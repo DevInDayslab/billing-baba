@@ -1,0 +1,93 @@
+---
+description: Billing Baba project conventions for AI-assisted development
+alwaysApply: true
+---
+
+# Billing Baba
+
+Offline-first POS, billing, inventory, and business management. Platforms: Windows, macOS, Android, iOS.
+
+```
+apps/client/   # Flutter (desktop + mobile)
+apps/api/      # Fastify REST API
+apps/web/      # Next.js landing site
+docs/          # Authoritative project docs — consult before new patterns
+```
+
+## Architecture
+
+- **Offline-first:** SQLite (Drift) is the primary store. Every write is local first; sync runs in the background.
+- **API scope:** Auth, cloud sync, backup, multi-device sync — not real-time POS operations.
+- **Business logic** lives in services/repositories — never in Flutter widgets or Fastify route handlers.
+- **Dual DB:** Drift + SQLite on client; Drizzle + PostgreSQL on API.
+
+## Before Writing Code
+
+1. Read existing implementation in the target app; reuse before creating.
+2. Modify existing files before adding new ones; keep diffs small and focused.
+3. For new architectures, patterns, or major dependencies — check `docs/` first.
+4. Document breaking schema or architectural changes in `docs/09-decisions.md`.
+
+## Flutter (`apps/client/`)
+
+**Stack:** Riverpod, GoRouter, Drift, Freezed, json_serializable.
+
+**Structure:** Feature-first under `lib/features/<feature>/` with `presentation/`, `application/`, `data/`. Shared code in `core/` or `shared/`.
+
+**Always:**
+- Small, reusable widgets; immutable Freezed models.
+- Riverpod for state; GoRouter for navigation.
+- Loading, error, and empty states on every data-driven screen.
+- Desktop-first layouts with mobile compatibility.
+- Local writes to SQLite; queue changes for background sync.
+
+**Never:**
+- Business logic, DB access, or sync logic inside widgets.
+- Duplicate widgets or providers.
+- New architectural patterns without necessity.
+- `setState` for app/feature state (use Riverpod).
+
+**UI:** Follow `docs/03-design-system.md`. Use design tokens — do not hardcode colors/fonts until Figma tokens are finalized. Packages: `google_fonts`, `lucide_icons_flutter`, `cached_network_image`, `shimmer`, `pinput`.
+
+## API (`apps/api/`)
+
+**Stack:** Fastify, TypeScript, Drizzle, Zod, JWT. **Use Bun** for all JS/TS package management and scripts (`bun install`, `bun add`, `bun run dev`). Do not use npm unless explicitly requested.
+
+**Structure:** Feature/domain modules with `routes/`, `services/`, `db/`. Shared utilities in `shared/` or `common/`.
+
+**Always:**
+- Thin routes: validate with Zod, delegate to services.
+- Services own business logic and DB access via Drizzle.
+- Standard responses: `{ "data": ... }` / `{ "data": [...], "meta": { page, limit, total } }`.
+- Errors: `{ "error": { "code", "message" } }` with correct HTTP status. ISO 8601 dates.
+- Bearer auth: `Authorization: Bearer <token>`.
+
+**Never:**
+- Business logic or direct DB access in route handlers.
+- Generic utility classes without a clear purpose.
+- Exposing stack traces, secrets, tokens, or PII in responses or logs.
+
+## Web (`apps/web/`)
+
+Next.js + Tailwind CSS. Marketing/landing only — no business logic or offline data concerns.
+
+## Naming
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| Dart files | `snake_case` | `invoice_list_screen.dart` |
+| Dart classes | `PascalCase` | `InvoiceListScreen` |
+| TS files | `kebab-case` | `invoice-service.ts` |
+| Functions | `camelCase` | `getInvoiceById` |
+| Constants | `UPPER_SNAKE_CASE` | `MAX_RETRY_COUNT` |
+| DB tables | `snake_case`, plural | `invoices` |
+| API routes | `kebab-case` | `/api/invoices` |
+| Git branches | `feature/`, `fix/`, `hotfix/`, `chore/` + kebab-case | `feature/invoices` |
+
+## General Principles
+
+- Production-ready, readable code over cleverness; composition over inheritance.
+- Comments explain **why**, not what. No dead code. No silent exception swallowing.
+- Run `flutter analyze` / `dart format` (client) and `eslint` / `prettier` (API) before pushing.
+- Never commit `.env` files. Never edit applied migrations — create new ones.
+- Explain major architectural decisions in PRs or ADRs.

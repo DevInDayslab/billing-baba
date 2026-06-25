@@ -1,0 +1,53 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies (common across stacks)
+node_modules/
+vendor/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.dart_tool/
+.packages
+build/
+dist/
+out/
+target/
+
+# Logs
+*.log
+logs/
+
+# Test / coverage
+coverage/
+.nyc_output/
+htmlcov/
+.coverage
+
+# Build artifacts
+*.class
+*.o
+*.so
+*.dylib
+
+# Secrets — never commit
+*.pem
+*.key
+credentials.json
+secrets/
