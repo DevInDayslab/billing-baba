@@ -1,8 +1,8 @@
 import { jsonb, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { money, syncedBusinessColumns, timestamptz } from '../columns';
-import { onlineOrderStatusEnum } from '../enums';
 import { businesses } from '../business/tables';
+import { money, syncedBusinessColumns, timestamptz } from '../columns';
 import { parties } from '../crm/tables';
+import { onlineOrderStatusEnum } from '../enums';
 import { salesDocuments } from '../sales/tables';
 
 const businessId = () =>
@@ -18,7 +18,9 @@ export const onlineOrders = pgTable(
     status: onlineOrderStatusEnum('status').notNull().default('pending'),
     totalAmount: money('total_amount').notNull(),
     orderPayload: jsonb('order_payload').notNull(),
-    salesDocumentId: uuid('sales_document_id').references(() => salesDocuments.id),
+    salesDocumentId: uuid('sales_document_id').references(
+      () => salesDocuments.id,
+    ),
     receivedAt: timestamptz('received_at').notNull().defaultNow(),
   },
   (table) => [

@@ -1,6 +1,6 @@
-import { boolean, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { tenantRootColumns, syncedBusinessColumns } from '../columns';
+import { boolean, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
+import { syncedBusinessColumns, tenantRootColumns } from '../columns';
 import { valuationMethodEnum } from '../enums';
 
 export const businesses = pgTable(
@@ -13,7 +13,9 @@ export const businesses = pgTable(
     address: text('address'),
     phone: text('phone'),
     email: text('email'),
-    valuationMethod: valuationMethodEnum('valuation_method').notNull().default('average'),
+    valuationMethod: valuationMethodEnum('valuation_method')
+      .notNull()
+      .default('average'),
   },
   (table) => [
     uniqueIndex('uq_businesses_gstin')
@@ -24,7 +26,9 @@ export const businesses = pgTable(
 
 export const branches = pgTable('branches', {
   ...syncedBusinessColumns,
-  businessId: syncedBusinessColumns.businessId.notNull().references(() => businesses.id),
+  businessId: syncedBusinessColumns.businessId
+    .notNull()
+    .references(() => businesses.id),
   name: text('name').notNull(),
   address: text('address'),
   isDefault: boolean('is_default').notNull().default(false),

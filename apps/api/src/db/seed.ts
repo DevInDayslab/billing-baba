@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { db } from './client';
+import { getDb } from './client';
 import {
   businesses,
   businessSettings,
@@ -10,6 +10,11 @@ import {
 } from './schema';
 
 async function seed() {
+  const db = getDb();
+  if (!db) {
+    throw new Error('DATABASE_URL is not set');
+  }
+
   console.log('Seeding development data...');
 
   const [business] = await db

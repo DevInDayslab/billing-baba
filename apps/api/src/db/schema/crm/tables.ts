@@ -1,5 +1,14 @@
-import { boolean, date, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import {
+  boolean,
+  date,
+  integer,
+  pgTable,
+  text,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import { businesses } from '../business/tables';
 import { money, syncedBusinessColumns, timestamptz } from '../columns';
 import {
   partyCategoryEnum,
@@ -7,9 +16,8 @@ import {
   pricingTierEnum,
   visitPurposeEnum,
 } from '../enums';
-import { businesses } from '../business/tables';
-import { areas } from '../settings/tables';
 import { users } from '../identity/tables';
+import { areas } from '../settings/tables';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);
@@ -110,7 +118,10 @@ export const partyTagAssignments = pgTable(
       .references(() => partyTags.id),
   },
   (table) => [
-    uniqueIndex('uq_party_tag_assignments_party_tag').on(table.partyId, table.partyTagId),
+    uniqueIndex('uq_party_tag_assignments_party_tag').on(
+      table.partyId,
+      table.partyTagId,
+    ),
   ],
 );
 
@@ -125,5 +136,10 @@ export const partyLoyaltyBalances = pgTable(
     pointsEarned: money('points_earned').notNull().default('0'),
     pointsAvailable: money('points_available').notNull().default('0'),
   },
-  (table) => [uniqueIndex('uq_party_loyalty_balances_party').on(table.businessId, table.partyId)],
+  (table) => [
+    uniqueIndex('uq_party_loyalty_balances_party').on(
+      table.businessId,
+      table.partyId,
+    ),
+  ],
 );

@@ -1,4 +1,7 @@
 import { relations } from 'drizzle-orm';
+import { businesses } from '../business/tables';
+import { users } from '../identity/tables';
+import { areas } from '../settings/tables';
 import {
   parties,
   partyAttachments,
@@ -8,9 +11,6 @@ import {
   partyTags,
   partyVisits,
 } from './tables';
-import { businesses } from '../business/tables';
-import { areas } from '../settings/tables';
-import { users } from '../identity/tables';
 
 export const partiesRelations = relations(parties, ({ one, many }) => ({
   business: one(businesses, {
@@ -39,12 +39,15 @@ export const partyVisitsRelations = relations(partyVisits, ({ one }) => ({
   }),
 }));
 
-export const partyAttachmentsRelations = relations(partyAttachments, ({ one }) => ({
-  party: one(parties, {
-    fields: [partyAttachments.partyId],
-    references: [parties.id],
+export const partyAttachmentsRelations = relations(
+  partyAttachments,
+  ({ one }) => ({
+    party: one(parties, {
+      fields: [partyAttachments.partyId],
+      references: [parties.id],
+    }),
   }),
-}));
+);
 
 export const partyLinksRelations = relations(partyLinks, ({ one }) => ({
   party: one(parties, {
@@ -61,20 +64,26 @@ export const partyTagsRelations = relations(partyTags, ({ many }) => ({
   assignments: many(partyTagAssignments),
 }));
 
-export const partyTagAssignmentsRelations = relations(partyTagAssignments, ({ one }) => ({
-  party: one(parties, {
-    fields: [partyTagAssignments.partyId],
-    references: [parties.id],
+export const partyTagAssignmentsRelations = relations(
+  partyTagAssignments,
+  ({ one }) => ({
+    party: one(parties, {
+      fields: [partyTagAssignments.partyId],
+      references: [parties.id],
+    }),
+    tag: one(partyTags, {
+      fields: [partyTagAssignments.partyTagId],
+      references: [partyTags.id],
+    }),
   }),
-  tag: one(partyTags, {
-    fields: [partyTagAssignments.partyTagId],
-    references: [partyTags.id],
-  }),
-}));
+);
 
-export const partyLoyaltyBalancesRelations = relations(partyLoyaltyBalances, ({ one }) => ({
-  party: one(parties, {
-    fields: [partyLoyaltyBalances.partyId],
-    references: [parties.id],
+export const partyLoyaltyBalancesRelations = relations(
+  partyLoyaltyBalances,
+  ({ one }) => ({
+    party: one(parties, {
+      fields: [partyLoyaltyBalances.partyId],
+      references: [parties.id],
+    }),
   }),
-}));
+);

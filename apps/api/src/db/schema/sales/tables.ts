@@ -1,15 +1,23 @@
-import { boolean, integer, pgTable, text, uniqueIndex, uuid, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import {
+  type AnyPgColumn,
+  boolean,
+  integer,
+  pgTable,
+  text,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import { businesses } from '../business/tables';
 import { money, syncedBusinessColumns, timestamptz } from '../columns';
+import { parties } from '../crm/tables';
 import {
   documentStatusEnum,
   salesDocumentTypeEnum,
   taxTypeEnum,
 } from '../enums';
-import { businesses } from '../business/tables';
-import { parties } from '../crm/tables';
-import { items } from '../inventory/tables';
 import { users } from '../identity/tables';
+import { items } from '../inventory/tables';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);

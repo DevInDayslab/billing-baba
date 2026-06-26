@@ -1,8 +1,8 @@
 import { boolean, date, pgTable, text, uuid } from 'drizzle-orm/pg-core';
-import { syncedBusinessColumns, timestamptz } from '../columns';
-import { alertTypeEnum, todoPriorityEnum } from '../enums';
 import { businesses } from '../business/tables';
+import { syncedBusinessColumns, timestamptz } from '../columns';
 import { parties } from '../crm/tables';
+import { alertTypeEnum, todoPriorityEnum } from '../enums';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);

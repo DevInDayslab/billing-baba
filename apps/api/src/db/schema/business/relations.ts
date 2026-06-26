@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm';
-import { businesses, branches } from './tables';
-import { users } from '../identity/tables';
 import { parties } from '../crm/tables';
+import { users } from '../identity/tables';
+import { branches, businesses } from './tables';
 
 export const businessesRelations = relations(businesses, ({ many }) => ({
   branches: many(branches),

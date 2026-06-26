@@ -2,7 +2,11 @@ import { pgEnum } from 'drizzle-orm/pg-core';
 
 export const userRoleEnum = pgEnum('user_role', ['owner', 'manager', 'staff']);
 
-export const partyTypeEnum = pgEnum('party_type', ['customer', 'supplier', 'both']);
+export const partyTypeEnum = pgEnum('party_type', [
+  'customer',
+  'supplier',
+  'both',
+]);
 
 export const partyCategoryEnum = pgEnum('party_category', [
   'customer',
@@ -12,7 +16,11 @@ export const partyCategoryEnum = pgEnum('party_category', [
   'custom',
 ]);
 
-export const pricingTierEnum = pgEnum('pricing_tier', ['tier_1', 'tier_2', 'tier_3']);
+export const pricingTierEnum = pgEnum('pricing_tier', [
+  'tier_1',
+  'tier_2',
+  'tier_3',
+]);
 
 export const itemTypeEnum = pgEnum('item_type', ['product', 'service']);
 
@@ -39,7 +47,12 @@ export const purchaseDocumentTypeEnum = pgEnum('purchase_document_type', [
   'purchase_return',
 ]);
 
-export const taxTypeEnum = pgEnum('tax_type', ['cgst_sgst', 'igst', 'exempt', 'none']);
+export const taxTypeEnum = pgEnum('tax_type', [
+  'cgst_sgst',
+  'igst',
+  'exempt',
+  'none',
+]);
 
 export const paymentModeEnum = pgEnum('payment_mode', [
   'cash',
@@ -50,7 +63,10 @@ export const paymentModeEnum = pgEnum('payment_mode', [
   'other',
 ]);
 
-export const paymentDirectionEnum = pgEnum('payment_direction', ['received', 'paid']);
+export const paymentDirectionEnum = pgEnum('payment_direction', [
+  'received',
+  'paid',
+]);
 
 export const shortPaymentHandlingEnum = pgEnum('short_payment_handling', [
   'official_balance',
@@ -76,7 +92,10 @@ export const ledgerEntryTypeEnum = pgEnum('ledger_entry_type', [
   'opening',
 ]);
 
-export const valuationMethodEnum = pgEnum('valuation_method', ['fifo', 'average']);
+export const valuationMethodEnum = pgEnum('valuation_method', [
+  'fifo',
+  'average',
+]);
 
 export const attendanceStatusEnum = pgEnum('attendance_status', [
   'present',
@@ -86,7 +105,11 @@ export const attendanceStatusEnum = pgEnum('attendance_status', [
   'absent',
 ]);
 
-export const todoPriorityEnum = pgEnum('todo_priority', ['low', 'medium', 'high']);
+export const todoPriorityEnum = pgEnum('todo_priority', [
+  'low',
+  'medium',
+  'high',
+]);
 
 export const alertTypeEnum = pgEnum('alert_type', [
   'payment_overdue',
@@ -102,7 +125,10 @@ export const onlineOrderStatusEnum = pgEnum('online_order_status', [
   'completed',
 ]);
 
-export const creditLimitActionEnum = pgEnum('credit_limit_action', ['block', 'warn']);
+export const creditLimitActionEnum = pgEnum('credit_limit_action', [
+  'block',
+  'warn',
+]);
 
 export const visitPurposeEnum = pgEnum('visit_purpose', [
   'purchase',

@@ -1,7 +1,14 @@
-import { boolean, integer, numeric, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  integer,
+  numeric,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 /** NUMERIC(18,4) for money and quantities per 04-database.md */
-export const money = (name: string) => numeric(name, { precision: 18, scale: 4 });
+export const money = (name: string) =>
+  numeric(name, { precision: 18, scale: 4 });
 
 export const uuidPrimaryKey = () => uuid('id').primaryKey().defaultRandom();
 

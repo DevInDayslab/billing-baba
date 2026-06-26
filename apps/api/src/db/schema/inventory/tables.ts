@@ -1,5 +1,13 @@
-import { boolean, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import {
+  boolean,
+  integer,
+  pgTable,
+  text,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import { businesses } from '../business/tables';
 import {
   money,
   syncedBusinessColumns,
@@ -11,7 +19,6 @@ import {
   itemTypeEnum,
   pricingTierEnum,
 } from '../enums';
-import { businesses } from '../business/tables';
 import { users } from '../identity/tables';
 
 const businessId = () =>
@@ -80,7 +87,9 @@ export const itemUnits = pgTable(
     unitName: text('unit_name').notNull(),
     conversionFactor: money('conversion_factor').notNull(),
   },
-  (table) => [uniqueIndex('uq_item_units_item_unit').on(table.itemId, table.unitName)],
+  (table) => [
+    uniqueIndex('uq_item_units_item_unit').on(table.itemId, table.unitName),
+  ],
 );
 
 export const itemTierPrices = pgTable(
@@ -94,7 +103,12 @@ export const itemTierPrices = pgTable(
     pricingTier: pricingTierEnum('pricing_tier').notNull(),
     price: money('price').notNull(),
   },
-  (table) => [uniqueIndex('uq_item_tier_prices_item_tier').on(table.itemId, table.pricingTier)],
+  (table) => [
+    uniqueIndex('uq_item_tier_prices_item_tier').on(
+      table.itemId,
+      table.pricingTier,
+    ),
+  ],
 );
 
 /** Immutable — append-only price audit */

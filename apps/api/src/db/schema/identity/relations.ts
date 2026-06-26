@@ -1,11 +1,6 @@
 import { relations } from 'drizzle-orm';
-import {
-  attendanceRecords,
-  devices,
-  refreshTokens,
-  users,
-} from './tables';
 import { businesses } from '../business/tables';
+import { attendanceRecords, devices, refreshTokens, users } from './tables';
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   business: one(businesses, {
@@ -35,13 +30,16 @@ export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
   }),
 }));
 
-export const attendanceRecordsRelations = relations(attendanceRecords, ({ one }) => ({
-  business: one(businesses, {
-    fields: [attendanceRecords.businessId],
-    references: [businesses.id],
+export const attendanceRecordsRelations = relations(
+  attendanceRecords,
+  ({ one }) => ({
+    business: one(businesses, {
+      fields: [attendanceRecords.businessId],
+      references: [businesses.id],
+    }),
+    user: one(users, {
+      fields: [attendanceRecords.userId],
+      references: [users.id],
+    }),
   }),
-  user: one(users, {
-    fields: [attendanceRecords.userId],
-    references: [users.id],
-  }),
-}));
+);

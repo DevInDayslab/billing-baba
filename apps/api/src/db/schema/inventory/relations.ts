@@ -1,4 +1,6 @@
 import { relations } from 'drizzle-orm';
+import { businesses } from '../business/tables';
+import { users } from '../identity/tables';
 import {
   brands,
   categories,
@@ -12,8 +14,6 @@ import {
   itemUnits,
   stockLevels,
 } from './tables';
-import { businesses } from '../business/tables';
-import { users } from '../identity/tables';
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
   items: many(items),
@@ -66,16 +66,19 @@ export const itemTierPricesRelations = relations(itemTierPrices, ({ one }) => ({
   }),
 }));
 
-export const itemPriceHistoryRelations = relations(itemPriceHistory, ({ one }) => ({
-  item: one(items, {
-    fields: [itemPriceHistory.itemId],
-    references: [items.id],
+export const itemPriceHistoryRelations = relations(
+  itemPriceHistory,
+  ({ one }) => ({
+    item: one(items, {
+      fields: [itemPriceHistory.itemId],
+      references: [items.id],
+    }),
+    changedByUser: one(users, {
+      fields: [itemPriceHistory.changedBy],
+      references: [users.id],
+    }),
   }),
-  changedByUser: one(users, {
-    fields: [itemPriceHistory.changedBy],
-    references: [users.id],
-  }),
-}));
+);
 
 export const godownsRelations = relations(godowns, ({ many }) => ({
   locations: many(itemLocations),
@@ -105,17 +108,20 @@ export const stockLevelsRelations = relations(stockLevels, ({ one }) => ({
   }),
 }));
 
-export const inventoryMovementsRelations = relations(inventoryMovements, ({ one }) => ({
-  item: one(items, {
-    fields: [inventoryMovements.itemId],
-    references: [items.id],
+export const inventoryMovementsRelations = relations(
+  inventoryMovements,
+  ({ one }) => ({
+    item: one(items, {
+      fields: [inventoryMovements.itemId],
+      references: [items.id],
+    }),
+    godown: one(godowns, {
+      fields: [inventoryMovements.godownId],
+      references: [godowns.id],
+    }),
+    createdByUser: one(users, {
+      fields: [inventoryMovements.createdBy],
+      references: [users.id],
+    }),
   }),
-  godown: one(godowns, {
-    fields: [inventoryMovements.godownId],
-    references: [godowns.id],
-  }),
-  createdByUser: one(users, {
-    fields: [inventoryMovements.createdBy],
-    references: [users.id],
-  }),
-}));
+);

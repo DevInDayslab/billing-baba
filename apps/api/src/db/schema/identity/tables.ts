@@ -1,8 +1,15 @@
-import { boolean, check, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import {
+  boolean,
+  check,
+  pgTable,
+  text,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import { businesses } from '../business/tables';
 import { syncedBusinessColumns, timestamptz } from '../columns';
 import { attendanceStatusEnum, userRoleEnum } from '../enums';
-import { businesses } from '../business/tables';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);
@@ -26,7 +33,10 @@ export const users = pgTable(
     uniqueIndex('uq_users_business_phone_active')
       .on(table.businessId, table.phone)
       .where(sql`${table.isDeleted} = false AND ${table.phone} IS NOT NULL`),
-    check('users_email_or_phone', sql`${table.email} IS NOT NULL OR ${table.phone} IS NOT NULL`),
+    check(
+      'users_email_or_phone',
+      sql`${table.email} IS NOT NULL OR ${table.phone} IS NOT NULL`,
+    ),
   ],
 );
 

@@ -1,21 +1,21 @@
-import { date, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { date, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { businesses } from '../business/tables';
 import {
   money,
   syncedBusinessColumns,
   timestamptz,
   uuidPrimaryKey,
 } from '../columns';
+import { parties } from '../crm/tables';
 import {
   ledgerEntryTypeEnum,
   paymentDirectionEnum,
   paymentModeEnum,
   shortPaymentHandlingEnum,
 } from '../enums';
-import { businesses } from '../business/tables';
-import { parties } from '../crm/tables';
-import { salesDocuments } from '../sales/tables';
 import { purchaseDocuments } from '../purchases/tables';
+import { salesDocuments } from '../sales/tables';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);
@@ -69,7 +69,9 @@ export const paymentAllocations = pgTable(
     paymentId: uuid('payment_id')
       .notNull()
       .references(() => payments.id),
-    salesDocumentId: uuid('sales_document_id').references(() => salesDocuments.id),
+    salesDocumentId: uuid('sales_document_id').references(
+      () => salesDocuments.id,
+    ),
     purchaseDocumentId: uuid('purchase_document_id').references(
       () => purchaseDocuments.id,
     ),

@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm';
-import { alerts, todos } from './tables';
 import { parties } from '../crm/tables';
+import { alerts, todos } from './tables';
 
 export const alertsRelations = relations(alerts, () => ({}));
 

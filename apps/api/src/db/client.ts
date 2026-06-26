@@ -1,17 +1,50 @@
-import 'dotenv/config';
+import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 
-const connectionString = process.env.DATABASE_URL;
+let queryClient: postgres.Sql | null = null;
+let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
-if (!connectionString) {
-  throw new Error('DATABASE_URL is not set');
+function getQueryClient(): postgres.Sql | null {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    return null;
+  }
+
+  if (!queryClient) {
+    // NeonDB: disable prepared statements for serverless pooler compatibility.
+    queryClient = postgres(connectionString, { prepare: false });
+  }
+
+  return queryClient;
 }
 
-/** NeonDB: disable prepared statements for serverless pooler compatibility */
-const queryClient = postgres(connectionString, { prepare: false });
+export function getDb(): ReturnType<typeof drizzle<typeof schema>> | null {
+  const client = getQueryClient();
+  if (!client) {
+    return null;
+  }
 
-export const db = drizzle(queryClient, { schema });
+  if (!db) {
+    db = drizzle(client, { schema });
+  }
 
-export type Database = typeof db;
+  return db;
+}
+
+export async function checkDatabaseConnection(): Promise<boolean> {
+  try {
+    const database = getDb();
+    if (!database) {
+      return false;
+    }
+
+    await database.execute(sql`SELECT 1`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export type Database = NonNullable<ReturnType<typeof getDb>>;

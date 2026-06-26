@@ -1,11 +1,17 @@
-import { boolean, integer, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  integer,
+  pgTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
+import { businesses } from '../business/tables';
 import { money, syncedBusinessColumns } from '../columns';
 import {
   creditLimitActionEnum,
   taxTypeEnum,
   valuationMethodEnum,
 } from '../enums';
-import { businesses } from '../business/tables';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);
@@ -19,11 +25,17 @@ export const areas = pgTable('areas', {
 export const businessSettings = pgTable('business_settings', {
   ...syncedBusinessColumns,
   businessId: businessId(),
-  valuationMethod: valuationMethodEnum('valuation_method').notNull().default('average'),
+  valuationMethod: valuationMethodEnum('valuation_method')
+    .notNull()
+    .default('average'),
   defaultTaxType: taxTypeEnum('default_tax_type').notNull().default('none'),
   invoiceTerms: text('invoice_terms'),
-  enablePriceConflictAlerts: boolean('enable_price_conflict_alerts').notNull().default(true),
-  creditLimitAction: creditLimitActionEnum('credit_limit_action').notNull().default('warn'),
+  enablePriceConflictAlerts: boolean('enable_price_conflict_alerts')
+    .notNull()
+    .default(true),
+  creditLimitAction: creditLimitActionEnum('credit_limit_action')
+    .notNull()
+    .default('warn'),
 });
 
 export const taxRates = pgTable('tax_rates', {

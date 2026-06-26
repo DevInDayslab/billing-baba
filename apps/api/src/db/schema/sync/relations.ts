@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm';
-import { onlineOrders } from './tables';
 import { parties } from '../crm/tables';
 import { salesDocuments } from '../sales/tables';
+import { onlineOrders } from './tables';
 
 export const onlineOrdersRelations = relations(onlineOrders, ({ one }) => ({
   party: one(parties, {

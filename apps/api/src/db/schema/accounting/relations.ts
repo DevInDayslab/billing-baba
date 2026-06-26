@@ -1,8 +1,8 @@
 import { relations } from 'drizzle-orm';
-import { ledgerEntries, paymentAllocations, payments } from './tables';
 import { parties } from '../crm/tables';
 import { purchaseDocuments } from '../purchases/tables';
 import { salesDocuments } from '../sales/tables';
+import { ledgerEntries, paymentAllocations, payments } from './tables';
 
 export const ledgerEntriesRelations = relations(ledgerEntries, ({ one }) => ({
   party: one(parties, {
@@ -19,17 +19,20 @@ export const paymentsRelations = relations(payments, ({ one, many }) => ({
   allocations: many(paymentAllocations),
 }));
 
-export const paymentAllocationsRelations = relations(paymentAllocations, ({ one }) => ({
-  payment: one(payments, {
-    fields: [paymentAllocations.paymentId],
-    references: [payments.id],
+export const paymentAllocationsRelations = relations(
+  paymentAllocations,
+  ({ one }) => ({
+    payment: one(payments, {
+      fields: [paymentAllocations.paymentId],
+      references: [payments.id],
+    }),
+    salesDocument: one(salesDocuments, {
+      fields: [paymentAllocations.salesDocumentId],
+      references: [salesDocuments.id],
+    }),
+    purchaseDocument: one(purchaseDocuments, {
+      fields: [paymentAllocations.purchaseDocumentId],
+      references: [purchaseDocuments.id],
+    }),
   }),
-  salesDocument: one(salesDocuments, {
-    fields: [paymentAllocations.salesDocumentId],
-    references: [salesDocuments.id],
-  }),
-  purchaseDocument: one(purchaseDocuments, {
-    fields: [paymentAllocations.purchaseDocumentId],
-    references: [purchaseDocuments.id],
-  }),
-}));
+);
