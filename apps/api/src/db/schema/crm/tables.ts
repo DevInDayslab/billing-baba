@@ -1,0 +1,129 @@
+import { boolean, date, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { money, syncedBusinessColumns, timestamptz } from '../columns';
+import {
+  partyCategoryEnum,
+  partyTypeEnum,
+  pricingTierEnum,
+  visitPurposeEnum,
+} from '../enums';
+import { businesses } from '../business/tables';
+import { areas } from '../settings/tables';
+import { users } from '../identity/tables';
+
+const businessId = () =>
+  syncedBusinessColumns.businessId.notNull().references(() => businesses.id);
+
+export const parties = pgTable(
+  'parties',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+    mobile: text('mobile'),
+    email: text('email'),
+    partyType: partyTypeEnum('party_type').notNull().default('customer'),
+    partyCategory: partyCategoryEnum('party_category'),
+    pricingTier: pricingTierEnum('pricing_tier').notNull().default('tier_1'),
+    gstin: text('gstin'),
+    stateCode: text('state_code'),
+    areaId: uuid('area_id').references(() => areas.id),
+    creditLimit: money('credit_limit').notNull().default('0'),
+    openingBalance: money('opening_balance').notNull().default('0'),
+    unrecoveredAmount: money('unrecovered_amount').notNull().default('0'),
+    faceImageUrl: text('face_image_url'),
+    connectedSince: date('connected_since'),
+    notes: text('notes'),
+  },
+  (table) => [
+    uniqueIndex('uq_parties_business_mobile_active')
+      .on(table.businessId, table.mobile)
+      .where(sql`${table.isDeleted} = false AND ${table.mobile} IS NOT NULL`),
+    sql`CHECK (${table.creditLimit} >= 0)`,
+    sql`CHECK (${table.unrecoveredAmount} >= 0)`,
+  ],
+);
+
+export const partyLinks = pgTable(
+  'party_links',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    partyId: uuid('party_id')
+      .notNull()
+      .references(() => parties.id),
+    linkedPartyId: uuid('linked_party_id')
+      .notNull()
+      .references(() => parties.id),
+    linkType: text('link_type').notNull(),
+  },
+  (table) => [
+    uniqueIndex('uq_party_links_business_parties').on(
+      table.businessId,
+      table.partyId,
+      table.linkedPartyId,
+    ),
+  ],
+);
+
+export const partyVisits = pgTable('party_visits', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  partyId: uuid('party_id')
+    .notNull()
+    .references(() => parties.id),
+  visitDate: timestamptz('visit_date').notNull(),
+  purpose: visitPurposeEnum('purpose').notNull(),
+  saleType: text('sale_type'),
+  notes: text('notes'),
+  recordedBy: uuid('recorded_by').references(() => users.id),
+});
+
+export const partyAttachments = pgTable('party_attachments', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  partyId: uuid('party_id')
+    .notNull()
+    .references(() => parties.id),
+  fileUrl: text('file_url').notNull(),
+  fileType: text('file_type').notNull(),
+  label: text('label'),
+});
+
+export const partyTags = pgTable('party_tags', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  name: text('name').notNull(),
+  color: text('color'),
+});
+
+export const partyTagAssignments = pgTable(
+  'party_tag_assignments',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    partyId: uuid('party_id')
+      .notNull()
+      .references(() => parties.id),
+    partyTagId: uuid('party_tag_id')
+      .notNull()
+      .references(() => partyTags.id),
+  },
+  (table) => [
+    uniqueIndex('uq_party_tag_assignments_party_tag').on(table.partyId, table.partyTagId),
+  ],
+);
+
+export const partyLoyaltyBalances = pgTable(
+  'party_loyalty_balances',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    partyId: uuid('party_id')
+      .notNull()
+      .references(() => parties.id),
+    pointsEarned: money('points_earned').notNull().default('0'),
+    pointsAvailable: money('points_available').notNull().default('0'),
+  },
+  (table) => [uniqueIndex('uq_party_loyalty_balances_party').on(table.businessId, table.partyId)],
+);
