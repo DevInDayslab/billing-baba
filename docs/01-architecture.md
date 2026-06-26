@@ -16,9 +16,9 @@ Phase 1 only — desktop and mobile POS, billing, inventory, parties, purchases,
 - [System Overview](#system-overview)
 - [Business Domains](#business-domains)
 - [Context Map](#context-map)
+- [Business Process Flow](#business-process-flow)
 - [Business Capability Map](#business-capability-map)
 - [Module Responsibilities](#module-responsibilities)
-- [Module Dependency Diagram](#module-dependency-diagram)
 - [Event Flow Diagram](#event-flow-diagram)
 - [Folder Structure](#folder-structure)
 - [Application Layers](#application-layers)
@@ -89,10 +89,10 @@ flowchart TB
 
 ## Business Domains
 
-Domains represent **business capabilities**, not screens. Each PRD feature belongs to **exactly one domain**. Module names in code may differ (e.g. domain **CRM**, module `parties`).
+**Business bounded contexts** own domain logic and entities. **Infrastructure services** provide cross-cutting transport and alerting — they are not business bounded contexts.
 
-| Domain | Module | Scope (Phase 1) | Owns |
-|--------|--------|-----------------|------|
+| Bounded context | Module | Scope (Phase 1) | Owns |
+|-----------------|--------|-----------------|------|
 | **Identity** | `auth` | Login, sessions, staff, attendance | Users, devices, tokens, attendance |
 | **Business** | `business` | Tenant profile, branches | Business, branches |
 | **CRM** | `parties` | Party CRM, credit, loyalty balances, hidden ledger | Parties, visits, attachments, tags, links |
@@ -102,15 +102,20 @@ Domains represent **business capabilities**, not screens. Each PRD feature belon
 | **Accounting** | `accounting` | Ledger, payments, receivable/payable | Ledger entries, payments, allocations |
 | **Reports** | `reports` | Compliance and analytics (read-only) | — (queries only) |
 | **Settings** | `settings` | Tax, numbering, loyalty rules, areas | Settings, tax rates, sequences, areas |
-| **Notifications** | `notifications` | Alerts, todos, reminder dispatch | Alerts, todos |
-| **Sync** | `sync` | Offline queue, Nazdikwala orders, backup | Online orders, sync infrastructure |
 
-**Not a domain:** `dashboard` is a cross-domain presentation feature (omni-search, widgets, order feed). It reads from local SQLite across domains; it owns no entities.
+| Infrastructure service | Module | Scope (Phase 1) | Owns |
+|------------------------|--------|-----------------|------|
+| **Notifications** | `notifications` | Alerts, todos, reminder dispatch | Alerts, todos |
+| **Sync** | `sync` | Offline queue, Nazdikwala orders, backup | Online orders, sync transport |
+
+**Not a bounded context:** `dashboard` is a cross-domain presentation feature (omni-search, widgets, order feed). It reads from local SQLite across contexts; it owns no entities.
+
+Each PRD feature belongs to **exactly one** bounded context or infrastructure service. Module names in code may differ (e.g. bounded context **CRM**, module `parties`).
 
 ### Domain feature ownership (single owner)
 
-| Feature | Domain | Notes |
-|---------|--------|-------|
+| Feature | Bounded context | Notes |
+|---------|-----------------|-------|
 | Items, units, categories, brands | Inventory | Includes bulk upload, MRP-only, tier prices |
 | Price history, market price | Inventory | Append-only `item_price_history` |
 | Godowns, shelf locations, photos | Inventory | Visual location management |
@@ -159,86 +164,147 @@ Domains represent **business capabilities**, not screens. Each PRD feature belon
 
 ## Context Map
 
-Canonical **bounded-context dependency map**. Arrows show upstream → downstream relationships (Customer-Supplier direction). Solid lines are synchronous service calls; dashed lines are in-process domain events (Phase 1 — no message broker).
+Canonical **bounded-context dependency map**. See the **legend** at the top of the diagram for node types and arrow semantics. Relationship details are in the table below.
 
 ```mermaid
-flowchart TD
-    subgraph business["Business Contexts"]
-        direction TB
-        ID["Identity"]
-        BUS["Business"]
-        SET["Settings"]
+%%{init: {'flowchart': {'nodeSpacing': 44, 'rankSpacing': 52, 'padding': 12}}}%%
+flowchart TB
+
+    subgraph legend["Context Map"]
+        direction LR
+        leg_biz["Business bounded context"]:::businessCtx
+        leg_inf["Infrastructure service"]:::infraCtx
+        leg_dep_a["downstream"]:::businessCtx --> leg_dep_b["upstream"]:::businessCtx
+        leg_evt_a["publisher"]:::businessCtx -.-> leg_evt_b["subscriber"]:::infraCtx
+    end
+
+    subgraph layer_foundation["Foundation"]
+        direction LR
+        ID["Identity"] --> BUS["Business"] --> SET["Settings"]
+    end
+
+    subgraph layer_master["Master Data"]
+        direction LR
         CRM["CRM"]
         INV["Inventory"]
+    end
+
+    subgraph layer_transaction["Transactions"]
+        direction LR
         SAL["Sales"]
         PUR["Purchases"]
+    end
+
+    subgraph layer_financial["Financial & Reporting"]
+        direction LR
         ACC["Accounting"]
         REP["Reports"]
     end
 
-    subgraph infrastructure["Infrastructure"]
+    subgraph infra["Infrastructure Services"]
         direction LR
         NOT["Notifications"]
         SYN["Sync"]
     end
 
-    ID --> BUS
-    BUS --> SET
     BUS --> CRM
     BUS --> INV
-    SET --> CRM
-    SET --> INV
     SET --> SAL
-    CRM -->|"Uses Parties"| SAL
-    INV -->|"Reads Inventory"| SAL
-    INV -->|"Reads Inventory"| PUR
-    SAL -->|"Creates Ledger"| ACC
-    PUR -->|"Creates Ledger"| ACC
-    CRM --> ACC
-    INV -->|"Generates Reports"| REP
-    ACC -->|"Generates Reports"| REP
+    CRM --> SAL
 
-    SAL -.->|SaleFinalized| NOT
-    SAL -.->|EstimateConverted| NOT
-    PUR -.->|PurchaseCompleted| NOT
-    INV -.->|StockAdjusted| NOT
-    ACC -.->|PaymentRecorded| NOT
-    CRM -.->|CreditLimitExceeded| NOT
+    SAL & PUR --> INV
+    SAL & PUR --> ACC
+    INV & ACC --> REP
 
-    SYN -.->|"Sync transport"| BUS
+    SAL & PUR & ACC -.-> NOT
+
+    SYN --> BUS
 
     classDef businessCtx fill:#e8f4fc,stroke:#4a90d9,color:#1a1a1a
     classDef infraCtx fill:#f5f5f5,stroke:#999999,color:#333333
-    class ID,BUS,SET,CRM,INV,SAL,PUR,ACC,REP businessCtx
-    class NOT,SYN infraCtx
+    class ID,BUS,SET,CRM,INV,SAL,PUR,ACC,REP,leg_biz,leg_dep_a,leg_dep_b,leg_evt_a businessCtx
+    class NOT,SYN,leg_inf,leg_evt_b infraCtx
 
-    style business fill:#fafcff,stroke:#4a90d9
-    style infrastructure fill:#f5f5f5,stroke:#999999
+    style legend fill:#ffffff,stroke:#cbd5e1
+    style layer_foundation fill:#fafcff,stroke:#4a90d9
+    style layer_master fill:#fafcff,stroke:#4a90d9
+    style layer_transaction fill:#fafcff,stroke:#4a90d9
+    style layer_financial fill:#fafcff,stroke:#4a90d9
+    style infra fill:#f5f5f5,stroke:#999999,stroke-dasharray:4 4
 ```
 
 | Relationship | DDD pattern | Mechanism |
 |--------------|-------------|-----------|
 | Identity → Business | Customer-Supplier | Users scoped to `business_id` |
 | Business → Settings / CRM / Inventory | Customer-Supplier | Tenant bootstrap |
-| Settings → CRM / Inventory / Sales | Shared Kernel (config) | Tax rates, numbering, loyalty rules |
+| Settings → Sales | Shared Kernel (config) | Tax rates, document numbering |
 | CRM → Sales | Customer-Supplier | Party tier, credit limit, pricing tier |
-| Inventory → Sales / Purchases | Conformist | Item master and stock rules |
-| Sales / Purchases → Accounting | Customer-Supplier | Finalize posts ledger via Accounting service |
-| Accounting → Reports | Conformist | Reports never mutate ledger |
-| * → Notifications | Event notification | Dashed arrows — domain events only; no back-deps |
+| Sales / Purchases → Inventory | Conformist | Item master and stock rules at finalize |
+| Sales / Purchases → Accounting | Customer-Supplier | Finalize posts ledger via `AccountingService` |
+| Inventory / Accounting → Reports | Conformist | Read-only aggregation; reports never mutate source data |
+| * → Notifications | Domain events | Dashed arrows only — alerts/todos; no back-deps |
 | Sync → Business | Infrastructure | Transport and conflict resolution; no domain rules |
+
+### Code module mapping
+
+Runtime imports in `apps/api/src/modules/` mirror this map. Module folder names differ from context names where noted.
+
+| Bounded context | Code module | If this module changes… downstream affected |
+|-----------------|-------------|-----------------------------------------------|
+| Identity | `auth` | `business`, `sync` |
+| Business | `business` | all tenant-scoped modules |
+| Settings | `settings` | `parties`, `inventory`, `sales` |
+| CRM | `parties` | `sales`, `notifications`, `sync` |
+| Inventory | `inventory` | `sales`, `purchases`, `reports`, `sync` |
+| Sales | `sales` | `accounting`, `reports`, `notifications`, `sync` |
+| Purchases | `purchases` | `accounting`, `reports`, `notifications`, `sync` |
+| Accounting | `accounting` | `reports`, `notifications`, `sync` |
+| Reports | `reports` | — (read-only) |
+| Notifications | `notifications` | — (event consumer) |
+| Sync | `sync` | — (transport only) |
+
+**Forbidden imports:** `accounting` → `sales`, `reports` → `accounting` (writes), `inventory` → `parties`, any module → `auth` (except sync transport).
+
+---
+
+## Business Process Flow
+
+End-to-end **sales lifecycle** across bounded contexts (not a context map). Phase 1 stores document types in unified `sales_documents` — see [04-database.md](04-database.md#sales_documents). *Sale Order* is the committed order step before dispatch; it may be represented by a confirmed estimate or an in-progress document chain.
+
+```mermaid
+flowchart LR
+    LEAD["Lead"] --> PARTY["Party"]
+    PARTY --> EST["Estimate"]
+    EST --> SO["Sale Order"]
+    SO --> DC["Delivery Challan"]
+    DC --> INV_DOC["Invoice"]
+    INV_DOC --> PAY["Payment"]
+    PAY --> LED["Ledger"]
+
+    INV_DOC --> IM["Inventory Movement"]
+    IM --> SL["Stock Levels"]
+
+    LED --> REP["Reports"]
+    SL --> REP
+```
+
+| Step | Bounded context | Entity / table |
+|------|-----------------|----------------|
+| Lead → Party | CRM | `parties` |
+| Estimate → Invoice | Sales | `sales_documents` (`estimate` → `delivery_challan` → `tax_invoice` / `bill_of_supply` / `normal_invoice`) |
+| Payment → Ledger | Accounting | `payments`, `ledger_entries` |
+| Invoice → Stock | Inventory | `inventory_movements`, `stock_levels` |
+| Ledger / Stock → Reports | Reports | Read-only queries |
 
 ---
 
 ## Business Capability Map
 
-What each module **owns** — capabilities and sub-features, not context relationships. For upstream/downstream dependencies between bounded contexts, see [Context Map](#context-map).
+What each module **owns** — capabilities only, not dependencies. For context relationships see [Context Map](#context-map); for runtime lifecycle see [Business Process Flow](#business-process-flow).
 
 ```mermaid
 flowchart TB
-    ROOT(("Billing Baba"))
-
-    subgraph row1[" "]
+    subgraph business_row1[" "]
         direction LR
         subgraph identity["Identity"]
             direction TB
@@ -279,7 +345,7 @@ flowchart TB
         end
     end
 
-    subgraph row2[" "]
+    subgraph business_row2[" "]
         direction LR
         subgraph purchases["Purchases"]
             direction TB
@@ -308,24 +374,22 @@ flowchart TB
             set_loyalty["Loyalty Rules"]
             set_areas["Areas"]
         end
-        subgraph infrastructure_cap["Infrastructure"]
-            direction LR
-            subgraph notifications["Notifications"]
-                direction TB
-                not_alerts["Alerts"]
-                not_todos["Todos"]
-            end
-            subgraph sync_cap["Sync"]
-                direction TB
-                syn_pushpull["Push/Pull"]
-                syn_orders["Online Orders"]
-                syn_backup["Backup"]
-            end
-        end
     end
 
-    ROOT --> row1
-    ROOT --> row2
+    subgraph infra_caps["Infrastructure Services"]
+        direction LR
+        subgraph notifications["Notifications"]
+            direction TB
+            not_alerts["Alerts"]
+            not_todos["Todos"]
+        end
+        subgraph sync_cap["Sync"]
+            direction TB
+            syn_pushpull["Push/Pull"]
+            syn_orders["Online Orders"]
+            syn_backup["Backup"]
+        end
+    end
 
     style identity fill:#e8f4fc,stroke:#4a90d9
     style business_cap fill:#e8f4fc,stroke:#4a90d9
@@ -338,7 +402,7 @@ flowchart TB
     style settings fill:#e8f4fc,stroke:#4a90d9
     style notifications fill:#f5f5f5,stroke:#999999
     style sync_cap fill:#f5f5f5,stroke:#999999
-    style infrastructure_cap fill:#fafafa,stroke:#bbbbbb
+    style infra_caps fill:#f5f5f5,stroke:#999999,stroke-dasharray:4 4
 ```
 
 ---
@@ -347,8 +411,8 @@ flowchart TB
 
 ### Backend modules (`apps/api/src/modules/`)
 
-| Module | Domain | Owns | Does not own |
-|--------|--------|------|--------------|
+| Module | Bounded context | Owns | Does not own |
+|--------|-----------------|------|--------------|
 | `auth` | Identity | Credentials, JWT, users, devices, attendance | Business data, ledger |
 | `business` | Business | Tenant profile, branches | Permissions, item prices |
 | `parties` | CRM | Party CRUD, visits, attachments, credit, loyalty balances, hidden ledger | Ledger posting, loyalty rules config |
@@ -363,8 +427,8 @@ flowchart TB
 
 ### Client features (`apps/client/lib/features/`)
 
-| Feature | Domain | Local-first responsibility |
-|---------|--------|----------------------------|
+| Feature | Bounded context | Local-first responsibility |
+|---------|-----------------|---------------------------|
 | `auth` | Identity | Token storage, session refresh, attendance |
 | `dashboard` | Cross-domain | Omni-search, widgets, order feed — no owned entities |
 | `business` | Business | Business profile screens |
@@ -380,155 +444,63 @@ flowchart TB
 
 ---
 
-## Module Dependency Diagram
-
-Runtime **code module** import graph. Semantics match the [Context Map](#context-map); names here reflect `apps/api/src/modules/` folders.
-
-```mermaid
-flowchart TD
-    subgraph business_modules["Business Modules"]
-        direction TB
-        AUTH["auth"]
-        BUS["business"]
-        SET["settings"]
-        CRM["parties"]
-        INV["inventory"]
-        SAL["sales"]
-        PUR["purchases"]
-        ACC["accounting"]
-        REP["reports"]
-    end
-
-    subgraph infrastructure_modules["Infrastructure"]
-        direction LR
-        NOT["notifications"]
-        SYN["sync"]
-    end
-
-    AUTH --> BUS
-    BUS --> SET
-    BUS --> CRM
-    BUS --> INV
-    SET --> CRM
-    SET --> INV
-    SET --> SAL
-    CRM -->|"Uses Parties"| SAL
-    INV -->|"Reads Inventory"| SAL
-    INV -->|"Reads Inventory"| PUR
-    SAL -->|"Creates Ledger"| ACC
-    PUR -->|"Creates Ledger"| ACC
-    CRM --> ACC
-    INV -->|"Generates Reports"| REP
-    ACC -->|"Generates Reports"| REP
-
-    SAL -.->|SaleFinalized| NOT
-    PUR -.->|PurchaseCompleted| NOT
-    INV -.->|StockAdjusted| NOT
-    ACC -.->|PaymentRecorded| NOT
-    CRM -.->|CreditLimitExceeded| NOT
-
-    SYN -.->|"Sync transport"| BUS
-
-    classDef businessMod fill:#e8f4fc,stroke:#4a90d9,color:#1a1a1a
-    classDef infraMod fill:#f5f5f5,stroke:#999999,color:#333333
-    class AUTH,BUS,SET,CRM,INV,SAL,PUR,ACC,REP businessMod
-    class NOT,SYN infraMod
-
-    style business_modules fill:#fafcff,stroke:#4a90d9
-    style infrastructure_modules fill:#f5f5f5,stroke:#999999
-```
-
-| If this module changes… | Downstream modules affected |
-|-------------------------|----------------------------|
-| `inventory` | `sales`, `purchases`, `reports`, `sync` |
-| `parties` (CRM) | `sales`, `accounting`, `notifications`, `sync` |
-| `sales` | `accounting`, `reports`, `notifications`, `sync` |
-| `purchases` | `accounting`, `reports`, `notifications`, `sync` |
-| `accounting` | `reports`, `notifications`, `sync` |
-| `settings` | `parties`, `inventory`, `sales` (tax/numbering reads) |
-
-**Forbidden:** `accounting` → `sales`, `reports` → `accounting` (writes), `inventory` → `parties`, any module → `auth` (except sync transport).
-
----
-
 ## Event Flow Diagram
 
-Runtime business event propagation (not ER relationships). Each finalize creates append-only records.
+Side effects when key **domain events** fire (complements [Business Process Flow](#business-process-flow)). Synchronous writes happen in-process; notifications are async via dashed paths.
 
 ```mermaid
 flowchart TD
-    subgraph purchase_flow["Purchase Bill Finalized"]
-        PB["Purchase Document"]
-        IM1["inventory_movement\n+quantity"]
-        SL1["stock_levels\nrecalculate"]
-        LE1["ledger_entry\ndebit expense/payable"]
+    subgraph sale["SaleFinalized"]
+        SD["sales_document"]
+        IM2["inventory_movement"]
+        SL2["stock_levels"]
+        LE2["ledger_entry"]
     end
 
-    subgraph sale_flow["Sales Invoice Finalized"]
-        SD["Sales Document"]
-        IM2["inventory_movement\n−quantity"]
-        SL2["stock_levels\nrecalculate"]
-        LE2["ledger_entry\ndebit receivable"]
+    subgraph purchase["PurchaseCompleted"]
+        PB["purchase_document"]
+        IM1["inventory_movement"]
+        SL1["stock_levels"]
+        LE1["ledger_entry"]
     end
 
-    subgraph payment_flow["Payment Recorded"]
+    subgraph payment["PaymentRecorded"]
         PAY["payment"]
         PA["payment_allocation"]
-        LE3["ledger_entry\ncredit receivable"]
+        LE3["ledger_entry"]
     end
 
-    subgraph downstream["Downstream"]
-        REP["Reports\nGSTR / P&L / Stock"]
-        NOT["Notifications\nalerts / todos"]
-        NAZ["Nazdikwala\nstock fan-out"]
-    end
-
-    PB --> IM1 --> SL1 --> LE1
-    SD --> IM2 --> SL2 --> LE2
+    SD --> IM2 --> SL2
+    SD --> LE2
+    PB --> IM1 --> SL1
+    PB --> LE1
     PAY --> PA --> LE3
 
-    LE1 --> REP
+    LE1 --> REP["Reports"]
     LE2 --> REP
     LE3 --> REP
     SL1 --> REP
     SL2 --> REP
-    SL2 --> NAZ
-    LE2 -.-> NOT
-    SL1 -.-> NOT
+
+    LE2 -.->|SaleFinalized| NOT["Notifications"]
+    LE1 -.->|PurchaseCompleted| NOT
+    LE3 -.->|PaymentRecorded| NOT
 ```
 
-| Event | Producer | Consumers | Side effects |
-|-------|----------|-----------|--------------|
-| Document finalized | Sales / Purchases | Inventory, Accounting | `inventory_movement`, `ledger_entry` |
-| Payment recorded | Accounting | Accounting (allocation), CRM (hidden ledger) | `ledger_entry`, optional `unrecovered_amount` |
-| Stock below reorder | Inventory | Notifications | `alert` (low_stock) |
-| Credit limit exceeded | CRM + Sales | Notifications | `alert` (credit_limit) |
-| Online order received | Sync | Notifications, Sales (on accept) | `online_order`, optional `sales_document` |
+| Domain event | Producer | Synchronous consumers | Async consumers |
+|--------------|----------|----------------------|-----------------|
+| `SaleFinalized` | Sales | Inventory (`inventory_movement`), Accounting (`ledger_entry`) | Notifications |
+| `PurchaseCompleted` | Purchases | Inventory, Accounting | Notifications |
+| `PaymentRecorded` | Accounting | Accounting (allocation), CRM (hidden ledger update) | Notifications |
+| `EstimateConverted` | Sales | Sales (`converted_from_id` chain) | Notifications |
+| `CreditLimitReached` | Sales (+ CRM rules) | — (blocks or warns in UI) | Notifications |
+| Online order received | Sync (infrastructure) | Sales on accept | Notifications |
 
 See [ADR-016](09-decisions.md#adr-016-event-based-inventory-ledger), [ADR-017](09-decisions.md#adr-017-double-entry-accounting).
 
 ---
 
-## Dependency Rules
-
-```mermaid
-flowchart TD
-    PRES["Presentation\nScreens / Widgets"]
-    APP["Application\nProviders / Controllers"]
-    DOM["Domain\nServices / Use Cases"]
-    DATA["Data\nRepositories"]
-    DB["SQLite / HTTP"]
-
-    PRES --> APP
-    APP --> DOM
-    DOM --> DATA
-    DATA --> DB
-
-    style PRES fill:#e8f4fc
-    style APP fill:#d4edda
-    style DOM fill:#fff3cd
-    style DATA fill:#f8d7da
-```
+## Cross-Context Rules
 
 | Rule | Client | Backend |
 |------|--------|---------|
@@ -660,12 +632,18 @@ flowchart TB
         ROUTES["Route Handlers\nZod validation"]
     end
 
-    subgraph modules["Domain Modules"]
+    subgraph modules["Business Modules"]
         direction LR
         M1["auth"]
         M2["sales"]
-        M3["sync"]
+        M3["inventory"]
         MN["..."]
+    end
+
+    subgraph infra_modules["Infrastructure"]
+        direction LR
+        MSYNC["sync"]
+        MNOT["notifications"]
     end
 
     subgraph module_internal["Module Internal — per module"]
@@ -676,10 +654,14 @@ flowchart TB
 
     MW --> ROUTES
     ROUTES --> modules
+    ROUTES --> infra_modules
     modules --> module_internal
+    infra_modules --> module_internal
     SV --> DB
     DB --> DRIZZLE["Drizzle ORM"]
     DRIZZLE --> PG["NeonDB PostgreSQL"]
+
+    style infra_modules fill:#f5f5f5,stroke:#999999,stroke-dasharray:4 4
 ```
 
 ### Module internal layout
@@ -900,6 +882,9 @@ Brief pointers only — not Phase 1 scope.
 |------|------------|
 | **Context Map** | Canonical bounded-context dependency diagram — who depends on whom |
 | **Business Capability Map** | Module ownership of features — what each module owns, not how contexts relate |
+| **Business Process Flow** | End-to-end document lifecycle across contexts (sales path) |
+| **Bounded context** | A domain model boundary with its own ubiquitous language and ownership |
+| **Infrastructure service** | Cross-cutting module (Sync, Notifications) — not a business bounded context |
 | **Party** | Customer or supplier — any counterparty with a ledger balance |
 | **Kaccha** | Normal (non-GST formal) invoice or estimate |
 | **Pakka** | Formal GST tax invoice |
@@ -951,7 +936,7 @@ Brief pointers only — not Phase 1 scope.
 
 Every PRD Phase 1 requirement mapped to domain, entity, and API module. Phase 2 items (§9) excluded.
 
-| PRD Feature | Business Domain | Database Entity | API Module | Status |
+| PRD Feature | Bounded context | Database Entity | API Module | Status |
 |-------------|-----------------|-----------------|------------|--------|
 | Omni-search & quick actions | Dashboard (presentation) | — (queries local SQLite) | — | Covered |
 | Global transaction search | Dashboard | parties, sales_documents, payments, items | parties, sales, accounting, inventory | Covered |
