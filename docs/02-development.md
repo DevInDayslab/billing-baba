@@ -18,45 +18,65 @@ billing-baba/
 | Tool | Version |
 |------|---------|
 | Flutter | Latest stable |
-| Node.js | LTS |
+| Bun | Latest |
 | Git | Latest |
 | Cursor | Latest |
-| PostgreSQL | <!-- TBD --> |
+| NeonDB | PostgreSQL 15+ (cloud) |
 
 ## Setup
 
-> Detailed setup commands for Flutter and Fastify will be added once the development environment is finalized.
+1. Clone the repository and enter the monorepo root.
 
-1. Clone the repository:
+2. **API** — from `apps/api/`:
+
    ```bash
-   git clone <!-- repository URL -->
-   cd billing-baba
+   bun install
+   cp .env.example .env
+   # Set DATABASE_URL to your NeonDB connection string
    ```
 
-2. Install dependencies — instructions coming soon for each app.
+3. **Database** — apply schema to NeonDB:
 
-3. Copy `.env.example` to `.env` and fill in values.
+   ```bash
+   bun run db:generate   # after schema changes — creates migration SQL
+   bun run db:migrate    # apply migrations
+   # OR for local dev only:
+   bun run db:push       # push schema without migration files
+   bun run db:seed       # optional dev seed data
+   ```
 
-4. Start development servers — instructions coming soon.
+4. **Client** — from `apps/client/`:
+
+   ```bash
+   flutter pub get
+   ```
 
 For Git workflow, see [07-git-workflow.md](07-git-workflow.md).
 
 ## Useful Commands
 
+### API (`apps/api/`)
+
 | Command | Description |
 |---------|-------------|
-| | Start dev server |
-| | Run tests |
-| | Run linter |
-| | Build for production |
+| `bun run dev` | Start Fastify dev server (tsx watch) |
+| `bun run build` | Compile TypeScript |
+| `bun run start` | Run compiled server |
+| `bun run lint` | ESLint |
+| `bun run format` | Prettier |
+| `bun run db:generate` | Drizzle Kit — generate migration from schema |
+| `bun run db:migrate` | Apply migrations to NeonDB |
+| `bun run db:push` | Push schema directly (dev only) |
+| `bun run db:studio` | Drizzle Studio (inspect data) |
+| `bun run db:seed` | Seed demo business data |
 
-> Commands will be documented per app once setup is complete.
+Schema source of truth: [04-database.md](04-database.md). Drizzle definitions live in `apps/api/src/db/schema/`.
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| | | <!-- TBD --> |
+| `DATABASE_URL` | Yes | NeonDB PostgreSQL connection string |
 
 Never commit `.env` files.
 
