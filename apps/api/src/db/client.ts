@@ -1,49 +1,61 @@
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import type { DatabaseHealthStatus } from '../shared/types';
 import * as schema from './schema';
 
 let queryClient: postgres.Sql | null = null;
 let db: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
-function getQueryClient(): postgres.Sql | null {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    return null;
-  }
-
+function getQueryClient(connectionString: string): postgres.Sql {
   if (!queryClient) {
-    // NeonDB: disable prepared statements for serverless pooler compatibility.
+    // Neon: disable prepared statements for serverless pooler compatibility.
     queryClient = postgres(connectionString, { prepare: false });
   }
 
   return queryClient;
 }
 
+export function isDatabaseConfigured(): boolean {
+  return Boolean(process.env.DATABASE_URL);
+}
+
 export function getDb(): ReturnType<typeof drizzle<typeof schema>> | null {
-  const client = getQueryClient();
-  if (!client) {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
     return null;
   }
 
   if (!db) {
-    db = drizzle(client, { schema });
+    db = drizzle(getQueryClient(connectionString), { schema });
   }
 
   return db;
 }
 
-export async function checkDatabaseConnection(): Promise<boolean> {
+export async function checkDatabaseHealth(): Promise<DatabaseHealthStatus> {
+  if (!isDatabaseConfigured()) {
+    return 'not_configured';
+  }
+
   try {
     const database = getDb();
     if (!database) {
-      return false;
+      return 'not_configured';
     }
 
     await database.execute(sql`SELECT 1`);
-    return true;
+    return 'connected';
   } catch {
-    return false;
+    return 'disconnected';
+  }
+}
+
+export async function closeDatabase(): Promise<void> {
+  if (queryClient) {
+    await queryClient.end();
+    queryClient = null;
+    db = null;
   }
 }
 

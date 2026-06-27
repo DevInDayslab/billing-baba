@@ -11,7 +11,14 @@ export async function registerSwaggerPlugin(
       info: {
         title: config.appName,
         version: config.version,
+        description: 'Billing Baba REST API — infrastructure endpoints only.',
       },
+      servers: [
+        {
+          url: config.apiPrefix,
+          description: `${config.environment} API`,
+        },
+      ],
     },
   });
 }

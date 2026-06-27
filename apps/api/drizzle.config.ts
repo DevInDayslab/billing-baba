@@ -6,8 +6,8 @@ export default defineConfig({
   out: './drizzle/migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    // Generate does not connect; migrate/push/studio require DATABASE_URL in .env
-    url: process.env.DATABASE_URL ?? 'postgresql://localhost:5432/billing_baba',
+    // Neon PostgreSQL — set DATABASE_URL in .env for migrate, seed, and studio.
+    url: process.env.DATABASE_URL ?? '',
   },
   strict: true,
   verbose: true,

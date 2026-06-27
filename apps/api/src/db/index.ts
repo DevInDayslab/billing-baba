@@ -1,2 +1,8 @@
-export { checkDatabaseConnection, type Database, getDb } from './client';
+export {
+  checkDatabaseHealth,
+  closeDatabase,
+  type Database,
+  getDb,
+  isDatabaseConfigured,
+} from './client';
 export * from './schema';

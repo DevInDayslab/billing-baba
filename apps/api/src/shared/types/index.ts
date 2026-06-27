@@ -1,4 +1,5 @@
-// Application-wide TypeScript types.
-// Feature-specific types belong in their respective modules.
-
-export {};
+export type {
+  ApiErrorResponse,
+  ApiSuccessResponse,
+  DatabaseHealthStatus,
+} from './api-response';
