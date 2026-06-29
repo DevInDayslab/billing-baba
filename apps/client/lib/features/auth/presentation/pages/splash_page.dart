@@ -16,7 +16,7 @@ class SplashPage extends StatelessWidget {
             const Text('Billing Baba'),
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: () => context.go(AppRoutes.home),
+              onPressed: () => context.go(AppRoutes.businessSelection),
               child: const Text('Continue'),
             ),
           ],
