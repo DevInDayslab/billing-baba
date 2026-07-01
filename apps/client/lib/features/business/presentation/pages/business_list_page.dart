@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_card.dart';
 import 'package:billing_baba/features/business/providers/business_list_provider.dart';
@@ -18,7 +19,6 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
     with SingleTickerProviderStateMixin {
   static const _headerColor = Color(0xFF1A1A2E);
   static const _maxContentWidth = 1040.0;
-  static const _loggedInPhone = '7987016325';
 
   late final TabController _tabController;
   final _searchController = TextEditingController();
@@ -52,6 +52,8 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
     final myBusinesses =
         _filterBusinesses(allBusinesses.where((b) => !b.isShared).toList());
 
+    final phoneNumber = ref.watch(loggedInPhoneProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
@@ -76,7 +78,7 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
               ),
             ),
           ),
-          const _BottomBar(phoneNumber: _loggedInPhone),
+          _BottomBar(phoneNumber: phoneNumber),
         ],
       ),
     );
@@ -261,9 +263,13 @@ class _MyCompaniesTab extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: BusinessCard(
               business: business,
-              onOpen: () {
-                ref.read(businessListProvider.notifier).selectBusiness(business.id);
-                context.go(AppRoutes.home);
+              onOpen: () async {
+                await ref
+                    .read(businessListProvider.notifier)
+                    .selectBusiness(business.id);
+                if (context.mounted) {
+                  context.go(AppRoutes.home);
+                }
               },
             ),
           ),
@@ -273,13 +279,13 @@ class _MyCompaniesTab extends ConsumerWidget {
   }
 }
 
-class _BottomBar extends StatelessWidget {
+class _BottomBar extends ConsumerWidget {
   const _BottomBar({required this.phoneNumber});
 
   final String phoneNumber;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -326,7 +332,7 @@ class _BottomBar extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     FilledButton(
-                      onPressed: () {},
+                      onPressed: () => context.go(AppRoutes.editProfile),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primary,
                       ),
@@ -339,7 +345,12 @@ class _BottomBar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        await ref.read(authProvider.notifier).logout();
+                        if (context.mounted) {
+                          context.go(AppRoutes.login);
+                        }
+                      },
                       child: const Text('Logout'),
                     ),
                     Text(

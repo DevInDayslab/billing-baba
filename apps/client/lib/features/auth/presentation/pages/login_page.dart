@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -26,9 +27,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     await ref.read(authProvider.notifier).sendOtp(_phoneController.text.trim());
   }
 
+  Future<void> _devLogin() async {
+    await ref.read(authProvider.notifier).devLogin();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(authProvider).isLoading;
+    final auth = ref.watch(authProvider);
+    final isLoading = auth.isLoading;
+    final showDevLogin = AppConfig.enableDevLogin;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
@@ -96,13 +103,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               formKey: _formKey,
                               phoneController: _phoneController,
                               isLoading: isLoading,
+                              errorMessage: auth.error,
+                              showDevLogin: showDevLogin,
                               onSubmit: _submit,
+                              onDevLogin: _devLogin,
                             )
                           : _MobileCard(
                               formKey: _formKey,
                               phoneController: _phoneController,
                               isLoading: isLoading,
+                              errorMessage: auth.error,
+                              showDevLogin: showDevLogin,
                               onSubmit: _submit,
+                              onDevLogin: _devLogin,
                             ),
                     ),
                   ),
@@ -125,12 +138,18 @@ class _DesktopCard extends StatelessWidget {
     required this.phoneController,
     required this.isLoading,
     required this.onSubmit,
+    this.errorMessage,
+    this.showDevLogin = false,
+    this.onDevLogin,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
   final bool isLoading;
+  final String? errorMessage;
+  final bool showDevLogin;
   final VoidCallback onSubmit;
+  final VoidCallback? onDevLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +207,10 @@ class _DesktopCard extends StatelessWidget {
                   formKey: formKey,
                   phoneController: phoneController,
                   isLoading: isLoading,
+                  errorMessage: errorMessage,
+                  showDevLogin: showDevLogin,
                   onSubmit: onSubmit,
+                  onDevLogin: onDevLogin,
                 ),
               ),
             ),
@@ -208,12 +230,18 @@ class _MobileCard extends StatelessWidget {
     required this.phoneController,
     required this.isLoading,
     required this.onSubmit,
+    this.errorMessage,
+    this.showDevLogin = false,
+    this.onDevLogin,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
   final bool isLoading;
+  final String? errorMessage;
+  final bool showDevLogin;
   final VoidCallback onSubmit;
+  final VoidCallback? onDevLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -234,7 +262,10 @@ class _MobileCard extends StatelessWidget {
         formKey: formKey,
         phoneController: phoneController,
         isLoading: isLoading,
+        errorMessage: errorMessage,
+        showDevLogin: showDevLogin,
         onSubmit: onSubmit,
+        onDevLogin: onDevLogin,
       ),
     );
   }
@@ -249,12 +280,18 @@ class _LoginForm extends StatelessWidget {
     required this.phoneController,
     required this.isLoading,
     required this.onSubmit,
+    this.errorMessage,
+    this.showDevLogin = false,
+    this.onDevLogin,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
   final bool isLoading;
+  final String? errorMessage;
+  final bool showDevLogin;
   final VoidCallback onSubmit;
+  final VoidCallback? onDevLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -373,6 +410,18 @@ class _LoginForm extends StatelessWidget {
             },
           ),
 
+          if (errorMessage != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              errorMessage!,
+              style: const TextStyle(
+                color: AppColors.error,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+
           const SizedBox(height: AppSpacing.xl),
 
           // Continue button
@@ -413,6 +462,42 @@ class _LoginForm extends StatelessWidget {
               ),
             ),
           ),
+
+          if (showDevLogin) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Development Only',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton.icon(
+                onPressed: isLoading ? null : onDevLogin,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textSecondary,
+                  side: BorderSide(color: Colors.grey.shade300),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.mdBorder,
+                  ),
+                ),
+                icon: const Icon(Icons.developer_mode_outlined, size: 18),
+                label: const Text(
+                  'Developer Login',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(height: AppSpacing.lg),
 

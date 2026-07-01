@@ -198,7 +198,10 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
 
                   // Change number
                   TextButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () {
+                      ref.read(authProvider.notifier).resetToLogin();
+                      context.pop();
+                    },
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,

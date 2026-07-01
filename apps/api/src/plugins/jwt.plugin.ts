@@ -2,6 +2,8 @@ import jwt from '@fastify/jwt';
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '../config/app_config';
 
+const ACCESS_TOKEN_TTL = '15m';
+
 export async function registerJwtPlugin(
   app: FastifyInstance,
   config: AppConfig,
@@ -15,10 +17,8 @@ export async function registerJwtPlugin(
 
   await app.register(jwt, {
     secret: config.jwtSecret,
+    sign: {
+      expiresIn: ACCESS_TOKEN_TTL,
+    },
   });
-
-  // TODO: Implement login and access token generation.
-  // TODO: Implement refresh token flow using JWT_REFRESH_SECRET.
-  // TODO: Add authentication middleware to protect routes.
-  // TODO: Attach userId and businessId to request context for logging.
 }

@@ -1,9 +1,7 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -50,11 +48,6 @@ class _SplashPageState extends State<SplashPage>
       ),
     );
 
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed && mounted) {
-        context.go(AppRoutes.login);
-      }
-    });
     unawaited(_controller.forward());
   }
 
@@ -97,7 +90,6 @@ class _SplashPageState extends State<SplashPage>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Logo
                       FadeTransition(
                         opacity: _fadeAnim,
                         child: SlideTransition(
@@ -110,10 +102,7 @@ class _SplashPageState extends State<SplashPage>
                           ),
                         ),
                       ),
-
                       SizedBox(height: isDesktop ? AppSpacing.xxl : AppSpacing.xl),
-
-                      // Welcome to Billing Baba
                       FadeTransition(
                         opacity: _fadeAnim,
                         child: SlideTransition(
@@ -146,10 +135,7 @@ class _SplashPageState extends State<SplashPage>
                           ),
                         ),
                       ),
-
                       SizedBox(height: isDesktop ? AppSpacing.lg : AppSpacing.md),
-
-                      // Tagline
                       FadeTransition(
                         opacity: _fadeAnim,
                         child: Text(
@@ -163,10 +149,7 @@ class _SplashPageState extends State<SplashPage>
                           ),
                         ),
                       ),
-
                       SizedBox(height: isDesktop ? 56.0 : AppSpacing.xxl),
-
-                      // Loading bar
                       FadeTransition(
                         opacity: _fadeAnim,
                         child: ClipRRect(

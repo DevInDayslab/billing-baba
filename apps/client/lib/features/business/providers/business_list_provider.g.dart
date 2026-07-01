@@ -42,7 +42,7 @@ final class BusinessListNotifierProvider
 }
 
 String _$businessListNotifierHash() =>
-    r'e8e52afe22919dfb3d15505c7af19e714af37309';
+    r'c00b8234bc3de4423ba17558e854cf166114cc72';
 
 abstract class _$BusinessListNotifier extends $Notifier<List<BusinessModel>> {
   List<BusinessModel> build();
@@ -61,3 +61,44 @@ abstract class _$BusinessListNotifier extends $Notifier<List<BusinessModel>> {
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(loggedInPhone)
+final loggedInPhoneProvider = LoggedInPhoneProvider._();
+
+final class LoggedInPhoneProvider
+    extends $FunctionalProvider<String, String, String>
+    with $Provider<String> {
+  LoggedInPhoneProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'loggedInPhoneProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$loggedInPhoneHash();
+
+  @$internal
+  @override
+  $ProviderElement<String> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  String create(Ref ref) {
+    return loggedInPhone(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String>(value),
+    );
+  }
+}
+
+String _$loggedInPhoneHash() => r'077cc4c7b9570458e2c25dbb23e64d38417da122';

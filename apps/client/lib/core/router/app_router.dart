@@ -34,16 +34,40 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final onSplash = location == AppRoutes.splash;
       final onLogin = location == AppRoutes.login;
       final onOtp = location == AppRoutes.verifyOtp;
+      final onBusinessList = location == AppRoutes.businessList;
+      final onEditProfile = location == AppRoutes.editProfile;
 
-      if (onSplash) return null;
+      if (auth.status == AuthStatus.initializing) {
+        return onSplash ? null : AppRoutes.splash;
+      }
+
+      if (onSplash) {
+        return switch (auth.status) {
+          AuthStatus.authenticated => AppRoutes.home,
+          AuthStatus.needsBusinessSelection => AppRoutes.businessList,
+          AuthStatus.needsBusinessCreation => AppRoutes.editProfile,
+          AuthStatus.otpSent => AppRoutes.verifyOtp,
+          AuthStatus.unauthenticated || AuthStatus.initializing => AppRoutes.login,
+        };
+      }
 
       switch (auth.status) {
         case AuthStatus.unauthenticated:
           if (!onLogin) return AppRoutes.login;
         case AuthStatus.otpSent:
           if (!onOtp) return AppRoutes.verifyOtp;
+        case AuthStatus.needsBusinessCreation:
+          if (!onEditProfile && !onBusinessList) {
+            return AppRoutes.editProfile;
+          }
+        case AuthStatus.needsBusinessSelection:
+          if (!onBusinessList) return AppRoutes.businessList;
         case AuthStatus.authenticated:
-          if (onLogin || onOtp) return AppRoutes.home;
+          if (onLogin || onOtp || onBusinessList || onEditProfile) {
+            return AppRoutes.home;
+          }
+        case AuthStatus.initializing:
+          return AppRoutes.splash;
       }
       return null;
     },

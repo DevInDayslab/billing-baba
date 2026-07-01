@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -7,26 +8,29 @@ part 'business_list_provider.g.dart';
 class BusinessListNotifier extends _$BusinessListNotifier {
   @override
   List<BusinessModel> build() {
-    return [
-      BusinessModel(
-        id: '1',
-        name: 'DD STOCK',
-        isCurrent: true,
-        syncStatus: SyncStatus.on,
-        lastSaleAt: DateTime(2025, 9, 14, 14, 30),
-      ),
-      BusinessModel(
-        id: '2',
-        name: '7987016325',
-        syncStatus: SyncStatus.on,
-        lastSaleAt: DateTime(2026, 6, 29, 10, 15),
-      ),
-    ];
+    final session = ref.watch(authProvider).session;
+    if (session == null) return [];
+
+    return session.businesses
+        .map(
+          (business) => BusinessModel(
+            id: business.id,
+            name: business.name,
+            syncStatus: SyncStatus.on,
+          ),
+        )
+        .toList();
   }
 
-  void selectBusiness(String id) {
-    // Temporary: will be replaced with navigation/state update.
-    // ignore: avoid_print
-    print('Selected business id: $id');
+  Future<void> selectBusiness(String id) async {
+    await ref.read(authProvider.notifier).selectBusiness(id);
   }
+}
+
+@riverpod
+String loggedInPhone(Ref ref) {
+  final auth = ref.watch(authProvider);
+  final phone = auth.session?.user.phone ?? auth.phone;
+  if (phone.length <= 10) return phone;
+  return phone.substring(phone.length - 10);
 }
