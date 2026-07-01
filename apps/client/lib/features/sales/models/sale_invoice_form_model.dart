@@ -6,6 +6,8 @@ enum SaleType { cash, credit }
 enum InvoiceNumberMode { auto, manual }
 
 class SaleLineItem {
+
+  factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
   const SaleLineItem({
     required this.id,
     this.itemName = '',
@@ -15,8 +17,6 @@ class SaleLineItem {
     this.discountPercent = 0,
     this.taxPercent = 0,
   });
-
-  factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
 
   final String id;
   final String itemName;
