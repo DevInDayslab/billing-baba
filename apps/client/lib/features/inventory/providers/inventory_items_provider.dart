@@ -12,4 +12,48 @@ class InventoryItems extends Notifier<List<InventoryItem>> {
   void addItem(InventoryItem item) {
     state = [...state, item];
   }
+
+  void moveItemsToCategory({
+    required List<String> itemIds,
+    required String categoryId,
+    required bool removeFromExistingCategory,
+  }) {
+    state = [
+      for (final item in state)
+        if (itemIds.contains(item.id))
+          _movedItem(
+            item,
+            categoryId: categoryId,
+            removeFromExistingCategory: removeFromExistingCategory,
+          )
+        else
+          item,
+    ];
+  }
+
+  InventoryItem _movedItem(
+    InventoryItem item, {
+    required String categoryId,
+    required bool removeFromExistingCategory,
+  }) {
+    final hasExistingCategory =
+        item.categoryId != null &&
+        item.categoryId != InventoryCatalog.uncategorizedCategoryId;
+
+    if (!removeFromExistingCategory && hasExistingCategory) {
+      return item;
+    }
+
+    return InventoryItem(
+      id: item.id,
+      name: item.name,
+      type: item.type,
+      quantity: item.quantity,
+      salePrice: item.salePrice,
+      stockValue: item.stockValue,
+      categoryId: categoryId,
+      availableForSale: item.availableForSale,
+      reservedQuantity: item.reservedQuantity,
+    );
+  }
 }

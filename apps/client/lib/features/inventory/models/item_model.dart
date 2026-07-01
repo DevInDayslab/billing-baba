@@ -9,6 +9,8 @@ class InventoryItem {
     this.salePrice,
     this.stockValue,
     this.categoryId,
+    this.availableForSale,
+    this.reservedQuantity,
   });
 
   final String id;
@@ -18,4 +20,6 @@ class InventoryItem {
   final double? salePrice;
   final double? stockValue;
   final String? categoryId;
+  final double? availableForSale;
+  final double? reservedQuantity;
 }
