@@ -15,14 +15,18 @@
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Client | Flutter (Windows, macOS, Android, iOS) |
-| Backend | Fastify REST API |
-| Local Database | SQLite (Drift) |
-| Cloud Database | PostgreSQL (Drizzle) |
-| State Management | Riverpod |
-| Navigation | GoRouter |
+
+| Layer            | Technology                             |
+| ---------------- | -------------------------------------- |
+| Client           | Flutter (Windows, macOS, Android, iOS) |
+| Backend          | Fastify REST API                       |
+| Local Database   | SQLite (Drift)                         |
+| Cloud Database   | PostgreSQL (Drizzle)                   |
+| State Management | Riverpod                               |
+| Navigation       | GoRouter                               |
+
+
+
 
 ## Repository Structure
 
@@ -37,24 +41,32 @@ billing-baba/
 └── .cursor/           # Cursor configuration
 ```
 
+
+
 ## Getting Started
 
 > Setup instructions will be added once the development environment is finalized. See [docs/02-development.md](docs/02-development.md).
 
+
+
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [00-project.md](docs/00-project.md) | Overview, scope, team, timeline |
-| [01-architecture.md](docs/01-architecture.md) | System structure and key flows |
-| [02-development.md](docs/02-development.md) | Local setup and commands |
-| [03-design-system.md](docs/03-design-system.md) | UI guidelines |
-| [04-database.md](docs/04-database.md) | Schema and migrations |
-| [05-api.md](docs/05-api.md) | API endpoints |
-| [06-coding-standards.md](docs/06-coding-standards.md) | Code style and conventions |
-| [07-git-workflow.md](docs/07-git-workflow.md) | Git branching and pull requests |
-| [08-project-management.md](docs/08-project-management.md) | Sprints and ClickUp workflow |
-| [09-decisions.md](docs/09-decisions.md) | Architecture decision records |
+
+| Document                                                  | Description                     |
+| --------------------------------------------------------- | ------------------------------- |
+| [00-project.md](docs/00-project.md)                       | Overview, scope, team, timeline |
+| [01-architecture.md](docs/01-architecture.md)             | System structure and key flows  |
+| [02-development.md](docs/02-development.md)               | Local setup and commands        |
+| [03-design-system.md](docs/03-design-system.md)           | UI guidelines                   |
+| [04-database.md](docs/04-database.md)                     | Schema and migrations           |
+| [05-api.md](docs/05-api.md)                               | API endpoints                   |
+| [06-coding-standards.md](docs/06-coding-standards.md)     | Code style and conventions      |
+| [07-git-workflow.md](docs/07-git-workflow.md)             | Git branching and pull requests |
+| [08-project-management.md](docs/08-project-management.md) | Sprints and ClickUp workflow    |
+| [09-decisions.md](docs/09-decisions.md)                   | Architecture decision records   |
+
+
+
 
 ## Development Workflow
 
