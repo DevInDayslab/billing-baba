@@ -1,0 +1,41 @@
+import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_page_title_bar.dart';
+import 'package:flutter/material.dart';
+
+/// Placeholder for sale sub-routes that are not yet implemented.
+class SalePlaceholderPage extends StatelessWidget {
+  const SalePlaceholderPage({
+    required this.title,
+    required this.route,
+    super.key,
+  });
+
+  final String title;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SalePageTitleBar(currentRoute: route),
+            const SizedBox(height: AppSpacing.xl),
+            Center(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
