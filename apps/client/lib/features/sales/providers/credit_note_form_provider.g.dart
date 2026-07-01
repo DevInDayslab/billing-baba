@@ -41,15 +41,14 @@ final class CreditNoteFormProvider
   }
 }
 
-String _$creditNoteFormHash() => r'credit_note_form_hash_v1';
+String _$creditNoteFormHash() => r'a9150828add8ed3ffca5e9358a63e8ece43b2162';
 
 abstract class _$CreditNoteForm extends $Notifier<CreditNoteFormState> {
   CreditNoteFormState build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref =
-        this.ref as $Ref<CreditNoteFormState, CreditNoteFormState>;
+    final ref = this.ref as $Ref<CreditNoteFormState, CreditNoteFormState>;
     final element =
         ref.element
             as $ClassProviderElement<
@@ -66,8 +65,7 @@ abstract class _$CreditNoteForm extends $Notifier<CreditNoteFormState> {
 final savedCreditNotesProvider = SavedCreditNotesNotifierProvider._();
 
 final class SavedCreditNotesNotifierProvider
-    extends
-        $NotifierProvider<SavedCreditNotesNotifier, List<SavedCreditNote>> {
+    extends $NotifierProvider<SavedCreditNotesNotifier, List<SavedCreditNote>> {
   SavedCreditNotesNotifierProvider._()
     : super(
         from: null,
@@ -96,7 +94,7 @@ final class SavedCreditNotesNotifierProvider
 }
 
 String _$savedCreditNotesNotifierHash() =>
-    r'saved_credit_notes_notifier_hash_v1';
+    r'f2efdb64eadf32106980f01eade6ba1e1fb1e4c2';
 
 abstract class _$SavedCreditNotesNotifier
     extends $Notifier<List<SavedCreditNote>> {
@@ -104,8 +102,7 @@ abstract class _$SavedCreditNotesNotifier
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref
-        as $Ref<List<SavedCreditNote>, List<SavedCreditNote>>;
+    final ref = this.ref as $Ref<List<SavedCreditNote>, List<SavedCreditNote>>;
     final element =
         ref.element
             as $ClassProviderElement<
@@ -157,4 +154,5 @@ final class CreditNoteGrandTotalProvider
   }
 }
 
-String _$creditNoteGrandTotalHash() => r'credit_note_grand_total_hash_v1';
+String _$creditNoteGrandTotalHash() =>
+    r'f98ee409c2c30e8c22620ec38ff5ed3735bad386';

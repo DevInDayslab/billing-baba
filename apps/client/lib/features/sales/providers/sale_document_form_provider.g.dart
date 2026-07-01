@@ -60,7 +60,7 @@ final class SaleDocumentFormNotifierProvider
 }
 
 String _$saleDocumentFormNotifierHash() =>
-    r'a1b2c3d4e5f6789012345678abcdef9012345678';
+    r'523e2b18a7639edc29f59fe1d858d0ee484778d3';
 
 final class SaleDocumentFormNotifierFamily extends $Family
     with
@@ -167,7 +167,7 @@ final class SaleDocumentTotalTaxProvider
 }
 
 String _$saleDocumentTotalTaxHash() =>
-    r'b2c3d4e5f6789012345678abcdef901234567890';
+    r'fcab33b73fb7ac0cd737c0c54b0e523b6b978714';
 
 final class SaleDocumentTotalTaxFamily extends $Family
     with $FunctionalFamilyOverride<double, SaleDocumentType> {
@@ -235,7 +235,8 @@ final class SaleDocumentGrandTotalProvider
 
   @override
   bool operator ==(Object other) {
-    return other is SaleDocumentGrandTotalProvider && other.argument == argument;
+    return other is SaleDocumentGrandTotalProvider &&
+        other.argument == argument;
   }
 
   @override
@@ -245,7 +246,7 @@ final class SaleDocumentGrandTotalProvider
 }
 
 String _$saleDocumentGrandTotalHash() =>
-    r'c3d4e5f6789012345678abcdef90123456789012';
+    r'7d1c4f1e1c70fad37a4a5c58a04ca7b8e2ad98b0';
 
 final class SaleDocumentGrandTotalFamily extends $Family
     with $FunctionalFamilyOverride<double, SaleDocumentType> {

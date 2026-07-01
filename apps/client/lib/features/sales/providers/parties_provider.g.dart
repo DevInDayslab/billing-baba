@@ -40,7 +40,7 @@ final class PartiesProvider extends $NotifierProvider<Parties, List<String>> {
   }
 }
 
-String _$partiesHash() => r'parties_provider_hash_placeholder';
+String _$partiesHash() => r'eec02250ba475d570a757efa8538724aada96462';
 
 abstract class _$Parties extends $Notifier<List<String>> {
   List<String> build();

@@ -41,7 +41,7 @@ final class SaleReturnFiltersProvider
   }
 }
 
-String _$saleReturnFiltersHash() => r'sale_return_filters_hash';
+String _$saleReturnFiltersHash() => r'4afe3366d601de9f88830c9a11f66acc13e906ac';
 
 abstract class _$SaleReturnFilters extends $Notifier<SaleReturnFiltersState> {
   SaleReturnFiltersState build();
@@ -107,4 +107,5 @@ final class PaginatedSaleReturnsProvider
   }
 }
 
-String _$paginatedSaleReturnsHash() => r'paginated_sale_returns_hash';
+String _$paginatedSaleReturnsHash() =>
+    r'd3f9b4526e9cab83aca89112d96e53e77d712aea';

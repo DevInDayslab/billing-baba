@@ -13,7 +13,11 @@ part of 'delivery_challan_form_provider.dart';
 final deliveryChallanFormProvider = DeliveryChallanFormNotifierProvider._();
 
 final class DeliveryChallanFormNotifierProvider
-    extends $NotifierProvider<DeliveryChallanFormNotifier, DeliveryChallanFormState> {
+    extends
+        $NotifierProvider<
+          DeliveryChallanFormNotifier,
+          DeliveryChallanFormState
+        > {
   DeliveryChallanFormNotifierProvider._()
     : super(
         from: null,
@@ -42,7 +46,7 @@ final class DeliveryChallanFormNotifierProvider
 }
 
 String _$deliveryChallanFormNotifierHash() =>
-    r'a1b2c3d4e5f60718293a4b5c6d7e8f9012345678';
+    r'a6335908256c1e9595b84e77df175c41d48f0b02';
 
 abstract class _$DeliveryChallanFormNotifier
     extends $Notifier<DeliveryChallanFormState> {
@@ -69,7 +73,10 @@ final savedDeliveryChallansProvider = SavedDeliveryChallansNotifierProvider._();
 
 final class SavedDeliveryChallansNotifierProvider
     extends
-        $NotifierProvider<SavedDeliveryChallansNotifier, List<SavedDeliveryChallan>> {
+        $NotifierProvider<
+          SavedDeliveryChallansNotifier,
+          List<SavedDeliveryChallan>
+        > {
   SavedDeliveryChallansNotifierProvider._()
     : super(
         from: null,
@@ -98,7 +105,7 @@ final class SavedDeliveryChallansNotifierProvider
 }
 
 String _$savedDeliveryChallansNotifierHash() =>
-    r'b2c3d4e5f60718293a4b5c6d7e8f901234567890';
+    r'a10552c8b0cdf380620e0e82301702b5eea6d70e';
 
 abstract class _$SavedDeliveryChallansNotifier
     extends $Notifier<List<SavedDeliveryChallan>> {
@@ -106,8 +113,9 @@ abstract class _$SavedDeliveryChallansNotifier
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref
-        as $Ref<List<SavedDeliveryChallan>, List<SavedDeliveryChallan>>;
+    final ref =
+        this.ref
+            as $Ref<List<SavedDeliveryChallan>, List<SavedDeliveryChallan>>;
     final element =
         ref.element
             as $ClassProviderElement<
@@ -124,8 +132,7 @@ abstract class _$SavedDeliveryChallansNotifier
 }
 
 @ProviderFor(deliveryChallanGrandTotal)
-final deliveryChallanGrandTotalProvider =
-    DeliveryChallanGrandTotalProvider._();
+final deliveryChallanGrandTotalProvider = DeliveryChallanGrandTotalProvider._();
 
 final class DeliveryChallanGrandTotalProvider
     extends $FunctionalProvider<double, double, double>
@@ -164,4 +171,4 @@ final class DeliveryChallanGrandTotalProvider
 }
 
 String _$deliveryChallanGrandTotalHash() =>
-    r'c3d4e5f60718293a4b5c6d7e8f90123456789012';
+    r'9ad8d5a8e031632cd7cd22dd697e6d3f15b32d90';

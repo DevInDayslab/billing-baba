@@ -41,7 +41,8 @@ final class SavedSaleDocumentsProvider
   }
 }
 
-String _$savedSaleDocumentsHash() => r'8f3c2a1b4d5e6f708192a3b4c5d6e7f8091a2b3';
+String _$savedSaleDocumentsHash() =>
+    r'652d85261ac779e42137c99dd9dc18ec8fda6ec4';
 
 abstract class _$SavedSaleDocuments extends $Notifier<List<SavedSaleDocument>> {
   List<SavedSaleDocument> build();

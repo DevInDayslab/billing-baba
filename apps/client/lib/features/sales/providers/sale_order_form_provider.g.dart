@@ -42,7 +42,7 @@ final class SaleOrderFormNotifierProvider
 }
 
 String _$saleOrderFormNotifierHash() =>
-    r'c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f7';
+    r'e62630ef907b4b3fe280ab7bc447f4c0d71e3cb8';
 
 abstract class _$SaleOrderFormNotifier extends $Notifier<SaleOrderFormState> {
   SaleOrderFormState build();
@@ -95,7 +95,7 @@ final class SavedSaleOrdersNotifierProvider
 }
 
 String _$savedSaleOrdersNotifierHash() =>
-    r'd5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708';
+    r'e7cd643288e05c6b1579bfa6db9444c6bc4e66b2';
 
 abstract class _$SavedSaleOrdersNotifier
     extends $Notifier<List<SavedSaleOrder>> {
@@ -103,8 +103,7 @@ abstract class _$SavedSaleOrdersNotifier
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref =
-        this.ref as $Ref<List<SavedSaleOrder>, List<SavedSaleOrder>>;
+    final ref = this.ref as $Ref<List<SavedSaleOrder>, List<SavedSaleOrder>>;
     final element =
         ref.element
             as $ClassProviderElement<
@@ -157,4 +156,4 @@ final class SaleOrderGrandTotalProvider
 }
 
 String _$saleOrderGrandTotalHash() =>
-    r'e6f708192a3b4c5d6e7f8091a2b3c4d5e6f70819';
+    r'a71cad1be905b34a2314d0e6a74240d9d6924fcb';
