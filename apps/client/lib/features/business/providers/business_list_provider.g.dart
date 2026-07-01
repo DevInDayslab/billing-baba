@@ -42,7 +42,7 @@ final class BusinessListNotifierProvider
 }
 
 String _$businessListNotifierHash() =>
-    r'457e29b3c2074cd36d0dbe64522ad177a2f75ebd';
+    r'e8e52afe22919dfb3d15505c7af19e714af37309';
 
 abstract class _$BusinessListNotifier extends $Notifier<List<BusinessModel>> {
   List<BusinessModel> build();
