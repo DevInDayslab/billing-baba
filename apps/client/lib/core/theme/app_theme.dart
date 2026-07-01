@@ -15,7 +15,8 @@ abstract final class AppColors {
 
 /// Typography placeholders — finalize from Figma design tokens.
 abstract final class AppTypography {
-  static TextTheme get textTheme => GoogleFonts.interTextTheme();
+  static TextTheme get textTheme =>
+      GoogleFonts.interTextTheme(ThemeData.light().textTheme);
 }
 
 /// Spacing design tokens.

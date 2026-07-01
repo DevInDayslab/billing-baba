@@ -186,16 +186,19 @@ class _TotalSaleCard extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Text(
-                'Total Sale',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'Total Sale',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Spacer(),
-              _PeriodDropdown(label: 'This Month'),
+              SizedBox(width: AppSpacing.sm),
+              Flexible(child: _PeriodDropdown(label: 'This Month')),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -332,21 +335,25 @@ class _PurchasesWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                'Purchases',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'Purchases',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Spacer(),
+              SizedBox(width: AppSpacing.xs),
               Text(
                 'This Month',
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -384,21 +391,25 @@ class _LowStocksWidget extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Text(
-                'Low Stocks Items',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'Low Stocks Items',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Spacer(),
+              SizedBox(width: AppSpacing.xs),
               Text(
                 'As of Now',
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

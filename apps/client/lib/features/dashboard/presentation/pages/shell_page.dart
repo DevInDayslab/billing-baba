@@ -255,32 +255,47 @@ class _ShellPageState extends State<ShellPage> {
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: Color(0xFF2A3447))),
         ),
-        child: Row(
-          children: [
-            if (!_isCollapsed) ...[
-              const Expanded(
-                child: Text(
-                  'My Business',
-                  style: TextStyle(
-                    color: _sidebarTextActive,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+        child: _isCollapsed
+            ? const Center(
+                child: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: Color(0xFF2A3447),
+                  backgroundImage: AssetImage('assets/images/logo.png'),
                 ),
+              )
+            : const Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Color(0xFF2A3447),
+                    backgroundImage: AssetImage('assets/images/logo.png'),
+                  ),
+                  SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'My Business',
+                      style: TextStyle(
+                        color: _sidebarTextActive,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: _sidebarText, size: 20),
+                ],
               ),
-              const Icon(Icons.chevron_right, color: _sidebarText, size: 20),
-            ] else
-              const Icon(Icons.store_outlined, color: _sidebarText, size: 22),
-          ],
-        ),
       ),
     );
   }
 
   Widget _buildTopBar() {
     return Container(
-      color: AppColors.surface,
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0))),
+      ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
@@ -317,34 +332,29 @@ class _ShellPageState extends State<ShellPage> {
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Flexible(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _TopBarButton(
-                    label: 'Add Sale',
-                    color: AppColors.error,
-                    onPressed: () => context.push(AppRoutes.addSale),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  _TopBarButton(
-                    label: 'Add Purchase',
-                    color: AppColors.primary,
-                    onPressed: () {},
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  _TopBarIconButton(icon: Icons.add, onPressed: () {}),
-                  _TopBarIconButton(
-                    icon: Icons.print_outlined,
-                    onPressed: () {},
-                  ),
-                  _TopBarIconButton(icon: Icons.more_vert, onPressed: () {}),
-                ],
+          const SizedBox(width: AppSpacing.md),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _TopBarButton(
+                label: 'Add Sale',
+                color: AppColors.error,
+                onPressed: () => context.push(AppRoutes.addSale),
               ),
-            ),
+              const SizedBox(width: AppSpacing.sm),
+              _TopBarButton(
+                label: 'Add Purchase',
+                color: AppColors.primary,
+                onPressed: () {},
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _TopBarIconButton(icon: Icons.add, onPressed: () {}),
+              _TopBarIconButton(
+                icon: Icons.print_outlined,
+                onPressed: () {},
+              ),
+              _TopBarIconButton(icon: Icons.more_vert, onPressed: () {}),
+            ],
           ),
         ],
       ),

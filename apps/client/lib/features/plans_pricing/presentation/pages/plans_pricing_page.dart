@@ -290,56 +290,64 @@ class _PageHeader extends StatelessWidget {
                 ),
           ),
         ),
-        if (!showFullComparison) ...[
-          const SizedBox(width: AppSpacing.sm),
-          Flexible(
-            child: OutlinedButton(
-              onPressed: onBuyLicenses,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.textPrimary,
-                side: BorderSide(color: Colors.grey.shade400),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
+        if (!showFullComparison)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              OutlinedButton(
+                onPressed: onBuyLicenses,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textPrimary,
+                  side: BorderSide(color: Colors.grey.shade400),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  minimumSize: const Size(0, 40),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  'Buy Additional Licenses',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
-              child: const Text(
-                'Buy Additional Licenses',
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
-            color: Colors.white,
-            onSelected: onMenuSelected,
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'offline_payment',
-                child: Text(
-                  'Offline Payment',
-                  style: TextStyle(color: Colors.black87),
+              PopupMenuButton<String>(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+                icon: const Icon(
+                  Icons.more_vert,
+                  color: AppColors.textSecondary,
+                  size: 22,
                 ),
-              ),
-              const PopupMenuItem(
-                value: 'license_info',
-                child: Text(
-                  'License Info',
-                  style: TextStyle(color: Colors.black87),
-                ),
-              ),
-              const PopupMenuItem(
-                enabled: false,
-                value: 'version',
-                child: Text(
-                  'Version: 1.0.67',
-                  style: TextStyle(color: Colors.black54, fontSize: 12),
-                ),
+                color: Colors.white,
+                onSelected: onMenuSelected,
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'offline_payment',
+                    child: Text(
+                      'Offline Payment',
+                      style: TextStyle(color: Colors.black87),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'license_info',
+                    child: Text(
+                      'License Info',
+                      style: TextStyle(color: Colors.black87),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    enabled: false,
+                    value: 'version',
+                    child: Text(
+                      'Version: 1.0.67',
+                      style: TextStyle(color: Colors.black54, fontSize: 12),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
       ],
     );
   }
