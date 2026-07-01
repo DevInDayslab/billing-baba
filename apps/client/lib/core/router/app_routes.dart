@@ -1,6 +1,8 @@
 /// Central route path constants.
 abstract final class AppRoutes {
   static const splash = '/';
+  static const login = '/login';
+  static const verifyOtp = '/verify-otp';
   static const home = '/home';
   static const businessList = '/business-list';
   static const parties = '/parties';
