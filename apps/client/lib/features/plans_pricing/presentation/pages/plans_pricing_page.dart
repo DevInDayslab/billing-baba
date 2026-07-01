@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/plans_pricing/models/plan_model.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/widgets/buy_licenses_dialog.dart';
@@ -32,11 +34,13 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
       _selectedPlatform == PlanPlatform.mobile ? 6 : 10;
 
   void _openUpgradeDialog(double upgradeAmount) {
-    showUpgradePlanDialog(
-      context,
-      platform: _selectedPlatform,
-      duration: _selectedDuration,
-      upgradeAmount: upgradeAmount,
+    unawaited(
+      showUpgradePlanDialog(
+        context,
+        platform: _selectedPlatform,
+        duration: _selectedDuration,
+        upgradeAmount: upgradeAmount,
+      ),
     );
   }
 
@@ -70,11 +74,13 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
                 onBuyLicenses: () => showBuyLicensesDialog(context),
                 onMenuSelected: (value) {
                   if (value == 'license_info') {
-                    showLicenseInfoDialog(
-                      context,
-                      platform: _selectedPlatform,
-                      duration: _selectedDuration,
-                      upgradeAmount: platinumPricing.discountedPrice,
+                    unawaited(
+                      showLicenseInfoDialog(
+                        context,
+                        platform: _selectedPlatform,
+                        duration: _selectedDuration,
+                        upgradeAmount: platinumPricing.discountedPrice,
+                      ),
                     );
                   }
                 },
@@ -359,13 +365,13 @@ class _DiscontinuationBanner extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: RichText(
-              text: TextSpan(
+              text: const TextSpan(
                 style: TextStyle(
                   fontSize: 13,
                   color: AppColors.textPrimary,
                   height: 1.4,
                 ),
-                children: const [
+                children: [
                   TextSpan(
                     text:
                         "We're discontinuing add-ons soon. Upgrade to the ",
@@ -477,7 +483,7 @@ class _FilterChips extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
-                Icon(
+                const Icon(
                   Icons.keyboard_arrow_down,
                   size: 18,
                   color: AppColors.textSecondary,
@@ -543,7 +549,7 @@ class _FilterChips extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
-                Icon(
+                const Icon(
                   Icons.keyboard_arrow_down,
                   size: 18,
                   color: AppColors.textSecondary,
@@ -752,9 +758,9 @@ class _FeatureComparisonTable extends StatelessWidget {
                   vertical: AppSpacing.sm + 4,
                 ),
                 color: AppColors.surface,
-                child: Row(
+                child: const Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       flex: 3,
                       child: SizedBox.shrink(),
                     ),
@@ -787,7 +793,7 @@ class _FeatureComparisonTable extends StatelessWidget {
               ),
               const Divider(height: 1),
               ...features.map((feature) {
-                final isEven = feature.isCategoryHeader ? false : dataRowIndex.isEven;
+                final isEven = !feature.isCategoryHeader && dataRowIndex.isEven;
                 if (!feature.isCategoryHeader) {
                   dataRowIndex++;
                 }

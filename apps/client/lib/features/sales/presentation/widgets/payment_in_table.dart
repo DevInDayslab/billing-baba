@@ -16,7 +16,7 @@ const _amountColWidth = 140.0;
 const _actionsColWidth = 48.0;
 const _colGap = 12.0;
 
-const _minTableWidth =
+const double _minTableWidth =
     _dateColWidth +
     _refColWidth +
     _paymentColWidth +

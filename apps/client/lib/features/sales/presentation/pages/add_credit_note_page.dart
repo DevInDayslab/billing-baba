@@ -46,10 +46,10 @@ class AddCreditNotePage extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.fromLTRB(
                       _sectionGap,
                       _sectionGap,
@@ -58,15 +58,15 @@ class AddCreditNotePage extends ConsumerWidget {
                     ),
                     child: _FormFields(),
                   ),
-                  const SizedBox(height: _sectionGap),
-                  const CreditNoteLineItemsTable(),
-                  const Divider(height: 1, color: _cardBorder),
-                  const Padding(
+                  SizedBox(height: _sectionGap),
+                  CreditNoteLineItemsTable(),
+                  Divider(height: 1, color: _cardBorder),
+                  Padding(
                     padding: EdgeInsets.all(_sectionGap),
                     child: CreditNoteFooter(),
                   ),
-                  const Divider(height: 1, color: _cardBorder),
-                  const _BottomActionBar(),
+                  Divider(height: 1, color: _cardBorder),
+                  _BottomActionBar(),
                 ],
               ),
             ),
@@ -199,7 +199,6 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                 child: SaleGenericSelectDropdown(
                   value: form.stateOfSupply,
                   options: SaleDropdownOptions.indianStates,
-                  hintText: 'Select',
                   maxMenuHeight: 280,
                   onSelected: notifier.updateStateOfSupply,
                 ),

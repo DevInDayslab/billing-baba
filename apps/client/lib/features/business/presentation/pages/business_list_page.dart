@@ -76,7 +76,7 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
               ),
             ),
           ),
-          _BottomBar(phoneNumber: _loggedInPhone),
+          const _BottomBar(phoneNumber: _loggedInPhone),
         ],
       ),
     );

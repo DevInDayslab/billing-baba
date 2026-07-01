@@ -16,6 +16,8 @@ class SaleLineItem {
     this.taxPercent = 0,
   });
 
+  factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
+
   final String id;
   final String itemName;
   final double qty;
@@ -49,8 +51,6 @@ class SaleLineItem {
       taxPercent: taxPercent ?? this.taxPercent,
     );
   }
-
-  factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
 }
 
 class SalePaymentEntry {

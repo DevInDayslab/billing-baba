@@ -61,15 +61,14 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
   }
 
   Future<void> _startMockPayment() async {
-    final navigator = Navigator.of(context);
     final amount = widget.upgradeAmount;
-    navigator.pop();
+    Navigator.of(context).pop();
 
     await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (!navigator.context.mounted) return;
+    if (!mounted) return;
 
     await showPaymentPendingDialog(
-      navigator.context,
+      context,
       amount: amount,
     );
   }
@@ -115,7 +114,7 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
                   children: [
                     _ActivePlanColumn(platformDurationLabel: _platformDurationLabel),
                     const SizedBox(height: AppSpacing.md),
-                    Icon(
+                    const Icon(
                       Icons.arrow_downward,
                       color: AppColors.textSecondary,
                       size: 28,
@@ -134,8 +133,8 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
                       platformDurationLabel: _platformDurationLabel,
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
+                  const Padding(
+                    padding: EdgeInsets.symmetric(
                       horizontal: AppSpacing.md,
                     ),
                     child: Icon(
@@ -254,10 +253,10 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
                   borderRadius: AppRadius.mdBorder,
                   border: Border.all(color: Colors.grey.shade300),
                 ),
-                child: Column(
+                child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Payment Method',
                       style: TextStyle(
                         fontSize: 14,
@@ -265,17 +264,18 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
-                    RadioListTile<String>(
-                      value: 'upi',
-                      groupValue: 'upi',
-                      onChanged: (_) {},
+                    SizedBox(height: AppSpacing.sm),
+                    ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text(
+                      leading: Icon(
+                        Icons.radio_button_checked,
+                        color: AppColors.primary,
+                      ),
+                      title: Text(
                         'UPI / Net Banking (Mock)',
                         style: TextStyle(fontSize: 13),
                       ),
-                      subtitle: const Text(
+                      subtitle: Text(
                         'Simulated payment — no real charge',
                         style: TextStyle(fontSize: 12),
                       ),
@@ -394,7 +394,7 @@ class _LabelPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w500,
           color: AppColors.textSecondary,
@@ -468,7 +468,7 @@ class _ActivePlanColumn extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               const _DashedDivider(),
               const SizedBox(height: AppSpacing.md),
-              Text(
+              const Text(
                 '•  Manufacturing Add-on',
                 style: TextStyle(
                   fontSize: 12,
@@ -479,14 +479,14 @@ class _ActivePlanColumn extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Row(
+        const Row(
           children: [
             Icon(
               Icons.schedule,
               size: 16,
               color: AppColors.textSecondary,
             ),
-            const SizedBox(width: AppSpacing.xs),
+            SizedBox(width: AppSpacing.xs),
             Text(
               'Expiring on 03 December 2026',
               style: TextStyle(
@@ -564,14 +564,14 @@ class _UpgradePlanColumn extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              Row(
+              const Row(
                 children: [
                   Icon(
                     Icons.schedule,
                     size: 16,
                     color: AppColors.textSecondary,
                   ),
-                  const SizedBox(width: AppSpacing.xs),
+                  SizedBox(width: AppSpacing.xs),
                   Text(
                     'Will expire on 02 July 2029',
                     style: TextStyle(
@@ -610,13 +610,13 @@ class _ConfirmBottomBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.info_outline,
             size: 18,
             color: AppColors.textSecondary,
           ),
           const SizedBox(width: AppSpacing.sm),
-          Expanded(
+          const Expanded(
             child: Text(
               'You will not be able to downgrade your plan later.',
               style: TextStyle(

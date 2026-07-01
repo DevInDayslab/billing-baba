@@ -127,7 +127,6 @@ List<PaymentInModel> _mockPaymentInRecords() {
       id: 1,
       date: DateTime(2026, 3, 13, 17, 23),
       status: PaymentInStatus.used,
-      partyIndex: 0,
       amount: 120,
     ),
     buildRecord(
@@ -153,7 +152,7 @@ List<PaymentInModel> _mockPaymentInRecords() {
     ),
     buildRecord(
       id: 5,
-      date: DateTime(2026, 1, 15, 11, 0),
+      date: DateTime(2026, 1, 15, 11),
       status: PaymentInStatus.unused,
       partyIndex: 4,
       amount: 5000,
@@ -209,11 +208,11 @@ DateTimeRange? _resolveTimeRange(
       ),
     ),
     TimeRangeOption.thisMonth => DateTimeRange(
-      start: DateTime(now.year, now.month, 1),
+      start: DateTime(now.year, now.month),
       end: _endOfDay(DateTime(now.year, now.month + 1, 0)),
     ),
     TimeRangeOption.thisYear => DateTimeRange(
-      start: DateTime(now.year, 1, 1),
+      start: DateTime(now.year),
       end: _endOfDay(DateTime(now.year, 12, 31)),
     ),
     TimeRangeOption.custom => custom,

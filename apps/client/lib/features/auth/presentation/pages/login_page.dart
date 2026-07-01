@@ -56,7 +56,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       RichText(
-                        text: TextSpan(
+                        text: const TextSpan(
                           children: [
                             TextSpan(
                               text: 'Billing',
@@ -265,7 +265,7 @@ class _LoginForm extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Welcome Back heading
-          Text(
+          const Text(
             'Welcome Back',
             style: TextStyle(
               fontSize: 28,
@@ -275,7 +275,7 @@ class _LoginForm extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          Text(
+          const Text(
             'Sign in to continue managing your business.',
             style: TextStyle(
               fontSize: 14,
@@ -286,7 +286,7 @@ class _LoginForm extends StatelessWidget {
           const SizedBox(height: AppSpacing.xxl),
 
           // Phone number label
-          Text(
+          const Text(
             'Phone Number',
             style: TextStyle(
               fontSize: 13,
@@ -327,7 +327,7 @@ class _LoginForm extends StatelessWidget {
                     right: BorderSide(color: Colors.grey.shade200, width: 1.5),
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   '+91',
                   style: TextStyle(
                     fontSize: 15,
@@ -336,7 +336,7 @@ class _LoginForm extends StatelessWidget {
                   ),
                 ),
               ),
-              prefixIconConstraints: const BoxConstraints(minHeight: 0),
+              prefixIconConstraints: const BoxConstraints(),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
                 vertical: 16,
@@ -420,13 +420,13 @@ class _LoginForm extends StatelessWidget {
           Row(
             children: [
               Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.lock_outline_rounded, size: 12, color: AppColors.textSecondary),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       'SECURE LOGIN',
                       style: TextStyle(
@@ -449,15 +449,15 @@ class _LoginForm extends StatelessWidget {
           Center(
             child: RichText(
               textAlign: TextAlign.center,
-              text: TextSpan(
+              text: const TextSpan(
                 style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 children: [
-                  const TextSpan(text: 'By continuing, you agree to our '),
+                  TextSpan(text: 'By continuing, you agree to our '),
                   TextSpan(
                     text: 'Terms of Service',
                     style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
                   ),
-                  const TextSpan(text: ' and '),
+                  TextSpan(text: ' and '),
                   TextSpan(
                     text: 'Privacy Policy',
                     style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),

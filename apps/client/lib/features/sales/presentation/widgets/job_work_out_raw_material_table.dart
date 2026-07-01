@@ -76,7 +76,7 @@ class JobWorkOutRawMaterialTable extends ConsumerWidget {
                 onPressed: notifier.addRawMaterialRow,
                 style: TextButton.styleFrom(
                   foregroundColor: _addRowButtonColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),

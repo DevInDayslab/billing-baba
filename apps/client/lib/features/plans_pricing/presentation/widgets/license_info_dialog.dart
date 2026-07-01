@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/plans_pricing/models/plan_model.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/widgets/upgrade_plan_dialog.dart';
@@ -13,7 +15,6 @@ Future<void> showLicenseInfoDialog(
 }) {
   return showDialog<void>(
     context: context,
-    barrierDismissible: true,
     builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -61,9 +62,9 @@ class LicenseInfoDialog extends StatelessWidget {
             children: [
               _DialogHeader(onClose: () => Navigator.of(context).pop()),
               const SizedBox(height: AppSpacing.sm),
-              _SubheaderRow(syncCompanyId: _syncCompanyId),
+              const _SubheaderRow(syncCompanyId: _syncCompanyId),
               const SizedBox(height: AppSpacing.lg),
-              _PlanDetailsCard(
+              const _PlanDetailsCard(
                 goldIconBg: _goldIconBg,
                 goldIconColor: _goldIconColor,
                 expiryColor: _expiryColor,
@@ -72,13 +73,14 @@ class LicenseInfoDialog extends StatelessWidget {
               _UpgradeBanner(
                 bannerBg: _upgradeBannerBg,
                 onUpgrade: () {
-                  final navigator = Navigator.of(context);
-                  navigator.pop();
-                  showUpgradePlanDialog(
-                    navigator.context,
-                    platform: platform,
-                    duration: duration,
-                    upgradeAmount: upgradeAmount,
+                  final navigator = Navigator.of(context)..pop();
+                  unawaited(
+                    showUpgradePlanDialog(
+                      navigator.context,
+                      platform: platform,
+                      duration: duration,
+                      upgradeAmount: upgradeAmount,
+                    ),
                   );
                 },
               ),
@@ -147,7 +149,7 @@ class _SubheaderRow extends StatelessWidget {
           verticalOffset: 16,
           child: InkWell(
             onTap: () {
-              Clipboard.setData(ClipboardData(text: syncCompanyId));
+              unawaited(Clipboard.setData(ClipboardData(text: syncCompanyId)));
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Sync Company ID copied'),

@@ -2,7 +2,7 @@ import 'package:billing_baba/features/sales/models/payment_in_model.dart';
 import 'package:flutter/material.dart';
 
 class PaymentInStatusBadge extends StatelessWidget {
-  const PaymentInStatusBadge({super.key, required this.status});
+  const PaymentInStatusBadge({required this.status, super.key});
 
   final PaymentInStatus status;
 

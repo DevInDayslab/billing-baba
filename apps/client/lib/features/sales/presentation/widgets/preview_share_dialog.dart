@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,7 +36,6 @@ Future<void> showPreviewShareDialog(
 }) {
   return showDialog<void>(
     context: context,
-    barrierDismissible: true,
     builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -94,7 +95,7 @@ class _PreviewShareDialogState extends State<PreviewShareDialog>
   }
 
   void _handleSaveAndShare() {
-    Clipboard.setData(ClipboardData(text: _activeMessage));
+    unawaited(Clipboard.setData(ClipboardData(text: _activeMessage)));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Message copied to clipboard')),
     );
@@ -196,7 +197,7 @@ class _PreviewShareDialogState extends State<PreviewShareDialog>
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'NOTE: Edited messages can\'t be sent via SMS',
+                    "NOTE: Edited messages can't be sent via SMS",
                     style: TextStyle(
                       fontSize: 11,
                       color: AppColors.textSecondary,

@@ -158,7 +158,6 @@ class _LineItemRow extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(
               width: 24,
@@ -252,7 +251,6 @@ class _LineItemRow extends ConsumerWidget {
                 hintText: 'TAX',
                 highlight: SaleDropdownHighlight.red,
                 compact: true,
-                maxMenuHeight: 250,
                 onSelected: (value) => notifier.updateLineItem(
                   index,
                   item.copyWith(taxPercent: saleTaxSlabs[value] ?? 0),

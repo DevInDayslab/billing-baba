@@ -33,7 +33,7 @@ class SaleInvoiceSummaryCard extends ConsumerWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Total Sales Amount',
                   style: TextStyle(
                     fontSize: 13,
@@ -71,7 +71,7 @@ class SaleInvoiceSummaryCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Text(
+                const Text(
                   'vs last month',
                   style: TextStyle(
                     fontSize: 11,
@@ -95,7 +95,7 @@ class SaleInvoiceSummaryCard extends ConsumerWidget {
             Text(
               'Received: ${_currencyFormat.format(summary.receivedAmount)} | '
               'Balance: ${_currencyFormat.format(summary.balanceAmount)}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textSecondary,
               ),

@@ -1,6 +1,5 @@
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
-import 'package:flutter/material.dart';
 
 class CreditNoteFormState {
   const CreditNoteFormState({

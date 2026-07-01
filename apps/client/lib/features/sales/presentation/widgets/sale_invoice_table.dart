@@ -17,7 +17,7 @@ const _amountColWidth = 100.0;
 const _balanceColWidth = 90.0;
 const _actionsColWidth = 120.0;
 
-const _minTableWidth =
+const double _minTableWidth =
     _dateColWidth +
     _invoiceColWidth +
     _transactionColWidth +

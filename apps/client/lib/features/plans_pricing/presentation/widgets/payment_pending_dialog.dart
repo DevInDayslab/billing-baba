@@ -57,8 +57,8 @@ class PaymentPendingDialog extends StatelessWidget {
               Container(
                 width: 64,
                 height: 64,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF8E1),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFF8E1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -77,7 +77,7 @@ class PaymentPendingDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              Text(
+              const Text(
                 'Your payment is being processed. This may take a few minutes.',
                 textAlign: TextAlign.center,
                 style: TextStyle(

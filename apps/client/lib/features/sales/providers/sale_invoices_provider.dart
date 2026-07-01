@@ -156,7 +156,7 @@ List<SaleInvoiceModel> _mockSaleInvoices() {
     final monthCycle = [3, 4, 5, 6, 7];
     final month = monthCycle[index % monthCycle.length];
     final day = (index % 28) + 1;
-    final statuses = SaleInvoiceStatus.values;
+    const statuses = SaleInvoiceStatus.values;
 
     return buildInvoice(
       id: id,
@@ -171,7 +171,6 @@ List<SaleInvoiceModel> _mockSaleInvoices() {
       id: 36,
       date: DateTime(2026, 5, 3),
       status: SaleInvoiceStatus.paid,
-      partyIndex: 0,
     ),
     buildInvoice(
       id: 37,
@@ -270,11 +269,11 @@ DateTimeRange? _resolveTimeRange(
       ),
     ),
     TimeRangeOption.thisMonth => DateTimeRange(
-      start: DateTime(now.year, now.month, 1),
+      start: DateTime(now.year, now.month),
       end: _endOfDay(DateTime(now.year, now.month + 1, 0)),
     ),
     TimeRangeOption.thisYear => DateTimeRange(
-      start: DateTime(now.year, 1, 1),
+      start: DateTime(now.year),
       end: _endOfDay(DateTime(now.year, 12, 31)),
     ),
     TimeRangeOption.custom => custom,

@@ -113,7 +113,7 @@ class PlanCard extends StatelessWidget {
                       child: Text(
                         '+ $hiddenCount More Features ↓',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           color: AppColors.primary,

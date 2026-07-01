@@ -71,8 +71,8 @@ class PlanCardCompact extends StatelessWidget {
               ),
               InkWell(
                 onTap: onViewAllFeatures,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -81,7 +81,7 @@ class PlanCardCompact extends StatelessWidget {
                         size: 16,
                         color: AppColors.primary,
                       ),
-                      const SizedBox(width: AppSpacing.xs),
+                      SizedBox(width: AppSpacing.xs),
                       Text(
                         'View All Features',
                         style: TextStyle(

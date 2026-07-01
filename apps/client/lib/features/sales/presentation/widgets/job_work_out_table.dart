@@ -18,7 +18,7 @@ const _deliveryColWidth = 140.0;
 const _statusColWidth = 120.0;
 const _actionsColWidth = 80.0;
 
-const _minTableWidth =
+const double _minTableWidth =
     _dateColWidth +
     _partyColWidth +
     _jobIdColWidth +
@@ -147,13 +147,13 @@ class _TableHeaderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
+    return const Padding(
+      padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
       child: Row(
-        children: const [
+        children: [
           SizedBox(width: _dateColWidth, child: Text('DATE', style: _headerStyle)),
           SizedBox(width: _partyColWidth, child: Text('PARTY', style: _headerStyle)),
           SizedBox(width: _jobIdColWidth, child: Text('JOB ID', style: _headerStyle)),

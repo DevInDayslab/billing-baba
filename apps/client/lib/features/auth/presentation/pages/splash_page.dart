@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +30,7 @@ class _SplashPageState extends State<SplashPage>
 
     _fadeAnim = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
+      curve: const Interval(0, 0.45, curve: Curves.easeOut),
     );
 
     _slideAnim = Tween<Offset>(
@@ -37,24 +39,23 @@ class _SplashPageState extends State<SplashPage>
     ).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
+        curve: const Interval(0, 0.45, curve: Curves.easeOut),
       ),
     );
 
     _loadingAnim = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.35, 1.0, curve: Curves.easeInOut),
+        curve: const Interval(0.35, 1, curve: Curves.easeInOut),
       ),
     );
-
-    _controller.forward();
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
         context.go(AppRoutes.login);
       }
     });
+    unawaited(_controller.forward());
   }
 
   @override

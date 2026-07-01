@@ -67,7 +67,7 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     state = state.copyWith(advanceAmount: value);
   }
 
-  void toggleRoundOff(bool value) {
+  void toggleRoundOff({required bool value}) {
     state = state.copyWith(roundOff: value);
   }
 

@@ -37,18 +37,18 @@ class _ShellPageState extends State<ShellPage> {
     }
   }
 
-  static final _saleSubItems = SaleSubRoutes.items
+  static final List<_NavSubItem> _saleSubItems = SaleSubRoutes.items
       .map((item) => _NavSubItem(route: item.route, label: item.label))
       .toList();
 
   static final _navItems = [
-    _NavItem(route: AppRoutes.home, icon: Icons.home_outlined, label: 'Home'),
-    _NavItem(
+    const _NavItem(route: AppRoutes.home, icon: Icons.home_outlined, label: 'Home'),
+    const _NavItem(
       route: AppRoutes.parties,
       icon: Icons.people_outlined,
       label: 'Parties',
     ),
-    _NavItem(
+    const _NavItem(
       route: AppRoutes.items,
       icon: Icons.inventory_2_outlined,
       label: 'Items',
@@ -60,21 +60,21 @@ class _ShellPageState extends State<ShellPage> {
       isExpandable: true,
       subItems: _saleSubItems,
     ),
-    _NavItem(
+    const _NavItem(
       icon: Icons.shopping_cart_outlined,
       label: 'Purchase & Expense',
     ),
-    _NavItem(
+    const _NavItem(
       route: AppRoutes.reports,
       icon: Icons.bar_chart_outlined,
       label: 'Reports',
     ),
-    _NavItem(
+    const _NavItem(
       route: AppRoutes.settings,
       icon: Icons.settings_outlined,
       label: 'Settings',
     ),
-    _NavItem(
+    const _NavItem(
       route: AppRoutes.plansPricing,
       icon: Icons.workspace_premium_outlined,
       label: 'Plans & Pricing',
@@ -258,10 +258,10 @@ class _ShellPageState extends State<ShellPage> {
         child: Row(
           children: [
             if (!_isCollapsed) ...[
-              Expanded(
+              const Expanded(
                 child: Text(
                   'My Business',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: _sidebarTextActive,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -293,11 +293,11 @@ class _ShellPageState extends State<ShellPage> {
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Search Transactions',
-                  hintStyle: TextStyle(
+                  hintStyle: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
                   ),
-                  prefixIcon: Icon(
+                  prefixIcon: const Icon(
                     Icons.search,
                     color: AppColors.textSecondary,
                     size: 20,
@@ -313,7 +313,7 @@ class _ShellPageState extends State<ShellPage> {
                   ),
                   isDense: true,
                 ),
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
               ),
             ),
           ),

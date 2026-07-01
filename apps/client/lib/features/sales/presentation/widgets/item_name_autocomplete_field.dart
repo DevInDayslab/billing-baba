@@ -51,8 +51,9 @@ class ItemNameAutocompleteFieldState extends State<ItemNameAutocompleteField> {
 
   @override
   void dispose() {
-    _focusNode.removeListener(_onFocusChange);
-    _focusNode.dispose();
+    _focusNode
+      ..removeListener(_onFocusChange)
+      ..dispose();
     _controller.dispose();
     _removeOverlay();
     super.dispose();

@@ -8,15 +8,15 @@ import 'package:billing_baba/features/business/presentation/pages/edit_profile_p
 import 'package:billing_baba/features/dashboard/presentation/pages/home_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/pages/plans_pricing_page.dart';
-import 'package:billing_baba/features/sales/presentation/pages/add_sale_page.dart';
-import 'package:billing_baba/features/sales/presentation/pages/payment_in_page.dart';
-import 'package:billing_baba/features/sales/presentation/pages/sale_invoices_page.dart';
-import 'package:billing_baba/features/sales/presentation/pages/estimate_quotation_page.dart';
-import 'package:billing_baba/features/sales/presentation/pages/proforma_invoice_page.dart';
-import 'package:billing_baba/features/sales/presentation/pages/delivery_challan_page.dart';
-import 'package:billing_baba/features/sales/presentation/pages/job_work_out_page.dart';
-import 'package:billing_baba/features/sales/presentation/pages/sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/add_credit_note_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/add_sale_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/delivery_challan_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/estimate_quotation_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/job_work_out_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/payment_in_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/proforma_invoice_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/sale_invoices_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_return_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -163,6 +163,6 @@ Widget _placeholderPage(String title) {
 /// Bridges Riverpod auth state changes into a [Listenable] for GoRouter.
 class _AuthListenable extends ChangeNotifier {
   _AuthListenable(Ref ref) {
-    ref.listen<AuthState>(authProvider, (_, __) => notifyListeners());
+    ref.listen<AuthState>(authProvider, (_, _) => notifyListeners());
   }
 }

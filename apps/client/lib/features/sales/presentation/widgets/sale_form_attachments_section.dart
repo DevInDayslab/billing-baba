@@ -39,7 +39,7 @@ class SaleFormAttachmentsSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Description', style: saleFieldLabelStyle),
+              const Text('Description', style: saleFieldLabelStyle),
               const SizedBox(height: 4),
               _DescriptionField(
                 initialValue: description,
@@ -53,7 +53,7 @@ class SaleFormAttachmentsSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Add Image', style: saleFieldLabelStyle),
+              const Text('Add Image', style: saleFieldLabelStyle),
               const SizedBox(height: 4),
               _UploadZone(
                 icon: Icons.camera_alt_outlined,
@@ -76,7 +76,7 @@ class SaleFormAttachmentsSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Add Document', style: saleFieldLabelStyle),
+              const Text('Add Document', style: saleFieldLabelStyle),
               const SizedBox(height: 4),
               _UploadZone(
                 icon: Icons.description_outlined,

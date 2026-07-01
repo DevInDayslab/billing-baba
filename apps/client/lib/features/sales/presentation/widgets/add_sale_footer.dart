@@ -111,7 +111,7 @@ class AddSaleFooter extends ConsumerWidget {
                   Checkbox(
                     value: form.roundOff,
                     onChanged: (value) =>
-                        notifier.toggleRoundOff(value ?? false),
+                        notifier.toggleRoundOff(value: value ?? false),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     visualDensity: VisualDensity.compact,
                   ),
@@ -164,7 +164,7 @@ class AddSaleFooter extends ConsumerWidget {
                         value: form.loyaltyPointsUsed,
                         onChanged: (value) {
                           if (!form.loyaltyPointsEnabled) {
-                            notifier.toggleLoyaltyPoints(true);
+                            notifier.toggleLoyaltyPoints(enabled: true);
                           }
                           notifier.updateLoyaltyPointsUsed(value);
                         },
@@ -203,7 +203,7 @@ class AddSaleFooter extends ConsumerWidget {
                     Checkbox(
                       value: form.receivedEnabled,
                       onChanged: (value) =>
-                          notifier.toggleReceived(value ?? false),
+                          notifier.toggleReceived(enabled: value ?? false),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       visualDensity: VisualDensity.compact,
                     ),
@@ -247,7 +247,7 @@ class AddSaleFooter extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Text(
+                    const Text(
                       'Point Awarded',
                       style: TextStyle(
                         fontSize: 11,
@@ -257,7 +257,7 @@ class AddSaleFooter extends ConsumerWidget {
                     const Spacer(),
                     Text(
                       '${form.pointsAwarded}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.textSecondary,
                       ),

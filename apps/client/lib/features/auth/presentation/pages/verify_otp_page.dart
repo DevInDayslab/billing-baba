@@ -18,9 +18,9 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
   static const _otpLength = 6;
   static const _resendSeconds = 30;
 
-  final _controllers =
+  final List<TextEditingController> _controllers =
       List.generate(_otpLength, (_) => TextEditingController());
-  final _focusNodes = List.generate(_otpLength, (_) => FocusNode());
+  final List<FocusNode> _focusNodes = List.generate(_otpLength, (_) => FocusNode());
 
   int _secondsLeft = _resendSeconds;
   Timer? _timer;
@@ -49,8 +49,12 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
   @override
   void dispose() {
     _timer?.cancel();
-    for (final c in _controllers) c.dispose();
-    for (final f in _focusNodes) f.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -68,11 +72,13 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
     if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
-    if (_otp.length == _otpLength) _verify();
+    if (_otp.length == _otpLength) unawaited(_verify());
   }
 
   void _resend() {
-    for (final c in _controllers) c.clear();
+    for (final c in _controllers) {
+      c.clear();
+    }
     _focusNodes.first.requestFocus();
     ref.read(authProvider.notifier).resendOtp();
     _startTimer();
@@ -107,7 +113,6 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                 vertical: AppSpacing.xxl,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Logo
                   Image.asset(
@@ -144,7 +149,7 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                   const SizedBox(height: AppSpacing.xs),
 
                   // Tagline
-                  Text(
+                  const Text(
                     'SIMPLIFY . BILL . GROW',
                     style: TextStyle(
                       fontSize: 11,
@@ -334,16 +339,14 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  _secondsLeft > 0
-                      ? Text(
+                  if (_secondsLeft > 0) Text(
                           'Resend OTP in ${_secondsLeft}s',
                           style: const TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
-                        )
-                      : GestureDetector(
+                        ) else GestureDetector(
                           onTap: _resend,
                           child: const Text(
                             'Resend OTP',
@@ -358,7 +361,7 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                   const SizedBox(height: AppSpacing.lg),
 
                   // Secure verification
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
@@ -366,7 +369,7 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                         size: 12,
                         color: AppColors.textSecondary,
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Text(
                         'SECURE VERIFICATION',
                         style: TextStyle(

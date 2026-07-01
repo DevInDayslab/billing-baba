@@ -5,7 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'plans_provider.g.dart';
 
 /// Approximate ratio observed between 3-year and 1-year mobile pricing.
-/// TODO(team): replace with real backend pricing values for desktop 1-year plans.
+// TODO(team): replace with real backend pricing values for desktop 1-year plans.
 const _oneYearPlaceholderRatio = 2.6;
 
 PlanPricing _placeholderOneYearPricing({
@@ -308,7 +308,7 @@ const _mobileCardFeatures = [
   ),
 ];
 
-const _featuresByPlatform = {
+const Map<PlanPlatform, List<PlanFeature>> _featuresByPlatform = {
   PlanPlatform.desktopMobile: _desktopCardFeatures,
   PlanPlatform.desktop: _desktopCardFeatures,
   PlanPlatform.mobile: _mobileCardFeatures,
@@ -513,7 +513,7 @@ Map<PlanPriceKey, AddonPricing> _scaledAddonPricing({
   };
 }
 
-const _silverAddonPricing = {
+const Map<(PlanPlatform, PlanDuration), AddonPricing> _silverAddonPricing = {
   (PlanPlatform.desktopMobile, PlanDuration.threeYears): AddonPricing(
     originalPrice: 7499,
     discountedPrice: 4399,
@@ -547,12 +547,12 @@ List<AddonPlan> buildAddonPlans() {
   const proDiscountedRatio = 9999 / 4399;
 
   return [
-    AddonPlan(
+    const AddonPlan(
       id: 'silver',
       name: 'Vyapar Silver',
       pricing: _silverAddonPricing,
-      iconColor: const Color(0xFF546E7A),
-      iconBgColor: const Color(0xFFECEFF1),
+      iconColor: Color(0xFF546E7A),
+      iconBgColor: Color(0xFFECEFF1),
     ),
     AddonPlan(
       id: 'gold',

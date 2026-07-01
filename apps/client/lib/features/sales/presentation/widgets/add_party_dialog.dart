@@ -36,7 +36,6 @@ class AddPartyResult {
 Future<AddPartyResult?> showAddPartyDialog(BuildContext context) {
   return showDialog<AddPartyResult>(
     context: context,
-    barrierDismissible: true,
     builder: (context) => const Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -352,7 +351,6 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       labelColor: AppColors.primary,
       unselectedLabelColor: AppColors.textSecondary,
       indicatorColor: AppColors.primary,
-      indicatorWeight: 2,
       labelStyle: const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
@@ -449,7 +447,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                   onPressed: () => setState(() => _showShippingAddress = true),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(horizontal: 0),
+                    padding: EdgeInsets.zero,
                   ),
                   child: const Text(
                     '+ Enable Shipping Address',

@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/models/sale_order_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/preview_share_dialog.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_empty_state_card.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_empty_state_card.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_order_footer.dart';
@@ -196,17 +198,17 @@ class _SaleOrderFormCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
             _sectionGap,
             _sectionGap,
             _sectionGap,
             0,
           ),
-          child: const Text(
+          child: Text(
             'Sale Order',
             style: TextStyle(
               fontSize: 20,
@@ -215,20 +217,20 @@ class _SaleOrderFormCard extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(height: _sectionGap),
-        const Padding(
+        SizedBox(height: _sectionGap),
+        Padding(
           padding: EdgeInsets.symmetric(horizontal: _sectionGap),
           child: _SaleOrderFormFields(),
         ),
-        const SizedBox(height: _sectionGap),
-        const SaleOrderLineItemsTable(),
-        const Divider(height: 1, color: _cardBorder),
-        const Padding(
+        SizedBox(height: _sectionGap),
+        SaleOrderLineItemsTable(),
+        Divider(height: 1, color: _cardBorder),
+        Padding(
           padding: EdgeInsets.all(_sectionGap),
           child: SaleOrderFooter(),
         ),
-        const Divider(height: 1, color: _cardBorder),
-        const _SaleOrderBottomActionBar(),
+        Divider(height: 1, color: _cardBorder),
+        _SaleOrderBottomActionBar(),
       ],
     );
   }
@@ -315,7 +317,6 @@ class _SaleOrderFormFieldsState extends ConsumerState<_SaleOrderFormFields> {
                 child: SaleGenericSelectDropdown(
                   value: form.stateOfSupply,
                   options: SaleDropdownOptions.indianStates,
-                  hintText: 'Select',
                   maxMenuHeight: 280,
                   onSelected: notifier.updateStateOfSupply,
                 ),
@@ -343,7 +344,7 @@ class _SaleOrderBottomActionBar extends ConsumerWidget {
       child: Row(
         children: [
           OutlinedButton(
-            onPressed: () => notifier.closeForm(),
+            onPressed: notifier.closeForm,
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               side: const BorderSide(color: _cardBorder),
@@ -354,9 +355,11 @@ class _SaleOrderBottomActionBar extends ConsumerWidget {
           PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'share') {
-                showPreviewShareDialog(
-                  context,
-                  initialTab: PreviewShareTab.saleOrder,
+                unawaited(
+                  showPreviewShareDialog(
+                    context,
+                    initialTab: PreviewShareTab.saleOrder,
+                  ),
                 );
                 return;
               }

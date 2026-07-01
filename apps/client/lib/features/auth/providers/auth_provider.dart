@@ -36,7 +36,7 @@ class AuthNotifier extends Notifier<AuthState> {
   AuthState build() => const AuthState();
 
   Future<void> sendOtp(String phone) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
     // Simulate network delay
     await Future<void>.delayed(const Duration(milliseconds: 800));
     state = state.copyWith(
@@ -47,7 +47,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<bool> verifyOtp(String otp) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
     await Future<void>.delayed(const Duration(milliseconds: 600));
 
     if (otp == _defaultOtp) {
@@ -66,7 +66,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   void resendOtp() {
-    state = state.copyWith(status: AuthStatus.otpSent, error: null);
+    state = state.copyWith(status: AuthStatus.otpSent);
   }
 
   void logout() {

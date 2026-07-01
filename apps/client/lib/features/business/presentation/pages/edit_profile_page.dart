@@ -387,7 +387,7 @@ class _OutlinedDropdown<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       hint: Text(
         'Select $hintText',
         style: const TextStyle(color: Colors.grey),
@@ -463,14 +463,14 @@ class _SignatureUploadBox extends StatelessWidget {
           color: const Color(0xFFBDBDBD),
           borderRadius: AppRadius.sm,
         ),
-        child: SizedBox(
+        child: const SizedBox(
           width: double.infinity,
           height: 80,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.upload, color: AppColors.textSecondary, size: 24),
-              const SizedBox(height: AppSpacing.xs),
+              SizedBox(height: AppSpacing.xs),
               Text(
                 'Upload Signature',
                 style: TextStyle(

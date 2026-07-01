@@ -58,7 +58,7 @@ class CreditNoteForm extends _$CreditNoteForm {
     state = state.copyWith(stateOfSupply: value, isDirty: true);
   }
 
-  void toggleRoundOff(bool value) {
+  void toggleRoundOff({required bool value}) {
     state = state.copyWith(roundOff: value, isDirty: true);
   }
 

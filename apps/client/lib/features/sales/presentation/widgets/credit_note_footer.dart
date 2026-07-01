@@ -92,7 +92,7 @@ class CreditNoteFooter extends ConsumerWidget {
                   Checkbox(
                     value: form.roundOff,
                     onChanged: (value) =>
-                        notifier.toggleRoundOff(value ?? false),
+                        notifier.toggleRoundOff(value: value ?? false),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     visualDensity: VisualDensity.compact,
                   ),

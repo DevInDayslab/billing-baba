@@ -34,7 +34,7 @@ class PaymentInSummaryCard extends ConsumerWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Total Amount',
                   style: TextStyle(
                     fontSize: 13,
@@ -72,7 +72,7 @@ class PaymentInSummaryCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Text(
+                const Text(
                   'vs last month',
                   style: TextStyle(
                     fontSize: 11,

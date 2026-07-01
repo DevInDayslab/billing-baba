@@ -69,7 +69,7 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     state = state.copyWith(stateOfSupply: value);
   }
 
-  void toggleRoundOff(bool value) {
+  void toggleRoundOff({required bool value}) {
     state = state.copyWith(roundOff: value);
   }
 

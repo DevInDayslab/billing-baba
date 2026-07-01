@@ -9,31 +9,31 @@ class HomePage extends StatelessWidget {
   static const _cardBorder = Color(0xFFE0E0E0);
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
+    return const ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Expanded(child: _ReceivableCard()),
                 SizedBox(width: _cardGap),
                 Expanded(child: _PayableCard()),
               ],
             ),
-            const SizedBox(height: _cardGap),
+            SizedBox(height: _cardGap),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Expanded(flex: 65, child: _TotalSaleCard()),
                 SizedBox(width: _cardGap),
                 Expanded(flex: 35, child: _RightColumnStack()),
               ],
             ),
-            const SizedBox(height: _cardGap),
-            const _MostUsedReportsSection(),
+            SizedBox(height: _cardGap),
+            _MostUsedReportsSection(),
           ],
         ),
       ),
@@ -73,7 +73,7 @@ class _ReceivableCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
+              const Text(
                 'Total Receivable',
                 style: TextStyle(
                   fontSize: 13,
@@ -98,7 +98,7 @@ class _ReceivableCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
+          const Text(
             "You don't have any receivables as of now.",
             style: TextStyle(
               fontSize: 12,
@@ -116,7 +116,7 @@ class _PayableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _DashboardCard(
+    return const _DashboardCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -129,7 +129,7 @@ class _PayableCard extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
               ),
-              const Spacer(),
+              Spacer(),
               Icon(
                 Icons.arrow_upward,
                 color: AppColors.error,
@@ -137,8 +137,8 @@ class _PayableCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          const Text(
+          SizedBox(height: AppSpacing.sm),
+          Text(
             '₹ 233',
             style: TextStyle(
               fontSize: 28,
@@ -146,7 +146,7 @@ class _PayableCard extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           Text(
             'From 1 Party',
             style: TextStyle(
@@ -184,9 +184,9 @@ class _TotalSaleCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Text(
+              Text(
                 'Total Sale',
                 style: TextStyle(
                   fontSize: 15,
@@ -194,7 +194,7 @@ class _TotalSaleCard extends StatelessWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              const Spacer(),
+              Spacer(),
               _PeriodDropdown(label: 'This Month'),
             ],
           ),
@@ -219,7 +219,7 @@ class _TotalSaleCard extends StatelessWidget {
                       .map(
                         (label) => Text(
                           label,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 10,
                             color: AppColors.textSecondary,
                           ),
@@ -249,7 +249,7 @@ class _TotalSaleCard extends StatelessWidget {
                                 child: Text(
                                   label,
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 8,
                                     color: AppColors.textSecondary,
                                   ),
@@ -311,8 +311,8 @@ class _RightColumnStack extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: const [
+    return const Column(
+      children: [
         _PurchasesWidget(),
         SizedBox(height: HomePage._cardGap),
         _LowStocksWidget(),
@@ -326,13 +326,13 @@ class _PurchasesWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _DashboardCard(
+    return const _DashboardCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text(
+              Text(
                 'Purchases',
                 style: TextStyle(
                   fontSize: 14,
@@ -340,7 +340,7 @@ class _PurchasesWidget extends StatelessWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              const Spacer(),
+              Spacer(),
               Text(
                 'This Month',
                 style: TextStyle(
@@ -350,8 +350,8 @@ class _PurchasesWidget extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          const Text(
+          SizedBox(height: AppSpacing.sm),
+          Text(
             '₹ 0',
             style: TextStyle(
               fontSize: 24,
@@ -359,8 +359,8 @@ class _PurchasesWidget extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          const Divider(height: 1, color: HomePage._cardBorder),
+          SizedBox(height: AppSpacing.md),
+          Divider(height: 1, color: HomePage._cardBorder),
         ],
       ),
     );
@@ -382,9 +382,9 @@ class _LowStocksWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Text(
+              Text(
                 'Low Stocks Items',
                 style: TextStyle(
                   fontSize: 14,
@@ -392,7 +392,7 @@ class _LowStocksWidget extends StatelessWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              const Spacer(),
+              Spacer(),
               Text(
                 'As of Now',
                 style: TextStyle(
@@ -430,7 +430,6 @@ class _LowStocksWidget extends StatelessWidget {
             ),
           ),
           Align(
-            alignment: Alignment.center,
             child: TextButton(
               onPressed: () {},
               style: TextButton.styleFrom(
@@ -570,13 +569,13 @@ class _PeriodDropdown extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
-          Icon(
+          const Icon(
             Icons.keyboard_arrow_down,
             size: 16,
             color: AppColors.textSecondary,

@@ -8,8 +8,8 @@ const _monthCalendarWidth = 252.0;
 const _navButtonSize = 32.0;
 const _dayCellHeight = 32.0;
 const _calendarRowCount = 6;
-const _panelHorizontalPadding = AppSpacing.md;
-const _panelWidth =
+const double _panelHorizontalPadding = AppSpacing.md;
+const double _panelWidth =
     _navButtonSize * 2 +
     _monthCalendarWidth * 2 +
     AppSpacing.lg +
@@ -85,7 +85,6 @@ class SaleDateRangePickerAnchorState extends State<SaleDateRangePickerAnchor> {
               link: _layerLink,
               showWhenUnlinked: false,
               targetAnchor: Alignment.bottomLeft,
-              followerAnchor: Alignment.topLeft,
               offset: followerOffset,
               child: _SaleDateRangePickerPanel(
                 initialRange: widget.initialRange,
@@ -228,7 +227,7 @@ class _SaleDateRangePickerPanelState extends State<_SaleDateRangePickerPanel> {
       DateTime(month.year, month.month + 1, 0).day;
 
   int _firstWeekdayOffset(DateTime month) =>
-      DateTime(month.year, month.month, 1).weekday % 7;
+      DateTime(month.year, month.month).weekday % 7;
 
   @override
   Widget build(BuildContext context) {
@@ -480,7 +479,7 @@ String formatSaleDateRangeLabel(DateTimeRange range) {
 /// Default display label when no custom range is selected.
 String defaultSaleDateRangeLabel() {
   final now = DateTime.now();
-  final start = DateTime(now.year, now.month, 1);
+  final start = DateTime(now.year, now.month);
   final end = DateTime(now.year, now.month + 1, 0);
   return formatSaleDateRangeLabel(DateTimeRange(start: start, end: end));
 }

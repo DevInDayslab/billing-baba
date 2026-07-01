@@ -359,7 +359,6 @@ class _DeliveryChallanFormFieldsState
                 child: SaleGenericSelectDropdown(
                   value: form.stateOfSupply,
                   options: SaleDropdownOptions.indianStates,
-                  hintText: 'Select',
                   maxMenuHeight: 280,
                   onSelected: notifier.updateStateOfSupply,
                 ),
@@ -404,7 +403,7 @@ class _DeliveryChallanBottomActionBar extends ConsumerWidget {
       child: Row(
         children: [
           OutlinedButton(
-            onPressed: () => notifier.closeForm(),
+            onPressed: notifier.closeForm,
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               side: const BorderSide(color: _cardBorder),

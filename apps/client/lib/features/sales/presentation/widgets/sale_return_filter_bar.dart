@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
@@ -92,7 +94,7 @@ class _SaleReturnFilterBarState extends ConsumerState<SaleReturnFilterBar> {
                         final now = DateTime.now();
                         filtersNotifier.setCustomDateRange(
                           DateTimeRange(
-                            start: DateTime(now.year, now.month, 1),
+                            start: DateTime(now.year, now.month),
                             end: DateTime(now.year, now.month + 1, 0),
                           ),
                         );
@@ -139,7 +141,7 @@ class _SaleReturnFilterBarState extends ConsumerState<SaleReturnFilterBar> {
         FilledButton.icon(
           onPressed: () {
             ref.read(creditNoteFormProvider.notifier).resetForm();
-            context.push(AppRoutes.addCreditNote);
+            unawaited(context.push(AppRoutes.addCreditNote));
           },
           style: FilledButton.styleFrom(
             backgroundColor: _addCreditNoteBlue,

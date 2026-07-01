@@ -7,8 +7,8 @@ const _monthCalendarWidth = 252.0;
 const _navButtonSize = 32.0;
 const _dayCellHeight = 32.0;
 const _calendarRowCount = 6;
-const _panelHorizontalPadding = AppSpacing.md;
-const _panelWidth =
+const double _panelHorizontalPadding = AppSpacing.md;
+const double _panelWidth =
     _navButtonSize * 2 + _monthCalendarWidth + _panelHorizontalPadding * 2;
 const _overlayVerticalOffset = 40.0;
 const _screenEdgePadding = 8.0;
@@ -73,7 +73,6 @@ class SaleSingleDatePickerAnchorState
               link: _layerLink,
               showWhenUnlinked: false,
               targetAnchor: Alignment.bottomLeft,
-              followerAnchor: Alignment.topLeft,
               offset: followerOffset,
               child: _SaleSingleDatePickerPanel(
                 selectedDate: widget.selectedDate,
@@ -281,7 +280,7 @@ class _MonthGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firstDay = DateTime(month.year, month.month, 1);
+    final firstDay = DateTime(month.year, month.month);
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
     final startOffset = firstDay.weekday % 7;
 

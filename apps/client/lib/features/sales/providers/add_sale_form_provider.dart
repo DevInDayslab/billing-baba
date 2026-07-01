@@ -53,9 +53,9 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(
       saleType: type,
       dueDate: type == SaleType.cash ? null : state.dueDate,
-      receivedEnabled: type == SaleType.credit ? state.receivedEnabled : false,
+      receivedEnabled: type == SaleType.credit && state.receivedEnabled,
       loyaltyPointsEnabled:
-          type == SaleType.credit ? state.loyaltyPointsEnabled : false,
+          type == SaleType.credit && state.loyaltyPointsEnabled,
       isDirty: true,
     );
   }
@@ -209,7 +209,7 @@ class AddSaleForm extends _$AddSaleForm {
     );
   }
 
-  void toggleRoundOff(bool value) {
+  void toggleRoundOff({required bool value}) {
     state = state.copyWith(roundOff: value, isDirty: true);
   }
 
@@ -217,7 +217,7 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(receivedAmount: value, isDirty: true);
   }
 
-  void toggleReceived(bool enabled) {
+  void toggleReceived({required bool enabled}) {
     state = state.copyWith(
       receivedEnabled: enabled,
       receivedAmount: enabled ? state.receivedAmount : 0,
@@ -225,7 +225,7 @@ class AddSaleForm extends _$AddSaleForm {
     );
   }
 
-  void toggleLoyaltyPoints(bool enabled) {
+  void toggleLoyaltyPoints({required bool enabled}) {
     state = state.copyWith(
       loyaltyPointsEnabled: enabled,
       loyaltyPointsUsed: enabled ? state.loyaltyPointsUsed : 0,
@@ -285,7 +285,7 @@ class AddSaleForm extends _$AddSaleForm {
       paymentType: state.paymentType,
       status: status,
       amount: grandTotal,
-      balance: balance.toDouble(),
+      balance: balance,
       godown: state.godown,
     );
   }

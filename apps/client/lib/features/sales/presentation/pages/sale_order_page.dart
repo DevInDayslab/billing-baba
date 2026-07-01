@@ -112,7 +112,6 @@ class _SaleOrderPageState extends ConsumerState<SaleOrderPage>
       buttonIcon: Icons.share_outlined,
       onPressed: () => showPreviewShareDialog(
         context,
-        initialTab: PreviewShareTab.shareStore,
       ),
     );
   }

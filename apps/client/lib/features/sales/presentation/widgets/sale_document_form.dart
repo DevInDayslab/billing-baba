@@ -189,7 +189,7 @@ class _EmptyState extends ConsumerWidget {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: savedDocuments.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final saved = savedDocuments[index];
                     final dateLabel = saved.invoiceDate != null
@@ -591,7 +591,6 @@ class _DocumentFormFieldsState extends ConsumerState<_DocumentFormFields> {
                 child: SaleGenericSelectDropdown(
                   value: form.stateOfSupply,
                   options: SaleDropdownOptions.indianStates,
-                  hintText: 'Select',
                   maxMenuHeight: 280,
                   onSelected: notifier.updateStateOfSupply,
                 ),
@@ -707,7 +706,7 @@ class _DocumentFooter extends ConsumerWidget {
                   Checkbox(
                     value: form.roundOff,
                     onChanged: (value) =>
-                        notifier.toggleRoundOff(value ?? false),
+                        notifier.toggleRoundOff(value: value ?? false),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     visualDensity: VisualDensity.compact,
                   ),
@@ -942,15 +941,11 @@ class _SaleTextField extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.hintText,
-    this.minLines = 1,
-    this.maxLines = 1,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
-  final int minLines;
-  final int maxLines;
 
   @override
   State<_SaleTextField> createState() => _SaleTextFieldState();
@@ -986,8 +981,6 @@ class _SaleTextFieldState extends State<_SaleTextField> {
       controller: _controller,
       style: saleFieldTextStyle,
       decoration: buildSaleFieldDecoration(hint: widget.hintText),
-      minLines: widget.minLines,
-      maxLines: widget.maxLines,
       onChanged: widget.onChanged,
     );
   }

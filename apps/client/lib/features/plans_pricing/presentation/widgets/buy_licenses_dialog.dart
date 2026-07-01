@@ -6,7 +6,7 @@ import 'package:billing_baba/features/plans_pricing/providers/plans_provider.dar
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// TODO(team): confirm exact bulk saver discount business rule with product team.
+// TODO(team): confirm exact bulk saver discount business rule with product team.
 const bulkDiscountRate = 0.06;
 
 /// Shows the buy additional licenses modal from Plans & Pricing.
@@ -269,10 +269,10 @@ class _BuyLicensesDialogState extends State<BuyLicensesDialog> {
                     borderRadius: AppRadius.mdBorder,
                     border: Border.all(color: Colors.grey.shade300),
                   ),
-                  child: Column(
+                  child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Payment Method',
                         style: TextStyle(
                           fontSize: 14,
@@ -280,17 +280,18 @@ class _BuyLicensesDialogState extends State<BuyLicensesDialog> {
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-                      RadioListTile<String>(
-                        value: 'upi',
-                        groupValue: 'upi',
-                        onChanged: (_) {},
+                      SizedBox(height: AppSpacing.sm),
+                      ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text(
+                        leading: Icon(
+                          Icons.radio_button_checked,
+                          color: AppColors.primary,
+                        ),
+                        title: Text(
                           'UPI / Net Banking (Mock)',
                           style: TextStyle(fontSize: 13),
                         ),
-                        subtitle: const Text(
+                        subtitle: Text(
                           'Simulated payment — no real charge',
                           style: TextStyle(fontSize: 12),
                         ),
@@ -343,7 +344,7 @@ class _BuyLicensesDialogState extends State<BuyLicensesDialog> {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
+          const Text(
             'Please wait while we confirm your payment…',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -374,8 +375,8 @@ class _BuyLicensesDialogState extends State<BuyLicensesDialog> {
           Container(
             width: 64,
             height: 64,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9),
+            decoration: const BoxDecoration(
+              color: Color(0xFFE8F5E9),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -394,7 +395,7 @@ class _BuyLicensesDialogState extends State<BuyLicensesDialog> {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
+          const Text(
             'Your licenses will be activated shortly.',
             style: TextStyle(
               fontSize: 13,
@@ -629,7 +630,7 @@ class _PlanListPanel extends StatelessWidget {
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
         itemCount: plans.length,
-        separatorBuilder: (_, __) => Divider(
+        separatorBuilder: (_, _) => Divider(
           height: 1,
           color: Colors.grey.shade200,
         ),
@@ -806,7 +807,7 @@ class _QuantityStepper extends StatelessWidget {
             width: 36,
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs + 2),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               border: Border.symmetric(
                 vertical: BorderSide(color: AppColors.error),
               ),
