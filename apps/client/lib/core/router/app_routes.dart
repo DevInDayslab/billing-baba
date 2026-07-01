@@ -8,7 +8,19 @@ abstract final class AppRoutes {
   static const parties = '/parties';
   static const items = '/items';
   static const sale = '/sale';
+  static const saleInvoices = '/sale/invoices';
+  static const saleEstimateQuotation = '/sale/estimate-quotation';
+  static const saleProformaInvoice = '/sale/proforma-invoice';
+  static const salePaymentIn = '/sale/payment-in';
+  static const saleOrder = '/sale/order';
+  static const saleDeliveryChallan = '/sale/delivery-challan';
+  static const saleJobWorkOut = '/sale/job-work-out';
+  static const saleReturnCreditNote = '/sale/return-credit-note';
+  static const addCreditNote = '/sale/add-credit-note';
+  static const addSale = '/sale/add';
+  static const editSale = '/sale/edit';
   static const reports = '/reports';
   static const settings = '/settings';
+  static const plansPricing = '/plans-pricing';
   static const editProfile = '/edit-profile';
 }
