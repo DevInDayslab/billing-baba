@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,8 +22,26 @@ class _ShellPageState extends State<ShellPage> {
   static const _sidebarTextActive = Color(0xFFFFFFFF);
 
   bool _isCollapsed = false;
+  bool _isSaleExpanded = false;
+  bool _saleExpandInitialized = false;
 
-  static const _navItems = [
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_saleExpandInitialized) {
+      _saleExpandInitialized = true;
+      final location = GoRouterState.of(context).uri.path;
+      if (location.startsWith(AppRoutes.sale)) {
+        _isSaleExpanded = true;
+      }
+    }
+  }
+
+  static final _saleSubItems = SaleSubRoutes.items
+      .map((item) => _NavSubItem(route: item.route, label: item.label))
+      .toList();
+
+  static final _navItems = [
     _NavItem(route: AppRoutes.home, icon: Icons.home_outlined, label: 'Home'),
     _NavItem(
       route: AppRoutes.parties,
@@ -34,10 +53,12 @@ class _ShellPageState extends State<ShellPage> {
       icon: Icons.inventory_2_outlined,
       label: 'Items',
     ),
+    // Only Sale uses expandable sub-items today; generalize if more parents are added.
     _NavItem(
-      route: AppRoutes.sale,
       icon: Icons.receipt_outlined,
       label: 'Sale',
+      isExpandable: true,
+      subItems: _saleSubItems,
     ),
     _NavItem(
       icon: Icons.shopping_cart_outlined,
@@ -53,6 +74,11 @@ class _ShellPageState extends State<ShellPage> {
       icon: Icons.settings_outlined,
       label: 'Settings',
     ),
+    _NavItem(
+      route: AppRoutes.plansPricing,
+      icon: Icons.workspace_premium_outlined,
+      label: 'Plans & Pricing',
+    ),
   ];
 
   @override
@@ -61,13 +87,17 @@ class _ShellPageState extends State<ShellPage> {
 
     return Scaffold(
       body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
-            width: _isCollapsed ? _sidebarCollapsedWidth : _sidebarExpandedWidth,
+            width: _isCollapsed
+                ? _sidebarCollapsedWidth
+                : _sidebarExpandedWidth,
             color: _sidebarColor,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildSidebarHeader(),
                 Expanded(child: _buildNavList(currentLocation)),
@@ -93,11 +123,20 @@ class _ShellPageState extends State<ShellPage> {
 
   Widget _buildSidebarHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.md, AppSpacing.sm, AppSpacing.sm),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.sm,
+      ),
       child: _isCollapsed
           ? Center(
               child: IconButton(
-                icon: const Icon(Icons.last_page, color: _sidebarText, size: 20),
+                icon: const Icon(
+                  Icons.last_page,
+                  color: _sidebarText,
+                  size: 20,
+                ),
                 onPressed: () => setState(() => _isCollapsed = false),
                 tooltip: 'Expand sidebar',
               ),
@@ -108,22 +147,38 @@ class _ShellPageState extends State<ShellPage> {
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search',
-                      hintStyle: const TextStyle(color: _sidebarText, fontSize: 13),
-                      prefixIcon: const Icon(Icons.search, color: _sidebarText, size: 20),
+                      hintStyle: const TextStyle(
+                        color: _sidebarText,
+                        fontSize: 13,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: _sidebarText,
+                        size: 20,
+                      ),
                       filled: true,
                       fillColor: const Color(0xFF141B27),
-                      contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.sm,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: AppRadius.mdBorder,
                         borderSide: BorderSide.none,
                       ),
                       isDense: true,
                     ),
-                    style: const TextStyle(color: _sidebarTextActive, fontSize: 13),
+                    style: const TextStyle(
+                      color: _sidebarTextActive,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.first_page, color: _sidebarText, size: 20),
+                  icon: const Icon(
+                    Icons.first_page,
+                    color: _sidebarText,
+                    size: 20,
+                  ),
                   onPressed: () => setState(() => _isCollapsed = true),
                   tooltip: 'Collapse sidebar',
                 ),
@@ -133,20 +188,59 @@ class _ShellPageState extends State<ShellPage> {
   }
 
   Widget _buildNavList(String currentLocation) {
-    return ListView.builder(
+    return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      itemCount: _navItems.length,
-      itemBuilder: (context, index) {
-        final item = _navItems[index];
-        final isActive = item.route != null && currentLocation == item.route;
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final item in _navItems) _buildNavItem(item, currentLocation),
+        ],
+      ),
+    );
+  }
 
-        return _SidebarNavTile(
-          item: item,
-          collapsed: _isCollapsed,
-          isActive: isActive,
-          onTap: item.route != null ? () => context.go(item.route!) : null,
-        );
-      },
+  Widget _buildNavItem(_NavItem item, String currentLocation) {
+    if (item.isExpandable) {
+      final isParentActive = currentLocation.startsWith(AppRoutes.sale);
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _SidebarExpandableNavTile(
+            item: item,
+            collapsed: _isCollapsed,
+            isActive: isParentActive,
+            isExpanded: _isSaleExpanded,
+            onToggle: () => setState(() => _isSaleExpanded = !_isSaleExpanded),
+          ),
+          if (_isSaleExpanded && !_isCollapsed)
+            ...item.subItems.map((sub) {
+              final isSubActive =
+                  currentLocation == sub.route ||
+                  (sub.route == AppRoutes.saleInvoices &&
+                      (currentLocation == AppRoutes.addSale ||
+                          currentLocation.startsWith('${AppRoutes.editSale}/'))) ||
+                  (sub.route == AppRoutes.saleReturnCreditNote &&
+                      currentLocation == AppRoutes.addCreditNote);
+              return _SidebarNavSubTile(
+                label: sub.label,
+                isActive: isSubActive,
+                onTap: () => context.go(sub.route),
+              );
+            }),
+        ],
+      );
+    }
+
+    final isActive = item.route != null && currentLocation == item.route;
+
+    return _SidebarNavTile(
+      item: item,
+      collapsed: _isCollapsed,
+      isActive: isActive,
+      onTap: item.route != null ? () => context.go(item.route!) : null,
     );
   }
 
@@ -199,11 +293,20 @@ class _ShellPageState extends State<ShellPage> {
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Search Transactions',
-                  hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                  prefixIcon: Icon(Icons.search, color: AppColors.textSecondary, size: 20),
+                  hintStyle: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
                   filled: true,
                   fillColor: AppColors.background,
-                  contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.sm,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: AppRadius.mdBorder,
                     borderSide: BorderSide.none,
@@ -216,25 +319,31 @@ class _ShellPageState extends State<ShellPage> {
           ),
           const SizedBox(width: AppSpacing.sm),
           Flexible(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _TopBarButton(
-                  label: 'Add Sale',
-                  color: AppColors.error,
-                  onPressed: () {},
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                _TopBarButton(
-                  label: 'Add Purchase',
-                  color: AppColors.primary,
-                  onPressed: () {},
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                _TopBarIconButton(icon: Icons.add, onPressed: () {}),
-                _TopBarIconButton(icon: Icons.print_outlined, onPressed: () {}),
-                _TopBarIconButton(icon: Icons.more_vert, onPressed: () {}),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _TopBarButton(
+                    label: 'Add Sale',
+                    color: AppColors.error,
+                    onPressed: () => context.push(AppRoutes.addSale),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  _TopBarButton(
+                    label: 'Add Purchase',
+                    color: AppColors.primary,
+                    onPressed: () {},
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  _TopBarIconButton(icon: Icons.add, onPressed: () {}),
+                  _TopBarIconButton(
+                    icon: Icons.print_outlined,
+                    onPressed: () {},
+                  ),
+                  _TopBarIconButton(icon: Icons.more_vert, onPressed: () {}),
+                ],
+              ),
             ),
           ),
         ],
@@ -248,11 +357,161 @@ class _NavItem {
     required this.icon,
     required this.label,
     this.route,
+    this.isExpandable = false,
+    this.subItems = const [],
   });
 
   final IconData icon;
   final String label;
   final String? route;
+  final bool isExpandable;
+  final List<_NavSubItem> subItems;
+}
+
+class _NavSubItem {
+  const _NavSubItem({required this.route, required this.label});
+
+  final String route;
+  final String label;
+}
+
+class _SidebarExpandableNavTile extends StatelessWidget {
+  const _SidebarExpandableNavTile({
+    required this.item,
+    required this.collapsed,
+    required this.isActive,
+    required this.isExpanded,
+    required this.onToggle,
+  });
+
+  final _NavItem item;
+  final bool collapsed;
+  final bool isActive;
+  final bool isExpanded;
+  final VoidCallback onToggle;
+
+  static const _sidebarActiveBg = Color(0xFF2A3447);
+  static const _sidebarText = Color(0xFFB0BEC5);
+  static const _sidebarTextActive = Color(0xFFFFFFFF);
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = Theme.of(context).colorScheme.primary;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: collapsed ? null : onToggle,
+        child: Container(
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 2,
+          ),
+          decoration: BoxDecoration(
+            color: isActive ? _sidebarActiveBg : Colors.transparent,
+            borderRadius: AppRadius.smBorder,
+            border: isActive
+                ? Border(left: BorderSide(color: accentColor, width: 3))
+                : null,
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: collapsed ? AppSpacing.sm : AppSpacing.md,
+            vertical: AppSpacing.sm + 2,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                item.icon,
+                color: isActive ? _sidebarTextActive : _sidebarText,
+                size: 22,
+              ),
+              if (!collapsed) ...[
+                const SizedBox(width: AppSpacing.sm + 4),
+                Expanded(
+                  child: Text(
+                    item.label,
+                    style: TextStyle(
+                      color: isActive ? _sidebarTextActive : _sidebarText,
+                      fontSize: 13,
+                      fontWeight: isActive
+                          ? FontWeight.w500
+                          : FontWeight.normal,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                AnimatedRotation(
+                  turns: isExpanded ? 0.25 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.chevron_right,
+                    color: isActive ? _sidebarTextActive : _sidebarText,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarNavSubTile extends StatelessWidget {
+  const _SidebarNavSubTile({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  static const _sidebarActiveBg = Color(0xFF2A3447);
+  static const _sidebarText = Color(0xFFB0BEC5);
+  static const _sidebarTextActive = Color(0xFFFFFFFF);
+
+  @override
+  Widget build(BuildContext context) {
+    final accentColor = Theme.of(context).colorScheme.primary;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 2,
+          ),
+          decoration: BoxDecoration(
+            color: isActive ? _sidebarActiveBg : Colors.transparent,
+            borderRadius: AppRadius.smBorder,
+            border: isActive
+                ? Border(left: BorderSide(color: accentColor, width: 3))
+                : null,
+          ),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md + 20,
+            AppSpacing.sm,
+            AppSpacing.md,
+            AppSpacing.sm,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isActive ? _sidebarTextActive : _sidebarText,
+              fontSize: 12,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _SidebarNavTile extends StatelessWidget {
@@ -311,7 +570,9 @@ class _SidebarNavTile extends StatelessWidget {
                     style: TextStyle(
                       color: isActive ? _sidebarTextActive : _sidebarText,
                       fontSize: 13,
-                      fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+                      fontWeight: isActive
+                          ? FontWeight.w500
+                          : FontWeight.normal,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
