@@ -47,8 +47,8 @@ class AddItemDialog extends ConsumerStatefulWidget {
 }
 
 class _AddItemDialogState extends ConsumerState<AddItemDialog>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
+    with TickerProviderStateMixin {
+  late TabController _tabController;
   final _asOfDatePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
   final _itemNameController = TextEditingController();
   final _hsnController = TextEditingController();
@@ -66,15 +66,43 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final Map<String, TextEditingController> _rawMaterialControllers = {};
   final Map<String, TextEditingController> _additionalCostControllers = {};
 
+  int _tabCountFor(ItemType type) =>
+      type == ItemType.product ? 4 : 2;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(
+      length: _tabCountFor(widget.initialType),
+      vsync: this,
+    );
     _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(addItemFormProvider.notifier)
           .setInitialType(widget.initialType);
+    });
+  }
+
+  void _handleItemTypeChange(ItemType type) {
+    final form = ref.read(addItemFormProvider);
+    if (form.itemType == type) return;
+
+    final oldController = _tabController..removeListener(_onTabChanged);
+    final newController = TabController(
+      length: _tabCountFor(type),
+      vsync: this,
+    )..addListener(_onTabChanged);
+
+    setState(() => _tabController = newController);
+
+    ref.read(addItemFormProvider.notifier).setItemType(type);
+    ref.read(addItemFormProvider.notifier).setActiveTab(0);
+    ref.read(inventoryItemsTabIndexProvider.notifier).selectForItemType(type);
+
+    // Dispose after rebuild so TabBar/AnimatedBuilder stop using the old controller.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      oldController.dispose();
     });
   }
 
@@ -195,6 +223,16 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<int>(inventoryItemsTabIndexProvider, (previous, next) {
+      if (next > inventoryServicesTabIndex) return;
+      final targetType = next == inventoryProductsTabIndex
+          ? ItemType.product
+          : ItemType.service;
+      if (ref.read(addItemFormProvider).itemType != targetType) {
+        _handleItemTypeChange(targetType);
+      }
+    });
+
     final form = ref.watch(addItemFormProvider);
     final notifier = ref.read(addItemFormProvider.notifier);
     final categories = ref.watch(categoriesProvider);
@@ -214,6 +252,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildHeader(form, notifier),
+            const Divider(height: 1, color: _cardBorder),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,
@@ -235,15 +274,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: AnimatedBuilder(
+                  key: ValueKey(form.itemType),
                   animation: _tabController,
-                  builder: (context, _) {
-                    return switch (_tabController.index) {
-                      0 => _buildPricingTab(form, notifier),
-                      1 => _buildStockTab(form, notifier),
-                      2 => _buildOnlineStoreTab(form, notifier),
-                      _ => _buildManufacturingTab(form, notifier),
-                    };
-                  },
+                  builder: (context, _) => _buildActiveTabContent(form, notifier),
                 ),
               ),
             ),
@@ -275,7 +308,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           const SizedBox(width: AppSpacing.lg),
           _ProductServiceToggle(
             isProduct: form.itemType == ItemType.product,
-            onChanged: (isProduct) => notifier.setItemType(
+            onChanged: (isProduct) => _handleItemTypeChange(
               isProduct ? ItemType.product : ItemType.service,
             ),
           ),
@@ -299,6 +332,25 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
+  Widget _buildActiveTabContent(
+    AddItemFormState form,
+    AddItemForm notifier,
+  ) {
+    if (form.itemType == ItemType.service) {
+      return switch (_tabController.index) {
+        0 => _buildPricingTab(form, notifier, isService: true),
+        _ => _buildOnlineStoreTab(form, notifier),
+      };
+    }
+
+    return switch (_tabController.index) {
+      0 => _buildPricingTab(form, notifier),
+      1 => _buildStockTab(form, notifier),
+      2 => _buildOnlineStoreTab(form, notifier),
+      _ => _buildManufacturingTab(form, notifier),
+    };
+  }
+
   Widget _buildTopFields({
     required AddItemFormState form,
     required AddItemForm notifier,
@@ -306,6 +358,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     required String? selectedCategory,
     required List<InventoryCategory> categories,
   }) {
+    final isProduct = form.itemType == ItemType.product;
+    final taxCodeLabel = isProduct ? 'Item HSN' : 'Item SAC';
+    final taxCodeHint = isProduct ? 'Search HSN' : 'Search SAC';
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 720;
@@ -329,7 +385,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: _LabeledField(
-              label: 'Item HSN',
+              label: taxCodeLabel,
               child: TextField(
                 controller: _hsnController,
                 style: saleFieldTextStyle,
@@ -338,7 +394,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                     onPressed: () {},
                     icon: const Icon(Icons.search, size: 18),
                     color: AppColors.textSecondary,
-                    tooltip: 'Search HSN',
+                    tooltip: taxCodeHint,
                   ),
                 ),
                 onChanged: notifier.updateHsn,
@@ -371,45 +427,47 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: _LabeledField(
-              label: 'Select Unit',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  OutlinedButton(
-                    onPressed: _openUnitPicker,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      backgroundColor: const Color(0xFFE3F2FD),
-                      side: BorderSide.none,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
+          if (isProduct) ...[
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _LabeledField(
+                label: 'Select Unit',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    OutlinedButton(
+                      onPressed: _openUnitPicker,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        backgroundColor: const Color(0xFFE3F2FD),
+                        side: BorderSide.none,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
+                      child: const Text(
+                        'Select Unit',
+                        style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
-                    child: const Text(
-                      'Select Unit',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    const SizedBox(height: 4),
+                    Text(
+                      _displayUnitLabel(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _displayUnitLabel(),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ];
 
         final row2 = [
@@ -489,9 +547,14 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   }
 
   Widget _buildTabBar() {
+    final form = ref.watch(addItemFormProvider);
+    final tabs = form.itemType == ItemType.product
+        ? const ['Pricing', 'Stock', 'Online Store', 'Manufacturing']
+        : const ['Pricing', 'Online Store'];
+
     return TabBar(
+      key: ValueKey(form.itemType),
       controller: _tabController,
-      onTap: (_) => setState(() {}),
       labelColor: _tabActiveColor,
       unselectedLabelColor: AppColors.textSecondary,
       indicatorColor: _tabActiveColor,
@@ -500,16 +563,15 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         fontSize: 13,
         fontWeight: FontWeight.w500,
       ),
-      tabs: const [
-        Tab(text: 'Pricing'),
-        Tab(text: 'Stock'),
-        Tab(text: 'Online Store'),
-        Tab(text: 'Manufacturing'),
-      ],
+      tabs: [for (final tab in tabs) Tab(text: tab)],
     );
   }
 
-  Widget _buildPricingTab(AddItemFormState form, AddItemForm notifier) {
+  Widget _buildPricingTab(
+    AddItemFormState form,
+    AddItemForm notifier, {
+    bool isService = false,
+  }) {
     final unitLabel = _displayUnitLabel();
     final taxOptions = [
       priceTaxModeLabel(PriceTaxMode.withoutTax),
@@ -565,93 +627,118 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          const Text(
-            'Wholesale Price',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _wholesalePriceController,
-                  style: saleFieldTextStyle,
-                  decoration:
-                      buildSaleFieldDecoration(hint: 'Wholesale Price'),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [_decimalInputFormatter],
-                  onChanged: (v) =>
-                      notifier.updateWholesalePrice(double.tryParse(v) ?? 0),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              SizedBox(
-                width: 160,
-                child: SaleGenericSelectDropdown(
-                  value: priceTaxModeLabel(form.wholesalePriceTaxMode),
-                  options: taxOptions,
-                  onSelected: (label) {
-                    notifier.setWholesalePriceTaxMode(
-                      label == 'With Tax'
-                          ? PriceTaxMode.withTax
-                          : PriceTaxMode.withoutTax,
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Minimum Wholesale Qty',
-                          style: saleFieldLabelStyle,
+          if (!isService) ...[
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Wholesale Price',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
                         ),
-                        const SizedBox(width: 4),
-                        Tooltip(
-                          message: 'Minimum quantity for wholesale pricing',
-                          child: Icon(
-                            Icons.info_outline,
-                            size: 14,
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: _minWholesaleQtyController,
-                      style: saleFieldTextStyle,
-                      decoration: buildSaleFieldDecoration(),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [_decimalInputFormatter],
-                      onChanged: (v) =>
-                          notifier.updateMinWholesaleQty(double.tryParse(v) ?? 0),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      unitLabel,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _wholesalePriceController,
+                              style: saleFieldTextStyle,
+                              decoration: buildSaleFieldDecoration(
+                                hint: 'Wholesale Price',
+                              ),
+                              keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              inputFormatters: [_decimalInputFormatter],
+                              onChanged: (v) => notifier.updateWholesalePrice(
+                                double.tryParse(v) ?? 0,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          SizedBox(
+                            width: 160,
+                            child: SaleGenericSelectDropdown(
+                              value: priceTaxModeLabel(
+                                form.wholesalePriceTaxMode,
+                              ),
+                              options: taxOptions,
+                              onSelected: (label) {
+                                notifier.setWholesalePriceTaxMode(
+                                  label == 'With Tax'
+                                      ? PriceTaxMode.withTax
+                                      : PriceTaxMode.withoutTax,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text(
+                            'Minimum Wholesale Qty',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Tooltip(
+                            message: 'Minimum quantity for wholesale pricing',
+                            child: Icon(
+                              Icons.info_outline,
+                              size: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _minWholesaleQtyController,
+                        style: saleFieldTextStyle,
+                        decoration: buildSaleFieldDecoration(),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [_decimalInputFormatter],
+                        onChanged: (v) => notifier.updateMinWholesaleQty(
+                          double.tryParse(v) ?? 0,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        unitLabel,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -1032,33 +1119,81 @@ class _ProductServiceToggle extends StatelessWidget {
   final bool isProduct;
   final ValueChanged<bool> onChanged;
 
+  static const _trackWidth = 44.0;
+  static const _trackHeight = 24.0;
+  static const _thumbSize = 20.0;
+  static const _inactiveTrackColor = Color(0xFFE8E8E8);
+
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          'Product',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: isProduct ? AppColors.primary : AppColors.textSecondary,
+        GestureDetector(
+          onTap: () => onChanged(true),
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+            child: Text(
+              'Product',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isProduct ? AppColors.primary : AppColors.textSecondary,
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 8),
-        Switch(
-          value: !isProduct,
-          onChanged: (isService) => onChanged(!isService),
-          activeThumbColor: AppColors.primary,
-          activeTrackColor: AppColors.primary.withValues(alpha: 0.4),
+        GestureDetector(
+          onTap: () => onChanged(!isProduct),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            width: _trackWidth,
+            height: _trackHeight,
+            decoration: BoxDecoration(
+              color: isProduct ? AppColors.primary : _inactiveTrackColor,
+              borderRadius: BorderRadius.circular(_trackHeight / 2),
+            ),
+            child: AnimatedAlign(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              alignment:
+                  isProduct ? Alignment.centerLeft : Alignment.centerRight,
+              child: Container(
+                width: _thumbSize,
+                height: _thumbSize,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 2,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
         const SizedBox(width: 8),
-        Text(
-          'Service',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: !isProduct ? AppColors.primary : AppColors.textSecondary,
+        GestureDetector(
+          onTap: () => onChanged(false),
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+            child: Text(
+              'Service',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: !isProduct ? AppColors.primary : AppColors.textSecondary,
+              ),
+            ),
           ),
         ),
       ],

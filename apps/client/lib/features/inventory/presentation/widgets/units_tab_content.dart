@@ -1,11 +1,12 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/add_conversion_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/add_unit_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_primary_button.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,7 +27,7 @@ class UnitsTabContent extends ConsumerWidget {
             ref.read(unitSearchQueryProvider.notifier).update(query),
         onUnitSelected: (id) =>
             ref.read(selectedUnitIdProvider.notifier).select(id),
-        onAddUnit: () => _showComingSoonSnackBar(context, 'Add Units'),
+        onAddUnit: () => showAddUnitDialog(context),
       ),
       detailPanel: selectedId == null
           ? const InventoryDetailPlaceholder(
@@ -35,17 +36,12 @@ class UnitsTabContent extends ConsumerWidget {
           : _UnitDetailPanel(
               unit: units.firstWhere(
                 (unit) => unit.id == selectedId,
-                orElse: () => InventoryCatalog.units.first,
+                orElse: () => units.first,
               ),
             ),
     );
   }
 
-  void _showComingSoonSnackBar(BuildContext context, String action) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$action coming soon')),
-    );
-  }
 }
 
 class _UnitsListPanel extends StatelessWidget {
@@ -102,41 +98,52 @@ class _UnitsListPanel extends StatelessWidget {
                       color: isSelected
                           ? inventorySelectedRowColor
                           : Colors.transparent,
-                      child: InkWell(
-                        onTap: () => onUnitSelected(unit.id),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: 12,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: inventoryCardBorder),
                           ),
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(color: inventoryCardBorder),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => onUnitSelected(unit.id),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.md,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          unit.fullName,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          unit.shortName,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  unit.fullName,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  unit.shortName,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              const InventoryListRowMenu(),
-                            ],
-                          ),
+                            const Padding(
+                              padding: EdgeInsets.only(right: AppSpacing.sm),
+                              child: InventoryListRowMenu(),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -181,11 +188,10 @@ class _UnitDetailPanel extends ConsumerWidget {
               ),
               InventorySecondaryButton(
                 label: 'Add Conversion',
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Add Conversion coming soon')),
-                  );
-                },
+                onPressed: () => showAddConversionDialog(
+                  context,
+                  initialBaseUnitId: unit.id,
+                ),
               ),
             ],
           ),

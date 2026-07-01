@@ -75,19 +75,39 @@ class InventoryListEmptyState extends StatelessWidget {
 }
 
 class InventoryListRowMenu extends StatelessWidget {
-  const InventoryListRowMenu({this.onTap, super.key});
+  const InventoryListRowMenu({
+    this.menuItems,
+    this.onSelected,
+    super.key,
+  });
 
-  final VoidCallback? onTap;
+  final List<PopupMenuEntry<String>>? menuItems;
+  final ValueChanged<String>? onSelected;
+
+  static const _iconColor = Color(0xFF616161);
+
+  static const _defaultMenuItems = <PopupMenuEntry<String>>[
+    PopupMenuItem(value: 'Edit', child: Text('Edit')),
+    PopupMenuItem(value: 'Delete', child: Text('Delete')),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      icon: const Icon(Icons.more_vert, size: 18),
-      color: AppColors.textSecondary,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+    return InventoryPopupMenuButton<String>(
       tooltip: 'More options',
+      offset: const Offset(0, 28),
+      onSelected: onSelected ??
+          (value) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('$value coming soon')),
+            );
+          },
+      itemBuilder: (context) => menuItems ?? _defaultMenuItems,
+      child: const SizedBox(
+        width: 28,
+        height: 28,
+        child: Icon(Icons.more_vert, size: 18, color: _iconColor),
+      ),
     );
   }
 }
