@@ -16,7 +16,7 @@ const _quantityColWidth = 90.0;
 const _priceColWidth = 100.0;
 const _statusColWidth = 80.0;
 
-const _minTableWidth =
+const double _minTableWidth =
     _typeColWidth +
     _invoiceColWidth +
     _nameColWidth +
@@ -191,9 +191,9 @@ class _TransactionTableHeader extends StatelessWidget {
         color: Color(0xFFF5F5F5),
         border: Border(bottom: BorderSide(color: inventoryCardBorder)),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           _HeaderCell(width: _typeColWidth, label: 'TYPE'),
           _HeaderCell(width: _invoiceColWidth, label: 'INVOICE/REF. NO'),
           _HeaderCell(width: _nameColWidth, label: 'NAME'),

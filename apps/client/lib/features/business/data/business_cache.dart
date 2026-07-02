@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/features/auth/models/account_profile.dart';
+import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/business/models/create_business_request.dart';
 
 class BusinessCache {
@@ -78,5 +79,51 @@ class BusinessCache {
 
   Future<void> clearPendingCreates() async {
     await _storage.write(StorageKeys.pendingBusinessCreates, '[]');
+  }
+
+  Future<void> saveBusinessProfile(BusinessProfileModel profile) async {
+    await _storage.write(
+      StorageKeys.cachedBusinessProfile,
+      jsonEncode(profile.toJson()),
+    );
+  }
+
+  Future<BusinessProfileModel?> readBusinessProfile() async {
+    final raw = _storage.read(StorageKeys.cachedBusinessProfile);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      return BusinessProfileModel.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> updateBusinessListEntry(BusinessProfileModel profile) async {
+    final businesses = await readBusinesses();
+    if (businesses.isEmpty) return;
+
+    final updated = businesses
+        .map(
+          (business) => business['id'] == profile.id
+              ? {
+                  ...business,
+                  'name': profile.name,
+                  'gstin': profile.gstin,
+                  'phone': profile.phone,
+                  'email': profile.email,
+                  'address': profile.address,
+                }
+              : business,
+        )
+        .toList();
+
+    await saveBusinesses(updated);
+  }
+
+  Future<void> updateSelectedBusiness(BusinessProfileModel profile) async {
+    await saveBusinessProfile(profile);
+    await saveLastOpenedBusinessId(profile.id);
   }
 }

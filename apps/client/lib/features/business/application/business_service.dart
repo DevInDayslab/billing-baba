@@ -6,6 +6,7 @@ import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/data/business_cache.dart';
 import 'package:billing_baba/features/business/data/business_repository.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
+import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/business/models/create_business_request.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -129,6 +130,56 @@ class BusinessService {
 
   Future<AccountProfile?> readCachedProfile() => _cache.readProfile();
 
+  Future<BusinessProfileModel> fetchBusinessProfile({
+    bool forceRefresh = false,
+  }) async {
+    final selectedBusinessId = _cache.readLastOpenedBusinessId();
+
+    if (!forceRefresh) {
+      final cached = await _cache.readBusinessProfile();
+      if (cached != null &&
+          (selectedBusinessId == null || cached.id == selectedBusinessId)) {
+        return cached;
+      }
+    }
+
+    try {
+      final remote = await _repository.getBusinessProfile();
+      await _cache.saveBusinessProfile(remote);
+      return remote;
+    } on DioException {
+      final cached = await _cache.readBusinessProfile();
+      if (cached != null &&
+          (selectedBusinessId == null || cached.id == selectedBusinessId)) {
+        return cached;
+      }
+      rethrow;
+    }
+  }
+
+  Future<BusinessProfileModel> updateBusinessProfile(
+    UpdateBusinessProfileInput input,
+  ) async {
+    try {
+      return await _repository.updateBusinessProfile(input.toRequest());
+    } on DioException catch (e) {
+      final validation = ApiErrorParser.parseValidation(e);
+      if (validation != null) throw validation;
+      rethrow;
+    }
+  }
+
+  Future<void> persistSavedProfile(BusinessProfileModel profile) async {
+    await _cache.updateSelectedBusiness(profile);
+    await _cache.updateBusinessListEntry(profile);
+    _ref.read(authProvider.notifier).patchBusinessFromProfile(
+          businessId: profile.id,
+          name: profile.name,
+          gstin: profile.gstin,
+        );
+    _ref.read(businessListProvider.notifier).applyProfileUpdate(profile);
+  }
+
   Future<void> rememberLastOpened(String businessId) =>
       _cache.saveLastOpenedBusinessId(businessId);
 
@@ -179,6 +230,7 @@ class BusinessList extends _$BusinessList {
     final service = await ref.read(businessServiceProvider.future);
     await service.rememberLastOpened(id);
     await ref.read(authProvider.notifier).selectBusiness(id);
+    ref.invalidate(businessProfileProvider);
     ref.invalidateSelf();
   }
 
@@ -190,6 +242,21 @@ class BusinessList extends _$BusinessList {
     ref.invalidateSelf();
     return created;
   }
+
+  void applyProfileUpdate(BusinessProfileModel profile) {
+    final businesses = state.asData?.value;
+    if (businesses == null) return;
+
+    state = AsyncData(
+      businesses
+          .map(
+            (business) => business.id == profile.id
+                ? business.copyWith(name: profile.name)
+                : business,
+          )
+          .toList(),
+    );
+  }
 }
 
 @riverpod
@@ -198,4 +265,57 @@ String loggedInPhone(Ref ref) {
   final phone = auth.session?.user.phone ?? auth.phone;
   if (phone.length <= 10) return phone;
   return phone.substring(phone.length - 10);
+}
+
+@Riverpod(keepAlive: true)
+class BusinessProfile extends _$BusinessProfile {
+  @override
+  Future<BusinessProfileModel> build() async {
+    final service = await ref.watch(businessServiceProvider.future);
+    return service.fetchBusinessProfile();
+  }
+
+  Future<BusinessProfileModel> updateProfile(
+    UpdateBusinessProfileInput input,
+  ) async {
+    final service = await ref.read(businessServiceProvider.future);
+    final updated = await service.updateBusinessProfile(input);
+    await service.persistSavedProfile(updated);
+    state = AsyncData(updated);
+    return updated;
+  }
+}
+
+@riverpod
+BusinessProfileModel? currentBusiness(Ref ref) {
+  return ref.watch(businessProfileProvider).asData?.value;
+}
+
+@riverpod
+SidebarBusiness sidebarBusiness(Ref ref) {
+  final profile = ref.watch(currentBusinessProvider);
+  if (profile != null) {
+    return SidebarBusiness(
+      id: profile.id,
+      name: profile.name,
+      seed: profile.id,
+    );
+  }
+
+  return const SidebarBusiness(
+    name: 'My Business',
+    seed: 'default',
+  );
+}
+
+class SidebarBusiness {
+  const SidebarBusiness({
+    required this.name,
+    required this.seed,
+    this.id,
+  });
+
+  final String? id;
+  final String name;
+  final String seed;
 }

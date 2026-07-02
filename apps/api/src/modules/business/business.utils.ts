@@ -37,6 +37,13 @@ export function resolveStateCode(
   return '27';
 }
 
+export function resolveStateName(stateCode: string): string | null {
+  const entry = Object.entries(STATE_NAME_TO_CODE).find(
+    ([, code]) => code === stateCode,
+  );
+  return entry?.[0] ?? null;
+}
+
 export function currentFiscalYearLabel(): string {
   const now = new Date();
   const month = now.getMonth() + 1;

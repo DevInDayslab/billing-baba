@@ -13,6 +13,14 @@ export const businesses = pgTable(
     address: text('address'),
     phone: text('phone'),
     email: text('email'),
+    businessType: text('business_type'),
+    businessCategory: text('business_category'),
+    pincode: text('pincode'),
+    currency: text('currency').notNull().default('INR'),
+    timezone: text('timezone').notNull().default('Asia/Kolkata'),
+    language: text('language').notNull().default('en'),
+    logoUrl: text('logo_url'),
+    signatureUrl: text('signature_url'),
     valuationMethod: valuationMethodEnum('valuation_method')
       .notNull()
       .default('average'),
