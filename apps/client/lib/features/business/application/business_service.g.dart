@@ -72,7 +72,7 @@ final class BusinessListProvider
   BusinessList create() => BusinessList();
 }
 
-String _$businessListHash() => r'30b59b50a2fa513ae7c43ec911900e3aa6eb3ed3';
+String _$businessListHash() => r'26afb9a22d2c1054d1bf0bb37452322db3ff3f85';
 
 abstract class _$BusinessList extends $AsyncNotifier<List<BusinessModel>> {
   FutureOr<List<BusinessModel>> build();
@@ -133,3 +133,141 @@ final class LoggedInPhoneProvider
 }
 
 String _$loggedInPhoneHash() => r'077cc4c7b9570458e2c25dbb23e64d38417da122';
+
+@ProviderFor(BusinessProfile)
+final businessProfileProvider = BusinessProfileProvider._();
+
+final class BusinessProfileProvider
+    extends $AsyncNotifierProvider<BusinessProfile, BusinessProfileModel> {
+  BusinessProfileProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'businessProfileProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$businessProfileHash();
+
+  @$internal
+  @override
+  BusinessProfile create() => BusinessProfile();
+}
+
+String _$businessProfileHash() => r'ff225909c1be9a15cd01d2ae495ec522d2d829ea';
+
+abstract class _$BusinessProfile extends $AsyncNotifier<BusinessProfileModel> {
+  FutureOr<BusinessProfileModel> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<BusinessProfileModel>, BusinessProfileModel>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<BusinessProfileModel>,
+                BusinessProfileModel
+              >,
+              AsyncValue<BusinessProfileModel>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(currentBusiness)
+final currentBusinessProvider = CurrentBusinessProvider._();
+
+final class CurrentBusinessProvider
+    extends
+        $FunctionalProvider<
+          BusinessProfileModel?,
+          BusinessProfileModel?,
+          BusinessProfileModel?
+        >
+    with $Provider<BusinessProfileModel?> {
+  CurrentBusinessProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentBusinessProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentBusinessHash();
+
+  @$internal
+  @override
+  $ProviderElement<BusinessProfileModel?> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  BusinessProfileModel? create(Ref ref) {
+    return currentBusiness(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(BusinessProfileModel? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<BusinessProfileModel?>(value),
+    );
+  }
+}
+
+String _$currentBusinessHash() => r'72316a73cbec60a501e9aeec21af842fda347f6c';
+
+@ProviderFor(sidebarBusiness)
+final sidebarBusinessProvider = SidebarBusinessProvider._();
+
+final class SidebarBusinessProvider
+    extends
+        $FunctionalProvider<SidebarBusiness, SidebarBusiness, SidebarBusiness>
+    with $Provider<SidebarBusiness> {
+  SidebarBusinessProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sidebarBusinessProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sidebarBusinessHash();
+
+  @$internal
+  @override
+  $ProviderElement<SidebarBusiness> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SidebarBusiness create(Ref ref) {
+    return sidebarBusiness(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SidebarBusiness value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SidebarBusiness>(value),
+    );
+  }
+}
+
+String _$sidebarBusinessHash() => r'e2738ae667f9bd01c384b5f3b967110c77c25a79';

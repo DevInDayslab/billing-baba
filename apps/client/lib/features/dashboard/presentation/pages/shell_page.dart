@@ -1,7 +1,8 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -254,12 +255,12 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   }
 
   Widget _buildSidebarFooter() {
-    final session = ref.watch(authProvider).session;
-    final companyName = _activeCompanyName(session);
+    final sidebarBusiness = ref.watch(sidebarBusinessProvider);
 
     return _SidebarProfileFooter(
       collapsed: _isCollapsed,
-      companyName: companyName,
+      companyName: sidebarBusiness.name,
+      avatarSeed: sidebarBusiness.seed,
       onEditProfile: () => context.go(AppRoutes.editProfile),
       onSwitchCompany: () async {
         await ref.read(authProvider.notifier).enterBusinessSelection();
@@ -270,25 +271,6 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         if (mounted) context.go(AppRoutes.login);
       },
     );
-  }
-
-  String _activeCompanyName(AuthSession? session) {
-    if (session == null || session.businesses.isEmpty) {
-      return 'My Business';
-    }
-    final businesses = session.businesses;
-    if (businesses.length == 1) {
-      return businesses.first.name;
-    }
-    final role = session.user.role;
-    if (role != null) {
-      for (final business in businesses) {
-        if (business.role == role) {
-          return business.name;
-        }
-      }
-    }
-    return businesses.first.name;
   }
 
   Widget _buildTopBar() {
@@ -653,6 +635,7 @@ class _SidebarProfileFooter extends StatefulWidget {
   const _SidebarProfileFooter({
     required this.collapsed,
     required this.companyName,
+    required this.avatarSeed,
     required this.onEditProfile,
     required this.onSwitchCompany,
     required this.onLogout,
@@ -660,6 +643,7 @@ class _SidebarProfileFooter extends StatefulWidget {
 
   final bool collapsed;
   final String companyName;
+  final String avatarSeed;
   final VoidCallback onEditProfile;
   final VoidCallback onSwitchCompany;
   final Future<void> Function() onLogout;
@@ -738,12 +722,6 @@ class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
     }
   }
 
-  String get _initial {
-    final trimmed = widget.companyName.trim();
-    if (trimmed.isEmpty) return 'B';
-    return trimmed[0].toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
     return CompositedTransformTarget(
@@ -762,23 +740,50 @@ class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
             ),
             child: widget.collapsed
                 ? Center(
-                    child: _CompanyAvatar(initial: _initial, radius: 16),
+                    child: BusinessAvatar(
+                      name: widget.companyName,
+                      seed: widget.avatarSeed,
+                      diameter: 32,
+                    ),
                   )
                 : Row(
                     children: [
-                      _CompanyAvatar(initial: _initial),
+                      BusinessAvatar(
+                        name: widget.companyName,
+                        seed: widget.avatarSeed,
+                        diameter: 36,
+                      ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: Text(
-                          widget.companyName,
-                          style: const TextStyle(
-                            color: _sidebarTextActive,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.companyName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                              style: const TextStyle(
+                                color: _sidebarTextActive,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Text(
+                              'Current Company',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                              style: TextStyle(
+                                color: _sidebarText,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      const SizedBox(width: AppSpacing.xs),
                       AnimatedRotation(
                         turns: _menuOpen ? 0.5 : 0,
                         duration: const Duration(milliseconds: 200),
@@ -791,29 +796,6 @@ class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
                     ],
                   ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CompanyAvatar extends StatelessWidget {
-  const _CompanyAvatar({required this.initial, this.radius = 18});
-
-  final String initial;
-  final double radius;
-
-  @override
-  Widget build(BuildContext context) {
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: AppColors.primary,
-      child: Text(
-        initial,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: radius * 0.78,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );

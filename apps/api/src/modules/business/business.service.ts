@@ -2,8 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { BusinessRepository } from './business.repository';
-import type { BusinessDetail, BusinessListItem } from './business.types';
-import type { CreateBusinessBody } from './business.schema';
+import type { BusinessDetail, BusinessListItem, BusinessProfile } from './business.types';
+import type { CreateBusinessBody, UpdateBusinessProfileBody } from './business.schema';
 
 export class BusinessService {
   private readonly repository: BusinessRepository;
@@ -36,5 +36,52 @@ export class BusinessService {
     );
 
     return business;
+  }
+
+  async getProfile(
+    businessId: string,
+    accountId: string,
+  ): Promise<BusinessProfile> {
+    const profile = await this.repository.getProfile(businessId, accountId);
+    if (!profile) {
+      throw new AppError(
+        'BUSINESS_NOT_FOUND',
+        'Business not found or you do not have access',
+        404,
+      );
+    }
+    return profile;
+  }
+
+  async updateProfile(
+    businessId: string,
+    accountId: string,
+    input: UpdateBusinessProfileBody,
+  ): Promise<BusinessProfile> {
+    try {
+      const profile = await this.repository.updateProfile(
+        businessId,
+        accountId,
+        input,
+      );
+      if (!profile) {
+        throw new AppError(
+          'BUSINESS_NOT_FOUND',
+          'Business not found or you do not have access',
+          404,
+        );
+      }
+      return profile;
+    } catch (error) {
+      if (error instanceof Error && error.message === 'GSTIN_ALREADY_EXISTS') {
+        throw new AppError(
+          'VALIDATION_ERROR',
+          'Invalid request body',
+          400,
+          { gstin: ['This GSTIN is already registered to another business'] },
+        );
+      }
+      throw error;
+    }
   }
 }

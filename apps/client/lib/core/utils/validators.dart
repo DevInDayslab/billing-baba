@@ -45,6 +45,23 @@ abstract final class Validators {
     return null;
   }
 
+  static String? gstinMaxLength(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    if (value.trim().length > 15) {
+      return 'GSTIN must be at most 15 characters';
+    }
+    return null;
+  }
+
+  static String? pincode(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    if (digits.length != 6) {
+      return 'Pincode must be 6 digits';
+    }
+    return null;
+  }
+
   /// Kept for optional phone fields elsewhere in the app.
   static String? phone(String? value) {
     if (value == null || value.isEmpty) return null;

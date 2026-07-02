@@ -559,6 +559,27 @@ class Auth extends _$Auth {
     }
   }
 
+  void patchBusinessFromProfile({
+    required String businessId,
+    required String name,
+    String? gstin,
+  }) {
+    final session = state.session;
+    if (session == null) return;
+
+    final businesses = session.businesses
+        .map(
+          (business) => business.id == businessId
+              ? business.copyWith(name: name, gstin: gstin)
+              : business,
+        )
+        .toList();
+
+    state = state.copyWith(
+      session: session.copyWith(businesses: businesses),
+    );
+  }
+
   Future<void> refreshBusinesses() async {
     final accessToken = state.session?.accessToken;
     if (accessToken == null) return;
