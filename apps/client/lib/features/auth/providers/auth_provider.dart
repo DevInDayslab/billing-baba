@@ -29,6 +29,7 @@ class AuthState {
     this.otpPhase = OtpPhase.idle,
     this.phone = '',
     this.reqId = '',
+    this.msg91AccessToken,
     this.error,
     this.session,
     this.resendAvailableAt,
@@ -40,6 +41,7 @@ class AuthState {
   final OtpPhase otpPhase;
   final String phone;
   final String reqId;
+  final String? msg91AccessToken;
   final String? error;
   final AuthSession? session;
   final DateTime? resendAvailableAt;
@@ -53,11 +55,21 @@ class AuthState {
   bool get isVerifyingOtp =>
       otpPhase == OtpPhase.verifyingOtp || otpPhase == OtpPhase.backendLogin;
 
+  bool get isBackendLogin => otpPhase == OtpPhase.backendLogin;
+
+  bool get isBackendLoginFailed => otpPhase == OtpPhase.backendLoginFailed;
+
   bool get canSendOtp =>
       status == AuthStatus.unauthenticated && otpPhase == OtpPhase.idle;
 
   bool get canVerifyOtp =>
       status == AuthStatus.otpSent && otpPhase.canVerify && reqId.isNotEmpty;
+
+  bool get canRetryBackendLogin =>
+      status == AuthStatus.otpSent &&
+      otpPhase == OtpPhase.backendLoginFailed &&
+      msg91AccessToken != null &&
+      msg91AccessToken!.isNotEmpty;
 
   bool get canResendOtp {
     if (status != AuthStatus.otpSent || !otpPhase.canResend) return false;
@@ -70,6 +82,7 @@ class AuthState {
       status == AuthStatus.otpSent &&
       !backendLoginCompleted &&
       otpPhase != OtpPhase.backendLogin &&
+      otpPhase != OtpPhase.backendLoginFailed &&
       otpPhase != OtpPhase.verifyingOtp;
 
   int get resendSecondsLeft {
@@ -84,6 +97,7 @@ class AuthState {
     OtpPhase? otpPhase,
     String? phone,
     String? reqId,
+    String? msg91AccessToken,
     String? error,
     AuthSession? session,
     DateTime? resendAvailableAt,
@@ -93,12 +107,15 @@ class AuthState {
     bool clearSession = false,
     bool clearReqId = false,
     bool clearResendTimer = false,
+    bool clearMsg91Token = false,
   }) {
     return AuthState(
       status: status ?? this.status,
       otpPhase: otpPhase ?? this.otpPhase,
       phone: phone ?? this.phone,
       reqId: clearReqId ? '' : reqId ?? this.reqId,
+      msg91AccessToken:
+          clearMsg91Token ? null : msg91AccessToken ?? this.msg91AccessToken,
       error: clearError ? null : error ?? this.error,
       session: clearSession ? null : session ?? this.session,
       resendAvailableAt:
@@ -129,6 +146,7 @@ class Auth extends _$Auth {
 
   var _autoLoginStarted = false;
   var _verifyInFlight = false;
+  var _backendLoginInFlight = false;
   var _resendInFlight = false;
   var _sendInFlight = false;
   int _verifyGeneration = 0;
@@ -184,6 +202,7 @@ class Auth extends _$Auth {
   void _completeOtpLogin(AuthSession session) {
     _verifyGeneration++;
     _verifyInFlight = false;
+    _backendLoginInFlight = false;
     _resendInFlight = false;
     AuthFlowLogger.reset();
     final nextStatus = _statusForSession(session);
@@ -195,6 +214,7 @@ class Auth extends _$Auth {
       clearReqId: true,
       clearError: true,
       clearResendTimer: true,
+      clearMsg91Token: true,
       backendLoginCompleted: true,
     );
   }
@@ -202,6 +222,7 @@ class Auth extends _$Auth {
   void _resetOtpFlow() {
     _verifyGeneration++;
     _verifyInFlight = false;
+    _backendLoginInFlight = false;
     _resendInFlight = false;
     _sendInFlight = false;
     AuthFlowLogger.reset();
@@ -210,9 +231,81 @@ class Auth extends _$Auth {
       clearReqId: true,
       clearError: true,
       clearResendTimer: true,
+      clearMsg91Token: true,
       backendLoginCompleted: false,
       otpSessionVersion: state.otpSessionVersion + 1,
     );
+  }
+
+  void _onBackendLoginFailed(int generation, String specificMessage) {
+    if (generation != _verifyGeneration || state.backendLoginCompleted) {
+      return;
+    }
+    _verifyInFlight = false;
+    _backendLoginInFlight = false;
+    _setOtpPhase(OtpPhase.backendLoginFailed);
+    state = state.copyWith(
+      error: _formatBackendLoginFailureMessage(specificMessage),
+      clearResendTimer: true,
+    );
+  }
+
+  String _formatBackendLoginFailureMessage(String specificMessage) {
+    return '$specificMessage\n\nYour OTP has already been verified.\n\nPlease retry when the server becomes available.';
+  }
+
+  Future<void> _attemptBackendLogin(int generation) async {
+    if (generation != _verifyGeneration || state.backendLoginCompleted) {
+      return;
+    }
+
+    _setOtpPhase(OtpPhase.backendLogin);
+    state = state.copyWith(clearError: true, clearResendTimer: true);
+
+    final token = state.msg91AccessToken;
+    if (token == null || token.isEmpty) {
+      _onBackendLoginFailed(generation, 'Something went wrong.');
+      return;
+    }
+
+    try {
+      final healthy = await ref.read(authRepositoryProvider).checkHealth();
+      if (generation != _verifyGeneration) return;
+
+      if (!healthy) {
+        _onBackendLoginFailed(
+          generation,
+          'Billing Baba server is currently unavailable.',
+        );
+        return;
+      }
+
+      final service = await _service();
+      final session = await service.loginWithMsg91Token(
+        msg91AccessToken: token,
+        phone: state.phone,
+      );
+
+      if (generation != _verifyGeneration) return;
+
+      _completeOtpLogin(session);
+    } on DioException catch (e) {
+      if (generation != _verifyGeneration || state.backendLoginCompleted) {
+        return;
+      }
+      _onBackendLoginFailed(generation, _backendLoginErrorMessage(e));
+    } catch (e) {
+      if (generation != _verifyGeneration || state.backendLoginCompleted) {
+        return;
+      }
+      _onBackendLoginFailed(generation, _backendLoginErrorMessage(e));
+    } finally {
+      if (!state.backendLoginCompleted &&
+          state.otpPhase != OtpPhase.backendLogin) {
+        _verifyInFlight = false;
+        _backendLoginInFlight = false;
+      }
+    }
   }
 
   Future<void> tryAutoLogin() async {
@@ -310,8 +403,6 @@ class Auth extends _$Auth {
     _setOtpPhase(OtpPhase.verifyingOtp);
     state = state.copyWith(clearError: true);
 
-    var sdkVerified = false;
-
     try {
       final msg91Token = await _otp.verifyOtp(reqId: reqId, otp: otp);
 
@@ -321,18 +412,8 @@ class Auth extends _$Auth {
         return;
       }
 
-      sdkVerified = true;
-      _setOtpPhase(OtpPhase.backendLogin);
-
-      final service = await _service();
-      final session = await service.loginWithMsg91Token(
-        msg91AccessToken: msg91Token,
-        phone: state.phone,
-      );
-
-      if (generation != _verifyGeneration) return;
-
-      _completeOtpLogin(session);
+      state = state.copyWith(msg91AccessToken: msg91Token);
+      await _attemptBackendLogin(generation);
     } on OtpException catch (e) {
       if (state.backendLoginCompleted || generation != _verifyGeneration) {
         return;
@@ -352,30 +433,8 @@ class Auth extends _$Auth {
             ? 'Please check your internet connection.'
             : e.message,
       );
-    } on DioException catch (e) {
-      if (state.backendLoginCompleted || generation != _verifyGeneration) {
-        return;
-      }
-      if (sdkVerified) {
-        state = state.copyWith(
-          otpPhase: OtpPhase.error,
-          clearReqId: true,
-          error: _messageFromError(e),
-        );
-        return;
-      }
-      _setOtpPhase(OtpPhase.otpSent);
-      state = state.copyWith(error: _messageFromError(e));
     } catch (e) {
       if (state.backendLoginCompleted || generation != _verifyGeneration) {
-        return;
-      }
-      if (sdkVerified) {
-        state = state.copyWith(
-          otpPhase: OtpPhase.error,
-          clearReqId: true,
-          error: _messageFromError(e),
-        );
         return;
       }
       _setOtpPhase(OtpPhase.otpSent);
@@ -386,6 +445,18 @@ class Auth extends _$Auth {
         _verifyInFlight = false;
       }
     }
+  }
+
+  Future<void> retryBackendLogin() async {
+    if (_backendLoginInFlight ||
+        _verifyInFlight ||
+        !state.canRetryBackendLogin) {
+      return;
+    }
+
+    _backendLoginInFlight = true;
+    final generation = _verifyGeneration;
+    await _attemptBackendLogin(generation);
   }
 
   Future<void> devLogin() async {
@@ -530,6 +601,34 @@ class Auth extends _$Auth {
       AuthFlowLogger.reset();
       state = const AuthState(status: AuthStatus.unauthenticated);
     }
+  }
+
+  String _backendLoginErrorMessage(Object error) {
+    if (error is DioException) {
+      if (error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout) {
+        return 'Server is taking too long to respond.';
+      }
+      if (error.type == DioExceptionType.connectionError) {
+        return 'Unable to connect to Billing Baba server.';
+      }
+      final statusCode = error.response?.statusCode;
+      if (statusCode != null && statusCode >= 500) {
+        return 'Billing Baba server encountered an error.';
+      }
+      final data = error.response?.data;
+      if (data is Map<String, dynamic>) {
+        final code = data['code']?.toString();
+        final message = data['message'];
+        if (message is String && message.isNotEmpty) {
+          return _mapApiErrorMessage(code, message);
+        }
+      }
+    }
+    if (error.toString().contains('SocketException')) {
+      return 'Unable to connect to Billing Baba server.';
+    }
+    return 'Something went wrong.';
   }
 
   String _messageFromError(Object error) {

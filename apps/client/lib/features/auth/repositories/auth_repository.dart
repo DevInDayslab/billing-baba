@@ -17,6 +17,24 @@ class AuthRepository {
 
   final Dio _dio;
 
+  static const _healthCheckTimeout = Duration(seconds: 5);
+
+  /// Lightweight reachability check before backend login.
+  Future<bool> checkHealth() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.health,
+        options: Options(
+          sendTimeout: _healthCheckTimeout,
+          receiveTimeout: _healthCheckTimeout,
+        ),
+      );
+      return response.statusCode == 200 && response.data?['success'] == true;
+    } on DioException {
+      return false;
+    }
+  }
+
   Future<AuthSession> login({
     required String msg91AccessToken,
     required String phone,

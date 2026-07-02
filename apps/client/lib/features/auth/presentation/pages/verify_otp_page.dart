@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/auth/models/otp_phase.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -38,10 +39,15 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
     _resendTicker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       final auth = ref.read(authProvider);
-      if (auth.showResend && auth.resendSecondsLeft > 0) {
+      if (auth.showResend && auth.resendAvailableAt != null) {
         setState(() {});
       }
     });
+  }
+
+  void _stopResendTicker() {
+    _resendTicker?.cancel();
+    _resendTicker = null;
   }
 
   void _clearOtpFields() {
@@ -53,7 +59,7 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
 
   @override
   void dispose() {
-    _resendTicker?.cancel();
+    _stopResendTicker();
     for (final c in _controllers) {
       c.dispose();
     }
@@ -99,9 +105,32 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
     await ref.read(authProvider.notifier).resendOtp();
   }
 
+  Future<void> _retryBackendLogin() async {
+    final auth = ref.read(authProvider);
+    if (!auth.canRetryBackendLogin || auth.isOtpBusy) return;
+    await ref.read(authProvider.notifier).retryBackendLogin();
+  }
+
+  void _goBackToLogin() {
+    _stopResendTicker();
+    ref.read(authProvider.notifier).resetToLogin();
+    context.pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+
+    ref.listen<bool>(
+      authProvider.select((s) => s.showResend),
+      (previous, next) {
+        if (next) {
+          _startResendTicker();
+        } else {
+          _stopResendTicker();
+        }
+      },
+    );
 
     ref.listen<int>(
       authProvider.select((s) => s.otpSessionVersion),
@@ -113,10 +142,12 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
     );
 
     final canVerify = auth.canVerifyOtp && !auth.isOtpBusy && _otp.length == _otpLength;
-    final isVerifying = auth.isVerifyingOtp;
+    final isVerifyingOtp = auth.otpPhase == OtpPhase.verifyingOtp;
+    final isSigningIn = auth.isBackendLogin;
+    final isBackendLoginFailed = auth.isBackendLoginFailed;
     final isResending = auth.isSendingOtp && auth.status == AuthStatus.otpSent;
     final resendSecondsLeft = auth.resendSecondsLeft;
-    final inputsEnabled = !auth.isOtpBusy;
+    final inputsEnabled = !auth.isOtpBusy && !isBackendLoginFailed;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
@@ -215,27 +246,23 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  TextButton(
-                    onPressed: auth.isOtpBusy
-                        ? null
-                        : () {
-                            ref.read(authProvider.notifier).resetToLogin();
-                            context.pop();
-                          },
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: const Text(
-                      'Change Number',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                  if (!isBackendLoginFailed)
+                    TextButton(
+                      onPressed: auth.isOtpBusy ? null : _goBackToLogin,
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Change Number',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(height: AppSpacing.xxl),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -303,44 +330,133 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                     ),
                   ],
                   const SizedBox(height: AppSpacing.xl),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton.icon(
-                      onPressed: canVerify ? _verify : null,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        disabledBackgroundColor:
-                            AppColors.primary.withValues(alpha: 0.6),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: AppRadius.mdBorder,
+                  if (isBackendLoginFailed) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 52,
+                            child: OutlinedButton(
+                              onPressed: auth.isOtpBusy ? null : _goBackToLogin,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.textPrimary,
+                                side: BorderSide(color: Colors.grey.shade300),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: AppRadius.mdBorder,
+                                ),
+                              ),
+                              child: const Text(
+                                'Back',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: SizedBox(
+                            height: 52,
+                            child: FilledButton(
+                              onPressed: auth.canRetryBackendLogin &&
+                                      !auth.isOtpBusy
+                                  ? _retryBackendLogin
+                                  : null,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                disabledBackgroundColor:
+                                    AppColors.primary.withValues(alpha: 0.6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: AppRadius.mdBorder,
+                                ),
+                              ),
+                              child: const Text(
+                                'Retry',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else if (isSigningIn)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: FilledButton.icon(
+                        onPressed: null,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          disabledBackgroundColor:
+                              AppColors.primary.withValues(alpha: 0.6),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppRadius.mdBorder,
+                          ),
+                        ),
+                        iconAlignment: IconAlignment.end,
+                        icon: const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                        label: const Text(
+                          'Signing you in...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      iconAlignment: IconAlignment.end,
-                      icon: isVerifying
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
+                    )
+                  else
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: FilledButton.icon(
+                        onPressed: canVerify ? _verify : null,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          disabledBackgroundColor:
+                              AppColors.primary.withValues(alpha: 0.6),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppRadius.mdBorder,
+                          ),
+                        ),
+                        iconAlignment: IconAlignment.end,
+                        icon: isVerifyingOtp
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.arrow_forward_rounded,
                                 color: Colors.white,
+                                size: 20,
                               ),
-                            )
-                          : const Icon(
-                              Icons.arrow_forward_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                      label: Text(
-                        isVerifying ? 'Verifying...' : 'Verify OTP',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                        label: Text(
+                          isVerifyingOtp ? 'Verifying...' : 'Verify OTP',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   if (auth.showResend) ...[
                     const SizedBox(height: AppSpacing.lg),
                     const Text(

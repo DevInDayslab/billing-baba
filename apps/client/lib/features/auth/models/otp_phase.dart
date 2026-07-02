@@ -7,6 +7,7 @@ enum OtpPhase {
   otpSent,
   verifyingOtp,
   backendLogin,
+  backendLoginFailed,
   error,
 }
 
