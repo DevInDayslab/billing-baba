@@ -30,6 +30,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-015: Unified Purchase Documents](#adr-015-unified-purchase-documents)
 - [ADR-016: Event-based Inventory Ledger](#adr-016-event-based-inventory-ledger)
 - [ADR-017: Double Entry Accounting](#adr-017-double-entry-accounting)
+- [ADR-018: OTP Authentication and Accounts Identity](#adr-018-otp-authentication-and-accounts-identity)
 
 ---
 
@@ -54,6 +55,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 | ADR-015 | Unified Purchase Documents | June 2026 | Accepted |
 | ADR-016 | Event-based Inventory Ledger | June 2026 | Accepted |
 | ADR-017 | Double Entry Accounting | June 2026 | Accepted |
+| ADR-018 | OTP Authentication and Accounts Identity | July 2026 | Accepted |
 
 ---
 
@@ -790,6 +792,51 @@ Phase 1 uses **single-sided party ledger** (not full GL with account heads). Cas
 | Separate cash/bank tables | PRD payment modes sufficient; adds scope |
 
 **References:** [04-database.md](04-database.md#ledger_entries), [05-api.md](05-api.md#accounting-apis)
+
+---
+
+## ADR-018: OTP Authentication and Accounts Identity
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Technical Lead |
+
+### Context
+
+Phase 1 authentication uses phone OTP via MSG91 on the Flutter client. The backend must verify every login server-side, issue JWT sessions, and support accounts with zero, one, or many business memberships. The existing `users` table is business-scoped and required `password_hash`, which does not fit OTP-only global login.
+
+### Decision
+
+1. Add a server-only `accounts` table (`phone` unique) as the global identity anchor.
+2. Link `users.account_id` → `accounts.id`; make `password_hash` nullable for OTP-only users.
+3. Public login endpoint is `POST /auth/login` with `{ access_token }` (MSG91 widget token). MSG91 verification is internal to `AuthService`.
+4. Access JWT lifetime 15 minutes; opaque refresh tokens (30 days) stored as SHA-256 hashes in `refresh_tokens` with `account_id`.
+5. Business scoping: single membership auto-scopes JWT; multiple memberships use account-level JWT until client calls `POST /auth/refresh` with `business_id`.
+
+### Consequences
+
+**Positive:**
+
+- Client is decoupled from auth provider (MSG91 → swappable without API changes)
+- Supports multi-company selection and zero-business onboarding
+- Refresh token rotation and revocation without exposing secrets
+
+**Negative:**
+
+- Schema migration required; `users.account_id` mandatory for new rows
+- Multi-business flow requires an extra refresh call after business selection
+
+### Alternatives Considered
+
+| Alternative | Why rejected |
+|-------------|--------------|
+| Password login on `users` only | Phase 1 scope is OTP-only |
+| `POST /auth/verify-msg91` | Leaks provider into public API |
+| Separate `select-business` endpoint | Reuses `/auth/refresh` with optional `business_id` |
+
+**References:** [05-api.md](05-api.md#authentication-apis), [01-architecture.md](01-architecture.md#authentication-flow)
 
 ---
 

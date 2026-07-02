@@ -48,6 +48,9 @@ dependencies:
   flex_color_scheme: ^8.4.0
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
+  sendotp_flutter_sdk: ^0.0.2
+  flutter_dotenv: ^6.0.1
+  lucide_icons_flutter: ^3.1.14+2
 
 dev_dependencies:
   flutter_test:
@@ -86,3 +89,4 @@ flutter:
     - assets/images/
     - assets/illustrations/
     - assets/animations/
+    - .env
