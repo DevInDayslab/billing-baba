@@ -8,6 +8,7 @@ import 'package:billing_baba/features/auth/services/auth_service.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_flow_logger.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'auth_provider.g.dart';
@@ -149,6 +150,7 @@ class Auth extends _$Auth {
   var _backendLoginInFlight = false;
   var _resendInFlight = false;
   var _sendInFlight = false;
+  var _devLoginInFlight = false;
   int _verifyGeneration = 0;
 
   @override
@@ -460,16 +462,28 @@ class Auth extends _$Auth {
   }
 
   Future<void> devLogin() async {
+    if (_devLoginInFlight || state.backendLoginCompleted) return;
+
+    _devLoginInFlight = true;
+    debugPrint('[DEV_LOGIN] Request started');
     state = state.copyWith(clearError: true);
     _setOtpPhase(OtpPhase.backendLogin);
 
     try {
       final service = await _service();
       final session = await service.devLogin();
+      debugPrint('[DEV_LOGIN] Login successful');
       _completeOtpLogin(session);
-    } catch (e) {
+    } on DioException catch (e) {
+      debugPrint('[DEV_LOGIN] Failed: ${e.response?.statusCode ?? 'network'}');
       _setOtpPhase(OtpPhase.idle);
-      state = state.copyWith(error: _messageFromError(e));
+      state = state.copyWith(error: _devLoginErrorMessage(e));
+    } catch (e) {
+      debugPrint('[DEV_LOGIN] Failed: unknown');
+      _setOtpPhase(OtpPhase.idle);
+      state = state.copyWith(error: _devLoginErrorMessage(e));
+    } finally {
+      _devLoginInFlight = false;
     }
   }
 
@@ -680,6 +694,26 @@ class Auth extends _$Auth {
       }
     }
     return 'Something went wrong. Please try again.';
+  }
+
+  String _devLoginErrorMessage(Object error) {
+    if (error is DioException) {
+      final statusCode = error.response?.statusCode;
+      switch (statusCode) {
+        case 404:
+          return 'Developer Login is disabled.';
+        case 401:
+          return 'Developer Login is not available.';
+        case 500:
+          return 'Unable to sign in using Developer Login.';
+      }
+      if (error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.connectionError) {
+        return 'Please check your internet connection.';
+      }
+    }
+    return 'Unable to sign in using Developer Login.';
   }
 
   String _mapApiErrorMessage(String? code, String message) {

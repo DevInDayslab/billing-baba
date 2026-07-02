@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/network/api_endpoints.dart';
+import 'package:billing_baba/core/network/interceptors.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:dio/dio.dart';
 
@@ -13,7 +14,7 @@ class AuthRepository {
                 receiveTimeout: const Duration(seconds: 30),
                 headers: {'Content-Type': 'application/json'},
               ),
-            );
+            )..interceptors.add(buildJsonBodyInterceptor());
 
   final Dio _dio;
 
@@ -60,6 +61,7 @@ class AuthRepository {
   Future<AuthSession> devLogin() async {
     final response = await _dio.post<Map<String, dynamic>>(
       '${ApiEndpoints.auth}/dev-login',
+      data: const <String, dynamic>{},
     );
     return _parseSession(response.data);
   }

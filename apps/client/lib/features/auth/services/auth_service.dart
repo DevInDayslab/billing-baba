@@ -4,6 +4,7 @@ import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
   AuthService({
@@ -97,6 +98,9 @@ class AuthService {
 
   Future<AuthSession> devLogin() async {
     final session = await _repository.devLogin();
+    debugPrint('[DEV_LOGIN] Response received');
+    AuthDebugLogger.backendLoginSuccess();
+    AuthDebugLogger.jwtIssued(session.accessToken);
     await persistSession(session);
     return session;
   }

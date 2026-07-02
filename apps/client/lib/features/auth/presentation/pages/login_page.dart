@@ -1,6 +1,5 @@
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/auth/models/otp_phase.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -35,11 +34,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
-    final isLoading =
+    final isDevLoginLoading =
+        auth.isBackendLogin && auth.status == AuthStatus.unauthenticated;
+    final isOtpFlowLoading =
         auth.isSendingOtp ||
-        (auth.otpPhase == OtpPhase.backendLogin &&
-            auth.status == AuthStatus.unauthenticated);
-    final canSend = auth.canSendOtp && !isLoading;
+        (auth.isBackendLogin && auth.status == AuthStatus.otpSent);
+    final canSend = auth.canSendOtp && !isOtpFlowLoading && !isDevLoginLoading;
     final showDevLogin = AppConfig.enableDevLogin;
 
     return Scaffold(
@@ -107,7 +107,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ? _DesktopCard(
                               formKey: _formKey,
                               phoneController: _phoneController,
-                              isLoading: isLoading,
+                              isOtpFlowLoading: isOtpFlowLoading,
+                              isDevLoginLoading: isDevLoginLoading,
                               canSend: canSend,
                               errorMessage: auth.error,
                               showDevLogin: showDevLogin,
@@ -117,7 +118,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           : _MobileCard(
                               formKey: _formKey,
                               phoneController: _phoneController,
-                              isLoading: isLoading,
+                              isOtpFlowLoading: isOtpFlowLoading,
+                              isDevLoginLoading: isDevLoginLoading,
                               canSend: canSend,
                               errorMessage: auth.error,
                               showDevLogin: showDevLogin,
@@ -143,7 +145,8 @@ class _DesktopCard extends StatelessWidget {
   const _DesktopCard({
     required this.formKey,
     required this.phoneController,
-    required this.isLoading,
+    required this.isOtpFlowLoading,
+    required this.isDevLoginLoading,
     required this.canSend,
     required this.onSubmit,
     this.errorMessage,
@@ -153,7 +156,8 @@ class _DesktopCard extends StatelessWidget {
 
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
-  final bool isLoading;
+  final bool isOtpFlowLoading;
+  final bool isDevLoginLoading;
   final bool canSend;
   final String? errorMessage;
   final bool showDevLogin;
@@ -215,7 +219,8 @@ class _DesktopCard extends StatelessWidget {
                 child: _LoginForm(
                   formKey: formKey,
                   phoneController: phoneController,
-                  isLoading: isLoading,
+                  isOtpFlowLoading: isOtpFlowLoading,
+                  isDevLoginLoading: isDevLoginLoading,
                   canSend: canSend,
                   errorMessage: errorMessage,
                   showDevLogin: showDevLogin,
@@ -238,7 +243,8 @@ class _MobileCard extends StatelessWidget {
   const _MobileCard({
     required this.formKey,
     required this.phoneController,
-    required this.isLoading,
+    required this.isOtpFlowLoading,
+    required this.isDevLoginLoading,
     required this.canSend,
     required this.onSubmit,
     this.errorMessage,
@@ -248,7 +254,8 @@ class _MobileCard extends StatelessWidget {
 
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
-  final bool isLoading;
+  final bool isOtpFlowLoading;
+  final bool isDevLoginLoading;
   final bool canSend;
   final String? errorMessage;
   final bool showDevLogin;
@@ -273,7 +280,8 @@ class _MobileCard extends StatelessWidget {
       child: _LoginForm(
         formKey: formKey,
         phoneController: phoneController,
-        isLoading: isLoading,
+        isOtpFlowLoading: isOtpFlowLoading,
+        isDevLoginLoading: isDevLoginLoading,
         canSend: canSend,
         errorMessage: errorMessage,
         showDevLogin: showDevLogin,
@@ -291,7 +299,8 @@ class _LoginForm extends StatelessWidget {
   const _LoginForm({
     required this.formKey,
     required this.phoneController,
-    required this.isLoading,
+    required this.isOtpFlowLoading,
+    required this.isDevLoginLoading,
     required this.canSend,
     required this.onSubmit,
     this.errorMessage,
@@ -301,7 +310,8 @@ class _LoginForm extends StatelessWidget {
 
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
-  final bool isLoading;
+  final bool isOtpFlowLoading;
+  final bool isDevLoginLoading;
   final bool canSend;
   final String? errorMessage;
   final bool showDevLogin;
@@ -453,7 +463,7 @@ class _LoginForm extends StatelessWidget {
                 ),
               ),
               iconAlignment: IconAlignment.end,
-              icon: isLoading
+              icon: isOtpFlowLoading
                   ? const SizedBox(
                       width: 20,
                       height: 20,
@@ -468,7 +478,7 @@ class _LoginForm extends StatelessWidget {
                       size: 20,
                     ),
               label: Text(
-                isLoading ? 'Sending OTP...' : 'Continue',
+                isOtpFlowLoading ? 'Sending OTP...' : 'Continue',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -494,7 +504,7 @@ class _LoginForm extends StatelessWidget {
               width: double.infinity,
               height: 44,
               child: OutlinedButton.icon(
-                onPressed: isLoading ? null : onDevLogin,
+                onPressed: isDevLoginLoading ? null : onDevLogin,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
                   side: BorderSide(color: Colors.grey.shade300),
@@ -502,10 +512,19 @@ class _LoginForm extends StatelessWidget {
                     borderRadius: AppRadius.mdBorder,
                   ),
                 ),
-                icon: const Icon(Icons.developer_mode_outlined, size: 18),
-                label: const Text(
-                  'Developer Login',
-                  style: TextStyle(
+                icon: isDevLoginLoading
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.grey.shade600,
+                        ),
+                      )
+                    : const Icon(Icons.developer_mode_outlined, size: 18),
+                label: Text(
+                  isDevLoginLoading ? 'Signing in...' : 'Developer Login',
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
