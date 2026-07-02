@@ -7,9 +7,7 @@ class ProductTransaction {
     required this.partyName,
     required this.date,
     required this.quantity,
-    this.unit,
-    required this.pricePerUnit,
-    required this.status,
+    required this.pricePerUnit, required this.status, this.unit,
     this.isInbound = false,
   });
 

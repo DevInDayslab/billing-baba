@@ -44,7 +44,7 @@ class _SelectItemsForCategoryDialogState
   final _selectedIds = <String>{};
   var _searchQuery = '';
   var _removeFromExistingCategory = true;
-  var _sortField = _ItemSortField.name;
+  _ItemSortField _sortField = _ItemSortField.name;
   var _sortAscending = true;
 
   bool _isInTargetCategory(InventoryItem item) {
@@ -203,7 +203,6 @@ class _SelectItemsForCategoryDialogState
               ),
               const SizedBox(height: AppSpacing.md),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Checkbox(
                     value: _removeFromExistingCategory,

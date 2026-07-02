@@ -54,7 +54,6 @@ class InventoryPopupMenuButton<T> extends StatelessWidget {
       brightness: Brightness.light,
       useMaterial3: Theme.of(context).useMaterial3,
       colorScheme: const ColorScheme.light(
-        surface: Colors.white,
         onSurface: AppColors.textPrimary,
       ),
       popupMenuTheme: const PopupMenuThemeData(

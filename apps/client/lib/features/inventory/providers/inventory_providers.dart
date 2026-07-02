@@ -7,6 +7,7 @@ import 'package:billing_baba/features/inventory/providers/inventory_categories_p
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/src/providers/provider.dart';
 
 final productsProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(productSearchQueryProvider).toLowerCase();
@@ -58,7 +59,7 @@ final categoriesProvider = Provider<List<InventoryCategory>>((ref) {
       .toList();
 });
 
-final categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
+final ProviderFamily<List<InventoryItem>, String> categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
   ref,
   categoryId,
 ) {
@@ -139,7 +140,7 @@ final productTransactionSearchQueryProvider =
       ProductTransactionSearchQuery.new,
     );
 
-final productTransactionsProvider =
+final ProviderFamily<List<ProductTransaction>, String> productTransactionsProvider =
     Provider.family<List<ProductTransaction>, String>((ref, itemId) {
       final query =
           ref.watch(productTransactionSearchQueryProvider).toLowerCase();
