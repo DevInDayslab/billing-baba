@@ -9,6 +9,8 @@ import {
   verifyMsg91WidgetAccessToken,
 } from './msg91-widget.service';
 import type {
+  AccountProfileResponse,
+  AccountRecord,
   AuthSessionResponse,
   AuthUserResponse,
   BusinessSummaryResponse,
@@ -54,6 +56,19 @@ function buildUserResponse(
     phone: account.phone,
     name: account.name,
     role: membership?.role,
+  };
+}
+
+function buildProfileResponse(
+  account: AccountRecord,
+): AccountProfileResponse {
+  return {
+    display_name: account.name,
+    phone: account.phone,
+    email: account.email,
+    avatar_url: account.avatarUrl,
+    timezone: account.timezone,
+    language: account.language,
   };
 }
 
@@ -206,6 +221,7 @@ export class AuthService {
     }
 
     const account = await this.findOrCreateAccountByPhone(phone);
+    await this.repository.ensureAccountProfile(account.id, account.phone);
 
     const memberships = await this.repository.findMembershipsByAccountId(
       account.id,
@@ -361,6 +377,7 @@ export class AuthService {
       user,
       businesses,
       selected_business: selectedBusiness,
+      profile: buildProfileResponse(accountRow),
     };
   }
 }

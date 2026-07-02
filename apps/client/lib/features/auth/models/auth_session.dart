@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/auth/models/account_profile.dart';
 import 'package:billing_baba/features/auth/models/auth_user.dart';
 import 'package:billing_baba/features/auth/models/business_summary.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -24,7 +25,7 @@ abstract class MeResponse with _$MeResponse {
   const factory MeResponse({
     required AuthUser user,
     required List<BusinessSummary> businesses,
-    @JsonKey(name: 'selected_business') BusinessSummary? selectedBusiness,
+    required AccountProfile profile, @JsonKey(name: 'selected_business') BusinessSummary? selectedBusiness,
   }) = _MeResponse;
 
   factory MeResponse.fromJson(Map<String, dynamic> json) =>

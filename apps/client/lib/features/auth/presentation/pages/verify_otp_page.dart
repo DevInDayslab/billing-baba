@@ -16,39 +16,44 @@ class VerifyOtpPage extends ConsumerStatefulWidget {
 
 class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
   static const _otpLength = 6;
-  static const _resendSeconds = 30;
 
   final List<TextEditingController> _controllers =
       List.generate(_otpLength, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(_otpLength, (_) => FocusNode());
+  final List<FocusNode> _focusNodes =
+      List.generate(_otpLength, (_) => FocusNode());
 
-  int _secondsLeft = _resendSeconds;
-  Timer? _timer;
+  Timer? _resendTicker;
 
   @override
   void initState() {
     super.initState();
-    _startTimer();
+    _startResendTicker();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNodes.first.requestFocus();
     });
   }
 
-  void _startTimer() {
-    _timer?.cancel();
-    setState(() => _secondsLeft = _resendSeconds);
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_secondsLeft == 0) {
-        t.cancel();
-      } else {
-        setState(() => _secondsLeft--);
+  void _startResendTicker() {
+    _resendTicker?.cancel();
+    _resendTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      final auth = ref.read(authProvider);
+      if (auth.showResend && auth.resendSecondsLeft > 0) {
+        setState(() {});
       }
     });
   }
 
+  void _clearOtpFields() {
+    for (final controller in _controllers) {
+      controller.clear();
+    }
+    _focusNodes.first.requestFocus();
+  }
+
   @override
   void dispose() {
-    _timer?.cancel();
+    _resendTicker?.cancel();
     for (final c in _controllers) {
       c.dispose();
     }
@@ -61,32 +66,57 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
   String get _otp => _controllers.map((c) => c.text).join();
 
   Future<void> _verify() async {
-    if (_otp.length < _otpLength) return;
+    final auth = ref.read(authProvider);
+    if (!auth.canVerifyOtp || auth.isOtpBusy || _otp.length < _otpLength) {
+      return;
+    }
     await ref.read(authProvider.notifier).verifyOtp(_otp);
   }
 
   void _onDigitChanged(int index, String value) {
+    final auth = ref.read(authProvider);
+    if (auth.isOtpBusy) return;
+
     if (value.length == 1 && index < _otpLength - 1) {
       _focusNodes[index + 1].requestFocus();
     }
     if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
-    if (_otp.length == _otpLength) unawaited(_verify());
+
+    final otp = _controllers.map((c) => c.text).join();
+    if (otp.length == _otpLength) {
+      final latest = ref.read(authProvider);
+      if (latest.canVerifyOtp && !latest.isOtpBusy) {
+        unawaited(_verify());
+      }
+    }
   }
 
-  void _resend() {
-    for (final c in _controllers) {
-      c.clear();
-    }
-    _focusNodes.first.requestFocus();
-    ref.read(authProvider.notifier).resendOtp();
-    _startTimer();
+  Future<void> _resend() async {
+    final auth = ref.read(authProvider);
+    if (!auth.canResendOtp || auth.isOtpBusy) return;
+    await ref.read(authProvider.notifier).resendOtp();
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+
+    ref.listen<int>(
+      authProvider.select((s) => s.otpSessionVersion),
+      (previous, next) {
+        if (previous != null && previous != next) {
+          _clearOtpFields();
+        }
+      },
+    );
+
+    final canVerify = auth.canVerifyOtp && !auth.isOtpBusy && _otp.length == _otpLength;
+    final isVerifying = auth.isVerifyingOtp;
+    final isResending = auth.isSendingOtp && auth.status == AuthStatus.otpSent;
+    final resendSecondsLeft = auth.resendSecondsLeft;
+    final inputsEnabled = !auth.isOtpBusy;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
@@ -114,7 +144,6 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
               ),
               child: Column(
                 children: [
-                  // Logo
                   Image.asset(
                     'assets/images/logo.png',
                     width: 72,
@@ -122,8 +151,6 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                     fit: BoxFit.contain,
                   ),
                   const SizedBox(height: AppSpacing.sm),
-
-                  // BillingBaba
                   RichText(
                     text: const TextSpan(
                       children: [
@@ -147,8 +174,6 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-
-                  // Tagline
                   const Text(
                     'SIMPLIFY . BILL . GROW',
                     style: TextStyle(
@@ -158,12 +183,9 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                       letterSpacing: 2,
                     ),
                   ),
-
                   const SizedBox(height: AppSpacing.xxl),
                   const Divider(),
                   const SizedBox(height: AppSpacing.xxl),
-
-                  // Heading
                   const Text(
                     'Verify Your Mobile Number',
                     style: TextStyle(
@@ -173,8 +195,6 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-
-                  // Subtitle
                   RichText(
                     textAlign: TextAlign.center,
                     text: TextSpan(
@@ -195,13 +215,13 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-
-                  // Change number
                   TextButton(
-                    onPressed: () {
-                      ref.read(authProvider.notifier).resetToLogin();
-                      context.pop();
-                    },
+                    onPressed: auth.isOtpBusy
+                        ? null
+                        : () {
+                            ref.read(authProvider.notifier).resetToLogin();
+                            context.pop();
+                          },
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,
@@ -216,10 +236,7 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: AppSpacing.xxl),
-
-                  // OTP boxes
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(_otpLength, (i) {
@@ -229,6 +246,7 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                         child: TextFormField(
                           controller: _controllers[i],
                           focusNode: _focusNodes[i],
+                          enabled: inputsEnabled,
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
                           maxLength: 1,
@@ -273,7 +291,6 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                       );
                     }),
                   ),
-
                   if (auth.error != null) ...[
                     const SizedBox(height: AppSpacing.md),
                     Text(
@@ -285,18 +302,12 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                       ),
                     ),
                   ],
-
                   const SizedBox(height: AppSpacing.xl),
-
-                  // Verify button
                   SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: FilledButton.icon(
-                      onPressed:
-                          (auth.isLoading || _otp.length < _otpLength)
-                              ? null
-                              : _verify,
+                      onPressed: canVerify ? _verify : null,
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         disabledBackgroundColor:
@@ -306,7 +317,7 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                         ),
                       ),
                       iconAlignment: IconAlignment.end,
-                      icon: auth.isLoading
+                      icon: isVerifying
                           ? const SizedBox(
                               width: 20,
                               height: 20,
@@ -321,7 +332,7 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                               size: 20,
                             ),
                       label: Text(
-                        auth.isLoading ? 'Verifying...' : 'Verify OTP',
+                        isVerifying ? 'Verifying...' : 'Verify OTP',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -330,40 +341,50 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Didn't receive + resend
-                  const Text(
-                    "Didn't receive the code?",
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
+                  if (auth.showResend) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    const Text(
+                      "Didn't receive the code?",
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  if (_secondsLeft > 0) Text(
-                          'Resend OTP in ${_secondsLeft}s',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
+                    const SizedBox(height: 4),
+                    if (isResending)
+                      const Text(
+                        'Sending OTP...',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    else if (resendSecondsLeft > 0)
+                      Text(
+                        'Resend OTP in ${resendSecondsLeft}s',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )
+                    else
+                      GestureDetector(
+                        onTap: auth.canResendOtp ? _resend : null,
+                        child: Text(
+                          'Resend OTP',
+                          style: TextStyle(
+                            color: auth.canResendOtp
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
                             fontWeight: FontWeight.w600,
-                          ),
-                        ) else GestureDetector(
-                          onTap: _resend,
-                          child: const Text(
-                            'Resend OTP',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
+                            fontSize: 13,
                           ),
                         ),
-
+                      ),
+                  ],
                   const SizedBox(height: AppSpacing.lg),
-
-                  // Secure verification
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

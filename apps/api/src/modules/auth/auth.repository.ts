@@ -17,6 +17,10 @@ export class AuthRepository {
         id: accounts.id,
         phone: accounts.phone,
         name: accounts.name,
+        email: accounts.email,
+        avatarUrl: accounts.avatarUrl,
+        timezone: accounts.timezone,
+        language: accounts.language,
         createdAt: accounts.createdAt,
         updatedAt: accounts.updatedAt,
       })
@@ -35,6 +39,10 @@ export class AuthRepository {
         id: accounts.id,
         phone: accounts.phone,
         name: accounts.name,
+        email: accounts.email,
+        avatarUrl: accounts.avatarUrl,
+        timezone: accounts.timezone,
+        language: accounts.language,
         createdAt: accounts.createdAt,
         updatedAt: accounts.updatedAt,
       });
@@ -58,6 +66,10 @@ export class AuthRepository {
         id: accounts.id,
         phone: accounts.phone,
         name: accounts.name,
+        email: accounts.email,
+        avatarUrl: accounts.avatarUrl,
+        timezone: accounts.timezone,
+        language: accounts.language,
         createdAt: accounts.createdAt,
         updatedAt: accounts.updatedAt,
       });
@@ -153,6 +165,10 @@ export class AuthRepository {
         id: accounts.id,
         phone: accounts.phone,
         name: accounts.name,
+        email: accounts.email,
+        avatarUrl: accounts.avatarUrl,
+        timezone: accounts.timezone,
+        language: accounts.language,
         createdAt: accounts.createdAt,
         updatedAt: accounts.updatedAt,
       })
@@ -161,6 +177,45 @@ export class AuthRepository {
       .limit(1);
 
     return row ?? null;
+  }
+
+  async ensureAccountProfile(
+    accountId: string,
+    phone: string,
+  ): Promise<AccountRecord> {
+    const existing = await this.findAccountById(accountId);
+    if (!existing) {
+      throw new Error('Account not found');
+    }
+
+    const displayName = existing.name ?? phone.slice(-10);
+
+    const [row] = await this.db
+      .update(accounts)
+      .set({
+        name: displayName,
+        timezone: existing.timezone || 'Asia/Kolkata',
+        language: existing.language || 'en',
+        updatedAt: new Date(),
+      })
+      .where(eq(accounts.id, accountId))
+      .returning({
+        id: accounts.id,
+        phone: accounts.phone,
+        name: accounts.name,
+        email: accounts.email,
+        avatarUrl: accounts.avatarUrl,
+        timezone: accounts.timezone,
+        language: accounts.language,
+        createdAt: accounts.createdAt,
+        updatedAt: accounts.updatedAt,
+      });
+
+    if (!row) {
+      throw new Error('Failed to ensure account profile');
+    }
+
+    return row;
   }
 
   async createRefreshToken(input: {

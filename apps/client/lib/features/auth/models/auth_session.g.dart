@@ -30,6 +30,7 @@ _MeResponse _$MeResponseFromJson(Map<String, dynamic> json) => _MeResponse(
   businesses: (json['businesses'] as List<dynamic>)
       .map((e) => BusinessSummary.fromJson(e as Map<String, dynamic>))
       .toList(),
+  profile: AccountProfile.fromJson(json['profile'] as Map<String, dynamic>),
   selectedBusiness: json['selected_business'] == null
       ? null
       : BusinessSummary.fromJson(
@@ -41,5 +42,6 @@ Map<String, dynamic> _$MeResponseToJson(_MeResponse instance) =>
     <String, dynamic>{
       'user': instance.user,
       'businesses': instance.businesses,
+      'profile': instance.profile,
       'selected_business': instance.selectedBusiness,
     };

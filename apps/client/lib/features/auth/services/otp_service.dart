@@ -3,9 +3,17 @@ import 'package:flutter/foundation.dart';
 import 'package:sendotp_flutter_sdk/sendotp_flutter_sdk.dart';
 
 class OtpException implements Exception {
-  const OtpException(this.message);
+  const OtpException(
+    this.message, {
+    this.code,
+    this.isNetwork = false,
+    this.isConsumed = false,
+  });
 
   final String message;
+  final int? code;
+  final bool isNetwork;
+  final bool isConsumed;
 
   @override
   String toString() => message;
@@ -53,36 +61,33 @@ class OtpService {
     _ensureReady();
 
     final identifier = formatIdentifier(mobileNumber);
-    AuthDebugLogger.log(
-      'sendOTP identifier=${AuthDebugLogger.maskPhone(identifier)}',
-    );
 
-    final result = await OTPWidget.sendOTP({'identifier': identifier});
-    if (result == null) {
-      throw const OtpException('Authentication failed. Please try again.');
-    }
+    try {
+      final result = await OTPWidget.sendOTP({'identifier': identifier});
+      if (result == null) {
+        throw const OtpException('Unable to send OTP. Please try again later.');
+      }
 
-    _logSdkResponse('SEND', result);
+      if (_isErrorType(result) || result['message'] == 'AuthenticationFailure') {
+        throw const OtpException(
+          'Unable to send OTP. Please try again later.',
+        );
+      }
 
-    if (_isErrorType(result) || result['message'] == 'AuthenticationFailure') {
-      throw const OtpException('Authentication failed. Please try again.');
-    }
+      final reqId = _parseReqId(result);
+      if (reqId != null) {
+        return reqId;
+      }
 
-    final reqId = _parseReqId(result);
-    if (reqId != null) {
-      AuthDebugLogger.sendOtp(
-        maskedPhone: AuthDebugLogger.maskPhone(mobileNumber),
-        reqId: reqId,
+      throw const OtpException(
+        'OTP was sent but the session expired. Go back and try again.',
       );
-      return reqId;
+    } catch (e) {
+      throw _wrapSendError(e);
     }
-
-    throw const OtpException(
-      'OTP was sent but the session expired. Go back and try again.',
-    );
   }
 
-  Future<void> retryOtp(String reqId) async {
+  Future<String> retryOtp(String reqId) async {
     _ensureReady();
 
     final trimmed = reqId.trim();
@@ -92,11 +97,15 @@ class OtpService {
       );
     }
 
-    final result = await OTPWidget.retryOTP({'reqId': trimmed});
-    _logSdkResponse('RETRY', result);
-
-    if (result != null && _isErrorType(result)) {
-      throw OtpException(_userMessageForSdkError(result, 'Failed to resend OTP'));
+    try {
+      final result = await OTPWidget.retryOTP({'reqId': trimmed});
+      if (result != null && _isErrorType(result)) {
+        throw _mapSdkError(result, fallback: 'Failed to resend OTP');
+      }
+      return trimmed;
+    } catch (e) {
+      if (e is OtpException) rethrow;
+      throw _wrapNetworkError(e);
     }
   }
 
@@ -113,29 +122,85 @@ class OtpService {
       );
     }
 
-    final result = await OTPWidget.verifyOTP({
-      'otp': otp,
-      'reqId': trimmedReqId,
-    });
+    try {
+      final result = await OTPWidget.verifyOTP({
+        'otp': otp,
+        'reqId': trimmedReqId,
+      });
 
-    if (result == null) {
-      throw const OtpException('Invalid OTP.');
+      if (result == null) {
+        throw const OtpException('Invalid OTP. Please check and try again.');
+      }
+
+      final type = result['type']?.toString().toLowerCase() ?? '';
+      if (type != 'success') {
+        throw _mapSdkError(result, fallback: 'Invalid OTP. Please check and try again.');
+      }
+
+      final accessToken = _extractAccessToken(result);
+      if (accessToken == null || accessToken.isEmpty) {
+        throw const OtpException('Access token missing. Please try again.');
+      }
+
+      return accessToken;
+    } catch (e) {
+      if (e is OtpException) rethrow;
+      throw _wrapNetworkError(e);
     }
+  }
 
-    _logSdkResponse('VERIFY', result);
+  OtpException _mapSdkError(
+    Map<String, dynamic> result, {
+    required String fallback,
+  }) {
+    final codeRaw = result['code'];
+    final code = codeRaw is int ? codeRaw : int.tryParse('$codeRaw');
+    final message = result['message']?.toString().toLowerCase() ?? '';
 
-    final type = result['type']?.toString().toLowerCase() ?? '';
-    if (type != 'success') {
-      throw OtpException(_userMessageForVerifyError(result));
+    if (code == 703 ||
+        message.contains('already') ||
+        message.contains('verifed')) {
+      return const OtpException(
+        'This OTP has already been used. Request a new one.',
+        code: 703,
+        isConsumed: true,
+      );
     }
-
-    final accessToken = _extractAccessToken(result);
-    if (accessToken == null || accessToken.isEmpty) {
-      throw const OtpException('Access token missing. Please try again.');
+    if (code == 702 || message.contains('expired')) {
+      return const OtpException(
+        'OTP expired. Please request a new OTP.',
+        code: 702,
+        isConsumed: true,
+      );
     }
+    if (result['message'] == 'AuthenticationFailure') {
+      return const OtpException(
+        'Unable to send OTP. Please try again later.',
+      );
+    }
+    return OtpException(fallback, code: code);
+  }
 
-    AuthDebugLogger.accessTokenReceived(accessToken);
-    return accessToken;
+  OtpException _wrapSendError(Object error) {
+    if (error is OtpException) return error;
+    return _wrapNetworkError(
+      error,
+      fallback: "Couldn't send OTP. Please check your connection.",
+    );
+  }
+
+  OtpException _wrapNetworkError(
+    Object error, {
+    String fallback = 'Please check your internet connection.',
+  }) {
+    final text = error.toString().toLowerCase();
+    if (text.contains('socket') ||
+        text.contains('network') ||
+        text.contains('timeout') ||
+        text.contains('connection')) {
+      return OtpException(fallback, isNetwork: true);
+    }
+    return OtpException(fallback);
   }
 
   String? _extractAccessToken(Map<String, dynamic> result) {
@@ -162,44 +227,6 @@ class OtpService {
   bool _looksLikeJwt(String value) {
     final parts = value.trim().split('.');
     return parts.length >= 3;
-  }
-
-  String _userMessageForVerifyError(Map<String, dynamic> result) {
-    final errorMsg = result['message']?.toString() ?? '';
-    final codeRaw = result['code'];
-    final code = codeRaw is int ? codeRaw : int.tryParse('$codeRaw');
-    final lower = errorMsg.toLowerCase();
-
-    if (code == 703 ||
-        code == 702 ||
-        lower.contains('already') ||
-        lower.contains('verifed')) {
-      return 'OTP already used. Tap Resend OTP for a new code.';
-    }
-    if (lower.contains('expired')) {
-      return 'OTP expired. Tap Resend OTP for a new code.';
-    }
-    if (lower.contains('invalid') || lower.contains('incorrect')) {
-      return 'Invalid OTP. Please check and try again.';
-    }
-    if (errorMsg.isNotEmpty && !errorMsg.contains('.')) {
-      return errorMsg;
-    }
-    return 'Invalid OTP. Please check and try again.';
-  }
-
-  String _userMessageForSdkError(
-    Map<String, dynamic> result,
-    String fallback,
-  ) {
-    final message = result['message']?.toString() ?? '';
-    if (message == 'AuthenticationFailure') {
-      return 'Authentication failed. Please try again.';
-    }
-    if (message.isNotEmpty) {
-      return message;
-    }
-    return fallback;
   }
 
   void _ensureReady() {
@@ -248,9 +275,5 @@ class OtpService {
       return false;
     }
     return RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(value);
-  }
-
-  void _logSdkResponse(String step, Map<String, dynamic>? result) {
-    AuthDebugLogger.logSdkResponse(step, result);
   }
 }

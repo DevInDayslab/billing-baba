@@ -14,8 +14,21 @@ export type AccountRecord = {
   id: string;
   phone: string;
   name: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+  timezone: string;
+  language: string;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type AccountProfileResponse = {
+  display_name: string | null;
+  phone: string;
+  email: string | null;
+  avatar_url: string | null;
+  timezone: string;
+  language: string;
 };
 
 export type BusinessMembership = {
@@ -52,6 +65,7 @@ export type MeResponse = {
   user: AuthUserResponse;
   businesses: BusinessSummaryResponse[];
   selected_business: BusinessSummaryResponse | null;
+  profile: AccountProfileResponse;
 };
 
 export type Msg91VerifyResponse = {

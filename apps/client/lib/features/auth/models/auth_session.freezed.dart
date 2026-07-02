@@ -314,7 +314,7 @@ $AuthUserCopyWith<$Res> get user {
 /// @nodoc
 mixin _$MeResponse {
 
- AuthUser get user; List<BusinessSummary> get businesses;@JsonKey(name: 'selected_business') BusinessSummary? get selectedBusiness;
+ AuthUser get user; List<BusinessSummary> get businesses; AccountProfile get profile;@JsonKey(name: 'selected_business') BusinessSummary? get selectedBusiness;
 /// Create a copy of MeResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -327,16 +327,16 @@ $MeResponseCopyWith<MeResponse> get copyWith => _$MeResponseCopyWithImpl<MeRespo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MeResponse&&(identical(other.user, user) || other.user == user)&&const DeepCollectionEquality().equals(other.businesses, businesses)&&(identical(other.selectedBusiness, selectedBusiness) || other.selectedBusiness == selectedBusiness));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MeResponse&&(identical(other.user, user) || other.user == user)&&const DeepCollectionEquality().equals(other.businesses, businesses)&&(identical(other.profile, profile) || other.profile == profile)&&(identical(other.selectedBusiness, selectedBusiness) || other.selectedBusiness == selectedBusiness));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,user,const DeepCollectionEquality().hash(businesses),selectedBusiness);
+int get hashCode => Object.hash(runtimeType,user,const DeepCollectionEquality().hash(businesses),profile,selectedBusiness);
 
 @override
 String toString() {
-  return 'MeResponse(user: $user, businesses: $businesses, selectedBusiness: $selectedBusiness)';
+  return 'MeResponse(user: $user, businesses: $businesses, profile: $profile, selectedBusiness: $selectedBusiness)';
 }
 
 
@@ -347,11 +347,11 @@ abstract mixin class $MeResponseCopyWith<$Res>  {
   factory $MeResponseCopyWith(MeResponse value, $Res Function(MeResponse) _then) = _$MeResponseCopyWithImpl;
 @useResult
 $Res call({
- AuthUser user, List<BusinessSummary> businesses,@JsonKey(name: 'selected_business') BusinessSummary? selectedBusiness
+ AuthUser user, List<BusinessSummary> businesses, AccountProfile profile,@JsonKey(name: 'selected_business') BusinessSummary? selectedBusiness
 });
 
 
-$AuthUserCopyWith<$Res> get user;$BusinessSummaryCopyWith<$Res>? get selectedBusiness;
+$AuthUserCopyWith<$Res> get user;$AccountProfileCopyWith<$Res> get profile;$BusinessSummaryCopyWith<$Res>? get selectedBusiness;
 
 }
 /// @nodoc
@@ -364,11 +364,12 @@ class _$MeResponseCopyWithImpl<$Res>
 
 /// Create a copy of MeResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? user = null,Object? businesses = null,Object? selectedBusiness = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? user = null,Object? businesses = null,Object? profile = null,Object? selectedBusiness = freezed,}) {
   return _then(_self.copyWith(
 user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as AuthUser,businesses: null == businesses ? _self.businesses : businesses // ignore: cast_nullable_to_non_nullable
-as List<BusinessSummary>,selectedBusiness: freezed == selectedBusiness ? _self.selectedBusiness : selectedBusiness // ignore: cast_nullable_to_non_nullable
+as List<BusinessSummary>,profile: null == profile ? _self.profile : profile // ignore: cast_nullable_to_non_nullable
+as AccountProfile,selectedBusiness: freezed == selectedBusiness ? _self.selectedBusiness : selectedBusiness // ignore: cast_nullable_to_non_nullable
 as BusinessSummary?,
   ));
 }
@@ -380,6 +381,15 @@ $AuthUserCopyWith<$Res> get user {
   
   return $AuthUserCopyWith<$Res>(_self.user, (value) {
     return _then(_self.copyWith(user: value));
+  });
+}/// Create a copy of MeResponse
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AccountProfileCopyWith<$Res> get profile {
+  
+  return $AccountProfileCopyWith<$Res>(_self.profile, (value) {
+    return _then(_self.copyWith(profile: value));
   });
 }/// Create a copy of MeResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -475,10 +485,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AuthUser user,  List<BusinessSummary> businesses, @JsonKey(name: 'selected_business')  BusinessSummary? selectedBusiness)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AuthUser user,  List<BusinessSummary> businesses,  AccountProfile profile, @JsonKey(name: 'selected_business')  BusinessSummary? selectedBusiness)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MeResponse() when $default != null:
-return $default(_that.user,_that.businesses,_that.selectedBusiness);case _:
+return $default(_that.user,_that.businesses,_that.profile,_that.selectedBusiness);case _:
   return orElse();
 
 }
@@ -496,10 +506,10 @@ return $default(_that.user,_that.businesses,_that.selectedBusiness);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AuthUser user,  List<BusinessSummary> businesses, @JsonKey(name: 'selected_business')  BusinessSummary? selectedBusiness)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AuthUser user,  List<BusinessSummary> businesses,  AccountProfile profile, @JsonKey(name: 'selected_business')  BusinessSummary? selectedBusiness)  $default,) {final _that = this;
 switch (_that) {
 case _MeResponse():
-return $default(_that.user,_that.businesses,_that.selectedBusiness);case _:
+return $default(_that.user,_that.businesses,_that.profile,_that.selectedBusiness);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -516,10 +526,10 @@ return $default(_that.user,_that.businesses,_that.selectedBusiness);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AuthUser user,  List<BusinessSummary> businesses, @JsonKey(name: 'selected_business')  BusinessSummary? selectedBusiness)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AuthUser user,  List<BusinessSummary> businesses,  AccountProfile profile, @JsonKey(name: 'selected_business')  BusinessSummary? selectedBusiness)?  $default,) {final _that = this;
 switch (_that) {
 case _MeResponse() when $default != null:
-return $default(_that.user,_that.businesses,_that.selectedBusiness);case _:
+return $default(_that.user,_that.businesses,_that.profile,_that.selectedBusiness);case _:
   return null;
 
 }
@@ -531,7 +541,7 @@ return $default(_that.user,_that.businesses,_that.selectedBusiness);case _:
 @JsonSerializable()
 
 class _MeResponse implements MeResponse {
-  const _MeResponse({required this.user, required final  List<BusinessSummary> businesses, @JsonKey(name: 'selected_business') this.selectedBusiness}): _businesses = businesses;
+  const _MeResponse({required this.user, required final  List<BusinessSummary> businesses, required this.profile, @JsonKey(name: 'selected_business') this.selectedBusiness}): _businesses = businesses;
   factory _MeResponse.fromJson(Map<String, dynamic> json) => _$MeResponseFromJson(json);
 
 @override final  AuthUser user;
@@ -542,6 +552,7 @@ class _MeResponse implements MeResponse {
   return EqualUnmodifiableListView(_businesses);
 }
 
+@override final  AccountProfile profile;
 @override@JsonKey(name: 'selected_business') final  BusinessSummary? selectedBusiness;
 
 /// Create a copy of MeResponse
@@ -557,16 +568,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MeResponse&&(identical(other.user, user) || other.user == user)&&const DeepCollectionEquality().equals(other._businesses, _businesses)&&(identical(other.selectedBusiness, selectedBusiness) || other.selectedBusiness == selectedBusiness));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MeResponse&&(identical(other.user, user) || other.user == user)&&const DeepCollectionEquality().equals(other._businesses, _businesses)&&(identical(other.profile, profile) || other.profile == profile)&&(identical(other.selectedBusiness, selectedBusiness) || other.selectedBusiness == selectedBusiness));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,user,const DeepCollectionEquality().hash(_businesses),selectedBusiness);
+int get hashCode => Object.hash(runtimeType,user,const DeepCollectionEquality().hash(_businesses),profile,selectedBusiness);
 
 @override
 String toString() {
-  return 'MeResponse(user: $user, businesses: $businesses, selectedBusiness: $selectedBusiness)';
+  return 'MeResponse(user: $user, businesses: $businesses, profile: $profile, selectedBusiness: $selectedBusiness)';
 }
 
 
@@ -577,11 +588,11 @@ abstract mixin class _$MeResponseCopyWith<$Res> implements $MeResponseCopyWith<$
   factory _$MeResponseCopyWith(_MeResponse value, $Res Function(_MeResponse) _then) = __$MeResponseCopyWithImpl;
 @override @useResult
 $Res call({
- AuthUser user, List<BusinessSummary> businesses,@JsonKey(name: 'selected_business') BusinessSummary? selectedBusiness
+ AuthUser user, List<BusinessSummary> businesses, AccountProfile profile,@JsonKey(name: 'selected_business') BusinessSummary? selectedBusiness
 });
 
 
-@override $AuthUserCopyWith<$Res> get user;@override $BusinessSummaryCopyWith<$Res>? get selectedBusiness;
+@override $AuthUserCopyWith<$Res> get user;@override $AccountProfileCopyWith<$Res> get profile;@override $BusinessSummaryCopyWith<$Res>? get selectedBusiness;
 
 }
 /// @nodoc
@@ -594,11 +605,12 @@ class __$MeResponseCopyWithImpl<$Res>
 
 /// Create a copy of MeResponse
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? user = null,Object? businesses = null,Object? selectedBusiness = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? user = null,Object? businesses = null,Object? profile = null,Object? selectedBusiness = freezed,}) {
   return _then(_MeResponse(
 user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
 as AuthUser,businesses: null == businesses ? _self._businesses : businesses // ignore: cast_nullable_to_non_nullable
-as List<BusinessSummary>,selectedBusiness: freezed == selectedBusiness ? _self.selectedBusiness : selectedBusiness // ignore: cast_nullable_to_non_nullable
+as List<BusinessSummary>,profile: null == profile ? _self.profile : profile // ignore: cast_nullable_to_non_nullable
+as AccountProfile,selectedBusiness: freezed == selectedBusiness ? _self.selectedBusiness : selectedBusiness // ignore: cast_nullable_to_non_nullable
 as BusinessSummary?,
   ));
 }
@@ -611,6 +623,15 @@ $AuthUserCopyWith<$Res> get user {
   
   return $AuthUserCopyWith<$Res>(_self.user, (value) {
     return _then(_self.copyWith(user: value));
+  });
+}/// Create a copy of MeResponse
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AccountProfileCopyWith<$Res> get profile {
+  
+  return $AccountProfileCopyWith<$Res>(_self.profile, (value) {
+    return _then(_self.copyWith(profile: value));
   });
 }/// Create a copy of MeResponse
 /// with the given fields replaced by the non-null parameter values.

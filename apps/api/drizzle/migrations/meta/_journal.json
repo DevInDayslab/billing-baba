@@ -15,6 +15,13 @@
       "when": 1782943040289,
       "tag": "0001_fantastic_the_executioner",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783000000000,
+      "tag": "0002_account_profile_fields",
+      "breakpoints": true
     }
   ]
 }

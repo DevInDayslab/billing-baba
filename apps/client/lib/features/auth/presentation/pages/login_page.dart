@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/auth/models/otp_phase.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,7 +35,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
-    final isLoading = auth.isLoading;
+    final isLoading =
+        auth.isSendingOtp ||
+        (auth.otpPhase == OtpPhase.backendLogin &&
+            auth.status == AuthStatus.unauthenticated);
+    final canSend = auth.canSendOtp && !isLoading;
     final showDevLogin = AppConfig.enableDevLogin;
 
     return Scaffold(
@@ -103,6 +108,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               formKey: _formKey,
                               phoneController: _phoneController,
                               isLoading: isLoading,
+                              canSend: canSend,
                               errorMessage: auth.error,
                               showDevLogin: showDevLogin,
                               onSubmit: _submit,
@@ -112,6 +118,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               formKey: _formKey,
                               phoneController: _phoneController,
                               isLoading: isLoading,
+                              canSend: canSend,
                               errorMessage: auth.error,
                               showDevLogin: showDevLogin,
                               onSubmit: _submit,
@@ -137,6 +144,7 @@ class _DesktopCard extends StatelessWidget {
     required this.formKey,
     required this.phoneController,
     required this.isLoading,
+    required this.canSend,
     required this.onSubmit,
     this.errorMessage,
     this.showDevLogin = false,
@@ -146,6 +154,7 @@ class _DesktopCard extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
   final bool isLoading;
+  final bool canSend;
   final String? errorMessage;
   final bool showDevLogin;
   final VoidCallback onSubmit;
@@ -207,6 +216,7 @@ class _DesktopCard extends StatelessWidget {
                   formKey: formKey,
                   phoneController: phoneController,
                   isLoading: isLoading,
+                  canSend: canSend,
                   errorMessage: errorMessage,
                   showDevLogin: showDevLogin,
                   onSubmit: onSubmit,
@@ -229,6 +239,7 @@ class _MobileCard extends StatelessWidget {
     required this.formKey,
     required this.phoneController,
     required this.isLoading,
+    required this.canSend,
     required this.onSubmit,
     this.errorMessage,
     this.showDevLogin = false,
@@ -238,6 +249,7 @@ class _MobileCard extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
   final bool isLoading;
+  final bool canSend;
   final String? errorMessage;
   final bool showDevLogin;
   final VoidCallback onSubmit;
@@ -262,6 +274,7 @@ class _MobileCard extends StatelessWidget {
         formKey: formKey,
         phoneController: phoneController,
         isLoading: isLoading,
+        canSend: canSend,
         errorMessage: errorMessage,
         showDevLogin: showDevLogin,
         onSubmit: onSubmit,
@@ -279,6 +292,7 @@ class _LoginForm extends StatelessWidget {
     required this.formKey,
     required this.phoneController,
     required this.isLoading,
+    required this.canSend,
     required this.onSubmit,
     this.errorMessage,
     this.showDevLogin = false,
@@ -288,6 +302,7 @@ class _LoginForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
   final bool isLoading;
+  final bool canSend;
   final String? errorMessage;
   final bool showDevLogin;
   final VoidCallback onSubmit;
@@ -429,7 +444,7 @@ class _LoginForm extends StatelessWidget {
             width: double.infinity,
             height: 52,
             child: FilledButton.icon(
-              onPressed: isLoading ? null : onSubmit,
+              onPressed: canSend ? onSubmit : null,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.6),

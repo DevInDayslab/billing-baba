@@ -26,6 +26,17 @@ class AuthService {
 
     try {
       final me = await _repository.me(accessToken);
+      final selectedId = await _storage.readSecure(StorageKeys.selectedBusinessId);
+      if (selectedId != null &&
+          selectedId.isNotEmpty &&
+          me.businesses.length > 1 &&
+          me.user.role == null &&
+          me.businesses.any((business) => business.id == selectedId)) {
+        return refreshStoredSession(
+          refreshToken: refreshToken,
+          businessId: selectedId,
+        );
+      }
       return AuthSession(
         accessToken: accessToken,
         refreshToken: refreshToken,
@@ -35,7 +46,12 @@ class AuthService {
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        return refreshStoredSession(refreshToken: refreshToken);
+        final selectedId =
+            await _storage.readSecure(StorageKeys.selectedBusinessId);
+        return refreshStoredSession(
+          refreshToken: refreshToken,
+          businessId: selectedId,
+        );
       }
       await clearSession();
       return null;

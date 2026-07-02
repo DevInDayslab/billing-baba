@@ -5,6 +5,7 @@ import 'package:billing_baba/features/auth/presentation/pages/verify_otp_page.da
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/presentation/pages/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/pages/edit_profile_page.dart';
+import 'package:billing_baba/features/dashboard/presentation/pages/coming_soon_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/home_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.dart';
 import 'package:billing_baba/features/inventory/presentation/pages/items_page.dart';
@@ -35,7 +36,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final onLogin = location == AppRoutes.login;
       final onOtp = location == AppRoutes.verifyOtp;
       final onBusinessList = location == AppRoutes.businessList;
-      final onEditProfile = location == AppRoutes.editProfile;
 
       if (auth.status == AuthStatus.initializing) {
         return onSplash ? null : AppRoutes.splash;
@@ -45,9 +45,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return switch (auth.status) {
           AuthStatus.authenticated => AppRoutes.home,
           AuthStatus.needsBusinessSelection => AppRoutes.businessList,
-          AuthStatus.needsBusinessCreation => AppRoutes.editProfile,
+          AuthStatus.needsBusinessCreation => AppRoutes.businessList,
           AuthStatus.otpSent => AppRoutes.verifyOtp,
-          AuthStatus.unauthenticated || AuthStatus.initializing => AppRoutes.login,
+          AuthStatus.unauthenticated || AuthStatus.initializing =>
+            AppRoutes.login,
         };
       }
 
@@ -57,15 +58,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         case AuthStatus.otpSent:
           if (!onOtp) return AppRoutes.verifyOtp;
         case AuthStatus.needsBusinessCreation:
-          if (!onEditProfile && !onBusinessList) {
-            return AppRoutes.editProfile;
-          }
         case AuthStatus.needsBusinessSelection:
           if (!onBusinessList) return AppRoutes.businessList;
         case AuthStatus.authenticated:
-          if (onLogin || onOtp || onBusinessList || onEditProfile) {
-            return AppRoutes.home;
-          }
+          if (onLogin || onOtp) return AppRoutes.home;
         case AuthStatus.initializing:
           return AppRoutes.splash;
       }
@@ -97,11 +93,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.parties,
-            builder: (context, state) => _placeholderPage('Parties'),
+            redirect: (context, state) => AppRoutes.partiesCustomers,
+          ),
+          GoRoute(
+            path: AppRoutes.partiesCustomers,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Customers'),
+          ),
+          GoRoute(
+            path: AppRoutes.partiesSuppliers,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Suppliers'),
           ),
           GoRoute(
             path: AppRoutes.items,
             builder: (context, state) => const ItemsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsCategories,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Categories'),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsUnits,
+            builder: (context, state) => const ComingSoonPage(title: 'Units'),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsGodowns,
+            builder: (context, state) => const ComingSoonPage(title: 'Godowns'),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsStockTransfer,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Stock Transfer'),
           ),
           GoRoute(
             path: AppRoutes.sale,
@@ -157,12 +181,83 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AddCreditNotePage(),
           ),
           GoRoute(
+            path: AppRoutes.purchase,
+            builder: (context, state) => const ComingSoonPage(title: 'Purchase'),
+          ),
+          GoRoute(
+            path: AppRoutes.purchaseReturn,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Purchase Return'),
+          ),
+          GoRoute(
+            path: AppRoutes.expenses,
+            builder: (context, state) => const ComingSoonPage(title: 'Expenses'),
+          ),
+          GoRoute(
+            path: AppRoutes.debitNote,
+            builder: (context, state) => const ComingSoonPage(title: 'Debit Note'),
+          ),
+          GoRoute(
             path: AppRoutes.reports,
-            builder: (context, state) => _placeholderPage('Reports'),
+            redirect: (context, state) => AppRoutes.reportsDashboard,
+          ),
+          GoRoute(
+            path: AppRoutes.reportsDashboard,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Reports Dashboard'),
+          ),
+          GoRoute(
+            path: AppRoutes.reportsSales,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Sales Reports'),
+          ),
+          GoRoute(
+            path: AppRoutes.reportsPurchase,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Purchase Reports'),
+          ),
+          GoRoute(
+            path: AppRoutes.reportsStock,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Stock Reports'),
+          ),
+          GoRoute(
+            path: AppRoutes.reportsParty,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Party Reports'),
+          ),
+          GoRoute(
+            path: AppRoutes.reportsGst,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'GST Reports'),
           ),
           GoRoute(
             path: AppRoutes.settings,
-            builder: (context, state) => _placeholderPage('Settings'),
+            redirect: (context, state) => AppRoutes.settingsPreferences,
+          ),
+          GoRoute(
+            path: AppRoutes.settingsUsers,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Users & Roles'),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsTaxes,
+            builder: (context, state) => const ComingSoonPage(title: 'Taxes'),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsInvoiceTemplates,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Invoice Templates'),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsPreferences,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Preferences'),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsBackup,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Backup & Restore'),
           ),
           GoRoute(
             path: AppRoutes.plansPricing,
@@ -177,13 +272,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-
-Widget _placeholderPage(String title) {
-  return Scaffold(
-    backgroundColor: Colors.transparent,
-    body: Center(child: Text(title)),
-  );
-}
 
 /// Bridges Riverpod auth state changes into a [Listenable] for GoRouter.
 class _AuthListenable extends ChangeNotifier {

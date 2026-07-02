@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'business_list_provider.dart';
+part of 'business_service.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,52 +9,83 @@ part of 'business_list_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(BusinessListNotifier)
-final businessListProvider = BusinessListNotifierProvider._();
+@ProviderFor(businessService)
+final businessServiceProvider = BusinessServiceProvider._();
 
-final class BusinessListNotifierProvider
-    extends $NotifierProvider<BusinessListNotifier, List<BusinessModel>> {
-  BusinessListNotifierProvider._()
+final class BusinessServiceProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<BusinessService>,
+          BusinessService,
+          FutureOr<BusinessService>
+        >
+    with $FutureModifier<BusinessService>, $FutureProvider<BusinessService> {
+  BusinessServiceProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'businessListProvider',
-        isAutoDispose: true,
+        name: r'businessServiceProvider',
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$businessListNotifierHash();
+  String debugGetCreateSourceHash() => _$businessServiceHash();
 
   @$internal
   @override
-  BusinessListNotifier create() => BusinessListNotifier();
+  $FutureProviderElement<BusinessService> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<BusinessModel> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<BusinessModel>>(value),
-    );
+  @override
+  FutureOr<BusinessService> create(Ref ref) {
+    return businessService(ref);
   }
 }
 
-String _$businessListNotifierHash() =>
-    r'c00b8234bc3de4423ba17558e854cf166114cc72';
+String _$businessServiceHash() => r'7709cdf569c2fbe2557b58c0ceae18c3a6d065ec';
 
-abstract class _$BusinessListNotifier extends $Notifier<List<BusinessModel>> {
-  List<BusinessModel> build();
+@ProviderFor(BusinessList)
+final businessListProvider = BusinessListProvider._();
+
+final class BusinessListProvider
+    extends $AsyncNotifierProvider<BusinessList, List<BusinessModel>> {
+  BusinessListProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'businessListProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$businessListHash();
+
+  @$internal
+  @override
+  BusinessList create() => BusinessList();
+}
+
+String _$businessListHash() => r'30b59b50a2fa513ae7c43ec911900e3aa6eb3ed3';
+
+abstract class _$BusinessList extends $AsyncNotifier<List<BusinessModel>> {
+  FutureOr<List<BusinessModel>> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<List<BusinessModel>, List<BusinessModel>>;
+    final ref =
+        this.ref as $Ref<AsyncValue<List<BusinessModel>>, List<BusinessModel>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<List<BusinessModel>, List<BusinessModel>>,
-              List<BusinessModel>,
+              AnyNotifier<AsyncValue<List<BusinessModel>>, List<BusinessModel>>,
+              AsyncValue<List<BusinessModel>>,
               Object?,
               Object?
             >;

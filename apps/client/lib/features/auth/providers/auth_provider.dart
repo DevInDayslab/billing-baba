@@ -2,13 +2,17 @@ import 'dart:async';
 
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
+import 'package:billing_baba/features/auth/models/otp_phase.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/auth_service.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
+import 'package:billing_baba/features/auth/utils/auth_flow_logger.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'auth_provider.g.dart';
+
+const _resendCooldown = Duration(seconds: 30);
 
 enum AuthStatus {
   initializing,
@@ -22,37 +26,86 @@ enum AuthStatus {
 class AuthState {
   const AuthState({
     this.status = AuthStatus.initializing,
+    this.otpPhase = OtpPhase.idle,
     this.phone = '',
     this.reqId = '',
-    this.isLoading = false,
     this.error,
     this.session,
+    this.resendAvailableAt,
+    this.otpSessionVersion = 0,
+    this.backendLoginCompleted = false,
   });
 
   final AuthStatus status;
+  final OtpPhase otpPhase;
   final String phone;
   final String reqId;
-  final bool isLoading;
   final String? error;
   final AuthSession? session;
+  final DateTime? resendAvailableAt;
+  final int otpSessionVersion;
+  final bool backendLoginCompleted;
+
+  bool get isOtpBusy => otpPhase.isBusy;
+
+  bool get isSendingOtp => otpPhase == OtpPhase.sendingOtp;
+
+  bool get isVerifyingOtp =>
+      otpPhase == OtpPhase.verifyingOtp || otpPhase == OtpPhase.backendLogin;
+
+  bool get canSendOtp =>
+      status == AuthStatus.unauthenticated && otpPhase == OtpPhase.idle;
+
+  bool get canVerifyOtp =>
+      status == AuthStatus.otpSent && otpPhase.canVerify && reqId.isNotEmpty;
+
+  bool get canResendOtp {
+    if (status != AuthStatus.otpSent || !otpPhase.canResend) return false;
+    final availableAt = resendAvailableAt;
+    if (availableAt == null) return false;
+    return DateTime.now().isAfter(availableAt);
+  }
+
+  bool get showResend =>
+      status == AuthStatus.otpSent &&
+      !backendLoginCompleted &&
+      otpPhase != OtpPhase.backendLogin &&
+      otpPhase != OtpPhase.verifyingOtp;
+
+  int get resendSecondsLeft {
+    final availableAt = resendAvailableAt;
+    if (availableAt == null) return 0;
+    final remaining = availableAt.difference(DateTime.now()).inSeconds;
+    return remaining > 0 ? remaining : 0;
+  }
 
   AuthState copyWith({
     AuthStatus? status,
+    OtpPhase? otpPhase,
     String? phone,
     String? reqId,
-    bool? isLoading,
     String? error,
     AuthSession? session,
+    DateTime? resendAvailableAt,
+    int? otpSessionVersion,
+    bool? backendLoginCompleted,
     bool clearError = false,
     bool clearSession = false,
+    bool clearReqId = false,
+    bool clearResendTimer = false,
   }) {
     return AuthState(
       status: status ?? this.status,
+      otpPhase: otpPhase ?? this.otpPhase,
       phone: phone ?? this.phone,
-      reqId: reqId ?? this.reqId,
-      isLoading: isLoading ?? this.isLoading,
+      reqId: clearReqId ? '' : reqId ?? this.reqId,
       error: clearError ? null : error ?? this.error,
       session: clearSession ? null : session ?? this.session,
+      resendAvailableAt:
+          clearResendTimer ? null : resendAvailableAt ?? this.resendAvailableAt,
+      otpSessionVersion: otpSessionVersion ?? this.otpSessionVersion,
+      backendLoginCompleted:
+          backendLoginCompleted ?? this.backendLoginCompleted,
     );
   }
 }
@@ -72,10 +125,13 @@ Future<AuthService> authService(Ref ref) async {
 
 @Riverpod(keepAlive: true)
 class Auth extends _$Auth {
-  var _autoLoginStarted = false;
+  static const _sendTimeout = Duration(seconds: 20);
 
-  /// Preserved across loading/error so resend still has MSG91 reqId.
-  String? _otpReqId;
+  var _autoLoginStarted = false;
+  var _verifyInFlight = false;
+  var _resendInFlight = false;
+  var _sendInFlight = false;
+  int _verifyGeneration = 0;
 
   @override
   AuthState build() {
@@ -89,9 +145,19 @@ class Auth extends _$Auth {
   Future<AuthService> _service() => ref.read(authServiceProvider.future);
   OtpService get _otp => ref.read(otpServiceProvider);
 
+  void _setOtpPhase(OtpPhase phase) {
+    AuthFlowLogger.otpTransition(phase);
+    state = state.copyWith(otpPhase: phase);
+  }
+
+  void _setAuthStatus(AuthStatus status) {
+    AuthFlowLogger.authStatus(status.name);
+    state = state.copyWith(status: status);
+  }
+
   AuthStatus _statusForSession(AuthSession session) {
     if (session.businesses.isEmpty) {
-      return AuthStatus.needsBusinessCreation;
+      return AuthStatus.needsBusinessSelection;
     }
     if (session.businesses.length > 1) {
       final hasBusinessScope = session.user.role != null;
@@ -102,12 +168,56 @@ class Auth extends _$Auth {
     return AuthStatus.authenticated;
   }
 
-  Future<void> tryAutoLogin() async {
+  void _onOtpSent(String reqId, {required String phone}) {
+    _setOtpPhase(OtpPhase.otpSent);
+    _setAuthStatus(AuthStatus.otpSent);
     state = state.copyWith(
-      status: AuthStatus.initializing,
-      isLoading: true,
+      phone: phone,
+      reqId: reqId,
       clearError: true,
+      resendAvailableAt: DateTime.now().add(_resendCooldown),
+      otpSessionVersion: state.otpSessionVersion + 1,
+      backendLoginCompleted: false,
     );
+  }
+
+  void _completeOtpLogin(AuthSession session) {
+    _verifyGeneration++;
+    _verifyInFlight = false;
+    _resendInFlight = false;
+    AuthFlowLogger.reset();
+    final nextStatus = _statusForSession(session);
+    _setAuthStatus(nextStatus);
+    state = state.copyWith(
+      otpPhase: OtpPhase.idle,
+      session: session,
+      phone: session.user.phone,
+      clearReqId: true,
+      clearError: true,
+      clearResendTimer: true,
+      backendLoginCompleted: true,
+    );
+  }
+
+  void _resetOtpFlow() {
+    _verifyGeneration++;
+    _verifyInFlight = false;
+    _resendInFlight = false;
+    _sendInFlight = false;
+    AuthFlowLogger.reset();
+    state = state.copyWith(
+      otpPhase: OtpPhase.idle,
+      clearReqId: true,
+      clearError: true,
+      clearResendTimer: true,
+      backendLoginCompleted: false,
+      otpSessionVersion: state.otpSessionVersion + 1,
+    );
+  }
+
+  Future<void> tryAutoLogin() async {
+    _setAuthStatus(AuthStatus.initializing);
+    state = state.copyWith(clearError: true);
 
     try {
       final service = await _service().timeout(const Duration(seconds: 8));
@@ -115,81 +225,104 @@ class Auth extends _$Auth {
           .loadStoredSession()
           .timeout(const Duration(seconds: 8));
       if (session == null) {
-        state = state.copyWith(
-          status: AuthStatus.unauthenticated,
-          isLoading: false,
-          clearSession: true,
-        );
+        _setAuthStatus(AuthStatus.unauthenticated);
+        state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
         return;
       }
 
+      final nextStatus = _statusForSession(session);
+      _setAuthStatus(nextStatus);
       state = state.copyWith(
-        status: _statusForSession(session),
-        isLoading: false,
         session: session,
         phone: session.user.phone,
+        otpPhase: OtpPhase.idle,
+        backendLoginCompleted: true,
       );
     } on TimeoutException {
-      state = state.copyWith(
-        status: AuthStatus.unauthenticated,
-        isLoading: false,
-        clearSession: true,
-      );
+      _setAuthStatus(AuthStatus.unauthenticated);
+      state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
     } catch (e) {
+      _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
-        status: AuthStatus.unauthenticated,
-        isLoading: false,
-        error: _messageFromError(e),
         clearSession: true,
+        otpPhase: OtpPhase.idle,
+        error: _messageFromError(e),
       );
     }
   }
 
   Future<void> sendOtp(String phone) async {
-    state = state.copyWith(isLoading: true, clearError: true, phone: phone);
+    if (_sendInFlight || !state.canSendOtp) return;
+
+    _sendInFlight = true;
+    _setOtpPhase(OtpPhase.sendingOtp);
+    state = state.copyWith(
+      phone: phone,
+      clearError: true,
+      clearReqId: true,
+      clearResendTimer: true,
+      backendLoginCompleted: false,
+    );
 
     try {
-      final reqId = await _otp
-          .sendOtp(phone)
-          .timeout(const Duration(seconds: 20));
-
-      _otpReqId = reqId;
-      state = state.copyWith(
-        isLoading: false,
-        status: AuthStatus.otpSent,
-        reqId: reqId,
-      );
+      final reqId = await _otp.sendOtp(phone).timeout(_sendTimeout);
+      _onOtpSent(reqId, phone: phone);
     } on TimeoutException {
+      _setOtpPhase(OtpPhase.idle);
+      _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
-        isLoading: false,
-        error: 'OTP request timed out. Check your connection and try again.',
+        clearReqId: true,
+        error: "Couldn't send OTP. Please check your connection.",
       );
     } on OtpException catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.message,
-      );
+      _setOtpPhase(OtpPhase.idle);
+      _setAuthStatus(AuthStatus.unauthenticated);
+      state = state.copyWith(clearReqId: true, error: e.message);
     } catch (e) {
+      _setOtpPhase(OtpPhase.idle);
+      _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
-        isLoading: false,
+        clearReqId: true,
         error: _messageFromError(e),
       );
+    } finally {
+      _sendInFlight = false;
     }
   }
 
-  Future<bool> verifyOtp(String otp) async {
-    final reqId = _otpReqId ?? state.reqId;
+  Future<void> verifyOtp(String otp) async {
+    if (_verifyInFlight ||
+        state.backendLoginCompleted ||
+        !state.canVerifyOtp) {
+      return;
+    }
+
+    final reqId = state.reqId;
     if (reqId.isEmpty) {
       state = state.copyWith(
         error: 'Session expired. Go back and request a new OTP.',
       );
-      return false;
+      return;
     }
 
-    state = state.copyWith(isLoading: true, clearError: true);
+    _verifyInFlight = true;
+    final generation = ++_verifyGeneration;
+    _setOtpPhase(OtpPhase.verifyingOtp);
+    state = state.copyWith(clearError: true);
+
+    var sdkVerified = false;
 
     try {
       final msg91Token = await _otp.verifyOtp(reqId: reqId, otp: otp);
+
+      if (generation != _verifyGeneration ||
+          state.backendLoginCompleted ||
+          !_verifyInFlight) {
+        return;
+      }
+
+      sdkVerified = true;
+      _setOtpPhase(OtpPhase.backendLogin);
 
       final service = await _service();
       final session = await service.loginWithMsg91Token(
@@ -197,101 +330,181 @@ class Auth extends _$Auth {
         phone: state.phone,
       );
 
-      _otpReqId = null;
-      state = state.copyWith(
-        isLoading: false,
-        status: _statusForSession(session),
-        session: session,
-        phone: session.user.phone,
-      );
-      return true;
+      if (generation != _verifyGeneration) return;
+
+      _completeOtpLogin(session);
     } on OtpException catch (e) {
+      if (state.backendLoginCompleted || generation != _verifyGeneration) {
+        return;
+      }
+      if (e.isConsumed) {
+        if (state.backendLoginCompleted) return;
+        state = state.copyWith(
+          otpPhase: OtpPhase.error,
+          error: e.message,
+          clearReqId: true,
+        );
+        return;
+      }
+      _setOtpPhase(OtpPhase.otpSent);
       state = state.copyWith(
-        isLoading: false,
-        error: e.message,
+        error: e.isNetwork
+            ? 'Please check your internet connection.'
+            : e.message,
       );
-      return false;
+    } on DioException catch (e) {
+      if (state.backendLoginCompleted || generation != _verifyGeneration) {
+        return;
+      }
+      if (sdkVerified) {
+        state = state.copyWith(
+          otpPhase: OtpPhase.error,
+          clearReqId: true,
+          error: _messageFromError(e),
+        );
+        return;
+      }
+      _setOtpPhase(OtpPhase.otpSent);
+      state = state.copyWith(error: _messageFromError(e));
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: _messageFromError(e),
-      );
-      return false;
+      if (state.backendLoginCompleted || generation != _verifyGeneration) {
+        return;
+      }
+      if (sdkVerified) {
+        state = state.copyWith(
+          otpPhase: OtpPhase.error,
+          clearReqId: true,
+          error: _messageFromError(e),
+        );
+        return;
+      }
+      _setOtpPhase(OtpPhase.otpSent);
+      state = state.copyWith(error: _messageFromError(e));
+    } finally {
+      if (!state.backendLoginCompleted &&
+          state.otpPhase != OtpPhase.backendLogin) {
+        _verifyInFlight = false;
+      }
     }
   }
 
   Future<void> devLogin() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(clearError: true);
+    _setOtpPhase(OtpPhase.backendLogin);
 
     try {
       final service = await _service();
       final session = await service.devLogin();
-
-      state = state.copyWith(
-        isLoading: false,
-        status: _statusForSession(session),
-        session: session,
-        phone: session.user.phone,
-      );
+      _completeOtpLogin(session);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: _messageFromError(e),
-      );
+      _setOtpPhase(OtpPhase.idle);
+      state = state.copyWith(error: _messageFromError(e));
     }
   }
 
   Future<void> resendOtp() async {
-    final reqId = _otpReqId ?? state.reqId;
-    if (reqId.isEmpty) return;
+    if (_resendInFlight ||
+        !state.canResendOtp ||
+        state.backendLoginCompleted) {
+      return;
+    }
 
-    state = state.copyWith(isLoading: true, clearError: true);
+    final phone = state.phone;
+    if (phone.isEmpty) return;
+
+    _resendInFlight = true;
+    _setOtpPhase(OtpPhase.sendingOtp);
+    state = state.copyWith(clearError: true);
+
     try {
-      await _otp.retryOtp(reqId);
-      state = state.copyWith(isLoading: false, status: AuthStatus.otpSent);
+      String reqId;
+      try {
+        reqId = await _otp.retryOtp(state.reqId);
+      } on OtpException catch (e) {
+        if (!e.isConsumed) rethrow;
+        reqId = await _otp.sendOtp(phone).timeout(_sendTimeout);
+      }
+
+      _onOtpSent(reqId, phone: phone);
+    } on TimeoutException {
+      _setOtpPhase(OtpPhase.otpSent);
+      state = state.copyWith(
+        error: "Couldn't send OTP. Please check your connection.",
+      );
     } on OtpException catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.message,
-      );
+      _setOtpPhase(OtpPhase.otpSent);
+      state = state.copyWith(error: e.message);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: _messageFromError(e),
-      );
+      _setOtpPhase(OtpPhase.otpSent);
+      state = state.copyWith(error: _messageFromError(e));
+    } finally {
+      _resendInFlight = false;
     }
   }
 
   void resetToLogin() {
-    _otpReqId = null;
-    state = state.copyWith(
-      status: AuthStatus.unauthenticated,
-      reqId: '',
-      clearError: true,
-    );
+    _resetOtpFlow();
+    _setAuthStatus(AuthStatus.unauthenticated);
+    state = state.copyWith(phone: '');
   }
 
   Future<void> selectBusiness(String businessId) async {
     final refreshToken = state.session?.refreshToken;
     if (refreshToken == null) return;
 
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(clearError: true);
     try {
       final service = await _service();
       final session = await service.selectBusiness(
         businessId: businessId,
         refreshToken: refreshToken,
       );
-      state = state.copyWith(
-        isLoading: false,
-        status: AuthStatus.authenticated,
-        session: session,
-      );
+      _setAuthStatus(AuthStatus.authenticated);
+      state = state.copyWith(session: session);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: _messageFromError(e),
+      state = state.copyWith(error: _messageFromError(e));
+    }
+  }
+
+  Future<void> enterBusinessSelection() async {
+    final refreshToken = state.session?.refreshToken;
+    if (refreshToken == null) return;
+
+    state = state.copyWith(clearError: true);
+    try {
+      final service = await _service();
+      final session = await service.refreshStoredSession(
+        refreshToken: refreshToken,
       );
+      if (session == null) {
+        _setAuthStatus(AuthStatus.unauthenticated);
+        state = state.copyWith(clearSession: true);
+        return;
+      }
+      _setAuthStatus(AuthStatus.needsBusinessSelection);
+      state = state.copyWith(session: session);
+    } catch (e) {
+      state = state.copyWith(error: _messageFromError(e));
+    }
+  }
+
+  Future<void> refreshBusinesses() async {
+    final accessToken = state.session?.accessToken;
+    if (accessToken == null) return;
+
+    try {
+      final me = await ref.read(authRepositoryProvider).me(accessToken);
+      final current = state.session;
+      if (current == null) return;
+
+      final updated = current.copyWith(
+        user: me.user,
+        businesses: me.businesses,
+      );
+      _setAuthStatus(_statusForSession(updated));
+      state = state.copyWith(session: updated);
+    } on DioException {
+      // Keep existing session on network failure.
     }
   }
 
@@ -300,10 +513,8 @@ class Auth extends _$Auth {
       final service = await _service();
       final session = await service.refreshStoredSession(businessId: businessId);
       if (session != null) {
-        state = state.copyWith(
-          status: _statusForSession(session),
-          session: session,
-        );
+        _setAuthStatus(_statusForSession(session));
+        state = state.copyWith(session: session);
       }
       return session;
     } catch (_) {
@@ -312,18 +523,20 @@ class Auth extends _$Auth {
   }
 
   Future<void> logout() async {
-    state = state.copyWith(isLoading: true);
     try {
       final service = await _service();
       await service.logout();
     } finally {
+      AuthFlowLogger.reset();
       state = const AuthState(status: AuthStatus.unauthenticated);
     }
   }
 
   String _messageFromError(Object error) {
     if (error is OtpException) {
-      return error.message;
+      return error.isNetwork
+          ? 'Please check your internet connection.'
+          : error.message;
     }
     if (error is DioException) {
       final data = error.response?.data;
@@ -337,7 +550,7 @@ class Auth extends _$Auth {
       if (error.type == DioExceptionType.connectionTimeout ||
           error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.connectionError) {
-        return 'Network unavailable. Check your connection and try again.';
+        return 'Please check your internet connection.';
       }
     }
     if (error is Exception) {
@@ -345,7 +558,6 @@ class Auth extends _$Auth {
       if (message.startsWith('Exception: ')) {
         return message.substring('Exception: '.length);
       }
-      return message;
     }
     return 'Something went wrong. Please try again.';
   }
@@ -358,9 +570,6 @@ class Auth extends _$Auth {
         return 'Authentication is not configured on the server.';
       case 'VALIDATION_ERROR':
         return 'Invalid login request. Please try again.';
-      case 'INVALID_TOKEN':
-      case 'TOKEN_EXPIRED':
-        return message;
       default:
         if (message.toLowerCase().contains('phone number')) {
           return 'Could not complete sign-in. Please try again.';
