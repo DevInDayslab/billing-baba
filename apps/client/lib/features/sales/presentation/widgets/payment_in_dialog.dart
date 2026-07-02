@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
@@ -322,21 +323,14 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('Share'),
-                        SizedBox(width: 4),
-                        Icon(Icons.keyboard_arrow_down, size: 18),
-                      ],
-                    ),
+                  ShareMenuButton(
+                    onChannelSelected: (channel) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${channel.label} coming soon'),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   FilledButton(

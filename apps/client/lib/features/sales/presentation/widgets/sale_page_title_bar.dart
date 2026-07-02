@@ -31,6 +31,15 @@ class _SalePageTitleBarState extends State<SalePageTitleBar> {
 
   Color get _contentColor => _isHovered ? _hoverColor : _defaultColor;
 
+  void _setHovered(bool hovered) {
+    if (_isHovered == hovered) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _isHovered != hovered) {
+        setState(() => _isHovered = hovered);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentLabel = SaleSubRoutes.labelForRoute(widget.currentRoute);
@@ -40,30 +49,27 @@ class _SalePageTitleBarState extends State<SalePageTitleBar> {
         SalePageSwitcherMenu(
           currentRoute: widget.currentRoute,
           child: MouseRegion(
-            onEnter: (_) => setState(() => _isHovered = true),
-            onExit: (_) => setState(() => _isHovered = false),
+            onEnter: (_) => _setHovered(true),
+            onExit: (_) => _setHovered(false),
             cursor: SystemMouseCursors.click,
-            child: Listener(
-              onPointerDown: (_) => setState(() => _isHovered = false),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      currentLabel,
-                      style: _titleStyle.copyWith(color: _contentColor),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    currentLabel,
+                    style: _titleStyle.copyWith(color: _contentColor),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 22,
+                      color: _contentColor,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xs),
-                      child: Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 22,
-                        color: _contentColor,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

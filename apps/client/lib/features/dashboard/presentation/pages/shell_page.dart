@@ -4,6 +4,7 @@ import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
+import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -27,18 +28,22 @@ class _ShellPageState extends ConsumerState<ShellPage> {
 
   bool _isCollapsed = false;
   bool _isSaleExpanded = false;
+  bool _isPurchaseExpanded = false;
+  bool _expandInitialized = false;
   bool _isPartiesExpanded = false;
-  bool _saleExpandInitialized = false;
   bool _partiesExpandInitialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_saleExpandInitialized) {
-      _saleExpandInitialized = true;
+    if (!_expandInitialized) {
+      _expandInitialized = true;
       final location = GoRouterState.of(context).uri.path;
       if (location.startsWith(AppRoutes.sale)) {
         _isSaleExpanded = true;
+      }
+      if (location.startsWith(AppRoutes.purchase)) {
+        _isPurchaseExpanded = true;
       }
     }
     if (!_partiesExpandInitialized) {
@@ -55,6 +60,10 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   ];
 
   static final List<_NavSubItem> _saleSubItems = SaleSubRoutes.items
+      .map((item) => _NavSubItem(route: item.route, label: item.label))
+      .toList();
+
+  static final List<_NavSubItem> _purchaseSubItems = PurchaseSubRoutes.items
       .map((item) => _NavSubItem(route: item.route, label: item.label))
       .toList();
 
@@ -81,11 +90,15 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       icon: Icons.receipt_outlined,
       label: 'Sale',
       isExpandable: true,
+      routePrefix: AppRoutes.sale,
       subItems: _saleSubItems,
     ),
-    const _NavItem(
+    _NavItem(
       icon: Icons.shopping_cart_outlined,
       label: 'Purchase & Expense',
+      isExpandable: true,
+      routePrefix: AppRoutes.purchase,
+      subItems: _purchaseSubItems,
     ),
     const _NavItem(
       route: AppRoutes.reports,
@@ -225,14 +238,26 @@ class _ShellPageState extends ConsumerState<ShellPage> {
 
   Widget _buildNavItem(_NavItem item, String currentLocation) {
     if (item.isExpandable) {
-      final isSale = item.subItems.any((s) => s.route.startsWith(AppRoutes.sale));
-      final isParties = item.subItems.any((s) => s.route.startsWith(AppRoutes.parties));
+      final isSale = item.routePrefix == AppRoutes.sale;
+      final isPurchase = item.routePrefix == AppRoutes.purchase;
+      final isParties = item.route == AppRoutes.parties;
+      final routePrefix = item.routePrefix ?? item.route!;
+
       final isParentActive = isSale
           ? currentLocation.startsWith(AppRoutes.sale)
-          : isParties
-              ? currentLocation.startsWith(AppRoutes.parties)
-              : false;
-      final isExpanded = isSale ? _isSaleExpanded : _isPartiesExpanded;
+          : isPurchase
+              ? currentLocation.startsWith(AppRoutes.purchase)
+              : isParties
+                  ? currentLocation.startsWith(AppRoutes.parties)
+                  : false;
+
+      final isExpanded = isSale
+          ? _isSaleExpanded
+          : isPurchase
+              ? _isPurchaseExpanded
+              : isParties
+                  ? _isPartiesExpanded
+                  : false;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -246,23 +271,20 @@ class _ShellPageState extends ConsumerState<ShellPage> {
             onToggle: () => setState(() {
               if (isSale) {
                 _isSaleExpanded = !_isSaleExpanded;
-              } else {
+              } else if (isPurchase) {
+                _isPurchaseExpanded = !_isPurchaseExpanded;
+              } else if (isParties) {
                 _isPartiesExpanded = !_isPartiesExpanded;
               }
             }),
           ),
           if (isExpanded && !_isCollapsed)
             ...item.subItems.map((sub) {
-              final isSubActive = isSale
-                  ? (currentLocation == sub.route ||
-                      (sub.route == AppRoutes.saleInvoices &&
-                          (currentLocation == AppRoutes.addSale ||
-                              currentLocation.startsWith(
-                                '${AppRoutes.editSale}/',
-                              ))) ||
-                      (sub.route == AppRoutes.saleReturnCreditNote &&
-                          currentLocation == AppRoutes.addCreditNote))
-                  : currentLocation == sub.route;
+              final isSubActive = _isSubItemActive(
+                routePrefix: routePrefix,
+                subRoute: sub.route,
+                currentLocation: currentLocation,
+              );
               return _SidebarNavSubTile(
                 label: sub.label,
                 isActive: isSubActive,
@@ -281,6 +303,51 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       isActive: isActive,
       onTap: item.route != null ? () => context.go(item.route!) : null,
     );
+  }
+
+  bool _isSubItemActive({
+    required String routePrefix,
+    required String subRoute,
+    required String currentLocation,
+  }) {
+    if (currentLocation == subRoute) return true;
+
+    if (routePrefix == AppRoutes.sale) {
+      if (subRoute == AppRoutes.saleInvoices &&
+          (currentLocation == AppRoutes.addSale ||
+              currentLocation.startsWith('${AppRoutes.editSale}/'))) {
+        return true;
+      }
+      if (subRoute == AppRoutes.saleReturnCreditNote &&
+          currentLocation == AppRoutes.addCreditNote) {
+        return true;
+      }
+    }
+
+    if (routePrefix == AppRoutes.purchase) {
+      if (subRoute == AppRoutes.purchaseBills &&
+          currentLocation == AppRoutes.addPurchase) {
+        return true;
+      }
+      if (subRoute == AppRoutes.purchaseExpenses &&
+          currentLocation == AppRoutes.addExpense) {
+        return true;
+      }
+      if (subRoute == AppRoutes.purchaseOrder &&
+          currentLocation == AppRoutes.addPurchaseOrder) {
+        return true;
+      }
+      if (subRoute == AppRoutes.purchaseReturnDebitNote &&
+          currentLocation == AppRoutes.addDebitNote) {
+        return true;
+      }
+      if (subRoute == AppRoutes.purchaseFa &&
+          currentLocation == AppRoutes.addPurchaseFa) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   Widget _buildSidebarFooter() {
@@ -364,7 +431,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                   _TopBarButton(
                     label: 'Add Purchase',
                     color: AppColors.primary,
-                    onPressed: () {},
+                    onPressed: () => context.push(AppRoutes.addPurchase),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   _TopBarIconButton(icon: Icons.add, onPressed: () {}),
@@ -388,6 +455,7 @@ class _NavItem {
     required this.icon,
     required this.label,
     this.route,
+    this.routePrefix,
     this.isExpandable = false,
     this.subItems = const [],
   });
@@ -395,6 +463,7 @@ class _NavItem {
   final IconData icon;
   final String label;
   final String? route;
+  final String? routePrefix;
   final bool isExpandable;
   final List<_NavSubItem> subItems;
 }
@@ -501,7 +570,7 @@ class _SidebarNavSubTile extends StatelessWidget {
   final VoidCallback onTap;
 
   static const _sidebarActiveBg = Color(0xFF2A3447);
-  static const _sidebarText = Color(0xFFB0BEC5);
+  static const _sidebarText = Color(0xFFCFD8DC);
   static const _sidebarTextActive = Color(0xFFFFFFFF);
 
   @override
@@ -534,8 +603,8 @@ class _SidebarNavSubTile extends StatelessWidget {
             label,
             style: TextStyle(
               color: isActive ? _sidebarTextActive : _sidebarText,
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.w500 : FontWeight.normal,
+              fontSize: 13,
+              fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
             ),
             overflow: TextOverflow.ellipsis,
           ),

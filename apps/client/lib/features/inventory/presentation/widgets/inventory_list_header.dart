@@ -13,35 +13,69 @@ class InventoryListHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      clipBehavior: Clip.hardEdge,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
       decoration: const BoxDecoration(
         color: Color(0xFFF5F5F5),
         border: Border(bottom: BorderSide(color: inventoryCardBorder)),
       ),
-      child: Row(
+      child: InventoryListRowLayout(
+        flexValues: [for (final column in columns) column.flex],
+        trailing: const SizedBox(width: 28),
         children: [
-          for (var i = 0; i < columns.length; i++) ...[
-            if (i > 0) const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              flex: columns[i].flex,
-              child: Row(
-                children: [
-                  Text(columns[i].label, style: InventoryStyles.listHeaderStyle),
-                  if (columns[i].showFilter) ...[
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.filter_list,
-                      size: 14,
-                      color: Colors.grey.shade500,
-                    ),
-                  ],
-                ],
-              ),
+          for (final column in columns)
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    column.label,
+                    style: InventoryStyles.listHeaderStyle,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (column.showFilter)
+                  Icon(
+                    Icons.filter_list,
+                    size: 14,
+                    color: Colors.grey.shade500,
+                  ),
+              ],
             ),
-          ],
-          const SizedBox(width: 28),
         ],
       ),
+    );
+  }
+}
+
+/// Row layout that mirrors [InventoryListHeader] column spacing so data rows
+/// align without sub-pixel overflow.
+class InventoryListRowLayout extends StatelessWidget {
+  const InventoryListRowLayout({
+    required this.flexValues,
+    required this.children,
+    this.trailing = const SizedBox(width: 28),
+    super.key,
+  });
+
+  final List<int> flexValues;
+  final List<Widget> children;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    assert(flexValues.length == children.length);
+
+    return Row(
+      children: [
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0) const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            flex: flexValues[i],
+            child: children[i],
+          ),
+        ],
+        trailing,
+      ],
     );
   }
 }
