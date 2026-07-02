@@ -1,5 +1,13 @@
 import type { FastifyPluginAsync } from 'fastify';
+import type { AppConfig } from '../../config/app_config';
+import { createAuthRoutes } from './auth.routes';
 
-export const authModule: FastifyPluginAsync = async (_app) => {
-  // TODO: Register auth routes, controllers, services, and repositories.
-};
+export function createAuthModule(config: AppConfig): FastifyPluginAsync {
+  return async (app) => {
+    await app.register(import('@fastify/rate-limit'), {
+      max: 10,
+      timeWindow: '1 minute',
+    });
+    await app.register(createAuthRoutes(config));
+  };
+}

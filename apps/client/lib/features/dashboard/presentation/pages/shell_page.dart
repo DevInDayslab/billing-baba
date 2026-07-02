@@ -1,20 +1,24 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/auth/providers/auth_provider.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 /// Main app shell with collapsible sidebar and top action bar.
-class ShellPage extends StatefulWidget {
+class ShellPage extends ConsumerStatefulWidget {
   const ShellPage({required this.child, super.key});
 
   final Widget child;
 
   @override
-  State<ShellPage> createState() => _ShellPageState();
+  ConsumerState<ShellPage> createState() => _ShellPageState();
 }
 
-class _ShellPageState extends State<ShellPage> {
+class _ShellPageState extends ConsumerState<ShellPage> {
   static const _sidebarExpandedWidth = 220.0;
   static const _sidebarCollapsedWidth = 60.0;
   static const _sidebarColor = Color(0xFF1C2333);
@@ -55,7 +59,11 @@ class _ShellPageState extends State<ShellPage> {
       .toList();
 
   static final _navItems = [
-    const _NavItem(route: AppRoutes.home, icon: Icons.home_outlined, label: 'Home'),
+    const _NavItem(
+      route: AppRoutes.home,
+      icon: Icons.home_outlined,
+      label: 'Home',
+    ),
     _NavItem(
       route: AppRoutes.parties,
       icon: Icons.people_outlined,
@@ -249,8 +257,9 @@ class _ShellPageState extends State<ShellPage> {
                   ? (currentLocation == sub.route ||
                       (sub.route == AppRoutes.saleInvoices &&
                           (currentLocation == AppRoutes.addSale ||
-                              currentLocation
-                                  .startsWith('${AppRoutes.editSale}/'))) ||
+                              currentLocation.startsWith(
+                                '${AppRoutes.editSale}/',
+                              ))) ||
                       (sub.route == AppRoutes.saleReturnCreditNote &&
                           currentLocation == AppRoutes.addCreditNote))
                   : currentLocation == sub.route;
@@ -275,47 +284,21 @@ class _ShellPageState extends State<ShellPage> {
   }
 
   Widget _buildSidebarFooter() {
-    return InkWell(
-      onTap: () => context.go(AppRoutes.editProfile),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: _isCollapsed ? AppSpacing.sm : AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: Color(0xFF2A3447))),
-        ),
-        child: _isCollapsed
-            ? const Center(
-                child: CircleAvatar(
-                  radius: 16,
-                  backgroundColor: Color(0xFF2A3447),
-                  backgroundImage: AssetImage('assets/images/logo.png'),
-                ),
-              )
-            : const Row(
-                children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: Color(0xFF2A3447),
-                    backgroundImage: AssetImage('assets/images/logo.png'),
-                  ),
-                  SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      'My Business',
-                      style: TextStyle(
-                        color: _sidebarTextActive,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Icon(Icons.chevron_right, color: _sidebarText, size: 20),
-                ],
-              ),
-      ),
+    final sidebarBusiness = ref.watch(sidebarBusinessProvider);
+
+    return _SidebarProfileFooter(
+      collapsed: _isCollapsed,
+      companyName: sidebarBusiness.name,
+      avatarSeed: sidebarBusiness.seed,
+      onEditProfile: () => context.go(AppRoutes.editProfile),
+      onSwitchCompany: () async {
+        await ref.read(authProvider.notifier).enterBusinessSelection();
+        if (mounted) context.go(AppRoutes.businessList);
+      },
+      onLogout: () async {
+        await ref.read(authProvider.notifier).logout();
+        if (mounted) context.go(AppRoutes.login);
+      },
     );
   }
 
@@ -673,6 +656,301 @@ class _TopBarIconButton extends StatelessWidget {
       icon: Icon(icon, color: AppColors.textSecondary, size: 22),
       onPressed: onPressed,
       tooltip: '',
+    );
+  }
+}
+
+class _SidebarProfileFooter extends StatefulWidget {
+  const _SidebarProfileFooter({
+    required this.collapsed,
+    required this.companyName,
+    required this.avatarSeed,
+    required this.onEditProfile,
+    required this.onSwitchCompany,
+    required this.onLogout,
+  });
+
+  final bool collapsed;
+  final String companyName;
+  final String avatarSeed;
+  final VoidCallback onEditProfile;
+  final VoidCallback onSwitchCompany;
+  final Future<void> Function() onLogout;
+
+  @override
+  State<_SidebarProfileFooter> createState() => _SidebarProfileFooterState();
+}
+
+class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
+  static const _sidebarColor = Color(0xFF1C2333);
+  static const _sidebarText = Color(0xFFB0BEC5);
+  static const _sidebarTextActive = Color(0xFFFFFFFF);
+
+  final _layerLink = LayerLink();
+  OverlayEntry? _menuOverlay;
+  var _menuOpen = false;
+
+  @override
+  void dispose() {
+    _removeMenu();
+    super.dispose();
+  }
+
+  void _toggleMenu() {
+    if (_menuOpen) {
+      _removeMenu();
+    } else {
+      _showMenu();
+    }
+  }
+
+  void _showMenu() {
+    final overlay = Overlay.of(context);
+    _menuOverlay = OverlayEntry(
+      builder: (overlayContext) => Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _removeMenu,
+              behavior: HitTestBehavior.translucent,
+            ),
+          ),
+          CompositedTransformFollower(
+            link: _layerLink,
+            targetAnchor: Alignment.topRight,
+            followerAnchor: Alignment.bottomLeft,
+            offset: const Offset(AppSpacing.sm, -AppSpacing.xs),
+            child: _ProfileMenuCard(
+              companyName: widget.companyName,
+              onEditProfile: () {
+                _removeMenu();
+                widget.onEditProfile();
+              },
+              onSwitchCompany: () {
+                _removeMenu();
+                widget.onSwitchCompany();
+              },
+              onLogout: () async {
+                _removeMenu();
+                await widget.onLogout();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+    overlay.insert(_menuOverlay!);
+    setState(() => _menuOpen = true);
+  }
+
+  void _removeMenu() {
+    _menuOverlay?.remove();
+    _menuOverlay = null;
+    if (_menuOpen) {
+      setState(() => _menuOpen = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: Material(
+        color: _sidebarColor,
+        child: InkWell(
+          onTap: _toggleMenu,
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.collapsed ? AppSpacing.sm : AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: Color(0xFF2A3447))),
+            ),
+            child: widget.collapsed
+                ? Center(
+                    child: BusinessAvatar(
+                      name: widget.companyName,
+                      seed: widget.avatarSeed,
+                      diameter: 32,
+                    ),
+                  )
+                : Row(
+                    children: [
+                      BusinessAvatar(
+                        name: widget.companyName,
+                        seed: widget.avatarSeed,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.companyName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                              style: const TextStyle(
+                                color: _sidebarTextActive,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Text(
+                              'Current Company',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                              style: TextStyle(
+                                color: _sidebarText,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      AnimatedRotation(
+                        turns: _menuOpen ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: const Icon(
+                          Icons.chevron_right,
+                          color: _sidebarText,
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileMenuCard extends StatelessWidget {
+  const _ProfileMenuCard({
+    required this.companyName,
+    required this.onEditProfile,
+    required this.onSwitchCompany,
+    required this.onLogout,
+  });
+
+  final String companyName;
+  final VoidCallback onEditProfile;
+  final VoidCallback onSwitchCompany;
+  final Future<void> Function() onLogout;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      elevation: 8,
+      shadowColor: Colors.black26,
+      borderRadius: AppRadius.mdBorder,
+      color: AppColors.surface,
+      child: SizedBox(
+        width: 220,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Active Company',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    companyName,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xFFE0E0E0)),
+            _ProfileMenuItem(
+              icon: Icons.edit_outlined,
+              label: 'Edit Profile',
+              onTap: onEditProfile,
+            ),
+            _ProfileMenuItem(
+              icon: Icons.autorenew,
+              label: 'Switch Company',
+              onTap: onSwitchCompany,
+            ),
+            const Divider(height: 1, color: Color(0xFFE0E0E0)),
+            _ProfileMenuItem(
+              icon: Icons.logout,
+              label: 'Logout',
+              color: AppColors.error,
+              onTap: onLogout,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileMenuItem extends StatelessWidget {
+  const _ProfileMenuItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final itemColor = color ?? AppColors.textPrimary;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm + 2,
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: itemColor),
+            const SizedBox(width: AppSpacing.sm + 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: itemColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

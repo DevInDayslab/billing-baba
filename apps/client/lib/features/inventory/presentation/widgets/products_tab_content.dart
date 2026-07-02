@@ -29,7 +29,6 @@ class ProductsTabContent extends ConsumerWidget {
             ref.read(selectedProductIdProvider.notifier).select(id),
         onAddItem: () => showAddItemDialog(
           context,
-          initialType: ItemType.product,
         ),
       ),
       detailPanel: selectedId == null
@@ -85,7 +84,7 @@ class _ProductsListPanel extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   InventoryPopupMenuButton<String>(
-                    onSelected: (String value) {
+                    onSelected: (value) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('$value coming soon')),
                       );

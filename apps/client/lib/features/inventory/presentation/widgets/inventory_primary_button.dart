@@ -17,7 +17,7 @@ class InventoryPrimaryButton extends StatelessWidget {
   final List<PopupMenuEntry<String>>? dropdownMenuItems;
   final ValueChanged<String>? onDropdownSelected;
 
-  static final _mainButtonStyle = FilledButton.styleFrom(
+  static final ButtonStyle _mainButtonStyle = FilledButton.styleFrom(
     backgroundColor: inventoryPrimaryOrange,
     foregroundColor: Colors.white,
     elevation: 0,
@@ -32,7 +32,7 @@ class InventoryPrimaryButton extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 12),
   );
 
-  static final _soloButtonStyle = FilledButton.styleFrom(
+  static final ButtonStyle _soloButtonStyle = FilledButton.styleFrom(
     backgroundColor: inventoryPrimaryOrange,
     foregroundColor: Colors.white,
     elevation: 0,

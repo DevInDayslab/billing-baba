@@ -12,7 +12,7 @@ String _nextRowId() {
   return 'row_$_rowCounter';
 }
 
-final addItemFormProvider =
+final NotifierProvider<AddItemForm, AddItemFormState> addItemFormProvider =
     NotifierProvider.autoDispose<AddItemForm, AddItemFormState>(
   AddItemForm.new,
 );

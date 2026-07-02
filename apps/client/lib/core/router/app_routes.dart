@@ -8,6 +8,10 @@ abstract final class AppRoutes {
   static const parties = '/parties';
   static const partyDetails = '/parties/party-details';
   static const items = '/items';
+  static const itemsCategories = '/items/categories';
+  static const itemsUnits = '/items/units';
+  static const itemsGodowns = '/items/godowns';
+  static const itemsStockTransfer = '/items/stock-transfer';
   static const sale = '/sale';
   static const saleInvoices = '/sale/invoices';
   static const saleEstimateQuotation = '/sale/estimate-quotation';
@@ -20,8 +24,23 @@ abstract final class AppRoutes {
   static const addCreditNote = '/sale/add-credit-note';
   static const addSale = '/sale/add';
   static const editSale = '/sale/edit';
+  static const purchase = '/purchase';
+  static const purchaseReturn = '/purchase/return';
+  static const expenses = '/purchase/expenses';
+  static const debitNote = '/purchase/debit-note';
   static const reports = '/reports';
+  static const reportsDashboard = '/reports/dashboard';
+  static const reportsSales = '/reports/sales';
+  static const reportsPurchase = '/reports/purchase';
+  static const reportsStock = '/reports/stock';
+  static const reportsParty = '/reports/party';
+  static const reportsGst = '/reports/gst';
   static const settings = '/settings';
+  static const settingsUsers = '/settings/users';
+  static const settingsTaxes = '/settings/taxes';
+  static const settingsInvoiceTemplates = '/settings/invoice-templates';
+  static const settingsPreferences = '/settings/preferences';
+  static const settingsBackup = '/settings/backup';
   static const plansPricing = '/plans-pricing';
   static const editProfile = '/edit-profile';
 }

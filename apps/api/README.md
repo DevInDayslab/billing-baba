@@ -36,7 +36,23 @@ Optional:
 | `DATABASE_URL` | Neon PostgreSQL connection string |
 | `JWT_SECRET` | Access token signing secret |
 | `JWT_REFRESH_SECRET` | Refresh token signing secret |
+| `MSG91_AUTH_KEY` | MSG91 server auth key for OTP verification |
+| `ENABLE_DEV_LOGIN` | `true` to register `POST /auth/dev-login` locally; **must be `false` in production** |
 | `CORS_ORIGINS` | Comma-separated allowed origins (production) |
+
+## Development Login
+
+For local development only, you can bypass MSG91 OTP and sign in instantly.
+
+Set `ENABLE_DEV_LOGIN=true` in `apps/api/.env`. When enabled, the API registers `POST /api/v1/auth/dev-login`, which:
+
+- Finds or creates a dedicated development account and business (reused on subsequent calls)
+- Issues real JWT access and refresh tokens — same response shape as `POST /auth/login`
+- Logs `DEV LOGIN USED` when `NODE_ENV=development`
+
+When `ENABLE_DEV_LOGIN` is not `true`, the route is **not registered**. Requests to `/auth/dev-login` receive a generic `404 Not Found` so production never reveals the feature.
+
+**Never set `ENABLE_DEV_LOGIN=true` in production.**
 
 ## Run
 

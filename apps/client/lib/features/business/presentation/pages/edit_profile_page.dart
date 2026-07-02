@@ -1,15 +1,20 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/business/application/business_profile_controller.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/models/business_profile_model.dart';
+import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class EditProfilePage extends StatefulWidget {
+class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
 
   @override
-  State<EditProfilePage> createState() => _EditProfilePageState();
+  ConsumerState<EditProfilePage> createState() => _EditProfilePageState();
 }
 
-class _EditProfilePageState extends State<EditProfilePage> {
+class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   static const _saveButtonColor = Color(0xFFD32F2F);
 
   static const _businessTypes = [
@@ -64,6 +69,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String? _businessType;
   String? _businessCategory;
   String? _state;
+  String? _profileSeed;
+  String? _hydratedProfileId;
+
+  @override
+  void initState() {
+    super.initState();
+    _businessNameController.addListener(() => setState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final profile = ref.read(businessProfileProvider).asData?.value;
+      if (profile != null && mounted) {
+        setState(() => _hydrateFromProfile(profile));
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -76,184 +95,332 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
+  void _hydrateFromProfile(BusinessProfileModel profile) {
+    if (_hydratedProfileId == profile.id) return;
+
+    _businessNameController.text = profile.name;
+    _phoneController.text = profile.phone ?? '';
+    _gstinController.text = profile.gstin ?? '';
+    _emailController.text = profile.email ?? '';
+    _addressController.text = profile.address ?? '';
+    _pincodeController.text = profile.pincode ?? '';
+    _businessType = profile.businessType;
+    _businessCategory = profile.businessCategory;
+    _state = profile.state;
+    _profileSeed = profile.id;
+    _hydratedProfileId = profile.id;
+  }
+
+  void _syncDropdownsFromProfile(BusinessProfileModel profile) {
+    setState(() {
+      _businessType = profile.businessType;
+      _businessCategory = profile.businessCategory;
+      _state = profile.state;
+      _profileSeed = profile.id;
+    });
+  }
+
+  Future<void> _save() async {
+    final input = UpdateBusinessProfileInput(
+      name: _businessNameController.text,
+      phone: _phoneController.text,
+      email: _emailController.text,
+      gstin: _gstinController.text,
+      address: _addressController.text,
+      businessType: _businessType,
+      businessCategory: _businessCategory,
+      state: _state,
+      pincode: _pincodeController.text,
+    );
+
+    final updated = await ref
+        .read(editBusinessProfileFormProvider.notifier)
+        .submit(input);
+
+    if (!mounted) return;
+
+    if (updated != null) {
+      _syncDropdownsFromProfile(updated);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Business profile saved successfully')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final profileAsync = ref.watch(businessProfileProvider);
+    final formState = ref.watch(editBusinessProfileFormProvider);
+
+    ref.listen(businessProfileProvider, (previous, next) {
+      next.whenData((profile) {
+        if (_hydratedProfileId != profile.id && mounted) {
+          setState(() => _hydrateFromProfile(profile));
+        }
+      });
+    });
+
     return ColoredBox(
       color: AppColors.surface,
-      child: SingleChildScrollView(
+      child: profileAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => _ErrorState(
+          message: 'Unable to load business profile. Please try again.',
+          onRetry: () => ref.invalidate(businessProfileProvider),
+        ),
+        data: (profile) {
+          final displayName = _businessNameController.text.isNotEmpty
+              ? _businessNameController.text
+              : profile.name;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                if (formState.generalError != null) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.sm + 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.08),
+                      borderRadius: AppRadius.smBorder,
+                      border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      formState.generalError!,
+                      style: const TextStyle(color: AppColors.error),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: const Color(0xFFE0E0E0)),
+                    borderRadius: AppRadius.mdBorder,
+                  ),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _LogoPlaceholder(
+                            name: displayName,
+                            logoUrl: profile.logoUrl,
+                            seed: _profileSeed ?? profile.id,
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const _SectionHeader(title: 'Business Details'),
+                                const SizedBox(height: AppSpacing.md),
+                                _LabeledField(
+                                  label: 'Business Name',
+                                  required: true,
+                                  errorText: formState.errorFor('name'),
+                                  child: _OutlinedField(
+                                    controller: _businessNameController,
+                                    hintText: 'Business Name',
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                _LabeledField(
+                                  label: 'Phone Number',
+                                  errorText: formState.errorFor('phone'),
+                                  child: _OutlinedField(
+                                    controller: _phoneController,
+                                    hintText: 'Phone Number',
+                                    keyboardType: TextInputType.phone,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                _LabeledField(
+                                  label: 'GSTIN',
+                                  errorText: formState.errorFor('gstin'),
+                                  child: _OutlinedField(
+                                    controller: _gstinController,
+                                    hintText: 'GSTIN',
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                _LabeledField(
+                                  label: 'Email ID',
+                                  errorText: formState.errorFor('email'),
+                                  child: _OutlinedField(
+                                    controller: _emailController,
+                                    hintText: 'Email ID',
+                                    keyboardType: TextInputType.emailAddress,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                _LabeledField(
+                                  label: 'Business Address',
+                                  errorText: formState.errorFor('address'),
+                                  child: _OutlinedField(
+                                    controller: _addressController,
+                                    hintText: 'Business Address',
+                                    minLines: 4,
+                                    maxLines: 4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const _SectionHeader(title: 'More Details'),
+                                const SizedBox(height: AppSpacing.md),
+                                _LabeledField(
+                                  label: 'Business Type',
+                                  errorText: formState.errorFor('business_type'),
+                                  child: _OutlinedDropdown<String>(
+                                    value: _businessType,
+                                    hintText: 'Business Type',
+                                    items: _businessTypes,
+                                    onChanged: (value) =>
+                                        setState(() => _businessType = value),
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                _LabeledField(
+                                  label: 'Business Category',
+                                  errorText:
+                                      formState.errorFor('business_category'),
+                                  child: _OutlinedDropdown<String>(
+                                    value: _businessCategory,
+                                    hintText: 'Business Category',
+                                    items: _businessCategories,
+                                    onChanged: (value) => setState(
+                                      () => _businessCategory = value,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                _LabeledField(
+                                  label: 'State',
+                                  errorText: formState.errorFor('state'),
+                                  child: _OutlinedDropdown<String>(
+                                    value: _state,
+                                    hintText: 'State',
+                                    items: _indianStates,
+                                    onChanged: (value) =>
+                                        setState(() => _state = value),
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                _LabeledField(
+                                  label: 'Pincode',
+                                  errorText: formState.errorFor('pincode'),
+                                  child: _OutlinedField(
+                                    controller: _pincodeController,
+                                    hintText: 'Pincode',
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                const _LabeledField(
+                                  label: 'Add Signature',
+                                  child: _SignatureUploadBox(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const Divider(color: Color(0xFFE0E0E0)),
+                      const SizedBox(height: AppSpacing.lg),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          OutlinedButton(
+                            onPressed: formState.isSubmitting
+                                ? null
+                                : () => context.pop(),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg,
+                                vertical: AppSpacing.sm + 4,
+                              ),
+                            ),
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: AppSpacing.sm + 4),
+                          FilledButton(
+                            onPressed: formState.isSubmitting ? null : _save,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _saveButtonColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg,
+                                vertical: AppSpacing.sm + 4,
+                              ),
+                            ),
+                            child: formState.isSubmitting
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text('Save Changes'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Edit Profile',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: const Color(0xFFE0E0E0)),
-                borderRadius: AppRadius.mdBorder,
-              ),
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _LogoPlaceholder(),
-                      const SizedBox(width: AppSpacing.lg),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const _SectionHeader(title: 'Business Details'),
-                            const SizedBox(height: AppSpacing.md),
-                            _LabeledField(
-                              label: 'Business Name',
-                              required: true,
-                              child: _OutlinedField(
-                                controller: _businessNameController,
-                                hintText: 'Business Name',
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _LabeledField(
-                              label: 'Phone Number',
-                              child: _OutlinedField(
-                                controller: _phoneController,
-                                hintText: 'Phone Number',
-                                keyboardType: TextInputType.phone,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _LabeledField(
-                              label: 'GSTIN',
-                              child: _OutlinedField(
-                                controller: _gstinController,
-                                hintText: 'GSTIN',
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _LabeledField(
-                              label: 'Email ID',
-                              child: _OutlinedField(
-                                controller: _emailController,
-                                hintText: 'Email ID',
-                                keyboardType: TextInputType.emailAddress,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _LabeledField(
-                              label: 'Business Address',
-                              child: _OutlinedField(
-                                controller: _addressController,
-                                hintText: 'Business Address',
-                                minLines: 4,
-                                maxLines: 4,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.lg),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const _SectionHeader(title: 'More Details'),
-                            const SizedBox(height: AppSpacing.md),
-                            _LabeledField(
-                              label: 'Business Type',
-                              child: _OutlinedDropdown<String>(
-                                value: _businessType,
-                                hintText: 'Business Type',
-                                items: _businessTypes,
-                                onChanged: (value) =>
-                                    setState(() => _businessType = value),
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _LabeledField(
-                              label: 'Business Category',
-                              child: _OutlinedDropdown<String>(
-                                value: _businessCategory,
-                                hintText: 'Business Category',
-                                items: _businessCategories,
-                                onChanged: (value) =>
-                                    setState(() => _businessCategory = value),
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _LabeledField(
-                              label: 'State',
-                              child: _OutlinedDropdown<String>(
-                                value: _state,
-                                hintText: 'State',
-                                items: _indianStates,
-                                onChanged: (value) =>
-                                    setState(() => _state = value),
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _LabeledField(
-                              label: 'Pincode',
-                              child: _OutlinedField(
-                                controller: _pincodeController,
-                                hintText: 'Pincode',
-                                keyboardType: TextInputType.number,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            _LabeledField(
-                              label: 'Add Signature',
-                              child: _SignatureUploadBox(onTap: () {}),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  const Divider(color: Color(0xFFE0E0E0)),
-                  const SizedBox(height: AppSpacing.lg),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      OutlinedButton(
-                        onPressed: () => context.pop(),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg,
-                            vertical: AppSpacing.sm + 4,
-                          ),
-                        ),
-                        child: const Text('Cancel'),
-                      ),
-                      const SizedBox(width: AppSpacing.sm + 4),
-                      FilledButton(
-                        onPressed: () => debugPrint('saved'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _saveButtonColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg,
-                            vertical: AppSpacing.sm + 4,
-                          ),
-                        ),
-                        child: const Text('Save Changes'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: AppSpacing.md),
+            FilledButton(onPressed: onRetry, child: const Text('Retry')),
           ],
         ),
       ),
@@ -284,11 +451,13 @@ class _LabeledField extends StatelessWidget {
     required this.label,
     required this.child,
     this.required = false,
+    this.errorText,
   });
 
   final String label;
   final Widget child;
   final bool required;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -318,6 +487,13 @@ class _LabeledField extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         child,
+        if (errorText != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            errorText!,
+            style: const TextStyle(fontSize: 12, color: AppColors.error),
+          ),
+        ],
       ],
     );
   }
@@ -421,65 +597,83 @@ class _OutlinedDropdown<T> extends StatelessWidget {
 }
 
 class _LogoPlaceholder extends StatelessWidget {
-  const _LogoPlaceholder();
+  const _LogoPlaceholder({
+    required this.name,
+    required this.logoUrl,
+    required this.seed,
+  });
+
+  final String name;
+  final String? logoUrl;
+  final String seed;
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _DashedBorderPainter(
-        shape: _DashedBorderShape.circle,
-        color: const Color(0xFFBDBDBD),
-      ),
-      child: const SizedBox(
-        width: 100,
-        height: 100,
-        child: Center(
-          child: Text(
-            'Add Logo',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
+    return Column(
+      children: [
+        CustomPaint(
+          painter: _DashedBorderPainter(
+            shape: _DashedBorderShape.circle,
+            color: const Color(0xFFBDBDBD),
+          ),
+          child: SizedBox(
+            width: 100,
+            height: 100,
+            child: Center(
+              child: logoUrl == null
+                  ? BusinessAvatar(
+                      name: name,
+                      seed: seed,
+                      diameter: 96,
+                    )
+                  : const Text(
+                      'Add Logo',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
             ),
-            textAlign: TextAlign.center,
           ),
         ),
-      ),
+        const SizedBox(height: AppSpacing.xs),
+        const Text(
+          'Logo upload coming soon',
+          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+        ),
+      ],
     );
   }
 }
 
 class _SignatureUploadBox extends StatelessWidget {
-  const _SignatureUploadBox({required this.onTap});
-
-  final VoidCallback onTap;
+  const _SignatureUploadBox();
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: CustomPaint(
-        painter: _DashedBorderPainter(
-          shape: _DashedBorderShape.rectangle,
-          color: const Color(0xFFBDBDBD),
-          borderRadius: AppRadius.sm,
-        ),
-        child: const SizedBox(
-          width: double.infinity,
-          height: 80,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.upload, color: AppColors.textSecondary, size: 24),
-              SizedBox(height: AppSpacing.xs),
-              Text(
-                'Upload Signature',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
+    return CustomPaint(
+      painter: _DashedBorderPainter(
+        shape: _DashedBorderShape.rectangle,
+        color: const Color(0xFFBDBDBD),
+        borderRadius: AppRadius.sm,
+      ),
+      child: const SizedBox(
+        width: double.infinity,
+        height: 80,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.upload, color: AppColors.textSecondary, size: 24),
+            SizedBox(height: AppSpacing.xs),
+            Text(
+              'Coming Soon',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

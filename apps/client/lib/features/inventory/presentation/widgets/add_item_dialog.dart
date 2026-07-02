@@ -477,7 +477,6 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               child: SaleGenericSelectDropdown(
                 value: selectedCategory ?? 'Select',
                 options: categoryOptions,
-                hintText: 'Select',
                 onSelected: (name) {
                   final category = categories.firstWhereOrNull(
                     (c) => c.name == name,
@@ -1165,10 +1164,10 @@ class _ProductServiceToggle extends StatelessWidget {
                 width: _thumbSize,
                 height: _thumbSize,
                 margin: const EdgeInsets.symmetric(horizontal: 2),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
                       color: Color(0x33000000),
                       blurRadius: 2,
@@ -1308,7 +1307,6 @@ class _RawMaterialRow extends StatelessWidget {
         border: Border(bottom: BorderSide(color: _cardBorder)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
             width: 28,
