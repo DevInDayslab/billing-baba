@@ -23,7 +23,9 @@ class _ShellPageState extends State<ShellPage> {
 
   bool _isCollapsed = false;
   bool _isSaleExpanded = false;
+  bool _isPartiesExpanded = false;
   bool _saleExpandInitialized = false;
+  bool _partiesExpandInitialized = false;
 
   @override
   void didChangeDependencies() {
@@ -35,7 +37,18 @@ class _ShellPageState extends State<ShellPage> {
         _isSaleExpanded = true;
       }
     }
+    if (!_partiesExpandInitialized) {
+      _partiesExpandInitialized = true;
+      final location = GoRouterState.of(context).uri.path;
+      if (location.startsWith(AppRoutes.parties)) {
+        _isPartiesExpanded = true;
+      }
+    }
   }
+
+  static const List<_NavSubItem> _partiesSubItems = [
+    _NavSubItem(route: AppRoutes.partyDetails, label: 'Party Details'),
+  ];
 
   static final List<_NavSubItem> _saleSubItems = SaleSubRoutes.items
       .map((item) => _NavSubItem(route: item.route, label: item.label))
@@ -43,10 +56,12 @@ class _ShellPageState extends State<ShellPage> {
 
   static final _navItems = [
     const _NavItem(route: AppRoutes.home, icon: Icons.home_outlined, label: 'Home'),
-    const _NavItem(
+    _NavItem(
       route: AppRoutes.parties,
       icon: Icons.people_outlined,
       label: 'Parties',
+      isExpandable: true,
+      subItems: _partiesSubItems,
     ),
     const _NavItem(
       route: AppRoutes.items,
@@ -202,7 +217,14 @@ class _ShellPageState extends State<ShellPage> {
 
   Widget _buildNavItem(_NavItem item, String currentLocation) {
     if (item.isExpandable) {
-      final isParentActive = currentLocation.startsWith(AppRoutes.sale);
+      final isSale = item.subItems.any((s) => s.route.startsWith(AppRoutes.sale));
+      final isParties = item.subItems.any((s) => s.route.startsWith(AppRoutes.parties));
+      final isParentActive = isSale
+          ? currentLocation.startsWith(AppRoutes.sale)
+          : isParties
+              ? currentLocation.startsWith(AppRoutes.parties)
+              : false;
+      final isExpanded = isSale ? _isSaleExpanded : _isPartiesExpanded;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -212,18 +234,26 @@ class _ShellPageState extends State<ShellPage> {
             item: item,
             collapsed: _isCollapsed,
             isActive: isParentActive,
-            isExpanded: _isSaleExpanded,
-            onToggle: () => setState(() => _isSaleExpanded = !_isSaleExpanded),
+            isExpanded: isExpanded,
+            onToggle: () => setState(() {
+              if (isSale) {
+                _isSaleExpanded = !_isSaleExpanded;
+              } else {
+                _isPartiesExpanded = !_isPartiesExpanded;
+              }
+            }),
           ),
-          if (_isSaleExpanded && !_isCollapsed)
+          if (isExpanded && !_isCollapsed)
             ...item.subItems.map((sub) {
-              final isSubActive =
-                  currentLocation == sub.route ||
-                  (sub.route == AppRoutes.saleInvoices &&
-                      (currentLocation == AppRoutes.addSale ||
-                          currentLocation.startsWith('${AppRoutes.editSale}/'))) ||
-                  (sub.route == AppRoutes.saleReturnCreditNote &&
-                      currentLocation == AppRoutes.addCreditNote);
+              final isSubActive = isSale
+                  ? (currentLocation == sub.route ||
+                      (sub.route == AppRoutes.saleInvoices &&
+                          (currentLocation == AppRoutes.addSale ||
+                              currentLocation
+                                  .startsWith('${AppRoutes.editSale}/'))) ||
+                      (sub.route == AppRoutes.saleReturnCreditNote &&
+                          currentLocation == AppRoutes.addCreditNote))
+                  : currentLocation == sub.route;
               return _SidebarNavSubTile(
                 label: sub.label,
                 isActive: isSubActive,
