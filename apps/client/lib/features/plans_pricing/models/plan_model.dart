@@ -8,17 +8,17 @@ enum PlanDuration { oneYear, threeYears }
 
 extension PlanPlatformLabel on PlanPlatform {
   String get label => switch (this) {
-        PlanPlatform.desktopMobile => 'Desktop + Mobile',
-        PlanPlatform.desktop => 'Desktop',
-        PlanPlatform.mobile => 'Mobile',
-      };
+    PlanPlatform.desktopMobile => 'Desktop + Mobile',
+    PlanPlatform.desktop => 'Desktop',
+    PlanPlatform.mobile => 'Mobile',
+  };
 }
 
 extension PlanDurationLabel on PlanDuration {
   String get label => switch (this) {
-        PlanDuration.oneYear => '1 Year',
-        PlanDuration.threeYears => '3 Years',
-      };
+    PlanDuration.oneYear => '1 Year',
+    PlanDuration.threeYears => '3 Years',
+  };
 }
 
 typedef PlanPriceKey = (PlanPlatform, PlanDuration);

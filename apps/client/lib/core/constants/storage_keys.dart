@@ -11,4 +11,9 @@ abstract final class StorageKeys {
   static const cachedBusinessProfile = 'cached_business_profile';
   static const sidebarCollapsed = 'sidebar_collapsed';
   static const sidebarExpandedSections = 'sidebar_expanded_sections';
+  static const cachedParties = 'cached_parties';
+  static const partyLocalExtensions = 'party_local_extensions';
+  static const pendingPartyOperations = 'pending_party_operations';
+  static const partyListFilter = 'party_list_filter';
+  static const selectedPartyId = 'selected_party_id';
 }

@@ -115,12 +115,14 @@ class AuthState {
       otpPhase: otpPhase ?? this.otpPhase,
       phone: phone ?? this.phone,
       reqId: clearReqId ? '' : reqId ?? this.reqId,
-      msg91AccessToken:
-          clearMsg91Token ? null : msg91AccessToken ?? this.msg91AccessToken,
+      msg91AccessToken: clearMsg91Token
+          ? null
+          : msg91AccessToken ?? this.msg91AccessToken,
       error: clearError ? null : error ?? this.error,
       session: clearSession ? null : session ?? this.session,
-      resendAvailableAt:
-          clearResendTimer ? null : resendAvailableAt ?? this.resendAvailableAt,
+      resendAvailableAt: clearResendTimer
+          ? null
+          : resendAvailableAt ?? this.resendAvailableAt,
       otpSessionVersion: otpSessionVersion ?? this.otpSessionVersion,
       backendLoginCompleted:
           backendLoginCompleted ?? this.backendLoginCompleted,
@@ -316,9 +318,9 @@ class Auth extends _$Auth {
 
     try {
       final service = await _service().timeout(const Duration(seconds: 8));
-      final session = await service
-          .loadStoredSession()
-          .timeout(const Duration(seconds: 8));
+      final session = await service.loadStoredSession().timeout(
+        const Duration(seconds: 8),
+      );
       if (session == null) {
         _setAuthStatus(AuthStatus.unauthenticated);
         state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
@@ -386,9 +388,7 @@ class Auth extends _$Auth {
   }
 
   Future<void> verifyOtp(String otp) async {
-    if (_verifyInFlight ||
-        state.backendLoginCompleted ||
-        !state.canVerifyOtp) {
+    if (_verifyInFlight || state.backendLoginCompleted || !state.canVerifyOtp) {
       return;
     }
 
@@ -488,9 +488,7 @@ class Auth extends _$Auth {
   }
 
   Future<void> resendOtp() async {
-    if (_resendInFlight ||
-        !state.canResendOtp ||
-        state.backendLoginCompleted) {
+    if (_resendInFlight || !state.canResendOtp || state.backendLoginCompleted) {
       return;
     }
 
@@ -617,7 +615,9 @@ class Auth extends _$Auth {
   Future<AuthSession?> refreshAccessToken({String? businessId}) async {
     try {
       final service = await _service();
-      final session = await service.refreshStoredSession(businessId: businessId);
+      final session = await service.refreshStoredSession(
+        businessId: businessId,
+      );
       if (session != null) {
         _setAuthStatus(_statusForSession(session));
         state = state.copyWith(session: session);

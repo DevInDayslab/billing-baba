@@ -149,8 +149,7 @@ class AddSaleFormState {
   }
 
   /// 1 loyalty point = ₹1 (placeholder until loyalty module exists).
-  double get loyaltyPointsValue =>
-      loyaltyPointsEnabled ? loyaltyPointsUsed : 0;
+  double get loyaltyPointsValue => loyaltyPointsEnabled ? loyaltyPointsUsed : 0;
 
   double get remainingAmount =>
       (grandTotal - loyaltyPointsValue).clamp(0, double.infinity);

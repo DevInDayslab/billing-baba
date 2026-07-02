@@ -72,7 +72,9 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
             return Column(
               children: [
                 const _SupportBar(),
-                Expanded(child: _EmptyBusinessState(onCreate: _openCreateBusiness)),
+                Expanded(
+                  child: _EmptyBusinessState(onCreate: _openCreateBusiness),
+                ),
                 _BottomBar(
                   phoneNumber: phoneNumber,
                   onCreate: _openCreateBusiness,
@@ -82,10 +84,12 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
             );
           }
 
-          final sharedBusinesses =
-              _filterBusinesses(allBusinesses.where((b) => b.isShared).toList());
-          final myBusinesses =
-              _filterBusinesses(allBusinesses.where((b) => !b.isShared).toList());
+          final sharedBusinesses = _filterBusinesses(
+            allBusinesses.where((b) => b.isShared).toList(),
+          );
+          final myBusinesses = _filterBusinesses(
+            allBusinesses.where((b) => !b.isShared).toList(),
+          );
 
           return Column(
             children: [
@@ -101,8 +105,9 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
                       ref.read(businessListProvider.notifier).refresh(),
                   child: Center(
                     child: ConstrainedBox(
-                      constraints:
-                          const BoxConstraints(maxWidth: _maxContentWidth),
+                      constraints: const BoxConstraints(
+                        maxWidth: _maxContentWidth,
+                      ),
                       child: TabBarView(
                         controller: _tabController,
                         children: [
@@ -158,17 +163,17 @@ class _EmptyBusinessState extends StatelessWidget {
               Text(
                 'No Business Found',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'Create your first business to start billing.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -202,7 +207,11 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.cloud_off_outlined, size: 48, color: AppColors.error),
+          const Icon(
+            Icons.cloud_off_outlined,
+            size: 48,
+            color: AppColors.error,
+          ),
           const SizedBox(height: AppSpacing.md),
           const Text('Could not load businesses'),
           const SizedBox(height: AppSpacing.md),
@@ -229,8 +238,8 @@ class _SupportBar extends StatelessWidget {
         child: Text(
           'Need help? Call 9333911911 / 080-68195500 — Get Instant Online Support',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+            color: AppColors.textSecondary,
+          ),
           textAlign: TextAlign.center,
         ),
       ),
@@ -272,9 +281,9 @@ class _Header extends StatelessWidget {
                 Text(
                   'Company List',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextField(
@@ -366,8 +375,8 @@ class _MyCompaniesTab extends ConsumerWidget {
         Text(
           'Select a company to continue billing and inventory management.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+            color: AppColors.textSecondary,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         ...businesses.map(
@@ -433,13 +442,17 @@ class _BottomBar extends ConsumerWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.phone, size: 18, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.phone,
+                      size: 18,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
                       phoneNumber,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),

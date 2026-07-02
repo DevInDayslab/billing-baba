@@ -135,8 +135,7 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                               width: 160,
                               child: SaleGenericSelectDropdown(
                                 value: form.paymentType,
-                                options:
-                                    PaymentInDropdownOptions.paymentTypes,
+                                options: PaymentInDropdownOptions.paymentTypes,
                                 compact: true,
                                 onSelected: notifier.updatePaymentType,
                               ),
@@ -159,7 +158,10 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                           const SizedBox(height: _sectionGap),
                           OutlinedButton.icon(
                             onPressed: notifier.toggleDescriptionField,
-                            icon: const Icon(Icons.description_outlined, size: 16),
+                            icon: const Icon(
+                              Icons.description_outlined,
+                              size: 16,
+                            ),
                             label: const Text(
                               'ADD DESCRIPTION',
                               style: TextStyle(
@@ -253,8 +255,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                 controller: _receivedController,
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                      decimal: true,
+                                    ),
                                 inputFormatters: [
                                   FilteringTextInputFormatter.allow(
                                     RegExp(r'^\d*\.?\d{0,2}'),
@@ -284,8 +286,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                 controller: _discountController,
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                      decimal: true,
+                                    ),
                                 inputFormatters: [
                                   FilteringTextInputFormatter.allow(
                                     RegExp(r'^\d*\.?\d{0,2}'),
@@ -520,10 +522,7 @@ class _AmountRow extends StatelessWidget {
       children: [
         Text(label, style: textStyle),
         const Spacer(),
-        if (child != null)
-          child!
-        else
-          Text(value ?? '', style: textStyle),
+        if (child != null) child! else Text(value ?? '', style: textStyle),
       ],
     );
   }

@@ -13,7 +13,10 @@ class InventoryListHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 10,
+      ),
       decoration: const BoxDecoration(
         color: Color(0xFFF5F5F5),
         border: Border(bottom: BorderSide(color: inventoryCardBorder)),
@@ -26,7 +29,10 @@ class InventoryListHeader extends StatelessWidget {
               flex: columns[i].flex,
               child: Row(
                 children: [
-                  Text(columns[i].label, style: InventoryStyles.listHeaderStyle),
+                  Text(
+                    columns[i].label,
+                    style: InventoryStyles.listHeaderStyle,
+                  ),
                   if (columns[i].showFilter) ...[
                     const SizedBox(width: 4),
                     Icon(
@@ -96,7 +102,8 @@ class InventoryListRowMenu extends StatelessWidget {
     return InventoryPopupMenuButton<String>(
       tooltip: 'More options',
       offset: const Offset(0, 28),
-      onSelected: onSelected ??
+      onSelected:
+          onSelected ??
           (value) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('$value coming soon')),

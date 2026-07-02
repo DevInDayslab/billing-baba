@@ -66,8 +66,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final Map<String, TextEditingController> _rawMaterialControllers = {};
   final Map<String, TextEditingController> _additionalCostControllers = {};
 
-  int _tabCountFor(ItemType type) =>
-      type == ItemType.product ? 4 : 2;
+  int _tabCountFor(ItemType type) => type == ItemType.product ? 4 : 2;
 
   @override
   void initState() {
@@ -78,9 +77,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
     _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(addItemFormProvider.notifier)
-          .setInitialType(widget.initialType);
+      ref.read(addItemFormProvider.notifier).setInitialType(widget.initialType);
     });
   }
 
@@ -204,7 +201,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       initialSecondaryUnitId: form.secondaryUnitId,
     );
     if (result == null || !mounted) return;
-    ref.read(addItemFormProvider.notifier).setUnits(
+    ref
+        .read(addItemFormProvider.notifier)
+        .setUnits(
           baseUnitId: result.baseUnitId,
           secondaryUnitId: result.secondaryUnitId,
         );
@@ -243,7 +242,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         .firstOrNull;
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: _dialogMaxWidth, maxHeight: 720),
+      constraints: const BoxConstraints(
+        maxWidth: _dialogMaxWidth,
+        maxHeight: 720,
+      ),
       child: Material(
         color: AppColors.surface,
         borderRadius: AppRadius.lgBorder,
@@ -276,7 +278,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                 child: AnimatedBuilder(
                   key: ValueKey(form.itemType),
                   animation: _tabController,
-                  builder: (context, _) => _buildActiveTabContent(form, notifier),
+                  builder: (context, _) =>
+                      _buildActiveTabContent(form, notifier),
                 ),
               ),
             ),
@@ -301,9 +304,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           Text(
             'Add Item',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(width: AppSpacing.lg),
           _ProductServiceToggle(
@@ -419,7 +422,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                     ),
                     child: const Text(
                       'Assign Code',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -602,8 +608,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                   controller: _salePriceController,
                   style: saleFieldTextStyle,
                   decoration: buildSaleFieldDecoration(hint: 'Sale Price'),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   inputFormatters: [_decimalInputFormatter],
                   onChanged: (v) =>
                       notifier.updateSalePrice(double.tryParse(v) ?? 0),
@@ -654,9 +661,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                               decoration: buildSaleFieldDecoration(
                                 hint: 'Wholesale Price',
                               ),
-                              keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               inputFormatters: [_decimalInputFormatter],
                               onChanged: (v) => notifier.updateWholesalePrice(
                                 double.tryParse(v) ?? 0,
@@ -761,8 +769,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                     controller: _openingQtyController,
                     style: saleFieldTextStyle,
                     decoration: buildSaleFieldDecoration(),
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     inputFormatters: [_decimalInputFormatter],
                     onChanged: (v) =>
                         notifier.updateOpeningQty(double.tryParse(v) ?? 0),
@@ -777,8 +786,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                     controller: _atPriceController,
                     style: saleFieldTextStyle,
                     decoration: buildSaleFieldDecoration(),
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     inputFormatters: [_decimalInputFormatter],
                     onChanged: (v) =>
                         notifier.updateAtPrice(double.tryParse(v) ?? 0),
@@ -826,8 +836,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                     controller: _minStockController,
                     style: saleFieldTextStyle,
                     decoration: buildSaleFieldDecoration(),
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     inputFormatters: [_decimalInputFormatter],
                     onChanged: (v) =>
                         notifier.updateMinStock(double.tryParse(v) ?? 0),
@@ -866,8 +877,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               controller: _onlineStorePriceController,
               style: saleFieldTextStyle,
               decoration: buildSaleFieldDecoration(hint: 'Online Store Price'),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [_decimalInputFormatter],
               onChanged: (v) =>
                   notifier.updateOnlineStorePrice(double.tryParse(v) ?? 0),
@@ -915,7 +927,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                 (entry) => _RawMaterialRow(
                   index: entry.key + 1,
                   row: entry.value,
-                  nameController: _rawController(entry.value.id, entry.value.itemName),
+                  nameController: _rawController(
+                    entry.value.id,
+                    entry.value.itemName,
+                  ),
                   onChanged: notifier.updateRawMaterial,
                   onRemove: () => notifier.removeRawMaterialRow(entry.value.id),
                   canRemove: form.rawMaterials.length > 1,
@@ -979,8 +994,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                         () => TextEditingController(text: row.description),
                       ),
                       style: saleFieldTextStyle,
-                      decoration:
-                          buildSaleFieldDecoration(hint: 'Description'),
+                      decoration: buildSaleFieldDecoration(hint: 'Description'),
                       onChanged: (v) => notifier.updateAdditionalCost(
                         row.id,
                         description: v,
@@ -992,8 +1006,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                     child: TextField(
                       style: saleFieldTextStyle,
                       decoration: buildSaleFieldDecoration(hint: 'Amount'),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [_decimalInputFormatter],
                       onChanged: (v) => notifier.updateAdditionalCost(
                         row.id,
@@ -1003,7 +1018,11 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                   ),
                   IconButton(
                     onPressed: () => notifier.removeAdditionalCost(row.id),
-                    icon: const Icon(Icons.close, size: 18, color: _tabActiveColor),
+                    icon: const Icon(
+                      Icons.close,
+                      size: 18,
+                      color: _tabActiveColor,
+                    ),
                   ),
                 ],
               ),
@@ -1048,13 +1067,18 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               children: [
                 const Text(
                   'Learn how to use Manufacturing',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 TextButton.icon(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Video tutorial coming soon')),
+                      const SnackBar(
+                        content: Text('Video tutorial coming soon'),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.play_circle_outline, size: 16),
@@ -1158,8 +1182,9 @@ class _ProductServiceToggle extends StatelessWidget {
             child: AnimatedAlign(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
-              alignment:
-                  isProduct ? Alignment.centerLeft : Alignment.centerRight,
+              alignment: isProduct
+                  ? Alignment.centerLeft
+                  : Alignment.centerRight,
               child: Container(
                 width: _thumbSize,
                 height: _thumbSize,
@@ -1293,7 +1318,8 @@ class _RawMaterialRow extends StatelessWidget {
     double? qty,
     String? unitLabel,
     double? purchasePrice,
-  }) onChanged;
+  })
+  onChanged;
   final VoidCallback onRemove;
   final bool canRemove;
 
@@ -1312,7 +1338,10 @@ class _RawMaterialRow extends StatelessWidget {
             width: 28,
             child: Text(
               '$index',
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           Expanded(
@@ -1320,7 +1349,10 @@ class _RawMaterialRow extends StatelessWidget {
             child: TextField(
               controller: nameController,
               style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(hint: 'Search item...', compact: true),
+              decoration: buildSaleFieldDecoration(
+                hint: 'Search item...',
+                compact: true,
+              ),
               onChanged: (v) => onChanged(row.id, itemName: v),
             ),
           ),
@@ -1329,7 +1361,9 @@ class _RawMaterialRow extends StatelessWidget {
             child: TextField(
               style: saleFieldTextStyle,
               decoration: buildSaleFieldDecoration(compact: true),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [_decimalInputFormatter],
               onChanged: (v) => onChanged(row.id, qty: double.tryParse(v) ?? 0),
             ),
@@ -1349,7 +1383,9 @@ class _RawMaterialRow extends StatelessWidget {
             child: TextField(
               style: saleFieldTextStyle,
               decoration: buildSaleFieldDecoration(compact: true),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [_decimalInputFormatter],
               onChanged: (v) =>
                   onChanged(row.id, purchasePrice: double.tryParse(v) ?? 0),
@@ -1360,7 +1396,10 @@ class _RawMaterialRow extends StatelessWidget {
             flex: 2,
             child: Text(
               currency.format(row.estimatedCost),
-              style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           SizedBox(
@@ -1368,7 +1407,11 @@ class _RawMaterialRow extends StatelessWidget {
             child: canRemove
                 ? IconButton(
                     onPressed: onRemove,
-                    icon: const Icon(Icons.close, size: 16, color: _tabActiveColor),
+                    icon: const Icon(
+                      Icons.close,
+                      size: 16,
+                      color: _tabActiveColor,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   )

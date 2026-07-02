@@ -238,8 +238,7 @@ class _AmountFieldState extends State<_AmountField> {
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
       ],
-      onChanged: (value) =>
-          widget.onChanged(double.tryParse(value) ?? 0),
+      onChanged: (value) => widget.onChanged(double.tryParse(value) ?? 0),
     );
   }
 }

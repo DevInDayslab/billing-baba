@@ -83,8 +83,9 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
 
   void removeImage(String id) {
     state = state.copyWith(
-      attachedImages:
-          state.attachedImages.where((image) => image.id != id).toList(),
+      attachedImages: state.attachedImages
+          .where((image) => image.id != id)
+          .toList(),
     );
   }
 

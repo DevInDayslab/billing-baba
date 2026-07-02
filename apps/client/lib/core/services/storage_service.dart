@@ -18,8 +18,7 @@ class StorageService {
   SharedPreferences? preferences;
   final FlutterSecureStorage _secureStorage;
 
-  bool get _usePreferencesForSecureStorage =>
-      !kIsWeb && Platform.isMacOS;
+  bool get _usePreferencesForSecureStorage => !kIsWeb && Platform.isMacOS;
 
   Future<void> init() async {
     preferences ??= await SharedPreferences.getInstance();

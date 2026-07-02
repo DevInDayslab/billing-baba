@@ -31,7 +31,8 @@ class CategoriesTabContent extends ConsumerWidget {
             ref.read(selectedCategoryIdProvider.notifier).select(id),
         onAddCategory: () => showAddCategoryDialog(context),
       ),
-      detailPanel: selectedId != null &&
+      detailPanel:
+          selectedId != null &&
               categories.any((category) => category.id == selectedId)
           ? _CategoryDetailPanel(
               category: categories.firstWhere(
@@ -297,9 +298,7 @@ class _CategoryItemRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              item.stockValue != null
-                  ? currency.format(item.stockValue)
-                  : '-',
+              item.stockValue != null ? currency.format(item.stockValue) : '-',
               style: const TextStyle(
                 fontSize: 13,
                 color: inventoryPositiveColor,

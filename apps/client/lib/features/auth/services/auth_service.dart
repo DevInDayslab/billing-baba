@@ -27,7 +27,9 @@ class AuthService {
 
     try {
       final me = await _repository.me(accessToken);
-      final selectedId = await _storage.readSecure(StorageKeys.selectedBusinessId);
+      final selectedId = await _storage.readSecure(
+        StorageKeys.selectedBusinessId,
+      );
       if (selectedId != null &&
           selectedId.isNotEmpty &&
           me.businesses.length > 1 &&
@@ -47,8 +49,9 @@ class AuthService {
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        final selectedId =
-            await _storage.readSecure(StorageKeys.selectedBusinessId);
+        final selectedId = await _storage.readSecure(
+          StorageKeys.selectedBusinessId,
+        );
         return refreshStoredSession(
           refreshToken: refreshToken,
           businessId: selectedId,

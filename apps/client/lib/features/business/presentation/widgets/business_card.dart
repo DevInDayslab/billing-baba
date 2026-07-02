@@ -37,7 +37,8 @@ class BusinessCard extends StatelessWidget {
                     Flexible(
                       child: Text(
                         business.name,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
@@ -72,8 +73,8 @@ class BusinessCard extends StatelessWidget {
                   Text(
                     'Last sale: ${dateFormat.format(business.lastSaleAt!)}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.sm),

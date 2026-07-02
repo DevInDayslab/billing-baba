@@ -249,8 +249,7 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
     final notifier = ref.read(
       addSaleFormProvider(invoiceId: widget.invoiceId).notifier,
     );
-    final isAutoNumber =
-        form.invoiceNumberMode == InvoiceNumberMode.auto;
+    final isAutoNumber = form.invoiceNumberMode == InvoiceNumberMode.auto;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

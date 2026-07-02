@@ -35,8 +35,7 @@ class SaleOrderContent extends ConsumerWidget {
 
     if (savedOrders.isEmpty) {
       return _EmptyState(
-        onAddPressed: () =>
-            ref.read(saleOrderFormProvider.notifier).openForm(),
+        onAddPressed: () => ref.read(saleOrderFormProvider.notifier).openForm(),
       );
     }
 

@@ -72,7 +72,7 @@ final class BusinessListProvider
   BusinessList create() => BusinessList();
 }
 
-String _$businessListHash() => r'26afb9a22d2c1054d1bf0bb37452322db3ff3f85';
+String _$businessListHash() => r'f6a2fe7b7ad26d760f99044a6305ab0183a41a49';
 
 abstract class _$BusinessList extends $AsyncNotifier<List<BusinessModel>> {
   FutureOr<List<BusinessModel>> build();
@@ -228,7 +228,7 @@ final class CurrentBusinessProvider
   }
 }
 
-String _$currentBusinessHash() => r'72316a73cbec60a501e9aeec21af842fda347f6c';
+String _$currentBusinessHash() => r'94dfd8ed353d0789b350de47bf74ada3441d6835';
 
 @ProviderFor(sidebarBusiness)
 final sidebarBusinessProvider = SidebarBusinessProvider._();

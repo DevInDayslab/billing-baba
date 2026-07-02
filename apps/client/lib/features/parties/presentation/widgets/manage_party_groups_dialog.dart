@@ -108,7 +108,9 @@ class _ManagePartyGroupsDialogState
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Party Group'),
-        content: Text('Delete "$name"? Parties in this group will be ungrouped.'),
+        content: Text(
+          'Delete "$name"? Parties in this group will be ungrouped.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),

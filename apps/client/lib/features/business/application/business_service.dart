@@ -35,7 +35,9 @@ class BusinessService {
   final BusinessCache _cache;
   final Ref _ref;
 
-  Future<List<BusinessModel>> fetchBusinesses({bool forceRefresh = false}) async {
+  Future<List<BusinessModel>> fetchBusinesses({
+    bool forceRefresh = false,
+  }) async {
     final selectedId = _ref.read(authProvider).session?.user.role != null
         ? _cache.readLastOpenedBusinessId()
         : null;
@@ -90,7 +92,8 @@ class BusinessService {
       final validation = ApiErrorParser.parseValidation(e);
       if (validation != null) throw validation;
 
-      final isOffline = e.response == null ||
+      final isOffline =
+          e.response == null ||
           e.type == DioExceptionType.connectionError ||
           e.type == DioExceptionType.connectionTimeout;
       if (isOffline) {
@@ -172,7 +175,9 @@ class BusinessService {
   Future<void> persistSavedProfile(BusinessProfileModel profile) async {
     await _cache.updateSelectedBusiness(profile);
     await _cache.updateBusinessListEntry(profile);
-    _ref.read(authProvider.notifier).patchBusinessFromProfile(
+    _ref
+        .read(authProvider.notifier)
+        .patchBusinessFromProfile(
           businessId: profile.id,
           name: profile.name,
           gstin: profile.gstin,
@@ -194,16 +199,16 @@ class BusinessService {
   }
 
   Map<String, dynamic> _businessToJson(BusinessDetailDto dto) => {
-        'id': dto.id,
-        'name': dto.name,
-        'role': dto.role,
-        'gstin': dto.gstin,
-        'phone': dto.phone,
-        'email': dto.email,
-        'state_code': dto.stateCode,
-        'address': dto.address,
-        'is_shared': dto.isShared,
-      };
+    'id': dto.id,
+    'name': dto.name,
+    'role': dto.role,
+    'gstin': dto.gstin,
+    'phone': dto.phone,
+    'email': dto.email,
+    'state_code': dto.stateCode,
+    'address': dto.address,
+    'is_shared': dto.isShared,
+  };
 }
 
 class BusinessOfflineException implements Exception {

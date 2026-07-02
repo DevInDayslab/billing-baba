@@ -2,7 +2,10 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import { AppError } from '../../shared/errors/app-error';
 import type { ApiSuccessResponse } from '../../shared/types';
-import { createBusinessBodySchema, updateBusinessProfileBodySchema } from './business.schema';
+import {
+  createBusinessBodySchema,
+  updateBusinessProfileBodySchema,
+} from './business.schema';
 import { BusinessService } from './business.service';
 import type {
   BusinessDetail,
@@ -31,7 +34,7 @@ export function createBusinessController() {
         throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
       }
 
-      const service = new BusinessService(request.server);
+      const service = new BusinessService();
       const data = await service.listBusinesses(accountId);
       return reply.send({ success: true, data });
     },
@@ -48,7 +51,7 @@ export function createBusinessController() {
         }
 
         const body = createBusinessBodySchema.parse(request.body);
-        const service = new BusinessService(request.server);
+        const service = new BusinessService();
         const data = await service.createBusiness(accountId, phone, body);
         return reply.status(201).send({ success: true, data });
       } catch (error) {
@@ -74,7 +77,7 @@ export function createBusinessController() {
         throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
       }
 
-      const service = new BusinessService(request.server);
+      const service = new BusinessService();
       const data = await service.getProfile(businessId, accountId);
       return reply.send({ success: true, data });
     },
@@ -91,7 +94,7 @@ export function createBusinessController() {
         }
 
         const body = updateBusinessProfileBodySchema.parse(request.body);
-        const service = new BusinessService(request.server);
+        const service = new BusinessService();
         const data = await service.updateProfile(businessId, accountId, body);
         return reply.send({ success: true, data });
       } catch (error) {
