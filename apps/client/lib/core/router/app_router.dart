@@ -9,6 +9,7 @@ import 'package:billing_baba/features/dashboard/presentation/pages/coming_soon_p
 import 'package:billing_baba/features/dashboard/presentation/pages/home_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.dart';
 import 'package:billing_baba/features/inventory/presentation/pages/items_page.dart';
+import 'package:billing_baba/features/parties/presentation/pages/party_details_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/pages/plans_pricing_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/add_credit_note_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/add_sale_page.dart';
@@ -93,17 +94,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.parties,
-            redirect: (context, state) => AppRoutes.partiesCustomers,
+            redirect: (_, __) => AppRoutes.partyDetails,
           ),
           GoRoute(
-            path: AppRoutes.partiesCustomers,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Customers'),
-          ),
-          GoRoute(
-            path: AppRoutes.partiesSuppliers,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Suppliers'),
+            path: AppRoutes.partyDetails,
+            builder: (context, state) => const PartyDetailsPage(),
           ),
           GoRoute(
             path: AppRoutes.items,

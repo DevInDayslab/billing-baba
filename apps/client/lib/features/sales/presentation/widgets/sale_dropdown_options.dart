@@ -8,21 +8,6 @@ abstract final class SaleDropdownOptions {
 
   static const godowns = ['Main Location', 'Warehouse B'];
 
-  static const parties = [
-    'Sharma Traders',
-    'Patel Electronics',
-    'Gupta General Store',
-    'Mehta Hardware',
-    'Singh & Sons',
-    'Kumar Agencies',
-    'Reddy Mart',
-    'Joshi Distributors',
-    'Verma Enterprises',
-    'Agarwal Textiles',
-    'Bansal Pharma',
-    'Chopra Foods',
-  ];
-
   static const indianStates = [
     'Andhra Pradesh',
     'Arunachal Pradesh',
@@ -60,6 +45,21 @@ abstract final class SaleDropdownOptions {
     'Ladakh',
     'Lakshadweep',
     'Puducherry',
+  ];
+
+  static const countries = [
+    'India',
+    'Afghanistan',
+    'Bangladesh',
+    'Bhutan',
+    'China',
+    'Malaysia',
+    'Nepal',
+    'Singapore',
+    'Sri Lanka',
+    'United Arab Emirates',
+    'United Kingdom',
+    'United States',
   ];
 }
 
