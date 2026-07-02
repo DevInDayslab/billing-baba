@@ -751,7 +751,6 @@ class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
                       BusinessAvatar(
                         name: widget.companyName,
                         seed: widget.avatarSeed,
-                        diameter: 36,
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(

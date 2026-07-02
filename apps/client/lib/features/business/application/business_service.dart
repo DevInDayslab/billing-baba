@@ -250,7 +250,7 @@ class BusinessList extends _$BusinessList {
     state = AsyncData(
       businesses
           .map(
-            (BusinessModel business) => business.id == profile.id
+            (business) => business.id == profile.id
                 ? business.copyWith(name: profile.name)
                 : business,
           )
