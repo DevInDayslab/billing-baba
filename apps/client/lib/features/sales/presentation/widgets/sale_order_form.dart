@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/sales/models/sale_order_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/preview_share_dialog.dart';
@@ -351,9 +352,9 @@ class _SaleOrderBottomActionBar extends ConsumerWidget {
             child: const Text('Cancel', style: TextStyle(fontSize: 13)),
           ),
           const Spacer(),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'share') {
+          ShareMenuButton(
+            onChannelSelected: (channel) {
+              if (channel == ShareChannel.email) {
                 unawaited(
                   showPreviewShareDialog(
                     context,
@@ -363,34 +364,9 @@ class _SaleOrderBottomActionBar extends ConsumerWidget {
                 return;
               }
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('$value coming soon')),
+                SnackBar(content: Text('${channel.label} coming soon')),
               );
             },
-            offset: const Offset(0, 40),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-              side: const BorderSide(color: _cardBorder),
-            ),
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'share', child: Text('Share')),
-              const PopupMenuItem(value: 'whatsapp', child: Text('WhatsApp')),
-              const PopupMenuItem(value: 'print', child: Text('Print')),
-            ],
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: _cardBorder),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Share', style: TextStyle(fontSize: 13)),
-                  SizedBox(width: 4),
-                  Icon(Icons.keyboard_arrow_down, size: 16),
-                ],
-              ),
-            ),
           ),
           const SizedBox(width: AppSpacing.md),
           FilledButton(
