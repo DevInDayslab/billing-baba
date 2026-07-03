@@ -96,7 +96,7 @@ final class PurchaseReturnFiltersProvider
 }
 
 String _$purchaseReturnFiltersHash() =>
-    r'727517ba93dd9c906c1391000494b0cdc0b8eb8f';
+    r'b3bc8506f74db822812aea852aada62704141eb8';
 
 abstract class _$PurchaseReturnFilters
     extends $Notifier<PurchaseReturnFiltersState> {
@@ -216,7 +216,7 @@ final class FilteredPurchaseReturnsProvider
 }
 
 String _$filteredPurchaseReturnsHash() =>
-    r'ec5a71bd749d42f03ccdc948cb47682d8bb14839';
+    r'9e062ef2252d30fea871a4fa707646a2ffa4b9c3';
 
 @ProviderFor(paginatedPurchaseReturns)
 final paginatedPurchaseReturnsProvider = PaginatedPurchaseReturnsProvider._();

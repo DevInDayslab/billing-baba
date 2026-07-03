@@ -41,8 +41,7 @@ final class AddPurchaseFaFormProvider
   }
 }
 
-String _$addPurchaseFaFormHash() =>
-    r'd4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3';
+String _$addPurchaseFaFormHash() => r'e97fb738afc8f4c9a9babaad2e0fb7ae5e5399a3';
 
 abstract class _$AddPurchaseFaForm extends $Notifier<AddPurchaseFaFormState> {
   AddPurchaseFaFormState build();
@@ -103,7 +102,7 @@ final class AddPurchaseFaTotalTaxProvider
 }
 
 String _$addPurchaseFaTotalTaxHash() =>
-    r'e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4';
+    r'70146c6e60b7ead33f5b370791a0af66e5168fdc';
 
 @ProviderFor(addPurchaseFaGrandTotal)
 final addPurchaseFaGrandTotalProvider = AddPurchaseFaGrandTotalProvider._();
@@ -145,4 +144,4 @@ final class AddPurchaseFaGrandTotalProvider
 }
 
 String _$addPurchaseFaGrandTotalHash() =>
-    r'f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5';
+    r'323102f21597cdda24d05bd023f79309ac570f9d';

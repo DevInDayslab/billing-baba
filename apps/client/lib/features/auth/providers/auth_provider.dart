@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
+import 'package:billing_baba/features/auth/models/auth_user.dart';
+import 'package:billing_baba/features/auth/models/business_summary.dart';
 import 'package:billing_baba/features/auth/models/otp_phase.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/auth_service.dart';
@@ -17,6 +19,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'auth_provider.g.dart';
 
 const _resendCooldown = Duration(seconds: 30);
+const _splashMinDuration = Duration(milliseconds: 2400);
 
 enum AuthStatus {
   initializing,
@@ -242,6 +245,39 @@ class Auth extends _$Auth {
     );
   }
 
+  Future<void> _completeMockOtpLogin() async {
+    final digits = state.phone.replaceAll(RegExp(r'\D'), '');
+    final phone = digits.length == 10 ? '91$digits' : digits;
+
+    final session = AuthSession(
+      accessToken: OtpService.mockAccessToken,
+      refreshToken: 'mock-refresh-token',
+      expiresIn: 900,
+      user: AuthUser(
+        id: 'local-user',
+        phone: phone,
+        name: 'User',
+        role: 'owner',
+      ),
+      businesses: const [
+        BusinessSummary(
+          id: 'local-business',
+          name: 'My Business',
+          role: 'owner',
+        ),
+      ],
+    );
+
+    try {
+      final service = await _service();
+      await service.persistSession(session);
+    } catch (_) {
+      // Best-effort until backend login is wired.
+    }
+
+    _completeOtpLogin(session);
+  }
+
   void _resetOtpFlow() {
     _verifyGeneration++;
     _verifyInFlight = false;
@@ -337,9 +373,14 @@ class Auth extends _$Auth {
 
     try {
       final service = await _service().timeout(const Duration(seconds: 8));
-      final session = await service.loadStoredSession().timeout(
-        const Duration(seconds: 8),
-      );
+      final sessionFuture = service
+          .loadStoredSession()
+          .timeout(const Duration(seconds: 8));
+      final results = await Future.wait<Object?>([
+        Future<void>.delayed(_splashMinDuration),
+        sessionFuture,
+      ]);
+      final session = results[1] as AuthSession?;
       if (session == null) {
         _setAuthStatus(AuthStatus.unauthenticated);
         state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
@@ -355,9 +396,11 @@ class Auth extends _$Auth {
         backendLoginCompleted: true,
       );
     } on TimeoutException {
+      await Future<void>.delayed(_splashMinDuration);
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
     } catch (e) {
+      await Future<void>.delayed(_splashMinDuration);
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
         clearSession: true,
@@ -430,6 +473,11 @@ class Auth extends _$Auth {
       if (generation != _verifyGeneration ||
           state.backendLoginCompleted ||
           !_verifyInFlight) {
+        return;
+      }
+
+      if (_otp.isMockMode && msg91Token == OtpService.mockAccessToken) {
+        await _completeMockOtpLogin();
         return;
       }
 

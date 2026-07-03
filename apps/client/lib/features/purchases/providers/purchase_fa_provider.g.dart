@@ -41,15 +41,14 @@ final class PurchaseFaRecordsProvider
   }
 }
 
-String _$purchaseFaRecordsHash() => r'f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0';
+String _$purchaseFaRecordsHash() => r'6a2a623cff3ec27e2407b7bc81cc21feab082e06';
 
 abstract class _$PurchaseFaRecords extends $Notifier<List<PurchaseFaModel>> {
   List<PurchaseFaModel> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref =
-        this.ref as $Ref<List<PurchaseFaModel>, List<PurchaseFaModel>>;
+    final ref = this.ref as $Ref<List<PurchaseFaModel>, List<PurchaseFaModel>>;
     final element =
         ref.element
             as $ClassProviderElement<
@@ -94,8 +93,7 @@ final class PurchaseFaFiltersProvider
   }
 }
 
-String _$purchaseFaFiltersHash() =>
-    r'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0';
+String _$purchaseFaFiltersHash() => r'a6d2248e7d22e5b6a69d19d59ae3c8808a22fbf0';
 
 abstract class _$PurchaseFaFilters extends $Notifier<PurchaseFaFiltersState> {
   PurchaseFaFiltersState build();
@@ -117,8 +115,7 @@ abstract class _$PurchaseFaFilters extends $Notifier<PurchaseFaFiltersState> {
 }
 
 @ProviderFor(filteredPurchaseFaRecords)
-final filteredPurchaseFaRecordsProvider =
-    FilteredPurchaseFaRecordsProvider._();
+final filteredPurchaseFaRecordsProvider = FilteredPurchaseFaRecordsProvider._();
 
 final class FilteredPurchaseFaRecordsProvider
     extends
@@ -163,7 +160,7 @@ final class FilteredPurchaseFaRecordsProvider
 }
 
 String _$filteredPurchaseFaRecordsHash() =>
-    r'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1';
+    r'21135dcae48c5d68941ea763b4f0d7cc4d505f1c';
 
 @ProviderFor(paginatedPurchaseFaRecords)
 final paginatedPurchaseFaRecordsProvider =
@@ -212,4 +209,4 @@ final class PaginatedPurchaseFaRecordsProvider
 }
 
 String _$paginatedPurchaseFaRecordsHash() =>
-    r'c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2';
+    r'15d93603a32a67650d96a19055c8fda21cdb3aae';

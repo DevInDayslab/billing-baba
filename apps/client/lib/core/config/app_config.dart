@@ -19,4 +19,7 @@ abstract final class AppConfig {
       kDebugMode ||
       dotenv.env['DEBUG']?.toLowerCase() == 'true' ||
       dotenv.env['APP_ENV']?.toLowerCase() == 'development';
+
+  /// Default OTP for local development when MSG91 is not configured.
+  static String get devOtp => dotenv.env['DEV_OTP']?.trim() ?? '123456';
 }
