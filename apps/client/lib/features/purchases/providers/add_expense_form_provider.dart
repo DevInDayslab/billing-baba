@@ -148,8 +148,9 @@ class AddExpenseForm extends _$AddExpenseForm {
 
   void removeImage(String id) {
     state = state.copyWith(
-      attachedImages:
-          state.attachedImages.where((image) => image.id != id).toList(),
+      attachedImages: state.attachedImages
+          .where((image) => image.id != id)
+          .toList(),
       isDirty: true,
     );
   }
@@ -211,7 +212,9 @@ class AddExpenseForm extends _$AddExpenseForm {
 
     final categories = ref.read(expenseCategoriesProvider);
     if (!categories.any((c) => c.id == categoryId)) {
-      ref.read(expenseCategoriesProvider.notifier).addCategory(
+      ref
+          .read(expenseCategoriesProvider.notifier)
+          .addCategory(
             ExpenseCategoryModel(
               id: categoryId,
               name: state.category.trim(),
@@ -263,7 +266,9 @@ class AddExpenseForm extends _$AddExpenseForm {
 
     for (final item in state.items) {
       if (item.itemName.trim().isEmpty || item.qty <= 0) continue;
-      ref.read(expenseItemsProvider.notifier).upsertItem(
+      ref
+          .read(expenseItemsProvider.notifier)
+          .upsertItem(
             ExpenseItemModel(
               id: item.id,
               name: item.itemName.trim(),

@@ -205,9 +205,9 @@ class ExpenseCategories extends _$ExpenseCategories {
 class ExpenseTransactions extends _$ExpenseTransactions {
   @override
   List<ExpenseTransactionModel> build() => [
-        ..._mockExpenseTransactions(),
-        ..._mockItemExpenseTransactions(),
-      ];
+    ..._mockExpenseTransactions(),
+    ..._mockItemExpenseTransactions(),
+  ];
 
   void addTransaction(ExpenseTransactionModel transaction) {
     state = [transaction, ...state];
@@ -312,12 +312,13 @@ class ExpenseFilters extends _$ExpenseFilters {
 @riverpod
 List<ExpenseCategoryModel> filteredExpenseCategories(Ref ref) {
   final categories = ref.watch(expenseCategoriesProvider);
-  final query = ref.watch(expenseCategorySearchQueryProvider).trim().toLowerCase();
+  final query = ref
+      .watch(expenseCategorySearchQueryProvider)
+      .trim()
+      .toLowerCase();
 
   if (query.isEmpty) return categories;
-  return categories
-      .where((c) => c.name.toLowerCase().contains(query))
-      .toList();
+  return categories.where((c) => c.name.toLowerCase().contains(query)).toList();
 }
 
 @riverpod
@@ -326,8 +327,10 @@ List<ExpenseTransactionModel> categoryExpenseTransactions(
   String categoryId,
 ) {
   final transactions = ref.watch(expenseTransactionsProvider);
-  final query =
-      ref.watch(expenseTransactionSearchQueryProvider).trim().toLowerCase();
+  final query = ref
+      .watch(expenseTransactionSearchQueryProvider)
+      .trim()
+      .toLowerCase();
 
   return transactions.where((t) {
     if (t.categoryId != categoryId) return false;

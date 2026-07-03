@@ -196,7 +196,11 @@ class _LineItemsHeader extends StatelessWidget {
           Text('DESCRIPTION', style: _headerStyle),
           Text('QTY', style: _headerStyle),
           Text('UNIT', style: _headerStyle),
-          Text('PRICE/UNIT', style: _headerStyle, overflow: TextOverflow.ellipsis),
+          Text(
+            'PRICE/UNIT',
+            style: _headerStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
           Text('TAX %', style: _headerStyle, overflow: TextOverflow.ellipsis),
           Text(
             'TAX AMT',
@@ -311,8 +315,7 @@ class _PaymentSummaryRowState extends State<_PaymentSummaryRow> {
   @override
   void didUpdateWidget(_PaymentSummaryRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newText =
-        widget.paidAmount == 0 ? '0' : widget.paidAmount.toString();
+    final newText = widget.paidAmount == 0 ? '0' : widget.paidAmount.toString();
     if (widget.paidAmount != oldWidget.paidAmount &&
         newText != _paidController.text) {
       _paidController.text = newText;
@@ -335,7 +338,9 @@ class _PaymentSummaryRowState extends State<_PaymentSummaryRow> {
           const Spacer(),
           _SummaryCell(
             label: 'Total',
-            value: PurchaseOrderLineItemsTable._amountFormat.format(widget.grandTotal),
+            value: PurchaseOrderLineItemsTable._amountFormat.format(
+              widget.grandTotal,
+            ),
             emphasized: true,
           ),
           const SizedBox(width: 16),
@@ -347,8 +352,9 @@ class _PaymentSummaryRowState extends State<_PaymentSummaryRow> {
                 controller: _paidController,
                 style: saleFieldTextStyle.copyWith(fontSize: 13),
                 decoration: buildSaleFieldDecoration(compact: true),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                 ],
@@ -360,8 +366,9 @@ class _PaymentSummaryRowState extends State<_PaymentSummaryRow> {
           const SizedBox(width: 16),
           _SummaryCell(
             label: 'Balance',
-            value: PurchaseOrderLineItemsTable._amountFormat
-                .format(widget.balanceAmount),
+            value: PurchaseOrderLineItemsTable._amountFormat.format(
+              widget.balanceAmount,
+            ),
             emphasized: true,
           ),
         ],
@@ -513,9 +520,7 @@ class _LineItemRow extends ConsumerWidget {
               SizedBox(
                 width: _priceTaxModeWidth,
                 child: SaleGenericSelectDropdown(
-                  value: item.priceIsTaxInclusive
-                      ? 'With Tax'
-                      : 'Without Tax',
+                  value: item.priceIsTaxInclusive ? 'With Tax' : 'Without Tax',
                   options: purchasePriceTaxModes,
                   hintText: '',
                   highlight: SaleDropdownHighlight.red,
@@ -588,9 +593,7 @@ class _TaxPercentCell extends StatelessWidget {
       child: Opacity(
         opacity: enabled ? 1 : 0.45,
         child: SaleGenericSelectDropdown(
-          value: enabled
-              ? taxLabelForPurchasePercent(taxPercent)
-              : '',
+          value: enabled ? taxLabelForPurchasePercent(taxPercent) : '',
           options: SaleDropdownOptions.taxSlabs,
           hintText: 'TAX',
           highlight: SaleDropdownHighlight.red,

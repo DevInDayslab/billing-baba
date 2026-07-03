@@ -96,7 +96,9 @@ class AllTransactionsReportContent extends StatelessWidget {
                       ReportTableHeaderCell(label: '#', width: 40),
                       ReportTableHeaderCell(label: 'DATE', width: 90),
                       ReportTableHeaderCell(label: 'REF NO.', width: 90),
-                      Expanded(child: ReportTableHeaderCell(label: 'PARTY NAME')),
+                      Expanded(
+                        child: ReportTableHeaderCell(label: 'PARTY NAME'),
+                      ),
                       ReportTableHeaderCell(label: 'CATEGORY', width: 90),
                       ReportTableHeaderCell(label: 'TYPE', width: 80),
                       ReportTableHeaderCell(

@@ -99,8 +99,7 @@ class DebitNoteFormState {
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       roundOff: roundOff ?? this.roundOff,
-      showValidationErrors:
-          showValidationErrors ?? this.showValidationErrors,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isDirty: isDirty ?? this.isDirty,
     );
   }

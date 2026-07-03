@@ -21,7 +21,8 @@ class TransactionReportFilterBar extends StatefulWidget {
       _TransactionReportFilterBarState();
 }
 
-class _TransactionReportFilterBarState extends State<TransactionReportFilterBar> {
+class _TransactionReportFilterBarState
+    extends State<TransactionReportFilterBar> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   late String _timeRange;
   late String _firm;

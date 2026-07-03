@@ -402,7 +402,8 @@ class _PurchaseOrderTextField extends StatefulWidget {
   final String? hintText;
 
   @override
-  State<_PurchaseOrderTextField> createState() => _PurchaseOrderTextFieldState();
+  State<_PurchaseOrderTextField> createState() =>
+      _PurchaseOrderTextFieldState();
 }
 
 class _PurchaseOrderTextFieldState extends State<_PurchaseOrderTextField> {

@@ -312,7 +312,10 @@ class _BottomActionBar extends ConsumerWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: _linkPaymentGreen,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
             ),
           const Spacer(),

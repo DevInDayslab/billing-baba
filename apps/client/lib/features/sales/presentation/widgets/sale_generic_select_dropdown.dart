@@ -57,8 +57,7 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
     SaleDropdownHighlight.neutral => AppColors.textPrimary,
   };
 
-  bool get _showCheckmark =>
-      widget.highlight != SaleDropdownHighlight.neutral;
+  bool get _showCheckmark => widget.highlight != SaleDropdownHighlight.neutral;
 
   static const _defaultMinMenuWidth = 100.0;
 
@@ -69,8 +68,8 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final triggerWidth = constraints.maxWidth.isFinite &&
-                constraints.maxWidth > 0
+        final triggerWidth =
+            constraints.maxWidth.isFinite && constraints.maxWidth > 0
             ? constraints.maxWidth
             : _defaultMinMenuWidth;
         final menuWidth = math.max(

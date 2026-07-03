@@ -45,7 +45,9 @@ class SalePurchaseOrderItemReportContent extends StatelessWidget {
                   children: [
                     ReportTableHeaderRow(
                       children: const [
-                        Expanded(child: ReportTableHeaderCell(label: 'ITEM NAME')),
+                        Expanded(
+                          child: ReportTableHeaderCell(label: 'ITEM NAME'),
+                        ),
                         ReportTableHeaderCell(
                           label: 'QUANTITY',
                           width: 140,
@@ -76,7 +78,9 @@ class SalePurchaseOrderItemReportContent extends StatelessWidget {
                         vertical: AppSpacing.md,
                       ),
                       decoration: const BoxDecoration(
-                        border: Border(top: BorderSide(color: reportCardBorder)),
+                        border: Border(
+                          top: BorderSide(color: reportCardBorder),
+                        ),
                       ),
                       child: Row(
                         children: [

@@ -158,8 +158,10 @@ class SaleFilterDropdownState extends State<SaleFilterDropdown> {
                                   border: OutlineInputBorder(
                                     borderRadius: AppRadius.smBorder,
                                   ),
-                                  prefixIcon:
-                                      const Icon(Icons.search, size: 18),
+                                  prefixIcon: const Icon(
+                                    Icons.search,
+                                    size: 18,
+                                  ),
                                   prefixIconConstraints: const BoxConstraints(
                                     minWidth: 36,
                                     minHeight: 36,

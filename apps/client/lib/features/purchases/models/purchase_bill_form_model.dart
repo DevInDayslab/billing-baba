@@ -110,8 +110,7 @@ class AddPurchaseFormState {
 
   double get paymentAmount => payments.isNotEmpty ? payments.first.amount : 0;
 
-  double get totalQty =>
-      items.fold<double>(0, (sum, item) => sum + item.qty);
+  double get totalQty => items.fold<double>(0, (sum, item) => sum + item.qty);
 
   double get subtotal =>
       items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);

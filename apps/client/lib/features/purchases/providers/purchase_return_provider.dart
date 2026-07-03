@@ -279,10 +279,12 @@ List<PurchaseReturnModel> filteredPurchaseReturns(Ref ref) {
     if (statusFilter != null && item.status != statusFilter) {
       return false;
     }
-    if (filters.selectedUser != 'All Users' && item.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        item.user != filters.selectedUser) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && item.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        item.firm != filters.selectedFirm) {
       return false;
     }
     if (filters.selectedGodown != 'All Godown' &&

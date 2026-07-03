@@ -102,13 +102,16 @@ List<PurchaseBillModel> _mockPurchaseBills() {
     DateTime? dueDate,
   }) {
     final billAmount = amount ?? (5000 + (id * 750) % 25000).toDouble();
-    final balance = balanceDue ?? switch (status) {
-      PurchaseBillStatus.paid => 0.0,
-      PurchaseBillStatus.cancelled => 0.0,
-      PurchaseBillStatus.unpaid => billAmount,
-      PurchaseBillStatus.overdue => billAmount,
-      PurchaseBillStatus.partiallyPaid => (billAmount * 0.2).roundToDouble(),
-    };
+    final balance =
+        balanceDue ??
+        switch (status) {
+          PurchaseBillStatus.paid => 0.0,
+          PurchaseBillStatus.cancelled => 0.0,
+          PurchaseBillStatus.unpaid => billAmount,
+          PurchaseBillStatus.overdue => billAmount,
+          PurchaseBillStatus.partiallyPaid =>
+            (billAmount * 0.2).roundToDouble(),
+        };
 
     return PurchaseBillModel(
       id: '$id',
@@ -308,10 +311,12 @@ List<PurchaseBillModel> filteredPurchaseBills(Ref ref) {
     if (statusFilter != null && bill.status != statusFilter) {
       return false;
     }
-    if (filters.selectedUser != 'All Users' && bill.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        bill.user != filters.selectedUser) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && bill.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        bill.firm != filters.selectedFirm) {
       return false;
     }
     if (dateRange != null &&

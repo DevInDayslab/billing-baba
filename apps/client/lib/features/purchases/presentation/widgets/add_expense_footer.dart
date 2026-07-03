@@ -145,7 +145,10 @@ class AddExpenseFooter extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: _cardBorder),
                   borderRadius: BorderRadius.circular(6),

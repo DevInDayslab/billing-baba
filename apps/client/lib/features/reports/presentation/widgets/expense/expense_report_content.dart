@@ -268,7 +268,9 @@ class _ExpenseReportContentState extends State<ExpenseReportContent> {
                         vertical: AppSpacing.md,
                       ),
                       decoration: const BoxDecoration(
-                        border: Border(top: BorderSide(color: reportCardBorder)),
+                        border: Border(
+                          top: BorderSide(color: reportCardBorder),
+                        ),
                       ),
                       child: Align(
                         alignment: Alignment.centerRight,

@@ -231,10 +231,12 @@ List<PurchaseOrderModel> filteredPurchaseOrders(Ref ref) {
     if (statusFilter != null && order.status != statusFilter) {
       return false;
     }
-    if (filters.selectedUser != 'All Users' && order.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        order.user != filters.selectedUser) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && order.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        order.firm != filters.selectedFirm) {
       return false;
     }
     if (dateRange != null &&

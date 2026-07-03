@@ -39,8 +39,7 @@ class ExpenseLineItemsTable extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addExpenseFormProvider);
     final notifier = ref.read(addExpenseFormProvider.notifier);
-    final minWidth =
-        form.gstEnabled ? _minTableWidthGst : _minTableWidthNoGst;
+    final minWidth = form.gstEnabled ? _minTableWidthGst : _minTableWidthNoGst;
 
     final tableContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -184,9 +183,17 @@ class _LineItemsHeader extends StatelessWidget {
           const Text('ITEM', style: _headerStyle),
           const Text('DESCRIPTION', style: _headerStyle),
           const Text('QTY', style: _headerStyle),
-          const Text('PRICE/UNIT', style: _headerStyle, overflow: TextOverflow.ellipsis),
+          const Text(
+            'PRICE/UNIT',
+            style: _headerStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
           if (gstEnabled) ...[
-            const Text('TAX %', style: _headerStyle, overflow: TextOverflow.ellipsis),
+            const Text(
+              'TAX %',
+              style: _headerStyle,
+              overflow: TextOverflow.ellipsis,
+            ),
             const Text(
               'TAX AMT',
               style: _headerStyle,
@@ -226,10 +233,17 @@ class _LineItemRow extends ConsumerWidget {
       child: _LineItemsTableRow(
         gstEnabled: gstEnabled,
         children: [
-          Text('${index + 1}', style: saleFieldTextStyle.copyWith(fontSize: 12)),
+          Text(
+            '${index + 1}',
+            style: saleFieldTextStyle.copyWith(fontSize: 12),
+          ),
           IconButton(
             onPressed: () => notifier.removeLineItem(index),
-            icon: const Icon(Icons.close, size: 16, color: AppColors.textSecondary),
+            icon: const Icon(
+              Icons.close,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
             tooltip: 'Remove row',
@@ -465,8 +479,9 @@ class _CompactNumberFieldState extends State<_CompactNumberField> {
   @override
   void didUpdateWidget(_CompactNumberField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newText =
-        widget.initialValue == 0 ? '' : widget.initialValue.toString();
+    final newText = widget.initialValue == 0
+        ? ''
+        : widget.initialValue.toString();
     if (widget.initialValue != oldWidget.initialValue &&
         newText != _controller.text) {
       _controller.text = newText;

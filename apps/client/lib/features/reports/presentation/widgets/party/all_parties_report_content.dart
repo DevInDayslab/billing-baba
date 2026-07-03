@@ -12,7 +12,8 @@ class AllPartiesReportContent extends StatefulWidget {
   const AllPartiesReportContent({super.key});
 
   @override
-  State<AllPartiesReportContent> createState() => _AllPartiesReportContentState();
+  State<AllPartiesReportContent> createState() =>
+      _AllPartiesReportContentState();
 }
 
 class _AllPartiesReportContentState extends State<AllPartiesReportContent> {

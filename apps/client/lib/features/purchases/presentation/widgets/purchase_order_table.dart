@@ -264,9 +264,18 @@ class _TableHeaderRow extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          _TableCell(width: _partyColWidth, child: Text('PARTY', style: _headerStyle)),
-          _TableCell(width: _noColWidth, child: Text('NO.', style: _headerStyle)),
-          _TableCell(width: _dateColWidth, child: Text('DATE', style: _headerStyle)),
+          _TableCell(
+            width: _partyColWidth,
+            child: Text('PARTY', style: _headerStyle),
+          ),
+          _TableCell(
+            width: _noColWidth,
+            child: Text('NO.', style: _headerStyle),
+          ),
+          _TableCell(
+            width: _dateColWidth,
+            child: Text('DATE', style: _headerStyle),
+          ),
           _TableCell(
             width: _dueDateColWidth,
             child: Text('DUE DATE', style: _headerStyle),
@@ -281,7 +290,10 @@ class _TableHeaderRow extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Text('BALANCE', style: _headerStyle),
           ),
-          _TableCell(width: _typeColWidth, child: Text('TYPE', style: _headerStyle)),
+          _TableCell(
+            width: _typeColWidth,
+            child: Text('TYPE', style: _headerStyle),
+          ),
           _TableCell(
             width: _statusColWidth,
             child: Text('STATUS', style: _headerStyle),

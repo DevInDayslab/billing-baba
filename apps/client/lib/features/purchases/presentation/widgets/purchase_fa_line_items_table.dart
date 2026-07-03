@@ -191,7 +191,11 @@ class _LineItemsHeader extends StatelessWidget {
           Text('ASSETS', style: _headerStyle),
           Text('DESCRIPTION', style: _headerStyle),
           Text('QTY', style: _headerStyle),
-          Text('PRICE/UNIT', style: _headerStyle, overflow: TextOverflow.ellipsis),
+          Text(
+            'PRICE/UNIT',
+            style: _headerStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
           Text('TAX %', style: _headerStyle, overflow: TextOverflow.ellipsis),
           Text(
             'TAX AMT',
@@ -305,8 +309,7 @@ class _PaymentSummaryRowState extends State<_PaymentSummaryRow> {
   @override
   void didUpdateWidget(_PaymentSummaryRow oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newText =
-        widget.paidAmount == 0 ? '0' : widget.paidAmount.toString();
+    final newText = widget.paidAmount == 0 ? '0' : widget.paidAmount.toString();
     if (widget.paidAmount != oldWidget.paidAmount &&
         newText != _paidController.text) {
       _paidController.text = newText;
@@ -343,8 +346,9 @@ class _PaymentSummaryRowState extends State<_PaymentSummaryRow> {
                 controller: _paidController,
                 style: saleFieldTextStyle.copyWith(fontSize: 13),
                 decoration: buildSaleFieldDecoration(compact: true),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                 ],
@@ -492,9 +496,7 @@ class _LineItemRow extends ConsumerWidget {
               SizedBox(
                 width: _priceTaxModeWidth,
                 child: SaleGenericSelectDropdown(
-                  value: item.priceIsTaxInclusive
-                      ? 'With Tax'
-                      : 'Without Tax',
+                  value: item.priceIsTaxInclusive ? 'With Tax' : 'Without Tax',
                   options: purchasePriceTaxModes,
                   hintText: '',
                   highlight: SaleDropdownHighlight.red,
@@ -567,9 +569,7 @@ class _TaxPercentCell extends StatelessWidget {
       child: Opacity(
         opacity: enabled ? 1 : 0.45,
         child: SaleGenericSelectDropdown(
-          value: enabled
-              ? taxLabelForPurchaseFaPercent(taxPercent)
-              : '',
+          value: enabled ? taxLabelForPurchaseFaPercent(taxPercent) : '',
           options: SaleDropdownOptions.taxSlabs,
           hintText: 'TAX',
           highlight: SaleDropdownHighlight.red,

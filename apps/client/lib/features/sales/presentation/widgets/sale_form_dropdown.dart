@@ -241,8 +241,8 @@ class SaleFormDropdownState extends State<SaleFormDropdown> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final triggerWidth = constraints.maxWidth.isFinite &&
-                constraints.maxWidth > 0
+        final triggerWidth =
+            constraints.maxWidth.isFinite && constraints.maxWidth > 0
             ? constraints.maxWidth
             : 200.0;
 
@@ -253,19 +253,22 @@ class SaleFormDropdownState extends State<SaleFormDropdown> {
               controller: _menuController,
               alignmentOffset: const Offset(0, 4),
               style: MenuStyle(
-                backgroundColor:
-                    const WidgetStatePropertyAll(AppColors.surface),
+                backgroundColor: const WidgetStatePropertyAll(
+                  AppColors.surface,
+                ),
                 elevation: const WidgetStatePropertyAll(4),
                 shadowColor: const WidgetStatePropertyAll(Colors.black26),
-                surfaceTintColor:
-                    const WidgetStatePropertyAll(Colors.transparent),
+                surfaceTintColor: const WidgetStatePropertyAll(
+                  Colors.transparent,
+                ),
                 shape: WidgetStatePropertyAll(
                   RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
                 ),
                 padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                 minimumSize: WidgetStatePropertyAll(Size(triggerWidth, 0)),
-                maximumSize:
-                    const WidgetStatePropertyAll(Size(double.infinity, 280)),
+                maximumSize: const WidgetStatePropertyAll(
+                  Size(double.infinity, 280),
+                ),
               ),
               menuChildren: [
                 for (final option in widget.options)

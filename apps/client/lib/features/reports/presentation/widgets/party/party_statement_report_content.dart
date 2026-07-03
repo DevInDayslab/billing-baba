@@ -17,7 +17,8 @@ class PartyStatementReportContent extends StatefulWidget {
       _PartyStatementReportContentState();
 }
 
-class _PartyStatementReportContentState extends State<PartyStatementReportContent> {
+class _PartyStatementReportContentState
+    extends State<PartyStatementReportContent> {
   String _viewMode = 'Vyapar';
   bool _summaryExpanded = true;
 

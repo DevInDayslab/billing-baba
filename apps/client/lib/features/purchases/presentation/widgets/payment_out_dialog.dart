@@ -149,8 +149,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                               width: 160,
                               child: SaleGenericSelectDropdown(
                                 value: form.paymentType,
-                                options:
-                                    PaymentOutDropdownOptions.paymentTypes,
+                                options: PaymentOutDropdownOptions.paymentTypes,
                                 compact: true,
                                 onSelected: notifier.updatePaymentType,
                               ),
@@ -265,8 +264,8 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                 controller: _paidController,
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                      decimal: true,
+                                    ),
                                 inputFormatters: [
                                   FilteringTextInputFormatter.allow(
                                     RegExp(r'^\d*\.?\d{0,2}'),
@@ -296,8 +295,8 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                 controller: _discountController,
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                      decimal: true,
+                                    ),
                                 inputFormatters: [
                                   FilteringTextInputFormatter.allow(
                                     RegExp(r'^\d*\.?\d{0,2}'),
@@ -424,7 +423,11 @@ class _PaymentOutActionsMenu extends StatelessWidget {
           value: _PaymentOutMenuAction.print,
           child: Row(
             children: [
-              Icon(Icons.print_outlined, size: 18, color: AppColors.textSecondary),
+              Icon(
+                Icons.print_outlined,
+                size: 18,
+                color: AppColors.textSecondary,
+              ),
               SizedBox(width: 8),
               Text('Print', style: TextStyle(fontSize: 13)),
             ],
@@ -625,10 +628,7 @@ class _AmountRow extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        if (child != null)
-          child!
-        else
-          Text(value ?? '', style: textStyle),
+        if (child != null) child! else Text(value ?? '', style: textStyle),
       ],
     );
   }

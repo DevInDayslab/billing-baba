@@ -260,7 +260,10 @@ class _TableHeaderRow extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          _TableCell(width: _dateColWidth, child: Text('DATE', style: _headerStyle)),
+          _TableCell(
+            width: _dateColWidth,
+            child: Text('DATE', style: _headerStyle),
+          ),
           _TableCell(
             width: _invoiceColWidth,
             child: Text('INVOICE NO.', style: _headerStyle),

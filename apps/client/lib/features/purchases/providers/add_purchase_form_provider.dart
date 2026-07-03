@@ -151,8 +151,9 @@ class AddPurchaseForm extends _$AddPurchaseForm {
 
   void removeImage(String id) {
     state = state.copyWith(
-      attachedImages:
-          state.attachedImages.where((image) => image.id != id).toList(),
+      attachedImages: state.attachedImages
+          .where((image) => image.id != id)
+          .toList(),
       isDirty: true,
     );
   }

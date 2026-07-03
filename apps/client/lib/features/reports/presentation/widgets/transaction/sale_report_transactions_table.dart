@@ -215,7 +215,10 @@ class _TableHeaderRow extends StatelessWidget {
       child: _ScrollableTableRow(
         child: const Row(
           children: [
-            _TableCell(width: _dateColWidth, child: Text('Date', style: _headerStyle)),
+            _TableCell(
+              width: _dateColWidth,
+              child: Text('Date', style: _headerStyle),
+            ),
             _TableCell(
               width: _invoiceColWidth,
               child: Text('Invoice no', style: _headerStyle),
@@ -231,7 +234,10 @@ class _TableHeaderRow extends StatelessWidget {
               width: _paymentColWidth,
               child: Text('Payment Type', style: _headerStyle),
             ),
-            _TableCell(width: _statusColWidth, child: Text('Status', style: _headerStyle)),
+            _TableCell(
+              width: _statusColWidth,
+              child: Text('Status', style: _headerStyle),
+            ),
             _TableCell(
               width: _amountColWidth,
               alignment: Alignment.centerRight,
@@ -242,7 +248,10 @@ class _TableHeaderRow extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Text('Balance', style: _headerStyle),
             ),
-            _TableCell(width: _actionsColWidth, child: Text('Actions', style: _headerStyle)),
+            _TableCell(
+              width: _actionsColWidth,
+              child: Text('Actions', style: _headerStyle),
+            ),
           ],
         ),
       ),

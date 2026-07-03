@@ -47,7 +47,8 @@ class ReportsNavPanel extends StatelessWidget {
   final ValueChanged<PartyReportSubSection> onPartySubSelected;
   final ValueChanged<GstReportSubSection> onGstSubSelected;
   final ValueChanged<ItemStockReportSubSection> onItemStockSubSelected;
-  final ValueChanged<BusinessStatusReportSubSection> onBusinessStatusSubSelected;
+  final ValueChanged<BusinessStatusReportSubSection>
+  onBusinessStatusSubSelected;
   final ValueChanged<ExpenseReportSubSection> onExpenseSubSelected;
   final ValueChanged<SalePurchaseOrderReportSubSection>
   onSalePurchaseOrderSubSelected;

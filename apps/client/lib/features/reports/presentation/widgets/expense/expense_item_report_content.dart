@@ -13,7 +13,8 @@ class ExpenseItemReportContent extends StatefulWidget {
   const ExpenseItemReportContent({super.key});
 
   @override
-  State<ExpenseItemReportContent> createState() => _ExpenseItemReportContentState();
+  State<ExpenseItemReportContent> createState() =>
+      _ExpenseItemReportContentState();
 }
 
 class _ExpenseItemReportContentState extends State<ExpenseItemReportContent> {
@@ -234,7 +235,9 @@ class _ExpenseItemReportContentState extends State<ExpenseItemReportContent> {
                         vertical: AppSpacing.md,
                       ),
                       decoration: const BoxDecoration(
-                        border: Border(top: BorderSide(color: reportCardBorder)),
+                        border: Border(
+                          top: BorderSide(color: reportCardBorder),
+                        ),
                       ),
                       child: Align(
                         alignment: Alignment.centerRight,

@@ -87,16 +87,20 @@ class BillWiseProfitReportContent extends StatelessWidget {
                                 vertical: 10,
                               ),
                               border: OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.sm),
-                                borderSide:
-                                    const BorderSide(color: reportCardBorder),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.sm,
+                                ),
+                                borderSide: const BorderSide(
+                                  color: reportCardBorder,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.sm),
-                                borderSide:
-                                    const BorderSide(color: reportCardBorder),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.sm,
+                                ),
+                                borderSide: const BorderSide(
+                                  color: reportCardBorder,
+                                ),
                               ),
                             ),
                           ),

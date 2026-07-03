@@ -16,7 +16,8 @@ class BankStatementReportContent extends StatefulWidget {
       _BankStatementReportContentState();
 }
 
-class _BankStatementReportContentState extends State<BankStatementReportContent> {
+class _BankStatementReportContentState
+    extends State<BankStatementReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   String _selectedBank = 'Select bank account';
   DateTimeRange _dateRange = DateTimeRange(
@@ -312,7 +313,9 @@ class _BankStatementReportContentState extends State<BankStatementReportContent>
                         vertical: AppSpacing.md,
                       ),
                       decoration: const BoxDecoration(
-                        border: Border(top: BorderSide(color: reportCardBorder)),
+                        border: Border(
+                          top: BorderSide(color: reportCardBorder),
+                        ),
                       ),
                       child: Align(
                         alignment: Alignment.centerRight,

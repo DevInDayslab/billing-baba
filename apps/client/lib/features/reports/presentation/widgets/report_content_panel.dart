@@ -138,12 +138,10 @@ class ReportContentPanel extends StatelessWidget {
         transactionSub?.label ?? 'Transaction Report',
       ReportNavGroup.party => partySub?.label ?? 'Party Report',
       ReportNavGroup.gst => gstSub?.label ?? 'GST Reports',
-      ReportNavGroup.itemStock =>
-        itemStockSub?.label ?? 'Item/Stock Report',
+      ReportNavGroup.itemStock => itemStockSub?.label ?? 'Item/Stock Report',
       ReportNavGroup.businessStatus =>
         businessStatusSub?.label ?? 'Business Status',
-      ReportNavGroup.expenseReport =>
-        expenseSub?.label ?? 'Expense Report',
+      ReportNavGroup.expenseReport => expenseSub?.label ?? 'Expense Report',
       ReportNavGroup.salePurchaseOrderReport =>
         salePurchaseOrderSub?.label ?? 'Sale/Purchase Order Report',
     };

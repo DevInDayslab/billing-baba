@@ -246,18 +246,18 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       final isParentActive = isSale
           ? currentLocation.startsWith(AppRoutes.sale)
           : isPurchase
-              ? currentLocation.startsWith(AppRoutes.purchase)
-              : isParties
-                  ? currentLocation.startsWith(AppRoutes.parties)
-                  : false;
+          ? currentLocation.startsWith(AppRoutes.purchase)
+          : isParties
+          ? currentLocation.startsWith(AppRoutes.parties)
+          : false;
 
       final isExpanded = isSale
           ? _isSaleExpanded
           : isPurchase
-              ? _isPurchaseExpanded
-              : isParties
-                  ? _isPartiesExpanded
-                  : false;
+          ? _isPurchaseExpanded
+          : isParties
+          ? _isPartiesExpanded
+          : false;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -295,7 +295,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       );
     }
 
-    final isActive = item.route != null &&
+    final isActive =
+        item.route != null &&
         (currentLocation == item.route ||
             (item.route == AppRoutes.reports &&
                 currentLocation.startsWith(AppRoutes.reports)));

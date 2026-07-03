@@ -12,7 +12,8 @@ class ExpenseLineItem {
     this.taxPercent = 0,
   });
 
-  factory ExpenseLineItem.empty({required String id}) => ExpenseLineItem(id: id);
+  factory ExpenseLineItem.empty({required String id}) =>
+      ExpenseLineItem(id: id);
 
   final String id;
   final String itemName;
@@ -120,8 +121,7 @@ class AddExpenseFormState {
   final bool isDirty;
   final bool showValidationErrors;
 
-  bool get categoryHasError =>
-      showValidationErrors && category.trim().isEmpty;
+  bool get categoryHasError => showValidationErrors && category.trim().isEmpty;
 
   bool get partyHasError => showValidationErrors && gstEnabled && party.isEmpty;
 
@@ -129,8 +129,7 @@ class AddExpenseFormState {
       showValidationErrors &&
       !items.any((item) => item.itemName.trim().isNotEmpty && item.qty > 0);
 
-  double get totalQty =>
-      items.fold<double>(0, (sum, item) => sum + item.qty);
+  double get totalQty => items.fold<double>(0, (sum, item) => sum + item.qty);
 
   double get subtotal =>
       items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
@@ -152,8 +151,7 @@ class AddExpenseFormState {
 
   double get balanceAmount => grandTotal - paymentAmount;
 
-  String get paymentType =>
-      payments.isNotEmpty ? payments.first.type : 'Cash';
+  String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
   bool get isValid =>
       category.trim().isNotEmpty &&

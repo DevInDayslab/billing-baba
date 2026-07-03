@@ -320,9 +320,7 @@ class _ItemTransactionRow extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            transaction.amount != null
-                ? '${transaction.amount!.toInt()}'
-                : '',
+            transaction.amount != null ? '${transaction.amount!.toInt()}' : '',
             style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),

@@ -31,7 +31,11 @@ class PartyReportByItemContent extends StatelessWidget {
                       children: [
                         SaleFilterDropdown(
                           label: 'All Godown',
-                          options: const ['All Godown', 'Main Location', 'Warehouse B'],
+                          options: const [
+                            'All Godown',
+                            'Main Location',
+                            'Warehouse B',
+                          ],
                           selected: 'All Godown',
                           onSelected: (_) {},
                         ),
@@ -58,7 +62,11 @@ class PartyReportByItemContent extends StatelessWidget {
                     children: [
                       SaleFilterDropdown(
                         label: 'All Categories',
-                        options: const ['All Categories', 'Category A', 'Category B'],
+                        options: const [
+                          'All Categories',
+                          'Category A',
+                          'Category B',
+                        ],
                         selected: 'All Categories',
                         onSelected: (_) {},
                       ),
@@ -83,7 +91,9 @@ class PartyReportByItemContent extends StatelessWidget {
                   ReportTableHeaderRow(
                     children: const [
                       ReportTableHeaderCell(label: '#', width: 40),
-                      Expanded(child: ReportTableHeaderCell(label: 'PARTY NAME')),
+                      Expanded(
+                        child: ReportTableHeaderCell(label: 'PARTY NAME'),
+                      ),
                       ReportTableHeaderCell(
                         label: 'SALE QUANTITY',
                         width: 120,

@@ -73,7 +73,11 @@ class PartyWiseProfitLossReportContent extends StatelessWidget {
                             width: 180,
                             child: SaleFilterDropdown(
                               label: 'All Parties',
-                              options: const ['All Parties', 'Customers', 'Suppliers'],
+                              options: const [
+                                'All Parties',
+                                'Customers',
+                                'Suppliers',
+                              ],
                               selected: 'All Parties',
                               onSelected: (_) {},
                             ),
@@ -87,7 +91,9 @@ class PartyWiseProfitLossReportContent extends StatelessWidget {
                     ReportTableHeaderRow(
                       children: const [
                         ReportTableHeaderCell(label: '#', width: 40),
-                        Expanded(child: ReportTableHeaderCell(label: 'PARTY NAME')),
+                        Expanded(
+                          child: ReportTableHeaderCell(label: 'PARTY NAME'),
+                        ),
                         ReportTableHeaderCell(label: 'PHONE NO.', width: 120),
                         ReportTableHeaderCell(
                           label: 'TOTAL SALE AMOUNT',
@@ -133,7 +139,9 @@ class PartyWiseProfitLossReportContent extends StatelessWidget {
                         vertical: AppSpacing.sm,
                       ),
                       decoration: const BoxDecoration(
-                        border: Border(top: BorderSide(color: reportCardBorder)),
+                        border: Border(
+                          top: BorderSide(color: reportCardBorder),
+                        ),
                       ),
                       child: Row(
                         children: [

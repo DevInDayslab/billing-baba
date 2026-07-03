@@ -10,7 +10,8 @@ class ProfitLossReportContent extends StatefulWidget {
   const ProfitLossReportContent({super.key});
 
   @override
-  State<ProfitLossReportContent> createState() => _ProfitLossReportContentState();
+  State<ProfitLossReportContent> createState() =>
+      _ProfitLossReportContentState();
 }
 
 class _ProfitLossReportContentState extends State<ProfitLossReportContent> {
@@ -90,7 +91,10 @@ class _ProfitLossReportContentState extends State<ProfitLossReportContent> {
                           onChanged: (v) => setState(() => _viewMode = v!),
                           visualDensity: VisualDensity.compact,
                         ),
-                        const Text('Accounting', style: TextStyle(fontSize: 13)),
+                        const Text(
+                          'Accounting',
+                          style: TextStyle(fontSize: 13),
+                        ),
                       ],
                     ),
                   ),

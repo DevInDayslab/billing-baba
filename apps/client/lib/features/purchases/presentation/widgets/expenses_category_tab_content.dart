@@ -34,8 +34,8 @@ class ExpensesCategoryTabContent extends ConsumerWidget {
     final selectedCategory = selectedId == null
         ? null
         : allCategories
-            .where((category) => category.id == selectedId)
-            .firstOrNull;
+              .where((category) => category.id == selectedId)
+              .firstOrNull;
 
     return InventorySplitLayout(
       listWidth: 340,
@@ -183,7 +183,8 @@ class _CategoryListRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final amountText = category.totalAmount == category.totalAmount.roundToDouble()
+    final amountText =
+        category.totalAmount == category.totalAmount.roundToDouble()
         ? category.totalAmount.toInt().toString()
         : category.totalAmount.toStringAsFixed(2);
 

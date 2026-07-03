@@ -373,9 +373,9 @@ class Auth extends _$Auth {
 
     try {
       final service = await _service().timeout(const Duration(seconds: 8));
-      final sessionFuture = service
-          .loadStoredSession()
-          .timeout(const Duration(seconds: 8));
+      final sessionFuture = service.loadStoredSession().timeout(
+        const Duration(seconds: 8),
+      );
       final results = await Future.wait<Object?>([
         Future<void>.delayed(_splashMinDuration),
         sessionFuture,

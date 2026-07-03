@@ -156,7 +156,8 @@ class ItemStockReportContent extends StatelessWidget {
                           selected: 'All Categories',
                           onSelected: (_) {},
                         ),
-                        if (subSection != ItemStockReportSubSection.lowStockDetails)
+                        if (subSection !=
+                            ItemStockReportSubSection.lowStockDetails)
                           SaleFilterDropdown(
                             label: 'All Items',
                             options: const [
@@ -200,7 +201,8 @@ class ItemStockReportContent extends StatelessWidget {
             ],
             const SizedBox(height: AppSpacing.md),
             ReportSearchField(
-              hintText: subSection == ItemStockReportSubSection.itemReportByParty
+              hintText:
+                  subSection == ItemStockReportSubSection.itemReportByParty
                   ? 'Search Party or Item...'
                   : 'Search Item...',
             ),
@@ -243,7 +245,9 @@ class ItemStockReportContent extends StatelessWidget {
                         vertical: AppSpacing.sm,
                       ),
                       decoration: const BoxDecoration(
-                        border: Border(top: BorderSide(color: reportCardBorder)),
+                        border: Border(
+                          top: BorderSide(color: reportCardBorder),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -260,8 +264,10 @@ class ItemStockReportContent extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: subSection ==
-                                      ItemStockReportSubSection.itemWiseProfitLoss
+                              color:
+                                  subSection ==
+                                      ItemStockReportSubSection
+                                          .itemWiseProfitLoss
                                   ? reportTeal
                                   : AppColors.textPrimary,
                             ),
@@ -300,8 +306,7 @@ class ItemStockReportContent extends StatelessWidget {
   };
 
   String get _footerSecondaryLabel => switch (subSection) {
-    ItemStockReportSubSection.stockSummary =>
-      'Total Items: 0',
+    ItemStockReportSubSection.stockSummary => 'Total Items: 0',
     ItemStockReportSubSection.itemWiseProfitLoss =>
       'Total Profit(+) / Loss (-): ${_currencyFormat.format(0)}',
     _ => '',

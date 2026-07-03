@@ -364,7 +364,10 @@ class _PaginationRow extends ConsumerWidget {
           ),
           Text(
             '$currentPage / $totalPages',
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
           ),
           IconButton(
             onPressed: currentPage < totalPages
@@ -447,14 +450,30 @@ class _TableHeaderRow extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          _TableCell(width: _indexColWidth, child: Text('#', style: _headerStyle)),
-          _TableCell(width: _dateColWidth, child: Text('DATE', style: _headerStyle)),
-          _TableCell(width: _refColWidth, child: Text('REF NO.', style: _headerStyle)),
-          Expanded(child: _TableCell(child: Text('PARTY NAME', style: _headerStyle))),
-          Expanded(
-            child: _TableCell(child: Text('CATEGORY NAME', style: _headerStyle)),
+          _TableCell(
+            width: _indexColWidth,
+            child: Text('#', style: _headerStyle),
           ),
-          _TableCell(width: _typeColWidth, child: Text('TYPE', style: _headerStyle)),
+          _TableCell(
+            width: _dateColWidth,
+            child: Text('DATE', style: _headerStyle),
+          ),
+          _TableCell(
+            width: _refColWidth,
+            child: Text('REF NO.', style: _headerStyle),
+          ),
+          Expanded(
+            child: _TableCell(child: Text('PARTY NAME', style: _headerStyle)),
+          ),
+          Expanded(
+            child: _TableCell(
+              child: Text('CATEGORY NAME', style: _headerStyle),
+            ),
+          ),
+          _TableCell(
+            width: _typeColWidth,
+            child: Text('TYPE', style: _headerStyle),
+          ),
           _TableCell(
             width: _amountColWidth,
             alignment: Alignment.centerRight,
@@ -474,7 +493,10 @@ class _TableHeaderRow extends StatelessWidget {
             width: _dueDateColWidth,
             child: Text('DUE DATE', style: _headerStyle),
           ),
-          _TableCell(width: _statusColWidth, child: Text('STATUS', style: _headerStyle)),
+          _TableCell(
+            width: _statusColWidth,
+            child: Text('STATUS', style: _headerStyle),
+          ),
           _TableCell(
             width: _actionsColWidth,
             child: Text('PRINT / SHARE', style: _headerStyle),

@@ -95,9 +95,7 @@ List<PaymentOutModel> _mockPaymentOutRecords() {
       date: DateTime(2026, 7, id * 2, 10 + index, index * 5),
       partyName: parties[index % parties.length],
       paymentType: paymentTypes[index % paymentTypes.length],
-      status: index % 3 == 0
-          ? PaymentOutStatus.pending
-          : PaymentOutStatus.paid,
+      status: index % 3 == 0 ? PaymentOutStatus.pending : PaymentOutStatus.paid,
       totalAmount: total,
       paidAmount: paid,
       user: index % 2 == 0 ? 'Admin' : 'Staff',
@@ -205,10 +203,12 @@ List<PaymentOutModel> filteredPaymentOutRecords(Ref ref) {
   );
 
   return records.where((record) {
-    if (filters.selectedFirm != 'All Firms' && record.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        record.firm != filters.selectedFirm) {
       return false;
     }
-    if (filters.selectedUser != 'All Users' && record.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        record.user != filters.selectedUser) {
       return false;
     }
     if (dateRange != null &&
@@ -283,8 +283,7 @@ class PaymentOutFormState {
   final bool showDescriptionField;
   final bool showValidationErrors;
 
-  double get total =>
-      (paidAmount - discount).clamp(0, double.infinity);
+  double get total => (paidAmount - discount).clamp(0, double.infinity);
 
   bool get isValid => party.trim().isNotEmpty && paidAmount > 0;
 
@@ -309,10 +308,8 @@ class PaymentOutFormState {
       paidAmount: paidAmount ?? this.paidAmount,
       discount: discount ?? this.discount,
       description: description ?? this.description,
-      showDescriptionField:
-          showDescriptionField ?? this.showDescriptionField,
-      showValidationErrors:
-          showValidationErrors ?? this.showValidationErrors,
+      showDescriptionField: showDescriptionField ?? this.showDescriptionField,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
     );
   }
 }
