@@ -1,5 +1,27 @@
 /// API response DTO for a party record.
 class PartyDto {
+  factory PartyDto.fromJson(Map<String, dynamic> json) {
+    return PartyDto(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      mobile: json['mobile'] as String?,
+      email: json['email'] as String?,
+      partyType: json['party_type'] as String? ?? 'customer',
+      partyCategory: json['party_category'] as String?,
+      pricingTier: json['pricing_tier'] as String? ?? 'tier_1',
+      gstin: json['gstin'] as String?,
+      stateCode: json['state_code'] as String?,
+      state: json['state'] as String?,
+      areaId: json['area_id'] as String?,
+      creditLimit: json['credit_limit']?.toString() ?? '0',
+      openingBalance: json['opening_balance']?.toString() ?? '0',
+      balance: json['balance']?.toString() ?? '0',
+      isActive: json['is_active'] as bool? ?? true,
+      notes: json['notes'] as String?,
+      createdAt: json['created_at'] as String? ?? '',
+      updatedAt: json['updated_at'] as String? ?? '',
+    );
+  }
   const PartyDto({
     required this.id,
     required this.name,
@@ -40,29 +62,6 @@ class PartyDto {
   final String createdAt;
   final String updatedAt;
 
-  factory PartyDto.fromJson(Map<String, dynamic> json) {
-    return PartyDto(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      mobile: json['mobile'] as String?,
-      email: json['email'] as String?,
-      partyType: json['party_type'] as String? ?? 'customer',
-      partyCategory: json['party_category'] as String?,
-      pricingTier: json['pricing_tier'] as String? ?? 'tier_1',
-      gstin: json['gstin'] as String?,
-      stateCode: json['state_code'] as String?,
-      state: json['state'] as String?,
-      areaId: json['area_id'] as String?,
-      creditLimit: json['credit_limit']?.toString() ?? '0',
-      openingBalance: json['opening_balance']?.toString() ?? '0',
-      balance: json['balance']?.toString() ?? '0',
-      isActive: json['is_active'] as bool? ?? true,
-      notes: json['notes'] as String?,
-      createdAt: json['created_at'] as String? ?? '',
-      updatedAt: json['updated_at'] as String? ?? '',
-    );
-  }
-
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
@@ -86,18 +85,6 @@ class PartyDto {
 }
 
 class PaginatedPartiesDto {
-  const PaginatedPartiesDto({
-    required this.parties,
-    required this.page,
-    required this.limit,
-    required this.total,
-  });
-
-  final List<PartyDto> parties;
-  final int page;
-  final int limit;
-  final int total;
-
   factory PaginatedPartiesDto.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
     final meta = json['meta'] as Map<String, dynamic>? ?? {};
@@ -111,4 +98,15 @@ class PaginatedPartiesDto {
       total: meta['total'] as int? ?? 0,
     );
   }
+  const PaginatedPartiesDto({
+    required this.parties,
+    required this.page,
+    required this.limit,
+    required this.total,
+  });
+
+  final List<PartyDto> parties;
+  final int page;
+  final int limit;
+  final int total;
 }

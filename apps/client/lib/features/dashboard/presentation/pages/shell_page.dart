@@ -64,7 +64,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       icon: Icons.home_outlined,
       label: 'Home',
     ),
-    _NavItem(
+    const _NavItem(
       route: AppRoutes.parties,
       icon: Icons.people_outlined,
       label: 'Parties',
@@ -233,9 +233,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       );
       final isParentActive = isSale
           ? currentLocation.startsWith(AppRoutes.sale)
-          : isParties
-          ? currentLocation.startsWith(AppRoutes.parties)
-          : false;
+          : isParties && currentLocation.startsWith(AppRoutes.parties);
       final isExpanded = isSale ? _isSaleExpanded : _isPartiesExpanded;
 
       return Column(

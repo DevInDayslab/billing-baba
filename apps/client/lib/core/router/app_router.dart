@@ -94,7 +94,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.parties,
-            redirect: (_, __) => AppRoutes.partyDetails,
+            redirect: (_, _) => AppRoutes.partyDetails,
           ),
           GoRoute(
             path: AppRoutes.partyDetails,
