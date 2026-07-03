@@ -1,4 +1,5 @@
-import 'package:billing_baba/features/auth/providers/auth_provider.dart' show AuthStatus;
+import 'package:billing_baba/features/auth/providers/auth_provider.dart'
+    show AuthStatus;
 
 /// OTP sub-flow phases inside [AuthStatus.otpSent] / login.
 enum OtpPhase {

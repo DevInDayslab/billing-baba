@@ -4,14 +4,14 @@
   "description": "Billing Baba REST API",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "bun --watch src/server.ts",
     "start": "node dist/server.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/db/migrate.ts",
-    "db:seed": "tsx src/db/seed.ts",
+    "db:migrate": "bun src/db/migrate.ts",
+    "db:seed": "bun src/db/seed.ts",
     "db:studio": "drizzle-kit studio"
   },
   "keywords": [],

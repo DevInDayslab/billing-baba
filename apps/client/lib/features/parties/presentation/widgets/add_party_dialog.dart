@@ -1,8 +1,8 @@
+import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
-import 'package:billing_baba/features/parties/providers/parties_provider.dart';
-import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/parties/providers/party_groups_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
@@ -167,10 +167,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _savedBillingAddressLine = party.addressLine;
     _savedBillingCity = party.city;
     _savedBillingPincode = party.pincode;
-    _savedBillingState =
-        party.state.isNotEmpty ? party.state : 'Andhra Pradesh';
-    _savedBillingCountry =
-        party.country.isNotEmpty ? party.country : 'India';
+    _savedBillingState = party.state.isNotEmpty
+        ? party.state
+        : 'Andhra Pradesh';
+    _savedBillingCountry = party.country.isNotEmpty ? party.country : 'India';
     _billingAddressLineController.text = party.addressLine;
     _billingCityController.text = party.city;
     _billingPincodeController.text = party.pincode;
@@ -180,17 +180,20 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _savedShippingAddressLine = party.shippingAddressLine;
     _savedShippingCity = party.shippingCity;
     _savedShippingPincode = party.shippingPincode;
-    _savedShippingState =
-        party.state.isNotEmpty ? party.state : 'Andhra Pradesh';
-    _savedShippingCountry =
-        party.shippingCountry.isNotEmpty ? party.shippingCountry : 'India';
+    _savedShippingState = party.state.isNotEmpty
+        ? party.state
+        : 'Andhra Pradesh';
+    _savedShippingCountry = party.shippingCountry.isNotEmpty
+        ? party.shippingCountry
+        : 'India';
     _shippingAddressLineController.text = party.shippingAddressLine;
     _shippingCityController.text = party.shippingCity;
     _shippingPincodeController.text = party.shippingPincode;
     _shippingDetailState = _savedShippingState;
     _shippingCountry = _savedShippingCountry;
 
-    _showShippingAddress = party.shippingAddress.isNotEmpty ||
+    _showShippingAddress =
+        party.shippingAddress.isNotEmpty ||
         party.shippingAddressLine.isNotEmpty;
 
     if (party.balance != 0) {
@@ -263,8 +266,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       shippingCountry: _savedShippingCountry,
       openingBalance: _openingBalanceController.text.trim(),
       openingBalanceAsOfDate: _openingBalanceAsOfDate,
-      loyaltyPointsOpeningBalance:
-          _loyaltyPointsOpeningBalanceController.text.trim(),
+      loyaltyPointsOpeningBalance: _loyaltyPointsOpeningBalanceController.text
+          .trim(),
       loyaltyPointsAsOfDate: _loyaltyPointsAsOfDate,
       hasCustomCreditLimit: _useCustomCreditLimit,
       creditLimit: _useCustomCreditLimit
@@ -407,7 +410,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     );
   }
 
-  void _save({required bool saveAndNew}) {
+  Future<void> _save({required bool saveAndNew}) async {
     if (!_validate()) return;
 
     final result = _buildResult();
@@ -417,74 +420,100 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       return;
     }
 
-    final partyId =
-        ref.read(partiesProvider.notifier).addPartyFromResult(result);
-
-    if (partyId == null) {
-      _showSaveSnackBar(
-        message: 'A party named "${result.partyName}" already exists',
-        backgroundColor: AppColors.error,
-      );
-      return;
-    }
-
-    ref.read(selectedPartyIdProvider.notifier).select(partyId);
-
     if (saveAndNew) {
-      _showSaveSnackBar(
-        message: 'Party "${result.partyName}" saved successfully',
-        backgroundColor: _successSnackBarColor,
-      );
-      _partyNameController.clear();
-      _gstinController.clear();
-      _phoneController.clear();
-      _emailController.clear();
-      _billingAddressController.clear();
-      _shippingAddressController.clear();
-      _billingAddressLineController.clear();
-      _billingCityController.clear();
-      _billingPincodeController.clear();
-      _shippingAddressLineController.clear();
-      _shippingCityController.clear();
-      _shippingPincodeController.clear();
-      _openingBalanceController.clear();
-      _loyaltyPointsOpeningBalanceController.clear();
-      _creditLimitController.clear();
-      _additionalField1Controller.clear();
-      _additionalField2Controller.clear();
-      setState(() {
-        _gstType = 'Unregistered/Consumer';
-        _state = 'Andhra Pradesh';
-        _billingDetailState = 'Andhra Pradesh';
-        _shippingDetailState = 'Andhra Pradesh';
-        _partyGroup = '';
-        _billingCountry = 'India';
-        _shippingCountry = 'India';
-        _openingBalanceAsOfDate = DateTime.now();
-        _loyaltyPointsAsOfDate = DateTime.now();
-        _useCustomCreditLimit = false;
-        _additionalField1Enabled = false;
-        _additionalField2Enabled = false;
-        _showShippingAddress = false;
-        _showDetailedBillingAddress = false;
-        _showDetailedShippingAddress = false;
-        _savedBillingAddressLine = '';
-        _savedBillingCity = '';
-        _savedBillingPincode = '';
-        _savedBillingState = 'Andhra Pradesh';
-        _savedBillingCountry = 'India';
-        _savedShippingAddressLine = '';
-        _savedShippingCity = '';
-        _savedShippingPincode = '';
-        _savedShippingState = 'Andhra Pradesh';
-        _savedShippingCountry = 'India';
-        _partyNameError = false;
-        _tabController.index = 0;
-      });
+      await _createParty(result, resetForm: true);
       return;
     }
 
     Navigator.of(context).pop(result);
+  }
+
+  Future<void> _createParty(
+    AddPartyResult result, {
+    required bool resetForm,
+  }) async {
+    try {
+      await ref.read(partyListProvider.notifier).createParty(result);
+      _showSaveSnackBar(
+        message: 'Party "${result.partyName}" saved successfully',
+        backgroundColor: _successSnackBarColor,
+      );
+      if (resetForm) {
+        _resetFormAfterSave();
+      } else if (mounted) {
+        Navigator.of(context).pop(result);
+      }
+    } on PartyOfflineException {
+      _showSaveSnackBar(
+        message: 'Party saved offline. It will sync when you are back online.',
+        backgroundColor: Colors.orange.shade800,
+      );
+      if (resetForm) {
+        _resetFormAfterSave();
+      } else if (mounted) {
+        Navigator.of(context).pop(result);
+      }
+      ref.invalidate(partyListProvider);
+    } on ApiValidationException catch (e) {
+      _showSaveSnackBar(
+        message: e.message,
+        backgroundColor: AppColors.error,
+      );
+    } catch (_) {
+      _showSaveSnackBar(
+        message: 'Failed to save party. Please try again.',
+        backgroundColor: AppColors.error,
+      );
+    }
+  }
+
+  void _resetFormAfterSave() {
+    _partyNameController.clear();
+    _gstinController.clear();
+    _phoneController.clear();
+    _emailController.clear();
+    _billingAddressController.clear();
+    _shippingAddressController.clear();
+    _billingAddressLineController.clear();
+    _billingCityController.clear();
+    _billingPincodeController.clear();
+    _shippingAddressLineController.clear();
+    _shippingCityController.clear();
+    _shippingPincodeController.clear();
+    _openingBalanceController.clear();
+    _loyaltyPointsOpeningBalanceController.clear();
+    _creditLimitController.clear();
+    _additionalField1Controller.clear();
+    _additionalField2Controller.clear();
+    setState(() {
+      _gstType = 'Unregistered/Consumer';
+      _state = 'Andhra Pradesh';
+      _billingDetailState = 'Andhra Pradesh';
+      _shippingDetailState = 'Andhra Pradesh';
+      _partyGroup = '';
+      _billingCountry = 'India';
+      _shippingCountry = 'India';
+      _openingBalanceAsOfDate = DateTime.now();
+      _loyaltyPointsAsOfDate = DateTime.now();
+      _useCustomCreditLimit = false;
+      _additionalField1Enabled = false;
+      _additionalField2Enabled = false;
+      _showShippingAddress = false;
+      _showDetailedBillingAddress = false;
+      _showDetailedShippingAddress = false;
+      _savedBillingAddressLine = '';
+      _savedBillingCity = '';
+      _savedBillingPincode = '';
+      _savedBillingState = 'Andhra Pradesh';
+      _savedBillingCountry = 'India';
+      _savedShippingAddressLine = '';
+      _savedShippingCity = '';
+      _savedShippingPincode = '';
+      _savedShippingState = 'Andhra Pradesh';
+      _savedShippingCountry = 'India';
+      _partyNameError = false;
+      _tabController.index = 0;
+    });
   }
 
   @override
@@ -544,9 +573,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             child: Text(
               _isEditMode ? 'Edit Party' : 'Add Party',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           IconButton(
@@ -673,7 +702,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(flex: 1, child: groupControls),
+        Expanded(child: groupControls),
         const Expanded(flex: 2, child: SizedBox.shrink()),
       ],
     );
@@ -865,9 +894,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             cityController: _billingCityController,
             pincodeController: _billingPincodeController,
             detailState: _billingDetailState,
-            onStateChanged: (value) => setState(() => _billingDetailState = value),
+            onStateChanged: (value) =>
+                setState(() => _billingDetailState = value),
             country: _billingCountry,
-            onCountryChanged: (value) => setState(() => _billingCountry = value),
+            onCountryChanged: (value) =>
+                setState(() => _billingCountry = value),
             onCancel: _cancelDetailedBillingAddress,
             onSave: _saveDetailedBillingAddress,
           ),
@@ -947,7 +978,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               child: DecoratedBox(
                 decoration: const BoxDecoration(
                   border: Border(
-                    left: BorderSide(color: _cardBorder, width: 1),
+                    left: BorderSide(color: _cardBorder),
                   ),
                 ),
                 child: Padding(
@@ -1024,7 +1055,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           padding: const EdgeInsets.symmetric(vertical: 4),
         ),
         icon: Icon(
-          showDetailed ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          showDetailed
+              ? Icons.visibility_off_outlined
+              : Icons.visibility_outlined,
           size: 18,
         ),
         label: Text(
@@ -1055,7 +1088,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           child: TextField(
             controller: addressLineController,
             style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(hint: 'Street, building, area'),
+            decoration: buildSaleFieldDecoration(
+              hint: 'Street, building, area',
+            ),
             textCapitalization: TextCapitalization.sentences,
           ),
         );
@@ -1087,13 +1122,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             decoration: buildSaleFieldDecoration(hint: 'Pincode'),
             keyboardType: TextInputType.number,
             maxLength: 6,
-            buildCounter: (
-              context, {
-              required currentLength,
-              required isFocused,
-              maxLength,
-            }) =>
-                null,
+            buildCounter:
+                (
+                  context, {
+                  required currentLength,
+                  required isFocused,
+                  maxLength,
+                }) => null,
           ),
         );
 
@@ -1296,10 +1331,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Credit Limit', style: saleFieldLabelStyle),
+        const Text('Credit Limit', style: saleFieldLabelStyle),
         const SizedBox(height: AppSpacing.sm),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _buildCreditLimitToggleBar(),
             if (_useCustomCreditLimit) ...[
@@ -1313,8 +1347,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                     hint: '0.00',
                     compact: true,
                   ),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                 ),
               ),
             ],
@@ -1429,7 +1464,6 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     required ValueChanged<bool> onEnabledChanged,
   }) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Checkbox(
           value: enabled,
@@ -1463,8 +1497,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 side: const BorderSide(color: AppColors.primary),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),

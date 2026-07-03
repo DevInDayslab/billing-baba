@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { createBusinessProfileRoutes } from './business-profile.routes';
 import { createBusinessRoutes } from './business.routes';
+import { createBusinessProfileRoutes } from './business-profile.routes';
 
 export const businessModule: FastifyPluginAsync = async (app) => {
   await app.register(createBusinessRoutes());

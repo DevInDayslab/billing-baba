@@ -11,8 +11,9 @@ Future<ApiClient> apiClient(Ref ref) async {
   return ApiClient(
     storage: storage,
     onRefreshToken: () async {
-      final session =
-          await ref.read(authProvider.notifier).refreshAccessToken();
+      final session = await ref
+          .read(authProvider.notifier)
+          .refreshAccessToken();
       return session?.accessToken;
     },
   );

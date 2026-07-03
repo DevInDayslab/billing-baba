@@ -14,8 +14,8 @@ String _nextRowId() {
 
 final NotifierProvider<AddItemForm, AddItemFormState> addItemFormProvider =
     NotifierProvider.autoDispose<AddItemForm, AddItemFormState>(
-  AddItemForm.new,
-);
+      AddItemForm.new,
+    );
 
 class AddItemForm extends Notifier<AddItemFormState> {
   @override
@@ -157,7 +157,10 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   void addRawMaterialRow() {
     state = state.copyWith(
-      rawMaterials: [...state.rawMaterials, RawMaterialRow(id: _nextRowId())],
+      rawMaterials: [
+        ...state.rawMaterials,
+        RawMaterialRow(id: _nextRowId()),
+      ],
       isDirty: true,
     );
   }
@@ -199,8 +202,9 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   void removeAdditionalCost(String id) {
     state = state.copyWith(
-      additionalCosts:
-          state.additionalCosts.where((row) => row.id != id).toList(),
+      additionalCosts: state.additionalCosts
+          .where((row) => row.id != id)
+          .toList(),
       isDirty: true,
     );
   }

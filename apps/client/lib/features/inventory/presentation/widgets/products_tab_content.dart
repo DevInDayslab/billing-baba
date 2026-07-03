@@ -40,7 +40,6 @@ class ProductsTabContent extends ConsumerWidget {
             ),
     );
   }
-
 }
 
 class _ProductsListPanel extends StatelessWidget {

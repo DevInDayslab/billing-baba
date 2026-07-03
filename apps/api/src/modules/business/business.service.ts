@@ -1,14 +1,20 @@
-import type { FastifyInstance } from 'fastify';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { BusinessRepository } from './business.repository';
-import type { BusinessDetail, BusinessListItem, BusinessProfile } from './business.types';
-import type { CreateBusinessBody, UpdateBusinessProfileBody } from './business.schema';
+import type {
+  CreateBusinessBody,
+  UpdateBusinessProfileBody,
+} from './business.schema';
+import type {
+  BusinessDetail,
+  BusinessListItem,
+  BusinessProfile,
+} from './business.types';
 
 export class BusinessService {
   private readonly repository: BusinessRepository;
 
-  constructor(private readonly app: FastifyInstance) {
+  constructor() {
     const db = getDb();
     if (!db) {
       throw new AppError(
@@ -74,12 +80,9 @@ export class BusinessService {
       return profile;
     } catch (error) {
       if (error instanceof Error && error.message === 'GSTIN_ALREADY_EXISTS') {
-        throw new AppError(
-          'VALIDATION_ERROR',
-          'Invalid request body',
-          400,
-          { gstin: ['This GSTIN is already registered to another business'] },
-        );
+        throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+          gstin: ['This GSTIN is already registered to another business'],
+        });
       }
       throw error;
     }

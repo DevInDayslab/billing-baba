@@ -200,7 +200,11 @@ class _AttachmentChip extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 child: const Padding(
                   padding: EdgeInsets.all(2),
-                  child: Icon(Icons.close, size: 14, color: AppColors.textSecondary),
+                  child: Icon(
+                    Icons.close,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
             ],

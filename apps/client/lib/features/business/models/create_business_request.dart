@@ -22,17 +22,17 @@ class CreateBusinessRequest {
   final String? address;
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        if (ownerName != null && ownerName!.isNotEmpty) 'owner_name': ownerName,
-        if (phone != null && phone!.isNotEmpty) 'phone': phone,
-        if (email != null && email!.isNotEmpty) 'email': email,
-        if (gstin != null && gstin!.isNotEmpty) 'gstin': gstin,
-        if (businessType != null && businessType!.isNotEmpty)
-          'business_type': businessType,
-        if (state != null && state!.isNotEmpty) 'state': state,
-        if (currency != null && currency!.isNotEmpty) 'currency': currency,
-        if (address != null && address!.isNotEmpty) 'address': address,
-      };
+    'name': name,
+    if (ownerName != null && ownerName!.isNotEmpty) 'owner_name': ownerName,
+    if (phone != null && phone!.isNotEmpty) 'phone': phone,
+    if (email != null && email!.isNotEmpty) 'email': email,
+    if (gstin != null && gstin!.isNotEmpty) 'gstin': gstin,
+    if (businessType != null && businessType!.isNotEmpty)
+      'business_type': businessType,
+    if (state != null && state!.isNotEmpty) 'state': state,
+    if (currency != null && currency!.isNotEmpty) 'currency': currency,
+    if (address != null && address!.isNotEmpty) 'address': address,
+  };
 }
 
 class BusinessDetailDto {

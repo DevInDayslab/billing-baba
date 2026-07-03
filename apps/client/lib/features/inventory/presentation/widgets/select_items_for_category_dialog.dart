@@ -90,7 +90,8 @@ class _SelectItemsForCategoryDialogState
 
   void _toggleSelectAll(List<InventoryItem> visibleItems) {
     setState(() {
-      if (_selectedIds.length == visibleItems.length && visibleItems.isNotEmpty) {
+      if (_selectedIds.length == visibleItems.length &&
+          visibleItems.isNotEmpty) {
         _selectedIds.clear();
       } else {
         _selectedIds
@@ -113,7 +114,9 @@ class _SelectItemsForCategoryDialogState
   void _moveItems() {
     if (_selectedIds.isEmpty) return;
 
-    ref.read(inventoryItemsProvider.notifier).moveItemsToCategory(
+    ref
+        .read(inventoryItemsProvider.notifier)
+        .moveItemsToCategory(
           itemIds: _selectedIds.toList(),
           categoryId: widget.targetCategoryId,
           removeFromExistingCategory: _removeFromExistingCategory,
@@ -126,7 +129,8 @@ class _SelectItemsForCategoryDialogState
   Widget build(BuildContext context) {
     final allItems = ref.watch(inventoryItemsProvider);
     final visibleItems = _filteredItems(allItems);
-    final allVisibleSelected = visibleItems.isNotEmpty &&
+    final allVisibleSelected =
+        visibleItems.isNotEmpty &&
         visibleItems.every((item) => _selectedIds.contains(item.id));
 
     return ConstrainedBox(
@@ -155,7 +159,10 @@ class _SelectItemsForCategoryDialogState
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -245,7 +252,10 @@ class _SelectItemsForCategoryDialogState
                     ),
                     child: const Text(
                       'Cancel',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -253,9 +263,10 @@ class _SelectItemsForCategoryDialogState
                     onPressed: _selectedIds.isEmpty ? null : _moveItems,
                     style: FilledButton.styleFrom(
                       backgroundColor: inventoryNegativeColor,
-                      disabledBackgroundColor: inventoryNegativeColor.withValues(
-                        alpha: 0.4,
-                      ),
+                      disabledBackgroundColor: inventoryNegativeColor
+                          .withValues(
+                            alpha: 0.4,
+                          ),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -267,7 +278,10 @@ class _SelectItemsForCategoryDialogState
                     ),
                     child: const Text(
                       'Move to this category',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -302,7 +316,10 @@ class _ItemsTableHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 10,
+      ),
       decoration: const BoxDecoration(
         color: Color(0xFFF5F5F5),
         border: Border(bottom: BorderSide(color: inventoryCardBorder)),

@@ -6,7 +6,8 @@ part 'account_profile.g.dart';
 @freezed
 abstract class AccountProfile with _$AccountProfile {
   const factory AccountProfile({
-    required String phone, @JsonKey(name: 'display_name') String? displayName,
+    required String phone,
+    @JsonKey(name: 'display_name') String? displayName,
     String? email,
     @JsonKey(name: 'avatar_url') String? avatarUrl,
     @Default('Asia/Kolkata') String timezone,

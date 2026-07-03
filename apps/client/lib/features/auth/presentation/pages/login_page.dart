@@ -415,8 +415,10 @@ class _LoginForm extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: AppRadius.mdBorder,
-                borderSide:
-                    const BorderSide(color: AppColors.primary, width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: AppRadius.mdBorder,
@@ -457,7 +459,9 @@ class _LoginForm extends StatelessWidget {
               onPressed: canSend ? onSubmit : null,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.6),
+                disabledBackgroundColor: AppColors.primary.withValues(
+                  alpha: 0.6,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.mdBorder,
                 ),
@@ -538,13 +542,19 @@ class _LoginForm extends StatelessWidget {
           // Secure login divider
           Row(
             children: [
-              Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+              Expanded(
+                child: Divider(color: Colors.grey.shade300, thickness: 1),
+              ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.lock_outline_rounded, size: 12, color: AppColors.textSecondary),
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      size: 12,
+                      color: AppColors.textSecondary,
+                    ),
                     SizedBox(width: 4),
                     Text(
                       'SECURE LOGIN',
@@ -558,7 +568,9 @@ class _LoginForm extends StatelessWidget {
                   ],
                 ),
               ),
-              Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+              Expanded(
+                child: Divider(color: Colors.grey.shade300, thickness: 1),
+              ),
             ],
           ),
 
@@ -574,12 +586,18 @@ class _LoginForm extends StatelessWidget {
                   TextSpan(text: 'By continuing, you agree to our '),
                   TextSpan(
                     text: 'Terms of Service',
-                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   TextSpan(text: ' and '),
                   TextSpan(
                     text: 'Privacy Policy',
-                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),

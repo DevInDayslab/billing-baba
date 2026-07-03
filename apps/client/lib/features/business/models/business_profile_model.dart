@@ -63,23 +63,23 @@ class BusinessProfileModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'owner_name': ownerName,
-        'phone': phone,
-        'email': email,
-        'gstin': gstin,
-        'business_type': businessType,
-        'business_category': businessCategory,
-        'state': state,
-        'pincode': pincode,
-        'currency': currency,
-        'address': address,
-        'timezone': timezone,
-        'language': language,
-        'logo_url': logoUrl,
-        'signature_url': signatureUrl,
-      };
+    'id': id,
+    'name': name,
+    'owner_name': ownerName,
+    'phone': phone,
+    'email': email,
+    'gstin': gstin,
+    'business_type': businessType,
+    'business_category': businessCategory,
+    'state': state,
+    'pincode': pincode,
+    'currency': currency,
+    'address': address,
+    'timezone': timezone,
+    'language': language,
+    'logo_url': logoUrl,
+    'signature_url': signatureUrl,
+  };
 }
 
 class UpdateBusinessProfileRequest {
@@ -106,20 +106,20 @@ class UpdateBusinessProfileRequest {
   final String? address;
 
   Map<String, dynamic> toJson() => {
-        'name': name.trim(),
-        if (phone != null && phone!.trim().isNotEmpty) 'phone': phone!.trim(),
-        if (email != null && email!.trim().isNotEmpty) 'email': email!.trim(),
-        if (gstin != null && gstin!.trim().isNotEmpty) 'gstin': gstin!.trim(),
-        if (businessType != null && businessType!.trim().isNotEmpty)
-          'business_type': businessType!.trim(),
-        if (businessCategory != null && businessCategory!.trim().isNotEmpty)
-          'business_category': businessCategory!.trim(),
-        if (state != null && state!.trim().isNotEmpty) 'state': state!.trim(),
-        if (pincode != null && pincode!.trim().isNotEmpty)
-          'pincode': pincode!.trim(),
-        if (address != null && address!.trim().isNotEmpty)
-          'address': address!.trim(),
-      };
+    'name': name.trim(),
+    if (phone != null && phone!.trim().isNotEmpty) 'phone': phone!.trim(),
+    if (email != null && email!.trim().isNotEmpty) 'email': email!.trim(),
+    if (gstin != null && gstin!.trim().isNotEmpty) 'gstin': gstin!.trim(),
+    if (businessType != null && businessType!.trim().isNotEmpty)
+      'business_type': businessType!.trim(),
+    if (businessCategory != null && businessCategory!.trim().isNotEmpty)
+      'business_category': businessCategory!.trim(),
+    if (state != null && state!.trim().isNotEmpty) 'state': state!.trim(),
+    if (pincode != null && pincode!.trim().isNotEmpty)
+      'pincode': pincode!.trim(),
+    if (address != null && address!.trim().isNotEmpty)
+      'address': address!.trim(),
+  };
 }
 
 class UpdateBusinessProfileInput {
@@ -146,14 +146,14 @@ class UpdateBusinessProfileInput {
   final String? address;
 
   UpdateBusinessProfileRequest toRequest() => UpdateBusinessProfileRequest(
-        name: name,
-        phone: phone,
-        email: email,
-        gstin: gstin,
-        businessType: businessType,
-        businessCategory: businessCategory,
-        state: state,
-        pincode: pincode,
-        address: address,
-      );
+    name: name,
+    phone: phone,
+    email: email,
+    gstin: gstin,
+    businessType: businessType,
+    businessCategory: businessCategory,
+    state: state,
+    pincode: pincode,
+    address: address,
+  );
 }

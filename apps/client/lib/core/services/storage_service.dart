@@ -18,8 +18,7 @@ class StorageService {
   SharedPreferences? preferences;
   final FlutterSecureStorage _secureStorage;
 
-  bool get _usePreferencesForSecureStorage =>
-      !kIsWeb && Platform.isMacOS;
+  bool get _usePreferencesForSecureStorage => !kIsWeb && Platform.isMacOS;
 
   Future<void> init() async {
     preferences ??= await SharedPreferences.getInstance();
@@ -56,4 +55,11 @@ class StorageService {
   Future<void> write(String key, String value) async {
     await preferences?.setString(key, value);
   }
+
+  Future<void> remove(String key) async {
+    await preferences?.remove(key);
+  }
+
+  Set<String> get preferenceKeys =>
+      Set<String>.unmodifiable(preferences?.getKeys() ?? const {});
 }

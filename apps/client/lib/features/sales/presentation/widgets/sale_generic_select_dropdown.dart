@@ -1,10 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
 
 enum SaleDropdownHighlight { neutral, red, blue }
 
-/// Reusable overlay dropdown with CompositedTransformTarget/Follower pattern.
+/// Reusable select dropdown backed by [MenuAnchor] for smooth open/scroll behavior.
 class SaleGenericSelectDropdown extends StatefulWidget {
   const SaleGenericSelectDropdown({
     required this.value,
@@ -35,33 +37,12 @@ class SaleGenericSelectDropdown extends StatefulWidget {
 }
 
 class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
-  final LayerLink _layerLink = LayerLink();
-  OverlayEntry? _overlayEntry;
+  final MenuController _menuController = MenuController();
 
-  @override
-  void dispose() {
-    _removeOverlay();
-    super.dispose();
-  }
-
-  void closeMenu() => _removeOverlay();
-
-  void _toggleMenu() {
-    if (_overlayEntry != null) {
-      _removeOverlay();
-    } else {
-      _showOverlay();
+  void closeMenu() {
+    if (_menuController.isOpen) {
+      _menuController.close();
     }
-  }
-
-  void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-  }
-
-  void _selectOption(String option) {
-    _removeOverlay();
-    widget.onSelected(option);
   }
 
   Color get _highlightColor => switch (widget.highlight) {
@@ -76,147 +57,125 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
     SaleDropdownHighlight.neutral => AppColors.textPrimary,
   };
 
-  void _showOverlay() {
-    final overlay = Overlay.of(context);
-    final renderBox = context.findRenderObject() as RenderBox?;
-    final triggerWidth = renderBox?.size.width ?? 200;
+  bool get _showCheckmark =>
+      widget.highlight != SaleDropdownHighlight.neutral;
 
-    _overlayEntry = OverlayEntry(
-      builder: (overlayContext) {
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: _removeOverlay,
-              ),
-            ),
-            CompositedTransformFollower(
-              link: _layerLink,
-              showWhenUnlinked: false,
-              offset: Offset(0, widget.compact ? 34 : 40),
-              child: Material(
-                elevation: 4,
-                shadowColor: Colors.black26,
-                borderRadius: AppRadius.mdBorder,
-                clipBehavior: Clip.antiAlias,
-                color: AppColors.surface,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minWidth: widget.minMenuWidth ?? triggerWidth,
-                    maxWidth: widget.minMenuWidth ?? triggerWidth,
-                    maxHeight: widget.maxMenuHeight,
-                  ),
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    children: [
-                      for (final option in widget.options)
-                        _DropdownMenuItem(
-                          label: option,
-                          isSelected: option == widget.value,
-                          highlightColor: _highlightColor,
-                          textColor: _highlightTextColor,
-                          showCheckmark:
-                              widget.highlight != SaleDropdownHighlight.neutral,
-                          onTap: () => _selectOption(option),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    overlay.insert(_overlayEntry!);
-  }
+  static const _defaultMinMenuWidth = 100.0;
 
   @override
   Widget build(BuildContext context) {
     final displayText = widget.value.isEmpty ? widget.hintText : widget.value;
     final isPlaceholder = widget.value.isEmpty;
 
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: SaleFieldTrigger(
-        onTap: _toggleMenu,
-        hasError: widget.hasError,
-        compact: widget.compact,
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                displayText,
-                style: TextStyle(
-                  fontSize: widget.compact ? 13 : 14,
-                  color: isPlaceholder
-                      ? Colors.grey.shade400
-                      : AppColors.textPrimary,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final triggerWidth = constraints.maxWidth.isFinite &&
+                constraints.maxWidth > 0
+            ? constraints.maxWidth
+            : _defaultMinMenuWidth;
+        final menuWidth = math.max(
+          widget.minMenuWidth ?? triggerWidth,
+          triggerWidth,
+        );
+
+        return MenuAnchor(
+          controller: _menuController,
+          alignmentOffset: Offset(0, widget.compact ? 2 : 4),
+          style: MenuStyle(
+            backgroundColor: const WidgetStatePropertyAll(AppColors.surface),
+            elevation: const WidgetStatePropertyAll(4),
+            shadowColor: const WidgetStatePropertyAll(Colors.black26),
+            surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
             ),
-            Icon(
-              Icons.keyboard_arrow_down,
-              size: widget.compact ? 16 : 18,
-              color: AppColors.textSecondary,
+            padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+            minimumSize: WidgetStatePropertyAll(Size(menuWidth, 0)),
+            maximumSize: WidgetStatePropertyAll(
+              Size(menuWidth, widget.maxMenuHeight),
             ),
+          ),
+          menuChildren: [
+            for (final option in widget.options) _buildMenuItem(option),
           ],
-        ),
-      ),
+          builder: (context, controller, child) {
+            return SaleFieldTrigger(
+              onTap: () {
+                if (controller.isOpen) {
+                  controller.close();
+                } else {
+                  controller.open();
+                }
+              },
+              hasError: widget.hasError,
+              compact: widget.compact,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      displayText,
+                      style: TextStyle(
+                        fontSize: widget.compact ? 13 : 14,
+                        color: isPlaceholder
+                            ? Colors.grey.shade400
+                            : AppColors.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    size: widget.compact ? 16 : 18,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
-}
 
-class _DropdownMenuItem extends StatelessWidget {
-  const _DropdownMenuItem({
-    required this.label,
-    required this.isSelected,
-    required this.highlightColor,
-    required this.textColor,
-    required this.showCheckmark,
-    required this.onTap,
-  });
+  MenuItemButton _buildMenuItem(String option) {
+    final isSelected = option == widget.value;
 
-  final String label;
-  final bool isSelected;
-  final Color highlightColor;
-  final Color textColor;
-  final bool showCheckmark;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        hoverColor: const Color(0xFFF5F5F5),
-        onTap: onTap,
-        child: Container(
-          color: isSelected ? highlightColor.withValues(alpha: 0.08) : null,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                    color: isSelected ? textColor : AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              if (isSelected && showCheckmark)
-                Icon(Icons.check, size: 16, color: textColor),
-            ],
-          ),
+    return MenuItemButton(
+      onPressed: () => widget.onSelected(option),
+      style: ButtonStyle(
+        minimumSize: const WidgetStatePropertyAll(Size.fromHeight(40)),
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         ),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered) && !isSelected) {
+            return const Color(0xFFF5F5F5);
+          }
+          return null;
+        }),
+        backgroundColor: WidgetStatePropertyAll(
+          isSelected ? _highlightColor.withValues(alpha: 0.08) : null,
+        ),
+        splashFactory: NoSplash.splashFactory,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              option,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected ? _highlightTextColor : AppColors.textPrimary,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (isSelected && _showCheckmark) ...[
+            const SizedBox(width: 8),
+            Icon(Icons.check, size: 16, color: _highlightTextColor),
+          ],
+        ],
       ),
     );
   }

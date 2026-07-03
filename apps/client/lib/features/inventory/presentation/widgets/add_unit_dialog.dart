@@ -61,10 +61,12 @@ class _AddUnitDialogState extends ConsumerState<AddUnitDialog> {
   }
 
   bool _createUnit({required bool saveAndNew}) {
-    final result = ref.read(inventoryUnitsProvider.notifier).addUnit(
-      fullName: _fullNameController.text,
-      shortName: _shortNameController.text,
-    );
+    final result = ref
+        .read(inventoryUnitsProvider.notifier)
+        .addUnit(
+          fullName: _fullNameController.text,
+          shortName: _shortNameController.text,
+        );
 
     if (!result.isSuccess) {
       setState(() => _errorMessage = result.error);

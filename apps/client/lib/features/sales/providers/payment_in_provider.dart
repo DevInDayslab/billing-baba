@@ -164,9 +164,7 @@ List<PaymentInModel> _mockPaymentInRecords() {
       return buildRecord(
         id: id,
         date: DateTime(2026, month, day, 10 + (index % 8), index % 60),
-        status: index.isEven
-            ? PaymentInStatus.used
-            : PaymentInStatus.unused,
+        status: index.isEven ? PaymentInStatus.used : PaymentInStatus.unused,
         partyIndex: index + 4,
       );
     }),
@@ -400,10 +398,8 @@ class PaymentInFormState {
       receivedAmount: receivedAmount ?? this.receivedAmount,
       discount: discount ?? this.discount,
       description: description ?? this.description,
-      showDescriptionField:
-          showDescriptionField ?? this.showDescriptionField,
-      showValidationErrors:
-          showValidationErrors ?? this.showValidationErrors,
+      showDescriptionField: showDescriptionField ?? this.showDescriptionField,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
     );
   }
 }

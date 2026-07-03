@@ -114,4 +114,9 @@ abstract final class InventoryStyles {
     fontSize: 14,
     color: AppColors.textSecondary,
   );
+
+  static const listCellStyle = TextStyle(
+    fontSize: 13,
+    color: AppColors.textPrimary,
+  );
 }

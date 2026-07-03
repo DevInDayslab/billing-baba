@@ -86,7 +86,10 @@ class SaleOrderLineItemsTable extends ConsumerWidget {
                       .fold<double>(0, (sum, item) => sum + item.qty)
                       .toStringAsFixed(0),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               const SizedBox(width: 280),
