@@ -217,7 +217,7 @@ final class ExpenseTabIndexProvider
   }
 }
 
-String _$expenseTabIndexHash() => r'3c3dff5767b14bca2804d517b752ee35d3c8f594';
+String _$expenseTabIndexHash() => r'c78761479d063d5019ae68de872b3be0651cba0d';
 
 abstract class _$ExpenseTabIndex extends $Notifier<int> {
   int build();
@@ -270,7 +270,7 @@ final class SelectedExpenseCategoryIdProvider
 }
 
 String _$selectedExpenseCategoryIdHash() =>
-    r'159c420bb8d0f7b60b7216dd48920935657ec0b2';
+    r'a5715ae77e26f5717b9995be8e133035eece4e03';
 
 abstract class _$SelectedExpenseCategoryId extends $Notifier<String?> {
   String? build();
@@ -323,7 +323,7 @@ final class SelectedExpenseItemIdProvider
 }
 
 String _$selectedExpenseItemIdHash() =>
-    r'7135089c26544cb633bd8be0b996b490b32d8ffc';
+    r'831abf3718530502cfc802668279803704b12772';
 
 abstract class _$SelectedExpenseItemId extends $Notifier<String?> {
   String? build();
@@ -377,7 +377,7 @@ final class ExpenseCategorySearchQueryProvider
 }
 
 String _$expenseCategorySearchQueryHash() =>
-    r'19bb1c411ae3989a2ee9fdaa1a78210b2d3ad140';
+    r'8eb9cd72081a9ef72f4f8e8081f1d28fb4fb5fb0';
 
 abstract class _$ExpenseCategorySearchQuery extends $Notifier<String> {
   String build();
@@ -431,7 +431,7 @@ final class ExpenseTransactionSearchQueryProvider
 }
 
 String _$expenseTransactionSearchQueryHash() =>
-    r'80e2c6035596026664a42398ef91be08c1efb6c7';
+    r'4632b6d00f4884a7ad7985754434f0e69db660fa';
 
 abstract class _$ExpenseTransactionSearchQuery extends $Notifier<String> {
   String build();
@@ -484,7 +484,7 @@ final class ExpenseItemSearchQueryProvider
 }
 
 String _$expenseItemSearchQueryHash() =>
-    r'69083c7f973a107e1a3d014ea97e365eef61c01b';
+    r'dd15e49bd9bb20e43aa1a54395b8acdc0ab71932';
 
 abstract class _$ExpenseItemSearchQuery extends $Notifier<String> {
   String build();
@@ -540,7 +540,7 @@ final class ExpenseItemTransactionSearchQueryProvider
 }
 
 String _$expenseItemTransactionSearchQueryHash() =>
-    r'116ca83186fee137b7337ca0cd7a2f02b1396222';
+    r'94acaa3d8a6d22022509bf5e1e15a8cf08af14c7';
 
 abstract class _$ExpenseItemTransactionSearchQuery extends $Notifier<String> {
   String build();

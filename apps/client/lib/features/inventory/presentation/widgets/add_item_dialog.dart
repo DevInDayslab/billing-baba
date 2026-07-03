@@ -1,12 +1,23 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
+import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/brand_model.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/add_brand_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/add_category_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/add_godown_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/select_unit_dialog.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_brands_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/inventory/providers/add_item_form_provider.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
@@ -15,32 +26,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:uuid/uuid.dart';
 
 const _dialogMaxWidth = 960.0;
 const _cardBorder = Color(0xFFE0E0E0);
 const _tabActiveColor = Color(0xFFD32F2F);
 const _summaryBannerColor = Color(0xFFFFF8E1);
-const _uuid = Uuid();
 
 Future<void> showAddItemDialog(
   BuildContext context, {
   ItemType initialType = ItemType.product,
+  InventoryItem? editItem,
 }) {
   return showDialog<void>(
     context: context,
     builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: AddItemDialog(initialType: initialType),
+      child: AddItemDialog(initialType: initialType, editItem: editItem),
     ),
   );
 }
 
 class AddItemDialog extends ConsumerStatefulWidget {
-  const AddItemDialog({this.initialType = ItemType.product, super.key});
+  const AddItemDialog({
+    this.initialType = ItemType.product,
+    this.editItem,
+    super.key,
+  });
 
   final ItemType initialType;
+  final InventoryItem? editItem;
 
   @override
   ConsumerState<AddItemDialog> createState() => _AddItemDialogState();
@@ -65,6 +80,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final _onlineStoreDescriptionController = TextEditingController();
   final Map<String, TextEditingController> _rawMaterialControllers = {};
   final Map<String, TextEditingController> _additionalCostControllers = {};
+  final _primaryImageUrlController = TextEditingController();
+  bool _isSaving = false;
 
   int _tabCountFor(ItemType type) => type == ItemType.product ? 4 : 2;
 
@@ -77,8 +94,76 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
     _tabController.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(addItemFormProvider.notifier).setInitialType(widget.initialType);
+      if (widget.editItem != null) {
+        unawaited(_hydrateEditItem(widget.editItem!));
+      } else {
+        ref.read(addItemFormProvider.notifier).setInitialType(widget.initialType);
+      }
     });
+  }
+
+  Future<void> _hydrateEditItem(InventoryItem item) async {
+    final notifier = ref.read(addItemFormProvider.notifier);
+    notifier.setInitialType(item.type);
+    notifier.updateItemName(item.name);
+    _itemNameController.text = item.name;
+
+    if (item.hsnCode != null) {
+      notifier.updateHsn(item.hsnCode!);
+      _hsnController.text = item.hsnCode!;
+    }
+    if (item.barcode != null) {
+      notifier.updateItemCode(item.barcode!);
+      _itemCodeController.text = item.barcode!;
+    }
+    if (item.description != null) {
+      notifier.updateDescription(item.description!);
+      _descriptionController.text = item.description!;
+    }
+    if (item.salePrice != null) {
+      notifier.updateSalePrice(item.salePrice!);
+      _salePriceController.text = item.salePrice!.toString();
+    }
+    if (item.categoryId != null) notifier.setCategory(item.categoryId);
+    if (item.brandId != null) notifier.setBrand(item.brandId);
+    if (item.primaryImageUrl != null) {
+      notifier.updatePrimaryImageUrl(item.primaryImageUrl!);
+      _primaryImageUrlController.text = item.primaryImageUrl!;
+    }
+
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      final detail = await service.getItem(item.id);
+      final tiers = await service.fetchItemTierPrices(item.id);
+
+      if (detail.purchasePrice != null) {
+        notifier.updateAtPrice(detail.purchasePrice!);
+        _atPriceController.text = detail.purchasePrice!.toString();
+      }
+      if (detail.reorderLevel != null) {
+        notifier.updateMinStock(detail.reorderLevel!);
+        _minStockController.text = detail.reorderLevel!.toString();
+      }
+
+      final wholesale = tiers
+          .where((tier) => tier.pricingTier == 'tier_2')
+          .map((tier) => tier.price)
+          .firstOrNull;
+      if (wholesale != null) {
+        notifier.updateWholesalePrice(wholesale);
+        _wholesalePriceController.text = wholesale.toString();
+      }
+
+      final units = ref.read(inventoryUnitsProvider).value ?? [];
+      final unit = units
+          .where((u) => u.shortName == detail.baseUnitShortName)
+          .firstOrNull;
+      if (unit != null) {
+        notifier.setUnits(baseUnitId: unit.id);
+      }
+    } catch (_) {
+      // Keep list-item fields if detail fetch fails.
+    }
   }
 
   void _handleItemTypeChange(ItemType type) {
@@ -127,6 +212,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     _locationController.dispose();
     _onlineStorePriceController.dispose();
     _onlineStoreDescriptionController.dispose();
+    _primaryImageUrlController.dispose();
     for (final controller in _rawMaterialControllers.values) {
       controller.dispose();
     }
@@ -143,31 +229,58 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
-  void _save({required bool saveAndNew}) {
+  Future<void> _save({required bool saveAndNew}) async {
+    if (_isSaving) return;
     final notifier = ref.read(addItemFormProvider.notifier);
     if (!notifier.validate()) return;
 
-    final form = ref.read(addItemFormProvider);
-    final item = InventoryItem(
-      id: _uuid.v4(),
-      name: form.itemName.trim(),
-      type: form.itemType,
-      quantity: form.itemType == ItemType.product ? form.openingQty : null,
-      salePrice: form.salePrice > 0 ? form.salePrice : null,
-      stockValue: form.openingQty * form.atPrice,
-      categoryId: form.categoryId ?? InventoryCatalog.uncategorizedCategoryId,
-    );
+    setState(() => _isSaving = true);
 
-    ref.read(inventoryItemsProvider.notifier).addItem(item);
+    try {
+      final form = ref.read(addItemFormProvider);
+      final editItem = widget.editItem;
+      if (editItem != null) {
+        await ref
+            .read(inventoryItemsProvider.notifier)
+            .updateItemFromForm(editItem.id, form);
+        ref.invalidate(productDetailProvider(editItem.id));
+        ref.invalidate(itemTierPricesProvider(editItem.id));
+      } else {
+        await ref.read(inventoryItemsProvider.notifier).addItemFromForm(form);
+      }
 
-    if (saveAndNew) {
-      notifier.reset(itemType: form.itemType);
-      _clearControllers();
-      _tabController.index = 0;
-      return;
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+
+      if (saveAndNew) {
+        notifier.reset(itemType: form.itemType);
+        _clearControllers();
+        _tabController.index = 0;
+        return;
+      }
+
+      Navigator.of(context).pop();
+    } on ApiValidationException catch (error) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.fieldErrors['name'] ?? error.message),
+        ),
+      );
+    } on InventoryException catch (error) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(InventoryErrorMapper.messageFor(error))),
+      );
     }
-
-    Navigator.of(context).pop();
   }
 
   void _clearControllers() {
@@ -184,6 +297,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     _locationController.clear();
     _onlineStorePriceController.clear();
     _onlineStoreDescriptionController.clear();
+    _primaryImageUrlController.clear();
     for (final controller in _rawMaterialControllers.values) {
       controller.dispose();
     }
@@ -236,10 +350,16 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     final form = ref.watch(addItemFormProvider);
     final notifier = ref.read(addItemFormProvider.notifier);
     final categories = ref.watch(categoriesProvider);
+    final brands = ref.watch(inventoryBrandsProvider).value ?? [];
     final categoryOptions = categories.map((c) => c.name).toList();
+    final brandOptions = brands.map((b) => b.name).toList();
     final selectedCategory = categories
         .where((c) => c.id == form.categoryId)
         .map((c) => c.name)
+        .firstOrNull;
+    final selectedBrand = brands
+        .where((b) => b.id == form.brandId)
+        .map((b) => b.name)
         .firstOrNull;
 
     return ConstrainedBox(
@@ -269,6 +389,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                 categoryOptions: categoryOptions,
                 selectedCategory: selectedCategory,
                 categories: categories,
+                brands: brands,
+                brandOptions: brandOptions,
+                selectedBrand: selectedBrand,
               ),
             ),
             _buildTabBar(),
@@ -303,7 +426,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       child: Row(
         children: [
           Text(
-            'Add Item',
+            widget.editItem != null ? 'Edit Item' : 'Add Item',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
@@ -317,16 +440,6 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             ),
           ),
           const Spacer(),
-          IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Item settings coming soon')),
-              );
-            },
-            icon: const Icon(Icons.settings_outlined, size: 20),
-            color: AppColors.textSecondary,
-            tooltip: 'Settings',
-          ),
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close, color: AppColors.textSecondary),
@@ -361,6 +474,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     required List<String> categoryOptions,
     required String? selectedCategory,
     required List<InventoryCategory> categories,
+    required List<BrandModel> brands,
+    required List<String> brandOptions,
+    required String? selectedBrand,
   }) {
     final isProduct = form.itemType == ItemType.product;
     final taxCodeLabel = isProduct ? 'Item HSN' : 'Item SAC';
@@ -481,15 +597,56 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           Expanded(
             child: _LabeledField(
               label: 'Category',
-              child: SaleGenericSelectDropdown(
-                value: selectedCategory ?? 'Select',
-                options: categoryOptions,
-                onSelected: (name) {
-                  final category = categories.firstWhereOrNull(
-                    (c) => c.name == name,
-                  );
-                  notifier.setCategory(category?.id);
-                },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SaleGenericSelectDropdown(
+                      value: selectedCategory ?? 'Select',
+                      options: categoryOptions,
+                      onSelected: (name) {
+                        final category = categories.firstWhereOrNull(
+                          (c) => c.name == name,
+                        );
+                        notifier.setCategory(category?.id);
+                      },
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => showAddCategoryDialog(context),
+                    icon: const Icon(Icons.add, size: 18),
+                    tooltip: 'Add category',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: _LabeledField(
+              label: 'Brand',
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SaleGenericSelectDropdown(
+                      value: selectedBrand ?? 'Select',
+                      options: brandOptions,
+                      onSelected: (name) {
+                        final brand = brands.firstWhereOrNull(
+                          (b) => b.name == name,
+                        );
+                        notifier.setBrand(brand?.id);
+                      },
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () async {
+                      final brand = await showAddBrandDialog(context);
+                      if (brand != null) notifier.setBrand(brand.id);
+                    },
+                    icon: const Icon(Icons.add, size: 18),
+                    tooltip: 'Add brand',
+                  ),
+                ],
               ),
             ),
           ),
@@ -505,28 +662,20 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+        ];
+
+        final row3 = [
           Expanded(
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 22),
-                child: TextButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Image upload coming soon')),
-                    );
-                  },
-                  icon: const Icon(Icons.camera_alt_outlined, size: 16),
-                  label: const Text(
-                    'Add Item Image',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    padding: EdgeInsets.zero,
-                  ),
+            flex: 2,
+            child: _LabeledField(
+              label: 'Image URL',
+              child: TextField(
+                controller: _primaryImageUrlController,
+                style: saleFieldTextStyle,
+                decoration: buildSaleFieldDecoration(
+                  hint: 'https://example.com/image.jpg',
                 ),
+                onChanged: notifier.updatePrimaryImageUrl,
               ),
             ),
           ),
@@ -537,6 +686,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             children: [
               ...row1.expand((w) => [w, const SizedBox(height: AppSpacing.md)]),
               ...row2.expand((w) => [w, const SizedBox(height: AppSpacing.md)]),
+              ...row3.expand((w) => [w, const SizedBox(height: AppSpacing.md)]),
             ],
           );
         }
@@ -546,6 +696,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: row1),
             const SizedBox(height: AppSpacing.md),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: row2),
+            const SizedBox(height: AppSpacing.md),
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: row3),
           ],
         );
       },
@@ -753,6 +905,13 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   }
 
   Widget _buildStockTab(AddItemFormState form, AddItemForm notifier) {
+    final godowns = ref.watch(inventoryGodownsProvider).value ?? [];
+    final godownOptions = godowns.map((g) => g.name).toList();
+    final selectedGodown = godowns
+        .where((g) => g.id == form.godownId)
+        .map((g) => g.name)
+        .firstOrNull;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -850,7 +1009,35 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           ),
           const SizedBox(height: AppSpacing.md),
           _LabeledField(
-            label: 'Location',
+            label: 'Godown',
+            child: Row(
+              children: [
+                Expanded(
+                  child: SaleGenericSelectDropdown(
+                    value: selectedGodown ?? 'Select',
+                    options: godownOptions,
+                    onSelected: (name) {
+                      final godown = godowns.firstWhereOrNull(
+                        (g) => g.name == name,
+                      );
+                      notifier.setGodown(godown?.id);
+                    },
+                  ),
+                ),
+                IconButton(
+                  onPressed: () async {
+                    final godown = await showAddGodownDialog(context);
+                    if (godown != null) notifier.setGodown(godown.id);
+                  },
+                  icon: const Icon(Icons.add, size: 18),
+                  tooltip: 'Add godown',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _LabeledField(
+            label: 'Rack / Shelf',
             child: TextField(
               controller: _locationController,
               style: saleFieldTextStyle,
@@ -1057,49 +1244,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE3F2FD),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Learn how to use Manufacturing',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Video tutorial coming soon'),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.play_circle_outline, size: 16),
-                  label: const Text(
-                    'Watch Video',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-              ],
-            ),
-          ),
           const Spacer(),
           OutlinedButton(
-            onPressed: () => _save(saveAndNew: true),
+            onPressed: _isSaving ? null : () => _save(saveAndNew: true),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.textPrimary,
               side: const BorderSide(color: _cardBorder),
@@ -1115,7 +1262,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           ),
           const SizedBox(width: AppSpacing.sm),
           FilledButton(
-            onPressed: () => _save(saveAndNew: false),
+            onPressed: _isSaving ? null : () => _save(saveAndNew: false),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
