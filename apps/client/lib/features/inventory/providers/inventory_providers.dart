@@ -7,7 +7,6 @@ import 'package:billing_baba/features/inventory/providers/inventory_categories_p
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod/src/providers/provider.dart';
 
 final productsProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(productSearchQueryProvider).toLowerCase();
@@ -62,8 +61,9 @@ final categoriesProvider = Provider<List<InventoryCategory>>((ref) {
       .toList();
 });
 
-final ProviderFamily<List<InventoryItem>, String> categoryItemsProvider =
-    Provider.family<List<InventoryItem>, String>((
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
       ref,
       categoryId,
     ) {
@@ -100,7 +100,8 @@ class InventoryItemsTabIndex extends Notifier<int> {
   @override
   int build() => inventoryProductsTabIndex;
 
-  void select(int index) => state = index;
+  int get tabIndex => state;
+  set tabIndex(int index) => state = index;
 
   void selectForItemType(ItemType type) {
     state = type == ItemType.product
@@ -154,8 +155,10 @@ final productTransactionSearchQueryProvider =
       ProductTransactionSearchQuery.new,
     );
 
-final ProviderFamily<List<ProductTransaction>, String>
-productTransactionsProvider = Provider.family<List<ProductTransaction>, String>(
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final productTransactionsProvider =
+    Provider.family<List<ProductTransaction>, String>(
   (ref, itemId) {
     final query = ref
         .watch(productTransactionSearchQueryProvider)
@@ -179,21 +182,24 @@ class SelectedProductId extends Notifier<String?> {
   @override
   String? build() => null;
 
-  void select(String? id) => state = id;
+  String? get selected => state;
+  set selected(String? id) => state = id;
 }
 
 class SelectedServiceId extends Notifier<String?> {
   @override
   String? build() => null;
 
-  void select(String? id) => state = id;
+  String? get selected => state;
+  set selected(String? id) => state = id;
 }
 
 class SelectedCategoryId extends Notifier<String?> {
   @override
   String? build() => InventoryCatalog.uncategorizedCategoryId;
 
-  void select(String? id) => state = id;
+  String? get selected => state;
+  set selected(String? id) => state = id;
 }
 
 class SelectedUnitId extends Notifier<String?> {
@@ -203,54 +209,62 @@ class SelectedUnitId extends Notifier<String?> {
     return units.isEmpty ? null : units.first.id;
   }
 
-  void select(String? id) => state = id;
+  String? get selected => state;
+  set selected(String? id) => state = id;
 }
 
 class ProductSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class ServiceSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class CategorySearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class CategoryItemSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class UnitSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class UnitConversionSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class ProductTransactionSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }

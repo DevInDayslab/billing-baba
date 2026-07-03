@@ -25,7 +25,7 @@ class BillWiseProfitReportContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ReportDateRangeBar(
+            const ReportDateRangeBar(
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -110,8 +110,8 @@ class BillWiseProfitReportContent extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   const Divider(height: 1, color: reportCardBorder),
-                  ReportTableHeaderRow(
-                    children: const [
+                  const ReportTableHeaderRow(
+                    children: [
                       ReportTableHeaderCell(label: 'DATE', width: 90),
                       ReportTableHeaderCell(label: 'INVOICE NO', width: 110),
                       Expanded(child: ReportTableHeaderCell(label: 'PARTY')),

@@ -84,12 +84,12 @@ class PartyReportByItemContent extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             const ReportSearchField(hintText: 'Search Party...'),
             const SizedBox(height: AppSpacing.md),
-            ReportCard(
+            const ReportCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ReportTableHeaderRow(
-                    children: const [
+                    children: [
                       ReportTableHeaderCell(label: '#', width: 40),
                       Expanded(
                         child: ReportTableHeaderCell(label: 'PARTY NAME'),
@@ -116,8 +116,8 @@ class PartyReportByItemContent extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const Divider(height: 1, color: reportCardBorder),
-                  const SizedBox(
+                  Divider(height: 1, color: reportCardBorder),
+                  SizedBox(
                     height: 200,
                     child: Center(
                       child: Text(

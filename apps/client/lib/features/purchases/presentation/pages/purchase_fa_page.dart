@@ -8,8 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-const _addCtaOrange = Color(0xFFFF9800);
-
 class PurchaseFaPage extends ConsumerWidget {
   const PurchaseFaPage({super.key});
 
@@ -44,7 +42,6 @@ class PurchaseFaPage extends ConsumerWidget {
                 description:
                     'You can manage purchase of all your fixed assets here.',
                 buttonLabel: 'Add Your First Purchase Of A Fixed Asset Here',
-                buttonColor: _addCtaOrange,
                 onPressed: () => context.push(AppRoutes.addPurchaseFa),
               )
             else

@@ -91,8 +91,8 @@ class AllTransactionsReportContent extends StatelessWidget {
                     ),
                   ),
                   const Divider(height: 1, color: reportCardBorder),
-                  ReportTableHeaderRow(
-                    children: const [
+                  const ReportTableHeaderRow(
+                    children: [
                       ReportTableHeaderCell(label: '#', width: 40),
                       ReportTableHeaderCell(label: 'DATE', width: 90),
                       ReportTableHeaderCell(label: 'REF NO.', width: 90),
@@ -126,7 +126,7 @@ class AllTransactionsReportContent extends StatelessWidget {
                     ],
                   ),
                   const Divider(height: 1, color: reportCardBorder),
-                  const ReportEmptyTableState(message: 'No data available'),
+                  const ReportEmptyTableState(),
                 ],
               ),
             ),

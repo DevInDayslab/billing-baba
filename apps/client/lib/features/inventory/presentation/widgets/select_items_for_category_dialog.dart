@@ -62,17 +62,17 @@ class _SelectItemsForCategoryDialogState
         .where(
           (item) => query.isEmpty || item.name.toLowerCase().contains(query),
         )
-        .toList();
-
-    items.sort((a, b) {
-      final comparison = switch (_sortField) {
-        _ItemSortField.name => a.name.toLowerCase().compareTo(
-          b.name.toLowerCase(),
-        ),
-        _ItemSortField.quantity => (a.quantity ?? 0).compareTo(b.quantity ?? 0),
-      };
-      return _sortAscending ? comparison : -comparison;
-    });
+        .toList()
+      ..sort((a, b) {
+        final comparison = switch (_sortField) {
+          _ItemSortField.name => a.name.toLowerCase().compareTo(
+            b.name.toLowerCase(),
+          ),
+          _ItemSortField.quantity =>
+            (a.quantity ?? 0).compareTo(b.quantity ?? 0),
+        };
+        return _sortAscending ? comparison : -comparison;
+      });
 
     return items;
   }

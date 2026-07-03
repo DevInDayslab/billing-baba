@@ -43,8 +43,8 @@ class SalePurchaseOrdersReportContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ReportTableHeaderRow(
-                      children: const [
+                    const ReportTableHeaderRow(
+                      children: [
                         ReportTableHeaderCell(label: 'DATE', width: 100),
                         ReportTableHeaderCell(label: 'ORDER NO.', width: 110),
                         Expanded(child: ReportTableHeaderCell(label: 'NAME')),

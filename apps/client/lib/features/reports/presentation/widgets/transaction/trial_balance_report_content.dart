@@ -22,7 +22,7 @@ class _TrialBalanceReportContentState extends State<TrialBalanceReportContent> {
   bool _showWorkingTrialBalance = false;
   bool _showZeroBalances = false;
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 4, 1),
+    start: DateTime(2026, 4),
     end: DateTime(2026, 7, 3),
   );
 
@@ -37,9 +37,9 @@ class _TrialBalanceReportContentState extends State<TrialBalanceReportContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
+            const Row(
               children: [
-                const Text(
+                Text(
                   'Trial Balance Report',
                   style: TextStyle(
                     fontSize: 22,
@@ -47,10 +47,10 @@ class _TrialBalanceReportContentState extends State<TrialBalanceReportContent> {
                     color: Color(0xFF1A237E),
                   ),
                 ),
-                const Spacer(),
-                const ReportPdfChip(),
-                const SizedBox(width: AppSpacing.sm),
-                const ReportXlsChip(),
+                Spacer(),
+                ReportPdfChip(),
+                SizedBox(width: AppSpacing.sm),
+                ReportXlsChip(),
               ],
             ),
             const SizedBox(height: AppSpacing.md),

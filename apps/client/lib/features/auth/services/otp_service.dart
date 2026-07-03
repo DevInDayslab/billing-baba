@@ -94,7 +94,7 @@ class OtpService {
       throw const OtpException(
         'OTP was sent but the session expired. Go back and try again.',
       );
-    } catch (e) {
+    } on Object catch (e) {
       throw _wrapSendError(e);
     }
   }
@@ -120,7 +120,7 @@ class OtpService {
         throw _mapSdkError(result, fallback: 'Failed to resend OTP');
       }
       return trimmed;
-    } catch (e) {
+    } on Object catch (e) {
       if (e is OtpException) rethrow;
       throw _wrapNetworkError(e);
     }
@@ -170,7 +170,7 @@ class OtpService {
       }
 
       return accessToken;
-    } catch (e) {
+    } on Object catch (e) {
       if (e is OtpException) rethrow;
       throw _wrapNetworkError(e);
     }

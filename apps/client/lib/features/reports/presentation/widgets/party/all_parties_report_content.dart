@@ -103,7 +103,7 @@ class _AllPartiesReportContentState extends State<AllPartiesReportContent> {
                       child: ReportSearchField(),
                     ),
                     const Divider(height: 1, color: reportCardBorder),
-                    ReportTableHeaderRow(
+                    const ReportTableHeaderRow(
                       children: [
                         SizedBox(
                           width: 48,
@@ -113,26 +113,26 @@ class _AllPartiesReportContentState extends State<AllPartiesReportContent> {
                             visualDensity: VisualDensity.compact,
                           ),
                         ),
-                        const ReportTableHeaderCell(label: '#', width: 40),
-                        const Expanded(
+                        ReportTableHeaderCell(label: '#', width: 40),
+                        Expanded(
                           child: ReportTableHeaderCell(label: 'PARTY NAME'),
                         ),
-                        const ReportTableHeaderCell(label: 'EMAIL', width: 140),
-                        const ReportTableHeaderCell(
+                        ReportTableHeaderCell(label: 'EMAIL', width: 140),
+                        ReportTableHeaderCell(
                           label: 'PHONE NO.',
                           width: 110,
                         ),
-                        const ReportTableHeaderCell(
+                        ReportTableHeaderCell(
                           label: 'RECEIVABLE BALANCE',
                           width: 140,
                           alignment: Alignment.centerRight,
                         ),
-                        const ReportTableHeaderCell(
+                        ReportTableHeaderCell(
                           label: 'PAYABLE BALANCE',
                           width: 130,
                           alignment: Alignment.centerRight,
                         ),
-                        const ReportTableHeaderCell(
+                        ReportTableHeaderCell(
                           label: 'CREDIT LIMIT',
                           width: 110,
                           alignment: Alignment.centerRight,

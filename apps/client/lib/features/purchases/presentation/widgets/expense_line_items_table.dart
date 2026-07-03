@@ -271,8 +271,7 @@ class _LineItemRow extends ConsumerWidget {
               item.copyWith(qty: value),
             ),
           ),
-          gstEnabled
-              ? Row(
+          if (gstEnabled) Row(
                   children: [
                     Expanded(
                       child: _CompactNumberField(
@@ -301,8 +300,7 @@ class _LineItemRow extends ConsumerWidget {
                       ),
                     ),
                   ],
-                )
-              : _CompactNumberField(
+                ) else _CompactNumberField(
                   initialValue: item.pricePerUnit,
                   onChanged: (value) => notifier.updateLineItem(
                     index,

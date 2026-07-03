@@ -236,7 +236,8 @@ class ExpenseTabIndex extends _$ExpenseTabIndex {
   @override
   int build() => 0;
 
-  void select(int index) => state = index;
+  int get tabIndex => state;
+  set tabIndex(int index) => state = index;
 }
 
 @riverpod
@@ -244,7 +245,8 @@ class SelectedExpenseCategoryId extends _$SelectedExpenseCategoryId {
   @override
   String? build() => _loyaltyCategoryId;
 
-  void select(String? id) => state = id;
+  String? get selected => state;
+  set selected(String? id) => state = id;
 }
 
 @riverpod
@@ -252,7 +254,8 @@ class SelectedExpenseItemId extends _$SelectedExpenseItemId {
   @override
   String? build() => 'crips';
 
-  void select(String? id) => state = id;
+  String? get selected => state;
+  set selected(String? id) => state = id;
 }
 
 @riverpod
@@ -260,7 +263,8 @@ class ExpenseCategorySearchQuery extends _$ExpenseCategorySearchQuery {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 @riverpod
@@ -268,7 +272,8 @@ class ExpenseTransactionSearchQuery extends _$ExpenseTransactionSearchQuery {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 @riverpod
@@ -276,7 +281,8 @@ class ExpenseItemSearchQuery extends _$ExpenseItemSearchQuery {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 @riverpod
@@ -285,7 +291,8 @@ class ExpenseItemTransactionSearchQuery
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 @riverpod

@@ -56,7 +56,7 @@ class _AddCategoryDialogState extends ConsumerState<AddCategoryDialog> {
       return;
     }
 
-    ref.read(selectedCategoryIdProvider.notifier).select(result.category!.id);
+    ref.read(selectedCategoryIdProvider.notifier).selected = result.category!.id;
 
     Navigator.of(context).pop();
   }

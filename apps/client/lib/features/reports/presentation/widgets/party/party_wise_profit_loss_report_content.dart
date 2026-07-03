@@ -25,8 +25,8 @@ class PartyWiseProfitLossReportContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
@@ -35,11 +35,11 @@ class PartyWiseProfitLossReportContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const ReportPeriodFilterBar(),
-                const SizedBox(height: AppSpacing.sm),
+                ReportPeriodFilterBar(),
+                SizedBox(height: AppSpacing.sm),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: const [
+                  children: [
                     ReportTextActionButton(
                       label: 'Excel Report',
                       icon: Icons.table_chart_outlined,
@@ -88,8 +88,8 @@ class PartyWiseProfitLossReportContent extends StatelessWidget {
                       ),
                     ),
                     const Divider(height: 1, color: reportCardBorder),
-                    ReportTableHeaderRow(
-                      children: const [
+                    const ReportTableHeaderRow(
+                      children: [
                         ReportTableHeaderCell(label: '#', width: 40),
                         Expanded(
                           child: ReportTableHeaderCell(label: 'PARTY NAME'),

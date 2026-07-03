@@ -43,8 +43,8 @@ class SalePurchaseOrderItemReportContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ReportTableHeaderRow(
-                      children: const [
+                    const ReportTableHeaderRow(
+                      children: [
                         Expanded(
                           child: ReportTableHeaderCell(label: 'ITEM NAME'),
                         ),
@@ -84,10 +84,10 @@ class SalePurchaseOrderItemReportContent extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Text.rich(
+                          const Text.rich(
                             TextSpan(
-                              style: const TextStyle(fontSize: 14),
-                              children: const [
+                              style: TextStyle(fontSize: 14),
+                              children: [
                                 TextSpan(
                                   text: 'Total Quantity: ',
                                   style: TextStyle(

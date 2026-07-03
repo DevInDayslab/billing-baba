@@ -31,11 +31,8 @@ class ExpenseCategoryModel {
 class ExpenseTransactionModel {
   const ExpenseTransactionModel({
     required this.id,
-    this.categoryId,
+    required this.date, required this.transactionNo, required this.party, this.categoryId,
     this.itemId,
-    required this.date,
-    required this.transactionNo,
-    required this.party,
     this.paymentType,
     this.amount,
     this.balance,

@@ -3,8 +3,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
-import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
+import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -247,17 +247,13 @@ class _ShellPageState extends ConsumerState<ShellPage> {
           ? currentLocation.startsWith(AppRoutes.sale)
           : isPurchase
           ? currentLocation.startsWith(AppRoutes.purchase)
-          : isParties
-          ? currentLocation.startsWith(AppRoutes.parties)
-          : false;
+          : isParties && currentLocation.startsWith(AppRoutes.parties);
 
       final isExpanded = isSale
           ? _isSaleExpanded
           : isPurchase
           ? _isPurchaseExpanded
-          : isParties
-          ? _isPartiesExpanded
-          : false;
+          : isParties && _isPartiesExpanded;
 
       return Column(
         mainAxisSize: MainAxisSize.min,

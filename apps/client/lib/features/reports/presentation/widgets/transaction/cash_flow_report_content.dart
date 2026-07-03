@@ -24,8 +24,8 @@ class _CashFlowReportContentState extends State<CashFlowReportContent> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
@@ -34,7 +34,7 @@ class _CashFlowReportContentState extends State<CashFlowReportContent> {
             child: ReportPeriodFilterBar(
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   ReportTextActionButton(
                     label: 'Excel Report',
                     icon: Icons.table_chart_outlined,
@@ -74,9 +74,9 @@ class _CashFlowReportContentState extends State<CashFlowReportContent> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          Expanded(
+          const Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                 AppSpacing.lg,
                 0,
                 AppSpacing.lg,
@@ -86,13 +86,13 @@ class _CashFlowReportContentState extends State<CashFlowReportContent> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(AppSpacing.md),
                       child: ReportSearchField(),
                     ),
-                    const Divider(height: 1, color: reportCardBorder),
+                    Divider(height: 1, color: reportCardBorder),
                     ReportTableHeaderRow(
-                      children: const [
+                      children: [
                         ReportTableHeaderCell(label: 'DATE', width: 90),
                         ReportTableHeaderCell(label: 'REF NO.', width: 90),
                         Expanded(child: ReportTableHeaderCell(label: 'NAME')),
@@ -120,8 +120,8 @@ class _CashFlowReportContentState extends State<CashFlowReportContent> {
                         ),
                       ],
                     ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const Expanded(
+                    Divider(height: 1, color: reportCardBorder),
+                    Expanded(
                       child: Center(
                         child: Text(
                           'No transactions to show',

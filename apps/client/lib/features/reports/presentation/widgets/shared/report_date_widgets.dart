@@ -24,7 +24,7 @@ class ReportDateRangeBar extends StatefulWidget {
 class _ReportDateRangeBarState extends State<ReportDateRangeBar> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 3),
   );
 
@@ -124,7 +124,7 @@ class _ReportPeriodFilterBarState extends State<ReportPeriodFilterBar> {
   String _period = 'This Month';
   String _firm = 'ALL FIRMS';
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2025, 9, 1),
+    start: DateTime(2025, 9),
     end: DateTime(2025, 9, 30),
   );
 

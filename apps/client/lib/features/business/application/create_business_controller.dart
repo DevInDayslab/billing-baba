@@ -118,7 +118,7 @@ class CreateBusinessForm extends _$CreateBusinessForm {
         showGenericErrorDialog: true,
       );
       return null;
-    } catch (_) {
+    } on Object catch (_) {
       state = state.copyWith(
         isSubmitting: false,
         showGenericErrorDialog: true,

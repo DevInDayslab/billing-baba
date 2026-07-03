@@ -21,7 +21,7 @@ class _BankStatementReportContentState
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   String _selectedBank = 'Select bank account';
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 31),
   );
 
@@ -220,8 +220,8 @@ class _BankStatementReportContentState
                         ),
                       ),
                     ),
-                    ReportTableHeaderRow(
-                      children: const [
+                    const ReportTableHeaderRow(
+                      children: [
                         ReportTableHeaderCell(label: 'DATE', width: 110),
                         Expanded(
                           child: ReportTableHeaderCell(label: 'DESCRIPTION'),

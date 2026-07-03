@@ -105,7 +105,6 @@ List<PurchaseReturnModel> _mockPurchaseReturns() {
       receivedPaid: 0,
       balance: 50,
       dueDate: DateTime(2026, 7, 2),
-      paymentType: 'Cash',
     ),
   ];
 }

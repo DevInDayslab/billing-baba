@@ -62,7 +62,7 @@ class ProductDetailPanel extends ConsumerWidget {
                   hint: 'Search',
                   onChanged: (query) => ref
                       .read(productTransactionSearchQueryProvider.notifier)
-                      .update(query),
+                      .query = query,
                 ),
               ),
             ],

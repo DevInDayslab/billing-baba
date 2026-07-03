@@ -33,7 +33,7 @@ class AddExpensePage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            PurchasePageTitleBar(currentRoute: AppRoutes.purchaseExpenses),
+            const PurchasePageTitleBar(currentRoute: AppRoutes.purchaseExpenses),
             const SizedBox(height: AppSpacing.md),
             DecoratedBox(
               decoration: BoxDecoration(
@@ -156,7 +156,6 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                   child: BillingNamePartySearchField(
                     value: form.party,
                     hasError: form.partyHasError,
-                    emptyPlaceholder: 'Select party',
                     errorMessage: 'Party is required',
                     onSelected: notifier.updateParty,
                   ),

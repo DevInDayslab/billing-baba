@@ -37,11 +37,11 @@ class _PartyStatementReportContentState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ReportCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
+            const ReportCard(
+              padding: EdgeInsets.all(AppSpacing.md),
               child: ReportPeriodFilterBar(
                 showFirmFilter: false,
-                trailing: const Row(
+                trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ReportTextActionButton(
@@ -57,9 +57,9 @@ class _PartyStatementReportContentState
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            ReportCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: const ReportSearchField(hintText: 'Select Party'),
+            const ReportCard(
+              padding: EdgeInsets.all(AppSpacing.md),
+              child: ReportSearchField(hintText: 'Select Party'),
             ),
             const SizedBox(height: AppSpacing.md),
             ReportCard(
@@ -74,8 +74,8 @@ class _PartyStatementReportContentState
                     ),
                   ),
                   const Divider(height: 1, color: reportCardBorder),
-                  ReportTableHeaderRow(
-                    children: const [
+                  const ReportTableHeaderRow(
+                    children: [
                       ReportTableHeaderCell(label: 'DATE', width: 100),
                       ReportTableHeaderCell(label: 'TYPE', width: 100),
                       ReportTableHeaderCell(label: 'REF NO.', width: 110),

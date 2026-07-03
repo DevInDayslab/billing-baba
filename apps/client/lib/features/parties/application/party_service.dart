@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
@@ -64,10 +66,12 @@ class PartyService {
       final cached = await _loadFromCache(businessId);
       if (cached.isNotEmpty) {
         _isShowingCachedData = true;
-        _refreshInBackground(
-          businessId,
-          searchQuery: searchQuery,
-          filter: filter,
+        unawaited(
+          _refreshInBackground(
+            businessId,
+            searchQuery: searchQuery,
+            filter: filter,
+          ),
         );
         return _applyClientFilters(cached, searchQuery, filter);
       }
@@ -99,7 +103,7 @@ class PartyService {
         .where((party) => party.id == partyId)
         .firstOrNull;
     if (cached != null) {
-      _fetchPartyInBackground(businessId, partyId);
+      unawaited(_fetchPartyInBackground(businessId, partyId));
       return cached;
     }
 
@@ -328,9 +332,8 @@ class PartyService {
         PartyListFilter.active => party.isActive,
         PartyListFilter.inactive => !party.isActive,
       };
-    }).toList();
-
-    filtered.sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
+    }).toList()
+      ..sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
     return filtered;
   }
 
@@ -500,9 +503,10 @@ extension on PartyListQuery {
 class PartyList extends _$PartyList {
   @override
   Future<List<PartyModel>> build() async {
-    ref.watch(partySearchQueryProvider);
-    ref.watch(partyListFilterProvider);
-    ref.watch(partyBackendSearchProvider);
+    ref
+      ..watch(partySearchQueryProvider)
+      ..watch(partyListFilterProvider)
+      ..watch(partyBackendSearchProvider);
 
     final service = await ref.watch(partyServiceProvider.future);
     return service.fetchParties(
@@ -531,7 +535,7 @@ class PartyList extends _$PartyList {
     try {
       final created = await service.createParty(result);
       _upsertInState(created);
-      ref.read(selectedPartyIdProvider.notifier).select(created.id);
+      ref.read(selectedPartyIdProvider.notifier).selected = created.id;
       await service.rememberSelectedParty(created.id);
       ref.invalidate(partyDetailProvider(created.id));
       return created;
@@ -569,7 +573,7 @@ class PartyList extends _$PartyList {
       _removeFromState(partyId);
       final selectedId = ref.read(selectedPartyIdProvider);
       if (selectedId == partyId) {
-        ref.read(selectedPartyIdProvider.notifier).select(null);
+        ref.read(selectedPartyIdProvider.notifier).selected = null;
         await service.rememberSelectedParty(null);
       }
     } on PartyOfflineException {
@@ -647,7 +651,8 @@ class PartyBackendSearch extends _$PartyBackendSearch {
   @override
   String build() => '';
 
-  void set(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 @riverpod

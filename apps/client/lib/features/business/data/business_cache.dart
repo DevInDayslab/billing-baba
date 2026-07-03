@@ -41,7 +41,7 @@ class BusinessCache {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
       return decoded.cast<Map<String, dynamic>>();
-    } catch (_) {
+    } on Object catch (_) {
       return [];
     }
   }
@@ -60,7 +60,7 @@ class BusinessCache {
       return AccountProfile.fromJson(
         jsonDecode(raw) as Map<String, dynamic>,
       );
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }
@@ -88,7 +88,7 @@ class BusinessCache {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
       return decoded.cast<Map<String, dynamic>>();
-    } catch (_) {
+    } on Object catch (_) {
       return [];
     }
   }
@@ -111,7 +111,7 @@ class BusinessCache {
       return BusinessProfileModel.fromJson(
         jsonDecode(raw) as Map<String, dynamic>,
       );
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }

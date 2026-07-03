@@ -25,15 +25,15 @@ class SalePurchaseByPartyReportContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.md,
             ),
             child: ReportPeriodFilterBar(
-              trailing: const Row(
+              trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ReportTextActionButton(
@@ -83,8 +83,8 @@ class SalePurchaseByPartyReportContent extends StatelessWidget {
                       ),
                     ),
                     const Divider(height: 1, color: reportCardBorder),
-                    ReportTableHeaderRow(
-                      children: const [
+                    const ReportTableHeaderRow(
+                      children: [
                         ReportTableHeaderCell(label: '#', width: 40),
                         Expanded(
                           child: ReportTableHeaderCell(label: 'PARTY NAME'),

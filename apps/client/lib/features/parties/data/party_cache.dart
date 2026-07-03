@@ -174,7 +174,7 @@ class PartyCache {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
       return decoded.cast<Map<String, dynamic>>();
-    } catch (_) {
+    } on Object catch (_) {
       return [];
     }
   }
@@ -202,7 +202,7 @@ class PartyCache {
           ),
         ),
       );
-    } catch (_) {
+    } on Object catch (_) {
       return {};
     }
   }
@@ -266,7 +266,7 @@ class PartyCache {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
       return decoded.cast<Map<String, dynamic>>();
-    } catch (_) {
+    } on Object catch (_) {
       return [];
     }
   }

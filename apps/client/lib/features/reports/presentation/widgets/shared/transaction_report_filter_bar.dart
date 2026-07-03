@@ -27,7 +27,7 @@ class _TransactionReportFilterBarState
   late String _timeRange;
   late String _firm;
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2025, 9, 1),
+    start: DateTime(2025, 9),
     end: DateTime(2025, 9, 30),
   );
 

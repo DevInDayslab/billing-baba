@@ -24,9 +24,9 @@ class UnitsTabContent extends ConsumerWidget {
         units: units,
         selectedId: selectedId,
         onSearchChanged: (query) =>
-            ref.read(unitSearchQueryProvider.notifier).update(query),
+            ref.read(unitSearchQueryProvider.notifier).query = query,
         onUnitSelected: (id) =>
-            ref.read(selectedUnitIdProvider.notifier).select(id),
+            ref.read(selectedUnitIdProvider.notifier).selected = id,
         onAddUnit: () => showAddUnitDialog(context),
       ),
       detailPanel: selectedId == null
@@ -207,7 +207,7 @@ class _UnitDetailPanel extends ConsumerWidget {
                   hint: 'Search',
                   onChanged: (query) => ref
                       .read(unitConversionSearchQueryProvider.notifier)
-                      .update(query),
+                      .query = query,
                 ),
               ),
             ],

@@ -26,9 +26,9 @@ class CategoriesTabContent extends ConsumerWidget {
         categories: categories,
         selectedId: selectedId,
         onSearchChanged: (query) =>
-            ref.read(categorySearchQueryProvider.notifier).update(query),
+            ref.read(categorySearchQueryProvider.notifier).query = query,
         onCategorySelected: (id) =>
-            ref.read(selectedCategoryIdProvider.notifier).select(id),
+            ref.read(selectedCategoryIdProvider.notifier).selected = id,
         onAddCategory: () => showAddCategoryDialog(context),
       ),
       detailPanel:
@@ -193,7 +193,7 @@ class _CategoryDetailPanel extends ConsumerWidget {
                       hint: 'Search',
                       onChanged: (query) => ref
                           .read(categoryItemSearchQueryProvider.notifier)
-                          .update(query),
+                          .query = query,
                     ),
                   ],
                 ),

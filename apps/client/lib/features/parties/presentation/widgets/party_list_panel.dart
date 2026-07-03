@@ -31,16 +31,18 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
   }
 
   void _onSearchChanged(String query) {
-    ref.read(partySearchQueryProvider.notifier).update(query);
+    ref.read(partySearchQueryProvider.notifier).query = query;
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
-      ref.read(partyBackendSearchProvider.notifier).set(query.trim());
-      ref.read(partyListProvider.notifier).refresh(searchQuery: query.trim());
+      ref.read(partyBackendSearchProvider.notifier).query = query.trim();
+      unawaited(
+        ref.read(partyListProvider.notifier).refresh(searchQuery: query.trim()),
+      );
     });
   }
 
   Future<void> _onFilterSelected(PartyListFilter filter) async {
-    ref.read(partyListFilterProvider.notifier).select(filter);
+    ref.read(partyListFilterProvider.notifier).filter = filter;
     final service = await ref.read(partyServiceProvider.future);
     await service.rememberListFilter(filter);
     await ref.read(partyListProvider.notifier).refresh(filter: filter);
@@ -188,7 +190,7 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
           party: party,
           isSelected: party.id == selectedId,
           onTap: () async {
-            ref.read(selectedPartyIdProvider.notifier).select(party.id);
+            ref.read(selectedPartyIdProvider.notifier).selected = party.id;
             final service = await ref.read(partyServiceProvider.future);
             await service.rememberSelectedParty(party.id);
           },
