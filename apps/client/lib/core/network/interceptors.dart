@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 /// Ensures POST/PUT/PATCH requests with JSON content-type always include a body.
 /// Fastify rejects `Content-Type: application/json` with no body (FST_ERR_CTP_EMPTY_JSON_BODY).
@@ -40,9 +39,4 @@ List<Interceptor> buildInterceptors() {
       onError: (error, handler) => handler.next(error),
     ),
   ];
-}
-
-/// Pretty logger for debug builds only.
-Interceptor buildLoggerInterceptor() {
-  return PrettyDioLogger(requestHeader: true, requestBody: true);
 }

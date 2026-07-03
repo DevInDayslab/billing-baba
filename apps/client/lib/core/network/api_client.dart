@@ -4,7 +4,6 @@ import 'package:billing_baba/core/network/auth_interceptor.dart';
 import 'package:billing_baba/core/network/interceptors.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 /// Configured Dio HTTP client for the Fastify API.
 class ApiClient {
@@ -27,7 +26,6 @@ class ApiClient {
             onRefreshToken: onRefreshToken,
           ),
         ...buildInterceptors(),
-        if (kDebugMode) buildLoggerInterceptor(),
       ]);
   }
 

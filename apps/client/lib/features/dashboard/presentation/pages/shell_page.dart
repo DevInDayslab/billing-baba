@@ -273,7 +273,10 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       );
     }
 
-    final isActive = item.route != null && currentLocation == item.route;
+    final isActive = item.route != null &&
+        (currentLocation == item.route ||
+            (item.route == AppRoutes.reports &&
+                currentLocation.startsWith(AppRoutes.reports)));
 
     return _SidebarNavTile(
       item: item,

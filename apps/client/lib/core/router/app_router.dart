@@ -11,6 +11,7 @@ import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.da
 import 'package:billing_baba/features/inventory/presentation/pages/items_page.dart';
 import 'package:billing_baba/features/parties/presentation/pages/party_details_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/pages/plans_pricing_page.dart';
+import 'package:billing_baba/features/reports/presentation/pages/reports_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/add_credit_note_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/add_sale_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/delivery_challan_page.dart';
@@ -194,37 +195,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.reports,
-            redirect: (context, state) => AppRoutes.reportsDashboard,
+            builder: (context, state) => const ReportsPage(),
           ),
           GoRoute(
             path: AppRoutes.reportsDashboard,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Reports Dashboard'),
+            redirect: (context, state) => AppRoutes.reports,
           ),
           GoRoute(
             path: AppRoutes.reportsSales,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Sales Reports'),
+            redirect: (context, state) => AppRoutes.reports,
           ),
           GoRoute(
             path: AppRoutes.reportsPurchase,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Purchase Reports'),
+            redirect: (context, state) => AppRoutes.reports,
           ),
           GoRoute(
             path: AppRoutes.reportsStock,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Stock Reports'),
+            redirect: (context, state) => AppRoutes.reports,
           ),
           GoRoute(
             path: AppRoutes.reportsParty,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Party Reports'),
+            redirect: (context, state) => AppRoutes.reports,
           ),
           GoRoute(
             path: AppRoutes.reportsGst,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'GST Reports'),
+            redirect: (context, state) => AppRoutes.reports,
           ),
           GoRoute(
             path: AppRoutes.settings,

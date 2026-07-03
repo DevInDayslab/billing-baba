@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sendotp_flutter_sdk/sendotp_flutter_sdk.dart';
@@ -27,6 +28,12 @@ class OtpService {
   }
 
   bool get isConfigured => _initialized;
+
+  /// Local mock OTP when MSG91 credentials are not set in .env.
+  bool get isMockMode => !_initialized;
+
+  static const mockReqId = 'mock-otp-req';
+  static const mockAccessToken = 'mock-otp-verified';
 
   bool get isSdkSupported =>
       kIsWeb ||
@@ -60,6 +67,10 @@ class OtpService {
   Future<String> sendOtp(String mobileNumber) async {
     _ensureReady();
 
+    if (isMockMode) {
+      return mockReqId;
+    }
+
     final identifier = formatIdentifier(mobileNumber);
 
     try {
@@ -90,6 +101,11 @@ class OtpService {
   Future<String> retryOtp(String reqId) async {
     _ensureReady();
 
+    if (isMockMode) {
+      final trimmed = reqId.trim();
+      return trimmed.isEmpty ? mockReqId : trimmed;
+    }
+
     final trimmed = reqId.trim();
     if (trimmed.isEmpty) {
       throw const OtpException(
@@ -114,6 +130,13 @@ class OtpService {
     required String otp,
   }) async {
     _ensureReady();
+
+    if (isMockMode) {
+      if (otp.trim() != AppConfig.devOtp) {
+        throw const OtpException('Invalid OTP. Please check and try again.');
+      }
+      return mockAccessToken;
+    }
 
     final trimmedReqId = reqId.trim();
     if (trimmedReqId.isEmpty) {
@@ -233,11 +256,6 @@ class OtpService {
     if (!isSdkSupported) {
       throw const OtpException(
         'OTP login is not supported on this platform.',
-      );
-    }
-    if (!_initialized) {
-      throw const OtpException(
-        'OTP service is not configured. Check MSG91 settings in .env.',
       );
     }
   }
