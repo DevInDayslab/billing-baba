@@ -51,4 +51,33 @@ abstract final class ApiEndpoints {
   static const inventoryPriceHistory = '$inventory/price-history';
   static String inventoryPriceHistoryRecord(String id) =>
       '$inventoryPriceHistory/$id';
+
+  static const sales = '/api/v1/sales';
+  static const salesDocuments = '$sales/sales-documents';
+  static String salesDocument(String id) => '$salesDocuments/$id';
+  static String salesDocumentLines(String id) => '${salesDocument(id)}/lines';
+  static String salesDocumentLine(String id, String lineId) =>
+      '${salesDocumentLines(id)}/$lineId';
+  static String salesDocumentFinalize(String id) =>
+      '${salesDocument(id)}/finalize';
+  static String salesDocumentCancel(String id) => '${salesDocument(id)}/cancel';
+  static String salesDocumentConvert(String id) => '${salesDocument(id)}/convert';
+  static String salesDocumentBrandSwap(String id) =>
+      '${salesDocument(id)}/brand-swap';
+
+  static const posSessions = '$sales/pos-sessions';
+  static String posSession(String id) => '$posSessions/$id';
+  static String posSessionDocuments(String id) =>
+      '${posSession(id)}/sales-documents';
+
+  static const accounting = '/api/v1/accounting';
+  static const payments = '$accounting/payments';
+  static String payment(String id) => '$payments/$id';
+  static String paymentAllocations(String id) => '${payment(id)}/allocations';
+  static String paymentAllocation(String id, String allocationId) =>
+      '${paymentAllocations(id)}/$allocationId';
+
+  static const jobWork = '/api/v1/job-work';
+  static const jobWorkOrders = '$jobWork/job-work-orders';
+  static String jobWorkOrder(String id) => '$jobWorkOrders/$id';
 }

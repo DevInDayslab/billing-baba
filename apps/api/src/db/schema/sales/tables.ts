@@ -64,25 +64,29 @@ export const salesDocuments = pgTable(
   ],
 );
 
-export const salesDocumentLines = pgTable('sales_document_lines', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  salesDocumentId: uuid('sales_document_id')
-    .notNull()
-    .references(() => salesDocuments.id),
-  itemId: uuid('item_id')
-    .notNull()
-    .references(() => items.id),
-  quantity: money('quantity').notNull(),
-  unit: text('unit').notNull(),
-  unitPrice: money('unit_price').notNull(),
-  marketPrice: money('market_price'),
-  discountAmount: money('discount_amount').notNull().default('0'),
-  taxType: taxTypeEnum('tax_type').notNull().default('none'),
-  taxRate: money('tax_rate').notNull().default('0'),
-  cgstAmount: money('cgst_amount').notNull().default('0'),
-  sgstAmount: money('sgst_amount').notNull().default('0'),
-  igstAmount: money('igst_amount').notNull().default('0'),
-  lineTotal: money('line_total').notNull(),
-  sortOrder: integer('sort_order').notNull().default(0),
-});
+export const salesDocumentLines = pgTable(
+  'sales_document_lines',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    salesDocumentId: uuid('sales_document_id')
+      .notNull()
+      .references(() => salesDocuments.id),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => items.id),
+    quantity: money('quantity').notNull(),
+    unit: text('unit').notNull(),
+    unitPrice: money('unit_price').notNull(),
+    marketPrice: money('market_price'),
+    discountAmount: money('discount_amount').notNull().default('0'),
+    taxType: taxTypeEnum('tax_type').notNull().default('none'),
+    taxRate: money('tax_rate').notNull().default('0'),
+    cgstAmount: money('cgst_amount').notNull().default('0'),
+    sgstAmount: money('sgst_amount').notNull().default('0'),
+    igstAmount: money('igst_amount').notNull().default('0'),
+    lineTotal: money('line_total').notNull(),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (table) => [sql`CHECK (${table.quantity} > 0)`],
+);

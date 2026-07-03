@@ -1,3 +1,5 @@
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
@@ -18,15 +20,11 @@ String _nextLineItemId() {
 class AddSaleForm extends _$AddSaleForm {
   @override
   AddSaleFormState build({String? invoiceId}) {
-    final invoices = ref.watch(saleInvoicesProvider);
     final now = DateTime.now();
-    final invoiceNumber = generateNextInvoiceNumber(
-      invoices.map((invoice) => invoice.invoiceNo).toList(),
-    );
 
     // TODO(dev): load existing invoice when invoiceId is provided (edit mode).
     return AddSaleFormState(
-      invoiceNumber: invoiceNumber,
+      invoiceNumber: 'Auto',
       invoiceDate: DateTime(now.year, now.month, now.day),
       invoiceTime: TimeOfDay.fromDateTime(now),
       items: [SaleLineItem.empty(id: _nextLineItemId())],
@@ -35,6 +33,14 @@ class AddSaleForm extends _$AddSaleForm {
 
   void updateBillingName(String value) {
     state = state.copyWith(billingName: value, isDirty: true);
+  }
+
+  void updateParty({required String partyId, required String partyName}) {
+    state = state.copyWith(
+      partyId: partyId,
+      billingName: partyName,
+      isDirty: true,
+    );
   }
 
   void updatePhone(String value) {
@@ -66,13 +72,9 @@ class AddSaleForm extends _$AddSaleForm {
 
   void toggleInvoiceNumberMode(InvoiceNumberMode mode) {
     if (mode == InvoiceNumberMode.auto) {
-      final invoices = ref.read(saleInvoicesProvider);
-      final autoNumber = generateNextInvoiceNumber(
-        invoices.map((invoice) => invoice.invoiceNo).toList(),
-      );
       state = state.copyWith(
         invoiceNumberMode: mode,
-        invoiceNumber: autoNumber,
+        invoiceNumber: 'Auto',
         isDirty: true,
       );
     } else {
@@ -249,8 +251,7 @@ class AddSaleForm extends _$AddSaleForm {
   SaleInvoiceModel? buildInvoiceModel() {
     if (!validate()) return null;
 
-    final invoices = ref.read(saleInvoicesProvider);
-    final nextId = invoices.length + 1;
+    final nextId = DateTime.now().millisecondsSinceEpoch;
     final grandTotal = state.grandTotal;
     final received = state.receivedEnabled
         ? state.receivedAmount
@@ -291,11 +292,28 @@ class AddSaleForm extends _$AddSaleForm {
     );
   }
 
-  void saveInvoice() {
-    final invoice = buildInvoiceModel();
-    if (invoice == null) return;
-    ref.read(saleInvoicesProvider.notifier).addInvoice(invoice);
-    ref.invalidateSelf();
+  Future<bool> saveInvoice() async {
+    if (!validate()) return false;
+
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final items = ref.read(inventoryItemsProvider).value ?? [];
+      final itemNameToId = {
+        for (final item in items) item.name.trim(): item.id,
+      };
+
+      await service.createAndFinalizeSale(
+        state,
+        partyId: state.partyId,
+        itemNameToId: itemNameToId,
+      );
+
+      ref.invalidate(saleInvoicesProvider);
+      ref.invalidateSelf();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }
 

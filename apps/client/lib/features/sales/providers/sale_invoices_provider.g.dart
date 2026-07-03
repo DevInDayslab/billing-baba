@@ -13,14 +13,14 @@ part of 'sale_invoices_provider.dart';
 final saleInvoicesProvider = SaleInvoicesProvider._();
 
 final class SaleInvoicesProvider
-    extends $NotifierProvider<SaleInvoices, List<SaleInvoiceModel>> {
+    extends $AsyncNotifierProvider<SaleInvoices, List<SaleInvoiceModel>> {
   SaleInvoicesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'saleInvoicesProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -31,30 +31,26 @@ final class SaleInvoicesProvider
   @$internal
   @override
   SaleInvoices create() => SaleInvoices();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<SaleInvoiceModel> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<SaleInvoiceModel>>(value),
-    );
-  }
 }
 
-String _$saleInvoicesHash() => r'5e4aa087b29b98ace8a12c5147b41a9bd8eef07c';
+String _$saleInvoicesHash() => r'46fda5f456ddfe2f5ff99ba7cc2e9c37100925a7';
 
-abstract class _$SaleInvoices extends $Notifier<List<SaleInvoiceModel>> {
-  List<SaleInvoiceModel> build();
+abstract class _$SaleInvoices extends $AsyncNotifier<List<SaleInvoiceModel>> {
+  FutureOr<List<SaleInvoiceModel>> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
-        this.ref as $Ref<List<SaleInvoiceModel>, List<SaleInvoiceModel>>;
+        this.ref
+            as $Ref<AsyncValue<List<SaleInvoiceModel>>, List<SaleInvoiceModel>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<List<SaleInvoiceModel>, List<SaleInvoiceModel>>,
-              List<SaleInvoiceModel>,
+              AnyNotifier<
+                AsyncValue<List<SaleInvoiceModel>>,
+                List<SaleInvoiceModel>
+              >,
+              AsyncValue<List<SaleInvoiceModel>>,
               Object?,
               Object?
             >;
@@ -162,7 +158,7 @@ final class FilteredSaleInvoicesProvider
 }
 
 String _$filteredSaleInvoicesHash() =>
-    r'ea2dddae71f8315b106ad71ba83d604c0df522d8';
+    r'd935ddae9a116dc0a887065d84be4943bb0b6c7b';
 
 @ProviderFor(paginatedSaleInvoices)
 final paginatedSaleInvoicesProvider = PaginatedSaleInvoicesProvider._();

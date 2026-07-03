@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -102,135 +103,6 @@ class PaginatedSaleInvoices {
   final int totalItems;
 }
 
-List<SaleInvoiceModel> _mockSaleInvoices() {
-  const parties = [
-    'Sharma Traders',
-    'Patel Electronics',
-    'Gupta General Store',
-    'Mehta Hardware',
-    'Singh & Sons',
-    'Kumar Agencies',
-    'Reddy Mart',
-    'Joshi Distributors',
-    'Verma Enterprises',
-    'Agarwal Textiles',
-    'Bansal Pharma',
-    'Chopra Foods',
-    'Desai Motors',
-    'Fernandes Exports',
-    'Iyer Stationery',
-  ];
-
-  const paymentTypes = ['Cash', 'Credit', 'UPI', 'Cheque'];
-
-  SaleInvoiceModel buildInvoice({
-    required int id,
-    required DateTime date,
-    required SaleInvoiceStatus status,
-    int partyIndex = 0,
-  }) {
-    final amount = 3000 + (id * 750) % 25000;
-    return SaleInvoiceModel(
-      id: '$id',
-      invoiceNo: 'SI-${1000 + id}',
-      date: date,
-      partyName: parties[partyIndex % parties.length],
-      transactionType: 'Sale',
-      paymentType: paymentTypes[id % paymentTypes.length],
-      status: status,
-      amount: amount.toDouble(),
-      balance: switch (status) {
-        SaleInvoiceStatus.paid => 0.0,
-        SaleInvoiceStatus.cancelled => 0.0,
-        SaleInvoiceStatus.unpaid => amount.toDouble(),
-        SaleInvoiceStatus.overdue => amount.toDouble(),
-        SaleInvoiceStatus.partiallyPaid => (amount * 0.4).roundToDouble(),
-      },
-      user: id % 3 == 0 ? 'Admin' : 'Staff',
-      godown: id % 4 == 0 ? 'Main Location' : 'Warehouse B',
-    );
-  }
-
-  final baseInvoices = List.generate(35, (index) {
-    final id = index + 1;
-    final monthCycle = [3, 4, 5, 6, 7];
-    final month = monthCycle[index % monthCycle.length];
-    final day = (index % 28) + 1;
-    const statuses = SaleInvoiceStatus.values;
-
-    return buildInvoice(
-      id: id,
-      date: DateTime(2026, month, day),
-      status: statuses[index % statuses.length],
-      partyIndex: index,
-    );
-  });
-
-  final mayJuneInvoices = <SaleInvoiceModel>[
-    buildInvoice(
-      id: 36,
-      date: DateTime(2026, 5, 3),
-      status: SaleInvoiceStatus.paid,
-    ),
-    buildInvoice(
-      id: 37,
-      date: DateTime(2026, 5, 8),
-      status: SaleInvoiceStatus.unpaid,
-      partyIndex: 1,
-    ),
-    buildInvoice(
-      id: 38,
-      date: DateTime(2026, 5, 14),
-      status: SaleInvoiceStatus.overdue,
-      partyIndex: 2,
-    ),
-    buildInvoice(
-      id: 39,
-      date: DateTime(2026, 5, 19),
-      status: SaleInvoiceStatus.partiallyPaid,
-      partyIndex: 3,
-    ),
-    buildInvoice(
-      id: 40,
-      date: DateTime(2026, 5, 24),
-      status: SaleInvoiceStatus.cancelled,
-      partyIndex: 4,
-    ),
-    buildInvoice(
-      id: 41,
-      date: DateTime(2026, 5, 29),
-      status: SaleInvoiceStatus.paid,
-      partyIndex: 5,
-    ),
-    buildInvoice(
-      id: 42,
-      date: DateTime(2026, 6, 2),
-      status: SaleInvoiceStatus.unpaid,
-      partyIndex: 6,
-    ),
-    buildInvoice(
-      id: 43,
-      date: DateTime(2026, 6, 11),
-      status: SaleInvoiceStatus.partiallyPaid,
-      partyIndex: 7,
-    ),
-    buildInvoice(
-      id: 44,
-      date: DateTime(2026, 6, 18),
-      status: SaleInvoiceStatus.overdue,
-      partyIndex: 8,
-    ),
-    buildInvoice(
-      id: 45,
-      date: DateTime(2026, 6, 27),
-      status: SaleInvoiceStatus.paid,
-      partyIndex: 9,
-    ),
-  ];
-
-  return [...baseInvoices, ...mayJuneInvoices];
-}
-
 SaleInvoiceStatus? _statusFromFilterLabel(String label) => switch (label) {
   'Paid' => SaleInvoiceStatus.paid,
   'Unpaid' => SaleInvoiceStatus.unpaid,
@@ -280,13 +152,20 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class SaleInvoices extends _$SaleInvoices {
   @override
-  List<SaleInvoiceModel> build() => _mockSaleInvoices();
+  Future<List<SaleInvoiceModel>> build() async {
+    final service = await ref.watch(salesServiceProvider.future);
+    return service.fetchInvoices();
+  }
 
-  void addInvoice(SaleInvoiceModel invoice) {
-    state = [invoice, ...state];
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final service = await ref.read(salesServiceProvider.future);
+      return service.fetchInvoices();
+    });
   }
 }
 
@@ -334,7 +213,8 @@ class SaleInvoiceFilters extends _$SaleInvoiceFilters {
 
 @riverpod
 List<SaleInvoiceModel> filteredSaleInvoices(Ref ref) {
-  final invoices = ref.watch(saleInvoicesProvider);
+  final invoicesAsync = ref.watch(saleInvoicesProvider);
+  final invoices = invoicesAsync.value ?? const <SaleInvoiceModel>[];
   final filters = ref.watch(saleInvoiceFiltersProvider);
 
   final dateRange = _resolveTimeRange(

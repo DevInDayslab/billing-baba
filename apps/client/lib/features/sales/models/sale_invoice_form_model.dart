@@ -8,6 +8,7 @@ enum InvoiceNumberMode { auto, manual }
 class SaleLineItem {
   const SaleLineItem({
     required this.id,
+    this.itemId,
     this.itemName = '',
     this.qty = 0,
     this.unit = 'NONE',
@@ -19,6 +20,7 @@ class SaleLineItem {
   factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
 
   final String id;
+  final String? itemId;
   final String itemName;
   final double qty;
   final String unit;
@@ -34,6 +36,7 @@ class SaleLineItem {
 
   SaleLineItem copyWith({
     String? id,
+    String? itemId,
     String? itemName,
     double? qty,
     String? unit,
@@ -43,6 +46,7 @@ class SaleLineItem {
   }) {
     return SaleLineItem(
       id: id ?? this.id,
+      itemId: itemId ?? this.itemId,
       itemName: itemName ?? this.itemName,
       qty: qty ?? this.qty,
       unit: unit ?? this.unit,
@@ -72,6 +76,7 @@ class SalePaymentEntry {
 
 class AddSaleFormState {
   const AddSaleFormState({
+    this.partyId,
     this.billingName = '',
     this.phone = '',
     this.billingAddress = '',
@@ -99,6 +104,7 @@ class AddSaleFormState {
     this.isDirty = false,
   });
 
+  final String? partyId;
   final String billingName;
   final String phone;
   final String billingAddress;
@@ -178,6 +184,7 @@ class AddSaleFormState {
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
   AddSaleFormState copyWith({
+    String? partyId,
     String? billingName,
     String? phone,
     String? billingAddress,
@@ -205,6 +212,7 @@ class AddSaleFormState {
     bool? isDirty,
   }) {
     return AddSaleFormState(
+      partyId: partyId ?? this.partyId,
       billingName: billingName ?? this.billingName,
       phone: phone ?? this.phone,
       billingAddress: billingAddress ?? this.billingAddress,

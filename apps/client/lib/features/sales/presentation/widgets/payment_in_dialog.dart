@@ -72,20 +72,27 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
     }
   }
 
-  void _handleSave() {
+  Future<void> _handleSave() async {
     final notifier = ref.read(paymentInFormProvider.notifier);
     final payment = notifier.buildPaymentModel();
     if (payment == null) return;
 
-    notifier.savePayment();
-    if (mounted) {
+    final saved = await notifier.savePayment();
+    if (!mounted) return;
+
+    if (!saved) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Payment ${payment.receiptNo} saved successfully'),
-        ),
+        const SnackBar(content: Text('Failed to save payment')),
       );
-      Navigator.of(context).pop();
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Payment ${payment.receiptNo} saved successfully'),
+      ),
+    );
+    Navigator.of(context).pop();
   }
 
   @override

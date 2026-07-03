@@ -538,19 +538,25 @@ class _BottomActionBar extends ConsumerWidget {
     if (context.mounted) context.pop();
   }
 
-  void _handleSave(
+  Future<void> _handleSave(
     BuildContext context,
     WidgetRef ref,
     AddSaleForm notifier,
-  ) {
-    final invoice = notifier.buildInvoiceModel();
-    if (invoice == null) return;
+  ) async {
+    if (!notifier.validate()) return;
 
-    notifier.saveInvoice();
+    final saved = await notifier.saveInvoice();
+    if (!context.mounted) return;
+
+    if (!saved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to save invoice')),
+      );
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Invoice ${invoice.invoiceNo} saved successfully'),
-      ),
+      const SnackBar(content: Text('Invoice saved successfully')),
     );
     context.go(AppRoutes.saleInvoices);
   }

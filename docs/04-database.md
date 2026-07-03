@@ -181,7 +181,7 @@ Applied to every **synced business table**. Server-only tables (`refresh_tokens`
 | `pricing_tier` | `tier_1`, `tier_2`, `tier_3` | `parties`, `item_tier_prices` |
 | `item_type` | `product`, `service` | `items` |
 | `document_status` | `draft`, `finalized`, `cancelled`, `converted` | documents |
-| `sales_document_type` | `estimate`, `delivery_challan`, `tax_invoice`, `bill_of_supply`, `normal_invoice`, `pos`, `sales_return` | `sales_documents` |
+| `sales_document_type` | `estimate`, `sale_order`, `delivery_challan`, `tax_invoice`, `bill_of_supply`, `normal_invoice`, `pos`, `sales_return` | `sales_documents` |
 | `purchase_document_type` | `purchase_order`, `purchase_bill`, `purchase_return` | `purchase_documents` |
 | `tax_type` | `cgst_sgst`, `igst`, `exempt`, `none` | line items |
 | `payment_mode` | `cash`, `upi`, `card`, `cheque`, `bank_transfer`, `other` | `payments`, `expenses` |
@@ -400,6 +400,7 @@ Single polymorphic tables per outward/inward flow ([ADR-014](09-decisions.md#adr
 | `document_type` | PRD name | Stock on finalize | Ledger on finalize |
 |-----------------|----------|-------------------|---------------------|
 | `estimate` | Quotation / proforma | No | No |
+| `sale_order` | Sale order | No | No |
 | `delivery_challan` | Delivery challan | Yes (`challan`) | No |
 | `tax_invoice` | GST invoice (pakka) | Yes (`sale`) | Yes (receivable) |
 | `bill_of_supply` | Bill of supply | Yes (`sale`) | Yes (receivable) |

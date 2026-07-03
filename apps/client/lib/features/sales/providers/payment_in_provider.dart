@@ -1,3 +1,5 @@
+import 'package:billing_baba/features/sales/application/sales_service.dart';
+import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
@@ -81,96 +83,6 @@ class PaginatedPaymentIn {
   final int totalItems;
 }
 
-List<PaymentInModel> _mockPaymentInRecords() {
-  const parties = [
-    'Abhivank',
-    'Aashray Narang',
-    'PartyAv',
-    'naitik',
-    'Sharma Traders',
-    'Patel Electronics',
-    'Gupta General Store',
-    'Mehta Hardware',
-    'Singh & Sons',
-    'Kumar Agencies',
-    'Reddy Mart',
-    'Joshi Distributors',
-  ];
-
-  const paymentTypes = PaymentInDropdownOptions.paymentTypes;
-
-  PaymentInModel buildRecord({
-    required int id,
-    required DateTime date,
-    required PaymentInStatus status,
-    int partyIndex = 0,
-    double? amount,
-  }) {
-    final total = amount ?? (120 + (id * 137) % 50000).toDouble();
-    final received = total;
-    return PaymentInModel(
-      id: '$id',
-      receiptNo: id <= 3 ? '$id' : 'REC-${1773217264824 + id}',
-      date: date,
-      partyName: parties[partyIndex % parties.length],
-      paymentType: paymentTypes[id % paymentTypes.length],
-      status: status,
-      totalAmount: total,
-      receivedAmount: received,
-      user: id % 3 == 0 ? 'Admin' : 'Staff',
-      godown: id % 4 == 0 ? 'Main Location' : 'Warehouse B',
-    );
-  }
-
-  return [
-    buildRecord(
-      id: 1,
-      date: DateTime(2026, 3, 13, 17, 23),
-      status: PaymentInStatus.used,
-      amount: 120,
-    ),
-    buildRecord(
-      id: 2,
-      date: DateTime(2026, 3, 21, 17, 46),
-      status: PaymentInStatus.used,
-      partyIndex: 1,
-      amount: 128,
-    ),
-    buildRecord(
-      id: 3,
-      date: DateTime(2026, 3, 25, 17, 54),
-      status: PaymentInStatus.used,
-      partyIndex: 2,
-      amount: 20,
-    ),
-    buildRecord(
-      id: 4,
-      date: DateTime(2026, 2, 10, 14, 30),
-      status: PaymentInStatus.unused,
-      partyIndex: 3,
-      amount: 2000000,
-    ),
-    buildRecord(
-      id: 5,
-      date: DateTime(2026, 1, 15, 11),
-      status: PaymentInStatus.unused,
-      partyIndex: 4,
-      amount: 5000,
-    ),
-    ...List.generate(15, (index) {
-      final id = index + 6;
-      final month = (index % 6) + 1;
-      final day = (index % 28) + 1;
-      return buildRecord(
-        id: id,
-        date: DateTime(2026, month, day, 10 + (index % 8), index % 60),
-        status: index.isEven ? PaymentInStatus.used : PaymentInStatus.unused,
-        partyIndex: index + 4,
-      );
-    }),
-  ];
-}
-
 PaymentInStatus? _statusFromFilterLabel(String label) => switch (label) {
   'Used' => PaymentInStatus.used,
   'Unused' => PaymentInStatus.unused,
@@ -221,13 +133,20 @@ String generateReceiptNo() {
   return 'REC-${DateTime.now().millisecondsSinceEpoch}';
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class PaymentInRecords extends _$PaymentInRecords {
   @override
-  List<PaymentInModel> build() => _mockPaymentInRecords();
+  Future<List<PaymentInModel>> build() async {
+    final service = await ref.watch(salesServiceProvider.future);
+    return service.fetchPayments();
+  }
 
-  void addPayment(PaymentInModel payment) {
-    state = [payment, ...state];
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final service = await ref.read(salesServiceProvider.future);
+      return service.fetchPayments();
+    });
   }
 }
 
@@ -275,7 +194,8 @@ class PaymentInFilters extends _$PaymentInFilters {
 
 @riverpod
 List<PaymentInModel> filteredPaymentInRecords(Ref ref) {
-  final records = ref.watch(paymentInRecordsProvider);
+  final recordsAsync = ref.watch(paymentInRecordsProvider);
+  final records = recordsAsync.value ?? const <PaymentInModel>[];
   final filters = ref.watch(paymentInFiltersProvider);
 
   final dateRange = _resolveTimeRange(
@@ -345,6 +265,7 @@ PaymentInSummaryData paymentInSummary(Ref ref) {
 
 class PaymentInFormState {
   const PaymentInFormState({
+    this.partyId,
     this.party = '',
     this.paymentType = 'Cash',
     this.receiptNo = '',
@@ -358,6 +279,7 @@ class PaymentInFormState {
     this.showValidationErrors = false,
   });
 
+  final String? partyId;
   final String party;
   final String paymentType;
   final String receiptNo;
@@ -376,6 +298,7 @@ class PaymentInFormState {
   bool get isValid => party.trim().isNotEmpty && receivedAmount > 0;
 
   PaymentInFormState copyWith({
+    String? partyId,
     String? party,
     String? paymentType,
     String? receiptNo,
@@ -389,6 +312,7 @@ class PaymentInFormState {
     bool? showValidationErrors,
   }) {
     return PaymentInFormState(
+      partyId: partyId ?? this.partyId,
       party: party ?? this.party,
       paymentType: paymentType ?? this.paymentType,
       receiptNo: receiptNo ?? this.receiptNo,
@@ -484,10 +408,27 @@ class PaymentInForm extends _$PaymentInForm {
     );
   }
 
-  void savePayment() {
+  Future<bool> savePayment() async {
     final payment = buildPaymentModel();
-    if (payment == null) return;
-    ref.read(paymentInRecordsProvider.notifier).addPayment(payment);
-    reset();
+    if (payment == null) return false;
+
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      await service.createPayment(
+        CreatePaymentRequest(
+          partyId: state.partyId ?? '',
+          direction: 'received',
+          amount: payment.receivedAmount.toStringAsFixed(4),
+          paymentMode: payment.paymentType.toLowerCase(),
+          referenceNumber: payment.receiptNo,
+          notes: payment.description.trim().isEmpty ? null : payment.description,
+        ),
+      );
+      ref.invalidate(paymentInRecordsProvider);
+      reset();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }
