@@ -21,7 +21,7 @@ class _ExpenseCategoryReportContentState
     extends State<ExpenseCategoryReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 31),
   );
 
@@ -39,8 +39,8 @@ class _ExpenseCategoryReportContentState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
@@ -48,7 +48,7 @@ class _ExpenseCategoryReportContentState
             ),
             child: Row(
               children: [
-                const Text(
+                Text(
                   'Expense Category Report',
                   style: TextStyle(
                     fontSize: 22,
@@ -56,12 +56,12 @@ class _ExpenseCategoryReportContentState
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const Spacer(),
-                const ReportTextActionButton(
+                Spacer(),
+                ReportTextActionButton(
                   label: 'Excel',
                   icon: Icons.table_chart_outlined,
                 ),
-                const ReportTextActionButton(
+                ReportTextActionButton(
                   label: 'Print',
                   icon: Icons.print_outlined,
                 ),
@@ -203,8 +203,8 @@ class _ExpenseCategoryReportContentState
                         ],
                       ),
                     ),
-                    ReportTableHeaderRow(
-                      children: const [
+                    const ReportTableHeaderRow(
+                      children: [
                         Expanded(
                           child: ReportTableHeaderCell(
                             label: 'EXPENSE CATEGORY',

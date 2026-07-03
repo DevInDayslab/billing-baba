@@ -20,7 +20,7 @@ class ExpenseReportContent extends StatefulWidget {
 class _ExpenseReportContentState extends State<ExpenseReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 31),
   );
 
@@ -227,8 +227,8 @@ class _ExpenseReportContentState extends State<ExpenseReportContent> {
                         ],
                       ),
                     ),
-                    ReportTableHeaderRow(
-                      children: const [
+                    const ReportTableHeaderRow(
+                      children: [
                         ReportTableHeaderCell(label: 'DATE', width: 100),
                         ReportTableHeaderCell(label: 'EXP NO', width: 100),
                         Expanded(child: ReportTableHeaderCell(label: 'PARTY')),
