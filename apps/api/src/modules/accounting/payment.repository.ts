@@ -6,6 +6,8 @@ import {
   payments,
 } from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
+import { purchaseDocuments } from '../../db/schema/purchases/tables';
+import { salesDocuments } from '../../db/schema/sales/tables';
 import type {
   AllocationInsertValues,
   PaymentAllocationRecord,
@@ -252,6 +254,104 @@ export class PaymentRepository {
       .returning({ id: paymentAllocations.id });
 
     return Boolean(row);
+  }
+
+  async sumAllocatedToPayment(
+    businessId: string,
+    paymentId: string,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({
+        total: sql<string>`coalesce(sum(${paymentAllocations.allocatedAmount}::numeric), 0)`,
+      })
+      .from(paymentAllocations)
+      .where(
+        and(
+          eq(paymentAllocations.paymentId, paymentId),
+          eq(paymentAllocations.businessId, businessId),
+          eq(paymentAllocations.isDeleted, false),
+        ),
+      );
+
+    return Number(row?.total ?? 0);
+  }
+
+  async sumAllocatedToSalesDocument(
+    businessId: string,
+    salesDocumentId: string,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({
+        total: sql<string>`coalesce(sum(${paymentAllocations.allocatedAmount}::numeric), 0)`,
+      })
+      .from(paymentAllocations)
+      .where(
+        and(
+          eq(paymentAllocations.salesDocumentId, salesDocumentId),
+          eq(paymentAllocations.businessId, businessId),
+          eq(paymentAllocations.isDeleted, false),
+        ),
+      );
+
+    return Number(row?.total ?? 0);
+  }
+
+  async findSalesDocumentForAllocation(
+    businessId: string,
+    salesDocumentId: string,
+  ): Promise<{
+    id: string;
+    partyId: string | null;
+    status: string;
+    totalAmount: string;
+  } | null> {
+    const [row] = await this.db
+      .select({
+        id: salesDocuments.id,
+        partyId: salesDocuments.partyId,
+        status: salesDocuments.status,
+        totalAmount: salesDocuments.totalAmount,
+      })
+      .from(salesDocuments)
+      .where(
+        and(
+          eq(salesDocuments.id, salesDocumentId),
+          eq(salesDocuments.businessId, businessId),
+          eq(salesDocuments.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return row ?? null;
+  }
+
+  async findPurchaseDocumentForAllocation(
+    businessId: string,
+    purchaseDocumentId: string,
+  ): Promise<{
+    id: string;
+    partyId: string | null;
+    status: string;
+    totalAmount: string;
+  } | null> {
+    const [row] = await this.db
+      .select({
+        id: purchaseDocuments.id,
+        partyId: purchaseDocuments.partyId,
+        status: purchaseDocuments.status,
+        totalAmount: purchaseDocuments.totalAmount,
+      })
+      .from(purchaseDocuments)
+      .where(
+        and(
+          eq(purchaseDocuments.id, purchaseDocumentId),
+          eq(purchaseDocuments.businessId, businessId),
+          eq(purchaseDocuments.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return row ?? null;
   }
 
   async findParty(businessId: string, partyId: string) {

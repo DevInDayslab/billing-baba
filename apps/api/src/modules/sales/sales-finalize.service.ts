@@ -135,6 +135,16 @@ export async function finalizeSalesDocument(
     convertedFromType,
   );
 
+  if (params.godownId) {
+    const godownValid = await repository.godownExists(
+      params.businessId,
+      params.godownId,
+    );
+    if (!godownValid) {
+      throw new AppError('NOT_FOUND', 'Godown not found', 404);
+    }
+  }
+
   return db.transaction(async (tx) => {
     let documentNumber: string | null = document.documentNumber;
 

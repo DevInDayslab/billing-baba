@@ -14,6 +14,7 @@ import {
   createPosSessionBodySchema,
   createSalesDocumentBodySchema,
   createSalesLineBodySchema,
+  documentSequenceIdParamSchema,
   finalizeSalesDocumentBodySchema,
   listPosSessionsQuerySchema,
   listSalesDocumentsQuerySchema,
@@ -21,6 +22,7 @@ import {
   salesDocumentIdParamSchema,
   salesLineIdParamSchema,
   updatePosSessionBodySchema,
+  updateDocumentSequenceBodySchema,
   updateSalesDocumentBodySchema,
   updateSalesLineBodySchema,
 } from './sales-document.schema';
@@ -463,6 +465,43 @@ export function createSalesDocumentController() {
           throw new AppError(
             'VALIDATION_ERROR',
             'Invalid query parameters',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    listDocumentSequences: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ) => {
+      const { accountId, businessId } = requireAuthContext(request);
+      const result = await service.listDocumentSequences(businessId, accountId);
+      return sendData(reply, result.data);
+    },
+
+    updateDocumentSequence: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { accountId, businessId } = requireAuthContext(request);
+        const { id } = documentSequenceIdParamSchema.parse(request.params);
+        const body = updateDocumentSequenceBodySchema.parse(request.body);
+        const data = await service.updateDocumentSequence(
+          businessId,
+          accountId,
+          id,
+          body,
+        );
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid request body',
             400,
             formatZodError(error),
           );

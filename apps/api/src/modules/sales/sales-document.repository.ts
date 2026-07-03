@@ -6,12 +6,14 @@ import {
   eq,
   gte,
   ilike,
+  isNull,
   lte,
   sql,
 } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { parties } from '../../db/schema/crm/tables';
-import { items } from '../../db/schema/inventory/tables';
+import { godowns, items } from '../../db/schema/inventory/tables';
+import { documentNumberSequences } from '../../db/schema/settings/tables';
 import {
   posSessions,
   salesDocumentLines,
@@ -545,6 +547,138 @@ export class SalesDocumentRepository {
       .limit(1);
 
     return row?.stateCode ?? null;
+  }
+
+  async godownExists(businessId: string, godownId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: godowns.id })
+      .from(godowns)
+      .where(
+        and(
+          eq(godowns.id, godownId),
+          eq(godowns.businessId, businessId),
+          eq(godowns.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return Boolean(row);
+  }
+
+  async openPosSessionExists(
+    businessId: string,
+    sessionId: string,
+  ): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: posSessions.id })
+      .from(posSessions)
+      .where(
+        and(
+          eq(posSessions.id, sessionId),
+          eq(posSessions.businessId, businessId),
+          eq(posSessions.isDeleted, false),
+          isNull(posSessions.endedAt),
+        ),
+      )
+      .limit(1);
+
+    return Boolean(row);
+  }
+
+  async listDocumentSequences(
+    businessId: string,
+    fiscalYear: string,
+  ): Promise<
+    Array<{
+      id: string;
+      document_series: string;
+      prefix: string | null;
+      next_number: number;
+      fiscal_year: string;
+    }>
+  > {
+    const rows = await this.db
+      .select()
+      .from(documentNumberSequences)
+      .where(
+        and(
+          eq(documentNumberSequences.businessId, businessId),
+          eq(documentNumberSequences.fiscalYear, fiscalYear),
+          eq(documentNumberSequences.isDeleted, false),
+        ),
+      )
+      .orderBy(asc(documentNumberSequences.documentSeries));
+
+    return rows.map((row) => ({
+      id: row.id,
+      document_series: row.documentSeries,
+      prefix: row.prefix,
+      next_number: row.nextNumber,
+      fiscal_year: row.fiscalYear,
+    }));
+  }
+
+  async findDocumentSequenceById(businessId: string, sequenceId: string) {
+    const [row] = await this.db
+      .select()
+      .from(documentNumberSequences)
+      .where(
+        and(
+          eq(documentNumberSequences.id, sequenceId),
+          eq(documentNumberSequences.businessId, businessId),
+          eq(documentNumberSequences.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      id: row.id,
+      document_series: row.documentSeries,
+      prefix: row.prefix,
+      next_number: row.nextNumber,
+      fiscal_year: row.fiscalYear,
+    };
+  }
+
+  async updateDocumentSequence(
+    businessId: string,
+    sequenceId: string,
+    values: { prefix?: string | null; nextNumber?: number },
+  ) {
+    const [row] = await this.db
+      .update(documentNumberSequences)
+      .set({
+        ...(values.prefix !== undefined ? { prefix: values.prefix } : {}),
+        ...(values.nextNumber !== undefined
+          ? { nextNumber: values.nextNumber }
+          : {}),
+        updatedAt: new Date(),
+        syncVersion: sql`${documentNumberSequences.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(documentNumberSequences.id, sequenceId),
+          eq(documentNumberSequences.businessId, businessId),
+          eq(documentNumberSequences.isDeleted, false),
+        ),
+      )
+      .returning();
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      id: row.id,
+      document_series: row.documentSeries,
+      prefix: row.prefix,
+      next_number: row.nextNumber,
+      fiscal_year: row.fiscalYear,
+    };
   }
 
   async swapLineItemBrands(

@@ -102,19 +102,7 @@ export class PaymentService {
     }
 
     const allocations = input.allocations ?? [];
-    const allocatedTotal = allocations.reduce(
-      (sum, allocation) => sum + parseMoney(allocation.allocated_amount),
-      0,
-    );
     const paymentAmount = parseMoney(input.amount);
-
-    if (allocatedTotal > paymentAmount) {
-      throw new AppError(
-        'VALIDATION_ERROR',
-        'Allocated amount exceeds payment amount',
-        422,
-      );
-    }
 
     for (const allocation of allocations) {
       const hasSales = Boolean(allocation.sales_document_id);
@@ -130,6 +118,18 @@ export class PaymentService {
 
     return this.db.transaction(async (tx) => {
       const repo = new PaymentRepository(tx as unknown as typeof this.db);
+
+      let pendingPaymentTotal = 0;
+      for (const allocation of allocations) {
+        await this.assertAllocationTarget(
+          repo,
+          businessId,
+          { party_id: input.party_id, amount: input.amount },
+          allocation,
+          { pendingPaymentTotal },
+        );
+        pendingPaymentTotal += parseMoney(allocation.allocated_amount);
+      }
 
       const payment = await repo.create({
         businessId,
@@ -180,9 +180,9 @@ export class PaymentService {
 
       if (
         input.short_payment_handling === 'unrecovered' &&
-        allocatedTotal < paymentAmount
+        pendingPaymentTotal < paymentAmount
       ) {
-        const shortfall = paymentAmount - allocatedTotal;
+        const shortfall = paymentAmount - pendingPaymentTotal;
         const current = parseMoney(party.unrecoveredAmount);
         await repo.updatePartyUnrecovered(
           businessId,
@@ -276,14 +276,25 @@ export class PaymentService {
       );
     }
 
-    return this.repository.createAllocation({
-      businessId,
-      paymentId,
-      salesDocumentId: input.sales_document_id ?? null,
-      purchaseDocumentId: input.purchase_document_id ?? null,
-      allocatedAmount: input.allocated_amount,
-      createdBy: userId ?? null,
-      updatedBy: userId ?? null,
+    return this.db.transaction(async (tx) => {
+      const repo = new PaymentRepository(tx as unknown as typeof this.db);
+
+      await this.assertAllocationTarget(
+        repo,
+        businessId,
+        { party_id: payment.party_id, amount: payment.amount, id: paymentId },
+        input,
+      );
+
+      return repo.createAllocation({
+        businessId,
+        paymentId,
+        salesDocumentId: input.sales_document_id ?? null,
+        purchaseDocumentId: input.purchase_document_id ?? null,
+        allocatedAmount: input.allocated_amount,
+        createdBy: userId ?? null,
+        updatedBy: userId ?? null,
+      });
     });
   }
 
@@ -309,6 +320,95 @@ export class PaymentService {
 
     if (!deleted) {
       throw new AppError('NOT_FOUND', 'Allocation not found', 404);
+    }
+  }
+
+  private async assertAllocationTarget(
+    repo: PaymentRepository,
+    businessId: string,
+    payment: { party_id: string; amount: string; id?: string },
+    allocation: CreateAllocationBody,
+    options?: { pendingPaymentTotal?: number },
+  ): Promise<void> {
+    const allocationAmount = parseMoney(allocation.allocated_amount);
+    const paymentAmount = parseMoney(payment.amount);
+
+    let existingPaymentAllocated = options?.pendingPaymentTotal ?? 0;
+    if (payment.id) {
+      existingPaymentAllocated += await repo.sumAllocatedToPayment(
+        businessId,
+        payment.id,
+      );
+    }
+
+    if (existingPaymentAllocated + allocationAmount > paymentAmount) {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'Allocated amount exceeds payment amount',
+        422,
+      );
+    }
+
+    if (allocation.sales_document_id) {
+      const document = await repo.findSalesDocumentForAllocation(
+        businessId,
+        allocation.sales_document_id,
+      );
+      if (!document) {
+        throw new AppError('NOT_FOUND', 'Sales document not found', 404);
+      }
+      if (document.status !== 'finalized') {
+        throw new AppError(
+          'VALIDATION_ERROR',
+          'Allocations require a finalized sales document',
+          422,
+        );
+      }
+      if (document.partyId !== payment.party_id) {
+        throw new AppError(
+          'VALIDATION_ERROR',
+          'Sales document party does not match payment party',
+          422,
+        );
+      }
+
+      const alreadyAllocated = await repo.sumAllocatedToSalesDocument(
+        businessId,
+        allocation.sales_document_id,
+      );
+      const documentTotal = parseMoney(document.totalAmount);
+      if (alreadyAllocated + allocationAmount > documentTotal) {
+        throw new AppError(
+          'VALIDATION_ERROR',
+          'Allocated amount exceeds document remaining balance',
+          422,
+        );
+      }
+      return;
+    }
+
+    if (allocation.purchase_document_id) {
+      const document = await repo.findPurchaseDocumentForAllocation(
+        businessId,
+        allocation.purchase_document_id,
+      );
+      if (!document) {
+        throw new AppError('NOT_FOUND', 'Purchase document not found', 404);
+      }
+      if (document.status !== 'finalized') {
+        throw new AppError(
+          'VALIDATION_ERROR',
+          'Allocations require a finalized purchase document',
+          422,
+        );
+      }
+      if (document.partyId !== payment.party_id) {
+        throw new AppError(
+          'VALIDATION_ERROR',
+          'Purchase document party does not match payment party',
+          422,
+        );
+      }
     }
   }
 }

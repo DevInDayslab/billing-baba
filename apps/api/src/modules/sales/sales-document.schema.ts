@@ -184,3 +184,20 @@ export type UpdatePosSessionBody = z.infer<typeof updatePosSessionBodySchema>;
 export const posSessionIdParamSchema = z.object({
   id: z.uuid('Invalid POS session ID'),
 });
+
+export const documentSequenceIdParamSchema = z.object({
+  id: z.uuid('Invalid document sequence ID'),
+});
+
+export const updateDocumentSequenceBodySchema = z
+  .object({
+    prefix: z.string().trim().max(20).nullable().optional(),
+    next_number: z.number().int().min(1).optional(),
+  })
+  .refine((body) => Object.keys(body).length > 0, {
+    message: 'At least one field is required',
+  });
+
+export type UpdateDocumentSequenceBody = z.infer<
+  typeof updateDocumentSequenceBodySchema
+>;

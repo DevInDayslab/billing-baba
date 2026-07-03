@@ -14,7 +14,8 @@
     "db:seed": "bun src/db/seed.ts",
     "db:studio": "drizzle-kit studio",
     "test": "bun test tests",
-    "test:inventory": "bun test tests/inventory.integration.test.ts"
+    "test:inventory": "bun test tests/inventory.integration.test.ts",
+    "test:sales": "bun test tests/sales.integration.test.ts"
   },
   "keywords": [],
   "author": "",

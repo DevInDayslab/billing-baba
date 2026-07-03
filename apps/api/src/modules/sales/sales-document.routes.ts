@@ -43,3 +43,14 @@ export const createPosSessionRoutes = (): FastifyPluginAsync => {
     );
   };
 };
+
+export const createDocumentSequenceRoutes = (): FastifyPluginAsync => {
+  const controller = createSalesDocumentController();
+
+  return async (app) => {
+    const preHandler = [authenticate, requireBusiness];
+
+    app.get('/', { preHandler }, controller.listDocumentSequences);
+    app.patch('/:id', { preHandler }, controller.updateDocumentSequence);
+  };
+};

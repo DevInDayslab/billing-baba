@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import {
   createPosSessionRoutes,
+  createDocumentSequenceRoutes,
   createSalesDocumentRoutes,
 } from './sales-document.routes';
 
@@ -9,4 +10,7 @@ export const salesModule: FastifyPluginAsync = async (app) => {
     prefix: '/sales-documents',
   });
   await app.register(createPosSessionRoutes(), { prefix: '/pos-sessions' });
+  await app.register(createDocumentSequenceRoutes(), {
+    prefix: '/document-sequences',
+  });
 };

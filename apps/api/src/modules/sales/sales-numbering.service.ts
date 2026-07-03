@@ -5,7 +5,7 @@ import { AppError } from '../../shared/errors/app-error';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
-function currentFiscalYear(date = new Date()): string {
+export function currentFiscalYear(date = new Date()): string {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   if (month >= 4) {
@@ -22,7 +22,7 @@ export async function assignDocumentNumber(
 ): Promise<string> {
   const fiscalYear = currentFiscalYear(documentDate);
 
-  const [sequence] = await db
+  let [sequence] = await db
     .select({
       id: documentNumberSequences.id,
       prefix: documentNumberSequences.prefix,
@@ -39,6 +39,33 @@ export async function assignDocumentNumber(
     )
     .limit(1)
     .for('update');
+
+  if (!sequence) {
+    await ensureDocumentSequence(
+      db,
+      businessId,
+      documentSeries,
+      documentSeries,
+      fiscalYear,
+    );
+    [sequence] = await db
+      .select({
+        id: documentNumberSequences.id,
+        prefix: documentNumberSequences.prefix,
+        nextNumber: documentNumberSequences.nextNumber,
+      })
+      .from(documentNumberSequences)
+      .where(
+        and(
+          eq(documentNumberSequences.businessId, businessId),
+          eq(documentNumberSequences.documentSeries, documentSeries),
+          eq(documentNumberSequences.fiscalYear, fiscalYear),
+          eq(documentNumberSequences.isDeleted, false),
+        ),
+      )
+      .limit(1)
+      .for('update');
+  }
 
   if (!sequence) {
     throw new AppError(
@@ -70,13 +97,12 @@ export async function assignDocumentNumber(
 }
 
 export async function ensureDocumentSequence(
-  db: Database,
+  db: Database | DbTransaction,
   businessId: string,
   documentSeries: string,
   prefix?: string | null,
+  fiscalYear = currentFiscalYear(),
 ): Promise<void> {
-  const fiscalYear = currentFiscalYear();
-
   const [existing] = await db
     .select({ id: documentNumberSequences.id })
     .from(documentNumberSequences)
@@ -94,11 +120,14 @@ export async function ensureDocumentSequence(
     return;
   }
 
-  await db.insert(documentNumberSequences).values({
-    businessId,
-    documentSeries,
-    prefix: prefix ?? null,
-    nextNumber: 1,
-    fiscalYear,
-  });
+  await db
+    .insert(documentNumberSequences)
+    .values({
+      businessId,
+      documentSeries,
+      prefix: prefix ?? documentSeries,
+      nextNumber: 1,
+      fiscalYear,
+    })
+    .onConflictDoNothing();
 }
