@@ -165,7 +165,7 @@ class Auth extends _$Auth {
   AuthState build() {
     if (!_autoLoginStarted) {
       _autoLoginStarted = true;
-      Future.microtask(tryAutoLogin);
+      unawaited(Future.microtask(tryAutoLogin));
     }
     return const AuthState();
   }
@@ -200,10 +200,11 @@ class Auth extends _$Auth {
     if (includeList) {
       ref.invalidate(businessListProvider);
     }
-    ref.invalidate(businessProfileProvider);
-    ref.invalidate(businessServiceProvider);
-    ref.invalidate(partyListProvider);
-    ref.invalidate(partyServiceProvider);
+    ref
+      ..invalidate(businessProfileProvider)
+      ..invalidate(businessServiceProvider)
+      ..invalidate(partyListProvider)
+      ..invalidate(partyServiceProvider);
   }
 
   Future<void> _clearBusinessScopedCaches() async {
@@ -271,7 +272,7 @@ class Auth extends _$Auth {
     try {
       final service = await _service();
       await service.persistSession(session);
-    } catch (_) {
+    } on Object catch (_) {
       // Best-effort until backend login is wired.
     }
 
@@ -353,7 +354,7 @@ class Auth extends _$Auth {
         return;
       }
       _onBackendLoginFailed(generation, _backendLoginErrorMessage(e));
-    } catch (e) {
+    } on Object catch (e) {
       if (generation != _verifyGeneration || state.backendLoginCompleted) {
         return;
       }
@@ -399,7 +400,7 @@ class Auth extends _$Auth {
       await Future<void>.delayed(_splashMinDuration);
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
-    } catch (e) {
+    } on Object catch (e) {
       await Future<void>.delayed(_splashMinDuration);
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
@@ -437,7 +438,7 @@ class Auth extends _$Auth {
       _setOtpPhase(OtpPhase.idle);
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(clearReqId: true, error: e.message);
-    } catch (e) {
+    } on Object catch (e) {
       _setOtpPhase(OtpPhase.idle);
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
@@ -502,7 +503,7 @@ class Auth extends _$Auth {
             ? 'Please check your internet connection.'
             : e.message,
       );
-    } catch (e) {
+    } on Object catch (e) {
       if (state.backendLoginCompleted || generation != _verifyGeneration) {
         return;
       }
@@ -545,7 +546,7 @@ class Auth extends _$Auth {
       debugPrint('[DEV_LOGIN] Failed: ${e.response?.statusCode ?? 'network'}');
       _setOtpPhase(OtpPhase.idle);
       state = state.copyWith(error: _devLoginErrorMessage(e));
-    } catch (e) {
+    } on Object catch (e) {
       debugPrint('[DEV_LOGIN] Failed: unknown');
       _setOtpPhase(OtpPhase.idle);
       state = state.copyWith(error: _devLoginErrorMessage(e));
@@ -584,7 +585,7 @@ class Auth extends _$Auth {
     } on OtpException catch (e) {
       _setOtpPhase(OtpPhase.otpSent);
       state = state.copyWith(error: e.message);
-    } catch (e) {
+    } on Object catch (e) {
       _setOtpPhase(OtpPhase.otpSent);
       state = state.copyWith(error: _messageFromError(e));
     } finally {
@@ -618,7 +619,7 @@ class Auth extends _$Auth {
       _setAuthStatus(AuthStatus.authenticated);
       state = state.copyWith(session: session);
       await _invalidateBusinessProviders();
-    } catch (e) {
+    } on Object catch (e) {
       state = state.copyWith(error: _messageFromError(e));
     }
   }
@@ -642,7 +643,7 @@ class Auth extends _$Auth {
       }
       _setAuthStatus(AuthStatus.needsBusinessSelection);
       state = state.copyWith(session: session);
-    } catch (e) {
+    } on Object catch (e) {
       state = state.copyWith(error: _messageFromError(e));
     }
   }
@@ -699,7 +700,7 @@ class Auth extends _$Auth {
         state = state.copyWith(session: session);
       }
       return session;
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }

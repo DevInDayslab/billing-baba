@@ -59,7 +59,7 @@ class AuthInterceptor extends Interceptor {
       );
       final response = await dio.fetch<dynamic>(options);
       return handler.resolve(response);
-    } catch (_) {
+    } on Object catch (_) {
       return handler.next(err);
     } finally {
       _isRefreshing = false;

@@ -96,7 +96,7 @@ class _AddExpenseCategoryDialogState
       return;
     }
 
-    final id = name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+    final id = name.toLowerCase().replaceAll(RegExp('[^a-z0-9]+'), '_');
     final type = _expenseType == 'Direct Expense'
         ? ExpenseCategoryType.direct
         : ExpenseCategoryType.indirect;
@@ -148,7 +148,7 @@ class _AddExpenseCategoryDialogState
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              Text('Expense Category', style: saleFieldLabelStyle),
+              const Text('Expense Category', style: saleFieldLabelStyle),
               const SizedBox(height: 4),
               TextField(
                 controller: _nameController,
@@ -170,7 +170,7 @@ class _AddExpenseCategoryDialogState
                   ),
                 ),
               const SizedBox(height: AppSpacing.md),
-              Text('Expense Type', style: saleFieldLabelStyle),
+              const Text('Expense Type', style: saleFieldLabelStyle),
               const SizedBox(height: 4),
               SaleGenericSelectDropdown(
                 value: _expenseType,

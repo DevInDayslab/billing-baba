@@ -73,7 +73,7 @@ class _AddUnitDialogState extends ConsumerState<AddUnitDialog> {
       return false;
     }
 
-    ref.read(selectedUnitIdProvider.notifier).select(result.unit!.id);
+    ref.read(selectedUnitIdProvider.notifier).selected = result.unit!.id;
 
     if (saveAndNew) {
       setState(() => _errorMessage = null);

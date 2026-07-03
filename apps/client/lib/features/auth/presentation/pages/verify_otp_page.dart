@@ -125,25 +125,25 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
 
-    ref.listen<bool>(
-      authProvider.select((s) => s.showResend),
-      (previous, next) {
-        if (next) {
-          _startResendTicker();
-        } else {
-          _stopResendTicker();
-        }
-      },
-    );
-
-    ref.listen<int>(
-      authProvider.select((s) => s.otpSessionVersion),
-      (previous, next) {
-        if (previous != null && previous != next) {
-          _clearOtpFields();
-        }
-      },
-    );
+    ref
+      ..listen<bool>(
+        authProvider.select((s) => s.showResend),
+        (previous, next) {
+          if (next) {
+            _startResendTicker();
+          } else {
+            _stopResendTicker();
+          }
+        },
+      )
+      ..listen<int>(
+        authProvider.select((s) => s.otpSessionVersion),
+        (previous, next) {
+          if (previous != null && previous != next) {
+            _clearOtpFields();
+          }
+        },
+      );
 
     final canVerify =
         auth.canVerifyOtp && !auth.isOtpBusy && _otp.length == _otpLength;

@@ -73,9 +73,9 @@ class _DayBookReportContentState extends State<DayBookReportContent> {
               ],
             ),
           ),
-          Expanded(
+          const Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(
+              padding: EdgeInsets.fromLTRB(
                 AppSpacing.lg,
                 0,
                 AppSpacing.lg,
@@ -85,15 +85,15 @@ class _DayBookReportContentState extends State<DayBookReportContent> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(AppSpacing.md),
                       child: ReportSearchField(
                         hintText: 'Search transactions...',
                       ),
                     ),
-                    const Divider(height: 1, color: reportCardBorder),
+                    Divider(height: 1, color: reportCardBorder),
                     ReportTableHeaderRow(
-                      children: const [
+                      children: [
                         Expanded(
                           child: ReportTableHeaderCell(label: 'NAME'),
                         ),
@@ -121,8 +121,8 @@ class _DayBookReportContentState extends State<DayBookReportContent> {
                         ),
                       ],
                     ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const Expanded(
+                    Divider(height: 1, color: reportCardBorder),
+                    Expanded(
                       child: Center(
                         child: Text(
                           'No transactions to show',

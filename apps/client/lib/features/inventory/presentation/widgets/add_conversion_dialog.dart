@@ -104,7 +104,7 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
       return false;
     }
 
-    ref.read(selectedUnitIdProvider.notifier).select(_baseUnitId);
+    ref.read(selectedUnitIdProvider.notifier).selected = _baseUnitId;
 
     if (saveAndNew) {
       setState(() => _errorMessage = null);

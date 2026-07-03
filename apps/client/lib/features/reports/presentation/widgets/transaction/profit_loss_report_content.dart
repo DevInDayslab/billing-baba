@@ -26,7 +26,7 @@ class _ProfitLossReportContentState extends State<ProfitLossReportContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ReportDateRangeBar(
+            const ReportDateRangeBar(
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -67,41 +67,43 @@ class _ProfitLossReportContentState extends State<ProfitLossReportContent> {
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.md,
                     ),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'View :',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
+                    child: RadioGroup<String>(
+                      groupValue: _viewMode,
+                      onChanged: (v) {
+                        if (v != null) setState(() => _viewMode = v);
+                      },
+                      child: const Row(
+                        children: [
+                          Text(
+                            'View :',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Radio<String>(
-                          value: 'Vyapar',
-                          groupValue: _viewMode,
-                          onChanged: (v) => setState(() => _viewMode = v!),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        const Text('Vyapar', style: TextStyle(fontSize: 13)),
-                        const SizedBox(width: AppSpacing.sm),
-                        Radio<String>(
-                          value: 'Accounting',
-                          groupValue: _viewMode,
-                          onChanged: (v) => setState(() => _viewMode = v!),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        const Text(
-                          'Accounting',
-                          style: TextStyle(fontSize: 13),
-                        ),
-                      ],
+                          SizedBox(width: AppSpacing.sm),
+                          Radio<String>(
+                            value: 'Vyapar',
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          Text('Vyapar', style: TextStyle(fontSize: 13)),
+                          SizedBox(width: AppSpacing.sm),
+                          Radio<String>(
+                            value: 'Accounting',
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          Text(
+                            'Accounting',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   const Divider(height: 1, color: reportCardBorder),
-                  ReportTableHeaderRow(
-                    children: const [
+                  const ReportTableHeaderRow(
+                    children: [
                       Expanded(
                         child: ReportTableHeaderCell(
                           label: 'Particulars',

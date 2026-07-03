@@ -18,19 +18,22 @@ class SelectedPartyId extends Notifier<String?> {
   @override
   String? build() => null;
 
-  void select(String? id) => state = id;
+  String? get selected => state;
+  set selected(String? id) => state = id;
 }
 
 class PartySearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class PartyListFilterNotifier extends Notifier<PartyListFilter> {
   @override
   PartyListFilter build() => PartyListFilter.all;
 
-  void select(PartyListFilter filter) => state = filter;
+  PartyListFilter get filter => state;
+  set filter(PartyListFilter value) => state = value;
 }

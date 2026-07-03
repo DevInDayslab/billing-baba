@@ -459,7 +459,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         message: e.message,
         backgroundColor: AppColors.error,
       );
-    } catch (_) {
+    } on Object catch (_) {
       _showSaveSnackBar(
         message: 'Failed to save party. Please try again.',
         backgroundColor: AppColors.error,
@@ -1536,14 +1536,10 @@ class _LabeledField extends StatelessWidget {
   const _LabeledField({
     required this.label,
     required this.child,
-    this.hasError = false,
-    this.errorText,
   });
 
   final String label;
   final Widget child;
-  final bool hasError;
-  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -1553,14 +1549,6 @@ class _LabeledField extends StatelessWidget {
         Text(label, style: saleFieldLabelStyle),
         const SizedBox(height: 6),
         child,
-        if (hasError && errorText != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 4, left: 2),
-            child: Text(
-              errorText!,
-              style: const TextStyle(fontSize: 11, color: saleFieldErrorColor),
-            ),
-          ),
       ],
     );
   }

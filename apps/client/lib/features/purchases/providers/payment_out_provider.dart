@@ -98,8 +98,8 @@ List<PaymentOutModel> _mockPaymentOutRecords() {
       status: index % 3 == 0 ? PaymentOutStatus.pending : PaymentOutStatus.paid,
       totalAmount: total,
       paidAmount: paid,
-      user: index % 2 == 0 ? 'Admin' : 'Staff',
-      firm: index % 2 == 0 ? 'Main Firm' : 'Branch Firm',
+      user: index.isEven ? 'Admin' : 'Staff',
+      firm: index.isEven ? 'Main Firm' : 'Branch Firm',
     );
   });
 }

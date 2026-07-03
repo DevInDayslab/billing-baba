@@ -1,5 +1,17 @@
 /// API response DTO for a party record.
 class PartyDto {
+  const PartyDto({
+    required this.id,
+    required this.name,
+    required this.partyType, required this.pricingTier, required this.creditLimit, required this.openingBalance, required this.balance, required this.isActive, required this.createdAt, required this.updatedAt, this.mobile,
+    this.email,
+    this.partyCategory,
+    this.gstin,
+    this.stateCode,
+    this.state,
+    this.areaId,
+    this.notes,
+  });
   factory PartyDto.fromJson(Map<String, dynamic> json) {
     return PartyDto(
       id: json['id'] as String,
@@ -22,26 +34,6 @@ class PartyDto {
       updatedAt: json['updated_at'] as String? ?? '',
     );
   }
-  const PartyDto({
-    required this.id,
-    required this.name,
-    this.mobile,
-    this.email,
-    required this.partyType,
-    this.partyCategory,
-    required this.pricingTier,
-    this.gstin,
-    this.stateCode,
-    this.state,
-    this.areaId,
-    required this.creditLimit,
-    required this.openingBalance,
-    required this.balance,
-    required this.isActive,
-    this.notes,
-    required this.createdAt,
-    required this.updatedAt,
-  });
 
   final String id;
   final String name;
@@ -85,6 +77,12 @@ class PartyDto {
 }
 
 class PaginatedPartiesDto {
+  const PaginatedPartiesDto({
+    required this.parties,
+    required this.page,
+    required this.limit,
+    required this.total,
+  });
   factory PaginatedPartiesDto.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
     final meta = json['meta'] as Map<String, dynamic>? ?? {};
@@ -98,12 +96,6 @@ class PaginatedPartiesDto {
       total: meta['total'] as int? ?? 0,
     );
   }
-  const PaginatedPartiesDto({
-    required this.parties,
-    required this.page,
-    required this.limit,
-    required this.total,
-  });
 
   final List<PartyDto> parties;
   final int page;

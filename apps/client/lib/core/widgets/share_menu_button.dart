@@ -60,7 +60,6 @@ class _ShareMenuButtonState extends State<ShareMenuButton> {
       controller: _menuController,
       useRootOverlay: true,
       consumeOutsideTap: true,
-      crossAxisUnconstrained: true,
       alignmentOffset: widget.overlayOffset,
       style: MenuStyle(
         alignment: widget.followerAnchor,

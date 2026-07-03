@@ -91,7 +91,7 @@ List<PurchaseOrderModel> _mockPurchaseOrders() {
     PurchaseOrderModel(
       id: '3',
       orderNo: '3',
-      date: DateTime(2025, 7, 5, 10, 0),
+      date: DateTime(2025, 7, 5, 10),
       partyName: 'Patel Electronics',
       status: PurchaseOrderStatus.partiallyReceived,
       amount: 8900,

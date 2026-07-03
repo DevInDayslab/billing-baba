@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
@@ -188,7 +190,6 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                               ),
                               side: const BorderSide(
                                 color: _cardBorder,
-                                style: BorderStyle.solid,
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(6),
@@ -375,16 +376,18 @@ class _PaymentOutActionsMenu extends StatelessWidget {
   final ValueChanged<ShareChannel> onChannelSelected;
 
   void _showSharePanel(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(AppSpacing.lg),
-        child: ShareMenuPanel(
-          onChannelSelected: (channel) {
-            Navigator.of(dialogContext).pop();
-            onChannelSelected(channel);
-          },
+    unawaited(
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(AppSpacing.lg),
+          child: ShareMenuPanel(
+            onChannelSelected: (channel) {
+              Navigator.of(dialogContext).pop();
+              onChannelSelected(channel);
+            },
+          ),
         ),
       ),
     );

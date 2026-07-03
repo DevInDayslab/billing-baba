@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/manage_party_groups_dialog.dart';
 import 'package:flutter/material.dart';
@@ -121,7 +123,7 @@ class PartyPageTitleBar extends StatelessWidget {
           onMoreSelected ??
           (value) {
             if (value == 'Manage Party Groups') {
-              showManagePartyGroupsDialog(context);
+              unawaited(showManagePartyGroupsDialog(context));
               return;
             }
             ScaffoldMessenger.of(context).showSnackBar(

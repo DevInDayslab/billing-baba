@@ -124,7 +124,7 @@ List<PurchaseBillModel> _mockPurchaseBills() {
       balanceDue: balance,
       dueDate: dueDate ?? date.add(const Duration(days: 15)),
       user: id % 3 == 0 ? 'Admin' : 'Staff',
-      firm: id % 2 == 0 ? 'Main Firm' : 'Branch Firm',
+      firm: id.isEven ? 'Main Firm' : 'Branch Firm',
     );
   }
 
@@ -133,7 +133,6 @@ List<PurchaseBillModel> _mockPurchaseBills() {
       id: 1,
       date: DateTime(2026, 7, 2, 18, 23),
       status: PurchaseBillStatus.partiallyPaid,
-      partyIndex: 0,
       amount: 25000,
       balanceDue: 5000,
       dueDate: DateTime(2026, 7, 2),

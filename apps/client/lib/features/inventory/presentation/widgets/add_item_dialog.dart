@@ -111,8 +111,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
   @override
   void dispose() {
-    _tabController.removeListener(_onTabChanged);
-    _tabController.dispose();
+    _tabController
+      ..removeListener(_onTabChanged)
+      ..dispose();
     _itemNameController.dispose();
     _hsnController.dispose();
     _itemCodeController.dispose();

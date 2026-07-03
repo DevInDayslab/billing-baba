@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/text_input_formatters.dart';
 import 'package:billing_baba/core/utils/validators.dart';
@@ -146,7 +148,8 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
   }
 
   void _showGenericErrorDialog() {
-    showDialog<void>(
+    unawaited(
+      showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Could not create business'),
@@ -160,6 +163,7 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
           ),
         ],
       ),
+    ),
     );
   }
 

@@ -10,11 +10,11 @@ class SaleReportContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
+    return const ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: const Column(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SaleReportTitleBar(),

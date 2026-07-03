@@ -19,7 +19,7 @@ class _BalanceSheetReportContentState extends State<BalanceSheetReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   bool _horizontalView = true;
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 4, 1),
+    start: DateTime(2026, 4),
     end: DateTime(2026, 7, 3),
   );
 
@@ -35,10 +35,10 @@ class _BalanceSheetReportContentState extends State<BalanceSheetReportContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
+            const Row(
               children: [
-                const Spacer(),
-                const Text(
+                Spacer(),
+                Text(
                   'Balance Sheet',
                   style: TextStyle(
                     fontSize: 22,
@@ -46,10 +46,10 @@ class _BalanceSheetReportContentState extends State<BalanceSheetReportContent> {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const Spacer(),
-                const ReportPdfChip(),
-                const SizedBox(width: AppSpacing.sm),
-                const ReportXlsChip(),
+                Spacer(),
+                ReportPdfChip(),
+                SizedBox(width: AppSpacing.sm),
+                ReportXlsChip(),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -133,12 +133,12 @@ class _BalanceSheetReportContentState extends State<BalanceSheetReportContent> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  IntrinsicHeight(
+                  const IntrinsicHeight(
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(child: _BalanceColumn(title: 'Assets')),
-                        const VerticalDivider(
+                        VerticalDivider(
                           width: 1,
                           color: reportCardBorder,
                         ),
@@ -156,7 +156,7 @@ class _BalanceSheetReportContentState extends State<BalanceSheetReportContent> {
                       horizontal: AppSpacing.md,
                       vertical: AppSpacing.sm,
                     ),
-                    child: IntrinsicHeight(
+                    child: const IntrinsicHeight(
                       child: Row(
                         children: [
                           Expanded(
@@ -165,7 +165,7 @@ class _BalanceSheetReportContentState extends State<BalanceSheetReportContent> {
                               amount: '0.00',
                             ),
                           ),
-                          const VerticalDivider(
+                          VerticalDivider(
                             width: 1,
                             color: Colors.white54,
                           ),

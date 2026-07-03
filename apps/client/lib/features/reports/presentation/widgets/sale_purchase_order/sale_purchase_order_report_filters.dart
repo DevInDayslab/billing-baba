@@ -24,7 +24,7 @@ class _SalePurchaseOrderReportFiltersState
   String _status = 'All Orders';
   String _godown = 'All Godown';
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 3),
   );
 

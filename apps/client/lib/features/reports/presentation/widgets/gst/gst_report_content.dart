@@ -123,16 +123,16 @@ class GstReportContent extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            ReportCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
+            const ReportCard(
+              padding: EdgeInsets.all(AppSpacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const ReportPeriodFilterBar(showFirmFilter: false),
-                  const SizedBox(height: AppSpacing.sm),
+                  ReportPeriodFilterBar(showFirmFilter: false),
+                  SizedBox(height: AppSpacing.sm),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
-                    children: const [
+                    children: [
                       ReportTextActionButton(
                         label: 'Print',
                         icon: Icons.print_outlined,
@@ -170,7 +170,7 @@ class GstReportContent extends StatelessWidget {
               ),
             ],
             const SizedBox(height: AppSpacing.md),
-            const ReportSearchField(hintText: 'Search...'),
+            const ReportSearchField(),
             const SizedBox(height: AppSpacing.md),
             ReportCard(
               child: Column(
@@ -201,7 +201,6 @@ class GstReportContent extends StatelessWidget {
                   const Divider(height: 1, color: reportCardBorder),
                   const ReportEmptyTableState(
                     message: 'No data available for the selected period.',
-                    minHeight: 200,
                   ),
                 ],
               ),

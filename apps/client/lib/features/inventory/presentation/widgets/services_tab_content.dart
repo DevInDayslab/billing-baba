@@ -26,9 +26,9 @@ class ServicesTabContent extends ConsumerWidget {
           selectedId: selectedId,
           isLoading: true,
           onSearchChanged: (query) =>
-              ref.read(serviceSearchQueryProvider.notifier).update(query),
+              ref.read(serviceSearchQueryProvider.notifier).query = query,
           onItemSelected: (id) =>
-              ref.read(selectedServiceIdProvider.notifier).select(id),
+              ref.read(selectedServiceIdProvider.notifier).selected = id,
           onAddService: () => showAddItemDialog(
             context,
             initialType: ItemType.service,
@@ -44,9 +44,9 @@ class ServicesTabContent extends ConsumerWidget {
           services: services,
           selectedId: selectedId,
           onSearchChanged: (query) =>
-              ref.read(serviceSearchQueryProvider.notifier).update(query),
+              ref.read(serviceSearchQueryProvider.notifier).query = query,
           onItemSelected: (id) =>
-              ref.read(selectedServiceIdProvider.notifier).select(id),
+              ref.read(selectedServiceIdProvider.notifier).selected = id,
           onAddService: () => showAddItemDialog(
             context,
             initialType: ItemType.service,

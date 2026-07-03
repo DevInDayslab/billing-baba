@@ -24,9 +24,9 @@ class ProductsTabContent extends ConsumerWidget {
         products: products,
         selectedId: selectedId,
         onSearchChanged: (query) =>
-            ref.read(productSearchQueryProvider.notifier).update(query),
+            ref.read(productSearchQueryProvider.notifier).query = query,
         onItemSelected: (id) =>
-            ref.read(selectedProductIdProvider.notifier).select(id),
+            ref.read(selectedProductIdProvider.notifier).selected = id,
         onAddItem: () => showAddItemDialog(
           context,
         ),

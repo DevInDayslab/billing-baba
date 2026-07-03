@@ -235,9 +235,9 @@ void _openParties(
   WidgetRef ref,
   PartyListFilter filter,
 ) {
-  ref.read(partyListFilterProvider.notifier).select(filter);
-  ref.read(partySearchQueryProvider.notifier).update('');
-  ref.read(selectedPartyIdProvider.notifier).select(null);
+  ref.read(partyListFilterProvider.notifier).filter = filter;
+  ref.read(partySearchQueryProvider.notifier).query = '';
+  ref.read(selectedPartyIdProvider.notifier).selected = null;
   context.go(AppRoutes.partyDetails);
 }
 

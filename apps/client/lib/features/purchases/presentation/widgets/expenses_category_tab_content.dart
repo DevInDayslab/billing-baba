@@ -43,9 +43,9 @@ class ExpensesCategoryTabContent extends ConsumerWidget {
         categories: categories,
         selectedId: selectedId,
         onSearchChanged: (query) =>
-            ref.read(expenseCategorySearchQueryProvider.notifier).update(query),
+            ref.read(expenseCategorySearchQueryProvider.notifier).query = query,
         onCategorySelected: (id) =>
-            ref.read(selectedExpenseCategoryIdProvider.notifier).select(id),
+            ref.read(selectedExpenseCategoryIdProvider.notifier).selected = id,
         onAddExpense: () => context.push(AppRoutes.addExpense),
       ),
       detailPanel: selectedCategory != null
@@ -296,7 +296,7 @@ class _CategoryDetailPanel extends ConsumerWidget {
             hint: 'Search',
             onChanged: (query) => ref
                 .read(expenseTransactionSearchQueryProvider.notifier)
-                .update(query),
+                .query = query,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -470,9 +470,7 @@ class _StandardTransactionRow extends StatelessWidget {
             style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          transaction.status != null
-              ? ExpenseStatusBadge(status: transaction.status!)
-              : const SizedBox.shrink(),
+          if (transaction.status != null) ExpenseStatusBadge(status: transaction.status!) else const SizedBox.shrink(),
         ],
       ),
     );

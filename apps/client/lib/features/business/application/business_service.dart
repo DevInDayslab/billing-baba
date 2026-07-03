@@ -275,8 +275,9 @@ class BusinessList extends _$BusinessList {
 
   Future<void> selectBusiness(String id) async {
     await _activateBusiness(id);
-    ref.invalidate(businessProfileProvider);
-    ref.invalidateSelf();
+    ref
+      ..invalidate(businessProfileProvider)
+      ..invalidateSelf();
   }
 
   Future<BusinessModel> createBusiness(CreateBusinessRequest request) async {
@@ -284,8 +285,9 @@ class BusinessList extends _$BusinessList {
     final created = await service.createBusiness(request);
     await _activateBusiness(created.id);
     await ref.read(authProvider.notifier).refreshBusinesses();
-    ref.invalidate(businessProfileProvider);
-    ref.invalidateSelf();
+    ref
+      ..invalidate(businessProfileProvider)
+      ..invalidateSelf();
     return created;
   }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -83,21 +85,23 @@ class _PartyDetailsPageState extends ConsumerState<PartyDetailsPage> {
     final service = await ref.read(partyServiceProvider.future);
     final remembered = service.readRememberedSelectedParty();
     if (remembered != null && mounted) {
-      ref.read(selectedPartyIdProvider.notifier).select(remembered);
+      ref.read(selectedPartyIdProvider.notifier).selected = remembered;
     }
     final filter = service.readRememberedListFilter();
     if (filter != null && mounted) {
-      ref.read(partyListFilterProvider.notifier).select(filter);
+      ref.read(partyListFilterProvider.notifier).filter = filter;
     }
   }
 
   void _clearSelection() {
-    ref.read(selectedPartyIdProvider.notifier).select(null);
-    ref
-        .read(partyServiceProvider.future)
-        .then(
-          (service) => service.rememberSelectedParty(null),
-        );
+    ref.read(selectedPartyIdProvider.notifier).selected = null;
+    unawaited(
+      ref
+          .read(partyServiceProvider.future)
+          .then(
+            (service) => service.rememberSelectedParty(null),
+          ),
+    );
   }
 
   @override

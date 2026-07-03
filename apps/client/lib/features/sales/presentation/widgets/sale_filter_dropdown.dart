@@ -123,7 +123,6 @@ class SaleFilterDropdownState extends State<SaleFilterDropdown> {
                   link: _layerLink,
                   showWhenUnlinked: false,
                   targetAnchor: Alignment.bottomLeft,
-                  followerAnchor: Alignment.topLeft,
                   offset: const Offset(0, 4),
                   child: Material(
                     elevation: 4,

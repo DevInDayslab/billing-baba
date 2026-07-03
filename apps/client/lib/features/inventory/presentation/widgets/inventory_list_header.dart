@@ -24,7 +24,6 @@ class InventoryListHeader extends StatelessWidget {
       ),
       child: InventoryListRowLayout(
         flexValues: [for (final column in columns) column.flex],
-        trailing: const SizedBox(width: 28),
         children: [
           for (final column in columns)
             Row(
@@ -68,7 +67,10 @@ class InventoryListRowLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    assert(flexValues.length == children.length);
+    assert(
+      flexValues.length == children.length,
+      'flexValues and children must have the same length',
+    );
 
     return Row(
       children: [

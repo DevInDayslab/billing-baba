@@ -18,7 +18,7 @@ class _SaleReportFilterBarState extends State<SaleReportFilterBar> {
   String _timeRange = 'This Month';
   String _firm = 'All Firms';
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2025, 9, 1),
+    start: DateTime(2025, 9),
     end: DateTime(2025, 9, 30),
   );
 

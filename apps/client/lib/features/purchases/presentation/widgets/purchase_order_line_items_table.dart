@@ -146,7 +146,10 @@ class _LineItemsTableRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    assert(children.length == 10);
+    assert(
+      children.length == 10,
+      'Purchase order line items table row must have 10 children',
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: _rowHorizontalPadding),

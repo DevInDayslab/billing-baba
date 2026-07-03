@@ -89,7 +89,7 @@ class EditBusinessProfileForm extends _$EditBusinessProfileForm {
         generalError: _messageFromDio(e),
       );
       return null;
-    } catch (_) {
+    } on Object catch (_) {
       state = state.copyWith(
         isSubmitting: false,
         generalError: 'Unable to save business profile. Please try again.',

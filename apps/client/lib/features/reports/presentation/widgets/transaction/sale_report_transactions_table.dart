@@ -89,24 +89,24 @@ class SaleReportTransactionsTable extends StatelessWidget {
                 width: _dateColWidth,
                 child: Text(_dateFormat.format(DateTime(2026, 4, 4))),
               ),
-              _TableCell(
+              const _TableCell(
                 width: _invoiceColWidth,
-                child: const Text('1773124034247'),
+                child: Text('1773124034247'),
               ),
               const Expanded(
                 child: _TableCell(child: Text('PartyAv')),
               ),
-              _TableCell(
+              const _TableCell(
                 width: _transactionColWidth,
-                child: const Text('Sale'),
+                child: Text('Sale'),
               ),
-              _TableCell(
+              const _TableCell(
                 width: _paymentColWidth,
-                child: const Text('Cash'),
+                child: Text('Cash'),
               ),
-              _TableCell(
+              const _TableCell(
                 width: _statusColWidth,
-                child: const SaleInvoiceStatusBadge(
+                child: SaleInvoiceStatusBadge(
                   status: SaleInvoiceStatus.cancelled,
                 ),
               ),
@@ -212,8 +212,8 @@ class _TableHeaderRow extends StatelessWidget {
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      child: _ScrollableTableRow(
-        child: const Row(
+      child: const _ScrollableTableRow(
+        child: Row(
           children: [
             _TableCell(
               width: _dateColWidth,
@@ -293,7 +293,7 @@ class _ScrollableTableRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final minTableWidth = _fixedColumnsWidth + _partyColumnMinWidth;
+        const minTableWidth = _fixedColumnsWidth + _partyColumnMinWidth;
         final tableWidth = constraints.maxWidth.isFinite
             ? math.max(constraints.maxWidth, minTableWidth)
             : minTableWidth;

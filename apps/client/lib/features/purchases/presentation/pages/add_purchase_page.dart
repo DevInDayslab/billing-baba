@@ -144,7 +144,6 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                 child: BillingNamePartySearchField(
                   value: form.party,
                   hasError: form.partyHasError,
-                  emptyPlaceholder: 'Select party',
                   errorMessage: 'Party is required',
                   onSelected: notifier.updateParty,
                 ),
@@ -419,13 +418,11 @@ class _PurchaseTextField extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.hintText,
-    this.keyboardType,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
-  final TextInputType? keyboardType;
 
   @override
   State<_PurchaseTextField> createState() => _PurchaseTextFieldState();
@@ -461,7 +458,6 @@ class _PurchaseTextFieldState extends State<_PurchaseTextField> {
       controller: _controller,
       style: saleFieldTextStyle,
       decoration: buildSaleFieldDecoration(hint: widget.hintText),
-      keyboardType: widget.keyboardType,
       onChanged: widget.onChanged,
     );
   }
