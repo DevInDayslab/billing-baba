@@ -22,7 +22,12 @@ Future<void> showBuyLicensesDialog(BuildContext context) {
   );
 }
 
-enum _BuyLicensesStep { selectPlans, reviewOrder, paymentPending, paymentSuccess }
+enum _BuyLicensesStep {
+  selectPlans,
+  reviewOrder,
+  paymentPending,
+  paymentSuccess,
+}
 
 class BuyLicensesDialog extends StatefulWidget {
   const BuyLicensesDialog({super.key});
@@ -52,8 +57,7 @@ class _BuyLicensesDialogState extends State<BuyLicensesDialog> {
   AddonPricing _pricingFor(AddonPlan plan) =>
       plan.pricingFor(_selectedPlatform, _selectedDuration);
 
-  int get _totalQuantity =>
-      _quantities.values.fold(0, (sum, qty) => sum + qty);
+  int get _totalQuantity => _quantities.values.fold(0, (sum, qty) => sum + qty);
 
   double get _subtotal {
     var total = 0.0;
@@ -460,9 +464,9 @@ class _DialogHeader extends StatelessWidget {
               title,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           IconButton(
@@ -913,11 +917,9 @@ class _SelectedPlansPanel extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 ...selectedEntries.map((entry) {
-                  final pricing =
-                      entry.plan.pricingFor(platform, duration);
+                  final pricing = entry.plan.pricingFor(platform, duration);
                   final lineTotal = pricing.discountedPrice * entry.qty;
-                  final qtyLabel =
-                      entry.qty > 1 ? ' x ${entry.qty}' : '';
+                  final qtyLabel = entry.qty > 1 ? ' x ${entry.qty}' : '';
                   return Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: Row(
@@ -1045,8 +1047,8 @@ class _BottomBar extends StatelessWidget {
     final message = !hasSelection
         ? '🎉 Buy 1 or more licenses & unlock Bulk Saver Discount!'
         : bulkDiscount > 0
-            ? '🎉 ${formatPrice(bulkDiscount)} Bulk Saver Discount Applied!'
-            : '🎉 Buy 1 or more licenses & unlock Bulk Saver Discount!';
+        ? '🎉 ${formatPrice(bulkDiscount)} Bulk Saver Discount Applied!'
+        : '🎉 Buy 1 or more licenses & unlock Bulk Saver Discount!';
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -1076,8 +1078,9 @@ class _BottomBar extends StatelessWidget {
           FilledButton(
             onPressed: onPrimary,
             style: FilledButton.styleFrom(
-              backgroundColor:
-                  onPrimary != null ? AppColors.error : Colors.grey.shade400,
+              backgroundColor: onPrimary != null
+                  ? AppColors.error
+                  : Colors.grey.shade400,
               disabledBackgroundColor: Colors.grey.shade400,
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.xl,

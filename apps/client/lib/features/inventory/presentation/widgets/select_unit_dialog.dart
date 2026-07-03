@@ -88,7 +88,10 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -149,7 +152,10 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
                   ),
                   child: const Text(
                     'SAVE',
-                    style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
               ),
@@ -167,9 +173,9 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
   String _unitLabel(List<InventoryUnit> units, String? unitId) {
     if (unitId == null) return 'None';
     return units
-        .where((unit) => unit.id == unitId)
-        .map((unit) => unit.shortName)
-        .firstOrNull ??
+            .where((unit) => unit.id == unitId)
+            .map((unit) => unit.shortName)
+            .firstOrNull ??
         'None';
   }
 

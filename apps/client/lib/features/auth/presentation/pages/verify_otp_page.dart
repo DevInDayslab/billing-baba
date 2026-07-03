@@ -18,10 +18,14 @@ class VerifyOtpPage extends ConsumerStatefulWidget {
 class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
   static const _otpLength = 6;
 
-  final List<TextEditingController> _controllers =
-      List.generate(_otpLength, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes =
-      List.generate(_otpLength, (_) => FocusNode());
+  final List<TextEditingController> _controllers = List.generate(
+    _otpLength,
+    (_) => TextEditingController(),
+  );
+  final List<FocusNode> _focusNodes = List.generate(
+    _otpLength,
+    (_) => FocusNode(),
+  );
 
   Timer? _resendTicker;
 
@@ -141,7 +145,8 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
       },
     );
 
-    final canVerify = auth.canVerifyOtp && !auth.isOtpBusy && _otp.length == _otpLength;
+    final canVerify =
+        auth.canVerifyOtp && !auth.isOtpBusy && _otp.length == _otpLength;
     final isVerifyingOtp = auth.otpPhase == OtpPhase.verifyingOtp;
     final isSigningIn = auth.isBackendLogin;
     final isBackendLoginFailed = auth.isBackendLoginFailed;
@@ -290,13 +295,15 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                             contentPadding: EdgeInsets.zero,
                             border: OutlineInputBorder(
                               borderRadius: AppRadius.mdBorder,
-                              borderSide:
-                                  BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: AppRadius.mdBorder,
-                              borderSide:
-                                  BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: AppRadius.mdBorder,
@@ -307,8 +314,9 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                             ),
                             errorBorder: OutlineInputBorder(
                               borderRadius: AppRadius.mdBorder,
-                              borderSide:
-                                  const BorderSide(color: AppColors.error),
+                              borderSide: const BorderSide(
+                                color: AppColors.error,
+                              ),
                             ),
                             filled: true,
                             fillColor: const Color(0xFFF8F9FF),
@@ -360,14 +368,14 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                           child: SizedBox(
                             height: 52,
                             child: FilledButton(
-                              onPressed: auth.canRetryBackendLogin &&
-                                      !auth.isOtpBusy
+                              onPressed:
+                                  auth.canRetryBackendLogin && !auth.isOtpBusy
                                   ? _retryBackendLogin
                                   : null,
                               style: FilledButton.styleFrom(
                                 backgroundColor: AppColors.primary,
-                                disabledBackgroundColor:
-                                    AppColors.primary.withValues(alpha: 0.6),
+                                disabledBackgroundColor: AppColors.primary
+                                    .withValues(alpha: 0.6),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: AppRadius.mdBorder,
                                 ),
@@ -393,8 +401,9 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                         onPressed: null,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          disabledBackgroundColor:
-                              AppColors.primary.withValues(alpha: 0.6),
+                          disabledBackgroundColor: AppColors.primary.withValues(
+                            alpha: 0.6,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: AppRadius.mdBorder,
                           ),
@@ -426,8 +435,9 @@ class _VerifyOtpPageState extends ConsumerState<VerifyOtpPage> {
                         onPressed: canVerify ? _verify : null,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          disabledBackgroundColor:
-                              AppColors.primary.withValues(alpha: 0.6),
+                          disabledBackgroundColor: AppColors.primary.withValues(
+                            alpha: 0.6,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: AppRadius.mdBorder,
                           ),

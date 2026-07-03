@@ -186,7 +186,10 @@ class _EmptyState extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480, maxHeight: 200),
+                constraints: const BoxConstraints(
+                  maxWidth: 480,
+                  maxHeight: 200,
+                ),
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: savedDocuments.length,
@@ -257,7 +260,10 @@ class _EmptyState extends ConsumerWidget {
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete_outline, size: 18),
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 18,
+                                ),
                                 tooltip: 'Delete',
                                 onPressed: () {
                                   ref
@@ -572,8 +578,7 @@ class _DocumentFormFieldsState extends ConsumerState<_DocumentFormFields> {
                   child: _PickerField(
                     value: formatSaleSingleDate(form.invoiceDate),
                     icon: Icons.calendar_today_outlined,
-                    onTap: () =>
-                        _invoiceDatePickerKey.currentState?.toggle(),
+                    onTap: () => _invoiceDatePickerKey.currentState?.toggle(),
                   ),
                 ),
               ),
@@ -1021,9 +1026,7 @@ class _AmountFieldState extends State<_AmountField> {
   @override
   void didUpdateWidget(_AmountField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newText = widget.value == 0
-        ? '0'
-        : widget.value.toStringAsFixed(2);
+    final newText = widget.value == 0 ? '0' : widget.value.toStringAsFixed(2);
     if (widget.value != oldWidget.value && newText != _controller.text) {
       _controller.text = newText;
     }

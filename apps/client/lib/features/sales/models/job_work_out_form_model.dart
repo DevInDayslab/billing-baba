@@ -136,8 +136,7 @@ class JobWorkOutFormState {
       description: description ?? this.description,
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
-      showValidationErrors:
-          showValidationErrors ?? this.showValidationErrors,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
     );
   }
 }
@@ -180,8 +179,9 @@ class SavedJobWorkOut {
       finishedGoodQty: form.finishedGoodQty,
       finishedGoodUnit: form.finishedGoodUnit,
       rawMaterials: List<JobWorkOutRawMaterialItem>.from(form.rawMaterials),
-      additionalCosts:
-          List<JobWorkOutAdditionalCost>.from(form.additionalCosts),
+      additionalCosts: List<JobWorkOutAdditionalCost>.from(
+        form.additionalCosts,
+      ),
       description: form.description,
       attachedImages: List<SaleFormAttachment>.from(form.attachedImages),
       attachedDocuments: List<SaleFormAttachment>.from(form.attachedDocuments),

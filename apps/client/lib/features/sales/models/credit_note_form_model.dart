@@ -58,8 +58,7 @@ class CreditNoteFormState {
   bool get hasValidLineItems =>
       items.any((item) => item.itemName.trim().isNotEmpty);
 
-  bool get lineItemsHasError =>
-      showValidationErrors && !hasValidLineItems;
+  bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
   bool get isValid => party.trim().isNotEmpty && hasValidLineItems;
 
@@ -94,8 +93,7 @@ class CreditNoteFormState {
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       roundOff: roundOff ?? this.roundOff,
-      showValidationErrors:
-          showValidationErrors ?? this.showValidationErrors,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isDirty: isDirty ?? this.isDirty,
     );
   }

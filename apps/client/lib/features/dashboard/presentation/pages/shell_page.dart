@@ -73,7 +73,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       icon: Icons.home_outlined,
       label: 'Home',
     ),
-    _NavItem(
+    const _NavItem(
       route: AppRoutes.parties,
       icon: Icons.people_outlined,
       label: 'Parties',

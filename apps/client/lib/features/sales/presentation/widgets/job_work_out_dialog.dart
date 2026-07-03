@@ -364,8 +364,9 @@ class _FinishedGoodSection extends StatelessWidget {
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                   ],
-                  onChanged: (value) =>
-                      notifier.updateFinishedGoodQty(double.tryParse(value) ?? 0),
+                  onChanged: (value) => notifier.updateFinishedGoodQty(
+                    double.tryParse(value) ?? 0,
+                  ),
                 ),
               ),
             ),

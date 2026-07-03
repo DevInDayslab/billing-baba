@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   date,
-  integer,
   pgTable,
   text,
   uniqueIndex,
@@ -42,6 +41,7 @@ export const parties = pgTable(
     faceImageUrl: text('face_image_url'),
     connectedSince: date('connected_since'),
     notes: text('notes'),
+    isActive: boolean('is_active').notNull().default(true),
   },
   (table) => [
     uniqueIndex('uq_parties_business_mobile_active')

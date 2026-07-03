@@ -66,7 +66,6 @@ class ServicesTabContent extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 class _ServicesListPanel extends StatelessWidget {

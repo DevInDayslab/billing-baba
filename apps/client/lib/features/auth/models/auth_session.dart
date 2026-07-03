@@ -25,7 +25,8 @@ abstract class MeResponse with _$MeResponse {
   const factory MeResponse({
     required AuthUser user,
     required List<BusinessSummary> businesses,
-    required AccountProfile profile, @JsonKey(name: 'selected_business') BusinessSummary? selectedBusiness,
+    required AccountProfile profile,
+    @JsonKey(name: 'selected_business') BusinessSummary? selectedBusiness,
   }) = _MeResponse;
 
   factory MeResponse.fromJson(Map<String, dynamic> json) =>

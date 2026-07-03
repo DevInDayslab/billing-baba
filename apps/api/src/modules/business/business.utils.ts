@@ -24,10 +24,7 @@ export const STATE_NAME_TO_CODE: Record<string, string> = {
   Chhattisgarh: '22',
 };
 
-export function resolveStateCode(
-  state?: string,
-  stateCode?: string,
-): string {
+export function resolveStateCode(state?: string, stateCode?: string): string {
   if (stateCode?.trim()) {
     return stateCode.trim();
   }

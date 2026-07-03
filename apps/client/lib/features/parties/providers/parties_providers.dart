@@ -1,46 +1,26 @@
-import 'package:billing_baba/features/parties/models/party_list_filter.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
-import 'package:billing_baba/features/parties/providers/parties_provider.dart';
-import 'package:billing_baba/features/parties/providers/party_transactions_provider.dart';
+import 'package:billing_baba/features/parties/providers/parties_selection_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+export 'parties_selection_providers.dart';
+
 final partyNamesProvider = Provider<List<String>>((ref) {
-  return ref.watch(partiesProvider).map((party) => party.name).toList();
+  final parties = ref.watch(partyListProvider);
+  return parties.maybeWhen(
+    data: (items) => items.map((party) => party.name).toList(),
+    orElse: () => [],
+  );
 });
 
 final partiesListProvider = Provider<List<PartyModel>>((ref) {
-  final query = ref.watch(partySearchQueryProvider).toLowerCase();
-  final filter = ref.watch(partyListFilterProvider);
-
-  final filtered = ref.watch(partiesProvider).where((party) {
-    final matchesSearch =
-        query.isEmpty || party.name.toLowerCase().contains(query);
-    if (!matchesSearch) return false;
-
-    return switch (filter) {
-      PartyListFilter.all => true,
-      PartyListFilter.toReceive => party.hasReceivable,
-      PartyListFilter.toPay => party.hasPayable,
-      PartyListFilter.active => party.isActive,
-      PartyListFilter.inactive => !party.isActive,
-    };
-  }).toList();
-
-  filtered.sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
-  return filtered;
+  return ref
+      .watch(partyListProvider)
+      .maybeWhen(
+        data: (items) => items,
+        orElse: () => const <PartyModel>[],
+      );
 });
-
-final selectedPartyIdProvider =
-    NotifierProvider<SelectedPartyId, String?>(SelectedPartyId.new);
-
-final partySearchQueryProvider =
-    NotifierProvider<PartySearchQuery, String>(PartySearchQuery.new);
-
-final partyListFilterProvider =
-    NotifierProvider<PartyListFilterNotifier, PartyListFilter>(
-      PartyListFilterNotifier.new,
-    );
-
-final partyTransactionsProvider = partyTransactionsForPartyProvider;
 
 class PartyBalanceSummary {
   const PartyBalanceSummary({
@@ -57,7 +37,12 @@ class PartyBalanceSummary {
 }
 
 final partyBalanceSummaryProvider = Provider<PartyBalanceSummary>((ref) {
-  final parties = ref.watch(partiesProvider);
+  final parties = ref
+      .watch(partyListProvider)
+      .maybeWhen(
+        data: (items) => items,
+        orElse: () => const <PartyModel>[],
+      );
 
   var totalReceivable = 0.0;
   var receivablePartyCount = 0;
@@ -85,29 +70,18 @@ final partyBalanceSummaryProvider = Provider<PartyBalanceSummary>((ref) {
 final selectedPartyProvider = Provider<PartyModel?>((ref) {
   final selectedId = ref.watch(selectedPartyIdProvider);
   if (selectedId == null) return null;
-  return ref
-      .watch(partiesProvider)
-      .where((party) => party.id == selectedId)
-      .firstOrNull;
+
+  final detail = ref.watch(partyDetailProvider(selectedId));
+  return detail.maybeWhen(
+    data: (party) => party,
+    orElse: () {
+      final parties = ref
+          .watch(partyListProvider)
+          .maybeWhen(
+            data: (items) => items,
+            orElse: () => const <PartyModel>[],
+          );
+      return parties.where((party) => party.id == selectedId).firstOrNull;
+    },
+  );
 });
-
-class SelectedPartyId extends Notifier<String?> {
-  @override
-  String? build() => null;
-
-  void select(String? id) => state = id;
-}
-
-class PartySearchQuery extends Notifier<String> {
-  @override
-  String build() => '';
-
-  void update(String query) => state = query;
-}
-
-class PartyListFilterNotifier extends Notifier<PartyListFilter> {
-  @override
-  PartyListFilter build() => PartyListFilter.all;
-
-  void select(PartyListFilter filter) => state = filter;
-}

@@ -13,9 +13,10 @@ Future<void> main() async {
 
   await dotenv.load();
 
-  final widgetId = dotenv.env['MSG91_WIDGET_ID'] ??
-      dotenv.env['MSG91_MOBILE_WIDGET_ID'];
-  final widgetAuthToken = dotenv.env['MSG91_WIDGET_AUTH_TOKEN'] ??
+  final widgetId =
+      dotenv.env['MSG91_WIDGET_ID'] ?? dotenv.env['MSG91_MOBILE_WIDGET_ID'];
+  final widgetAuthToken =
+      dotenv.env['MSG91_WIDGET_AUTH_TOKEN'] ??
       dotenv.env['MSG91_MOBILE_WIDGET_TOKEN'] ??
       dotenv.env['MSG91_AUTH_TOKEN'];
   if (widgetId != null &&

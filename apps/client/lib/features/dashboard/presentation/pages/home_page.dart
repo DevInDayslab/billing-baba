@@ -519,7 +519,9 @@ class _LowStocksWidget extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: item.$2 < 0 ? AppColors.error : AppColors.textPrimary,
+                      color: item.$2 < 0
+                          ? AppColors.error
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -599,7 +601,7 @@ class _MostUsedReportsSection extends StatelessWidget {
             final itemWidth = columns == 1
                 ? constraints.maxWidth
                 : (constraints.maxWidth - (columns - 1) * HomePage._cardGap) /
-                    columns;
+                      columns;
 
             return Wrap(
               spacing: HomePage._cardGap,

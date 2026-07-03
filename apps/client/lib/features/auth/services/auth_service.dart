@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
@@ -27,7 +28,9 @@ class AuthService {
 
     try {
       final me = await _repository.me(accessToken);
-      final selectedId = await _storage.readSecure(StorageKeys.selectedBusinessId);
+      final selectedId = await _storage.readSecure(
+        StorageKeys.selectedBusinessId,
+      );
       if (selectedId != null &&
           selectedId.isNotEmpty &&
           me.businesses.length > 1 &&
@@ -47,8 +50,9 @@ class AuthService {
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        final selectedId =
-            await _storage.readSecure(StorageKeys.selectedBusinessId);
+        final selectedId = await _storage.readSecure(
+          StorageKeys.selectedBusinessId,
+        );
         return refreshStoredSession(
           refreshToken: refreshToken,
           businessId: selectedId,
@@ -62,6 +66,7 @@ class AuthService {
   Future<AuthSession?> refreshStoredSession({
     String? refreshToken,
     String? businessId,
+    bool preserveBusinessScope = true,
   }) async {
     final token =
         refreshToken ?? await _storage.readSecure(StorageKeys.refreshToken);
@@ -69,12 +74,25 @@ class AuthService {
       return null;
     }
 
+    final storedBusinessId = preserveBusinessScope
+        ? await _storage.readSecure(StorageKeys.selectedBusinessId)
+        : null;
+    final effectiveBusinessId =
+        businessId ??
+        ((storedBusinessId != null && storedBusinessId.isNotEmpty)
+            ? storedBusinessId
+            : null);
+
     try {
       final session = await _repository.refresh(
         refreshToken: token,
-        businessId: businessId,
+        businessId: effectiveBusinessId,
       );
-      await persistSession(session, businessId: businessId);
+      final persistBusinessId = _businessIdForSession(
+        session,
+        explicitBusinessId: businessId ?? effectiveBusinessId,
+      );
+      await persistSession(session, businessId: persistBusinessId);
       return session;
     } on DioException {
       await clearSession();
@@ -137,12 +155,40 @@ class AuthService {
     AuthSession session, {
     String? businessId,
   }) async {
+    final previousPhone = _storage.read(StorageKeys.accountPhone);
+    if (previousPhone != null &&
+        previousPhone.isNotEmpty &&
+        previousPhone != session.user.phone) {
+      await SessionCacheCleanup(_storage).clearAll();
+    }
+
     await _storage.writeSecure(StorageKeys.accessToken, session.accessToken);
     await _storage.writeSecure(StorageKeys.refreshToken, session.refreshToken);
     await _storage.write(StorageKeys.accountPhone, session.user.phone);
-    if (businessId != null) {
-      await _storage.writeSecure(StorageKeys.selectedBusinessId, businessId);
+
+    final selectedId = _businessIdForSession(
+      session,
+      explicitBusinessId: businessId,
+    );
+    if (selectedId != null) {
+      await _storage.writeSecure(StorageKeys.selectedBusinessId, selectedId);
+      await _storage.write(StorageKeys.lastOpenedBusinessId, selectedId);
+    } else {
+      await _storage.deleteSecure(StorageKeys.selectedBusinessId);
     }
+  }
+
+  String? _businessIdForSession(
+    AuthSession session, {
+    String? explicitBusinessId,
+  }) {
+    if (explicitBusinessId != null && explicitBusinessId.isNotEmpty) {
+      return explicitBusinessId;
+    }
+    if (session.user.role != null && session.businesses.length == 1) {
+      return session.businesses.first.id;
+    }
+    return null;
   }
 
   Future<void> clearSession() async {
@@ -150,6 +196,7 @@ class AuthService {
     await _storage.deleteSecure(StorageKeys.refreshToken);
     await _storage.deleteSecure(StorageKeys.selectedBusinessId);
     await _storage.write(StorageKeys.accountPhone, '');
+    await SessionCacheCleanup(_storage).clearAll();
   }
 
   Future<String?> getAccessToken() =>

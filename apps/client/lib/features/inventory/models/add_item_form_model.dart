@@ -154,8 +154,9 @@ class AddItemFormState {
       hsn: hsn ?? this.hsn,
       itemCode: itemCode ?? this.itemCode,
       baseUnitId: clearBaseUnit ? null : (baseUnitId ?? this.baseUnitId),
-      secondaryUnitId:
-          clearSecondaryUnit ? null : (secondaryUnitId ?? this.secondaryUnitId),
+      secondaryUnitId: clearSecondaryUnit
+          ? null
+          : (secondaryUnitId ?? this.secondaryUnitId),
       categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
       description: description ?? this.description,
       activeTab: activeTab ?? this.activeTab,

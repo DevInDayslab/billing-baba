@@ -117,7 +117,8 @@ class PartyPageTitleBar extends StatelessWidget {
         color: AppColors.textSecondary,
         size: 22,
       ),
-      onSelected: onMoreSelected ??
+      onSelected:
+          onMoreSelected ??
           (value) {
             if (value == 'Manage Party Groups') {
               showManagePartyGroupsDialog(context);

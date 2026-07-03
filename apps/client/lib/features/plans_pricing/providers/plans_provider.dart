@@ -451,17 +451,23 @@ class PricingPlans extends _$PricingPlans {
         pricing: {
           (PlanPlatform.desktopMobile, PlanDuration.threeYears):
               goldDesktopMobileThreeYears,
-          (PlanPlatform.desktop, PlanDuration.threeYears): goldDesktopThreeYears,
+          (PlanPlatform.desktop, PlanDuration.threeYears):
+              goldDesktopThreeYears,
           (PlanPlatform.mobile, PlanDuration.threeYears): goldMobileThreeYears,
           (PlanPlatform.mobile, PlanDuration.oneYear): goldMobileOneYear,
           // TODO(team): replace placeholder 1-year desktop pricing with real backend values.
-          (PlanPlatform.desktopMobile, PlanDuration.oneYear):
-              _placeholderOneYearPricing(
+          (
+            PlanPlatform.desktopMobile,
+            PlanDuration.oneYear,
+          ): _placeholderOneYearPricing(
             threeYearOriginal: 18699,
             threeYear: goldDesktopMobileThreeYears,
             ctaLabel: 'Renew Gold',
           ),
-          (PlanPlatform.desktop, PlanDuration.oneYear): _placeholderOneYearPricing(
+          (
+            PlanPlatform.desktop,
+            PlanDuration.oneYear,
+          ): _placeholderOneYearPricing(
             threeYearOriginal: 17099,
             threeYear: goldDesktopThreeYears,
             ctaLabel: 'Renew Gold',
@@ -477,16 +483,22 @@ class PricingPlans extends _$PricingPlans {
               platinumDesktopMobileThreeYears,
           (PlanPlatform.desktop, PlanDuration.threeYears):
               platinumDesktopThreeYears,
-          (PlanPlatform.mobile, PlanDuration.threeYears): platinumMobileThreeYears,
+          (PlanPlatform.mobile, PlanDuration.threeYears):
+              platinumMobileThreeYears,
           (PlanPlatform.mobile, PlanDuration.oneYear): platinumMobileOneYear,
           // TODO(team): replace placeholder 1-year desktop pricing with real backend values.
-          (PlanPlatform.desktopMobile, PlanDuration.oneYear):
-              _placeholderOneYearPricing(
+          (
+            PlanPlatform.desktopMobile,
+            PlanDuration.oneYear,
+          ): _placeholderOneYearPricing(
             threeYearOriginal: 52999,
             threeYear: platinumDesktopMobileThreeYears,
             ctaLabel: 'Upgrade to Platinum',
           ),
-          (PlanPlatform.desktop, PlanDuration.oneYear): _placeholderOneYearPricing(
+          (
+            PlanPlatform.desktop,
+            PlanDuration.oneYear,
+          ): _placeholderOneYearPricing(
             threeYearOriginal: 42999,
             threeYear: platinumDesktopThreeYears,
             ctaLabel: 'Upgrade to Platinum',
@@ -506,9 +518,10 @@ Map<PlanPriceKey, AddonPricing> _scaledAddonPricing({
   return {
     for (final entry in silver.entries)
       entry.key: AddonPricing(
-        originalPrice: (entry.value.originalPrice * originalRatio).roundToDouble(),
-        discountedPrice:
-            (entry.value.discountedPrice * discountedRatio).roundToDouble(),
+        originalPrice: (entry.value.originalPrice * originalRatio)
+            .roundToDouble(),
+        discountedPrice: (entry.value.discountedPrice * discountedRatio)
+            .roundToDouble(),
       ),
   };
 }

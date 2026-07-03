@@ -91,11 +91,13 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
       return false;
     }
 
-    final result = ref.read(inventoryUnitsProvider.notifier).addConversion(
-      baseUnitId: _baseUnitId,
-      secondaryUnitId: _secondaryUnitId!,
-      rate: rate,
-    );
+    final result = ref
+        .read(inventoryUnitsProvider.notifier)
+        .addConversion(
+          baseUnitId: _baseUnitId,
+          secondaryUnitId: _secondaryUnitId!,
+          rate: rate,
+        );
 
     if (!result.isSuccess) {
       setState(() => _errorMessage = result.error);
