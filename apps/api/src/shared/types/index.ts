@@ -1,5 +1,7 @@
 export type {
+  ApiDataResponse,
+  ApiErrorBody,
   ApiErrorResponse,
-  ApiSuccessResponse,
+  ApiPaginatedResponse,
   DatabaseHealthStatus,
 } from './api-response';
