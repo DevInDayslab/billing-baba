@@ -41,7 +41,6 @@ class UnitsTabContent extends ConsumerWidget {
             ),
     );
   }
-
 }
 
 class _UnitsListPanel extends StatelessWidget {

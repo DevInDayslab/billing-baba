@@ -2,15 +2,12 @@ import { and, eq, ne, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { businesses } from '../../db/schema/business/tables';
 import { users } from '../../db/schema/identity/tables';
+import { categories, godowns } from '../../db/schema/inventory/tables';
+import { expenseCategories } from '../../db/schema/purchases/tables';
 import {
   businessSettings,
   documentNumberSequences,
 } from '../../db/schema/settings/tables';
-import {
-  categories,
-  godowns,
-} from '../../db/schema/inventory/tables';
-import { expenseCategories } from '../../db/schema/purchases/tables';
 import type {
   CreateBusinessBody,
   UpdateBusinessProfileBody,
@@ -175,9 +172,7 @@ export class BusinessRepository {
         }
       }
 
-      const stateCode = input.state
-        ? resolveStateCode(input.state)
-        : undefined;
+      const stateCode = input.state ? resolveStateCode(input.state) : undefined;
 
       const [updated] = await tx
         .update(businesses)

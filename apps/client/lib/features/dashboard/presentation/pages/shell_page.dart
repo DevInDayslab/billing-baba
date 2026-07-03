@@ -64,7 +64,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       icon: Icons.home_outlined,
       label: 'Home',
     ),
-    _NavItem(
+    const _NavItem(
       route: AppRoutes.parties,
       icon: Icons.people_outlined,
       label: 'Parties',
@@ -225,13 +225,15 @@ class _ShellPageState extends ConsumerState<ShellPage> {
 
   Widget _buildNavItem(_NavItem item, String currentLocation) {
     if (item.isExpandable) {
-      final isSale = item.subItems.any((s) => s.route.startsWith(AppRoutes.sale));
-      final isParties = item.subItems.any((s) => s.route.startsWith(AppRoutes.parties));
+      final isSale = item.subItems.any(
+        (s) => s.route.startsWith(AppRoutes.sale),
+      );
+      final isParties = item.subItems.any(
+        (s) => s.route.startsWith(AppRoutes.parties),
+      );
       final isParentActive = isSale
           ? currentLocation.startsWith(AppRoutes.sale)
-          : isParties
-              ? currentLocation.startsWith(AppRoutes.parties)
-              : false;
+          : isParties && currentLocation.startsWith(AppRoutes.parties);
       final isExpanded = isSale ? _isSaleExpanded : _isPartiesExpanded;
 
       return Column(
@@ -255,13 +257,13 @@ class _ShellPageState extends ConsumerState<ShellPage> {
             ...item.subItems.map((sub) {
               final isSubActive = isSale
                   ? (currentLocation == sub.route ||
-                      (sub.route == AppRoutes.saleInvoices &&
-                          (currentLocation == AppRoutes.addSale ||
-                              currentLocation.startsWith(
-                                '${AppRoutes.editSale}/',
-                              ))) ||
-                      (sub.route == AppRoutes.saleReturnCreditNote &&
-                          currentLocation == AppRoutes.addCreditNote))
+                        (sub.route == AppRoutes.saleInvoices &&
+                            (currentLocation == AppRoutes.addSale ||
+                                currentLocation.startsWith(
+                                  '${AppRoutes.editSale}/',
+                                ))) ||
+                        (sub.route == AppRoutes.saleReturnCreditNote &&
+                            currentLocation == AppRoutes.addCreditNote))
                   : currentLocation == sub.route;
               return _SidebarNavSubTile(
                 label: sub.label,

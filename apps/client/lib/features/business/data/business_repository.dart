@@ -56,7 +56,9 @@ class BusinessRepository {
         .toList();
   }
 
-  Future<BusinessDetailDto> createBusiness(CreateBusinessRequest request) async {
+  Future<BusinessDetailDto> createBusiness(
+    CreateBusinessRequest request,
+  ) async {
     final response = await _dio.post<Map<String, dynamic>>(
       ApiEndpoints.businesses,
       data: request.toJson(),

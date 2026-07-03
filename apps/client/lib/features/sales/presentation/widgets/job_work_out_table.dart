@@ -30,7 +30,10 @@ const double _minTableWidth =
 class JobWorkOutTable extends ConsumerWidget {
   const JobWorkOutTable({super.key});
 
-  Future<void> _openForm(BuildContext context, {SavedJobWorkOut? existing}) async {
+  Future<void> _openForm(
+    BuildContext context, {
+    SavedJobWorkOut? existing,
+  }) async {
     await showJobWorkOutDialog(context, existing: existing);
   }
 
@@ -154,15 +157,30 @@ class _TableHeaderRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          SizedBox(width: _dateColWidth, child: Text('DATE', style: _headerStyle)),
-          SizedBox(width: _partyColWidth, child: Text('PARTY', style: _headerStyle)),
-          SizedBox(width: _jobIdColWidth, child: Text('JOB ID', style: _headerStyle)),
+          SizedBox(
+            width: _dateColWidth,
+            child: Text('DATE', style: _headerStyle),
+          ),
+          SizedBox(
+            width: _partyColWidth,
+            child: Text('PARTY', style: _headerStyle),
+          ),
+          SizedBox(
+            width: _jobIdColWidth,
+            child: Text('JOB ID', style: _headerStyle),
+          ),
           SizedBox(
             width: _deliveryColWidth,
             child: Text('DELIVERY DATE', style: _headerStyle),
           ),
-          SizedBox(width: _statusColWidth, child: Text('STATUS', style: _headerStyle)),
-          SizedBox(width: _actionsColWidth, child: Text('ACTIONS', style: _headerStyle)),
+          SizedBox(
+            width: _statusColWidth,
+            child: Text('STATUS', style: _headerStyle),
+          ),
+          SizedBox(
+            width: _actionsColWidth,
+            child: Text('ACTIONS', style: _headerStyle),
+          ),
         ],
       ),
     );
@@ -189,10 +207,12 @@ class _DataRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusLabel =
-        item.status == JobWorkOutStatus.open ? 'Open' : 'Closed';
-    final statusColor =
-        item.status == JobWorkOutStatus.open ? _statusOpenColor : _statusClosedColor;
+    final statusLabel = item.status == JobWorkOutStatus.open
+        ? 'Open'
+        : 'Closed';
+    final statusColor = item.status == JobWorkOutStatus.open
+        ? _statusOpenColor
+        : _statusClosedColor;
 
     return Material(
       color: Colors.transparent,

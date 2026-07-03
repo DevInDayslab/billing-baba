@@ -112,7 +112,9 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
               if (isNarrow) {
                 return Column(
                   children: [
-                    _ActivePlanColumn(platformDurationLabel: _platformDurationLabel),
+                    _ActivePlanColumn(
+                      platformDurationLabel: _platformDurationLabel,
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     const Icon(
                       Icons.arrow_downward,
@@ -120,7 +122,9 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
                       size: 28,
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    _UpgradePlanColumn(platformDurationLabel: _platformDurationLabel),
+                    _UpgradePlanColumn(
+                      platformDurationLabel: _platformDurationLabel,
+                    ),
                   ],
                 );
               }
@@ -361,9 +365,9 @@ class _DialogHeader extends StatelessWidget {
               title,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           IconButton(
@@ -665,8 +669,8 @@ class _DashedDivider extends StatelessWidget {
       builder: (context, constraints) {
         const dashWidth = 6.0;
         const dashGap = 4.0;
-        final dashCount =
-            (constraints.maxWidth / (dashWidth + dashGap)).floor();
+        final dashCount = (constraints.maxWidth / (dashWidth + dashGap))
+            .floor();
         return Row(
           children: List.generate(dashCount, (index) {
             return Padding(

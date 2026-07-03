@@ -34,8 +34,10 @@ class PlanCardCompact extends StatelessWidget {
 
   String _formatPrice(double price) => '₹${_priceFormat.format(price)}';
 
-  List<PlanFeature> _displayFeatures() =>
-      features.where((f) => !f.isCategoryHeader).take(_compactFeatureLimit).toList();
+  List<PlanFeature> _displayFeatures() => features
+      .where((f) => !f.isCategoryHeader)
+      .take(_compactFeatureLimit)
+      .toList();
 
   @override
   Widget build(BuildContext context) {
@@ -295,8 +297,7 @@ class _FeatureListItem extends StatelessWidget {
         ),
       );
     } else {
-      final included =
-          isGold ? feature.goldIncluded : feature.platinumIncluded;
+      final included = isGold ? feature.goldIncluded : feature.platinumIncluded;
       trailing = Icon(
         included == true ? Icons.check : Icons.close,
         color: included == true ? checkColor : crossColor,

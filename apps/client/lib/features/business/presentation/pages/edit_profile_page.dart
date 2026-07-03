@@ -291,7 +291,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                 const SizedBox(height: AppSpacing.md),
                                 _LabeledField(
                                   label: 'Business Type',
-                                  errorText: formState.errorFor('business_type'),
+                                  errorText: formState.errorFor(
+                                    'business_type',
+                                  ),
                                   child: _OutlinedDropdown<String>(
                                     value: _businessType,
                                     hintText: 'Business Type',
@@ -303,8 +305,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                 const SizedBox(height: AppSpacing.md),
                                 _LabeledField(
                                   label: 'Business Category',
-                                  errorText:
-                                      formState.errorFor('business_category'),
+                                  errorText: formState.errorFor(
+                                    'business_category',
+                                  ),
                                   child: _OutlinedDropdown<String>(
                                     value: _businessCategory,
                                     hintText: 'Business Category',

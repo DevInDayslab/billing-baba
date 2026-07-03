@@ -55,14 +55,12 @@ class SaleOrderFormState {
 
   double get balanceAmount => (total - advanceAmount).clamp(0, double.infinity);
 
-  bool get partyHasError =>
-      showValidationErrors && party.trim().isEmpty;
+  bool get partyHasError => showValidationErrors && party.trim().isEmpty;
 
   bool get hasValidLineItems =>
       items.any((item) => item.itemName.trim().isNotEmpty);
 
-  bool get lineItemsHasError =>
-      showValidationErrors && !hasValidLineItems;
+  bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
   bool get isValid => party.trim().isNotEmpty && hasValidLineItems;
 
@@ -96,8 +94,7 @@ class SaleOrderFormState {
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       roundOff: roundOff ?? this.roundOff,
-      showValidationErrors:
-          showValidationErrors ?? this.showValidationErrors,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
     );
   }
 }

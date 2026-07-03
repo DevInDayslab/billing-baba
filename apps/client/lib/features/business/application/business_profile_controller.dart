@@ -33,8 +33,9 @@ class EditBusinessProfileFormState {
       fieldErrors: clearFieldErrors
           ? const {}
           : fieldErrors ?? this.fieldErrors,
-      generalError:
-          clearGeneralError ? null : generalError ?? this.generalError,
+      generalError: clearGeneralError
+          ? null
+          : generalError ?? this.generalError,
     );
   }
 }

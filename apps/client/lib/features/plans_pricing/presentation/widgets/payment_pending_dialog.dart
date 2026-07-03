@@ -9,8 +9,7 @@ Future<void> showPaymentPendingDialog(
   BuildContext context, {
   required double amount,
 }) {
-  final transactionId =
-      (Random().nextInt(9000000) + 1000000).toString();
+  final transactionId = (Random().nextInt(9000000) + 1000000).toString();
   final formattedAmount =
       '₹${NumberFormat('#,##0.##', 'en_IN').format(amount)}';
 

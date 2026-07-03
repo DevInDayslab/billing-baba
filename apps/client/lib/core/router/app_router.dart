@@ -48,8 +48,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           AuthStatus.needsBusinessSelection => AppRoutes.businessList,
           AuthStatus.needsBusinessCreation => AppRoutes.businessList,
           AuthStatus.otpSent => AppRoutes.verifyOtp,
-          AuthStatus.unauthenticated || AuthStatus.initializing =>
-            AppRoutes.login,
+          AuthStatus.unauthenticated ||
+          AuthStatus.initializing => AppRoutes.login,
         };
       }
 
@@ -94,7 +94,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.parties,
-            redirect: (_, __) => AppRoutes.partyDetails,
+            redirect: (_, _) => AppRoutes.partyDetails,
           ),
           GoRoute(
             path: AppRoutes.partyDetails,
@@ -177,7 +177,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.purchase,
-            builder: (context, state) => const ComingSoonPage(title: 'Purchase'),
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Purchase'),
           ),
           GoRoute(
             path: AppRoutes.purchaseReturn,
@@ -186,11 +187,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.expenses,
-            builder: (context, state) => const ComingSoonPage(title: 'Expenses'),
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Expenses'),
           ),
           GoRoute(
             path: AppRoutes.debitNote,
-            builder: (context, state) => const ComingSoonPage(title: 'Debit Note'),
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Debit Note'),
           ),
           GoRoute(
             path: AppRoutes.reports,

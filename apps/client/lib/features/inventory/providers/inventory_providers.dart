@@ -11,7 +11,8 @@ import 'package:riverpod/src/providers/provider.dart';
 
 final productsProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(productSearchQueryProvider).toLowerCase();
-  return ref.watch(inventoryItemsProvider)
+  return ref
+      .watch(inventoryItemsProvider)
       .where((item) => item.type == ItemType.product)
       .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
       .toList();
@@ -20,7 +21,8 @@ final productsProvider = Provider<List<InventoryItem>>((ref) {
 final servicesProvider = FutureProvider<List<InventoryItem>>((ref) async {
   await Future<void>.delayed(const Duration(milliseconds: 800));
   final query = ref.watch(serviceSearchQueryProvider).toLowerCase();
-  return ref.watch(inventoryItemsProvider)
+  return ref
+      .watch(inventoryItemsProvider)
       .where((item) => item.type == ItemType.service)
       .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
       .toList();
@@ -43,7 +45,8 @@ final categoriesProvider = Provider<List<InventoryCategory>>((ref) {
     return items.where((item) => item.categoryId == category.id).length;
   }
 
-  return ref.watch(inventoryCategoriesProvider)
+  return ref
+      .watch(inventoryCategoriesProvider)
       .map(
         (category) => InventoryCategory(
           id: category.id,
@@ -59,20 +62,25 @@ final categoriesProvider = Provider<List<InventoryCategory>>((ref) {
       .toList();
 });
 
-final ProviderFamily<List<InventoryItem>, String> categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
-  ref,
-  categoryId,
-) {
-  final query = ref.watch(categoryItemSearchQueryProvider).toLowerCase();
-  return ref.watch(inventoryItemsProvider)
-      .where((item) => item.categoryId == categoryId)
-      .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
-      .toList();
-});
+final ProviderFamily<List<InventoryItem>, String> categoryItemsProvider =
+    Provider.family<List<InventoryItem>, String>((
+      ref,
+      categoryId,
+    ) {
+      final query = ref.watch(categoryItemSearchQueryProvider).toLowerCase();
+      return ref
+          .watch(inventoryItemsProvider)
+          .where((item) => item.categoryId == categoryId)
+          .where(
+            (item) => query.isEmpty || item.name.toLowerCase().contains(query),
+          )
+          .toList();
+    });
 
 final unitsProvider = Provider<List<InventoryUnit>>((ref) {
   final query = ref.watch(unitSearchQueryProvider).toLowerCase();
-  return ref.watch(inventoryUnitsProvider)
+  return ref
+      .watch(inventoryUnitsProvider)
       .where(
         (unit) =>
             query.isEmpty ||
@@ -101,23 +109,28 @@ class InventoryItemsTabIndex extends Notifier<int> {
   }
 }
 
-final selectedProductIdProvider =
-    NotifierProvider<SelectedProductId, String?>(SelectedProductId.new);
+final selectedProductIdProvider = NotifierProvider<SelectedProductId, String?>(
+  SelectedProductId.new,
+);
 
-final selectedServiceIdProvider =
-    NotifierProvider<SelectedServiceId, String?>(SelectedServiceId.new);
+final selectedServiceIdProvider = NotifierProvider<SelectedServiceId, String?>(
+  SelectedServiceId.new,
+);
 
 final selectedCategoryIdProvider =
     NotifierProvider<SelectedCategoryId, String?>(SelectedCategoryId.new);
 
-final selectedUnitIdProvider =
-    NotifierProvider<SelectedUnitId, String?>(SelectedUnitId.new);
+final selectedUnitIdProvider = NotifierProvider<SelectedUnitId, String?>(
+  SelectedUnitId.new,
+);
 
-final productSearchQueryProvider =
-    NotifierProvider<ProductSearchQuery, String>(ProductSearchQuery.new);
+final productSearchQueryProvider = NotifierProvider<ProductSearchQuery, String>(
+  ProductSearchQuery.new,
+);
 
-final serviceSearchQueryProvider =
-    NotifierProvider<ServiceSearchQuery, String>(ServiceSearchQuery.new);
+final serviceSearchQueryProvider = NotifierProvider<ServiceSearchQuery, String>(
+  ServiceSearchQuery.new,
+);
 
 final categorySearchQueryProvider =
     NotifierProvider<CategorySearchQuery, String>(CategorySearchQuery.new);
@@ -127,8 +140,9 @@ final categoryItemSearchQueryProvider =
       CategoryItemSearchQuery.new,
     );
 
-final unitSearchQueryProvider =
-    NotifierProvider<UnitSearchQuery, String>(UnitSearchQuery.new);
+final unitSearchQueryProvider = NotifierProvider<UnitSearchQuery, String>(
+  UnitSearchQuery.new,
+);
 
 final unitConversionSearchQueryProvider =
     NotifierProvider<UnitConversionSearchQuery, String>(
@@ -140,23 +154,26 @@ final productTransactionSearchQueryProvider =
       ProductTransactionSearchQuery.new,
     );
 
-final ProviderFamily<List<ProductTransaction>, String> productTransactionsProvider =
-    Provider.family<List<ProductTransaction>, String>((ref, itemId) {
-      final query =
-          ref.watch(productTransactionSearchQueryProvider).toLowerCase();
-      return InventoryCatalog.productTransactions
-          .where((txn) => txn.itemId == itemId)
-          .where(
-            (txn) =>
-                query.isEmpty ||
-                txn.typeLabel.toLowerCase().contains(query) ||
-                txn.invoiceRefNo.toLowerCase().contains(query) ||
-                txn.partyName.toLowerCase().contains(query) ||
-                txn.status.toLowerCase().contains(query),
-          )
-          .toList()
-        ..sort((a, b) => b.date.compareTo(a.date));
-    });
+final ProviderFamily<List<ProductTransaction>, String>
+productTransactionsProvider = Provider.family<List<ProductTransaction>, String>(
+  (ref, itemId) {
+    final query = ref
+        .watch(productTransactionSearchQueryProvider)
+        .toLowerCase();
+    return InventoryCatalog.productTransactions
+        .where((txn) => txn.itemId == itemId)
+        .where(
+          (txn) =>
+              query.isEmpty ||
+              txn.typeLabel.toLowerCase().contains(query) ||
+              txn.invoiceRefNo.toLowerCase().contains(query) ||
+              txn.partyName.toLowerCase().contains(query) ||
+              txn.status.toLowerCase().contains(query),
+        )
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+  },
+);
 
 class SelectedProductId extends Notifier<String?> {
   @override
