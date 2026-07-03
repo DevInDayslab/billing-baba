@@ -150,7 +150,9 @@ class _PreviewShareDialogState extends State<PreviewShareDialog>
                             onTap: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Online store setup coming soon'),
+                                  content: Text(
+                                    'Online store setup coming soon',
+                                  ),
                                 ),
                               );
                             },
@@ -295,7 +297,10 @@ class _OnlineStoreBanner extends StatelessWidget {
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                ),
                 children: [
                   const TextSpan(
                     text: 'Get your own website for online store now. ',

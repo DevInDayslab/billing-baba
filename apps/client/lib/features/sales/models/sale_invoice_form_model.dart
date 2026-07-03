@@ -6,8 +6,6 @@ enum SaleType { cash, credit }
 enum InvoiceNumberMode { auto, manual }
 
 class SaleLineItem {
-
-  factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
   const SaleLineItem({
     required this.id,
     this.itemName = '',
@@ -17,6 +15,8 @@ class SaleLineItem {
     this.discountPercent = 0,
     this.taxPercent = 0,
   });
+
+  factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
 
   final String id;
   final String itemName;
@@ -149,8 +149,7 @@ class AddSaleFormState {
   }
 
   /// 1 loyalty point = ₹1 (placeholder until loyalty module exists).
-  double get loyaltyPointsValue =>
-      loyaltyPointsEnabled ? loyaltyPointsUsed : 0;
+  double get loyaltyPointsValue => loyaltyPointsEnabled ? loyaltyPointsUsed : 0;
 
   double get remainingAmount =>
       (grandTotal - loyaltyPointsValue).clamp(0, double.infinity);

@@ -36,8 +36,9 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
       rawMaterials: saved.rawMaterials.isEmpty
           ? [JobWorkOutRawMaterialItem.empty(id: nextRawMaterialId())]
           : List<JobWorkOutRawMaterialItem>.from(saved.rawMaterials),
-      additionalCosts:
-          List<JobWorkOutAdditionalCost>.from(saved.additionalCosts),
+      additionalCosts: List<JobWorkOutAdditionalCost>.from(
+        saved.additionalCosts,
+      ),
       description: saved.description,
       attachedImages: List<SaleFormAttachment>.from(saved.attachedImages),
       attachedDocuments: List<SaleFormAttachment>.from(saved.attachedDocuments),
@@ -88,8 +89,9 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
 
   void removeImage(String id) {
     state = state.copyWith(
-      attachedImages:
-          state.attachedImages.where((image) => image.id != id).toList(),
+      attachedImages: state.attachedImages
+          .where((image) => image.id != id)
+          .toList(),
     );
   }
 
@@ -161,8 +163,9 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
 
   void removeAdditionalCost(String id) {
     state = state.copyWith(
-      additionalCosts:
-          state.additionalCosts.where((cost) => cost.id != id).toList(),
+      additionalCosts: state.additionalCosts
+          .where((cost) => cost.id != id)
+          .toList(),
     );
   }
 

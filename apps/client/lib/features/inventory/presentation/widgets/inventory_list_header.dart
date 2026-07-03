@@ -13,35 +13,74 @@ class InventoryListHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
+      clipBehavior: Clip.hardEdge,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 10,
+      ),
       decoration: const BoxDecoration(
         color: Color(0xFFF5F5F5),
         border: Border(bottom: BorderSide(color: inventoryCardBorder)),
       ),
-      child: Row(
+      child: InventoryListRowLayout(
+        flexValues: [for (final column in columns) column.flex],
+        trailing: const SizedBox(width: 28),
         children: [
-          for (var i = 0; i < columns.length; i++) ...[
-            if (i > 0) const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              flex: columns[i].flex,
-              child: Row(
-                children: [
-                  Text(columns[i].label, style: InventoryStyles.listHeaderStyle),
-                  if (columns[i].showFilter) ...[
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.filter_list,
-                      size: 14,
-                      color: Colors.grey.shade500,
-                    ),
-                  ],
+          for (final column in columns)
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    column.label,
+                    style: InventoryStyles.listHeaderStyle,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (column.showFilter) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.filter_list,
+                    size: 14,
+                    color: Colors.grey.shade500,
+                  ),
                 ],
-              ),
+              ],
             ),
-          ],
-          const SizedBox(width: 28),
         ],
       ),
+    );
+  }
+}
+
+/// Row layout that mirrors [InventoryListHeader] column spacing so data rows
+/// align without sub-pixel overflow.
+class InventoryListRowLayout extends StatelessWidget {
+  const InventoryListRowLayout({
+    required this.flexValues,
+    required this.children,
+    this.trailing = const SizedBox(width: 28),
+    super.key,
+  });
+
+  final List<int> flexValues;
+  final List<Widget> children;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    assert(flexValues.length == children.length);
+
+    return Row(
+      children: [
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0) const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            flex: flexValues[i],
+            child: children[i],
+          ),
+        ],
+        trailing,
+      ],
     );
   }
 }
@@ -75,19 +114,40 @@ class InventoryListEmptyState extends StatelessWidget {
 }
 
 class InventoryListRowMenu extends StatelessWidget {
-  const InventoryListRowMenu({this.onTap, super.key});
+  const InventoryListRowMenu({
+    this.menuItems,
+    this.onSelected,
+    super.key,
+  });
 
-  final VoidCallback? onTap;
+  final List<PopupMenuEntry<String>>? menuItems;
+  final ValueChanged<String>? onSelected;
+
+  static const _iconColor = Color(0xFF616161);
+
+  static const _defaultMenuItems = <PopupMenuEntry<String>>[
+    PopupMenuItem(value: 'Edit', child: Text('Edit')),
+    PopupMenuItem(value: 'Delete', child: Text('Delete')),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      icon: const Icon(Icons.more_vert, size: 18),
-      color: AppColors.textSecondary,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+    return InventoryPopupMenuButton<String>(
       tooltip: 'More options',
+      offset: const Offset(0, 28),
+      onSelected:
+          onSelected ??
+          (value) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('$value coming soon')),
+            );
+          },
+      itemBuilder: (context) => menuItems ?? _defaultMenuItems,
+      child: const SizedBox(
+        width: 28,
+        height: 28,
+        child: Icon(Icons.more_vert, size: 18, color: _iconColor),
+      ),
     );
   }
 }

@@ -1,8 +1,10 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/auth/providers/auth_provider.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_card.dart';
-import 'package:billing_baba/features/business/providers/business_list_provider.dart';
+import 'package:billing_baba/features/business/presentation/widgets/create_business_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +20,6 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
     with SingleTickerProviderStateMixin {
   static const _headerColor = Color(0xFF1A1A2E);
   static const _maxContentWidth = 1040.0;
-  static const _loggedInPhone = '7987016325';
 
   late final TabController _tabController;
   final _searchController = TextEditingController();
@@ -44,39 +45,189 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
         .toList();
   }
 
+  Future<void> _openCreateBusiness() async {
+    final created = await showCreateBusinessModal(context);
+    if (!mounted || created != true) return;
+
+    final auth = ref.read(authProvider);
+    if (auth.status != AuthStatus.authenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Business created. Select it from the list to continue.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Business created successfully')),
+    );
+    context.go(AppRoutes.home);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final allBusinesses = ref.watch(businessListProvider);
-    final sharedBusinesses =
-        _filterBusinesses(allBusinesses.where((b) => b.isShared).toList());
-    final myBusinesses =
-        _filterBusinesses(allBusinesses.where((b) => !b.isShared).toList());
+    final businessesAsync = ref.watch(businessListProvider);
+    final phoneNumber = ref.watch(loggedInPhoneProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          const _SupportBar(),
-          _Header(
-            searchController: _searchController,
-            tabController: _tabController,
-            onSearchChanged: () => setState(() {}),
-          ),
-          Expanded(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: _maxContentWidth),
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _SharedCompaniesTab(businesses: sharedBusinesses),
-                    _MyCompaniesTab(businesses: myBusinesses),
-                  ],
+      body: businessesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => _ErrorState(
+          onRetry: () => ref.read(businessListProvider.notifier).refresh(),
+        ),
+        data: (allBusinesses) {
+          if (allBusinesses.isEmpty) {
+            return Column(
+              children: [
+                const _SupportBar(),
+                Expanded(
+                  child: _EmptyBusinessState(onCreate: _openCreateBusiness),
+                ),
+                _BottomBar(
+                  phoneNumber: phoneNumber,
+                  onCreate: _openCreateBusiness,
+                  showNewCompany: false,
+                ),
+              ],
+            );
+          }
+
+          final sharedBusinesses = _filterBusinesses(
+            allBusinesses.where((b) => b.isShared).toList(),
+          );
+          final myBusinesses = _filterBusinesses(
+            allBusinesses.where((b) => !b.isShared).toList(),
+          );
+
+          return Column(
+            children: [
+              const _SupportBar(),
+              _Header(
+                searchController: _searchController,
+                tabController: _tabController,
+                onSearchChanged: () => setState(() {}),
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () =>
+                      ref.read(businessListProvider.notifier).refresh(),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: _maxContentWidth,
+                      ),
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _SharedCompaniesTab(businesses: sharedBusinesses),
+                          _MyCompaniesTab(businesses: myBusinesses),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
+              _BottomBar(
+                phoneNumber: phoneNumber,
+                onCreate: _openCreateBusiness,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _EmptyBusinessState extends StatelessWidget {
+  const _EmptyBusinessState({required this.onCreate});
+
+  final VoidCallback onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 480),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: AppRadius.xlBorder,
+                ),
+                child: Icon(
+                  Icons.storefront_outlined,
+                  size: 56,
+                  color: AppColors.primary.withValues(alpha: 0.85),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'No Business Found',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Create your first business to start billing.',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              FilledButton(
+                onPressed: onCreate,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  minimumSize: const Size(220, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.mdBorder,
+                  ),
+                ),
+                child: const Text('Create Business'),
+              ),
+            ],
           ),
-          const _BottomBar(phoneNumber: _loggedInPhone),
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.cloud_off_outlined,
+            size: 48,
+            color: AppColors.error,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Text('Could not load businesses'),
+          const SizedBox(height: AppSpacing.md),
+          FilledButton(onPressed: onRetry, child: const Text('Try again')),
         ],
       ),
     );
@@ -99,8 +250,8 @@ class _SupportBar extends StatelessWidget {
         child: Text(
           'Need help? Call 9333911911 / 080-68195500 — Get Instant Online Support',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+            color: AppColors.textSecondary,
+          ),
           textAlign: TextAlign.center,
         ),
       ),
@@ -142,9 +293,9 @@ class _Header extends StatelessWidget {
                 Text(
                   'Company List',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextField(
@@ -200,24 +351,11 @@ class _SharedCompaniesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (businesses.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.business_outlined,
-              size: 64,
-              color: AppColors.textSecondary.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'No Shared Companies to Show',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-          ],
-        ),
+      return ListView(
+        children: const [
+          SizedBox(height: 120),
+          Center(child: Text('No shared companies to show')),
+        ],
       );
     }
 
@@ -229,10 +367,7 @@ class _SharedCompaniesTab extends ConsumerWidget {
         final business = businesses[index];
         return BusinessCard(
           business: business,
-          onOpen: () {
-            ref.read(businessListProvider.notifier).selectBusiness(business.id);
-            context.go(AppRoutes.home);
-          },
+          onOpen: () => _openBusiness(context, ref, business.id),
         );
       },
     );
@@ -252,8 +387,8 @@ class _MyCompaniesTab extends ConsumerWidget {
         Text(
           'Select a company to continue billing and inventory management.',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+            color: AppColors.textSecondary,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         ...businesses.map(
@@ -261,10 +396,7 @@ class _MyCompaniesTab extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
             child: BusinessCard(
               business: business,
-              onOpen: () {
-                ref.read(businessListProvider.notifier).selectBusiness(business.id);
-                context.go(AppRoutes.home);
-              },
+              onOpen: () => _openBusiness(context, ref, business.id),
             ),
           ),
         ),
@@ -273,20 +405,35 @@ class _MyCompaniesTab extends ConsumerWidget {
   }
 }
 
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({required this.phoneNumber});
+Future<void> _openBusiness(
+  BuildContext context,
+  WidgetRef ref,
+  String businessId,
+) async {
+  await ref.read(businessListProvider.notifier).selectBusiness(businessId);
+  if (context.mounted) {
+    context.go(AppRoutes.home);
+  }
+}
+
+class _BottomBar extends ConsumerWidget {
+  const _BottomBar({
+    required this.phoneNumber,
+    required this.onCreate,
+    this.showNewCompany = true,
+  });
 
   final String phoneNumber;
+  final VoidCallback onCreate;
+  final bool showNewCompany;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade300),
-        ),
+        border: Border(top: BorderSide(color: Colors.grey.shade300)),
       ),
       child: Center(
         child: ConstrainedBox(
@@ -307,48 +454,34 @@ class _BottomBar extends StatelessWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.phone, size: 18, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.phone,
+                      size: 18,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
                       phoneNumber,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () {},
-                      child: const Text('Restore backup'),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    FilledButton(
-                      onPressed: () {},
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        fontWeight: FontWeight.w500,
                       ),
-                      child: const Text('New Company'),
                     ),
                   ],
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Logout'),
+                if (showNewCompany)
+                  FilledButton(
+                    onPressed: onCreate,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
                     ),
-                    Text(
-                      'Logging out will stop syncing data',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                    ),
-                  ],
+                    child: const Text('New Company'),
+                  ),
+                TextButton(
+                  onPressed: () async {
+                    await ref.read(authProvider.notifier).logout();
+                    if (context.mounted) context.go(AppRoutes.login);
+                  },
+                  child: const Text('Logout'),
                 ),
               ],
             ),

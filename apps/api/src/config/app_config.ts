@@ -32,6 +32,14 @@ const envSchema = z.object({
     emptyToUndefined,
     z.string().min(1).optional(),
   ),
+  MSG91_AUTH_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  ENABLE_DEV_LOGIN: z.preprocess((value) => {
+    if (value === '' || value === undefined) return false;
+    if (typeof value === 'string') {
+      return value.toLowerCase() === 'true';
+    }
+    return Boolean(value);
+  }, z.boolean().default(false)),
   CORS_ORIGINS: z.preprocess(emptyToUndefined, z.string().optional()),
   APP_VERSION: z.preprocess(emptyToUndefined, z.string().optional()),
 });
@@ -47,6 +55,8 @@ export type AppConfig = {
   databaseUrl?: string;
   jwtSecret?: string;
   jwtRefreshSecret?: string;
+  msg91AuthKey?: string;
+  enableDevLogin: boolean;
   corsOrigins: string[];
 };
 
@@ -74,6 +84,8 @@ export function loadAppConfig(): AppConfig {
     databaseUrl: env.DATABASE_URL,
     jwtSecret: env.JWT_SECRET,
     jwtRefreshSecret: env.JWT_REFRESH_SECRET,
+    msg91AuthKey: env.MSG91_AUTH_KEY,
+    enableDevLogin: env.ENABLE_DEV_LOGIN,
     corsOrigins:
       env.CORS_ORIGINS?.split(',')
         .map((origin) => origin.trim())

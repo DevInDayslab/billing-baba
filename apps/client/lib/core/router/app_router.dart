@@ -5,10 +5,24 @@ import 'package:billing_baba/features/auth/presentation/pages/verify_otp_page.da
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/presentation/pages/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/pages/edit_profile_page.dart';
+import 'package:billing_baba/features/dashboard/presentation/pages/coming_soon_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/home_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.dart';
 import 'package:billing_baba/features/inventory/presentation/pages/items_page.dart';
+import 'package:billing_baba/features/parties/presentation/pages/party_details_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/pages/plans_pricing_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/add_debit_note_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/add_expense_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/add_purchase_fa_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/add_purchase_order_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/add_purchase_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/expenses_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/payment_out_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/purchase_bills_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/purchase_fa_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/purchase_order_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/purchase_return_page.dart';
+import 'package:billing_baba/features/reports/presentation/pages/reports_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/add_credit_note_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/add_sale_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/delivery_challan_page.dart';
@@ -34,16 +48,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final onSplash = location == AppRoutes.splash;
       final onLogin = location == AppRoutes.login;
       final onOtp = location == AppRoutes.verifyOtp;
+      final onBusinessList = location == AppRoutes.businessList;
 
-      if (onSplash) return null;
+      if (auth.status == AuthStatus.initializing) {
+        return onSplash ? null : AppRoutes.splash;
+      }
+
+      if (onSplash) {
+        return switch (auth.status) {
+          AuthStatus.authenticated => AppRoutes.home,
+          AuthStatus.needsBusinessSelection => AppRoutes.businessList,
+          AuthStatus.needsBusinessCreation => AppRoutes.businessList,
+          AuthStatus.otpSent => AppRoutes.verifyOtp,
+          AuthStatus.unauthenticated ||
+          AuthStatus.initializing => AppRoutes.login,
+        };
+      }
 
       switch (auth.status) {
         case AuthStatus.unauthenticated:
           if (!onLogin) return AppRoutes.login;
         case AuthStatus.otpSent:
           if (!onOtp) return AppRoutes.verifyOtp;
+        case AuthStatus.needsBusinessCreation:
+        case AuthStatus.needsBusinessSelection:
+          if (!onBusinessList) return AppRoutes.businessList;
         case AuthStatus.authenticated:
           if (onLogin || onOtp) return AppRoutes.home;
+        case AuthStatus.initializing:
+          return AppRoutes.splash;
       }
       return null;
     },
@@ -73,11 +106,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.parties,
-            builder: (context, state) => _placeholderPage('Parties'),
+            redirect: (_, _) => AppRoutes.partyDetails,
+          ),
+          GoRoute(
+            path: AppRoutes.partyDetails,
+            builder: (context, state) => const PartyDetailsPage(),
           ),
           GoRoute(
             path: AppRoutes.items,
             builder: (context, state) => const ItemsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsCategories,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Categories'),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsUnits,
+            builder: (context, state) => const ComingSoonPage(title: 'Units'),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsGodowns,
+            builder: (context, state) => const ComingSoonPage(title: 'Godowns'),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsStockTransfer,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Stock Transfer'),
           ),
           GoRoute(
             path: AppRoutes.sale,
@@ -133,12 +188,113 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AddCreditNotePage(),
           ),
           GoRoute(
+            path: AppRoutes.purchase,
+            redirect: (context, state) => AppRoutes.purchaseBills,
+          ),
+          GoRoute(
+            path: AppRoutes.purchaseBills,
+            builder: (context, state) => const PurchaseBillsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.purchasePaymentOut,
+            builder: (context, state) => const PaymentOutPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.purchaseExpenses,
+            builder: (context, state) => const ExpensesPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.purchaseOrder,
+            builder: (context, state) => const PurchaseOrderPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.purchaseReturnDebitNote,
+            builder: (context, state) => const PurchaseReturnPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addDebitNote,
+            name: 'addDebitNote',
+            builder: (context, state) => const AddDebitNotePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.purchaseFa,
+            builder: (context, state) => const PurchaseFaPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addPurchaseFa,
+            name: 'addPurchaseFa',
+            builder: (context, state) => const AddPurchaseFaPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addPurchase,
+            name: 'addPurchase',
+            builder: (context, state) => const AddPurchasePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addPurchaseOrder,
+            name: 'addPurchaseOrder',
+            builder: (context, state) => const AddPurchaseOrderPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addExpense,
+            name: 'addExpense',
+            builder: (context, state) => const AddExpensePage(),
+          ),
+          GoRoute(
             path: AppRoutes.reports,
-            builder: (context, state) => _placeholderPage('Reports'),
+            builder: (context, state) => const ReportsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.reportsDashboard,
+            redirect: (context, state) => AppRoutes.reports,
+          ),
+          GoRoute(
+            path: AppRoutes.reportsSales,
+            redirect: (context, state) => AppRoutes.reports,
+          ),
+          GoRoute(
+            path: AppRoutes.reportsPurchase,
+            redirect: (context, state) => AppRoutes.reports,
+          ),
+          GoRoute(
+            path: AppRoutes.reportsStock,
+            redirect: (context, state) => AppRoutes.reports,
+          ),
+          GoRoute(
+            path: AppRoutes.reportsParty,
+            redirect: (context, state) => AppRoutes.reports,
+          ),
+          GoRoute(
+            path: AppRoutes.reportsGst,
+            redirect: (context, state) => AppRoutes.reports,
           ),
           GoRoute(
             path: AppRoutes.settings,
-            builder: (context, state) => _placeholderPage('Settings'),
+            redirect: (context, state) => AppRoutes.settingsPreferences,
+          ),
+          GoRoute(
+            path: AppRoutes.settingsUsers,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Users & Roles'),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsTaxes,
+            builder: (context, state) => const ComingSoonPage(title: 'Taxes'),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsInvoiceTemplates,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Invoice Templates'),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsPreferences,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Preferences'),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsBackup,
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Backup & Restore'),
           ),
           GoRoute(
             path: AppRoutes.plansPricing,
@@ -153,13 +309,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-
-Widget _placeholderPage(String title) {
-  return Scaffold(
-    backgroundColor: Colors.transparent,
-    body: Center(child: Text(title)),
-  );
-}
 
 /// Bridges Riverpod auth state changes into a [Listenable] for GoRouter.
 class _AuthListenable extends ChangeNotifier {

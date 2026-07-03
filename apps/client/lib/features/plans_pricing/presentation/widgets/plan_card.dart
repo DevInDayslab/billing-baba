@@ -68,9 +68,7 @@ class PlanCard extends StatelessWidget {
             color: isGold ? AppColors.surface : _platinumBg,
             borderRadius: AppRadius.lgBorder,
             border: Border.all(
-              color: isGold
-                  ? const Color(0xFFE0E0E0)
-                  : const Color(0xFFB39DDB),
+              color: isGold ? const Color(0xFFE0E0E0) : const Color(0xFFB39DDB),
               width: isGold ? 1 : 1.5,
             ),
             boxShadow: isGold
@@ -233,7 +231,9 @@ class PlanCard extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,
                     side: const BorderSide(color: AppColors.error),
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + 4),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.sm + 4,
+                    ),
                     textStyle: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -246,7 +246,9 @@ class PlanCard extends StatelessWidget {
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.error,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + 4),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.sm + 4,
+                    ),
                     textStyle: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -288,8 +290,7 @@ class _FeatureListItem extends StatelessWidget {
         ),
       );
     } else {
-      final included =
-          isGold ? feature.goldIncluded : feature.platinumIncluded;
+      final included = isGold ? feature.goldIncluded : feature.platinumIncluded;
       trailing = Icon(
         included == true ? Icons.check : Icons.close,
         color: included == true ? checkColor : crossColor,

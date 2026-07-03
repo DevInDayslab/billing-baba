@@ -42,7 +42,7 @@ final class SaleOrderFormNotifierProvider
 }
 
 String _$saleOrderFormNotifierHash() =>
-    r'e62630ef907b4b3fe280ab7bc447f4c0d71e3cb8';
+    r'65253a569d1dc71420fe8cc33d3637e4f48142c4';
 
 abstract class _$SaleOrderFormNotifier extends $Notifier<SaleOrderFormState> {
   SaleOrderFormState build();

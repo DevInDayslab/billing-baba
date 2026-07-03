@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/credit_note_footer.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/credit_note_line_items_table.dart';
@@ -235,18 +236,12 @@ class _BottomActionBar extends ConsumerWidget {
             child: const Text('Cancel', style: TextStyle(fontSize: 13)),
           ),
           const SizedBox(width: AppSpacing.sm),
-          OutlinedButton.icon(
-            onPressed: () {
+          ShareMenuButton(
+            onChannelSelected: (channel) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Share coming soon')),
+                SnackBar(content: Text('${channel.label} coming soon')),
               );
             },
-            icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-            label: const Text('Share', style: TextStyle(fontSize: 13)),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              side: const BorderSide(color: _cardBorder),
-            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           FilledButton(

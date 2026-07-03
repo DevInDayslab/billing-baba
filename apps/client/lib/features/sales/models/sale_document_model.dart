@@ -66,14 +66,12 @@ class SaleDocumentFormState {
     return roundOff ? grand.roundToDouble() : grand;
   }
 
-  bool get partyHasError =>
-      showValidationErrors && party.trim().isEmpty;
+  bool get partyHasError => showValidationErrors && party.trim().isEmpty;
 
   bool get hasValidLineItems =>
       items.any((item) => item.itemName.trim().isNotEmpty);
 
-  bool get lineItemsHasError =>
-      showValidationErrors && !hasValidLineItems;
+  bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
   bool get isValid => party.trim().isNotEmpty && hasValidLineItems;
 
@@ -107,8 +105,7 @@ class SaleDocumentFormState {
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       taxOption: taxOption ?? this.taxOption,
       roundOff: roundOff ?? this.roundOff,
-      showValidationErrors:
-          showValidationErrors ?? this.showValidationErrors,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
     );
   }
 }

@@ -1,9 +1,7 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -33,15 +31,16 @@ class _SplashPageState extends State<SplashPage>
       curve: const Interval(0, 0.45, curve: Curves.easeOut),
     );
 
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.12),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0, 0.45, curve: Curves.easeOut),
-      ),
-    );
+    _slideAnim =
+        Tween<Offset>(
+          begin: const Offset(0, 0.12),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0, 0.45, curve: Curves.easeOut),
+          ),
+        );
 
     _loadingAnim = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
@@ -50,11 +49,6 @@ class _SplashPageState extends State<SplashPage>
       ),
     );
 
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed && mounted) {
-        context.go(AppRoutes.login);
-      }
-    });
     unawaited(_controller.forward());
   }
 
@@ -75,17 +69,36 @@ class _SplashPageState extends State<SplashPage>
             final isDesktop = w >= 900;
             final isTablet = w >= 600 && w < 900;
 
-            final logoSize = isDesktop ? 250.0 : isTablet ? 190.0 : 140.0;
-            final welcomeFontSize =
-                isDesktop ? 42.0 : isTablet ? 36.0 : 28.0;
-            final brandFontSize =
-                isDesktop ? 48.0 : isTablet ? 40.0 : 32.0;
-            final taglineFontSize =
-                isDesktop ? 18.0 : isTablet ? 16.0 : 14.0;
-            final loadingBarWidth =
-                isDesktop ? 320.0 : isTablet ? 260.0 : 200.0;
-            final contentWidth =
-                isDesktop ? 560.0 : isTablet ? 480.0 : double.infinity;
+            final logoSize = isDesktop
+                ? 250.0
+                : isTablet
+                ? 190.0
+                : 140.0;
+            final welcomeFontSize = isDesktop
+                ? 42.0
+                : isTablet
+                ? 36.0
+                : 28.0;
+            final brandFontSize = isDesktop
+                ? 48.0
+                : isTablet
+                ? 40.0
+                : 32.0;
+            final taglineFontSize = isDesktop
+                ? 18.0
+                : isTablet
+                ? 16.0
+                : 14.0;
+            final loadingBarWidth = isDesktop
+                ? 320.0
+                : isTablet
+                ? 260.0
+                : 200.0;
+            final contentWidth = isDesktop
+                ? 560.0
+                : isTablet
+                ? 480.0
+                : double.infinity;
 
             return Center(
               child: SizedBox(
@@ -97,7 +110,6 @@ class _SplashPageState extends State<SplashPage>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Logo
                       FadeTransition(
                         opacity: _fadeAnim,
                         child: SlideTransition(
@@ -110,10 +122,9 @@ class _SplashPageState extends State<SplashPage>
                           ),
                         ),
                       ),
-
-                      SizedBox(height: isDesktop ? AppSpacing.xxl : AppSpacing.xl),
-
-                      // Welcome to Billing Baba
+                      SizedBox(
+                        height: isDesktop ? AppSpacing.xxl : AppSpacing.xl,
+                      ),
                       FadeTransition(
                         opacity: _fadeAnim,
                         child: SlideTransition(
@@ -146,10 +157,9 @@ class _SplashPageState extends State<SplashPage>
                           ),
                         ),
                       ),
-
-                      SizedBox(height: isDesktop ? AppSpacing.lg : AppSpacing.md),
-
-                      // Tagline
+                      SizedBox(
+                        height: isDesktop ? AppSpacing.lg : AppSpacing.md,
+                      ),
                       FadeTransition(
                         opacity: _fadeAnim,
                         child: Text(
@@ -163,10 +173,7 @@ class _SplashPageState extends State<SplashPage>
                           ),
                         ),
                       ),
-
                       SizedBox(height: isDesktop ? 56.0 : AppSpacing.xxl),
-
-                      // Loading bar
                       FadeTransition(
                         opacity: _fadeAnim,
                         child: ClipRRect(
@@ -179,8 +186,7 @@ class _SplashPageState extends State<SplashPage>
                               builder: (context, _) => LinearProgressIndicator(
                                 value: _loadingAnim.value,
                                 backgroundColor: Colors.grey.shade200,
-                                valueColor:
-                                    const AlwaysStoppedAnimation<Color>(
+                                valueColor: const AlwaysStoppedAnimation<Color>(
                                   AppColors.primary,
                                 ),
                               ),

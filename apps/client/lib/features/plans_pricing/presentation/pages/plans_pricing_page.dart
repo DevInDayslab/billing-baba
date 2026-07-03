@@ -51,10 +51,14 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
     final goldPlan = plans.firstWhere((p) => p.isGold);
     final platinumPlan = plans.firstWhere((p) => !p.isGold);
     final cardFeatures = goldPlan.featuresByPlatform[_selectedPlatform]!;
-    final goldPricing =
-        goldPlan.pricingFor(_selectedPlatform, _selectedDuration);
-    final platinumPricing =
-        platinumPlan.pricingFor(_selectedPlatform, _selectedDuration);
+    final goldPricing = goldPlan.pricingFor(
+      _selectedPlatform,
+      _selectedDuration,
+    );
+    final platinumPricing = platinumPlan.pricingFor(
+      _selectedPlatform,
+      _selectedDuration,
+    );
 
     final scrollContent = SingleChildScrollView(
       padding: EdgeInsets.only(
@@ -201,12 +205,11 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
                     child: FilledButton(
                       onPressed:
                           _selectedCompactPlan == PricingPlanType.platinum &&
-                                  selectedPricing.ctaLabel ==
-                                      'Upgrade to Platinum'
-                              ? () => _openUpgradeDialog(
-                                    selectedPricing.discountedPrice,
-                                  )
-                              : () {},
+                              selectedPricing.ctaLabel == 'Upgrade to Platinum'
+                          ? () => _openUpgradeDialog(
+                              selectedPricing.discountedPrice,
+                            )
+                          : () {},
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.error,
                         foregroundColor: Colors.white,
@@ -285,9 +288,9 @@ class _PageHeader extends StatelessWidget {
             'Plans & Pricing',
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         if (!showFullComparison)
@@ -313,7 +316,10 @@ class _PageHeader extends StatelessWidget {
               ),
               PopupMenuButton<String>(
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+                constraints: const BoxConstraints.tightFor(
+                  width: 40,
+                  height: 40,
+                ),
                 icon: const Icon(
                   Icons.more_vert,
                   color: AppColors.textSecondary,
@@ -369,7 +375,11 @@ class _DiscontinuationBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.amber.shade800, size: 22),
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.amber.shade800,
+            size: 22,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: RichText(
@@ -381,15 +391,15 @@ class _DiscontinuationBanner extends StatelessWidget {
                 ),
                 children: [
                   TextSpan(
-                    text:
-                        "We're discontinuing add-ons soon. Upgrade to the ",
+                    text: "We're discontinuing add-ons soon. Upgrade to the ",
                   ),
                   TextSpan(
                     text: 'Platinum',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   TextSpan(
-                    text: ' plan to continue using all your favourite features.',
+                    text:
+                        ' plan to continue using all your favourite features.',
                   ),
                 ],
               ),
@@ -636,8 +646,7 @@ class _OverviewPlanCards extends StatelessWidget {
                   overviewFeatureLimit: overviewFeatureLimit,
                   featuresExpanded: featuresExpanded,
                   onToggleFeatures: onToggleFeatures,
-                  onCtaPressed:
-                      showUpgradeCta ? onUpgradePressed : null,
+                  onCtaPressed: showUpgradeCta ? onUpgradePressed : null,
                 ),
               ),
             ],

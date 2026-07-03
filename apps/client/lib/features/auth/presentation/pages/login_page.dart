@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -26,9 +27,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     await ref.read(authProvider.notifier).sendOtp(_phoneController.text.trim());
   }
 
+  Future<void> _devLogin() async {
+    await ref.read(authProvider.notifier).devLogin();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(authProvider).isLoading;
+    final auth = ref.watch(authProvider);
+    final isDevLoginLoading =
+        auth.isBackendLogin && auth.status == AuthStatus.unauthenticated;
+    final isOtpFlowLoading =
+        auth.isSendingOtp ||
+        (auth.isBackendLogin && auth.status == AuthStatus.otpSent);
+    final canSend = auth.canSendOtp && !isOtpFlowLoading && !isDevLoginLoading;
+    final showDevLogin = AppConfig.enableDevLogin;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
@@ -95,14 +107,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ? _DesktopCard(
                               formKey: _formKey,
                               phoneController: _phoneController,
-                              isLoading: isLoading,
+                              isOtpFlowLoading: isOtpFlowLoading,
+                              isDevLoginLoading: isDevLoginLoading,
+                              canSend: canSend,
+                              errorMessage: auth.error,
+                              showDevLogin: showDevLogin,
                               onSubmit: _submit,
+                              onDevLogin: _devLogin,
                             )
                           : _MobileCard(
                               formKey: _formKey,
                               phoneController: _phoneController,
-                              isLoading: isLoading,
+                              isOtpFlowLoading: isOtpFlowLoading,
+                              isDevLoginLoading: isDevLoginLoading,
+                              canSend: canSend,
+                              errorMessage: auth.error,
+                              showDevLogin: showDevLogin,
                               onSubmit: _submit,
+                              onDevLogin: _devLogin,
                             ),
                     ),
                   ),
@@ -123,14 +145,24 @@ class _DesktopCard extends StatelessWidget {
   const _DesktopCard({
     required this.formKey,
     required this.phoneController,
-    required this.isLoading,
+    required this.isOtpFlowLoading,
+    required this.isDevLoginLoading,
+    required this.canSend,
     required this.onSubmit,
+    this.errorMessage,
+    this.showDevLogin = false,
+    this.onDevLogin,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
-  final bool isLoading;
+  final bool isOtpFlowLoading;
+  final bool isDevLoginLoading;
+  final bool canSend;
+  final String? errorMessage;
+  final bool showDevLogin;
   final VoidCallback onSubmit;
+  final VoidCallback? onDevLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -187,8 +219,13 @@ class _DesktopCard extends StatelessWidget {
                 child: _LoginForm(
                   formKey: formKey,
                   phoneController: phoneController,
-                  isLoading: isLoading,
+                  isOtpFlowLoading: isOtpFlowLoading,
+                  isDevLoginLoading: isDevLoginLoading,
+                  canSend: canSend,
+                  errorMessage: errorMessage,
+                  showDevLogin: showDevLogin,
                   onSubmit: onSubmit,
+                  onDevLogin: onDevLogin,
                 ),
               ),
             ),
@@ -206,14 +243,24 @@ class _MobileCard extends StatelessWidget {
   const _MobileCard({
     required this.formKey,
     required this.phoneController,
-    required this.isLoading,
+    required this.isOtpFlowLoading,
+    required this.isDevLoginLoading,
+    required this.canSend,
     required this.onSubmit,
+    this.errorMessage,
+    this.showDevLogin = false,
+    this.onDevLogin,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
-  final bool isLoading;
+  final bool isOtpFlowLoading;
+  final bool isDevLoginLoading;
+  final bool canSend;
+  final String? errorMessage;
+  final bool showDevLogin;
   final VoidCallback onSubmit;
+  final VoidCallback? onDevLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -233,8 +280,13 @@ class _MobileCard extends StatelessWidget {
       child: _LoginForm(
         formKey: formKey,
         phoneController: phoneController,
-        isLoading: isLoading,
+        isOtpFlowLoading: isOtpFlowLoading,
+        isDevLoginLoading: isDevLoginLoading,
+        canSend: canSend,
+        errorMessage: errorMessage,
+        showDevLogin: showDevLogin,
         onSubmit: onSubmit,
+        onDevLogin: onDevLogin,
       ),
     );
   }
@@ -247,14 +299,24 @@ class _LoginForm extends StatelessWidget {
   const _LoginForm({
     required this.formKey,
     required this.phoneController,
-    required this.isLoading,
+    required this.isOtpFlowLoading,
+    required this.isDevLoginLoading,
+    required this.canSend,
     required this.onSubmit,
+    this.errorMessage,
+    this.showDevLogin = false,
+    this.onDevLogin,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController phoneController;
-  final bool isLoading;
+  final bool isOtpFlowLoading;
+  final bool isDevLoginLoading;
+  final bool canSend;
+  final String? errorMessage;
+  final bool showDevLogin;
   final VoidCallback onSubmit;
+  final VoidCallback? onDevLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -353,8 +415,10 @@ class _LoginForm extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: AppRadius.mdBorder,
-                borderSide:
-                    const BorderSide(color: AppColors.primary, width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: AppRadius.mdBorder,
@@ -373,6 +437,18 @@ class _LoginForm extends StatelessWidget {
             },
           ),
 
+          if (errorMessage != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              errorMessage!,
+              style: const TextStyle(
+                color: AppColors.error,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+
           const SizedBox(height: AppSpacing.xl),
 
           // Continue button
@@ -380,16 +456,18 @@ class _LoginForm extends StatelessWidget {
             width: double.infinity,
             height: 52,
             child: FilledButton.icon(
-              onPressed: isLoading ? null : onSubmit,
+              onPressed: canSend ? onSubmit : null,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.6),
+                disabledBackgroundColor: AppColors.primary.withValues(
+                  alpha: 0.6,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.mdBorder,
                 ),
               ),
               iconAlignment: IconAlignment.end,
-              icon: isLoading
+              icon: isOtpFlowLoading
                   ? const SizedBox(
                       width: 20,
                       height: 20,
@@ -404,7 +482,7 @@ class _LoginForm extends StatelessWidget {
                       size: 20,
                     ),
               label: Text(
-                isLoading ? 'Sending OTP...' : 'Continue',
+                isOtpFlowLoading ? 'Sending OTP...' : 'Continue',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -414,18 +492,69 @@ class _LoginForm extends StatelessWidget {
             ),
           ),
 
+          if (showDevLogin) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Development Only',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton.icon(
+                onPressed: isDevLoginLoading ? null : onDevLogin,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textSecondary,
+                  side: BorderSide(color: Colors.grey.shade300),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppRadius.mdBorder,
+                  ),
+                ),
+                icon: isDevLoginLoading
+                    ? SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.grey.shade600,
+                        ),
+                      )
+                    : const Icon(Icons.developer_mode_outlined, size: 18),
+                label: Text(
+                  isDevLoginLoading ? 'Signing in...' : 'Developer Login',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+
           const SizedBox(height: AppSpacing.lg),
 
           // Secure login divider
           Row(
             children: [
-              Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+              Expanded(
+                child: Divider(color: Colors.grey.shade300, thickness: 1),
+              ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.lock_outline_rounded, size: 12, color: AppColors.textSecondary),
+                    Icon(
+                      Icons.lock_outline_rounded,
+                      size: 12,
+                      color: AppColors.textSecondary,
+                    ),
                     SizedBox(width: 4),
                     Text(
                       'SECURE LOGIN',
@@ -439,7 +568,9 @@ class _LoginForm extends StatelessWidget {
                   ],
                 ),
               ),
-              Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+              Expanded(
+                child: Divider(color: Colors.grey.shade300, thickness: 1),
+              ),
             ],
           ),
 
@@ -455,12 +586,18 @@ class _LoginForm extends StatelessWidget {
                   TextSpan(text: 'By continuing, you agree to our '),
                   TextSpan(
                     text: 'Terms of Service',
-                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   TextSpan(text: ' and '),
                   TextSpan(
                     text: 'Privacy Policy',
-                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),

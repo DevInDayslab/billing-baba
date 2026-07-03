@@ -1,54 +1,79 @@
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/parties/models/party_list_filter.dart';
+import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   static const _cardGap = 12.0;
   static const _cardPadding = 16.0;
   static const _cardBorder = Color(0xFFE0E0E0);
+
   @override
-  Widget build(BuildContext context) {
-    return const ColoredBox(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ColoredBox(
       color: AppColors.background,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 720;
+          final isMedium = constraints.maxWidth < 1024;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
               children: [
-                Expanded(child: _ReceivableCard()),
-                SizedBox(width: _cardGap),
-                Expanded(child: _PayableCard()),
+                if (isCompact) ...[
+                  const _ReceivableCard(),
+                  const SizedBox(height: _cardGap),
+                  const _PayableCard(),
+                ] else
+                  const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: _ReceivableCard()),
+                      SizedBox(width: _cardGap),
+                      Expanded(child: _PayableCard()),
+                    ],
+                  ),
+                const SizedBox(height: _cardGap),
+                if (isCompact) ...[
+                  const _TotalSaleCard(),
+                  const SizedBox(height: _cardGap),
+                  const _RightColumnStack(),
+                ] else
+                  const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 65, child: _TotalSaleCard()),
+                      SizedBox(width: _cardGap),
+                      Expanded(flex: 35, child: _RightColumnStack()),
+                    ],
+                  ),
+                const SizedBox(height: _cardGap),
+                _MostUsedReportsSection(isMedium: isMedium),
               ],
             ),
-            SizedBox(height: _cardGap),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 65, child: _TotalSaleCard()),
-                SizedBox(width: _cardGap),
-                Expanded(flex: 35, child: _RightColumnStack()),
-              ],
-            ),
-            SizedBox(height: _cardGap),
-            _MostUsedReportsSection(),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
 
 class _DashboardCard extends StatelessWidget {
-  const _DashboardCard({required this.child});
+  const _DashboardCard({required this.child, this.onTap});
 
   final Widget child;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    final card = DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
@@ -59,15 +84,35 @@ class _DashboardCard extends StatelessWidget {
         child: child,
       ),
     );
+
+    if (onTap == null) return card;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: card,
+      ),
+    );
   }
 }
 
-class _ReceivableCard extends StatelessWidget {
+class _ReceivableCard extends ConsumerWidget {
   const _ReceivableCard();
 
+  static final _currencyFormat = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹',
+    decimalDigits: 0,
+  );
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summary = ref.watch(partyBalanceSummaryProvider);
+
     return _DashboardCard(
+      onTap: () => _openParties(context, ref, PartyListFilter.toReceive),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -89,21 +134,29 @@ class _ReceivableCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          const Text(
-            '₹ 0',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _currencyFormat.format(summary.totalReceivable),
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          const Text(
-            "You don't have any receivables as of now.",
-            style: TextStyle(
+          Text(
+            summary.receivablePartyCount == 0
+                ? "You don't have any receivables as of now."
+                : _partyCountLabel(summary.receivablePartyCount),
+            style: const TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -111,16 +164,25 @@ class _ReceivableCard extends StatelessWidget {
   }
 }
 
-class _PayableCard extends StatelessWidget {
+class _PayableCard extends ConsumerWidget {
   const _PayableCard();
 
+  static final _currencyFormat = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹',
+    decimalDigits: 0,
+  );
+
   @override
-  Widget build(BuildContext context) {
-    return const _DashboardCard(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summary = ref.watch(partyBalanceSummaryProvider);
+
+    return _DashboardCard(
+      onTap: () => _openParties(context, ref, PartyListFilter.toPay),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Text(
                 'Total Payable',
@@ -137,27 +199,51 @@ class _PayableCard extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: AppSpacing.sm),
-          Text(
-            '₹ 233',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+          const SizedBox(height: AppSpacing.sm),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _currencyFormat.format(summary.totalPayable),
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
-          SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
           Text(
-            'From 1 Party',
-            style: TextStyle(
+            summary.payablePartyCount == 0
+                ? "You don't have any payables as of now."
+                : _partyCountLabel(summary.payablePartyCount),
+            style: const TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
     );
   }
+}
+
+void _openParties(
+  BuildContext context,
+  WidgetRef ref,
+  PartyListFilter filter,
+) {
+  ref.read(partyListFilterProvider.notifier).select(filter);
+  ref.read(partySearchQueryProvider.notifier).update('');
+  ref.read(selectedPartyIdProvider.notifier).select(null);
+  context.go(AppRoutes.partyDetails);
+}
+
+String _partyCountLabel(int count) {
+  if (count == 1) return 'From 1 Party';
+  return 'From $count Parties';
 }
 
 class _TotalSaleCard extends StatelessWidget {
@@ -433,7 +519,9 @@ class _LowStocksWidget extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: item.$2 < 0 ? AppColors.error : AppColors.textPrimary,
+                      color: item.$2 < 0
+                          ? AppColors.error
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -462,7 +550,9 @@ class _LowStocksWidget extends StatelessWidget {
 }
 
 class _MostUsedReportsSection extends StatelessWidget {
-  const _MostUsedReportsSection();
+  const _MostUsedReportsSection({this.isMedium = false});
+
+  final bool isMedium;
 
   static const _reports = [
     'Sale Report',
@@ -503,13 +593,28 @@ class _MostUsedReportsSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
-            for (var i = 0; i < _reports.length; i++) ...[
-              if (i > 0) const SizedBox(width: HomePage._cardGap),
-              Expanded(child: _ReportCard(title: _reports[i])),
-            ],
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = isMedium
+                ? (constraints.maxWidth >= 520 ? 2 : 1)
+                : 4;
+            final itemWidth = columns == 1
+                ? constraints.maxWidth
+                : (constraints.maxWidth - (columns - 1) * HomePage._cardGap) /
+                      columns;
+
+            return Wrap(
+              spacing: HomePage._cardGap,
+              runSpacing: HomePage._cardGap,
+              children: [
+                for (final report in _reports)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _ReportCard(title: report),
+                  ),
+              ],
+            );
+          },
         ),
       ],
     );

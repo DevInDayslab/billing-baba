@@ -1,11 +1,13 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/add_category_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_primary_button.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/select_items_for_category_dialog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,19 +29,19 @@ class CategoriesTabContent extends ConsumerWidget {
             ref.read(categorySearchQueryProvider.notifier).update(query),
         onCategorySelected: (id) =>
             ref.read(selectedCategoryIdProvider.notifier).select(id),
-        onAddCategory: () => _showComingSoonSnackBar(context, 'Add Category'),
+        onAddCategory: () => showAddCategoryDialog(context),
       ),
-      detailPanel: selectedId == null
-          ? const InventoryDetailPlaceholder(
-              message: 'Select a category to view items',
+      detailPanel:
+          selectedId != null &&
+              categories.any((category) => category.id == selectedId)
+          ? _CategoryDetailPanel(
+              category: categories.firstWhere(
+                (category) => category.id == selectedId,
+              ),
             )
-          : _CategoryDetailPanel(categoryId: selectedId),
-    );
-  }
-
-  void _showComingSoonSnackBar(BuildContext context, String action) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$action coming soon')),
+          : const InventoryDetailPlaceholder(
+              message: 'Select a category to view items',
+            ),
     );
   }
 }
@@ -115,22 +117,8 @@ class _CategoriesListPanel extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              Container(
-                                width: 24,
-                                height: 24,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade300,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  '${category.itemCount}',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
+                              _CategoryItemCountBadge(
+                                count: category.itemCount,
                               ),
                             ],
                           ),
@@ -146,15 +134,13 @@ class _CategoriesListPanel extends StatelessWidget {
 }
 
 class _CategoryDetailPanel extends ConsumerWidget {
-  const _CategoryDetailPanel({required this.categoryId});
+  const _CategoryDetailPanel({required this.category});
 
-  final String categoryId;
+  final InventoryCategory category;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final categories = ref.watch(categoriesProvider);
-    final category = categories.firstWhere((c) => c.id == categoryId);
-    final items = ref.watch(categoryItemsProvider(categoryId));
+    final items = ref.watch(categoryItemsProvider(category.id));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -162,63 +148,54 @@ class _CategoryDetailPanel extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(
-                        category.name.toUpperCase(),
-                        style: InventoryStyles.panelTitleStyle,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Container(
-                      width: 24,
-                      height: 24,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        '${category.itemCount}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            category.name.toUpperCase(),
+                            style: InventoryStyles.panelTitleStyle,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: AppSpacing.sm),
+                        _CategoryItemCountBadge(count: category.itemCount),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    const Text(
+                      'ITEMS',
+                      style: InventoryStyles.listHeaderStyle,
                     ),
                   ],
                 ),
               ),
-              InventorySecondaryButton(
-                label: 'Move To This Category',
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Move To This Category coming soon'),
+              const SizedBox(width: AppSpacing.md),
+              IntrinsicWidth(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    InventorySecondaryButton(
+                      label: 'Move To This Category',
+                      onPressed: () => showSelectItemsForCategoryDialog(
+                        context,
+                        targetCategoryId: category.id,
+                      ),
                     ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: Row(
-            children: [
-              const Text('ITEMS', style: InventoryStyles.listHeaderStyle),
-              const Spacer(),
-              SizedBox(
-                width: 200,
-                child: InventorySearchField(
-                  hint: 'Search',
-                  onChanged: (query) => ref
-                      .read(categoryItemSearchQueryProvider.notifier)
-                      .update(query),
+                    const SizedBox(height: AppSpacing.sm),
+                    InventorySearchField(
+                      hint: 'Search',
+                      onChanged: (query) => ref
+                          .read(categoryItemSearchQueryProvider.notifier)
+                          .update(query),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -248,6 +225,35 @@ class _CategoryDetailPanel extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CategoryItemCountBadge extends StatelessWidget {
+  const _CategoryItemCountBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 24,
+      height: 24,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade300,
+        shape: BoxShape.circle,
+      ),
+      child: Text(
+        '$count',
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+          height: 1,
+        ),
+        textAlign: TextAlign.center,
+      ),
     );
   }
 }
@@ -292,9 +298,7 @@ class _CategoryItemRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              item.stockValue != null
-                  ? currency.format(item.stockValue)
-                  : '-',
+              item.stockValue != null ? currency.format(item.stockValue) : '-',
               style: const TextStyle(
                 fontSize: 13,
                 color: inventoryPositiveColor,

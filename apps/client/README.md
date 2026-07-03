@@ -124,6 +124,28 @@ Set the API base URL at build time:
 flutter run --dart-define=API_BASE_URL=https://api.example.com
 ```
 
+Copy environment variables for MSG91 and optional dev login:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Description |
+|----------|-------------|
+| `MSG91_WIDGET_ID` | MSG91 widget ID for OTP |
+| `MSG91_WIDGET_AUTH_TOKEN` | MSG91 widget auth token |
+| `ENABLE_DEV_LOGIN` | `true` to show the Developer Login button; **must be `false` in production** |
+
+## Development Login
+
+When `ENABLE_DEV_LOGIN=true` in `apps/client/.env` **and** the API has the same flag enabled, the login screen shows a secondary **Developer Login** button (outlined, not the primary CTA).
+
+Tapping it calls `POST /api/v1/auth/dev-login` through the existing `AuthRepository` → `AuthService` → Riverpod session flow. Navigation after success is identical to a normal OTP login (dashboard, business selection, or create-business placeholder).
+
+When `ENABLE_DEV_LOGIN=false`, the button is hidden and the dev-login route is unavailable on the API. Normal OTP login is unchanged.
+
+**Never enable this in production builds.**
+
 ## Code Generation
 
 ```bash

@@ -66,7 +66,6 @@ class ServicesTabContent extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 class _ServicesListPanel extends StatelessWidget {
@@ -130,43 +129,54 @@ class _ServicesListPanel extends StatelessWidget {
                       color: isSelected
                           ? inventorySelectedRowColor
                           : Colors.transparent,
-                      child: InkWell(
-                        onTap: () => onItemSelected(item.id),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: 12,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: inventoryCardBorder),
                           ),
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(color: inventoryCardBorder),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => onItemSelected(item.id),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.md,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          item.name,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          item.salePrice != null
+                                              ? currency.format(item.salePrice)
+                                              : '-',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  item.name,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  item.salePrice != null
-                                      ? currency.format(item.salePrice)
-                                      : '-',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              const InventoryListRowMenu(),
-                            ],
-                          ),
+                            const Padding(
+                              padding: EdgeInsets.only(right: AppSpacing.sm),
+                              child: InventoryListRowMenu(),
+                            ),
+                          ],
                         ),
                       ),
                     );

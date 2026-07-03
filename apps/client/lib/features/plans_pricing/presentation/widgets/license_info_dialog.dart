@@ -39,8 +39,7 @@ class LicenseInfoDialog extends StatelessWidget {
   final PlanDuration duration;
   final double upgradeAmount;
 
-  static const _syncCompanyId =
-      '7987016325__t_2024_10_05_00_16_26_s5iu.vyp';
+  static const _syncCompanyId = '7987016325__t_2024_10_05_00_16_26_s5iu.vyp';
   static const _upgradeBannerBg = Color(0xFFE8F1FF);
   static const _goldIconBg = Color(0xFFFFF3E0);
   static const _goldIconColor = Color(0xFFE65100);
@@ -104,9 +103,9 @@ class _DialogHeader extends StatelessWidget {
         Text(
           'View License Info',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
         ),
         const Spacer(),
         IconButton(
@@ -303,8 +302,8 @@ class _DashedDivider extends StatelessWidget {
       builder: (context, constraints) {
         const dashWidth = 6.0;
         const dashGap = 4.0;
-        final dashCount =
-            (constraints.maxWidth / (dashWidth + dashGap)).floor();
+        final dashCount = (constraints.maxWidth / (dashWidth + dashGap))
+            .floor();
         return Row(
           children: List.generate(dashCount, (index) {
             return Padding(

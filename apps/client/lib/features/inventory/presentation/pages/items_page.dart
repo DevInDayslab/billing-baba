@@ -4,6 +4,7 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_s
 import 'package:billing_baba/features/inventory/presentation/widgets/products_tab_content.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/services_tab_content.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/units_tab_content.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,16 +23,32 @@ class _ItemsPageState extends ConsumerState<ItemsPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      ref
+          .read(inventoryItemsTabIndexProvider.notifier)
+          .select(_tabController.index);
+    }
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<int>(inventoryItemsTabIndexProvider, (previous, next) {
+      if (_tabController.index != next && mounted) {
+        _tabController.animateTo(next);
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Padding(
