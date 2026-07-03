@@ -47,12 +47,24 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
 
   Future<void> _openCreateBusiness() async {
     final created = await showCreateBusinessModal(context);
-    if (created == true && mounted) {
+    if (!mounted || created != true) return;
+
+    final auth = ref.read(authProvider);
+    if (auth.status != AuthStatus.authenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Business created successfully')),
+        const SnackBar(
+          content: Text(
+            'Business created. Select it from the list to continue.',
+          ),
+        ),
       );
-      context.go(AppRoutes.home);
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Business created successfully')),
+    );
+    context.go(AppRoutes.home);
   }
 
   @override

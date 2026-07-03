@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
@@ -38,23 +40,37 @@ class BusinessService {
   Future<List<BusinessModel>> fetchBusinesses({
     bool forceRefresh = false,
   }) async {
-    final selectedId = _ref.read(authProvider).session?.user.role != null
+    final auth = _ref.read(authProvider);
+    final accountId = auth.session?.user.id;
+    final selectedId = authHasBusinessScope(auth)
         ? _cache.readLastOpenedBusinessId()
         : null;
+
+    if (accountId != null) {
+      final cachedAccountId = _cache.readCachedBusinessesAccountId();
+      if (cachedAccountId != null &&
+          cachedAccountId.isNotEmpty &&
+          cachedAccountId != accountId) {
+        await _cache.clearAll();
+      }
+    }
 
     if (!forceRefresh) {
       final cached = await _loadFromCache(selectedId);
       if (cached.isNotEmpty) {
-        _refreshInBackground(selectedId);
+        unawaited(_refreshInBackground(accountId, selectedId));
         return cached;
       }
     }
 
     try {
       final remote = await _repository.listBusinesses();
-      await _cache.saveBusinesses(
-        remote.map(_businessToJson).toList(),
-      );
+      if (accountId != null) {
+        await _cache.saveBusinesses(
+          remote.map(_businessToJson).toList(),
+          accountId: accountId,
+        );
+      }
       return remote.map((b) => _toModel(b, selectedId)).toList();
     } on DioException {
       final cached = await _loadFromCache(selectedId);
@@ -63,13 +79,18 @@ class BusinessService {
     }
   }
 
-  Future<void> _refreshInBackground(String? selectedId) async {
+  Future<void> _refreshInBackground(
+    String? accountId,
+    String? selectedId,
+  ) async {
     try {
       final remote = await _repository.listBusinesses();
-      await _cache.saveBusinesses(
-        remote.map(_businessToJson).toList(),
-      );
-      _ref.invalidate(businessListProvider);
+      if (accountId != null) {
+        await _cache.saveBusinesses(
+          remote.map(_businessToJson).toList(),
+          accountId: accountId,
+        );
+      }
     } on DioException {
       // Keep showing cache.
     }
@@ -136,6 +157,11 @@ class BusinessService {
   Future<BusinessProfileModel> fetchBusinessProfile({
     bool forceRefresh = false,
   }) async {
+    final auth = _ref.read(authProvider);
+    if (!authHasBusinessScope(auth)) {
+      throw const BusinessProfileScopeRequired();
+    }
+
     final selectedBusinessId = _cache.readLastOpenedBusinessId();
 
     if (!forceRefresh) {
@@ -182,7 +208,10 @@ class BusinessService {
           name: profile.name,
           gstin: profile.gstin,
         );
-    _ref.read(businessListProvider.notifier).applyProfileUpdate(profile);
+    final businesses = _ref.read(businessListProvider).asData?.value;
+    if (businesses != null) {
+      _ref.read(businessListProvider.notifier).applyProfileUpdate(profile);
+    }
   }
 
   Future<void> rememberLastOpened(String businessId) =>
@@ -211,6 +240,13 @@ class BusinessService {
   };
 }
 
+class BusinessProfileScopeRequired implements Exception {
+  const BusinessProfileScopeRequired();
+}
+
+bool authHasBusinessScope(AuthState auth) =>
+    auth.status == AuthStatus.authenticated && auth.session?.user.role != null;
+
 class BusinessOfflineException implements Exception {
   const BusinessOfflineException();
 }
@@ -231,10 +267,14 @@ class BusinessList extends _$BusinessList {
     });
   }
 
-  Future<void> selectBusiness(String id) async {
+  Future<void> _activateBusiness(String id) async {
     final service = await ref.read(businessServiceProvider.future);
     await service.rememberLastOpened(id);
     await ref.read(authProvider.notifier).selectBusiness(id);
+  }
+
+  Future<void> selectBusiness(String id) async {
+    await _activateBusiness(id);
     ref.invalidate(businessProfileProvider);
     ref.invalidateSelf();
   }
@@ -242,8 +282,9 @@ class BusinessList extends _$BusinessList {
   Future<BusinessModel> createBusiness(CreateBusinessRequest request) async {
     final service = await ref.read(businessServiceProvider.future);
     final created = await service.createBusiness(request);
+    await _activateBusiness(created.id);
     await ref.read(authProvider.notifier).refreshBusinesses();
-    await selectBusiness(created.id);
+    ref.invalidate(businessProfileProvider);
     ref.invalidateSelf();
     return created;
   }
@@ -276,6 +317,11 @@ String loggedInPhone(Ref ref) {
 class BusinessProfile extends _$BusinessProfile {
   @override
   Future<BusinessProfileModel> build() async {
+    final auth = ref.watch(authProvider);
+    if (!authHasBusinessScope(auth)) {
+      throw const BusinessProfileScopeRequired();
+    }
+
     final service = await ref.watch(businessServiceProvider.future);
     return service.fetchBusinessProfile();
   }

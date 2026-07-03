@@ -5,6 +5,7 @@ abstract final class StorageKeys {
   static const selectedBusinessId = 'selected_business_id';
   static const accountPhone = 'account_phone';
   static const cachedBusinesses = 'cached_businesses';
+  static const cachedBusinessesAccountId = 'cached_businesses_account_id';
   static const cachedProfile = 'cached_profile';
   static const lastOpenedBusinessId = 'last_opened_business_id';
   static const pendingBusinessCreates = 'pending_business_creates';

@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/models/otp_phase.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/auth_service.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_flow_logger.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -181,13 +184,29 @@ class Auth extends _$Auth {
     if (session.businesses.isEmpty) {
       return AuthStatus.needsBusinessSelection;
     }
-    if (session.businesses.length > 1) {
-      final hasBusinessScope = session.user.role != null;
-      return hasBusinessScope
-          ? AuthStatus.authenticated
-          : AuthStatus.needsBusinessSelection;
+    if (session.user.role == null) {
+      return AuthStatus.needsBusinessSelection;
     }
     return AuthStatus.authenticated;
+  }
+
+  bool _hasBusinessScope(AuthSession? session) =>
+      session != null && session.user.role != null;
+
+  Future<void> _invalidateBusinessProviders({bool includeList = false}) async {
+    if (includeList) {
+      ref.invalidate(businessListProvider);
+    }
+    ref.invalidate(businessProfileProvider);
+    ref.invalidate(businessServiceProvider);
+    ref.invalidate(partyListProvider);
+    ref.invalidate(partyServiceProvider);
+  }
+
+  Future<void> _clearBusinessScopedCaches() async {
+    final storage = await ref.read(storageServiceProvider.future);
+    await SessionCacheCleanup(storage).clearBusinessScopedData();
+    await _invalidateBusinessProviders(includeList: true);
   }
 
   void _onOtpSent(String reqId, {required String phone}) {
@@ -542,8 +561,15 @@ class Auth extends _$Auth {
         businessId: businessId,
         refreshToken: refreshToken,
       );
+      if (!_hasBusinessScope(session)) {
+        state = state.copyWith(
+          error: 'Could not select business. Please try again.',
+        );
+        return;
+      }
       _setAuthStatus(AuthStatus.authenticated);
       state = state.copyWith(session: session);
+      await _invalidateBusinessProviders();
     } catch (e) {
       state = state.copyWith(error: _messageFromError(e));
     }
@@ -555,9 +581,11 @@ class Auth extends _$Auth {
 
     state = state.copyWith(clearError: true);
     try {
+      await _clearBusinessScopedCaches();
       final service = await _service();
       final session = await service.refreshStoredSession(
         refreshToken: refreshToken,
+        preserveBusinessScope: false,
       );
       if (session == null) {
         _setAuthStatus(AuthStatus.unauthenticated);
@@ -632,6 +660,7 @@ class Auth extends _$Auth {
     try {
       final service = await _service();
       await service.logout();
+      await _invalidateBusinessProviders(includeList: true);
     } finally {
       AuthFlowLogger.reset();
       state = const AuthState(status: AuthStatus.unauthenticated);
