@@ -178,7 +178,8 @@ class _ExpenseCategoryReportContentState
                           ),
                           const Spacer(),
                           FilledButton.icon(
-                            onPressed: () => context.push(AppRoutes.expenses),
+                            onPressed: () =>
+                                context.push(AppRoutes.purchaseExpenses),
                             style: FilledButton.styleFrom(
                               backgroundColor: reportActiveBlue,
                               foregroundColor: Colors.white,

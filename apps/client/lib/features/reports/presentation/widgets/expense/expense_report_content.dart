@@ -202,7 +202,8 @@ class _ExpenseReportContentState extends State<ExpenseReportContent> {
                           ),
                           const SizedBox(width: AppSpacing.md),
                           FilledButton.icon(
-                            onPressed: () => context.push(AppRoutes.expenses),
+                            onPressed: () =>
+                                context.push(AppRoutes.purchaseExpenses),
                             style: FilledButton.styleFrom(
                               backgroundColor: reportActiveBlue,
                               foregroundColor: Colors.white,
