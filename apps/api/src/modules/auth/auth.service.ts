@@ -262,6 +262,10 @@ export class AuthService {
       memberships = [membership];
     }
 
+    for (const membership of memberships) {
+      await this.repository.ensureInventorySeeds(membership.businessId);
+    }
+
     if (this.config.environment === 'development') {
       this.app.log.info('DEV LOGIN USED');
     }

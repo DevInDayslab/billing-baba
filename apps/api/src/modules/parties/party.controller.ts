@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import { AppError } from '../../shared/errors/app-error';
+import { sendData, sendPaginated } from '../../shared/http/response';
 import {
   createPartyBodySchema,
   listPartiesQuerySchema,
@@ -54,11 +55,7 @@ export function createPartyController() {
         const service = new PartyService();
         const result = await service.listParties(businessId, accountId, query);
 
-        return reply.send({
-          success: true,
-          data: result.data,
-          meta: result.meta,
-        });
+        return sendPaginated(reply, result.data, result.meta);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(
@@ -83,7 +80,7 @@ export function createPartyController() {
           userId,
           body,
         );
-        return reply.status(201).send({ success: true, data });
+        return sendData(reply, data, 201);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(
@@ -103,7 +100,7 @@ export function createPartyController() {
         const { id } = partyIdParamSchema.parse(request.params);
         const service = new PartyService();
         const data = await service.getParty(businessId, accountId, id);
-        return reply.send({ success: true, data });
+        return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(
@@ -130,7 +127,7 @@ export function createPartyController() {
           id,
           body,
         );
-        return reply.send({ success: true, data });
+        return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(

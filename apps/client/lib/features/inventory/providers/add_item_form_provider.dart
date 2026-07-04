@@ -75,6 +75,26 @@ class AddItemForm extends Notifier<AddItemFormState> {
     );
   }
 
+  void setBrand(String? brandId) {
+    state = state.copyWith(
+      brandId: brandId,
+      clearBrand: brandId == null,
+      isDirty: true,
+    );
+  }
+
+  void setGodown(String? godownId) {
+    state = state.copyWith(
+      godownId: godownId,
+      clearGodown: godownId == null,
+      isDirty: true,
+    );
+  }
+
+  void updatePrimaryImageUrl(String value) {
+    state = state.copyWith(primaryImageUrl: value, isDirty: true);
+  }
+
   void updateDescription(String value) {
     state = state.copyWith(description: value, isDirty: true);
   }

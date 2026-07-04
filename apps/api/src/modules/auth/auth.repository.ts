@@ -6,6 +6,7 @@ import {
   refreshTokens,
   users,
 } from '../../db/schema/identity/tables';
+import { categories, godowns } from '../../db/schema/inventory/tables';
 import type { AccountRecord, BusinessMembership } from './auth.types';
 
 export class AuthRepository {
@@ -87,45 +88,101 @@ export class AuthRepository {
     ownerName: string;
     phone: string;
   }): Promise<BusinessMembership> {
-    const [business] = await this.db
-      .insert(businesses)
-      .values({
-        name: input.businessName,
-        stateCode: '27',
-        valuationMethod: 'average',
-      })
-      .returning({
-        id: businesses.id,
-        name: businesses.name,
-        gstin: businesses.gstin,
+    return this.db.transaction(async (tx) => {
+      const [business] = await tx
+        .insert(businesses)
+        .values({
+          name: input.businessName,
+          stateCode: '27',
+          valuationMethod: 'average',
+        })
+        .returning({
+          id: businesses.id,
+          name: businesses.name,
+          gstin: businesses.gstin,
+        });
+
+      if (!business) {
+        throw new Error('Failed to create business');
+      }
+
+      const [user] = await tx
+        .insert(users)
+        .values({
+          businessId: business.id,
+          accountId: input.accountId,
+          name: input.ownerName,
+          phone: input.phone,
+          role: 'owner',
+        })
+        .returning({ id: users.id, role: users.role });
+
+      if (!user) {
+        throw new Error('Failed to create owner user');
+      }
+
+      await tx.insert(godowns).values({
+        businessId: business.id,
+        name: 'Main Warehouse',
+        isDefault: true,
       });
 
-    if (!business) {
-      throw new Error('Failed to create business');
-    }
+      await tx.insert(categories).values([
+        { businessId: business.id, name: 'General' },
+        { businessId: business.id, name: 'Services' },
+      ]);
 
-    const [user] = await this.db
-      .insert(users)
-      .values({
+      return {
+        userId: user.id,
         businessId: business.id,
-        accountId: input.accountId,
-        name: input.ownerName,
-        phone: input.phone,
-        role: 'owner',
-      })
-      .returning({ id: users.id, role: users.role });
+        businessName: business.name,
+        role: user.role,
+        gstin: business.gstin,
+      };
+    });
+  }
 
-    if (!user) {
-      throw new Error('Failed to create owner user');
+  async ensureInventorySeeds(businessId: string): Promise<void> {
+    const activeGodowns = await this.db
+      .select({ id: godowns.id, isDefault: godowns.isDefault })
+      .from(godowns)
+      .where(
+        and(eq(godowns.businessId, businessId), eq(godowns.isDeleted, false)),
+      );
+
+    if (activeGodowns.length === 0) {
+      await this.db.insert(godowns).values({
+        businessId,
+        name: 'Main Warehouse',
+        isDefault: true,
+      });
+    } else if (!activeGodowns.some((row) => row.isDefault)) {
+      const firstGodown = activeGodowns[0];
+      if (firstGodown) {
+        await this.db
+          .update(godowns)
+          .set({ isDefault: true, updatedAt: new Date() })
+          .where(eq(godowns.id, firstGodown.id));
+      }
     }
 
-    return {
-      userId: user.id,
-      businessId: business.id,
-      businessName: business.name,
-      role: user.role,
-      gstin: business.gstin,
-    };
+    const [category] = await this.db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(
+        and(
+          eq(categories.businessId, businessId),
+          eq(categories.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    if (!category) {
+      await this.db.insert(categories).values([
+        { businessId, name: 'General' },
+        { businessId, name: 'Services' },
+      ]);
+    }
   }
 
   async findMembershipsByAccountId(

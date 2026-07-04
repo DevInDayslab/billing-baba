@@ -6,13 +6,14 @@ function buildErrorResponse(
   requestId: string,
   code: string,
   message: string,
-  errors: Record<string, string[]> | null = null,
+  details: Record<string, string[]> | null = null,
 ): ApiErrorResponse {
   return {
-    success: false,
-    message,
-    code,
-    errors,
+    error: {
+      code,
+      message,
+      ...(details ? { details } : {}),
+    },
     requestId,
   };
 }

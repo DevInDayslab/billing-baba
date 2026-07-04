@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,10 +47,12 @@ class _SelectItemsForCategoryDialogState
   _ItemSortField _sortField = _ItemSortField.name;
   var _sortAscending = true;
 
+  bool _isMoving = false;
+
   bool _isInTargetCategory(InventoryItem item) {
-    if (widget.targetCategoryId == InventoryCatalog.uncategorizedCategoryId) {
+    if (widget.targetCategoryId == uncategorizedCategoryId) {
       return item.categoryId == null ||
-          item.categoryId == InventoryCatalog.uncategorizedCategoryId;
+          item.categoryId == uncategorizedCategoryId;
     }
     return item.categoryId == widget.targetCategoryId;
   }
@@ -111,10 +113,11 @@ class _SelectItemsForCategoryDialogState
     });
   }
 
-  void _moveItems() {
-    if (_selectedIds.isEmpty) return;
+  Future<void> _moveItems() async {
+    if (_selectedIds.isEmpty || _isMoving) return;
 
-    ref
+    setState(() => _isMoving = true);
+    final error = await ref
         .read(inventoryItemsProvider.notifier)
         .moveItemsToCategory(
           itemIds: _selectedIds.toList(),
@@ -122,12 +125,22 @@ class _SelectItemsForCategoryDialogState
           removeFromExistingCategory: _removeFromExistingCategory,
         );
 
+    if (!mounted) return;
+    setState(() => _isMoving = false);
+
+    if (error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final allItems = ref.watch(inventoryItemsProvider);
+    final allItems = ref.watch(inventoryItemsProvider).value ?? [];
     final visibleItems = _filteredItems(allItems);
     final allVisibleSelected =
         visibleItems.isNotEmpty &&
@@ -260,7 +273,7 @@ class _SelectItemsForCategoryDialogState
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   FilledButton(
-                    onPressed: _selectedIds.isEmpty ? null : _moveItems,
+                    onPressed: _selectedIds.isEmpty || _isMoving ? null : _moveItems,
                     style: FilledButton.styleFrom(
                       backgroundColor: inventoryNegativeColor,
                       disabledBackgroundColor: inventoryNegativeColor

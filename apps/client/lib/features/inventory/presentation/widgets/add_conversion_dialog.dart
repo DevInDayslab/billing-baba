@@ -43,6 +43,7 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
   late String _baseUnitId;
   String? _secondaryUnitId;
   String? _errorMessage;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -80,18 +81,20 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
     );
   }
 
-  bool _save({required bool saveAndNew}) {
+  Future<void> _save({required bool saveAndNew}) async {
+    if (_isLoading) return;
     final rate = double.tryParse(_rateController.text.trim());
     if (rate == null || rate <= 0) {
       setState(() => _errorMessage = 'Enter a valid rate greater than 0');
-      return false;
+      return;
     }
     if (_secondaryUnitId == null) {
       setState(() => _errorMessage = 'Select a secondary unit');
-      return false;
+      return;
     }
 
-    final result = ref
+    setState(() => _isLoading = true);
+    final result = await ref
         .read(inventoryUnitsProvider.notifier)
         .addConversion(
           baseUnitId: _baseUnitId,
@@ -99,9 +102,12 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
           rate: rate,
         );
 
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
     if (!result.isSuccess) {
       setState(() => _errorMessage = result.error);
-      return false;
+      return;
     }
 
     ref.read(selectedUnitIdProvider.notifier).selected = _baseUnitId;
@@ -109,11 +115,10 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
     if (saveAndNew) {
       setState(() => _errorMessage = null);
       _resetForm();
-      return true;
+      return;
     }
 
     Navigator.of(context).pop();
-    return true;
   }
 
   String _baseUnitOptionLabel(InventoryUnit unit) {
@@ -324,7 +329,7 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       FilledButton(
-                        onPressed: () => _save(saveAndNew: false),
+                        onPressed: _isLoading ? null : () => _save(saveAndNew: false),
                         style: buttonStyle,
                         child: const Text(
                           'SAVE',
@@ -337,7 +342,7 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       FilledButton(
-                        onPressed: () => _save(saveAndNew: true),
+                        onPressed: _isLoading ? null : () => _save(saveAndNew: true),
                         style: buttonStyle,
                         child: const Text(
                           'SAVE & NEW',

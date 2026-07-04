@@ -751,6 +751,29 @@ Use append-only **`inventory_movements`** as the stock event ledger. `stock_leve
 
 ---
 
+## ADR-019: Business Unit Dictionary
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+
+### Context
+
+The Flutter Units tab manages a business-wide unit list with conversions. The original schema only had `item_units` (per-item alternate units) and `items.base_unit` (free text). Global unit CRUD requires persistent business-scoped definitions.
+
+### Decision
+
+Add **`unit_definitions`** (business unit dictionary: `full_name`, `short_name`) and **`unit_conversions`** (directed pairs with `conversion_factor`). Items continue to reference units via `items.base_unit` text matching `short_name`. Per-item `item_units` remains for item-specific alternate units at sale time.
+
+### Consequences
+
+- Units tab maps to `unit_definitions` + `unit_conversions` APIs
+- Item create validates `base_unit` against active unit definitions
+- Two unit models coexist: global dictionary vs per-item `item_units`
+
+---
+
 ## ADR-017: Double Entry Accounting
 
 | Field | Value |

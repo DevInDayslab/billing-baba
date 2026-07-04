@@ -1,0 +1,29 @@
+class CreateMovementRequest {
+  const CreateMovementRequest({
+    required this.itemId,
+    required this.godownId,
+    required this.movementType,
+    required this.quantityDelta,
+    this.costPerUnit,
+    this.referenceId,
+    this.referenceType,
+  });
+
+  final String itemId;
+  final String godownId;
+  final String movementType;
+  final String quantityDelta;
+  final String? costPerUnit;
+  final String? referenceId;
+  final String? referenceType;
+
+  Map<String, dynamic> toJson() => {
+    'item_id': itemId,
+    'godown_id': godownId,
+    'movement_type': movementType,
+    'quantity_delta': quantityDelta,
+    if (costPerUnit != null) 'cost_per_unit': costPerUnit,
+    if (referenceId != null) 'reference_id': referenceId,
+    if (referenceType != null) 'reference_type': referenceType,
+  };
+}

@@ -1,17 +1,12 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import { AppError } from '../../shared/errors/app-error';
-import type { ApiSuccessResponse } from '../../shared/types';
+import { sendData, sendPaginated } from '../../shared/http/response';
 import {
   createBusinessBodySchema,
   updateBusinessProfileBodySchema,
 } from './business.schema';
 import { BusinessService } from './business.service';
-import type {
-  BusinessDetail,
-  BusinessListItem,
-  BusinessProfile,
-} from './business.types';
 
 function formatZodError(error: ZodError): Record<string, string[]> {
   const errors: Record<string, string[]> = {};
@@ -28,7 +23,7 @@ export function createBusinessController() {
     list: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<BusinessListItem[]>> => {
+    ): Promise<FastifyReply> => {
       const accountId = request.accountId;
       if (!accountId) {
         throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
@@ -36,13 +31,13 @@ export function createBusinessController() {
 
       const service = new BusinessService();
       const data = await service.listBusinesses(accountId);
-      return reply.send({ success: true, data });
+      return sendData(reply, data);
     },
 
     create: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<BusinessDetail>> => {
+    ): Promise<FastifyReply> => {
       try {
         const accountId = request.accountId;
         const phone = request.phone;
@@ -53,7 +48,7 @@ export function createBusinessController() {
         const body = createBusinessBodySchema.parse(request.body);
         const service = new BusinessService();
         const data = await service.createBusiness(accountId, phone, body);
-        return reply.status(201).send({ success: true, data });
+        return sendData(reply, data, 201);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(
@@ -70,7 +65,7 @@ export function createBusinessController() {
     getProfile: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<BusinessProfile>> => {
+    ): Promise<FastifyReply> => {
       const accountId = request.accountId;
       const businessId = request.businessId;
       if (!accountId || !businessId) {
@@ -79,13 +74,13 @@ export function createBusinessController() {
 
       const service = new BusinessService();
       const data = await service.getProfile(businessId, accountId);
-      return reply.send({ success: true, data });
+      return sendData(reply, data);
     },
 
     updateProfile: async (
       request: FastifyRequest,
       reply: FastifyReply,
-    ): Promise<ApiSuccessResponse<BusinessProfile>> => {
+    ): Promise<FastifyReply> => {
       try {
         const accountId = request.accountId;
         const businessId = request.businessId;
@@ -96,7 +91,7 @@ export function createBusinessController() {
         const body = updateBusinessProfileBodySchema.parse(request.body);
         const service = new BusinessService();
         const data = await service.updateProfile(businessId, accountId, body);
-        return reply.send({ success: true, data });
+        return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(

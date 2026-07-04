@@ -30,6 +30,48 @@ export const categories = pgTable('categories', {
   name: text('name').notNull(),
 });
 
+export const unitDefinitions = pgTable(
+  'unit_definitions',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+    shortName: text('short_name').notNull(),
+    symbol: text('symbol'),
+    decimalPlaces: integer('decimal_places').notNull().default(0),
+    isSystem: boolean('is_system').notNull().default(false),
+    isActive: boolean('is_active').notNull().default(true),
+  },
+  (table) => [
+    uniqueIndex('uq_unit_definitions_business_name_active')
+      .on(table.businessId, sql`lower(${table.name})`)
+      .where(sql`${table.isDeleted} = false`),
+    uniqueIndex('uq_unit_definitions_business_short_name_active')
+      .on(table.businessId, sql`lower(${table.shortName})`)
+      .where(sql`${table.isDeleted} = false`),
+  ],
+);
+
+export const unitConversions = pgTable(
+  'unit_conversions',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    fromUnitId: uuid('from_unit_id')
+      .notNull()
+      .references(() => unitDefinitions.id),
+    toUnitId: uuid('to_unit_id')
+      .notNull()
+      .references(() => unitDefinitions.id),
+    conversionFactor: money('conversion_factor').notNull(),
+  },
+  (table) => [
+    uniqueIndex('uq_unit_conversions_business_pair_active')
+      .on(table.businessId, table.fromUnitId, table.toUnitId)
+      .where(sql`${table.isDeleted} = false`),
+  ],
+);
+
 export const brands = pgTable('brands', {
   ...syncedBusinessColumns,
   businessId: businessId(),
