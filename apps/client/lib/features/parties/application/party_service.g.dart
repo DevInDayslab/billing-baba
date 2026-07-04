@@ -72,7 +72,7 @@ final class PartyListProvider
   PartyList create() => PartyList();
 }
 
-String _$partyListHash() => r'99dbc0adb6916f0b32e31865115aad27ffffd274';
+String _$partyListHash() => r'c9073e2b5b591fbfc12cdd559628ac09f1b08d6b';
 
 abstract class _$PartyList extends $AsyncNotifier<List<PartyModel>> {
   FutureOr<List<PartyModel>> build();

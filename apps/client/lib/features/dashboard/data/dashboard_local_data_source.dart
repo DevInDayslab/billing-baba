@@ -1,0 +1,3 @@
+class DashboardLocalDataSource {
+  const DashboardLocalDataSource();
+}

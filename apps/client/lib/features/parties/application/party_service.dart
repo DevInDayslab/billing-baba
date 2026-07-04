@@ -66,13 +66,6 @@ class PartyService {
       final cached = await _loadFromCache(businessId);
       if (cached.isNotEmpty) {
         _isShowingCachedData = true;
-        unawaited(
-          _refreshInBackground(
-            businessId,
-            searchQuery: searchQuery,
-            filter: filter,
-          ),
-        );
         return _applyClientFilters(cached, searchQuery, filter);
       }
     }
@@ -254,24 +247,6 @@ class PartyService {
         .firstOrNull;
   }
 
-  Future<void> _refreshInBackground(
-    String businessId, {
-    String? searchQuery,
-    PartyListFilter filter = PartyListFilter.all,
-  }) async {
-    try {
-      final remote = await _fetchRemoteParties(
-        searchQuery: searchQuery,
-        filter: filter,
-      );
-      await _persistParties(businessId, remote);
-      _isShowingCachedData = false;
-      _ref.invalidate(partyListProvider);
-    } on DioException {
-      // Keep showing cache.
-    }
-  }
-
   Future<void> _fetchPartyInBackground(
     String businessId,
     String partyId,
@@ -279,7 +254,12 @@ class PartyService {
     try {
       final dto = await _repository.getParty(partyId);
       await _cache.upsertParty(businessId, dto.toJson());
-      _ref.invalidate(partyDetailProvider(partyId));
+      // Defer so partyDetailProvider is not invalidated during its own build.
+      unawaited(
+        Future.microtask(
+          () => _ref.invalidate(partyDetailProvider(partyId)),
+        ),
+      );
     } on DioException {
       // Keep cached detail.
     }
@@ -501,6 +481,8 @@ extension on PartyListQuery {
 
 @Riverpod(keepAlive: true)
 class PartyList extends _$PartyList {
+  var _revalidateGeneration = 0;
+
   @override
   Future<List<PartyModel>> build() async {
     ref
@@ -509,10 +491,33 @@ class PartyList extends _$PartyList {
       ..watch(partyBackendSearchProvider);
 
     final service = await ref.watch(partyServiceProvider.future);
-    return service.fetchParties(
+    final parties = await service.fetchParties(
       searchQuery: ref.read(partyBackendSearchProvider),
       filter: ref.read(partyListFilterProvider),
     );
+
+    if (service.isShowingCachedData) {
+      unawaited(_revalidateFromRemote());
+    }
+
+    return parties;
+  }
+
+  Future<void> _revalidateFromRemote() async {
+    final generation = ++_revalidateGeneration;
+
+    try {
+      final service = await ref.read(partyServiceProvider.future);
+      final fresh = await service.fetchParties(
+        forceRefresh: true,
+        searchQuery: ref.read(partyBackendSearchProvider),
+        filter: ref.read(partyListFilterProvider),
+      );
+      if (!ref.mounted || generation != _revalidateGeneration) return;
+      state = AsyncData(fresh);
+    } on Object {
+      // Keep showing cached data.
+    }
   }
 
   Future<void> refresh({
