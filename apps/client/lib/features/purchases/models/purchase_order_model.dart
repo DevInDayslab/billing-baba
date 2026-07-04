@@ -1,3 +1,5 @@
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
+
 enum PurchaseOrderStatus {
   open,
   orderCompleted,
@@ -15,6 +17,8 @@ class PurchaseOrderModel {
     required this.amount,
     required this.balanceDue,
     required this.dueDate,
+    this.partyId,
+    this.documentStatus,
     this.type = 'Purchase Order',
     this.user = 'Admin',
     this.firm = 'All Firms',
@@ -24,7 +28,9 @@ class PurchaseOrderModel {
   final String orderNo;
   final DateTime date;
   final String partyName;
+  final String? partyId;
   final PurchaseOrderStatus status;
+  final PurchaseDocumentStatus? documentStatus;
   final double amount;
   final double balanceDue;
   final DateTime dueDate;
@@ -33,4 +39,10 @@ class PurchaseOrderModel {
   final String firm;
 
   double get paidAmount => amount - balanceDue;
+
+  bool get isDraft => documentStatus == PurchaseDocumentStatus.draft;
+
+  bool get canConvertToBill =>
+      documentStatus == PurchaseDocumentStatus.finalized &&
+      status != PurchaseOrderStatus.partiallyReceived;
 }

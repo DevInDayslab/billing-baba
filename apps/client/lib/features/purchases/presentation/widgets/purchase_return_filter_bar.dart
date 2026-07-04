@@ -151,7 +151,7 @@ class _PurchaseReturnFilterBarState
         const SizedBox(width: AppSpacing.md),
         FilledButton.icon(
           onPressed: () {
-            ref.read(debitNoteFormProvider.notifier).resetForm();
+            ref.read(debitNoteFormProvider().notifier).resetForm();
             unawaited(context.push(AppRoutes.addDebitNote));
           },
           style: FilledButton.styleFrom(

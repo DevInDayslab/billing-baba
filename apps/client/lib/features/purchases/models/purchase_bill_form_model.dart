@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 class PurchaseLineItem {
   const PurchaseLineItem({
     required this.id,
+    this.serverLineId,
+    this.itemId,
     this.itemName = '',
     this.description = '',
     this.qty = 0,
@@ -18,6 +20,8 @@ class PurchaseLineItem {
       PurchaseLineItem(id: id);
 
   final String id;
+  final String? serverLineId;
+  final String? itemId;
   final String itemName;
   final String description;
   final double qty;
@@ -40,6 +44,8 @@ class PurchaseLineItem {
 
   PurchaseLineItem copyWith({
     String? id,
+    String? serverLineId,
+    String? itemId,
     String? itemName,
     String? description,
     double? qty,
@@ -50,6 +56,8 @@ class PurchaseLineItem {
   }) {
     return PurchaseLineItem(
       id: id ?? this.id,
+      serverLineId: serverLineId ?? this.serverLineId,
+      itemId: itemId ?? this.itemId,
       itemName: itemName ?? this.itemName,
       description: description ?? this.description,
       qty: qty ?? this.qty,
@@ -63,6 +71,9 @@ class PurchaseLineItem {
 
 class AddPurchaseFormState {
   const AddPurchaseFormState({
+    this.documentId,
+    this.partyId,
+    this.godownId,
     this.party = '',
     this.billingName = '',
     this.eWayBillNo = '',
@@ -83,8 +94,14 @@ class AddPurchaseFormState {
     this.roundOff = true,
     this.showValidationErrors = false,
     this.isDirty = false,
+    this.isLoading = false,
+    this.isSaving = false,
+    this.saveError,
   });
 
+  final String? documentId;
+  final String? partyId;
+  final String? godownId;
   final String party;
   final String billingName;
   final String eWayBillNo;
@@ -105,6 +122,9 @@ class AddPurchaseFormState {
   final bool roundOff;
   final bool showValidationErrors;
   final bool isDirty;
+  final bool isLoading;
+  final bool isSaving;
+  final String? saveError;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -134,7 +154,10 @@ class AddPurchaseFormState {
   double get balanceAmount =>
       (grandTotal - paymentAmount).clamp(0, double.infinity);
 
-  bool get partyHasError => showValidationErrors && party.trim().isEmpty;
+  bool get partyHasError =>
+      showValidationErrors &&
+      (partyId == null || partyId!.isEmpty) &&
+      party.trim().isEmpty;
 
   bool get hasValidLineItems => items.any(
     (item) => item.itemName.trim().isNotEmpty && item.qty > 0,
@@ -142,9 +165,14 @@ class AddPurchaseFormState {
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
-  bool get isValid => party.trim().isNotEmpty && hasValidLineItems;
+  bool get isValid =>
+      ((partyId != null && partyId!.isNotEmpty) || party.trim().isNotEmpty) &&
+      hasValidLineItems;
 
   AddPurchaseFormState copyWith({
+    String? documentId,
+    String? partyId,
+    String? godownId,
     String? party,
     String? billingName,
     String? eWayBillNo,
@@ -165,8 +193,15 @@ class AddPurchaseFormState {
     bool? roundOff,
     bool? showValidationErrors,
     bool? isDirty,
+    bool? isLoading,
+    bool? isSaving,
+    String? saveError,
+    bool clearSaveError = false,
   }) {
     return AddPurchaseFormState(
+      documentId: documentId ?? this.documentId,
+      partyId: partyId ?? this.partyId,
+      godownId: godownId ?? this.godownId,
       party: party ?? this.party,
       billingName: billingName ?? this.billingName,
       eWayBillNo: eWayBillNo ?? this.eWayBillNo,
@@ -187,6 +222,9 @@ class AddPurchaseFormState {
       roundOff: roundOff ?? this.roundOff,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isDirty: isDirty ?? this.isDirty,
+      isLoading: isLoading ?? this.isLoading,
+      isSaving: isSaving ?? this.isSaving,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }
 }

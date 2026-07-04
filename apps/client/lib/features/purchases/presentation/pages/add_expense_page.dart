@@ -22,7 +22,9 @@ const _sectionGap = 16.0;
 const _addExpenseRed = Color(0xFFD32F2F);
 
 class AddExpensePage extends ConsumerWidget {
-  const AddExpensePage({super.key});
+  const AddExpensePage({this.expenseId, super.key});
+
+  final String? expenseId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,32 +50,32 @@ class AddExpensePage extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding: EdgeInsets.fromLTRB(
+                    padding: const EdgeInsets.fromLTRB(
                       _sectionGap,
                       _sectionGap,
                       _sectionGap,
                       0,
                     ),
-                    child: _PageHeader(),
+                    child: _PageHeader(expenseId: expenseId),
                   ),
-                  SizedBox(height: _sectionGap),
+                  const SizedBox(height: _sectionGap),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: _sectionGap),
-                    child: _FormFields(),
+                    padding: const EdgeInsets.symmetric(horizontal: _sectionGap),
+                    child: _FormFields(expenseId: expenseId),
                   ),
-                  SizedBox(height: _sectionGap),
-                  ExpenseLineItemsTable(),
-                  Divider(height: 1, color: _cardBorder),
+                  const SizedBox(height: _sectionGap),
+                  ExpenseLineItemsTable(expenseId: expenseId),
+                  const Divider(height: 1, color: _cardBorder),
                   Padding(
-                    padding: EdgeInsets.all(_sectionGap),
-                    child: AddExpenseFooter(),
+                    padding: const EdgeInsets.all(_sectionGap),
+                    child: AddExpenseFooter(expenseId: expenseId),
                   ),
-                  Divider(height: 1, color: _cardBorder),
-                  _BottomActionBar(),
+                  const Divider(height: 1, color: _cardBorder),
+                  _BottomActionBar(expenseId: expenseId),
                 ],
               ),
             ),
@@ -85,12 +87,14 @@ class AddExpensePage extends ConsumerWidget {
 }
 
 class _PageHeader extends ConsumerWidget {
-  const _PageHeader();
+  const _PageHeader({this.expenseId});
+
+  final String? expenseId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addExpenseFormProvider);
-    final notifier = ref.read(addExpenseFormProvider.notifier);
+    final form = ref.watch(addExpenseFormProvider(expenseId: expenseId));
+    final notifier = ref.read(addExpenseFormProvider(expenseId: expenseId).notifier);
 
     return Row(
       children: [
@@ -127,7 +131,9 @@ class _PageHeader extends ConsumerWidget {
 }
 
 class _FormFields extends ConsumerStatefulWidget {
-  const _FormFields();
+  const _FormFields({this.expenseId});
+
+  final String? expenseId;
 
   @override
   ConsumerState<_FormFields> createState() => _FormFieldsState();
@@ -139,8 +145,9 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
 
   @override
   Widget build(BuildContext context) {
-    final form = ref.watch(addExpenseFormProvider);
-    final notifier = ref.read(addExpenseFormProvider.notifier);
+    final form = ref.watch(addExpenseFormProvider(expenseId: widget.expenseId));
+    final notifier =
+        ref.read(addExpenseFormProvider(expenseId: widget.expenseId).notifier);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -158,6 +165,8 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                     hasError: form.partyHasError,
                     errorMessage: 'Party is required',
                     onSelected: notifier.updateParty,
+                    onPartySelectedWithId: (partyId, partyName) =>
+                        notifier.updateParty(partyName, partyId: partyId),
                   ),
                 ),
               ),
@@ -288,17 +297,22 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
       initialTime: current ?? TimeOfDay.now(),
     );
     if (picked != null) {
-      ref.read(addExpenseFormProvider.notifier).updateExpenseTime(picked);
+      ref
+          .read(addExpenseFormProvider(expenseId: widget.expenseId).notifier)
+          .updateExpenseTime(picked);
     }
   }
 }
 
 class _BottomActionBar extends ConsumerWidget {
-  const _BottomActionBar();
+  const _BottomActionBar({this.expenseId});
+
+  final String? expenseId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(addExpenseFormProvider.notifier);
+    final notifier =
+        ref.read(addExpenseFormProvider(expenseId: expenseId).notifier);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -340,7 +354,7 @@ class _BottomActionBar extends ConsumerWidget {
   }
 
   Future<void> _handleCancel(BuildContext context, WidgetRef ref) async {
-    final form = ref.read(addExpenseFormProvider);
+    final form = ref.read(addExpenseFormProvider(expenseId: expenseId));
     if (form.isDirty) {
       final discard = await showDialog<bool>(
         context: context,
@@ -366,13 +380,19 @@ class _BottomActionBar extends ConsumerWidget {
     if (context.mounted) context.pop();
   }
 
-  void _handleSave(
+  Future<void> _handleSave(
     BuildContext context,
     WidgetRef ref,
     AddExpenseForm notifier,
-  ) {
-    final saved = notifier.save();
-    if (!saved) return;
+  ) async {
+    final error = await notifier.saveExpense();
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
 
     showTransactionSuccessToast(context);
     context.go(AppRoutes.purchaseExpenses);

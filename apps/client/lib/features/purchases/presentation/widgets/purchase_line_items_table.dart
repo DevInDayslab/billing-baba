@@ -34,16 +34,17 @@ const _descriptionFlex = 2;
 const _minLineItemsTableWidth = 1020.0;
 
 class PurchaseLineItemsTable extends ConsumerWidget {
-  const PurchaseLineItemsTable({this.embedded = false, super.key});
+  const PurchaseLineItemsTable({this.embedded = false, this.billId, super.key});
 
   final bool embedded;
+  final String? billId;
 
   static final _amountFormat = NumberFormat('#,##0.00', 'en_IN');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addPurchaseFormProvider);
-    final notifier = ref.read(addPurchaseFormProvider.notifier);
+    final form = ref.watch(addPurchaseFormProvider(billId: billId));
+    final notifier = ref.read(addPurchaseFormProvider(billId: billId).notifier);
 
     final tableContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -57,7 +58,11 @@ class PurchaseLineItemsTable extends ConsumerWidget {
                 const Divider(height: 1, color: _cardBorder),
                 for (var i = 0; i < form.items.length; i++) ...[
                   if (i > 0) const Divider(height: 1, color: _cardBorder),
-                  _LineItemRow(index: i, item: form.items[i]),
+                  _LineItemRow(
+                    index: i,
+                    item: form.items[i],
+                    billId: billId,
+                  ),
                 ],
                 if (form.lineItemsHasError)
                   const Padding(
@@ -426,14 +431,17 @@ class _LineItemRow extends ConsumerWidget {
   const _LineItemRow({
     required this.index,
     required this.item,
+    this.billId,
   });
 
   final int index;
   final PurchaseLineItem item;
+  final String? billId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(addPurchaseFormProvider.notifier);
+    final notifier =
+        ref.read(addPurchaseFormProvider(billId: billId).notifier);
 
     return SizedBox(
       height: _rowHeight,

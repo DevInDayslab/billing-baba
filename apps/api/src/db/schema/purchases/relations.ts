@@ -6,6 +6,8 @@ import {
   expenses,
   purchaseDocumentLines,
   purchaseDocuments,
+  purchaseFaBatches,
+  purchaseFixedAssets,
 } from './tables';
 
 export const expenseCategoriesRelations = relations(
@@ -22,7 +24,13 @@ export const purchaseDocumentsRelations = relations(
       fields: [purchaseDocuments.partyId],
       references: [parties.id],
     }),
+    convertedFrom: one(purchaseDocuments, {
+      fields: [purchaseDocuments.convertedFromId],
+      references: [purchaseDocuments.id],
+      relationName: 'conversion_chain',
+    }),
     lines: many(purchaseDocumentLines),
+    fixedAssets: many(purchaseFixedAssets),
   }),
 );
 
@@ -50,3 +58,28 @@ export const expensesRelations = relations(expenses, ({ one }) => ({
     references: [parties.id],
   }),
 }));
+
+export const purchaseFaBatchesRelations = relations(
+  purchaseFaBatches,
+  ({ one, many }) => ({
+    party: one(parties, {
+      fields: [purchaseFaBatches.partyId],
+      references: [parties.id],
+    }),
+    assets: many(purchaseFixedAssets),
+  }),
+);
+
+export const purchaseFixedAssetsRelations = relations(
+  purchaseFixedAssets,
+  ({ one }) => ({
+    batch: one(purchaseFaBatches, {
+      fields: [purchaseFixedAssets.batchId],
+      references: [purchaseFaBatches.id],
+    }),
+    purchaseDocument: one(purchaseDocuments, {
+      fields: [purchaseFixedAssets.purchaseDocumentId],
+      references: [purchaseDocuments.id],
+    }),
+  }),
+);

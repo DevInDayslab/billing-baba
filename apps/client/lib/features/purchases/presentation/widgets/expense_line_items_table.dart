@@ -31,14 +31,17 @@ const _minTableWidthNoGst = 720.0;
 const _minTableWidthGst = 960.0;
 
 class ExpenseLineItemsTable extends ConsumerWidget {
-  const ExpenseLineItemsTable({super.key});
+  const ExpenseLineItemsTable({this.expenseId, super.key});
+
+  final String? expenseId;
 
   static final _amountFormat = NumberFormat('#,##0.00', 'en_IN');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addExpenseFormProvider);
-    final notifier = ref.read(addExpenseFormProvider.notifier);
+    final form = ref.watch(addExpenseFormProvider(expenseId: expenseId));
+    final notifier =
+        ref.read(addExpenseFormProvider(expenseId: expenseId).notifier);
     final minWidth = form.gstEnabled ? _minTableWidthGst : _minTableWidthNoGst;
 
     final tableContent = Column(
@@ -57,6 +60,7 @@ class ExpenseLineItemsTable extends ConsumerWidget {
                     index: i,
                     item: form.items[i],
                     gstEnabled: form.gstEnabled,
+                    expenseId: expenseId,
                   ),
                 ],
                 if (form.lineItemsHasError)
@@ -218,15 +222,18 @@ class _LineItemRow extends ConsumerWidget {
     required this.index,
     required this.item,
     required this.gstEnabled,
+    this.expenseId,
   });
 
   final int index;
   final ExpenseLineItem item;
   final bool gstEnabled;
+  final String? expenseId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(addExpenseFormProvider.notifier);
+    final notifier =
+        ref.read(addExpenseFormProvider(expenseId: expenseId).notifier);
 
     return SizedBox(
       height: _rowHeight,

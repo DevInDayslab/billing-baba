@@ -33,9 +33,14 @@ abstract final class AppRoutes {
   static const addDebitNote = '/purchase/add-debit-note';
   static const purchaseFa = '/purchase/fa';
   static const addPurchaseFa = '/purchase/add-fa';
+  static const editPurchaseFa = '/purchase/edit-fa';
   static const addPurchase = '/purchase/add';
+  static const editPurchase = '/purchase/edit';
   static const addPurchaseOrder = '/purchase/add-order';
+  static const editPurchaseOrder = '/purchase/edit-order';
   static const addExpense = '/purchase/add-expense';
+  static const editExpense = '/purchase/edit-expense';
+  static const editDebitNote = '/purchase/edit-debit-note';
   static const reports = '/reports';
   static const reportsDashboard = '/reports/dashboard';
   static const reportsSales = '/reports/sales';

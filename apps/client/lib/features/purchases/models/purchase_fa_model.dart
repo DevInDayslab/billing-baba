@@ -9,6 +9,8 @@ enum PurchaseFaStatus {
 class PurchaseFaModel {
   const PurchaseFaModel({
     required this.id,
+    required this.batchId,
+    required this.partyId,
     required this.invoiceNo,
     required this.date,
     required this.partyName,
@@ -22,6 +24,8 @@ class PurchaseFaModel {
   });
 
   final String id;
+  final String batchId;
+  final String partyId;
   final String invoiceNo;
   final DateTime date;
   final String partyName;

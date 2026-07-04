@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 
 class AddPurchaseOrderFormState {
   const AddPurchaseOrderFormState({
+    this.documentId,
+    this.partyId,
+    this.godownId,
     this.party = '',
     this.billingName = '',
     this.orderNumber = '',
@@ -24,8 +27,14 @@ class AddPurchaseOrderFormState {
     this.roundOff = true,
     this.showValidationErrors = false,
     this.isDirty = false,
+    this.isLoading = false,
+    this.isSaving = false,
+    this.saveError,
   });
 
+  final String? documentId;
+  final String? partyId;
+  final String? godownId;
   final String party;
   final String billingName;
   final String orderNumber;
@@ -45,6 +54,9 @@ class AddPurchaseOrderFormState {
   final bool roundOff;
   final bool showValidationErrors;
   final bool isDirty;
+  final bool isLoading;
+  final bool isSaving;
+  final String? saveError;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -74,7 +86,10 @@ class AddPurchaseOrderFormState {
   double get balanceAmount =>
       (grandTotal - paymentAmount).clamp(0, double.infinity);
 
-  bool get partyHasError => showValidationErrors && party.trim().isEmpty;
+  bool get partyHasError =>
+      showValidationErrors &&
+      (partyId == null || partyId!.isEmpty) &&
+      party.trim().isEmpty;
 
   bool get hasValidLineItems => items.any(
     (item) => item.itemName.trim().isNotEmpty && item.qty > 0,
@@ -82,9 +97,14 @@ class AddPurchaseOrderFormState {
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
-  bool get isValid => party.trim().isNotEmpty && hasValidLineItems;
+  bool get isValid =>
+      ((partyId != null && partyId!.isNotEmpty) || party.trim().isNotEmpty) &&
+      hasValidLineItems;
 
   AddPurchaseOrderFormState copyWith({
+    String? documentId,
+    String? partyId,
+    String? godownId,
     String? party,
     String? billingName,
     String? orderNumber,
@@ -104,8 +124,15 @@ class AddPurchaseOrderFormState {
     bool? roundOff,
     bool? showValidationErrors,
     bool? isDirty,
+    bool? isLoading,
+    bool? isSaving,
+    String? saveError,
+    bool clearSaveError = false,
   }) {
     return AddPurchaseOrderFormState(
+      documentId: documentId ?? this.documentId,
+      partyId: partyId ?? this.partyId,
+      godownId: godownId ?? this.godownId,
       party: party ?? this.party,
       billingName: billingName ?? this.billingName,
       orderNumber: orderNumber ?? this.orderNumber,
@@ -125,6 +152,9 @@ class AddPurchaseOrderFormState {
       roundOff: roundOff ?? this.roundOff,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isDirty: isDirty ?? this.isDirty,
+      isLoading: isLoading ?? this.isLoading,
+      isSaving: isSaving ?? this.isSaving,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }
 }

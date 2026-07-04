@@ -10,23 +10,30 @@ part of 'debit_note_form_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(DebitNoteForm)
-final debitNoteFormProvider = DebitNoteFormProvider._();
+final debitNoteFormProvider = DebitNoteFormFamily._();
 
 final class DebitNoteFormProvider
     extends $NotifierProvider<DebitNoteForm, DebitNoteFormState> {
-  DebitNoteFormProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'debitNoteFormProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  DebitNoteFormProvider._({
+    required DebitNoteFormFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'debitNoteFormProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$debitNoteFormHash();
+
+  @override
+  String toString() {
+    return r'debitNoteFormProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -39,12 +46,50 @@ final class DebitNoteFormProvider
       providerOverride: $SyncValueProvider<DebitNoteFormState>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is DebitNoteFormProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
-String _$debitNoteFormHash() => r'caa03627a2227c0f3b29391ccc39dc5ab10bc0aa';
+String _$debitNoteFormHash() => r'07c26ee31ebd0fd629732681a8a2dcdb48e0217b';
+
+final class DebitNoteFormFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          DebitNoteForm,
+          DebitNoteFormState,
+          DebitNoteFormState,
+          DebitNoteFormState,
+          String?
+        > {
+  DebitNoteFormFamily._()
+    : super(
+        retry: null,
+        name: r'debitNoteFormProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  DebitNoteFormProvider call({String? debitNoteId}) =>
+      DebitNoteFormProvider._(argument: debitNoteId, from: this);
+
+  @override
+  String toString() => r'debitNoteFormProvider';
+}
 
 abstract class _$DebitNoteForm extends $Notifier<DebitNoteFormState> {
-  DebitNoteFormState build();
+  late final _$args = ref.$arg as String?;
+  String? get debitNoteId => _$args;
+
+  DebitNoteFormState build({String? debitNoteId});
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -57,83 +102,36 @@ abstract class _$DebitNoteForm extends $Notifier<DebitNoteFormState> {
               Object?,
               Object?
             >;
-    return element.handleCreate(ref, build);
-  }
-}
-
-@ProviderFor(SavedDebitNotesNotifier)
-final savedDebitNotesProvider = SavedDebitNotesNotifierProvider._();
-
-final class SavedDebitNotesNotifierProvider
-    extends $NotifierProvider<SavedDebitNotesNotifier, List<SavedDebitNote>> {
-  SavedDebitNotesNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'savedDebitNotesProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$savedDebitNotesNotifierHash();
-
-  @$internal
-  @override
-  SavedDebitNotesNotifier create() => SavedDebitNotesNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<SavedDebitNote> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<SavedDebitNote>>(value),
-    );
-  }
-}
-
-String _$savedDebitNotesNotifierHash() =>
-    r'd688e934c1dd5e3ff78323885097f3eb4ac39a5c';
-
-abstract class _$SavedDebitNotesNotifier
-    extends $Notifier<List<SavedDebitNote>> {
-  List<SavedDebitNote> build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<List<SavedDebitNote>, List<SavedDebitNote>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<List<SavedDebitNote>, List<SavedDebitNote>>,
-              List<SavedDebitNote>,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
+    return element.handleCreate(ref, () => build(debitNoteId: _$args));
   }
 }
 
 @ProviderFor(debitNoteGrandTotal)
-final debitNoteGrandTotalProvider = DebitNoteGrandTotalProvider._();
+final debitNoteGrandTotalProvider = DebitNoteGrandTotalFamily._();
 
 final class DebitNoteGrandTotalProvider
     extends $FunctionalProvider<double, double, double>
     with $Provider<double> {
-  DebitNoteGrandTotalProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'debitNoteGrandTotalProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  DebitNoteGrandTotalProvider._({
+    required DebitNoteGrandTotalFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'debitNoteGrandTotalProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$debitNoteGrandTotalHash();
+
+  @override
+  String toString() {
+    return r'debitNoteGrandTotalProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -142,7 +140,8 @@ final class DebitNoteGrandTotalProvider
 
   @override
   double create(Ref ref) {
-    return debitNoteGrandTotal(ref);
+    final argument = this.argument as String?;
+    return debitNoteGrandTotal(ref, debitNoteId: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -152,7 +151,35 @@ final class DebitNoteGrandTotalProvider
       providerOverride: $SyncValueProvider<double>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is DebitNoteGrandTotalProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$debitNoteGrandTotalHash() =>
-    r'7e6bb67e33915fba34bb95e4c2aeb0eeeffa3346';
+    r'39891d69269fe44a7e70b07f81873ce02c74ca57';
+
+final class DebitNoteGrandTotalFamily extends $Family
+    with $FunctionalFamilyOverride<double, String?> {
+  DebitNoteGrandTotalFamily._()
+    : super(
+        retry: null,
+        name: r'debitNoteGrandTotalProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  DebitNoteGrandTotalProvider call({String? debitNoteId}) =>
+      DebitNoteGrandTotalProvider._(argument: debitNoteId, from: this);
+
+  @override
+  String toString() => r'debitNoteGrandTotalProvider';
+}

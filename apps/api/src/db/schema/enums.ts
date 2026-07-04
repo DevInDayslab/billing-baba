@@ -54,6 +54,19 @@ export const purchaseDocumentTypeEnum = pgEnum('purchase_document_type', [
   'purchase_return',
 ]);
 
+export const expenseCategoryTypeEnum = pgEnum('expense_category_type', [
+  'direct',
+  'indirect',
+]);
+
+export const purchaseFaStatusEnum = pgEnum('purchase_fa_status', [
+  'paid',
+  'unpaid',
+  'partially_paid',
+  'overdue',
+  'cancelled',
+]);
+
 export const taxTypeEnum = pgEnum('tax_type', [
   'cgst_sgst',
   'igst',

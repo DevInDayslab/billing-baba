@@ -16,7 +16,9 @@ const _rowHeight = 48.0;
 const _addRowColor = Color(0xFF1565C0);
 
 class DebitNoteLineItemsTable extends ConsumerWidget {
-  const DebitNoteLineItemsTable({super.key});
+  const DebitNoteLineItemsTable({this.debitNoteId, super.key});
+
+  final String? debitNoteId;
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -28,17 +30,22 @@ class DebitNoteLineItemsTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(debitNoteFormProvider);
-    final notifier = ref.read(debitNoteFormProvider.notifier);
+    final form = ref.watch(debitNoteFormProvider(debitNoteId: debitNoteId));
+    final notifier =
+        ref.read(debitNoteFormProvider(debitNoteId: debitNoteId).notifier);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _LineItemsHeader(),
+        _LineItemsHeader(debitNoteId: debitNoteId),
         const Divider(height: 1, color: _cardBorder),
         for (var i = 0; i < form.items.length; i++) ...[
           if (i > 0) const Divider(height: 1, color: _cardBorder),
-          _LineItemRow(index: i, item: form.items[i]),
+          _LineItemRow(
+            index: i,
+            item: form.items[i],
+            debitNoteId: debitNoteId,
+          ),
         ],
         if (form.lineItemsHasError)
           const Padding(
@@ -116,11 +123,14 @@ class DebitNoteLineItemsTable extends ConsumerWidget {
 }
 
 class _LineItemsHeader extends ConsumerWidget {
-  const _LineItemsHeader();
+  const _LineItemsHeader({this.debitNoteId});
+
+  final String? debitNoteId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(debitNoteFormProvider.notifier);
+    final notifier =
+        ref.read(debitNoteFormProvider(debitNoteId: debitNoteId).notifier);
 
     return Container(
       color: _headerBackground,
@@ -175,14 +185,20 @@ class _LineItemsHeader extends ConsumerWidget {
 }
 
 class _LineItemRow extends ConsumerWidget {
-  const _LineItemRow({required this.index, required this.item});
+  const _LineItemRow({
+    required this.index,
+    required this.item,
+    this.debitNoteId,
+  });
 
   final int index;
   final SaleLineItem item;
+  final String? debitNoteId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(debitNoteFormProvider.notifier);
+    final notifier =
+        ref.read(debitNoteFormProvider(debitNoteId: debitNoteId).notifier);
 
     return SizedBox(
       height: _rowHeight,

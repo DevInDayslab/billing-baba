@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 
 class DebitNoteFormState {
   const DebitNoteFormState({
+    this.documentId,
+    this.partyId,
+    this.godownId,
     this.party = '',
     this.returnNo = '1',
     this.billNumber = '',
@@ -23,6 +26,9 @@ class DebitNoteFormState {
     this.isDirty = false,
   });
 
+  final String? documentId;
+  final String? partyId;
+  final String? godownId;
   final String party;
   final String returnNo;
   final String billNumber;
@@ -64,9 +70,14 @@ class DebitNoteFormState {
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
-  bool get isValid => party.trim().isNotEmpty && hasValidLineItems;
+  bool get isValid =>
+      ((partyId != null && partyId!.isNotEmpty) || party.trim().isNotEmpty) &&
+      hasValidLineItems;
 
   DebitNoteFormState copyWith({
+    String? documentId,
+    String? partyId,
+    String? godownId,
     String? party,
     String? returnNo,
     String? billNumber,
@@ -85,6 +96,9 @@ class DebitNoteFormState {
     bool? isDirty,
   }) {
     return DebitNoteFormState(
+      documentId: documentId ?? this.documentId,
+      partyId: partyId ?? this.partyId,
+      godownId: godownId ?? this.godownId,
       party: party ?? this.party,
       returnNo: returnNo ?? this.returnNo,
       billNumber: billNumber ?? this.billNumber,

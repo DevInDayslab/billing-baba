@@ -25,7 +25,7 @@ class ExpenseReportContent extends ConsumerStatefulWidget {
 class _ExpenseReportContentState extends ConsumerState<ExpenseReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 31),
   );
 
@@ -42,8 +42,8 @@ class _ExpenseReportContentState extends ConsumerState<ExpenseReportContent> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
@@ -52,11 +52,11 @@ class _ExpenseReportContentState extends ConsumerState<ExpenseReportContent> {
             child: ReportTitleActionsRow(
               title: 'Expense',
               actions: [
-                const ReportTextActionButton(
+                ReportTextActionButton(
                   label: 'Excel Report',
                   icon: Icons.table_chart_outlined,
                 ),
-                const ReportTextActionButton(
+                ReportTextActionButton(
                   label: 'Print',
                   icon: Icons.print_outlined,
                 ),
@@ -179,7 +179,7 @@ class _ExpenseReportContentState extends ConsumerState<ExpenseReportContent> {
                           ),
                           const SizedBox(width: AppSpacing.md),
                           FilledButton.icon(
-                            onPressed: () => context.push(AppRoutes.expenses),
+                            onPressed: () => context.push(AppRoutes.purchaseExpenses),
                             style: FilledButton.styleFrom(
                               backgroundColor: reportActiveBlue,
                               foregroundColor: Colors.white,
@@ -205,11 +205,11 @@ class _ExpenseReportContentState extends ConsumerState<ExpenseReportContent> {
                     ),
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     ReportAlignedHeaderCell(
                                       label: 'DATE',
                                       width: 100,
@@ -250,9 +250,9 @@ class _ExpenseReportContentState extends ConsumerState<ExpenseReportContent> {
                                       width: 90,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No expense records found for the selected period.',

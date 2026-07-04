@@ -217,6 +217,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AddDebitNotePage(),
           ),
           GoRoute(
+            path: '${AppRoutes.editDebitNote}/:debitNoteId',
+            name: 'editDebitNote',
+            builder: (context, state) => AddDebitNotePage(
+              debitNoteId: state.pathParameters['debitNoteId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.purchaseFa,
             builder: (context, state) => const PurchaseFaPage(),
           ),
@@ -226,9 +233,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AddPurchaseFaPage(),
           ),
           GoRoute(
+            path: '${AppRoutes.editPurchaseFa}/:batchId',
+            name: 'editPurchaseFa',
+            builder: (context, state) => AddPurchaseFaPage(
+              batchId: state.pathParameters['batchId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.addPurchase,
             name: 'addPurchase',
             builder: (context, state) => const AddPurchasePage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editPurchase}/:billId',
+            name: 'editPurchase',
+            builder: (context, state) => AddPurchasePage(
+              billId: state.pathParameters['billId'],
+            ),
           ),
           GoRoute(
             path: AppRoutes.addPurchaseOrder,
@@ -236,9 +257,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AddPurchaseOrderPage(),
           ),
           GoRoute(
+            path: '${AppRoutes.editPurchaseOrder}/:orderId',
+            name: 'editPurchaseOrder',
+            builder: (context, state) => AddPurchaseOrderPage(
+              orderId: state.pathParameters['orderId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.addExpense,
             name: 'addExpense',
             builder: (context, state) => const AddExpensePage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editExpense}/:expenseId',
+            name: 'editExpense',
+            builder: (context, state) => AddExpensePage(
+              expenseId: state.pathParameters['expenseId'],
+            ),
           ),
           GoRoute(
             path: AppRoutes.reports,

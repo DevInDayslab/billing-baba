@@ -1,6 +1,10 @@
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_service.dart';
+import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
-import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:flutter/material.dart';
@@ -15,35 +19,77 @@ String _nextPurchaseLineItemId() {
   return 'purchase_line_$_purchaseLineItemCounter';
 }
 
+AddPurchaseFormState _defaultFormState({String? documentId}) {
+  final now = DateTime.now();
+  return AddPurchaseFormState(
+    documentId: documentId,
+    billNumber: 'Auto',
+    billDate: DateTime(now.year, now.month, now.day),
+    billTime: TimeOfDay.fromDateTime(now),
+    dueDate: DateTime(now.year, now.month, now.day),
+    items: [PurchaseLineItem.empty(id: _nextPurchaseLineItemId())],
+    isLoading: documentId != null,
+  );
+}
+
 @riverpod
 class AddPurchaseForm extends _$AddPurchaseForm {
   @override
-  AddPurchaseFormState build() {
-    final bills = ref.watch(purchaseBillsProvider);
-    final now = DateTime.now();
-    final billNumber = generateNextPurchaseBillNumber(
-      bills.map((bill) => bill.invoiceNo).toList(),
-    );
-
-    return AddPurchaseFormState(
-      billNumber: billNumber,
-      billDate: DateTime(now.year, now.month, now.day),
-      billTime: TimeOfDay.fromDateTime(now),
-      dueDate: DateTime(now.year, now.month, now.day),
-      items: [PurchaseLineItem.empty(id: _nextPurchaseLineItemId())],
-    );
+  AddPurchaseFormState build({String? billId}) {
+    if (billId != null) {
+      Future.microtask(() => _loadDocument(billId));
+      return _defaultFormState(documentId: billId);
+    }
+    return _defaultFormState();
   }
 
-  void updateParty(String value) {
+  Future<void> _loadDocument(String documentId) async {
+    state = state.copyWith(isLoading: true, clearSaveError: true);
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final loaded = await service.loadPurchaseBillForm(documentId);
+      final items = await _resolveItemNames(loaded.items);
+      state = loaded.copyWith(items: items, isLoading: false);
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        saveError: PurchaseErrorMapper.messageFor(error),
+      );
+    }
+  }
+
+  Future<List<PurchaseLineItem>> _resolveItemNames(
+    List<PurchaseLineItem> items,
+  ) async {
+    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final itemNames = {for (final item in inventory) item.id: item.name};
+
+    return [
+      for (final line in items)
+        if (line.itemId != null && line.itemName.isEmpty)
+          line.copyWith(itemName: itemNames[line.itemId] ?? '')
+        else
+          line,
+    ];
+  }
+
+  Map<String, String> _itemNameToId() {
+    final items = ref.read(inventoryItemsProvider).value ?? [];
+    return {for (final item in items) item.name.trim(): item.id};
+  }
+
+  void updateParty(String value, {String? partyId}) {
     state = state.copyWith(
       party: value,
+      partyId: partyId ?? state.partyId,
       billingName: state.billingName.isEmpty ? value : state.billingName,
       isDirty: true,
+      clearSaveError: true,
     );
   }
 
   void updateBillingName(String value) {
-    state = state.copyWith(billingName: value, isDirty: true);
+    state = state.copyWith(billingName: value, isDirty: true, clearSaveError: true);
   }
 
   void updateEWayBillNo(String value) {
@@ -74,8 +120,12 @@ class AddPurchaseForm extends _$AddPurchaseForm {
     state = state.copyWith(stateOfSupply: value, isDirty: true);
   }
 
-  void updateGodown(String value) {
-    state = state.copyWith(godown: value, isDirty: true);
+  void updateGodown(String value, {String? godownId}) {
+    state = state.copyWith(
+      godown: value,
+      godownId: godownId ?? state.godownId,
+      isDirty: true,
+    );
   }
 
   void updateTermsTitle(String value) {
@@ -198,71 +248,115 @@ class AddPurchaseForm extends _$AddPurchaseForm {
     state = state.copyWith(roundOff: value, isDirty: true);
   }
 
-  bool validate() {
-    final isValid = state.isValid;
+  bool validate({bool finalize = false}) {
+    final hasLines = state.hasValidLineItems;
+    final hasParty =
+        (state.partyId != null && state.partyId!.isNotEmpty) ||
+        state.party.trim().isNotEmpty;
+
+    final isValid = hasLines && (!finalize || hasParty);
     if (!isValid) {
       state = state.copyWith(showValidationErrors: true);
     }
     return isValid;
   }
 
-  PurchaseBillModel? buildBillModel() {
-    if (!validate()) return null;
+  Future<String?> saveDraft() async {
+    if (!validate()) return 'Add at least one item with name and quantity';
 
-    final bills = ref.read(purchaseBillsProvider);
-    final nextId = (bills.length + 1).toString();
-    final grandTotal = state.grandTotal;
-    final paid = state.paymentAmount;
-    final balance = state.balanceAmount;
-
-    final status = balance <= 0
-        ? PurchaseBillStatus.paid
-        : paid > 0
-        ? PurchaseBillStatus.partiallyPaid
-        : PurchaseBillStatus.unpaid;
-
-    final date = state.billDate ?? DateTime.now();
-    final time = state.billTime ?? TimeOfDay.now();
-    final billDateTime = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
-
-    return PurchaseBillModel(
-      id: nextId,
-      invoiceNo: state.billNumber,
-      date: billDateTime,
-      partyName: state.billingName.trim().isNotEmpty
-          ? state.billingName.trim()
-          : state.party.trim(),
-      paymentType: state.paymentType,
-      status: status,
-      amount: grandTotal,
-      balanceDue: balance,
-      dueDate: state.dueDate ?? billDateTime,
-    );
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final input = service.draftInputFromBillForm(
+        state,
+        documentType: PurchaseDocumentType.purchaseBill,
+      );
+      final document = await service.saveDocumentDraft(
+        input.copyWith(partyId: state.partyId),
+        itemNameToId: _itemNameToId(),
+      );
+      state = state.copyWith(
+        documentId: document.id,
+        isSaving: false,
+        isDirty: false,
+      );
+      ref.invalidate(purchaseBillsProvider);
+      return null;
+    } catch (error) {
+      final message = PurchaseErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
   }
 
-  bool save() {
-    final bill = buildBillModel();
-    if (bill == null) return false;
-    ref.read(purchaseBillsProvider.notifier).addBill(bill);
-    ref.invalidateSelf();
-    return true;
+  Future<String?> saveBill({bool finalize = true}) async {
+    if (!validate(finalize: finalize)) {
+      if ((state.partyId == null || state.partyId!.isEmpty) &&
+          state.party.trim().isEmpty) {
+        return 'Supplier is required';
+      }
+      return 'Add at least one item with name and quantity';
+    }
+
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final input = service.draftInputFromBillForm(
+        state,
+        documentType: PurchaseDocumentType.purchaseBill,
+      );
+
+      if (finalize) {
+        await service.finalizeDocumentDraft(
+          input.copyWith(partyId: state.partyId),
+          itemNameToId: _itemNameToId(),
+          godownId: state.godownId,
+        );
+      } else {
+        await service.saveDocumentDraft(
+          input.copyWith(partyId: state.partyId),
+          itemNameToId: _itemNameToId(),
+        );
+      }
+
+      ref.invalidate(purchaseBillsProvider);
+      ref.invalidateSelf();
+      return null;
+    } catch (error) {
+      final message = PurchaseErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
+  }
+}
+
+extension on PurchaseDocumentDraftInput {
+  PurchaseDocumentDraftInput copyWith({String? partyId}) {
+    return PurchaseDocumentDraftInput(
+      documentId: documentId,
+      partyId: partyId ?? this.partyId,
+      documentType: documentType,
+      documentSeries: documentSeries,
+      documentDate: documentDate,
+      dueDate: dueDate,
+      supplierInvoiceNumber: supplierInvoiceNumber,
+      notes: notes,
+      godownId: godownId,
+      isGstFormal: isGstFormal,
+      convertedFromId: convertedFromId,
+      items: items,
+    );
   }
 }
 
 @riverpod
-double addPurchaseTotalTax(Ref ref) {
-  final form = ref.watch(addPurchaseFormProvider);
+double addPurchaseTotalTax(Ref ref, {String? billId}) {
+  final form = ref.watch(addPurchaseFormProvider(billId: billId));
   return form.totalTax;
 }
 
 @riverpod
-double addPurchaseGrandTotal(Ref ref) {
-  final form = ref.watch(addPurchaseFormProvider);
+double addPurchaseGrandTotal(Ref ref, {String? billId}) {
+  final form = ref.watch(addPurchaseFormProvider(billId: billId));
   return form.grandTotal;
 }

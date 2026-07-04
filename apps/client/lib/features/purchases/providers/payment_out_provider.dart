@@ -1,4 +1,9 @@
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
+import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
+import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -10,9 +15,12 @@ const paymentOutPageSize = 10;
 abstract final class PaymentOutDropdownOptions {
   static const paymentTypes = [
     'Cash',
+    'UPI',
     'Cheque',
     'Bank Transfer',
-    'Online',
+    'Card',
+    'Wallet',
+    'Others',
   ];
 }
 
@@ -67,54 +75,11 @@ class PaymentOutSummaryData {
   final double paidAmount;
 }
 
-class PaginatedPaymentOut {
-  const PaginatedPaymentOut({
-    required this.items,
-    required this.currentPage,
-    required this.totalPages,
-    required this.totalItems,
-  });
-
-  final List<PaymentOutModel> items;
-  final int currentPage;
-  final int totalPages;
-  final int totalItems;
-}
-
-List<PaymentOutModel> _mockPaymentOutRecords() {
-  const parties = ['KK INDUSTRIES', 'Sharma Traders', 'Patel Electronics'];
-  const paymentTypes = ['Cash', 'Cheque', 'Bank Transfer', 'UPI'];
-
-  return List.generate(8, (index) {
-    final id = index + 1;
-    final total = (5000 + id * 1200).toDouble();
-    final paid = index % 3 == 0 ? total * 0.5 : total;
-    return PaymentOutModel(
-      id: '$id',
-      receiptNo: 'PO-${1000 + id}',
-      date: DateTime(2026, 7, id * 2, 10 + index, index * 5),
-      partyName: parties[index % parties.length],
-      paymentType: paymentTypes[index % paymentTypes.length],
-      status: index % 3 == 0 ? PaymentOutStatus.pending : PaymentOutStatus.paid,
-      totalAmount: total,
-      paidAmount: paid,
-      user: index.isEven ? 'Admin' : 'Staff',
-      firm: index.isEven ? 'Main Firm' : 'Branch Firm',
-    );
-  });
-}
-
 DateTime _startOfDay(DateTime date) =>
     DateTime(date.year, date.month, date.day);
 
 DateTime _endOfDay(DateTime date) =>
     DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
-
-bool _isWithinRange(DateTime date, DateTime start, DateTime end) {
-  final normalized = _startOfDay(date);
-  return !normalized.isBefore(_startOfDay(start)) &&
-      !normalized.isAfter(_startOfDay(end));
-}
 
 DateTimeRange? _resolveTimeRange(
   TimeRangeOption option,
@@ -144,13 +109,62 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-@riverpod
+PaymentListQuery _buildPaymentListQuery(PaymentOutFiltersState filters) {
+  final dateRange = _resolveTimeRange(
+    filters.timeRangeOption,
+    filters.customDateRange,
+  );
+
+  return PaymentListQuery(
+    page: filters.currentPage,
+    limit: paymentOutPageSize,
+    direction: 'paid',
+    from: dateRange?.start.toUtc().toIso8601String(),
+    to: dateRange?.end.toUtc().toIso8601String(),
+  );
+}
+
+List<PaymentOutModel> _applyClientFilters(
+  List<PaymentOutModel> records,
+  PaymentOutFiltersState filters,
+) {
+  return records.where((record) {
+    if (filters.selectedFirm != 'All Firms' &&
+        record.firm != filters.selectedFirm) {
+      return false;
+    }
+    if (filters.selectedUser != 'All Users' &&
+        record.user != filters.selectedUser) {
+      return false;
+    }
+    return true;
+  }).toList();
+}
+
+@Riverpod(keepAlive: true)
 class PaymentOutRecords extends _$PaymentOutRecords {
   @override
-  List<PaymentOutModel> build() => _mockPaymentOutRecords();
+  Future<PaginatedPaymentOut> build() async {
+    ref.watch(paymentOutFiltersProvider);
+    return _fetchPage();
+  }
 
-  void addPayment(PaymentOutModel payment) {
-    state = [payment, ...state];
+  Future<PaginatedPaymentOut> _fetchPage() async {
+    final filters = ref.read(paymentOutFiltersProvider);
+    final service = await ref.read(purchaseServiceProvider.future);
+    final page = await service.fetchPaymentsPage(_buildPaymentListQuery(filters));
+
+    return PaginatedPaymentOut(
+      items: _applyClientFilters(page.items, filters),
+      currentPage: page.currentPage,
+      totalPages: page.totalPages,
+      totalItems: page.totalItems,
+    );
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(_fetchPage);
   }
 }
 
@@ -164,6 +178,7 @@ class PaymentOutFilters extends _$PaymentOutFilters {
       timeRangeOption: TimeRangeOptionX.fromLabel(label),
       currentPage: 1,
     );
+    ref.invalidate(paymentOutRecordsProvider);
   }
 
   void setCustomDateRange(
@@ -177,72 +192,43 @@ class PaymentOutFilters extends _$PaymentOutFilters {
       customDateRange: range,
       currentPage: 1,
     );
+    ref.invalidate(paymentOutRecordsProvider);
   }
 
   void setFirm(String firm) {
     state = state.copyWith(selectedFirm: firm, currentPage: 1);
+    ref.invalidate(paymentOutRecordsProvider);
   }
 
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
+    ref.invalidate(paymentOutRecordsProvider);
   }
 
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
+    ref.invalidate(paymentOutRecordsProvider);
   }
 }
 
 @riverpod
-List<PaymentOutModel> filteredPaymentOutRecords(Ref ref) {
-  final records = ref.watch(paymentOutRecordsProvider);
-  final filters = ref.watch(paymentOutFiltersProvider);
-
-  final dateRange = _resolveTimeRange(
-    filters.timeRangeOption,
-    filters.customDateRange,
-  );
-
-  return records.where((record) {
-    if (filters.selectedFirm != 'All Firms' &&
-        record.firm != filters.selectedFirm) {
-      return false;
-    }
-    if (filters.selectedUser != 'All Users' &&
-        record.user != filters.selectedUser) {
-      return false;
-    }
-    if (dateRange != null &&
-        !_isWithinRange(record.date, dateRange.start, dateRange.end)) {
-      return false;
-    }
-    return true;
-  }).toList();
-}
-
-@riverpod
 PaginatedPaymentOut paginatedPaymentOutRecords(Ref ref) {
-  final filtered = ref.watch(filteredPaymentOutRecordsProvider);
-  final filters = ref.watch(paymentOutFiltersProvider);
-
-  final totalItems = filtered.length;
-  final totalPages = totalItems == 0
-      ? 1
-      : (totalItems / paymentOutPageSize).ceil();
-  final currentPage = filters.currentPage.clamp(1, totalPages);
-  final startIndex = (currentPage - 1) * paymentOutPageSize;
-  final endIndex = (startIndex + paymentOutPageSize).clamp(0, totalItems);
-
-  return PaginatedPaymentOut(
-    items: filtered.sublist(startIndex, endIndex),
-    currentPage: currentPage,
-    totalPages: totalPages,
-    totalItems: totalItems,
+  final recordsAsync = ref.watch(paymentOutRecordsProvider);
+  return recordsAsync.maybeWhen(
+    data: (page) => page,
+    orElse: () => const PaginatedPaymentOut(
+      items: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+    ),
   );
 }
 
 @riverpod
 PaymentOutSummaryData paymentOutSummary(Ref ref) {
-  final records = ref.watch(filteredPaymentOutRecordsProvider);
+  final page = ref.watch(paginatedPaymentOutRecordsProvider);
+  final records = page.items;
   final totalAmount = records.fold<double>(
     0,
     (sum, record) => sum + record.totalAmount,
@@ -260,56 +246,77 @@ PaymentOutSummaryData paymentOutSummary(Ref ref) {
 
 class PaymentOutFormState {
   const PaymentOutFormState({
+    this.partyId,
     this.party = '',
     this.paymentType = 'Cash',
     this.receiptNo = '',
     this.date,
     this.time,
+    this.balanceDue = 0,
     this.paidAmount = 0,
     this.discount = 0,
     this.description = '',
     this.showDescriptionField = false,
     this.showValidationErrors = false,
+    this.saveError,
+    this.isSaving = false,
   });
 
+  final String? partyId;
   final String party;
   final String paymentType;
   final String receiptNo;
   final DateTime? date;
   final TimeOfDay? time;
+  final double balanceDue;
   final double paidAmount;
   final double discount;
   final String description;
   final bool showDescriptionField;
   final bool showValidationErrors;
+  final String? saveError;
+  final bool isSaving;
 
   double get total => (paidAmount - discount).clamp(0, double.infinity);
 
-  bool get isValid => party.trim().isNotEmpty && paidAmount > 0;
+  bool get isValid =>
+      party.trim().isNotEmpty &&
+      partyId != null &&
+      partyId!.isNotEmpty &&
+      paidAmount > 0;
 
   PaymentOutFormState copyWith({
+    String? partyId,
     String? party,
     String? paymentType,
     String? receiptNo,
     DateTime? date,
     TimeOfDay? time,
+    double? balanceDue,
     double? paidAmount,
     double? discount,
     String? description,
     bool? showDescriptionField,
     bool? showValidationErrors,
+    String? saveError,
+    bool clearSaveError = false,
+    bool? isSaving,
   }) {
     return PaymentOutFormState(
+      partyId: partyId ?? this.partyId,
       party: party ?? this.party,
       paymentType: paymentType ?? this.paymentType,
       receiptNo: receiptNo ?? this.receiptNo,
       date: date ?? this.date,
       time: time ?? this.time,
+      balanceDue: balanceDue ?? this.balanceDue,
       paidAmount: paidAmount ?? this.paidAmount,
       discount: discount ?? this.discount,
       description: description ?? this.description,
       showDescriptionField: showDescriptionField ?? this.showDescriptionField,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
+      isSaving: isSaving ?? this.isSaving,
     );
   }
 }
@@ -332,12 +339,26 @@ class PaymentOutForm extends _$PaymentOutForm {
     state = _initialPaymentOutFormState();
   }
 
-  void updateParty(String value) {
-    state = state.copyWith(party: value);
+  Future<void> updateParty(String name, {String? partyId}) async {
+    state = state.copyWith(
+      party: name,
+      partyId: partyId,
+      clearSaveError: true,
+    );
+
+    if (partyId != null && partyId.isNotEmpty) {
+      try {
+        final service = await ref.read(purchaseServiceProvider.future);
+        final balanceDue = await service.fetchPartyBalanceDue(partyId);
+        state = state.copyWith(balanceDue: balanceDue);
+      } catch (_) {
+        // Balance lookup is best-effort for the dialog.
+      }
+    }
   }
 
   void updatePaymentType(String value) {
-    state = state.copyWith(paymentType: value);
+    state = state.copyWith(paymentType: value, clearSaveError: true);
   }
 
   void updateDate(DateTime date) {
@@ -349,11 +370,11 @@ class PaymentOutForm extends _$PaymentOutForm {
   }
 
   void updatePaidAmount(double value) {
-    state = state.copyWith(paidAmount: value);
+    state = state.copyWith(paidAmount: value, clearSaveError: true);
   }
 
   void updateDiscount(double value) {
-    state = state.copyWith(discount: value);
+    state = state.copyWith(discount: value, clearSaveError: true);
   }
 
   void updateDescription(String value) {
@@ -364,40 +385,52 @@ class PaymentOutForm extends _$PaymentOutForm {
     state = state.copyWith(showDescriptionField: !state.showDescriptionField);
   }
 
-  PaymentOutModel? buildPaymentModel() {
+  Future<String?> savePayment() async {
     if (!state.isValid) {
       state = state.copyWith(showValidationErrors: true);
-      return null;
+      return 'Please fill required fields';
     }
 
-    final date = state.date ?? DateTime.now();
-    final time = state.time ?? TimeOfDay.now();
-    final dateTime = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
+    state = state.copyWith(isSaving: true, clearSaveError: true);
 
-    return PaymentOutModel(
-      id: '${DateTime.now().millisecondsSinceEpoch}',
-      receiptNo: state.receiptNo,
-      date: dateTime,
-      partyName: state.party.trim(),
-      paymentType: state.paymentType,
-      status: PaymentOutStatus.paid,
-      totalAmount: state.total,
-      paidAmount: state.paidAmount,
-      discount: state.discount,
-      description: state.description,
-    );
-  }
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final date = state.date ?? DateTime.now();
+      final time = state.time ?? TimeOfDay.now();
+      final paymentDate = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
 
-  void savePayment() {
-    final payment = buildPaymentModel();
-    if (payment == null) return;
-    ref.read(paymentOutRecordsProvider.notifier).addPayment(payment);
-    reset();
+      final allocations = await service.buildFifoAllocations(
+        partyId: state.partyId!,
+        amount: state.paidAmount,
+      );
+
+      await service.createPayment(
+        CreatePaymentRequest(
+          partyId: state.partyId!,
+          direction: 'paid',
+          amount: state.paidAmount.toStringAsFixed(4),
+          paymentMode: PurchasePaymentModes.toApi(state.paymentType),
+          paymentDate: paymentDate.toUtc().toIso8601String(),
+          referenceNumber: state.receiptNo,
+          notes: state.description.trim().isEmpty ? null : state.description,
+          allocations: allocations,
+        ),
+      );
+
+      ref.invalidate(paymentOutRecordsProvider);
+      ref.invalidate(purchaseBillsProvider);
+      reset();
+      return null;
+    } catch (error) {
+      final message = PurchaseErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
   }
 }

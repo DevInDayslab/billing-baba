@@ -1,7 +1,11 @@
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
+import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
 import 'package:billing_baba/features/purchases/models/purchase_order_form_model.dart';
-import 'package:billing_baba/features/purchases/models/purchase_order_model.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_orders_provider.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:flutter/material.dart';
@@ -19,27 +23,67 @@ String _nextPurchaseOrderLineItemId() {
 @riverpod
 class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
   @override
-  AddPurchaseOrderFormState build() {
-    final orders = ref.watch(purchaseOrdersProvider);
+  AddPurchaseOrderFormState build({String? orderId}) {
+    if (orderId != null) {
+      Future.microtask(() => _loadDocument(orderId));
+    }
     final now = DateTime.now();
-    final orderNumber = generateNextPurchaseOrderNumber(
-      orders.map((order) => order.orderNo).toList(),
-    );
-
     return AddPurchaseOrderFormState(
-      orderNumber: orderNumber,
+      documentId: orderId,
+      orderNumber: 'Auto',
       orderDate: DateTime(now.year, now.month, now.day),
       orderTime: TimeOfDay.fromDateTime(now),
       dueDate: DateTime(now.year, now.month, now.day),
       items: [PurchaseLineItem.empty(id: _nextPurchaseOrderLineItemId())],
+      isLoading: orderId != null,
     );
   }
 
-  void updateParty(String value) {
+  Future<void> _loadDocument(String documentId) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final loaded = await service.loadPurchaseOrderForm(documentId);
+      state = _mapBillFormToOrderForm(loaded).copyWith(isLoading: false);
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        saveError: PurchaseErrorMapper.messageFor(error),
+      );
+    }
+  }
+
+  AddPurchaseOrderFormState _mapBillFormToOrderForm(AddPurchaseFormState bill) {
+    return AddPurchaseOrderFormState(
+      documentId: bill.documentId,
+      partyId: bill.partyId,
+      godownId: bill.godownId,
+      party: bill.party,
+      billingName: bill.billingName,
+      orderNumber: bill.billNumber,
+      orderDate: bill.billDate,
+      orderTime: bill.billTime,
+      dueDate: bill.dueDate,
+      stateOfSupply: bill.stateOfSupply,
+      godown: bill.godown,
+      description: bill.description,
+      items: bill.items,
+      payments: bill.payments,
+    );
+  }
+
+  Map<String, String> _itemNameToId() {
+    final items = ref.read(inventoryItemsProvider).value ?? [];
+    return {for (final item in items) item.name.trim(): item.id};
+  }
+
+  void updateParty(String value, {String? partyId}) {
     state = state.copyWith(
       party: value,
+      partyId: partyId ?? state.partyId,
       billingName: state.billingName.isEmpty ? value : state.billingName,
       isDirty: true,
+      clearSaveError: true,
     );
   }
 
@@ -71,8 +115,12 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
     state = state.copyWith(stateOfSupply: value, isDirty: true);
   }
 
-  void updateGodown(String value) {
-    state = state.copyWith(godown: value, isDirty: true);
+  void updateGodown(String value, {String? godownId}) {
+    state = state.copyWith(
+      godown: value,
+      godownId: godownId ?? state.godownId,
+      isDirty: true,
+    );
   }
 
   void updateTermsTitle(String value) {
@@ -195,67 +243,73 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
     state = state.copyWith(roundOff: value, isDirty: true);
   }
 
-  bool validate() {
-    final isValid = state.isValid;
+  bool validate({bool finalize = false}) {
+    final hasParty =
+        (state.partyId != null && state.partyId!.isNotEmpty) ||
+        state.party.trim().isNotEmpty;
+    final isValid = state.hasValidLineItems && (!finalize || hasParty);
     if (!isValid) {
       state = state.copyWith(showValidationErrors: true);
     }
     return isValid;
   }
 
-  PurchaseOrderModel? buildOrderModel() {
-    if (!validate()) return null;
+  Future<String?> saveOrder({bool finalize = true}) async {
+    if (!validate(finalize: finalize)) {
+      if ((state.partyId == null || state.partyId!.isEmpty) &&
+          state.party.trim().isEmpty) {
+        return 'Supplier is required';
+      }
+      return 'Add at least one item with name and quantity';
+    }
 
-    final orders = ref.read(purchaseOrdersProvider);
-    final nextId = (orders.length + 1).toString();
-    final grandTotal = state.grandTotal;
-    final balance = state.balanceAmount;
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final input = PurchaseDocumentDraftInput(
+        documentId: state.documentId,
+        partyId: state.partyId,
+        documentType: PurchaseDocumentType.purchaseOrder,
+        documentSeries: PurchaseConstants.purchaseOrderSeries,
+        documentDate: state.orderDate,
+        dueDate: state.dueDate,
+        notes: state.description,
+        godownId: state.godownId,
+        items: state.items,
+      );
 
-    final status = balance <= 0
-        ? PurchaseOrderStatus.orderCompleted
-        : PurchaseOrderStatus.open;
+      if (finalize) {
+        await service.finalizeDocumentDraft(
+          input,
+          itemNameToId: _itemNameToId(),
+          godownId: state.godownId,
+        );
+      } else {
+        await service.saveDocumentDraft(
+          input,
+          itemNameToId: _itemNameToId(),
+        );
+      }
 
-    final date = state.orderDate ?? DateTime.now();
-    final time = state.orderTime ?? TimeOfDay.now();
-    final orderDateTime = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
-
-    return PurchaseOrderModel(
-      id: nextId,
-      orderNo: state.orderNumber,
-      date: orderDateTime,
-      partyName: state.billingName.trim().isNotEmpty
-          ? state.billingName.trim()
-          : state.party.trim(),
-      status: status,
-      amount: grandTotal,
-      balanceDue: balance,
-      dueDate: state.dueDate ?? orderDateTime,
-    );
-  }
-
-  bool save() {
-    final order = buildOrderModel();
-    if (order == null) return false;
-    ref.read(purchaseOrdersProvider.notifier).addOrder(order);
-    ref.invalidateSelf();
-    return true;
+      ref.invalidate(purchaseOrdersProvider);
+      ref.invalidateSelf();
+      return null;
+    } catch (error) {
+      final message = PurchaseErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
   }
 }
 
 @riverpod
-double addPurchaseOrderTotalTax(Ref ref) {
-  final form = ref.watch(addPurchaseOrderFormProvider);
+double addPurchaseOrderTotalTax(Ref ref, {String? orderId}) {
+  final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
   return form.totalTax;
 }
 
 @riverpod
-double addPurchaseOrderGrandTotal(Ref ref) {
-  final form = ref.watch(addPurchaseOrderFormProvider);
+double addPurchaseOrderGrandTotal(Ref ref, {String? orderId}) {
+  final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
   return form.grandTotal;
 }

@@ -296,6 +296,26 @@ export class PaymentRepository {
     return Number(row?.total ?? 0);
   }
 
+  async sumAllocatedToPurchaseDocument(
+    businessId: string,
+    purchaseDocumentId: string,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({
+        total: sql<string>`coalesce(sum(${paymentAllocations.allocatedAmount}::numeric), 0)`,
+      })
+      .from(paymentAllocations)
+      .where(
+        and(
+          eq(paymentAllocations.purchaseDocumentId, purchaseDocumentId),
+          eq(paymentAllocations.businessId, businessId),
+          eq(paymentAllocations.isDeleted, false),
+        ),
+      );
+
+    return Number(row?.total ?? 0);
+  }
+
   async findSalesDocumentForAllocation(
     businessId: string,
     salesDocumentId: string,

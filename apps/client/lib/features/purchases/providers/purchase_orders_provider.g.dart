@@ -13,14 +13,14 @@ part of 'purchase_orders_provider.dart';
 final purchaseOrdersProvider = PurchaseOrdersProvider._();
 
 final class PurchaseOrdersProvider
-    extends $NotifierProvider<PurchaseOrders, List<PurchaseOrderModel>> {
+    extends $AsyncNotifierProvider<PurchaseOrders, PaginatedPurchaseOrders> {
   PurchaseOrdersProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'purchaseOrdersProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -31,30 +31,30 @@ final class PurchaseOrdersProvider
   @$internal
   @override
   PurchaseOrders create() => PurchaseOrders();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<PurchaseOrderModel> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<PurchaseOrderModel>>(value),
-    );
-  }
 }
 
-String _$purchaseOrdersHash() => r'4b65b4ed5fc3d02f926ffa1921f508bc9b611907';
+String _$purchaseOrdersHash() => r'62dac2a377e3dd09648641fb1b0eac6e046ee901';
 
-abstract class _$PurchaseOrders extends $Notifier<List<PurchaseOrderModel>> {
-  List<PurchaseOrderModel> build();
+abstract class _$PurchaseOrders
+    extends $AsyncNotifier<PaginatedPurchaseOrders> {
+  FutureOr<PaginatedPurchaseOrders> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
-        this.ref as $Ref<List<PurchaseOrderModel>, List<PurchaseOrderModel>>;
+        this.ref
+            as $Ref<
+              AsyncValue<PaginatedPurchaseOrders>,
+              PaginatedPurchaseOrders
+            >;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<List<PurchaseOrderModel>, List<PurchaseOrderModel>>,
-              List<PurchaseOrderModel>,
+              AnyNotifier<
+                AsyncValue<PaginatedPurchaseOrders>,
+                PaginatedPurchaseOrders
+              >,
+              AsyncValue<PaginatedPurchaseOrders>,
               Object?,
               Object?
             >;
@@ -95,7 +95,7 @@ final class PurchaseOrderFiltersProvider
 }
 
 String _$purchaseOrderFiltersHash() =>
-    r'bfc0aa5e9f23a01110261eb0733464a60ad91d70';
+    r'414840405a41fa6a4d62116f7c6675be705a4e6d';
 
 abstract class _$PurchaseOrderFilters
     extends $Notifier<PurchaseOrderFiltersState> {
@@ -116,54 +116,6 @@ abstract class _$PurchaseOrderFilters
     return element.handleCreate(ref, build);
   }
 }
-
-@ProviderFor(filteredPurchaseOrders)
-final filteredPurchaseOrdersProvider = FilteredPurchaseOrdersProvider._();
-
-final class FilteredPurchaseOrdersProvider
-    extends
-        $FunctionalProvider<
-          List<PurchaseOrderModel>,
-          List<PurchaseOrderModel>,
-          List<PurchaseOrderModel>
-        >
-    with $Provider<List<PurchaseOrderModel>> {
-  FilteredPurchaseOrdersProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'filteredPurchaseOrdersProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$filteredPurchaseOrdersHash();
-
-  @$internal
-  @override
-  $ProviderElement<List<PurchaseOrderModel>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  List<PurchaseOrderModel> create(Ref ref) {
-    return filteredPurchaseOrders(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<PurchaseOrderModel> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<PurchaseOrderModel>>(value),
-    );
-  }
-}
-
-String _$filteredPurchaseOrdersHash() =>
-    r'b574e65314e9e139ed9a03135ab3f797ddbf8546';
 
 @ProviderFor(paginatedPurchaseOrders)
 final paginatedPurchaseOrdersProvider = PaginatedPurchaseOrdersProvider._();
@@ -211,4 +163,4 @@ final class PaginatedPurchaseOrdersProvider
 }
 
 String _$paginatedPurchaseOrdersHash() =>
-    r'a99b2ae8182029492be8346ed35ac16faab28dcf';
+    r'978d00624315a4c57b84e637124ff9ebf8d8764e';

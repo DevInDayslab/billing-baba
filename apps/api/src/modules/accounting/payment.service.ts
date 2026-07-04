@@ -409,6 +409,19 @@ export class PaymentService {
           422,
         );
       }
+
+      const alreadyAllocated = await repo.sumAllocatedToPurchaseDocument(
+        businessId,
+        allocation.purchase_document_id,
+      );
+      const documentTotal = parseMoney(document.totalAmount);
+      if (alreadyAllocated + allocationAmount > documentTotal) {
+        throw new AppError(
+          'VALIDATION_ERROR',
+          'Allocated amount exceeds document remaining balance',
+          422,
+        );
+      }
     }
   }
 }

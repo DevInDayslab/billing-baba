@@ -10,23 +10,30 @@ part of 'add_expense_form_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(AddExpenseForm)
-final addExpenseFormProvider = AddExpenseFormProvider._();
+final addExpenseFormProvider = AddExpenseFormFamily._();
 
 final class AddExpenseFormProvider
     extends $NotifierProvider<AddExpenseForm, AddExpenseFormState> {
-  AddExpenseFormProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'addExpenseFormProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  AddExpenseFormProvider._({
+    required AddExpenseFormFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'addExpenseFormProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$addExpenseFormHash();
+
+  @override
+  String toString() {
+    return r'addExpenseFormProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -39,12 +46,50 @@ final class AddExpenseFormProvider
       providerOverride: $SyncValueProvider<AddExpenseFormState>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AddExpenseFormProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
-String _$addExpenseFormHash() => r'61542261e42986fc32ca5cc1e4abe9b1b4f5d546';
+String _$addExpenseFormHash() => r'c4bb8cfbd5cfc3b61738afebc89b0a2bc165e61b';
+
+final class AddExpenseFormFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          AddExpenseForm,
+          AddExpenseFormState,
+          AddExpenseFormState,
+          AddExpenseFormState,
+          String?
+        > {
+  AddExpenseFormFamily._()
+    : super(
+        retry: null,
+        name: r'addExpenseFormProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AddExpenseFormProvider call({String? expenseId}) =>
+      AddExpenseFormProvider._(argument: expenseId, from: this);
+
+  @override
+  String toString() => r'addExpenseFormProvider';
+}
 
 abstract class _$AddExpenseForm extends $Notifier<AddExpenseFormState> {
-  AddExpenseFormState build();
+  late final _$args = ref.$arg as String?;
+  String? get expenseId => _$args;
+
+  AddExpenseFormState build({String? expenseId});
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -57,30 +102,37 @@ abstract class _$AddExpenseForm extends $Notifier<AddExpenseFormState> {
               Object?,
               Object?
             >;
-    return element.handleCreate(ref, build);
+    return element.handleCreate(ref, () => build(expenseId: _$args));
   }
 }
 
 @ProviderFor(addExpenseGrandTotal)
-final addExpenseGrandTotalProvider = AddExpenseGrandTotalProvider._();
+final addExpenseGrandTotalProvider = AddExpenseGrandTotalFamily._();
 
 final class AddExpenseGrandTotalProvider
     extends $FunctionalProvider<double, double, double>
     with $Provider<double> {
-  AddExpenseGrandTotalProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'addExpenseGrandTotalProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  AddExpenseGrandTotalProvider._({
+    required AddExpenseGrandTotalFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'addExpenseGrandTotalProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$addExpenseGrandTotalHash();
 
+  @override
+  String toString() {
+    return r'addExpenseGrandTotalProvider'
+        ''
+        '($argument)';
+  }
+
   @$internal
   @override
   $ProviderElement<double> $createElement($ProviderPointer pointer) =>
@@ -88,7 +140,8 @@ final class AddExpenseGrandTotalProvider
 
   @override
   double create(Ref ref) {
-    return addExpenseGrandTotal(ref);
+    final argument = this.argument as String?;
+    return addExpenseGrandTotal(ref, expenseId: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -97,31 +150,66 @@ final class AddExpenseGrandTotalProvider
       origin: this,
       providerOverride: $SyncValueProvider<double>(value),
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AddExpenseGrandTotalProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
   }
 }
 
 String _$addExpenseGrandTotalHash() =>
-    r'91d9200201f1a0501acb69cf8972c5eb120cf1bc';
+    r'41f6f7e15226fde7f655e8c147aa717afb755a60';
+
+final class AddExpenseGrandTotalFamily extends $Family
+    with $FunctionalFamilyOverride<double, String?> {
+  AddExpenseGrandTotalFamily._()
+    : super(
+        retry: null,
+        name: r'addExpenseGrandTotalProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AddExpenseGrandTotalProvider call({String? expenseId}) =>
+      AddExpenseGrandTotalProvider._(argument: expenseId, from: this);
+
+  @override
+  String toString() => r'addExpenseGrandTotalProvider';
+}
 
 @ProviderFor(addExpenseTotalTax)
-final addExpenseTotalTaxProvider = AddExpenseTotalTaxProvider._();
+final addExpenseTotalTaxProvider = AddExpenseTotalTaxFamily._();
 
 final class AddExpenseTotalTaxProvider
     extends $FunctionalProvider<double, double, double>
     with $Provider<double> {
-  AddExpenseTotalTaxProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'addExpenseTotalTaxProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  AddExpenseTotalTaxProvider._({
+    required AddExpenseTotalTaxFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'addExpenseTotalTaxProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$addExpenseTotalTaxHash();
+
+  @override
+  String toString() {
+    return r'addExpenseTotalTaxProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -130,7 +218,8 @@ final class AddExpenseTotalTaxProvider
 
   @override
   double create(Ref ref) {
-    return addExpenseTotalTax(ref);
+    final argument = this.argument as String?;
+    return addExpenseTotalTax(ref, expenseId: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -140,10 +229,38 @@ final class AddExpenseTotalTaxProvider
       providerOverride: $SyncValueProvider<double>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AddExpenseTotalTaxProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$addExpenseTotalTaxHash() =>
-    r'f5e76cb3d9d6565bce0bbdc517dc7a366f76fd5f';
+    r'496f7fa6855e7b1429f15682bdf9749c92bd788d';
+
+final class AddExpenseTotalTaxFamily extends $Family
+    with $FunctionalFamilyOverride<double, String?> {
+  AddExpenseTotalTaxFamily._()
+    : super(
+        retry: null,
+        name: r'addExpenseTotalTaxProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AddExpenseTotalTaxProvider call({String? expenseId}) =>
+      AddExpenseTotalTaxProvider._(argument: expenseId, from: this);
+
+  @override
+  String toString() => r'addExpenseTotalTaxProvider';
+}
 
 @ProviderFor(expenseCategoryOptions)
 final expenseCategoryOptionsProvider = ExpenseCategoryOptionsProvider._();
@@ -185,4 +302,4 @@ final class ExpenseCategoryOptionsProvider
 }
 
 String _$expenseCategoryOptionsHash() =>
-    r'41fc999a71174cbd6cb4fe98aaeb997c7439abda';
+    r'b59541e113a213537f8c232edc5fc526a94b2a80';

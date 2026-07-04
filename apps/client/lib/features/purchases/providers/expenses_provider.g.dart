@@ -13,14 +13,15 @@ part of 'expenses_provider.dart';
 final expenseCategoriesProvider = ExpenseCategoriesProvider._();
 
 final class ExpenseCategoriesProvider
-    extends $NotifierProvider<ExpenseCategories, List<ExpenseCategoryModel>> {
+    extends
+        $AsyncNotifierProvider<ExpenseCategories, List<ExpenseCategoryModel>> {
   ExpenseCategoriesProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'expenseCategoriesProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -31,35 +32,30 @@ final class ExpenseCategoriesProvider
   @$internal
   @override
   ExpenseCategories create() => ExpenseCategories();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<ExpenseCategoryModel> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<ExpenseCategoryModel>>(value),
-    );
-  }
 }
 
-String _$expenseCategoriesHash() => r'18ea846ff04ab9f4d98fcde0dc4bbd553cd5c0eb';
+String _$expenseCategoriesHash() => r'72230b0ed35fa7d65884a14f9fcb55d47810912b';
 
 abstract class _$ExpenseCategories
-    extends $Notifier<List<ExpenseCategoryModel>> {
-  List<ExpenseCategoryModel> build();
+    extends $AsyncNotifier<List<ExpenseCategoryModel>> {
+  FutureOr<List<ExpenseCategoryModel>> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
         this.ref
-            as $Ref<List<ExpenseCategoryModel>, List<ExpenseCategoryModel>>;
+            as $Ref<
+              AsyncValue<List<ExpenseCategoryModel>>,
+              List<ExpenseCategoryModel>
+            >;
     final element =
         ref.element
             as $ClassProviderElement<
               AnyNotifier<
-                List<ExpenseCategoryModel>,
+                AsyncValue<List<ExpenseCategoryModel>>,
                 List<ExpenseCategoryModel>
               >,
-              List<ExpenseCategoryModel>,
+              AsyncValue<List<ExpenseCategoryModel>>,
               Object?,
               Object?
             >;
@@ -72,14 +68,17 @@ final expenseTransactionsProvider = ExpenseTransactionsProvider._();
 
 final class ExpenseTransactionsProvider
     extends
-        $NotifierProvider<ExpenseTransactions, List<ExpenseTransactionModel>> {
+        $AsyncNotifierProvider<
+          ExpenseTransactions,
+          List<ExpenseTransactionModel>
+        > {
   ExpenseTransactionsProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'expenseTransactionsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -90,41 +89,31 @@ final class ExpenseTransactionsProvider
   @$internal
   @override
   ExpenseTransactions create() => ExpenseTransactions();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<ExpenseTransactionModel> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<ExpenseTransactionModel>>(
-        value,
-      ),
-    );
-  }
 }
 
 String _$expenseTransactionsHash() =>
-    r'87436d7d0f9be1871a1f45aa5beaf323a2b1dd9f';
+    r'33afffaa5cf0bfc96af3538d8d4a56b7262b94c5';
 
 abstract class _$ExpenseTransactions
-    extends $Notifier<List<ExpenseTransactionModel>> {
-  List<ExpenseTransactionModel> build();
+    extends $AsyncNotifier<List<ExpenseTransactionModel>> {
+  FutureOr<List<ExpenseTransactionModel>> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
         this.ref
             as $Ref<
-              List<ExpenseTransactionModel>,
+              AsyncValue<List<ExpenseTransactionModel>>,
               List<ExpenseTransactionModel>
             >;
     final element =
         ref.element
             as $ClassProviderElement<
               AnyNotifier<
-                List<ExpenseTransactionModel>,
+                AsyncValue<List<ExpenseTransactionModel>>,
                 List<ExpenseTransactionModel>
               >,
-              List<ExpenseTransactionModel>,
+              AsyncValue<List<ExpenseTransactionModel>>,
               Object?,
               Object?
             >;
@@ -132,11 +121,17 @@ abstract class _$ExpenseTransactions
   }
 }
 
-@ProviderFor(ExpenseItems)
+@ProviderFor(expenseItems)
 final expenseItemsProvider = ExpenseItemsProvider._();
 
 final class ExpenseItemsProvider
-    extends $NotifierProvider<ExpenseItems, List<ExpenseItemModel>> {
+    extends
+        $FunctionalProvider<
+          List<ExpenseItemModel>,
+          List<ExpenseItemModel>,
+          List<ExpenseItemModel>
+        >
+    with $Provider<List<ExpenseItemModel>> {
   ExpenseItemsProvider._()
     : super(
         from: null,
@@ -153,7 +148,14 @@ final class ExpenseItemsProvider
 
   @$internal
   @override
-  ExpenseItems create() => ExpenseItems();
+  $ProviderElement<List<ExpenseItemModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<ExpenseItemModel> create(Ref ref) {
+    return expenseItems(ref);
+  }
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<ExpenseItemModel> value) {
@@ -164,26 +166,7 @@ final class ExpenseItemsProvider
   }
 }
 
-String _$expenseItemsHash() => r'2580823c08a2e7d5affd19ba4175e1f4f429b709';
-
-abstract class _$ExpenseItems extends $Notifier<List<ExpenseItemModel>> {
-  List<ExpenseItemModel> build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref =
-        this.ref as $Ref<List<ExpenseItemModel>, List<ExpenseItemModel>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<List<ExpenseItemModel>, List<ExpenseItemModel>>,
-              List<ExpenseItemModel>,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
+String _$expenseItemsHash() => r'aaee8d3e4544ddbc2a5beccafe6a3580d26e9d08';
 
 @ProviderFor(ExpenseTabIndex)
 final expenseTabIndexProvider = ExpenseTabIndexProvider._();
@@ -270,7 +253,7 @@ final class SelectedExpenseCategoryIdProvider
 }
 
 String _$selectedExpenseCategoryIdHash() =>
-    r'a5715ae77e26f5717b9995be8e133035eece4e03';
+    r'af3597b65e043c60f0f6ec4836746462763c7c29';
 
 abstract class _$SelectedExpenseCategoryId extends $Notifier<String?> {
   String? build();
@@ -323,7 +306,7 @@ final class SelectedExpenseItemIdProvider
 }
 
 String _$selectedExpenseItemIdHash() =>
-    r'831abf3718530502cfc802668279803704b12772';
+    r'3cc2b1af818351329c64d8a9131d993ad6b27900';
 
 abstract class _$SelectedExpenseItemId extends $Notifier<String?> {
   String? build();
@@ -592,7 +575,7 @@ final class ExpenseFiltersProvider
   }
 }
 
-String _$expenseFiltersHash() => r'4db2c3fa1bf7e9a0d65a860831dea7b2f8daf6df';
+String _$expenseFiltersHash() => r'd562984ba7bc824be6f954cdddbedb5faf5d7a88';
 
 abstract class _$ExpenseFilters extends $Notifier<ExpenseFiltersState> {
   ExpenseFiltersState build();
@@ -658,7 +641,7 @@ final class FilteredExpenseCategoriesProvider
 }
 
 String _$filteredExpenseCategoriesHash() =>
-    r'788e7939cc6bae56514a973ba25bf3e22fd79b2b';
+    r'5e2f634503debe8534f301ab0c73759cf63d63fe';
 
 @ProviderFor(categoryExpenseTransactions)
 final categoryExpenseTransactionsProvider =
@@ -728,7 +711,7 @@ final class CategoryExpenseTransactionsProvider
 }
 
 String _$categoryExpenseTransactionsHash() =>
-    r'7e511df2ff0d0e95c71a2c39e4bbbe7271fcea5b';
+    r'98d64ef861b4ca2ec3ad61400a7e6ec47cf24fdb';
 
 final class CategoryExpenseTransactionsFamily extends $Family
     with $FunctionalFamilyOverride<List<ExpenseTransactionModel>, String> {
@@ -863,7 +846,7 @@ final class ItemExpenseTransactionsProvider
 }
 
 String _$itemExpenseTransactionsHash() =>
-    r'8032e960bdde5644ac2f766f4e9d2fdc80b5ed0f';
+    r'af04138b5cbfad06e3869ff3b73b5d0c575ec48f';
 
 final class ItemExpenseTransactionsFamily extends $Family
     with $FunctionalFamilyOverride<List<ExpenseTransactionModel>, String> {
@@ -923,4 +906,4 @@ final class ExpensesTotalAmountProvider
 }
 
 String _$expensesTotalAmountHash() =>
-    r'5a99a7b517558fb8fe4dad8fc9f211767656ed3b';
+    r'0bec28fbd8861edf669bffd84fa812aa9f117653';

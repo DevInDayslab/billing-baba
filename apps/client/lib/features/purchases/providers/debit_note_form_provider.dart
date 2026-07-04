@@ -1,4 +1,11 @@
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/debit_note_form_model.dart';
+import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
+import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
+import 'package:billing_baba/features/purchases/providers/purchase_return_provider.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:flutter/material.dart';
@@ -13,27 +20,99 @@ String _nextDebitNoteLineItemId() {
   return 'debit_note_line_$_debitNoteLineItemCounter';
 }
 
-DebitNoteFormState _initialDebitNoteFormState() {
+DebitNoteFormState _initialDebitNoteFormState({String? documentId}) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   return DebitNoteFormState(
+    documentId: documentId,
     returnDate: today,
     returnTime: TimeOfDay.fromDateTime(now),
     items: [SaleLineItem.empty(id: _nextDebitNoteLineItemId())],
   );
 }
 
+List<PurchaseLineItem> _toPurchaseLines(List<SaleLineItem> items) {
+  return items
+      .map(
+        (line) => PurchaseLineItem(
+          id: line.id,
+          serverLineId: line.serverLineId,
+          itemId: line.itemId,
+          itemName: line.itemName,
+          qty: line.qty,
+          unit: line.unit,
+          pricePerUnit: line.pricePerUnit,
+          taxPercent: line.taxPercent,
+        ),
+      )
+      .toList();
+}
+
 @riverpod
 class DebitNoteForm extends _$DebitNoteForm {
   @override
-  DebitNoteFormState build() => _initialDebitNoteFormState();
+  DebitNoteFormState build({String? debitNoteId}) {
+    if (debitNoteId != null) {
+      Future.microtask(() => _loadDocument(debitNoteId));
+    }
+    return _initialDebitNoteFormState(documentId: debitNoteId);
+  }
+
+  Future<void> _loadDocument(String documentId) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final loaded = await service.loadDebitNoteForm(documentId);
+      final inventory = ref.read(inventoryItemsProvider).value ?? [];
+      final itemNames = {for (final item in inventory) item.id: item.name};
+
+      final items = loaded.items.map((line) {
+        final saleLine = SaleLineItem(
+          id: line.id,
+          serverLineId: line.serverLineId,
+          itemId: line.itemId,
+          itemName: line.itemId != null && line.itemName.isEmpty
+              ? (itemNames[line.itemId] ?? '')
+              : line.itemName,
+          qty: line.qty,
+          unit: line.unit,
+          pricePerUnit: line.pricePerUnit,
+          taxPercent: line.taxPercent,
+        );
+        return saleLine;
+      }).toList();
+
+      state = DebitNoteFormState(
+        documentId: loaded.documentId,
+        partyId: loaded.partyId,
+        party: loaded.party,
+        returnNo: loaded.billNumber,
+        returnDate: loaded.billDate,
+        returnTime: loaded.billTime,
+        description: loaded.description,
+        items: items.isEmpty
+            ? [SaleLineItem.empty(id: _nextDebitNoteLineItemId())]
+            : items,
+      );
+    } catch (error) {
+      // Load errors surface when user attempts save; keep form editable.
+    }
+  }
 
   void resetForm() {
     state = _initialDebitNoteFormState();
   }
 
-  void updateParty(String value) {
-    state = state.copyWith(party: value, isDirty: true);
+  Map<String, String> _itemNameToId() {
+    final items = ref.read(inventoryItemsProvider).value ?? [];
+    return {for (final item in items) item.name.trim(): item.id};
+  }
+
+  void updateParty(String value, {String? partyId}) {
+    state = state.copyWith(
+      party: value,
+      partyId: partyId ?? state.partyId,
+      isDirty: true,
+    );
   }
 
   void updateReturnNo(String value) {
@@ -60,8 +139,12 @@ class DebitNoteForm extends _$DebitNoteForm {
     state = state.copyWith(stateOfSupply: value, isDirty: true);
   }
 
-  void updateGodown(String value) {
-    state = state.copyWith(godown: value, isDirty: true);
+  void updateGodown(String value, {String? godownId}) {
+    state = state.copyWith(
+      godown: value,
+      godownId: godownId ?? state.godownId,
+      isDirty: true,
+    );
   }
 
   void toggleRoundOff({required bool value}) {
@@ -98,6 +181,30 @@ class DebitNoteForm extends _$DebitNoteForm {
       const SalePaymentEntry(type: 'Cash'),
     ];
     state = state.copyWith(payments: payments, isDirty: true);
+  }
+
+  void addLineItem() {
+    final items = [
+      ...state.items,
+      SaleLineItem.empty(id: _nextDebitNoteLineItemId()),
+    ];
+    state = state.copyWith(items: items, isDirty: true);
+  }
+
+  void removeLineItem(int index) {
+    if (index < 0 || index >= state.items.length) return;
+    final items = [...state.items]..removeAt(index);
+    if (items.isEmpty) {
+      items.add(SaleLineItem.empty(id: _nextDebitNoteLineItemId()));
+    }
+    state = state.copyWith(items: items, isDirty: true);
+  }
+
+  void updateLineItem(int index, SaleLineItem item) {
+    if (index < 0 || index >= state.items.length) return;
+    final items = [...state.items];
+    items[index] = item;
+    state = state.copyWith(items: items, isDirty: true);
   }
 
   void addImage(SaleFormAttachment attachment) {
@@ -152,66 +259,59 @@ class DebitNoteForm extends _$DebitNoteForm {
     );
   }
 
-  void addLineItem() {
-    final items = [
-      ...state.items,
-      SaleLineItem.empty(id: _nextDebitNoteLineItemId()),
-    ];
-    state = state.copyWith(items: items, isDirty: true);
-  }
-
-  void removeLineItem(int index) {
-    if (index < 0 || index >= state.items.length) return;
-    final items = [...state.items]..removeAt(index);
-    if (items.isEmpty) {
-      items.add(SaleLineItem.empty(id: _nextDebitNoteLineItemId()));
-    }
-    state = state.copyWith(items: items, isDirty: true);
-  }
-
-  void updateLineItem(int index, SaleLineItem item) {
-    if (index < 0 || index >= state.items.length) return;
-    final items = [...state.items];
-    items[index] = item;
-    state = state.copyWith(items: items, isDirty: true);
-  }
-
-  bool validate() {
-    final isValid = state.isValid;
+  bool validate({bool finalize = false}) {
+    final hasParty =
+        (state.partyId != null && state.partyId!.isNotEmpty) ||
+        state.party.trim().isNotEmpty;
+    final isValid = state.hasValidLineItems && (!finalize || hasParty);
     if (!isValid) {
       state = state.copyWith(showValidationErrors: true);
     }
     return isValid;
   }
 
-  bool save() {
-    if (!validate()) return false;
-    final saved = SavedDebitNote.fromFormState(
-      id: nextSavedDebitNoteId(),
-      form: state,
-    );
-    ref.read(savedDebitNotesProvider.notifier).addDebitNote(saved);
-    resetForm();
-    return true;
+  Future<String?> saveDebitNote({bool finalize = true}) async {
+    if (!validate(finalize: finalize)) {
+      return 'Supplier and line items are required';
+    }
+
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final input = PurchaseDocumentDraftInput(
+        documentId: state.documentId,
+        partyId: state.partyId,
+        documentType: PurchaseDocumentType.purchaseReturn,
+        documentSeries: PurchaseConstants.purchaseReturnSeries,
+        documentDate: state.returnDate,
+        notes: state.description,
+        godownId: state.godownId,
+        items: _toPurchaseLines(state.items),
+      );
+
+      if (finalize) {
+        await service.finalizeDocumentDraft(
+          input,
+          itemNameToId: _itemNameToId(),
+          godownId: state.godownId,
+        );
+      } else {
+        await service.saveDocumentDraft(
+          input,
+          itemNameToId: _itemNameToId(),
+        );
+      }
+
+      ref.invalidate(purchaseReturnsProvider);
+      resetForm();
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
   }
 }
 
 @riverpod
-class SavedDebitNotesNotifier extends _$SavedDebitNotesNotifier {
-  @override
-  List<SavedDebitNote> build() => [];
-
-  void addDebitNote(SavedDebitNote debitNote) {
-    state = [debitNote, ...state];
-  }
-
-  void removeDebitNote(String id) {
-    state = state.where((note) => note.id != id).toList();
-  }
-}
-
-@riverpod
-double debitNoteGrandTotal(Ref ref) {
-  final form = ref.watch(debitNoteFormProvider);
+double debitNoteGrandTotal(Ref ref, {String? debitNoteId}) {
+  final form = ref.watch(debitNoteFormProvider(debitNoteId: debitNoteId));
   return form.total;
 }
