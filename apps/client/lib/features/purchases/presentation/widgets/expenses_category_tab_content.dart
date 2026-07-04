@@ -4,6 +4,8 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_l
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
+import 'package:billing_baba/features/purchases/application/expense_service.dart';
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/expense_status_badge.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
@@ -27,36 +29,54 @@ class ExpensesCategoryTabContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesAsync = ref.watch(expenseCategoriesProvider);
     final categories = ref.watch(filteredExpenseCategoriesProvider);
-    final allCategoriesAsync = ref.watch(expenseCategoriesProvider);
-    final allCategories = allCategoriesAsync.maybeWhen(
-      data: (items) => items,
-      orElse: () => const <ExpenseCategoryModel>[],
-    );
     final selectedId = ref.watch(selectedExpenseCategoryIdProvider);
 
-    final selectedCategory = selectedId == null
-        ? null
-        : allCategories
-              .where((category) => category.id == selectedId)
-              .firstOrNull;
-
-    return InventorySplitLayout(
-      listWidth: 340,
-      listPanel: _CategoryListPanel(
-        categories: categories,
-        selectedId: selectedId,
-        onSearchChanged: (query) =>
-            ref.read(expenseCategorySearchQueryProvider.notifier).query = query,
-        onCategorySelected: (id) =>
-            ref.read(selectedExpenseCategoryIdProvider.notifier).selected = id,
-        onAddExpense: () => context.push(AppRoutes.addExpense),
-      ),
-      detailPanel: selectedCategory != null
-          ? _CategoryDetailPanel(category: selectedCategory)
-          : const InventoryDetailPlaceholder(
-              message: 'Select a category to view transactions',
+    return categoriesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) {
+        final message = error is ExpensesNotAvailableException
+            ? error.toString()
+            : PurchaseErrorMapper.messageFor(error);
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
+          ),
+        );
+      },
+      data: (allCategories) {
+        final selectedCategory = selectedId == null
+            ? null
+            : allCategories
+                  .where((category) => category.id == selectedId)
+                  .firstOrNull;
+
+        return InventorySplitLayout(
+          listWidth: 340,
+          listPanel: _CategoryListPanel(
+            categories: categories,
+            selectedId: selectedId,
+            onSearchChanged: (query) => ref
+                .read(expenseCategorySearchQueryProvider.notifier)
+                .query = query,
+            onCategorySelected: (id) => ref
+                .read(selectedExpenseCategoryIdProvider.notifier)
+                .selected = id,
+            onAddExpense: () => context.push(AppRoutes.addExpense),
+          ),
+          detailPanel: selectedCategory != null
+              ? _CategoryDetailPanel(category: selectedCategory)
+              : const InventoryDetailPlaceholder(
+                  message: 'Select a category to view transactions',
+                ),
+        );
+      },
     );
   }
 }

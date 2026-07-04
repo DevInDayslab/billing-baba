@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
@@ -160,10 +161,18 @@ List<PurchaseBillModel> _applyClientFilters(
 
 @riverpod
 class PurchaseBillSearchQuery extends _$PurchaseBillSearchQuery {
-  @override
-  String build() => '';
+  Debouncer? _debouncer;
 
-  void setQuery(String value) => state = value;
+  @override
+  String build() {
+    ref.onDispose(() => _debouncer?.dispose());
+    return '';
+  }
+
+  void setQuery(String value) {
+    _debouncer ??= Debouncer();
+    _debouncer!.run(() => state = value);
+  }
 }
 
 @Riverpod(keepAlive: true)

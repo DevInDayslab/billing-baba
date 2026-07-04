@@ -59,7 +59,7 @@ final class AddPurchaseOrderFormProvider
 }
 
 String _$addPurchaseOrderFormHash() =>
-    r'bd3b8891e37d4135ae156c6de97321a2bcf36a77';
+    r'fabb50f8a559a0f179f68f6bd232c92dc531f93d';
 
 final class AddPurchaseOrderFormFamily extends $Family
     with
@@ -110,25 +110,32 @@ abstract class _$AddPurchaseOrderForm
 }
 
 @ProviderFor(addPurchaseOrderTotalTax)
-final addPurchaseOrderTotalTaxProvider = AddPurchaseOrderTotalTaxProvider._();
+final addPurchaseOrderTotalTaxProvider = AddPurchaseOrderTotalTaxFamily._();
 
 final class AddPurchaseOrderTotalTaxProvider
     extends $FunctionalProvider<double, double, double>
     with $Provider<double> {
-  AddPurchaseOrderTotalTaxProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'addPurchaseOrderTotalTaxProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  AddPurchaseOrderTotalTaxProvider._({
+    required AddPurchaseOrderTotalTaxFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'addPurchaseOrderTotalTaxProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$addPurchaseOrderTotalTaxHash();
 
+  @override
+  String toString() {
+    return r'addPurchaseOrderTotalTaxProvider'
+        ''
+        '($argument)';
+  }
+
   @$internal
   @override
   $ProviderElement<double> $createElement($ProviderPointer pointer) =>
@@ -136,7 +143,8 @@ final class AddPurchaseOrderTotalTaxProvider
 
   @override
   double create(Ref ref) {
-    return addPurchaseOrderTotalTax(ref);
+    final argument = this.argument as String?;
+    return addPurchaseOrderTotalTax(ref, orderId: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -145,32 +153,67 @@ final class AddPurchaseOrderTotalTaxProvider
       origin: this,
       providerOverride: $SyncValueProvider<double>(value),
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AddPurchaseOrderTotalTaxProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
   }
 }
 
 String _$addPurchaseOrderTotalTaxHash() =>
-    r'99e158b2ede73ed8579311672d6ede5efefdc412';
+    r'6bd7cad7140f44715150731a9c859e5a177559df';
+
+final class AddPurchaseOrderTotalTaxFamily extends $Family
+    with $FunctionalFamilyOverride<double, String?> {
+  AddPurchaseOrderTotalTaxFamily._()
+    : super(
+        retry: null,
+        name: r'addPurchaseOrderTotalTaxProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AddPurchaseOrderTotalTaxProvider call({String? orderId}) =>
+      AddPurchaseOrderTotalTaxProvider._(argument: orderId, from: this);
+
+  @override
+  String toString() => r'addPurchaseOrderTotalTaxProvider';
+}
 
 @ProviderFor(addPurchaseOrderGrandTotal)
-final addPurchaseOrderGrandTotalProvider =
-    AddPurchaseOrderGrandTotalProvider._();
+final addPurchaseOrderGrandTotalProvider = AddPurchaseOrderGrandTotalFamily._();
 
 final class AddPurchaseOrderGrandTotalProvider
     extends $FunctionalProvider<double, double, double>
     with $Provider<double> {
-  AddPurchaseOrderGrandTotalProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'addPurchaseOrderGrandTotalProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  AddPurchaseOrderGrandTotalProvider._({
+    required AddPurchaseOrderGrandTotalFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'addPurchaseOrderGrandTotalProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$addPurchaseOrderGrandTotalHash();
+
+  @override
+  String toString() {
+    return r'addPurchaseOrderGrandTotalProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -179,7 +222,8 @@ final class AddPurchaseOrderGrandTotalProvider
 
   @override
   double create(Ref ref) {
-    return addPurchaseOrderGrandTotal(ref);
+    final argument = this.argument as String?;
+    return addPurchaseOrderGrandTotal(ref, orderId: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -189,7 +233,36 @@ final class AddPurchaseOrderGrandTotalProvider
       providerOverride: $SyncValueProvider<double>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AddPurchaseOrderGrandTotalProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$addPurchaseOrderGrandTotalHash() =>
-    r'e5e2cbc566af3c2e507f8ca2e25b7e10d2ba5e8d';
+    r'702aba3e6880b0a5850059dc08cfa0e73baa45e3';
+
+final class AddPurchaseOrderGrandTotalFamily extends $Family
+    with $FunctionalFamilyOverride<double, String?> {
+  AddPurchaseOrderGrandTotalFamily._()
+    : super(
+        retry: null,
+        name: r'addPurchaseOrderGrandTotalProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AddPurchaseOrderGrandTotalProvider call({String? orderId}) =>
+      AddPurchaseOrderGrandTotalProvider._(argument: orderId, from: this);
+
+  @override
+  String toString() => r'addPurchaseOrderGrandTotalProvider';
+}

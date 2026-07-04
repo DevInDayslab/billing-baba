@@ -1,10 +1,13 @@
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/purchase_order_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_order_status_badge.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_orders_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
@@ -43,8 +46,10 @@ class PurchaseOrderTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final ordersAsync = ref.watch(purchaseOrdersProvider);
     final paginated = ref.watch(paginatedPurchaseOrdersProvider);
     final filtersNotifier = ref.read(purchaseOrderFiltersProvider.notifier);
+    final notifier = ref.read(purchaseOrdersProvider.notifier);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -102,48 +107,76 @@ class PurchaseOrderTable extends ConsumerWidget {
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
+                IconButton(
+                  onPressed: notifier.refresh,
+                  icon: const Icon(Icons.refresh, size: 20),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Refresh',
+                ),
               ],
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final tableWidth = constraints.maxWidth.clamp(
-                _minTableWidth,
-                double.infinity,
-              );
+          ordersAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(AppSpacing.xl),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, _) => Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                children: [
+                  Text(
+                    PurchaseErrorMapper.messageFor(error),
+                    style: const TextStyle(color: AppColors.error),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton(
+                    onPressed: notifier.refresh,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+            data: (_) => LayoutBuilder(
+              builder: (context, constraints) {
+                final tableWidth = constraints.maxWidth.clamp(
+                  _minTableWidth,
+                  double.infinity,
+                );
 
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  width: tableWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const _TableHeaderRow(),
-                      if (paginated.items.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(AppSpacing.xl),
-                          child: Center(
-                            child: Text(
-                              'No purchase orders found',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: tableWidth,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const _TableHeaderRow(),
+                        if (paginated.items.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(AppSpacing.xl),
+                            child: Center(
+                              child: Text(
+                                'No purchase orders found',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ),
-                          ),
-                        )
-                      else
-                        for (var i = 0; i < paginated.items.length; i++) ...[
-                          if (i > 0)
-                            const Divider(height: 1, color: _cardBorder),
-                          _buildRow(context, paginated.items[i]),
-                        ],
-                    ],
+                          )
+                        else
+                          for (var i = 0; i < paginated.items.length; i++) ...[
+                            if (i > 0)
+                              const Divider(height: 1, color: _cardBorder),
+                            _buildRow(context, ref, paginated.items[i]),
+                          ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
           if (paginated.totalPages > 1) ...[
             const Divider(height: 1, color: _cardBorder),
@@ -157,7 +190,11 @@ class PurchaseOrderTable extends ConsumerWidget {
     );
   }
 
-  Widget _buildRow(BuildContext context, PurchaseOrderModel order) {
+  Widget _buildRow(
+    BuildContext context,
+    WidgetRef ref,
+    PurchaseOrderModel order,
+  ) {
     return _TableDataRow(
       children: [
         _TableCell(
@@ -229,7 +266,7 @@ class PurchaseOrderTable extends ConsumerWidget {
                 ),
               ),
               IconButton(
-                onPressed: () => debugPrint('More ${order.orderNo}'),
+                onPressed: () => _showOrderActions(context, ref, order),
                 icon: const Icon(Icons.more_vert, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
@@ -241,6 +278,87 @@ class PurchaseOrderTable extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _showOrderActions(
+    BuildContext context,
+    WidgetRef ref,
+    PurchaseOrderModel order,
+  ) async {
+    final action = await showMenu<String>(
+      context: context,
+      position: const RelativeRect.fromLTRB(200, 400, 200, 0),
+      items: [
+        if (order.isDraft)
+          const PopupMenuItem(value: 'edit', child: Text('Edit draft')),
+        if (order.isDraft)
+          const PopupMenuItem(value: 'finalize', child: Text('Finalize')),
+        if (order.isDraft)
+          const PopupMenuItem(value: 'delete', child: Text('Delete draft')),
+        if (order.canConvertToBill)
+          const PopupMenuItem(
+            value: 'convert',
+            child: Text('Convert to purchase bill'),
+          ),
+        if (!order.isDraft)
+          const PopupMenuItem(value: 'open', child: Text('Open')),
+      ],
+    );
+
+    if (action == null || !context.mounted) return;
+    final notifier = ref.read(purchaseOrdersProvider.notifier);
+
+    switch (action) {
+      case 'edit':
+      case 'open':
+        await context.push('${AppRoutes.editPurchaseOrder}/${order.id}');
+      case 'finalize':
+        final error = await notifier.finalizeOrder(order.id);
+        if (!context.mounted) return;
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        }
+      case 'delete':
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Delete draft?'),
+            content: Text('Delete draft ${order.orderNo}?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true || !context.mounted) return;
+        final error = await notifier.deleteDraft(order.id);
+        if (!context.mounted) return;
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        }
+      case 'convert':
+        final error = await notifier.convertToBill(order.id);
+        if (!context.mounted) return;
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Purchase order converted to bill')),
+          );
+        }
+    }
   }
 }
 

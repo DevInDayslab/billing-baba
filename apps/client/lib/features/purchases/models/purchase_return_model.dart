@@ -39,4 +39,6 @@ class PurchaseReturnModel {
   final String user;
   final String firm;
   final String godown;
+
+  bool get isDraft => documentStatus == PurchaseDocumentStatus.draft;
 }

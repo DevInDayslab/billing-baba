@@ -19,7 +19,9 @@ const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 
 class AddDebitNotePage extends ConsumerWidget {
-  const AddDebitNotePage({super.key});
+  const AddDebitNotePage({this.debitNoteId, super.key});
+
+  final String? debitNoteId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,32 +50,32 @@ class AddDebitNotePage extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding: EdgeInsets.fromLTRB(
+                    padding: const EdgeInsets.fromLTRB(
                       _sectionGap,
                       _sectionGap,
                       _sectionGap,
                       0,
                     ),
-                    child: _PageHeader(),
+                    child: _PageHeader(debitNoteId: debitNoteId),
                   ),
-                  SizedBox(height: _sectionGap),
+                  const SizedBox(height: _sectionGap),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: _sectionGap),
-                    child: _FormFields(),
+                    padding: const EdgeInsets.symmetric(horizontal: _sectionGap),
+                    child: _FormFields(debitNoteId: debitNoteId),
                   ),
-                  SizedBox(height: _sectionGap),
-                  DebitNoteLineItemsTable(),
-                  Divider(height: 1, color: _cardBorder),
+                  const SizedBox(height: _sectionGap),
+                  DebitNoteLineItemsTable(debitNoteId: debitNoteId),
+                  const Divider(height: 1, color: _cardBorder),
                   Padding(
-                    padding: EdgeInsets.all(_sectionGap),
-                    child: DebitNoteFooter(),
+                    padding: const EdgeInsets.all(_sectionGap),
+                    child: DebitNoteFooter(debitNoteId: debitNoteId),
                   ),
-                  Divider(height: 1, color: _cardBorder),
-                  _BottomActionBar(),
+                  const Divider(height: 1, color: _cardBorder),
+                  _BottomActionBar(debitNoteId: debitNoteId),
                 ],
               ),
             ),
@@ -85,12 +87,15 @@ class AddDebitNotePage extends ConsumerWidget {
 }
 
 class _PageHeader extends ConsumerWidget {
-  const _PageHeader();
+  const _PageHeader({this.debitNoteId});
+
+  final String? debitNoteId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(debitNoteFormProvider());
-    final notifier = ref.read(debitNoteFormProvider().notifier);
+    final form = ref.watch(debitNoteFormProvider(debitNoteId: debitNoteId));
+    final notifier =
+        ref.read(debitNoteFormProvider(debitNoteId: debitNoteId).notifier);
 
     return Row(
       children: [
@@ -113,7 +118,9 @@ class _PageHeader extends ConsumerWidget {
 }
 
 class _FormFields extends ConsumerStatefulWidget {
-  const _FormFields();
+  const _FormFields({this.debitNoteId});
+
+  final String? debitNoteId;
 
   @override
   ConsumerState<_FormFields> createState() => _FormFieldsState();
@@ -125,8 +132,11 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
 
   @override
   Widget build(BuildContext context) {
-    final form = ref.watch(debitNoteFormProvider());
-    final notifier = ref.read(debitNoteFormProvider().notifier);
+    final form =
+        ref.watch(debitNoteFormProvider(debitNoteId: widget.debitNoteId));
+    final notifier = ref.read(
+      debitNoteFormProvider(debitNoteId: widget.debitNoteId).notifier,
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,17 +249,22 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
       initialTime: current ?? TimeOfDay.now(),
     );
     if (picked != null) {
-      ref.read(debitNoteFormProvider().notifier).updateReturnTime(picked);
+      ref
+          .read(debitNoteFormProvider(debitNoteId: widget.debitNoteId).notifier)
+          .updateReturnTime(picked);
     }
   }
 }
 
 class _BottomActionBar extends ConsumerWidget {
-  const _BottomActionBar();
+  const _BottomActionBar({this.debitNoteId});
+
+  final String? debitNoteId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(debitNoteFormProvider().notifier);
+    final notifier =
+        ref.read(debitNoteFormProvider(debitNoteId: debitNoteId).notifier);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -291,7 +306,7 @@ class _BottomActionBar extends ConsumerWidget {
   }
 
   Future<void> _handleCancel(BuildContext context, WidgetRef ref) async {
-    final form = ref.read(debitNoteFormProvider());
+    final form = ref.read(debitNoteFormProvider(debitNoteId: debitNoteId));
     if (form.isDirty) {
       final discard = await showDialog<bool>(
         context: context,

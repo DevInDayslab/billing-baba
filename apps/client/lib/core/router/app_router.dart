@@ -217,6 +217,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AddDebitNotePage(),
           ),
           GoRoute(
+            path: '${AppRoutes.editDebitNote}/:debitNoteId',
+            name: 'editDebitNote',
+            builder: (context, state) => AddDebitNotePage(
+              debitNoteId: state.pathParameters['debitNoteId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.purchaseFa,
             builder: (context, state) => const PurchaseFaPage(),
           ),
@@ -241,6 +248,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.addPurchaseOrder,
             name: 'addPurchaseOrder',
             builder: (context, state) => const AddPurchaseOrderPage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editPurchaseOrder}/:orderId',
+            name: 'editPurchaseOrder',
+            builder: (context, state) => AddPurchaseOrderPage(
+              orderId: state.pathParameters['orderId'],
+            ),
           ),
           GoRoute(
             path: AppRoutes.addExpense,

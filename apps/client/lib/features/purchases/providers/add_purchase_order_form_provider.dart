@@ -303,13 +303,13 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
 }
 
 @riverpod
-double addPurchaseOrderTotalTax(Ref ref) {
-  final form = ref.watch(addPurchaseOrderFormProvider());
+double addPurchaseOrderTotalTax(Ref ref, {String? orderId}) {
+  final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
   return form.totalTax;
 }
 
 @riverpod
-double addPurchaseOrderGrandTotal(Ref ref) {
-  final form = ref.watch(addPurchaseOrderFormProvider());
+double addPurchaseOrderGrandTotal(Ref ref, {String? orderId}) {
+  final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
   return form.grandTotal;
 }

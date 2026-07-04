@@ -51,8 +51,52 @@ List<PurchaseLineItem> _toPurchaseLines(List<SaleLineItem> items) {
 @riverpod
 class DebitNoteForm extends _$DebitNoteForm {
   @override
-  DebitNoteFormState build({String? debitNoteId}) =>
-      _initialDebitNoteFormState(documentId: debitNoteId);
+  DebitNoteFormState build({String? debitNoteId}) {
+    if (debitNoteId != null) {
+      Future.microtask(() => _loadDocument(debitNoteId));
+    }
+    return _initialDebitNoteFormState(documentId: debitNoteId);
+  }
+
+  Future<void> _loadDocument(String documentId) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final loaded = await service.loadDebitNoteForm(documentId);
+      final inventory = ref.read(inventoryItemsProvider).value ?? [];
+      final itemNames = {for (final item in inventory) item.id: item.name};
+
+      final items = loaded.items.map((line) {
+        final saleLine = SaleLineItem(
+          id: line.id,
+          serverLineId: line.serverLineId,
+          itemId: line.itemId,
+          itemName: line.itemId != null && line.itemName.isEmpty
+              ? (itemNames[line.itemId] ?? '')
+              : line.itemName,
+          qty: line.qty,
+          unit: line.unit,
+          pricePerUnit: line.pricePerUnit,
+          taxPercent: line.taxPercent,
+        );
+        return saleLine;
+      }).toList();
+
+      state = DebitNoteFormState(
+        documentId: loaded.documentId,
+        partyId: loaded.partyId,
+        party: loaded.party,
+        returnNo: loaded.billNumber,
+        returnDate: loaded.billDate,
+        returnTime: loaded.billTime,
+        description: loaded.description,
+        items: items.isEmpty
+            ? [SaleLineItem.empty(id: _nextDebitNoteLineItemId())]
+            : items,
+      );
+    } catch (error) {
+      // Load errors surface when user attempts save; keep form editable.
+    }
+  }
 
   void resetForm() {
     state = _initialDebitNoteFormState();
@@ -267,7 +311,7 @@ class DebitNoteForm extends _$DebitNoteForm {
 }
 
 @riverpod
-double debitNoteGrandTotal(Ref ref) {
-  final form = ref.watch(debitNoteFormProvider());
+double debitNoteGrandTotal(Ref ref, {String? debitNoteId}) {
+  final form = ref.watch(debitNoteFormProvider(debitNoteId: debitNoteId));
   return form.total;
 }

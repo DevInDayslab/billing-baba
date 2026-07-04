@@ -1,9 +1,10 @@
+import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_order_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
-import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -208,8 +209,13 @@ class PurchaseOrders extends _$PurchaseOrders {
 
 @riverpod
 class PurchaseOrderFilters extends _$PurchaseOrderFilters {
+  Debouncer? _searchDebouncer;
+
   @override
-  PurchaseOrderFiltersState build() => const PurchaseOrderFiltersState();
+  PurchaseOrderFiltersState build() {
+    ref.onDispose(() => _searchDebouncer?.dispose());
+    return const PurchaseOrderFiltersState();
+  }
 
   void setTimeRange(String label) {
     state = state.copyWith(
@@ -249,8 +255,11 @@ class PurchaseOrderFilters extends _$PurchaseOrderFilters {
   }
 
   void setSearchQuery(String query) {
-    state = state.copyWith(searchQuery: query, currentPage: 1);
-    ref.invalidate(purchaseOrdersProvider);
+    _searchDebouncer ??= Debouncer();
+    _searchDebouncer!.run(() {
+      state = state.copyWith(searchQuery: query, currentPage: 1);
+      ref.invalidate(purchaseOrdersProvider);
+    });
   }
 
   void setPage(int page) {

@@ -95,7 +95,7 @@ final class PurchaseOrderFiltersProvider
 }
 
 String _$purchaseOrderFiltersHash() =>
-    r'3bbe355e7564bc0301a47da4ad221909048d90cb';
+    r'414840405a41fa6a4d62116f7c6675be705a4e6d';
 
 abstract class _$PurchaseOrderFilters
     extends $Notifier<PurchaseOrderFiltersState> {

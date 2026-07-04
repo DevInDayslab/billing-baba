@@ -34,16 +34,18 @@ const _descriptionFlex = 2;
 const _minLineItemsTableWidth = 1020.0;
 
 class PurchaseOrderLineItemsTable extends ConsumerWidget {
-  const PurchaseOrderLineItemsTable({this.embedded = false, super.key});
+  const PurchaseOrderLineItemsTable({this.embedded = false, this.orderId, super.key});
 
   final bool embedded;
+  final String? orderId;
 
   static final _amountFormat = NumberFormat('#,##0.00', 'en_IN');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addPurchaseOrderFormProvider());
-    final notifier = ref.read(addPurchaseOrderFormProvider().notifier);
+    final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
+    final notifier =
+        ref.read(addPurchaseOrderFormProvider(orderId: orderId).notifier);
 
     final tableContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -57,7 +59,11 @@ class PurchaseOrderLineItemsTable extends ConsumerWidget {
                 const Divider(height: 1, color: _cardBorder),
                 for (var i = 0; i < form.items.length; i++) ...[
                   if (i > 0) const Divider(height: 1, color: _cardBorder),
-                  _LineItemRow(index: i, item: form.items[i]),
+                  _LineItemRow(
+                    index: i,
+                    item: form.items[i],
+                    orderId: orderId,
+                  ),
                 ],
                 if (form.lineItemsHasError)
                   const Padding(
@@ -426,14 +432,17 @@ class _LineItemRow extends ConsumerWidget {
   const _LineItemRow({
     required this.index,
     required this.item,
+    this.orderId,
   });
 
   final int index;
   final PurchaseLineItem item;
+  final String? orderId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(addPurchaseOrderFormProvider().notifier);
+    final notifier =
+        ref.read(addPurchaseOrderFormProvider(orderId: orderId).notifier);
 
     return SizedBox(
       height: _rowHeight,

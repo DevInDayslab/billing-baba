@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
@@ -226,8 +227,13 @@ class PurchaseReturns extends _$PurchaseReturns {
 
 @riverpod
 class PurchaseReturnFilters extends _$PurchaseReturnFilters {
+  Debouncer? _searchDebouncer;
+
   @override
-  PurchaseReturnFiltersState build() => const PurchaseReturnFiltersState();
+  PurchaseReturnFiltersState build() {
+    ref.onDispose(() => _searchDebouncer?.dispose());
+    return const PurchaseReturnFiltersState();
+  }
 
   void setTimeRange(String label) {
     state = state.copyWith(
@@ -282,8 +288,11 @@ class PurchaseReturnFilters extends _$PurchaseReturnFilters {
   }
 
   void setSearchQuery(String query) {
-    state = state.copyWith(searchQuery: query, currentPage: 1);
-    ref.invalidate(purchaseReturnsProvider);
+    _searchDebouncer ??= Debouncer();
+    _searchDebouncer!.run(() {
+      state = state.copyWith(searchQuery: query, currentPage: 1);
+      ref.invalidate(purchaseReturnsProvider);
+    });
   }
 
   void setPage(int page) {

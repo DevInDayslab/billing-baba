@@ -22,7 +22,9 @@ const _sectionGap = 16.0;
 const _addPurchaseRed = Color(0xFFD32F2F);
 
 class AddPurchaseOrderPage extends ConsumerWidget {
-  const AddPurchaseOrderPage({super.key});
+  const AddPurchaseOrderPage({this.orderId, super.key});
+
+  final String? orderId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,32 +53,35 @@ class AddPurchaseOrderPage extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding: EdgeInsets.fromLTRB(
+                    padding: const EdgeInsets.fromLTRB(
                       _sectionGap,
                       _sectionGap,
                       _sectionGap,
                       0,
                     ),
-                    child: _PageHeader(),
+                    child: _PageHeader(orderId: orderId),
                   ),
-                  SizedBox(height: _sectionGap),
+                  const SizedBox(height: _sectionGap),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: _sectionGap),
-                    child: _FormFields(),
+                    padding: const EdgeInsets.symmetric(horizontal: _sectionGap),
+                    child: _FormFields(orderId: orderId),
                   ),
-                  SizedBox(height: _sectionGap),
-                  PurchaseOrderLineItemsTable(embedded: true),
-                  Divider(height: 1, color: _cardBorder),
+                  const SizedBox(height: _sectionGap),
+                  PurchaseOrderLineItemsTable(
+                    embedded: true,
+                    orderId: orderId,
+                  ),
+                  const Divider(height: 1, color: _cardBorder),
                   Padding(
-                    padding: EdgeInsets.all(_sectionGap),
-                    child: AddPurchaseOrderFooter(),
+                    padding: const EdgeInsets.all(_sectionGap),
+                    child: AddPurchaseOrderFooter(orderId: orderId),
                   ),
-                  Divider(height: 1, color: _cardBorder),
-                  _BottomActionBar(),
+                  const Divider(height: 1, color: _cardBorder),
+                  _BottomActionBar(orderId: orderId),
                 ],
               ),
             ),
@@ -88,12 +93,15 @@ class AddPurchaseOrderPage extends ConsumerWidget {
 }
 
 class _PageHeader extends ConsumerWidget {
-  const _PageHeader();
+  const _PageHeader({this.orderId});
+
+  final String? orderId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addPurchaseOrderFormProvider());
-    final notifier = ref.read(addPurchaseOrderFormProvider().notifier);
+    final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
+    final notifier =
+        ref.read(addPurchaseOrderFormProvider(orderId: orderId).notifier);
 
     return Row(
       children: [
@@ -116,7 +124,9 @@ class _PageHeader extends ConsumerWidget {
 }
 
 class _FormFields extends ConsumerStatefulWidget {
-  const _FormFields();
+  const _FormFields({this.orderId});
+
+  final String? orderId;
 
   @override
   ConsumerState<_FormFields> createState() => _FormFieldsState();
@@ -128,8 +138,11 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
 
   @override
   Widget build(BuildContext context) {
-    final form = ref.watch(addPurchaseOrderFormProvider());
-    final notifier = ref.read(addPurchaseOrderFormProvider().notifier);
+    final form =
+        ref.watch(addPurchaseOrderFormProvider(orderId: widget.orderId));
+    final notifier = ref.read(
+      addPurchaseOrderFormProvider(orderId: widget.orderId).notifier,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -279,17 +292,22 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
       initialTime: current ?? TimeOfDay.now(),
     );
     if (picked != null) {
-      ref.read(addPurchaseOrderFormProvider().notifier).updateOrderTime(picked);
+      ref
+          .read(addPurchaseOrderFormProvider(orderId: widget.orderId).notifier)
+          .updateOrderTime(picked);
     }
   }
 }
 
 class _BottomActionBar extends ConsumerWidget {
-  const _BottomActionBar();
+  const _BottomActionBar({this.orderId});
+
+  final String? orderId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(addPurchaseOrderFormProvider().notifier);
+    final notifier =
+        ref.read(addPurchaseOrderFormProvider(orderId: orderId).notifier);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -331,7 +349,7 @@ class _BottomActionBar extends ConsumerWidget {
   }
 
   Future<void> _handleCancel(BuildContext context, WidgetRef ref) async {
-    final form = ref.read(addPurchaseOrderFormProvider());
+    final form = ref.read(addPurchaseOrderFormProvider(orderId: orderId));
     if (form.isDirty) {
       final discard = await showDialog<bool>(
         context: context,

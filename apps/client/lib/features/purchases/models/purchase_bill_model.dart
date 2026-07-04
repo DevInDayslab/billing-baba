@@ -40,4 +40,6 @@ class PurchaseBillModel {
   final String firm;
 
   double get paidAmount => amount - balanceDue;
+
+  bool get isDraft => documentStatus == PurchaseDocumentStatus.draft;
 }

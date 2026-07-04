@@ -12,7 +12,9 @@ import 'package:intl/intl.dart';
 const _linkColor = Color(0xFF1565C0);
 
 class DebitNoteFooter extends ConsumerWidget {
-  const DebitNoteFooter({super.key});
+  const DebitNoteFooter({this.debitNoteId, super.key});
+
+  final String? debitNoteId;
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -22,9 +24,11 @@ class DebitNoteFooter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(debitNoteFormProvider());
-    final notifier = ref.read(debitNoteFormProvider().notifier);
-    final grandTotal = ref.watch(debitNoteGrandTotalProvider);
+    final form = ref.watch(debitNoteFormProvider(debitNoteId: debitNoteId));
+    final notifier =
+        ref.read(debitNoteFormProvider(debitNoteId: debitNoteId).notifier);
+    final grandTotal =
+        ref.watch(debitNoteGrandTotalProvider(debitNoteId: debitNoteId));
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

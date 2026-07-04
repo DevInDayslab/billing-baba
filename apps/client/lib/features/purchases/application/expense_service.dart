@@ -10,6 +10,14 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'expense_service.g.dart';
 
+/// Thrown when the expenses API is not deployed yet.
+class ExpensesNotAvailableException implements Exception {
+  const ExpensesNotAvailableException();
+
+  @override
+  String toString() => 'Expenses are not available on this server yet.';
+}
+
 @Riverpod(keepAlive: true)
 Future<ExpenseService> expenseService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
@@ -41,6 +49,9 @@ class ExpenseService {
           )
           .toList();
     } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        throw const ExpensesNotAvailableException();
+      }
       throw mapPurchaseError(error);
     }
   }
@@ -68,6 +79,9 @@ class ExpenseService {
           )
           .toList();
     } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        throw const ExpensesNotAvailableException();
+      }
       throw mapPurchaseError(error);
     }
   }
@@ -76,6 +90,9 @@ class ExpenseService {
     try {
       return _repository.createExpense(request);
     } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        throw const ExpensesNotAvailableException();
+      }
       throw mapPurchaseError(error);
     }
   }
@@ -86,6 +103,9 @@ class ExpenseService {
     try {
       return _repository.createCategory(request);
     } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        throw const ExpensesNotAvailableException();
+      }
       throw mapPurchaseError(error);
     }
   }

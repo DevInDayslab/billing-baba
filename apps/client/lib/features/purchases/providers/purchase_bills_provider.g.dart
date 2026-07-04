@@ -42,7 +42,7 @@ final class PurchaseBillSearchQueryProvider
 }
 
 String _$purchaseBillSearchQueryHash() =>
-    r'e97de9891cd7d28e96cd81515d7758cf2c1c3b6c';
+    r'64d6558cd9224b118dfb5aacfa00e96af9791083';
 
 abstract class _$PurchaseBillSearchQuery extends $Notifier<String> {
   String build();
