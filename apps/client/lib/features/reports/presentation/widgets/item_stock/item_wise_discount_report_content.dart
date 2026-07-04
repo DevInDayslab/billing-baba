@@ -4,7 +4,8 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,23 +30,29 @@ class _ItemWiseDiscountReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final allRows = ref.watch(reportItemWiseDiscountProvider);
-    final query = _itemNameController.text.trim().toLowerCase();
-    final rows = query.isEmpty
-        ? allRows
-        : allRows
-            .where((r) => r.itemName.toLowerCase().contains(query))
-            .toList();
-    final totalSaleAmount = rows.fold<double>(
-      0,
-      (sum, row) => sum + row.saleQty * 200,
-    );
-    final totalDiscount = rows.fold<double>(
-      0,
-      (sum, row) => sum + row.discountAmount,
-    );
+    final reportAsync = ref.watch(itemWiseDiscountReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(itemWiseDiscountReportProvider.notifier).refresh(),
+      data: (report) {
+        final allRows = report.rows;
+        final query = _itemNameController.text.trim().toLowerCase();
+        final rows = query.isEmpty
+            ? allRows
+            : allRows
+                .where((r) => r.itemName.toLowerCase().contains(query))
+                .toList();
+        final totalSaleAmount = rows.fold<double>(
+          0,
+          (sum, row) => sum + row.saleQty * 200,
+        );
+        final totalDiscount = rows.fold<double>(
+          0,
+          (sum, row) => sum + row.discountAmount,
+        );
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -382,6 +389,20 @@ class _ItemWiseDiscountReportContentState
                         ],
                       ),
                     ),
+                    ReportPaginationBar(
+                      page: report.meta.page,
+                      totalPages: report.meta.totalPages,
+                      onPrevious: report.meta.page > 1
+                          ? () => ref
+                                .read(itemWiseDiscountReportProvider.notifier)
+                                .goToPage(report.meta.page - 1)
+                          : null,
+                      onNext: report.meta.page < report.meta.totalPages
+                          ? () => ref
+                                .read(itemWiseDiscountReportProvider.notifier)
+                                .goToPage(report.meta.page + 1)
+                          : null,
+                    ),
                   ],
                 ),
               ),
@@ -389,6 +410,8 @@ class _ItemWiseDiscountReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

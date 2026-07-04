@@ -41,12 +41,11 @@ import 'package:billing_baba/features/reports/presentation/widgets/party/sale_pu
 import 'package:billing_baba/features/reports/presentation/widgets/party/sale_purchase_by_party_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/sale_purchase_order/sale_purchase_order_item_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/sale_purchase_order/sale_purchase_orders_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_deferred_module_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_panel_scope.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/loan_accounts/loan_statement_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/other_income/other_income_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/taxes/gst_tax_rate_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/taxes/gst_tax_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/taxes/tax_invoice_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/transaction/all_transactions_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/transaction/balance_sheet_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/transaction/bill_wise_profit_report_content.dart';
@@ -186,13 +185,13 @@ class ReportContentPanel extends StatelessWidget {
           TaxesReportSubSection.gstRateReport =>
             const GstTaxRateReportContent(),
           TaxesReportSubSection.formNo27Eq =>
-            TaxInvoiceReportContent(subSection: taxesSub!),
+            ReportDeferredModuleContent(reportName: taxesSub!.label),
           TaxesReportSubSection.tcsReceivable =>
-            TaxInvoiceReportContent(subSection: taxesSub!),
+            ReportDeferredModuleContent(reportName: taxesSub!.label),
           TaxesReportSubSection.tdsPayable =>
-            TaxInvoiceReportContent(subSection: taxesSub!),
+            ReportDeferredModuleContent(reportName: taxesSub!.label),
           TaxesReportSubSection.tdsReceivable =>
-            TaxInvoiceReportContent(subSection: taxesSub!),
+            ReportDeferredModuleContent(reportName: taxesSub!.label),
         },
       );
     }
@@ -226,11 +225,11 @@ class ReportContentPanel extends StatelessWidget {
       return _scoped(
         switch (otherIncomeSub!) {
           OtherIncomeReportSubSection.otherIncome =>
-            const OtherIncomeReportContent(),
+            ReportDeferredModuleContent(reportName: otherIncomeSub!.label),
           OtherIncomeReportSubSection.otherIncomeCategoryReport =>
-            const OtherIncomeCategoryReportContent(),
+            ReportDeferredModuleContent(reportName: otherIncomeSub!.label),
           OtherIncomeReportSubSection.otherIncomeItemReport =>
-            const OtherIncomeItemReportContent(),
+            ReportDeferredModuleContent(reportName: otherIncomeSub!.label),
         },
       );
     }

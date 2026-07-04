@@ -3,10 +3,13 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:flutter/material.dart';
@@ -33,17 +36,55 @@ class _ExpenseReportContentState extends ConsumerState<ExpenseReportContent> {
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportExpensesProvider);
-    final totalAmount =
-        rows.fold<double>(0, (sum, row) => sum + row.amount);
+    final reportAsync = ref.watch(expensesReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(expensesReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalAmount = report.totalAmount;
+
+        void exportCsv() {
+          ReportExportService.exportAndNotify(
+            context: context,
+            title: 'Expense',
+            filename: 'expense-report',
+            headers: const [
+              'Date',
+              'Exp No',
+              'Party',
+              'Category',
+              'Payment Type',
+              'Amount',
+              'Balance Due',
+              'Due Date',
+              'Status',
+            ],
+            rows: [
+              for (final row in rows)
+                [
+                  formatReportDate(row.date),
+                  row.expenseNo,
+                  row.partyName,
+                  row.category,
+                  '-',
+                  formatReportCurrency(row.amount),
+                  '-',
+                  formatReportDate(row.dueDate),
+                  row.status,
+                ],
+            ],
+          );
+        }
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
@@ -55,10 +96,42 @@ class _ExpenseReportContentState extends ConsumerState<ExpenseReportContent> {
                 ReportTextActionButton(
                   label: 'Excel Report',
                   icon: Icons.table_chart_outlined,
+                  onTap: exportCsv,
                 ),
                 ReportTextActionButton(
                   label: 'Print',
                   icon: Icons.print_outlined,
+                  onTap: () => ReportExportService.showPrintPreview(
+                    context: context,
+                    title: 'Expense',
+                    content: ReportExportService.toCsv(
+                      headers: const [
+                        'Date',
+                        'Exp No',
+                        'Party',
+                        'Category',
+                        'Payment Type',
+                        'Amount',
+                        'Balance Due',
+                        'Due Date',
+                        'Status',
+                      ],
+                      rows: [
+                        for (final row in rows)
+                          [
+                            formatReportDate(row.date),
+                            row.expenseNo,
+                            row.partyName,
+                            row.category,
+                            '-',
+                            formatReportCurrency(row.amount),
+                            '-',
+                            formatReportDate(row.dueDate),
+                            row.status,
+                          ],
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -172,9 +245,12 @@ class _ExpenseReportContentState extends ConsumerState<ExpenseReportContent> {
                             ),
                           ),
                           const SizedBox(width: AppSpacing.lg),
-                          const Expanded(
+                          Expanded(
                             child: ReportSearchField(
                               hintText: 'Search expenses...',
+                              onChanged: ref
+                                  .read(reportFiltersProvider.notifier)
+                                  .setSearchQuery,
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
@@ -398,6 +474,20 @@ class _ExpenseReportContentState extends ConsumerState<ExpenseReportContent> {
                         ),
                       ),
                     ),
+                    ReportPaginationBar(
+                      page: report.meta.page,
+                      totalPages: report.meta.totalPages,
+                      onPrevious: report.meta.page > 1
+                          ? () => ref
+                                .read(expensesReportProvider.notifier)
+                                .goToPage(report.meta.page - 1)
+                          : null,
+                      onNext: report.meta.page < report.meta.totalPages
+                          ? () => ref
+                                .read(expensesReportProvider.notifier)
+                                .goToPage(report.meta.page + 1)
+                          : null,
+                    ),
                   ],
                 ),
               ),
@@ -405,6 +495,8 @@ class _ExpenseReportContentState extends ConsumerState<ExpenseReportContent> {
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

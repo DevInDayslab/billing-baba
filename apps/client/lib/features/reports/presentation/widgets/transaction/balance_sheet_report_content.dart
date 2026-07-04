@@ -1,12 +1,14 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -21,191 +23,177 @@ class BalanceSheetReportContent extends ConsumerStatefulWidget {
 
 class _BalanceSheetReportContentState
     extends ConsumerState<BalanceSheetReportContent> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   bool _horizontalView = true;
-  DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 4, 1),
-    end: DateTime(2026, 7, 3),
-  );
 
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
   static final _asOnFormat = DateFormat('MMM dd, yyyy');
-
-  static double _itemsTotal(List<ReportBalanceSheetItem> items) =>
-      items.where((item) => !item.isHeader).fold(0.0, (sum, item) => sum + item.amount);
 
   @override
   Widget build(BuildContext context) {
-    final assets = ref.watch(reportBalanceSheetAssetsProvider);
-    final liabilities = ref.watch(reportBalanceSheetLiabilitiesProvider);
-    final assetsTotal = _itemsTotal(assets);
-    final liabilitiesTotal = _itemsTotal(liabilities);
+    final reportAsync = ref.watch(balanceSheetReportProvider);
 
-    return ColoredBox(
-      color: AppColors.background,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                const Spacer(),
-                const Text(
-                  'Balance Sheet',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                const ReportPdfChip(),
-                const SizedBox(width: AppSpacing.sm),
-                const ReportXlsChip(),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Expanded(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                      border: Border.all(color: reportCardBorder),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today_outlined,
-                            size: 16,
-                            color: AppColors.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(_dateFormat.format(_dateRange.start)),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                            ),
-                            child: Text(
-                              'To',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                          const Icon(
-                            Icons.calendar_today_outlined,
-                            size: 16,
-                            color: AppColors.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          SaleDateRangePickerAnchor(
-                            key: _datePickerKey,
-                            initialRange: _dateRange,
-                            onRangeSelected: (range) =>
-                                setState(() => _dateRange = range),
-                            child: SaleFilterChip(
-                              label: _dateFormat.format(_dateRange.end),
-                              onTap: () =>
-                                  _datePickerKey.currentState?.toggle(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                const Text('Horizontal', style: TextStyle(fontSize: 13)),
-                Switch(
-                  value: !_horizontalView,
-                  onChanged: (v) => setState(() => _horizontalView = !v),
-                ),
-                const Text('Vertical', style: TextStyle(fontSize: 13)),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Balance Sheet as on ${_asOnFormat.format(_dateRange.end)}',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ReportCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(balanceSheetReportProvider.notifier).refresh(),
+      data: (report) {
+        const exportHeaders = ['Section', 'Account', 'Amount'];
+        final exportRows = _balanceSheetExportRows(report);
+
+        return ColoredBox(
+        color: AppColors.background,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
                 children: [
-                  IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: _BalanceColumn(
-                            title: 'Assets',
-                            items: assets,
-                          ),
-                        ),
-                        const VerticalDivider(
-                          width: 1,
-                          color: reportCardBorder,
-                        ),
-                        Expanded(
-                          child: _BalanceColumn(
-                            title: 'Equities & Liabilities',
-                            items: liabilities,
-                          ),
-                        ),
-                      ],
+                  const Spacer(),
+                  const Text(
+                    'Balance Sheet',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
                     ),
                   ),
-                  Container(
-                    color: reportFooterBlue,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
+                  const Spacer(),
+                  ReportPdfChip(
+                    onTap: () => reportPrintTable(
+                      context: context,
+                      title: 'Balance Sheet',
+                      headers: exportHeaders,
+                      rows: exportRows,
                     ),
-                    child: IntrinsicHeight(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _FooterTotal(
-                              label: 'Total Assets',
-                              amount: formatReportCurrency(assetsTotal),
-                            ),
-                          ),
-                          const VerticalDivider(
-                            width: 1,
-                            color: Colors.white54,
-                          ),
-                          Expanded(
-                            child: _FooterTotal(
-                              label: 'Total Equities & Liabilities',
-                              amount: formatReportCurrency(liabilitiesTotal),
-                            ),
-                          ),
-                        ],
-                      ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  ReportXlsChip(
+                    onTap: () => reportExportTable(
+                      context: context,
+                      title: 'Balance Sheet',
+                      filename: 'balance-sheet',
+                      headers: exportHeaders,
+                      rows: exportRows,
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.md),
+              const ReportCard(
+                padding: EdgeInsets.all(AppSpacing.md),
+                child: ReportPeriodFilterBar(),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  const Text('Horizontal', style: TextStyle(fontSize: 13)),
+                  Switch(
+                    value: !_horizontalView,
+                    onChanged: (v) => setState(() => _horizontalView = !v),
+                  ),
+                  const Text('Vertical', style: TextStyle(fontSize: 13)),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Balance Sheet as on ${_asOnFormat.format(report.asOn)}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              ReportCard(
+                child: _horizontalView
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: _BalanceColumn(
+                                    title: 'Assets',
+                                    items: report.assets,
+                                  ),
+                                ),
+                                const VerticalDivider(
+                                  width: 1,
+                                  color: reportCardBorder,
+                                ),
+                                Expanded(
+                                  child: _BalanceColumn(
+                                    title: 'Equities & Liabilities',
+                                    items: report.liabilities,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _BalanceFooter(
+                            assetsTotal: report.assetsTotal,
+                            liabilitiesTotal: report.liabilitiesTotal,
+                          ),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _BalanceColumn(
+                            title: 'Assets',
+                            items: report.assets,
+                          ),
+                          const Divider(height: 1, color: reportCardBorder),
+                          _BalanceColumn(
+                            title: 'Equities & Liabilities',
+                            items: report.liabilities,
+                          ),
+                          _BalanceFooter(
+                            assetsTotal: report.assetsTotal,
+                            liabilitiesTotal: report.liabilitiesTotal,
+                          ),
+                        ],
+                      ),
+              ),
+            ],
+          ),
         ),
-      ),
+      );
+      },
     );
   }
+}
+
+List<List<String>> _balanceSheetExportRows(BalanceSheetReportData report) {
+  final rows = <List<String>>[
+    ['Assets', '', ''],
+    for (final item in report.assets)
+      [
+        '',
+        item.name,
+        item.isHeader ? '' : formatReportCurrencyCompact(item.amount),
+      ],
+    [
+      '',
+      'Total Assets',
+      formatReportCurrencyCompact(report.assetsTotal),
+    ],
+    ['', '', ''],
+    ['Equities & Liabilities', '', ''],
+    for (final item in report.liabilities)
+      [
+        '',
+        item.name,
+        item.isHeader ? '' : formatReportCurrencyCompact(item.amount),
+      ],
+    [
+      '',
+      'Total Equities & Liabilities',
+      formatReportCurrencyCompact(report.liabilitiesTotal),
+    ],
+  ];
+  return rows;
 }
 
 class _BalanceColumn extends StatelessWidget {
@@ -227,55 +215,78 @@ class _BalanceColumn extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: reportTableHeaderStyle,
-                ),
-              ),
+              Expanded(child: Text(title, style: reportTableHeaderStyle)),
               const Text('AMOUNT', style: reportTableHeaderStyle),
             ],
           ),
         ),
-        for (var i = 0; i < items.length; i++) _BalanceSheetItemRow(item: items[i]),
+        ...items.map(
+          (item) => Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.md + (item.indent * 12),
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item.name,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight:
+                          item.isHeader ? FontWeight.w700 : FontWeight.w400,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                if (!item.isHeader)
+                  Text(
+                    formatReportCurrencyCompact(item.amount),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
 }
 
-class _BalanceSheetItemRow extends StatelessWidget {
-  const _BalanceSheetItemRow({required this.item});
+class _BalanceFooter extends StatelessWidget {
+  const _BalanceFooter({
+    required this.assetsTotal,
+    required this.liabilitiesTotal,
+  });
 
-  final ReportBalanceSheetItem item;
+  final double assetsTotal;
+  final double liabilitiesTotal;
 
   @override
   Widget build(BuildContext context) {
-    final indentPadding = AppSpacing.md + (item.indent * AppSpacing.lg);
-    final textStyle = item.isHeader
-        ? const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          )
-        : const TextStyle(fontSize: 13, color: AppColors.textPrimary);
-
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: reportCardBorder)),
+    return Container(
+      color: reportFooterBlue,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
       ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          indentPadding,
-          AppSpacing.sm,
-          AppSpacing.md,
-          AppSpacing.sm,
-        ),
+      child: IntrinsicHeight(
         child: Row(
           children: [
-            Expanded(child: Text(item.name, style: textStyle)),
-            Text(
-              item.isHeader ? '' : formatReportCurrency(item.amount),
-              style: textStyle,
+            Expanded(
+              child: _FooterTotal(
+                label: 'Total Assets',
+                amount: formatReportCurrencyCompact(assetsTotal),
+              ),
+            ),
+            const VerticalDivider(width: 1, color: Colors.white54),
+            Expanded(
+              child: _FooterTotal(
+                label: 'Total Equities & Liabilities',
+                amount: formatReportCurrencyCompact(liabilitiesTotal),
+              ),
             ),
           ],
         ),

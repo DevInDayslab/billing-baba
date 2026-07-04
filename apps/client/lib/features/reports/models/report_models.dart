@@ -92,13 +92,19 @@ class ReportBillWiseProfitRow {
 class ReportTrialBalanceRow {
   const ReportTrialBalanceRow({
     required this.accountName,
+    required this.opening,
     required this.debit,
     required this.credit,
+    required this.closingDebit,
+    required this.closingCredit,
   });
 
   final String accountName;
+  final double opening;
   final double debit;
   final double credit;
+  final double closingDebit;
+  final double closingCredit;
 }
 
 class ReportBalanceSheetItem {

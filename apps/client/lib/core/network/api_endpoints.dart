@@ -105,4 +105,62 @@ abstract final class ApiEndpoints {
   static String jobWorkOrder(String id) => '$jobWorkOrders/$id';
 
   static const dashboard = '/api/v1/dashboard';
+
+  static const reports = '/api/v1/reports';
+  static const reportsSales = '$reports/sales';
+  static const reportsPurchases = '$reports/purchases';
+  static const reportsStockSummary = '$reports/stock-summary';
+  static const reportsLowStock = '$reports/low-stock';
+  static const reportsPartyOutstanding = '$reports/party-outstanding';
+  static const reportsPartyStatement = '$reports/party-statement';
+  static const reportsDayBook = '$reports/day-book';
+  static const reportsAllTransactions = '$reports/all-transactions';
+  static const reportsProfitLoss = '$reports/profit-loss';
+  static const reportsGstr1 = '$reports/gstr-1';
+  static const reportsGstr2 = '$reports/gstr-2';
+  static const reportsGstr3b = '$reports/gstr-3b';
+  static const reportsBillWiseProfit = '$reports/bill-wise-profit';
+  static const reportsCashFlow = '$reports/cash-flow';
+  static const reportsPartyWiseProfitLoss = '$reports/party-wise-profit-loss';
+  static const reportsPartyReportByItem = '$reports/party-report-by-item';
+  static const reportsSalePurchaseByParty = '$reports/sale-purchase-by-party';
+  static const reportsSalePurchaseByPartyGroup =
+      '$reports/sale-purchase-by-party-group';
+  static const reportsGstr9 = '$reports/gstr-9';
+  static const reportsSaleSummaryByHsn = '$reports/sale-summary-by-hsn';
+  static const reportsSacReport = '$reports/sac-report';
+  static const reportsItemReportByParty = '$reports/item-report-by-party';
+  static const reportsItemWiseProfitLoss = '$reports/item-wise-profit-loss';
+  static const reportsStockDetail = '$reports/stock-detail';
+  static const reportsItemDetail = '$reports/item-detail';
+  static const reportsSalePurchaseByItemCategory =
+      '$reports/sale-purchase-by-item-category';
+  static const reportsStockSummaryByItemCategory =
+      '$reports/stock-summary-by-item-category';
+  static const reportsItemCategoryWiseProfitLoss =
+      '$reports/item-category-wise-profit-loss';
+  static const reportsItemWiseDiscount = '$reports/item-wise-discount';
+  static const reportsManufacturing = '$reports/manufacturing';
+  static const reportsConsumption = '$reports/consumption';
+  static const reportsStockTransfer = '$reports/stock-transfer';
+  static const reportsBankStatement = '$reports/bank-statement';
+  static const reportsGstReport = '$reports/gst-report';
+  static const reportsGstRateReport = '$reports/gst-rate-report';
+  static const reportsForm27eq = '$reports/form-27eq';
+  static const reportsTcsReceivable = '$reports/tcs-receivable';
+  static const reportsTdsPayable = '$reports/tds-payable';
+  static const reportsTdsReceivable = '$reports/tds-receivable';
+  static const reportsExpenses = '$reports/expenses';
+  static const reportsExpenseByCategory = '$reports/expense-by-category';
+  static const reportsExpenseByItem = '$reports/expense-by-item';
+  static const reportsSalePurchaseOrders = '$reports/sale-purchase-orders';
+  static const reportsSalePurchaseOrderItems =
+      '$reports/sale-purchase-order-items';
+  static const reportsOtherIncome = '$reports/other-income';
+  static const reportsOtherIncomeByCategory =
+      '$reports/other-income-by-category';
+  static const reportsOtherIncomeByItem = '$reports/other-income-by-item';
+  static const reportsLoanStatement = '$reports/loan-statement';
+  static const reportsTrialBalance = '$reports/trial-balance';
+  static const reportsBalanceSheet = '$reports/balance-sheet';
 }

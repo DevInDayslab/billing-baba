@@ -1,45 +1,52 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class TransactionReportFilterBar extends StatefulWidget {
+class TransactionReportFilterBar extends ConsumerStatefulWidget {
   const TransactionReportFilterBar({
-    this.showFirmFilter = true,
-    this.initialTimeRange = 'This Month',
-    this.initialFirm = 'All Firms',
+    this.showFirmFilter = false,
     super.key,
   });
 
   final bool showFirmFilter;
-  final String initialTimeRange;
-  final String initialFirm;
 
   @override
-  State<TransactionReportFilterBar> createState() =>
+  ConsumerState<TransactionReportFilterBar> createState() =>
       _TransactionReportFilterBarState();
 }
 
 class _TransactionReportFilterBarState
-    extends State<TransactionReportFilterBar> {
+    extends ConsumerState<TransactionReportFilterBar> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  late String _timeRange;
-  late String _firm;
-  DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2025, 9),
-    end: DateTime(2025, 9, 30),
-  );
 
-  @override
-  void initState() {
-    super.initState();
-    _timeRange = widget.initialTimeRange;
-    _firm = widget.initialFirm;
-  }
+  static const _periodOptions = [
+    'All Time',
+    'Today',
+    'Yesterday',
+    'This Week',
+    'Last Week',
+    'This Month',
+    'Last Month',
+    'This Quarter',
+    'This Year',
+    'Custom',
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final filters = ref.watch(reportFiltersProvider);
+    final notifier = ref.read(reportFiltersProvider.notifier);
+    final dateRange = filters.customDateRange ??
+        DateTimeRange(
+          start: DateTime.now(),
+          end: DateTime.now(),
+        );
+
     return ReportCard(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -59,33 +66,22 @@ class _TransactionReportFilterBarState
             ),
           ),
           SaleFilterDropdown(
-            label: _timeRange,
-            options: const [
-              'All Time',
-              'Today',
-              'This Week',
-              'This Month',
-              'This Year',
-              'Custom',
-            ],
-            selected: _timeRange,
-            onSelected: (value) => setState(() => _timeRange = value),
+            label: filters.periodLabel,
+            options: _periodOptions,
+            selected: filters.periodLabel,
+            onSelected: (value) {
+              notifier.setPeriod(ReportPeriod.fromLabel(value));
+            },
           ),
-          SaleDateRangePickerAnchor(
-            key: _datePickerKey,
-            initialRange: _dateRange,
-            onRangeSelected: (range) => setState(() => _dateRange = range),
-            child: SaleFilterChip(
-              label: formatSaleDateRangeLabel(_dateRange),
-              onTap: () => _datePickerKey.currentState?.toggle(),
-            ),
-          ),
-          if (widget.showFirmFilter)
-            SaleFilterDropdown(
-              label: _firm,
-              options: const ['All Firms', 'Firm A', 'Firm B'],
-              selected: _firm,
-              onSelected: (value) => setState(() => _firm = value),
+          if (filters.period == ReportPeriod.custom)
+            SaleDateRangePickerAnchor(
+              key: _datePickerKey,
+              initialRange: dateRange,
+              onRangeSelected: notifier.setCustomDateRange,
+              child: SaleFilterChip(
+                label: formatSaleDateRangeLabel(dateRange),
+                onTap: () => _datePickerKey.currentState?.toggle(),
+              ),
             ),
         ],
       ),

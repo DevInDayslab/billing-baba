@@ -1,14 +1,16 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/gst/gstr_month_filter_bar.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 class Gstr3bReportContent extends ConsumerStatefulWidget {
   const Gstr3bReportContent({super.key});
@@ -18,230 +20,179 @@ class Gstr3bReportContent extends ConsumerStatefulWidget {
 }
 
 class _Gstr3bReportContentState extends ConsumerState<Gstr3bReportContent> {
-  late DateTime _fromMonth;
-  late DateTime _toMonth;
   bool _considerNonTaxExempted = false;
 
-  static final _monthFormat = DateFormat('MM/yyyy');
+  static const _exportHeaders = [
+    'NATURE OF SUPPLIES',
+    'TOTAL TAXABLE VALUE',
+    'INTEGRATED TAX',
+    'CENTRAL TAX',
+    'STATE/UT TAX',
+    'CESS',
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _fromMonth = DateTime(now.year, now.month);
-    _toMonth = DateTime(now.year, now.month);
-  }
-
-  Future<void> _pickMonth({required bool isFrom}) async {
-    final initial = isFrom ? _fromMonth : _toMonth;
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked == null || !mounted) return;
-    setState(() {
-      final month = DateTime(picked.year, picked.month);
-      if (isFrom) {
-        _fromMonth = month;
-      } else {
-        _toMonth = month;
-      }
-    });
+  List<List<String>> _exportRows(List<ReportGstr3bRow> rows) {
+    return [
+      for (final row in rows)
+        [
+          row.nature,
+          formatReportCurrency(row.taxableValue),
+          formatReportCurrency(row.integratedTax),
+          formatReportCurrency(row.centralTax),
+          formatReportCurrency(row.stateTax),
+          formatReportCurrency(row.cess),
+        ],
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
-    final supplyRows = ref.watch(reportGstr3bProvider);
+    final reportAsync = ref.watch(gstr3bReportProvider);
 
-    return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: ReportCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Wrap(
-                spacing: AppSpacing.lg,
-                runSpacing: AppSpacing.sm,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  _MonthField(
-                    label: 'From Month/Year',
-                    value: _monthFormat.format(_fromMonth),
-                    onTap: () => _pickMonth(isFrom: true),
-                  ),
-                  _MonthField(
-                    label: 'To Month/Year',
-                    value: _monthFormat.format(_toMonth),
-                    onTap: () => _pickMonth(isFrom: false),
-                  ),
-                  const ReportTextActionButton(
-                    label: 'Excel Report',
-                    icon: Icons.table_chart_outlined,
-                  ),
-                  const ReportTextActionButton(
-                    label: 'Print',
-                    icon: Icons.print_outlined,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                0,
-                AppSpacing.lg,
-                AppSpacing.lg,
-              ),
-              child: ReportCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.sm,
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(gstr3bReportProvider.notifier).refresh(),
+      data: (report) {
+        final supplyRows = report.rows;
+        final exportRows = _exportRows(supplyRows);
+
+        return ColoredBox(
+          color: AppColors.background,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
+                child: ReportCard(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Wrap(
+                    spacing: AppSpacing.lg,
+                    runSpacing: AppSpacing.sm,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      const GstrMonthFilterBar(),
+                      ReportTextActionButton(
+                        label: 'Excel Report',
+                        icon: Icons.table_chart_outlined,
+                        onTap: () => reportExportTable(
+                          context: context,
+                          title: 'GSTR-3B',
+                          filename: 'gstr3b-report',
+                          headers: _exportHeaders,
+                          rows: exportRows,
+                        ),
                       ),
-                      child: Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          const Text(
-                            'GSTR3 REPORT',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                              letterSpacing: 0.4,
-                            ),
+                      ReportTextActionButton(
+                        label: 'Print',
+                        icon: Icons.print_outlined,
+                        onTap: () => reportPrintTable(
+                          context: context,
+                          title: 'GSTR-3B',
+                          headers: _exportHeaders,
+                          rows: exportRows,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: ReportCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.sm,
                           ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
+                          child: Wrap(
+                            spacing: AppSpacing.sm,
+                            runSpacing: AppSpacing.sm,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              Checkbox(
-                                value: _considerNonTaxExempted,
-                                onChanged: (value) => setState(
-                                  () =>
-                                      _considerNonTaxExempted = value ?? false,
-                                ),
-                                visualDensity: VisualDensity.compact,
-                              ),
                               const Text(
-                                'CONSIDER NON-TAX AS EXEMPTED',
+                                'GSTR3 REPORT',
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                  letterSpacing: 0.3,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                  letterSpacing: 0.4,
                                 ),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Checkbox(
+                                    value: _considerNonTaxExempted,
+                                    onChanged: (value) => setState(
+                                      () => _considerNonTaxExempted =
+                                          value ?? false,
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                  const Text(
+                                    'CONSIDER NON-TAX AS EXEMPTED',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondary,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                        const Divider(height: 1, color: reportCardBorder),
+                        const _SectionTitle(
+                          title:
+                              'Details of outward supplies and inward supplies '
+                              'liable to reverse charge',
+                        ),
+                        _TaxSupplyTable(rows: supplyRows),
+                        const Divider(height: 1, color: reportCardBorder),
+                        const _SectionTitle(
+                          title:
+                              '5. Details of inter-State supplies made to '
+                              'unregistered persons, composition dealer and UIN holders',
+                        ),
+                        const _InterStateSuppliesTable(),
+                        const Divider(height: 1, color: reportCardBorder),
+                        const _SectionTitle(title: '3. Eligible ITC'),
+                        const _ItcTable(),
+                        const Divider(height: 1, color: reportCardBorder),
+                        const _SectionTitle(
+                          title:
+                              '4. Details of exempt, nil-rated and non-GST '
+                              'inward supplies',
+                        ),
+                        const _ExemptSuppliesTable(),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
                     ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    _SectionTitle(
-                      title:
-                          'Details of outward supplies and inward supplies '
-                          'liable to reverse charge',
-                    ),
-                    _TaxSupplyTable(rows: supplyRows),
-                    const Divider(height: 1, color: reportCardBorder),
-                    _SectionTitle(
-                      title:
-                          '5. Details of inter-State supplies made to '
-                          'unregistered persons, composition dealer and UIN holders',
-                    ),
-                    const _InterStateSuppliesTable(),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const _SectionTitle(title: '3. Eligible ITC'),
-                    const _ItcTable(),
-                    const Divider(height: 1, color: reportCardBorder),
-                    _SectionTitle(
-                      title:
-                          '4. Details of exempt, nil-rated and non-GST '
-                          'inward supplies',
-                    ),
-                    const _ExemptSuppliesTable(),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MonthField extends StatelessWidget {
-  const _MonthField({
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: 8,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              border: Border.all(color: reportCardBorder),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.calendar_today_outlined,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: 6),
-                Text(value, style: const TextStyle(fontSize: 13)),
-              ],
-            ),
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -288,7 +239,7 @@ class _TaxSupplyTable extends StatelessWidget {
   static const _natureWidth = 280.0;
   static const _valueWidth = 120.0;
   static const _cessWidth = 80.0;
-  static const minWidth =
+  static const double minWidth =
       _natureWidth + (_valueWidth * 4) + _cessWidth + 32;
 
   @override
@@ -380,10 +331,10 @@ class _InterStateSuppliesTable extends StatelessWidget {
 
   static const _placeWidth = 160.0;
   static const _valueWidth = 130.0;
-  static const _groupWidth = _valueWidth * 2;
-  static const _columnsWidth = _placeWidth + (_groupWidth * 3);
-  static const _horizontalPadding = AppSpacing.md * 2;
-  static const minWidth = _columnsWidth + _horizontalPadding;
+  static const double _groupWidth = _valueWidth * 2;
+  static const double _columnsWidth = _placeWidth + (_groupWidth * 3);
+  static const double _horizontalPadding = AppSpacing.md * 2;
+  static const double minWidth = _columnsWidth + _horizontalPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -488,7 +439,7 @@ class _ItcTable extends StatelessWidget {
   static const _detailWidth = 360.0;
   static const _taxWidth = 120.0;
   static const _cessWidth = 80.0;
-  static const minWidth = _detailWidth + (_taxWidth * 3) + _cessWidth + 32;
+  static const double minWidth = _detailWidth + (_taxWidth * 3) + _cessWidth + 32;
 
   @override
   Widget build(BuildContext context) {
@@ -621,7 +572,7 @@ class _ExemptSuppliesTable extends StatelessWidget {
 
   static const _natureWidth = 320.0;
   static const _valueWidth = 160.0;
-  static const minWidth = _natureWidth + (_valueWidth * 2) + 32;
+  static const double minWidth = _natureWidth + (_valueWidth * 2) + 32;
 
   @override
   Widget build(BuildContext context) {

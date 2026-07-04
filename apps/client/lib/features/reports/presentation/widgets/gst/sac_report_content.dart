@@ -3,8 +3,11 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -36,10 +39,41 @@ class _SacReportContentState extends ConsumerState<SacReportContent> {
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportSacRowsProvider);
-    final totalValue = rows.fold(0.0, (sum, r) => sum + r.totalValue);
+    final reportAsync = ref.watch(sacReportReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(sacReportReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalValue = rows.fold(0.0, (sum, r) => sum + r.totalValue);
+        const exportHeaders = [
+          '#',
+          'SAC',
+          'Invoice Type',
+          'Total Value',
+          'Taxable Value',
+          'IGST Amount',
+          'CGST Amount',
+          'SGST Amount',
+          'Add. Cess',
+        ];
+        final exportRows = [
+          for (var i = 0; i < rows.length; i++)
+            [
+              '${i + 1}',
+              rows[i].sac,
+              rows[i].invoiceType,
+              formatReportCurrency(rows[i].totalValue),
+              formatReportCurrency(rows[i].taxableValue),
+              formatReportCurrency(rows[i].igst),
+              formatReportCurrency(rows[i].cgst),
+              formatReportCurrency(rows[i].sgst),
+              formatReportCurrency(rows[i].cess),
+            ],
+        ];
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -97,13 +131,26 @@ class _SacReportContentState extends ConsumerState<SacReportContent> {
                     selected: _firm,
                     onSelected: (value) => setState(() => _firm = value),
                   ),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Excel Report',
                     icon: Icons.table_chart_outlined,
+                    onTap: () => reportExportTable(
+                      context: context,
+                      title: 'SAC Report',
+                      filename: 'sac-report',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Print',
                     icon: Icons.print_outlined,
+                    onTap: () => reportPrintTable(
+                      context: context,
+                      title: 'SAC Report',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
                 ],
               ),
@@ -140,8 +187,12 @@ class _SacReportContentState extends ConsumerState<SacReportContent> {
                             ),
                           ),
                           const SizedBox(width: AppSpacing.lg),
-                          const Expanded(
-                            child: ReportSearchField(),
+                          Expanded(
+                            child: ReportSearchField(
+                              onChanged: ref
+                                  .read(reportFiltersProvider.notifier)
+                                  .setSearchQuery,
+                            ),
                           ),
                         ],
                       ),
@@ -318,6 +369,8 @@ class _SacReportContentState extends ConsumerState<SacReportContent> {
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

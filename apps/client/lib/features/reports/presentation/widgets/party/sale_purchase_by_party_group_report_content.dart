@@ -1,13 +1,16 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_filter_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,14 +19,47 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rows = ref.watch(reportSalePurchaseByPartyGroupProvider);
-    final totalSale =
-        rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
-    final totalPurchase =
-        rows.fold<double>(0, (sum, row) => sum + row.purchaseAmount);
-    final netBalance = totalSale - totalPurchase;
+    final reportAsync = ref.watch(salePurchaseByPartyGroupReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref
+          .read(salePurchaseByPartyGroupReportProvider.notifier)
+          .refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalSale =
+            rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
+        final totalPurchase =
+            rows.fold<double>(0, (sum, row) => sum + row.purchaseAmount);
+        final netBalance = totalSale - totalPurchase;
+
+        void exportCsv() {
+          ReportExportService.exportAndNotify(
+            context: context,
+            title: 'Sale Purchase By Party Group',
+            filename: 'sale-purchase-by-party-group',
+            headers: const [
+              'Party Group',
+              'Party Name',
+              'Sale Amount',
+              'Purchase Amount',
+              'Net Balance',
+            ],
+            rows: [
+              for (final row in rows)
+                [
+                  row.partyGroup,
+                  row.partyName,
+                  formatReportCurrency(row.saleAmount),
+                  formatReportCurrency(row.purchaseAmount),
+                  formatReportCurrency(row.saleAmount - row.purchaseAmount),
+                ],
+            ],
+          );
+        }
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -36,16 +72,42 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
               AppSpacing.md,
             ),
             child: ReportPeriodFilterBar(
-              trailing: const Row(
+              trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ReportTextActionButton(
                     label: 'Excel Report',
                     icon: Icons.table_chart_outlined,
+                    onTap: exportCsv,
                   ),
                   ReportTextActionButton(
                     label: 'Print',
                     icon: Icons.print_outlined,
+                    onTap: () => ReportExportService.showPrintPreview(
+                      context: context,
+                      title: 'Sale Purchase By Party Group',
+                      content: ReportExportService.toCsv(
+                        headers: const [
+                          'Party Group',
+                          'Party Name',
+                          'Sale Amount',
+                          'Purchase Amount',
+                          'Net Balance',
+                        ],
+                        rows: [
+                          for (final row in rows)
+                            [
+                              row.partyGroup,
+                              row.partyName,
+                              formatReportCurrency(row.saleAmount),
+                              formatReportCurrency(row.purchaseAmount),
+                              formatReportCurrency(
+                                row.saleAmount - row.purchaseAmount,
+                              ),
+                            ],
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -67,35 +129,23 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
                       padding: const EdgeInsets.all(AppSpacing.md),
                       child: Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 160,
-                            child: SaleFilterDropdown(
-                              label: 'All Groups',
-                              options: const [
-                                'All Groups',
-                                'Group A',
-                                'Group B',
-                              ],
-                              selected: 'All Groups',
-                              onSelected: (_) {},
-                            ),
+                            child: ReportPartyGroupFilter(),
                           ),
                           const SizedBox(width: AppSpacing.sm),
-                          SizedBox(
+                          const SizedBox(
                             width: 160,
-                            child: SaleFilterDropdown(
-                              label: 'All Parties',
-                              options: const [
-                                'All Parties',
-                                'Customers',
-                                'Suppliers',
-                              ],
-                              selected: 'All Parties',
-                              onSelected: (_) {},
-                            ),
+                            child: ReportPartyTypeFilter(),
                           ),
                           const SizedBox(width: AppSpacing.md),
-                          const Expanded(child: ReportSearchField()),
+                          Expanded(
+                            child: ReportSearchField(
+                              onChanged: ref
+                                  .read(reportFiltersProvider.notifier)
+                                  .setSearchQuery,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -242,6 +292,26 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
                         ],
                       ),
                     ),
+                    ReportPaginationBar(
+                      page: report.meta.page,
+                      totalPages: report.meta.totalPages,
+                      onPrevious: report.meta.page > 1
+                          ? () => ref
+                                .read(
+                                  salePurchaseByPartyGroupReportProvider
+                                      .notifier,
+                                )
+                                .goToPage(report.meta.page - 1)
+                          : null,
+                      onNext: report.meta.page < report.meta.totalPages
+                          ? () => ref
+                                .read(
+                                  salePurchaseByPartyGroupReportProvider
+                                      .notifier,
+                                )
+                                .goToPage(report.meta.page + 1)
+                          : null,
+                    ),
                   ],
                 ),
               ),
@@ -249,6 +319,8 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

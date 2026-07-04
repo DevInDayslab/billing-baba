@@ -4,7 +4,8 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:flutter/material.dart';
@@ -46,13 +47,21 @@ class _SalePurchaseReportByItemCategoryReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportSalePurchaseByCategoryProvider);
-    final totalSaleAmount =
-        rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
-    final totalPurchaseAmount =
-        rows.fold<double>(0, (sum, row) => sum + row.purchaseAmount);
+    final reportAsync = ref.watch(salePurchaseByItemCategoryReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref
+          .read(salePurchaseByItemCategoryReportProvider.notifier)
+          .refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalSaleAmount =
+            rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
+        final totalPurchaseAmount =
+            rows.fold<double>(0, (sum, row) => sum + row.purchaseAmount);
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -459,6 +468,8 @@ class _SalePurchaseReportByItemCategoryReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

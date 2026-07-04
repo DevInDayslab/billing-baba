@@ -4,7 +4,9 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -40,11 +42,37 @@ class _ItemReportByPartyReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportItemByPartyProvider);
-    final totalSaleAmount =
-        rows.fold<double>(0, (sum, row) => sum + row.amount);
+    final reportAsync = ref.watch(itemReportByPartyReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () =>
+          ref.read(itemReportByPartyReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalSaleAmount =
+            rows.fold<double>(0, (sum, row) => sum + row.amount);
+        const exportHeaders = [
+          'Item Name',
+          'Party Name',
+          'Sale Quantity',
+          'Sale Amount',
+          'Purchase Quantity',
+          'Purchase Amount',
+        ];
+        final exportRows = [
+          for (final row in rows)
+            [
+              row.itemName,
+              row.partyName,
+              row.quantity.toStringAsFixed(0),
+              formatReportCurrency(row.amount),
+              '-',
+              '-',
+            ],
+        ];
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,13 +163,26 @@ class _ItemReportByPartyReportContentState
                       ),
                     ],
                   ),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Excel',
                     icon: Icons.table_chart_outlined,
+                    onTap: () => reportExportTable(
+                      context: context,
+                      title: 'Item Report by Party',
+                      filename: 'item-report-by-party',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Print',
                     icon: Icons.print_outlined,
+                    onTap: () => reportPrintTable(
+                      context: context,
+                      title: 'Item Report by Party',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
                 ],
               ),
@@ -378,6 +419,8 @@ class _ItemReportByPartyReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

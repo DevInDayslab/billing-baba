@@ -1,8 +1,10 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/taxes/taxes_report_filter_bar.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,21 +14,54 @@ class GstTaxReportContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rows = ref.watch(reportGstTaxByPartyProvider);
+    final reportAsync = ref.watch(gstTaxReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(gstTaxReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        const exportHeaders = [
+          'Party Name',
+          'Sale Tax',
+          'Purchase / Expense Tax',
+        ];
+        final exportRows = [
+          for (final row in rows)
+            [
+              row.partyName,
+              formatReportCurrency(row.saleTax),
+              formatReportCurrency(row.purchaseExpenseTax),
+            ],
+        ];
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.md,
             ),
-            child: TaxesReportFilterBar(),
+            child: TaxesReportFilterBar(
+              onExportExcel: () => reportExportTable(
+                context: context,
+                title: 'GST Tax Report',
+                filename: 'gst-tax-report',
+                headers: exportHeaders,
+                rows: exportRows,
+              ),
+              onPrint: () => reportPrintTable(
+                context: context,
+                title: 'GST Tax Report',
+                headers: exportHeaders,
+                rows: exportRows,
+              ),
+            ),
           ),
           const Padding(
             padding: EdgeInsets.fromLTRB(
@@ -110,6 +145,20 @@ class GstTaxReportContent extends ConsumerWidget {
                         ),
                       ),
                     ),
+                    ReportPaginationBar(
+                      page: report.meta.page,
+                      totalPages: report.meta.totalPages,
+                      onPrevious: report.meta.page > 1
+                          ? () => ref
+                                .read(gstTaxReportProvider.notifier)
+                                .goToPage(report.meta.page - 1)
+                          : null,
+                      onNext: report.meta.page < report.meta.totalPages
+                          ? () => ref
+                                .read(gstTaxReportProvider.notifier)
+                                .goToPage(report.meta.page + 1)
+                          : null,
+                    ),
                   ],
                 ),
               ),
@@ -117,6 +166,8 @@ class GstTaxReportContent extends ConsumerWidget {
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

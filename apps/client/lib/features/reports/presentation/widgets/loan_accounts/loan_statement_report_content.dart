@@ -2,10 +2,13 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -24,13 +27,19 @@ class LoanStatementReportContent extends ConsumerStatefulWidget {
 class _LoanStatementReportContentState
     extends ConsumerState<LoanStatementReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  String _selectedLoan = 'Select loan account';
   DateTimeRange _dateRange = DateTimeRange(
     start: DateTime(2026, 7, 1),
     end: DateTime(2026, 7, 31),
   );
 
   static final _dateFormat = DateFormat('dd/MM/yyyy');
+  static const _selectLoanLabel = 'Select loan account';
+  static const _loanOptions = [
+    _selectLoanLabel,
+    'Business Term Loan',
+    'Working Capital Loan',
+    'Vehicle Loan',
+  ];
 
   static const _headers = [
     ReportAlignedHeaderCell(label: 'DATE', width: 110),
@@ -55,13 +64,46 @@ class _LoanStatementReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final loanSelected = _selectedLoan != 'Select loan account';
-    final rows = loanSelected
-        ? ref.watch(reportLoanStatementProvider(_selectedLoan))
-        : const <ReportLoanStatementRow>[];
-    final closingBalance = rows.isEmpty ? 0.0 : rows.last.balance;
+    final filters = ref.watch(reportFiltersProvider);
+    final selectedLoan = filters.loanAccount ?? _selectLoanLabel;
+    final loanSelected = selectedLoan != _selectLoanLabel;
+    final reportAsync = ref.watch(loanStatementReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(loanStatementReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report?.rows ?? const <ReportLoanStatementRow>[];
+        final closingBalance = rows.isEmpty ? 0.0 : rows.last.balance;
+
+        void exportCsv() {
+          ReportExportService.exportAndNotify(
+            context: context,
+            title: 'Loan Statement',
+            filename: 'loan-statement',
+            headers: const [
+              'Date',
+              'Ref No',
+              'Particulars',
+              'Debit',
+              'Credit',
+              'Outstanding',
+            ],
+            rows: [
+              for (final row in rows)
+                [
+                  formatReportDate(row.date),
+                  row.refNo,
+                  row.description,
+                  row.debit > 0 ? formatReportCurrency(row.debit) : '-',
+                  row.credit > 0 ? formatReportCurrency(row.credit) : '-',
+                  formatReportCurrency(row.balance),
+                ],
+            ],
+          );
+        }
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -75,14 +117,46 @@ class _LoanStatementReportContentState
             ),
             child: ReportTitleActionsRow(
               title: 'Loan Statement',
-              actions: const [
+              actions: [
                 ReportTextActionButton(
                   label: 'Excel',
                   icon: Icons.table_chart_outlined,
+                  onTap: loanSelected ? exportCsv : null,
                 ),
                 ReportTextActionButton(
                   label: 'Print',
                   icon: Icons.print_outlined,
+                  onTap: loanSelected
+                      ? () => ReportExportService.showPrintPreview(
+                            context: context,
+                            title: 'Loan Statement',
+                            content: ReportExportService.toCsv(
+                              headers: const [
+                                'Date',
+                                'Ref No',
+                                'Particulars',
+                                'Debit',
+                                'Credit',
+                                'Outstanding',
+                              ],
+                              rows: [
+                                for (final row in rows)
+                                  [
+                                    formatReportDate(row.date),
+                                    row.refNo,
+                                    row.description,
+                                    row.debit > 0
+                                        ? formatReportCurrency(row.debit)
+                                        : '-',
+                                    row.credit > 0
+                                        ? formatReportCurrency(row.credit)
+                                        : '-',
+                                    formatReportCurrency(row.balance),
+                                  ],
+                              ],
+                            ),
+                          )
+                      : null,
                 ),
               ],
             ),
@@ -119,16 +193,14 @@ class _LoanStatementReportContentState
                       SizedBox(
                         width: 220,
                         child: SaleFilterDropdown(
-                          label: _selectedLoan,
-                          options: const [
-                            'Select loan account',
-                            'Business Term Loan',
-                            'Working Capital Loan',
-                            'Vehicle Loan',
-                          ],
-                          selected: _selectedLoan,
-                          onSelected: (value) =>
-                              setState(() => _selectedLoan = value),
+                          label: selectedLoan,
+                          options: _loanOptions,
+                          selected: selectedLoan,
+                          onSelected: (value) => ref
+                              .read(reportFiltersProvider.notifier)
+                              .setLoanAccount(
+                                value == _selectLoanLabel ? null : value,
+                              ),
                         ),
                       ),
                     ],
@@ -358,6 +430,8 @@ class _LoanStatementReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 

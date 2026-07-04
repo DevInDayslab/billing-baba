@@ -8,7 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class TaxesReportFilterBar extends StatefulWidget {
-  const TaxesReportFilterBar({super.key});
+  const TaxesReportFilterBar({
+    this.onExportExcel,
+    this.onPrint,
+    super.key,
+  });
+
+  final VoidCallback? onExportExcel;
+  final VoidCallback? onPrint;
 
   @override
   State<TaxesReportFilterBar> createState() => _TaxesReportFilterBarState();
@@ -105,13 +112,15 @@ class _TaxesReportFilterBarState extends State<TaxesReportFilterBar> {
               ),
             ],
           ),
-          const ReportTextActionButton(
+          ReportTextActionButton(
             label: 'Excel',
             icon: Icons.table_chart_outlined,
+            onTap: widget.onExportExcel,
           ),
-          const ReportTextActionButton(
+          ReportTextActionButton(
             label: 'Print',
             icon: Icons.print_outlined,
+            onTap: widget.onPrint,
           ),
         ],
       ),
@@ -120,7 +129,14 @@ class _TaxesReportFilterBarState extends State<TaxesReportFilterBar> {
 }
 
 class TaxInvoiceReportFilterBar extends StatefulWidget {
-  const TaxInvoiceReportFilterBar({super.key});
+  const TaxInvoiceReportFilterBar({
+    this.onExportExcel,
+    this.onPrint,
+    super.key,
+  });
+
+  final VoidCallback? onExportExcel;
+  final VoidCallback? onPrint;
 
   @override
   State<TaxInvoiceReportFilterBar> createState() =>
@@ -226,13 +242,15 @@ class _TaxInvoiceReportFilterBarState extends State<TaxInvoiceReportFilterBar> {
             selected: _firm,
             onSelected: (value) => setState(() => _firm = value),
           ),
-          const ReportTextActionButton(
+          ReportTextActionButton(
             label: 'Excel Report',
             icon: Icons.table_chart_outlined,
+            onTap: widget.onExportExcel,
           ),
-          const ReportTextActionButton(
+          ReportTextActionButton(
             label: 'Print',
             icon: Icons.print_outlined,
+            onTap: widget.onPrint,
           ),
         ],
       ),

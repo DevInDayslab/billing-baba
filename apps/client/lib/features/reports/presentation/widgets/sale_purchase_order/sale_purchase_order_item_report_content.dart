@@ -2,8 +2,10 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/sale_purchase_order/sale_purchase_order_report_filters.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,25 +15,55 @@ class SalePurchaseOrderItemReportContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rows = ref.watch(reportOrderItemsProvider);
-    final totalQty =
-        rows.fold<double>(0, (sum, row) => sum + row.quantity);
-    final totalAmount =
-        rows.fold<double>(0, (sum, row) => sum + row.amount);
+    final reportAsync = ref.watch(salePurchaseOrderItemsReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () =>
+          ref.read(salePurchaseOrderItemsReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalQty =
+            rows.fold<double>(0, (sum, row) => sum + row.quantity);
+        final totalAmount =
+            rows.fold<double>(0, (sum, row) => sum + row.amount);
+        const exportHeaders = ['Item Name', 'Quantity', 'Amount'];
+        final exportRows = [
+          for (final row in rows)
+            [
+              row.itemName,
+              row.quantity.toStringAsFixed(0),
+              formatReportCurrency(row.amount),
+            ],
+        ];
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.md,
             ),
-            child: SalePurchaseOrderReportFilters(),
+            child: SalePurchaseOrderReportFilters(
+              onExportExcel: () => reportExportTable(
+                context: context,
+                title: 'Sale / Purchase Order Items',
+                filename: 'sale-purchase-order-items',
+                headers: exportHeaders,
+                rows: exportRows,
+              ),
+              onPrint: () => reportPrintTable(
+                context: context,
+                title: 'Sale / Purchase Order Items',
+                headers: exportHeaders,
+                rows: exportRows,
+              ),
+            ),
           ),
           Expanded(
             child: Padding(
@@ -204,6 +236,24 @@ class SalePurchaseOrderItemReportContent extends ConsumerWidget {
                         ],
                       ),
                     ),
+                    ReportPaginationBar(
+                      page: report.meta.page,
+                      totalPages: report.meta.totalPages,
+                      onPrevious: report.meta.page > 1
+                          ? () => ref
+                                .read(
+                                  salePurchaseOrderItemsReportProvider.notifier,
+                                )
+                                .goToPage(report.meta.page - 1)
+                          : null,
+                      onNext: report.meta.page < report.meta.totalPages
+                          ? () => ref
+                                .read(
+                                  salePurchaseOrderItemsReportProvider.notifier,
+                                )
+                                .goToPage(report.meta.page + 1)
+                          : null,
+                    ),
                   ],
                 ),
               ),
@@ -211,6 +261,8 @@ class SalePurchaseOrderItemReportContent extends ConsumerWidget {
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

@@ -1,11 +1,16 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_filter_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -21,16 +26,56 @@ class PartyReportByItemContent extends ConsumerStatefulWidget {
 
 class _PartyReportByItemContentState
     extends ConsumerState<PartyReportByItemContent> {
-  String _selectedItem = 'caty';
-
-  List<String> get _itemNames =>
-      InventoryCatalog.items.map((item) => item.name).toList();
+  String _selectedItemName(List<InventoryItem> items, String? itemId) {
+    if (itemId == null || itemId.isEmpty) return 'All Items';
+    for (final item in items) {
+      if (item.id == itemId) return item.name;
+    }
+    return 'All Items';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportPartyByItemProvider(_selectedItem));
+    final filters = ref.watch(reportFiltersProvider);
+    final items = ref.watch(inventoryItemsProvider).value ?? [];
+    final selectedItemId = filters.itemId;
+    final selectedItemName = _selectedItemName(items, selectedItemId);
+    final itemNames = items.map((item) => item.name).toList();
+    final reportAsync = ref.watch(partyReportByItemReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () =>
+          ref.read(partyReportByItemReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report?.rows ?? const [];
+
+        void exportCsv() {
+          ReportExportService.exportAndNotify(
+            context: context,
+            title: 'Party Report By Item',
+            filename: 'party-report-by-item',
+            headers: const [
+              'Party Name',
+              'Sale Quantity',
+              'Sale Amount',
+              'Purchase Quantity',
+              'Purchase Amount',
+            ],
+            rows: [
+              for (final row in rows)
+                [
+                  row.partyName,
+                  row.quantity.toStringAsFixed(0),
+                  formatReportCurrency(row.amount),
+                  '—',
+                  '—',
+                ],
+            ],
+          );
+        }
+
+        return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -44,15 +89,35 @@ class _PartyReportByItemContentState
                 children: [
                   const ReportPeriodFilterBar(),
                   const SizedBox(height: AppSpacing.sm),
-                  const Row(
+                  Row(
                     children: [
                       ReportTextActionButton(
                         label: 'Excel Report',
                         icon: Icons.table_chart_outlined,
+                        onTap: exportCsv,
                       ),
                       ReportTextActionButton(
                         label: 'Print',
                         icon: Icons.print_outlined,
+                        onTap: () => ReportExportService.showPrintPreview(
+                          context: context,
+                          title: 'Party Report By Item',
+                          content: ReportExportService.toCsv(
+                            headers: const [
+                              'Party Name',
+                              'Sale Quantity',
+                              'Sale Amount',
+                            ],
+                            rows: [
+                              for (final row in rows)
+                                [
+                                  row.partyName,
+                                  row.quantity.toStringAsFixed(0),
+                                  formatReportCurrency(row.amount),
+                                ],
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -61,24 +126,24 @@ class _PartyReportByItemContentState
                     spacing: AppSpacing.sm,
                     runSpacing: AppSpacing.sm,
                     children: [
+                      const ReportCategoryFilter(),
                       SaleFilterDropdown(
-                        label: 'All Categories',
-                        options: const [
-                          'All Categories',
-                          'Category A',
-                          'Category B',
-                        ],
-                        selected: 'All Categories',
-                        onSelected: (_) {},
-                      ),
-                      SaleFilterDropdown(
-                        label: 'All Items',
-                        options: ['All Items', ..._itemNames],
-                        selected: _selectedItem,
+                        label: selectedItemName,
+                        options: ['All Items', ...itemNames],
+                        selected: selectedItemName,
                         onSelected: (value) {
-                          if (value != 'All Items') {
-                            setState(() => _selectedItem = value);
+                          if (value == 'All Items') {
+                            ref
+                                .read(reportFiltersProvider.notifier)
+                                .setItemId(null);
+                            return;
                           }
+                          final item = items.firstWhere(
+                            (entry) => entry.name == value,
+                          );
+                          ref
+                              .read(reportFiltersProvider.notifier)
+                              .setItemId(item.id);
                         },
                       ),
                     ],
@@ -87,7 +152,11 @@ class _PartyReportByItemContentState
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            const ReportSearchField(hintText: 'Search Party...'),
+            ReportSearchField(
+              hintText: 'Search Party...',
+              onChanged:
+                  ref.read(reportFiltersProvider.notifier).setSearchQuery,
+            ),
             const SizedBox(height: AppSpacing.md),
             ReportCard(
               child: Column(
@@ -95,12 +164,14 @@ class _PartyReportByItemContentState
                 children: [
                   ReportSyncScrollTable(
                     minWidth: 700,
-                    emptyState: const SizedBox(
+                    emptyState: SizedBox(
                       height: 200,
                       child: Center(
                         child: Text(
-                          'No data available for the selected period.',
-                          style: TextStyle(
+                          selectedItemId == null || selectedItemId.isEmpty
+                              ? 'Select an item to view the report.'
+                              : 'No data available for the selected period.',
+                          style: const TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondary,
                           ),
@@ -181,9 +252,26 @@ class _PartyReportByItemContentState
                 ],
               ),
             ),
+            if (report != null)
+              ReportPaginationBar(
+                page: report.meta.page,
+                totalPages: report.meta.totalPages,
+                onPrevious: report.meta.page > 1
+                    ? () => ref
+                          .read(partyReportByItemReportProvider.notifier)
+                          .goToPage(report.meta.page - 1)
+                    : null,
+                onNext: report.meta.page < report.meta.totalPages
+                    ? () => ref
+                          .read(partyReportByItemReportProvider.notifier)
+                          .goToPage(report.meta.page + 1)
+                    : null,
+              ),
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

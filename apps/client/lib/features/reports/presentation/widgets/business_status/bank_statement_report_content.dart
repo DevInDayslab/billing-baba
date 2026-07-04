@@ -2,10 +2,13 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -24,24 +27,60 @@ class BankStatementReportContent extends ConsumerStatefulWidget {
 class _BankStatementReportContentState
     extends ConsumerState<BankStatementReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  String _selectedBank = 'Select bank account';
   DateTimeRange _dateRange = DateTimeRange(
     start: DateTime(2026, 7, 1),
     end: DateTime(2026, 7, 31),
   );
 
   static final _dateFormat = DateFormat('dd/MM/yyyy');
+  static const _selectBankLabel = 'Select bank account';
+  static const _bankOptions = [
+    _selectBankLabel,
+    'HDFC Bank',
+    'ICICI Bank',
+    'SBI',
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final bankSelected = _selectedBank != 'Select bank account';
-    final rows = bankSelected
-        ? ref.watch(reportBankStatementProvider(_selectedBank))
-        : const <ReportBankStatementRow>[];
-    final closingBalance =
-        rows.isEmpty ? 0.0 : rows.last.balance;
+    final filters = ref.watch(reportFiltersProvider);
+    final selectedBank = filters.bankName ?? _selectBankLabel;
+    final bankSelected = selectedBank != _selectBankLabel;
+    final reportAsync = ref.watch(bankStatementReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(bankStatementReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report?.rows ?? const <ReportBankStatementRow>[];
+        final closingBalance = rows.isEmpty ? 0.0 : rows.last.balance;
+
+        void exportCsv() {
+          ReportExportService.exportAndNotify(
+            context: context,
+            title: 'Bank Statement',
+            filename: 'bank-statement',
+            headers: const [
+              'Date',
+              'Description',
+              'Withdrawal Amount',
+              'Deposit Amount',
+              'Balance Amount',
+            ],
+            rows: [
+              for (final row in rows)
+                [
+                  formatReportDate(row.date),
+                  row.description,
+                  row.moneyOut > 0 ? formatReportCurrency(row.moneyOut) : '-',
+                  row.moneyIn > 0 ? formatReportCurrency(row.moneyIn) : '-',
+                  formatReportCurrency(row.balance),
+                ],
+            ],
+          );
+        }
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -56,13 +95,43 @@ class _BankStatementReportContentState
             child: ReportTitleActionsRow(
               title: 'Bank Statement',
               actions: [
-                const ReportTextActionButton(
+                ReportTextActionButton(
                   label: 'Excel',
                   icon: Icons.table_chart_outlined,
+                  onTap: bankSelected ? exportCsv : null,
                 ),
-                const ReportTextActionButton(
+                ReportTextActionButton(
                   label: 'Print',
                   icon: Icons.print_outlined,
+                  onTap: bankSelected
+                      ? () => ReportExportService.showPrintPreview(
+                            context: context,
+                            title: 'Bank Statement',
+                            content: ReportExportService.toCsv(
+                              headers: const [
+                                'Date',
+                                'Description',
+                                'Withdrawal Amount',
+                                'Deposit Amount',
+                                'Balance Amount',
+                              ],
+                              rows: [
+                                for (final row in rows)
+                                  [
+                                    formatReportDate(row.date),
+                                    row.description,
+                                    row.moneyOut > 0
+                                        ? formatReportCurrency(row.moneyOut)
+                                        : '-',
+                                    row.moneyIn > 0
+                                        ? formatReportCurrency(row.moneyIn)
+                                        : '-',
+                                    formatReportCurrency(row.balance),
+                                  ],
+                              ],
+                            ),
+                          )
+                      : null,
                 ),
               ],
             ),
@@ -99,16 +168,14 @@ class _BankStatementReportContentState
                       SizedBox(
                         width: 200,
                         child: SaleFilterDropdown(
-                          label: _selectedBank,
-                          options: const [
-                            'Select bank account',
-                            'HDFC Bank',
-                            'ICICI Bank',
-                            'SBI',
-                          ],
-                          selected: _selectedBank,
-                          onSelected: (value) =>
-                              setState(() => _selectedBank = value),
+                          label: selectedBank,
+                          options: _bankOptions,
+                          selected: selectedBank,
+                          onSelected: (value) => ref
+                              .read(reportFiltersProvider.notifier)
+                              .setBankName(
+                                value == _selectBankLabel ? null : value,
+                              ),
                         ),
                       ),
                     ],
@@ -436,6 +503,8 @@ class _BankStatementReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

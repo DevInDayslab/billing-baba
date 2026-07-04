@@ -1,10 +1,12 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -39,20 +41,37 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
 
   @override
   Widget build(BuildContext context) {
-    final selectedItem = ref.watch(reportSelectedItemNameProvider);
-    final rows = ref.watch(reportItemDetailProvider(selectedItem));
-    final itemNames = InventoryCatalog.items.map((i) => i.name).toList();
-
-    double runningClosing(int index) {
-      var balance = 0.0;
-      for (var i = 0; i <= index; i++) {
-        final row = rows[i];
-        balance += row.type == 'Sale' ? -row.quantity : row.quantity;
+    final filters = ref.watch(reportFiltersProvider);
+    final selectedItemId = filters.itemId;
+    final items = ref.watch(inventoryItemsProvider).value ?? [];
+    var selectedItemName = 'Select Item';
+    if (selectedItemId != null) {
+      for (final item in items) {
+        if (item.id == selectedItemId) {
+          selectedItemName = item.name;
+          break;
+        }
       }
-      return balance;
     }
+    final itemNames = items.map((item) => item.name).toList();
+    final reportAsync = ref.watch(itemDetailReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(itemDetailReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report?.rows ?? const [];
+
+        double runningClosing(int index) {
+          var balance = 0.0;
+          for (var i = 0; i <= index; i++) {
+            final row = rows[i];
+            balance += row.type == 'Sale' ? -row.quantity : row.quantity;
+          }
+          return balance;
+        }
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -204,14 +223,23 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
                               SizedBox(
                                 width: 260,
                                 child: SaleFilterDropdown(
-                                  label: selectedItem,
-                                  options: itemNames,
-                                  selected: selectedItem,
-                                  onSelected: (value) => ref
-                                      .read(
-                                        reportSelectedItemNameProvider.notifier,
-                                      )
-                                      .select(value),
+                                  label: selectedItemName,
+                                  options: ['Select Item', ...itemNames],
+                                  selected: selectedItemName,
+                                  onSelected: (value) {
+                                    if (value == 'Select Item') {
+                                      ref
+                                          .read(reportFiltersProvider.notifier)
+                                          .setItemId(null);
+                                      return;
+                                    }
+                                    final item = items.firstWhere(
+                                      (entry) => entry.name == value,
+                                    );
+                                    ref
+                                        .read(reportFiltersProvider.notifier)
+                                        .setItemId(item.id);
+                                  },
                                 ),
                               ),
                             ],
@@ -238,7 +266,54 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
                     const Divider(height: 1, color: reportCardBorder),
                     const Divider(height: 1, color: reportCardBorder),
                     Expanded(
-                      child: rows.isEmpty
+                      child: selectedItemId == null || selectedItemId.isEmpty
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ReportSyncScrollTable(
+                                  headerChildren: const [
+                                    ReportAlignedHeaderCell(
+                                      label: 'DATE',
+                                      width: 120,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'SALE QUANTITY',
+                                      width: 130,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'PURCHASE QUANTITY',
+                                      width: 150,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'ADJUSTMENT QUANTITY',
+                                      width: 170,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                    Expanded(
+                                      child: ReportAlignedHeaderCell(
+                                        label: 'CLOSING QUANTITY',
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                    ),
+                                  ],
+                                  rows: const [],
+                                ),
+                                const Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      'Select an item to view the report.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : rows.isEmpty
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
@@ -367,6 +442,21 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
                               ),
                             ),
                     ),
+                    if (report != null)
+                      ReportPaginationBar(
+                        page: report.meta.page,
+                        totalPages: report.meta.totalPages,
+                        onPrevious: report.meta.page > 1
+                            ? () => ref
+                                  .read(itemDetailReportProvider.notifier)
+                                  .goToPage(report.meta.page - 1)
+                            : null,
+                        onNext: report.meta.page < report.meta.totalPages
+                            ? () => ref
+                                  .read(itemDetailReportProvider.notifier)
+                                  .goToPage(report.meta.page + 1)
+                            : null,
+                      ),
                   ],
                 ),
               ),
@@ -374,6 +464,8 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

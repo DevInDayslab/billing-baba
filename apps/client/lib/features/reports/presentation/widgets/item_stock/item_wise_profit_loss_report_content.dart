@@ -3,7 +3,9 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -41,13 +43,51 @@ class _ItemWiseProfitLossReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportItemWiseProfitLossProvider);
-    final totalSale =
-        rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
-    final totalProfit =
-        rows.fold<double>(0, (sum, row) => sum + row.profit);
+    final reportAsync = ref.watch(itemWiseProfitLossReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () =>
+          ref.read(itemWiseProfitLossReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalSale =
+            rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
+        final totalProfit =
+            rows.fold<double>(0, (sum, row) => sum + row.profit);
+        const exportHeaders = [
+          'Item Name',
+          'Sale',
+          'CR. Note / Sale Return',
+          'Purchase',
+          'DR. Note / Purchase Return',
+          'Opening Stock',
+          'Closing Stock',
+          'Tax Receivable',
+          'Tax Payable',
+          'MFG. Cost',
+          'Consumption Cost',
+          'Net Profit/Loss',
+        ];
+        final exportRows = [
+          for (final row in rows)
+            [
+              row.itemName,
+              formatReportCurrency(row.saleAmount),
+              '-',
+              formatReportCurrency(row.purchaseAmount),
+              '-',
+              '-',
+              '-',
+              '-',
+              '-',
+              '-',
+              '-',
+              formatReportCurrency(row.profit),
+            ],
+        ];
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -170,13 +210,26 @@ class _ItemWiseProfitLossReportContentState
                       ),
                     ],
                   ),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Excel',
                     icon: Icons.table_chart_outlined,
+                    onTap: () => reportExportTable(
+                      context: context,
+                      title: 'Item Wise Profit / Loss',
+                      filename: 'item-wise-profit-loss',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Print',
                     icon: Icons.print_outlined,
+                    onTap: () => reportPrintTable(
+                      context: context,
+                      title: 'Item Wise Profit / Loss',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
                 ],
               ),
@@ -329,6 +382,20 @@ class _ItemWiseProfitLossReportContentState
                         ],
                       ),
                     ),
+                    ReportPaginationBar(
+                      page: report.meta.page,
+                      totalPages: report.meta.totalPages,
+                      onPrevious: report.meta.page > 1
+                          ? () => ref
+                                .read(itemWiseProfitLossReportProvider.notifier)
+                                .goToPage(report.meta.page - 1)
+                          : null,
+                      onNext: report.meta.page < report.meta.totalPages
+                          ? () => ref
+                                .read(itemWiseProfitLossReportProvider.notifier)
+                                .goToPage(report.meta.page + 1)
+                          : null,
+                    ),
                   ],
                 ),
               ),
@@ -336,6 +403,8 @@ class _ItemWiseProfitLossReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 }
