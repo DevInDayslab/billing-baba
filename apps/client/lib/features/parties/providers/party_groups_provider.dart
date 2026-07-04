@@ -1,16 +1,11 @@
-import 'package:billing_baba/features/parties/providers/parties_provider.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-const defaultPartyGroups = [
-  'Bags',
-  'Retail',
-  'Wholesale',
-  'Distributors',
-  'Etc',
-];
+const defaultPartyGroups = <String>[];
 
-final partyGroupsProvider =
-    NotifierProvider<PartyGroups, List<String>>(PartyGroups.new);
+final partyGroupsProvider = NotifierProvider<PartyGroups, List<String>>(
+  PartyGroups.new,
+);
 
 class PartyGroups extends Notifier<List<String>> {
   @override
@@ -39,14 +34,14 @@ class PartyGroups extends Notifier<List<String>> {
     state = [
       for (final group in state) group == oldName ? trimmed : group,
     ];
-    ref.read(partiesProvider.notifier).renamePartyGroup(oldName, trimmed);
+    ref.read(partyListProvider.notifier).renamePartyGroup(oldName, trimmed);
     return true;
   }
 
   bool deleteGroup(String name) {
     if (!state.contains(name)) return false;
     state = state.where((group) => group != name).toList();
-    ref.read(partiesProvider.notifier).clearPartyGroup(name);
+    ref.read(partyListProvider.notifier).clearPartyGroup(name);
     return true;
   }
 }

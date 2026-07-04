@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
@@ -8,19 +9,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _dialogMaxWidth = 480.0;
 
-Future<void> showAddUnitDialog(BuildContext context) {
+Future<void> showAddUnitDialog(
+  BuildContext context, {
+  InventoryUnit? editUnit,
+}) {
   return showDialog<void>(
     context: context,
-    builder: (context) => const Dialog(
+    builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: AddUnitDialog(),
+      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: AddUnitDialog(editUnit: editUnit),
     ),
   );
 }
 
 class AddUnitDialog extends ConsumerStatefulWidget {
-  const AddUnitDialog({super.key});
+  const AddUnitDialog({this.editUnit, super.key});
+
+  final InventoryUnit? editUnit;
 
   @override
   ConsumerState<AddUnitDialog> createState() => _AddUnitDialogState();
@@ -31,10 +37,17 @@ class _AddUnitDialogState extends ConsumerState<AddUnitDialog> {
   final _shortNameController = TextEditingController();
   final _fullNameFocusNode = FocusNode();
   String? _errorMessage;
+  bool _isLoading = false;
+
+  bool get _isEditing => widget.editUnit != null;
 
   @override
   void initState() {
     super.initState();
+    if (widget.editUnit != null) {
+      _fullNameController.text = widget.editUnit!.fullName;
+      _shortNameController.text = widget.editUnit!.shortName;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fullNameFocusNode.requestFocus();
     });
@@ -60,27 +73,41 @@ class _AddUnitDialogState extends ConsumerState<AddUnitDialog> {
     _fullNameFocusNode.requestFocus();
   }
 
-  bool _createUnit({required bool saveAndNew}) {
-    final result = ref.read(inventoryUnitsProvider.notifier).addUnit(
-      fullName: _fullNameController.text,
-      shortName: _shortNameController.text,
-    );
+  Future<void> _saveUnit({required bool saveAndNew}) async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+
+    final notifier = ref.read(inventoryUnitsProvider.notifier);
+    final result = _isEditing
+        ? await notifier.updateUnit(
+            id: widget.editUnit!.id,
+            fullName: _fullNameController.text,
+            shortName: _shortNameController.text,
+          )
+        : await notifier.addUnit(
+            fullName: _fullNameController.text,
+            shortName: _shortNameController.text,
+          );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
 
     if (!result.isSuccess) {
       setState(() => _errorMessage = result.error);
-      return false;
+      return;
     }
 
-    ref.read(selectedUnitIdProvider.notifier).select(result.unit!.id);
+    if (!_isEditing) {
+      ref.read(selectedUnitIdProvider.notifier).selected = result.unit!.id;
+    }
 
-    if (saveAndNew) {
+    if (saveAndNew && !_isEditing) {
       setState(() => _errorMessage = null);
       _clearFields();
-      return true;
+      return;
     }
 
     Navigator.of(context).pop();
-    return true;
   }
 
   @override
@@ -111,10 +138,10 @@ class _AddUnitDialogState extends ConsumerState<AddUnitDialog> {
             children: [
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'New Unit',
-                      style: TextStyle(
+                      _isEditing ? 'Edit Unit' : 'New Unit',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
@@ -177,7 +204,7 @@ class _AddUnitDialogState extends ConsumerState<AddUnitDialog> {
                           textInputAction: TextInputAction.done,
                           textCapitalization: TextCapitalization.characters,
                           onChanged: (_) => _clearError(),
-                          onSubmitted: (_) => _createUnit(saveAndNew: false),
+                          onSubmitted: (_) => _saveUnit(saveAndNew: false),
                           decoration: buildSaleFieldDecoration(
                             hint: 'e.g., Pcs',
                             hasError: hasError,
@@ -203,28 +230,34 @@ class _AddUnitDialogState extends ConsumerState<AddUnitDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   FilledButton(
-                    onPressed: () => _createUnit(saveAndNew: false),
+                    onPressed: _isLoading
+                        ? null
+                        : () => _saveUnit(saveAndNew: false),
                     style: buttonStyle,
-                    child: const Text(
-                      'Save',
-                      style: TextStyle(
+                    child: Text(
+                      _isEditing ? 'Save' : 'Save',
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  FilledButton(
-                    onPressed: () => _createUnit(saveAndNew: true),
-                    style: buttonStyle,
-                    child: const Text(
-                      'Save New',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                  if (!_isEditing) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    FilledButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => _saveUnit(saveAndNew: true),
+                      style: buttonStyle,
+                      child: const Text(
+                        'Save New',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ],

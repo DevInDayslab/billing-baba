@@ -3,6 +3,7 @@ import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 class JobWorkOutRawMaterialItem {
   const JobWorkOutRawMaterialItem({
     required this.id,
+    this.itemId,
     this.itemName = '',
     this.qty = 0,
     this.unit = 'NONE',
@@ -14,6 +15,7 @@ class JobWorkOutRawMaterialItem {
   }
 
   final String id;
+  final String? itemId;
   final String itemName;
   final double qty;
   final String unit;
@@ -22,6 +24,7 @@ class JobWorkOutRawMaterialItem {
   double get estimatedCost => qty * purchasePrice;
 
   JobWorkOutRawMaterialItem copyWith({
+    String? itemId,
     String? itemName,
     double? qty,
     String? unit,
@@ -29,6 +32,7 @@ class JobWorkOutRawMaterialItem {
   }) {
     return JobWorkOutRawMaterialItem(
       id: id,
+      itemId: itemId ?? this.itemId,
       itemName: itemName ?? this.itemName,
       qty: qty ?? this.qty,
       unit: unit ?? this.unit,
@@ -59,6 +63,8 @@ class JobWorkOutAdditionalCost {
 
 class JobWorkOutFormState {
   const JobWorkOutFormState({
+    this.orderId,
+    this.partyId,
     this.party = '',
     this.phoneNo = '',
     this.jobId = '',
@@ -73,8 +79,12 @@ class JobWorkOutFormState {
     this.attachedImages = const [],
     this.attachedDocuments = const [],
     this.showValidationErrors = false,
+    this.isSaving = false,
+    this.saveError,
   });
 
+  final String? orderId;
+  final String? partyId;
   final String party;
   final String phoneNo;
   final String jobId;
@@ -89,6 +99,8 @@ class JobWorkOutFormState {
   final List<SaleFormAttachment> attachedImages;
   final List<SaleFormAttachment> attachedDocuments;
   final bool showValidationErrors;
+  final bool isSaving;
+  final String? saveError;
 
   double get rawMaterialsTotal =>
       rawMaterials.fold<double>(0, (sum, item) => sum + item.estimatedCost);
@@ -104,9 +116,14 @@ class JobWorkOutFormState {
       showValidationErrors && finishedGoodName.trim().isEmpty;
 
   bool get isValid =>
-      party.trim().isNotEmpty && finishedGoodName.trim().isNotEmpty;
+      party.trim().isNotEmpty &&
+      partyId != null &&
+      partyId!.isNotEmpty &&
+      finishedGoodName.trim().isNotEmpty;
 
   JobWorkOutFormState copyWith({
+    String? orderId,
+    String? partyId,
     String? party,
     String? phoneNo,
     String? jobId,
@@ -121,8 +138,13 @@ class JobWorkOutFormState {
     List<SaleFormAttachment>? attachedImages,
     List<SaleFormAttachment>? attachedDocuments,
     bool? showValidationErrors,
+    bool? isSaving,
+    String? saveError,
+    bool clearSaveError = false,
   }) {
     return JobWorkOutFormState(
+      orderId: orderId ?? this.orderId,
+      partyId: partyId ?? this.partyId,
       party: party ?? this.party,
       phoneNo: phoneNo ?? this.phoneNo,
       jobId: jobId ?? this.jobId,
@@ -136,85 +158,33 @@ class JobWorkOutFormState {
       description: description ?? this.description,
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
-      showValidationErrors:
-          showValidationErrors ?? this.showValidationErrors,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
+      isSaving: isSaving ?? this.isSaving,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }
 }
 
-enum JobWorkOutStatus { open, closed }
+enum JobWorkOutStatus { open, closed, cancelled }
 
-class SavedJobWorkOut {
-  const SavedJobWorkOut({
+class JobWorkOrderListItem {
+  const JobWorkOrderListItem({
     required this.id,
     required this.party,
-    required this.phoneNo,
     required this.jobId,
     required this.invoiceDate,
     required this.deliveryDate,
-    required this.finishedGoodName,
-    required this.finishedGoodQty,
-    required this.finishedGoodUnit,
-    required this.rawMaterials,
-    required this.additionalCosts,
-    required this.description,
-    required this.attachedImages,
-    required this.attachedDocuments,
-    required this.grandTotal,
     required this.status,
-    required this.savedAt,
+    required this.grandTotal,
   });
-
-  factory SavedJobWorkOut.fromFormState({
-    required String id,
-    required JobWorkOutFormState form,
-  }) {
-    return SavedJobWorkOut(
-      id: id,
-      party: form.party,
-      phoneNo: form.phoneNo,
-      jobId: form.jobId,
-      invoiceDate: form.invoiceDate,
-      deliveryDate: form.deliveryDate,
-      finishedGoodName: form.finishedGoodName,
-      finishedGoodQty: form.finishedGoodQty,
-      finishedGoodUnit: form.finishedGoodUnit,
-      rawMaterials: List<JobWorkOutRawMaterialItem>.from(form.rawMaterials),
-      additionalCosts:
-          List<JobWorkOutAdditionalCost>.from(form.additionalCosts),
-      description: form.description,
-      attachedImages: List<SaleFormAttachment>.from(form.attachedImages),
-      attachedDocuments: List<SaleFormAttachment>.from(form.attachedDocuments),
-      grandTotal: form.grandTotal,
-      status: JobWorkOutStatus.open,
-      savedAt: DateTime.now(),
-    );
-  }
 
   final String id;
   final String party;
-  final String phoneNo;
   final String jobId;
   final DateTime? invoiceDate;
   final DateTime? deliveryDate;
-  final String finishedGoodName;
-  final double finishedGoodQty;
-  final String finishedGoodUnit;
-  final List<JobWorkOutRawMaterialItem> rawMaterials;
-  final List<JobWorkOutAdditionalCost> additionalCosts;
-  final String description;
-  final List<SaleFormAttachment> attachedImages;
-  final List<SaleFormAttachment> attachedDocuments;
-  final double grandTotal;
   final JobWorkOutStatus status;
-  final DateTime savedAt;
-}
-
-int _savedJobWorkOutCounter = 0;
-
-String nextSavedJobWorkOutId() {
-  _savedJobWorkOutCounter += 1;
-  return 'job_work_out_$_savedJobWorkOutCounter';
+  final double grandTotal;
 }
 
 int _rawMaterialCounter = 0;

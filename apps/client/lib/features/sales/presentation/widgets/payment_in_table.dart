@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/payment_in_status_badge.dart';
 import 'package:billing_baba/features/sales/providers/payment_in_provider.dart';
@@ -38,7 +39,9 @@ class PaymentInTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final recordsAsync = ref.watch(paymentInRecordsProvider);
     final paginated = ref.watch(paginatedPaymentInRecordsProvider);
+    final notifier = ref.read(paymentInRecordsProvider.notifier);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -66,55 +69,80 @@ class PaymentInTable extends ConsumerWidget {
                 ),
                 const Spacer(),
                 IconButton(
-                  onPressed: () => debugPrint('Search tapped'),
-                  icon: const Icon(Icons.search, size: 20),
+                  onPressed: notifier.refresh,
+                  icon: const Icon(Icons.refresh, size: 20),
                   color: AppColors.textSecondary,
-                  tooltip: 'Search',
+                  tooltip: 'Refresh',
                 ),
               ],
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          if (paginated.items.isEmpty)
-            const Padding(
+          recordsAsync.when(
+            loading: () => const Padding(
               padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(
-                child: Text(
-                  'No payment records found',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, _) => Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                children: [
+                  Text(
+                    SalesErrorMapper.messageFor(error),
+                    style: const TextStyle(color: AppColors.error),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton(
+                    onPressed: notifier.refresh,
+                    child: const Text('Retry'),
+                  ),
+                ],
               ),
-            )
-          else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final tableWidth = constraints.maxWidth.clamp(
-                  _minTableWidth,
-                  double.infinity,
-                );
-
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: tableWidth,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const _TableHeaderRow(),
-                        for (var i = 0; i < paginated.items.length; i++) ...[
-                          if (i > 0)
-                            const Divider(height: 1, color: _cardBorder),
-                          _buildRow(paginated.items[i]),
-                        ],
-                      ],
+            ),
+            data: (_) {
+              if (paginated.items.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(AppSpacing.xl),
+                  child: Center(
+                    child: Text(
+                      'No payment records found',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ),
                 );
-              },
-            ),
+              }
+
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final tableWidth = constraints.maxWidth.clamp(
+                    _minTableWidth,
+                    double.infinity,
+                  );
+
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: tableWidth,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const _TableHeaderRow(),
+                          for (var i = 0; i < paginated.items.length; i++) ...[
+                            if (i > 0)
+                              const Divider(height: 1, color: _cardBorder),
+                            _buildRow(paginated.items[i]),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
           const Divider(height: 1, color: _cardBorder),
           _PaginationRow(
             currentPage: paginated.currentPage,

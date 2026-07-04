@@ -11,11 +11,27 @@ class BusinessCache {
 
   final StorageService _storage;
 
-  Future<void> saveBusinesses(List<Map<String, dynamic>> businesses) async {
+  Future<void> saveBusinesses(
+    List<Map<String, dynamic>> businesses, {
+    required String accountId,
+  }) async {
+    await _storage.write(StorageKeys.cachedBusinessesAccountId, accountId);
     await _storage.write(
       StorageKeys.cachedBusinesses,
       jsonEncode(businesses),
     );
+  }
+
+  String? readCachedBusinessesAccountId() =>
+      _storage.read(StorageKeys.cachedBusinessesAccountId);
+
+  Future<void> clearAll() async {
+    await _storage.write(StorageKeys.cachedBusinesses, '[]');
+    await _storage.write(StorageKeys.cachedBusinessesAccountId, '');
+    await _storage.write(StorageKeys.cachedProfile, '');
+    await _storage.write(StorageKeys.lastOpenedBusinessId, '');
+    await _storage.write(StorageKeys.cachedBusinessProfile, '');
+    await _storage.write(StorageKeys.pendingBusinessCreates, '[]');
   }
 
   Future<List<Map<String, dynamic>>> readBusinesses() async {
@@ -25,7 +41,7 @@ class BusinessCache {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
       return decoded.cast<Map<String, dynamic>>();
-    } catch (_) {
+    } on Object catch (_) {
       return [];
     }
   }
@@ -44,7 +60,7 @@ class BusinessCache {
       return AccountProfile.fromJson(
         jsonDecode(raw) as Map<String, dynamic>,
       );
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }
@@ -72,7 +88,7 @@ class BusinessCache {
       final decoded = jsonDecode(raw);
       if (decoded is! List) return [];
       return decoded.cast<Map<String, dynamic>>();
-    } catch (_) {
+    } on Object catch (_) {
       return [];
     }
   }
@@ -95,7 +111,7 @@ class BusinessCache {
       return BusinessProfileModel.fromJson(
         jsonDecode(raw) as Map<String, dynamic>,
       );
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }
@@ -119,7 +135,16 @@ class BusinessCache {
         )
         .toList();
 
-    await saveBusinesses(updated);
+    final accountId = readCachedBusinessesAccountId();
+    if (accountId == null || accountId.isEmpty) {
+      await _storage.write(
+        StorageKeys.cachedBusinesses,
+        jsonEncode(updated),
+      );
+      return;
+    }
+
+    await saveBusinesses(updated, accountId: accountId);
   }
 
   Future<void> updateSelectedBusiness(BusinessProfileModel profile) async {

@@ -21,12 +21,13 @@ class TransactionReportFilterBar extends StatefulWidget {
       _TransactionReportFilterBarState();
 }
 
-class _TransactionReportFilterBarState extends State<TransactionReportFilterBar> {
+class _TransactionReportFilterBarState
+    extends State<TransactionReportFilterBar> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   late String _timeRange;
   late String _firm;
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2025, 9, 1),
+    start: DateTime(2025, 9),
     end: DateTime(2025, 9, 30),
   );
 

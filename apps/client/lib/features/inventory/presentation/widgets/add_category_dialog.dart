@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
@@ -8,19 +9,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _dialogMaxWidth = 400.0;
 
-Future<void> showAddCategoryDialog(BuildContext context) {
+Future<void> showAddCategoryDialog(
+  BuildContext context, {
+  InventoryCategory? editCategory,
+}) {
   return showDialog<void>(
     context: context,
-    builder: (context) => const Dialog(
+    builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: AddCategoryDialog(),
+      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: AddCategoryDialog(editCategory: editCategory),
     ),
   );
 }
 
 class AddCategoryDialog extends ConsumerStatefulWidget {
-  const AddCategoryDialog({super.key});
+  const AddCategoryDialog({this.editCategory, super.key});
+
+  final InventoryCategory? editCategory;
 
   @override
   ConsumerState<AddCategoryDialog> createState() => _AddCategoryDialogState();
@@ -30,10 +36,16 @@ class _AddCategoryDialogState extends ConsumerState<AddCategoryDialog> {
   final _nameController = TextEditingController();
   final _focusNode = FocusNode();
   String? _errorMessage;
+  bool _isLoading = false;
+
+  bool get _isEditing => widget.editCategory != null;
 
   @override
   void initState() {
     super.initState();
+    if (widget.editCategory != null) {
+      _nameController.text = widget.editCategory!.name;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
@@ -46,19 +58,29 @@ class _AddCategoryDialogState extends ConsumerState<AddCategoryDialog> {
     super.dispose();
   }
 
-  void _createCategory() {
-    final result = ref
-        .read(inventoryCategoriesProvider.notifier)
-        .addCategory(_nameController.text);
+  Future<void> _saveCategory() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+    final notifier = ref.read(inventoryCategoriesProvider.notifier);
+    final result = _isEditing
+        ? await notifier.updateCategory(
+            widget.editCategory!.id,
+            _nameController.text,
+          )
+        : await notifier.addCategory(_nameController.text);
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
 
     if (!result.isSuccess) {
       setState(() => _errorMessage = result.error);
       return;
     }
 
-    ref
-        .read(selectedCategoryIdProvider.notifier)
-        .select(result.category!.id);
+    if (!_isEditing) {
+      ref.read(selectedCategoryIdProvider.notifier).selected =
+          result.category!.id;
+    }
 
     Navigator.of(context).pop();
   }
@@ -81,10 +103,10 @@ class _AddCategoryDialogState extends ConsumerState<AddCategoryDialog> {
             children: [
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Add Category',
-                      style: TextStyle(
+                      _isEditing ? 'Edit Category' : 'Add Category',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
@@ -118,7 +140,7 @@ class _AddCategoryDialogState extends ConsumerState<AddCategoryDialog> {
                     setState(() => _errorMessage = null);
                   }
                 },
-                onSubmitted: (_) => _createCategory(),
+                onSubmitted: (_) => _saveCategory(),
                 decoration: buildSaleFieldDecoration(
                   hint: 'e.g., Grocery',
                   hasError: hasError,
@@ -138,7 +160,7 @@ class _AddCategoryDialogState extends ConsumerState<AddCategoryDialog> {
               SizedBox(
                 height: inventoryButtonHeight,
                 child: FilledButton(
-                  onPressed: _createCategory,
+                  onPressed: _isLoading ? null : _saveCategory,
                   style: FilledButton.styleFrom(
                     backgroundColor: inventoryNegativeColor,
                     foregroundColor: Colors.white,
@@ -147,13 +169,22 @@ class _AddCategoryDialogState extends ConsumerState<AddCategoryDialog> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-                  child: const Text(
-                    'Create',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _isEditing ? 'Save' : 'Create',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],

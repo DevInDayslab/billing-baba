@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/text_input_formatters.dart';
 import 'package:billing_baba/core/utils/validators.dart';
@@ -131,8 +133,9 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
-    final created =
-        await ref.read(createBusinessFormProvider.notifier).submit(_buildInput());
+    final created = await ref
+        .read(createBusinessFormProvider.notifier)
+        .submit(_buildInput());
     if (!mounted) return;
 
     if (created != null) {
@@ -145,7 +148,8 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
   }
 
   void _showGenericErrorDialog() {
-    showDialog<void>(
+    unawaited(
+      showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Could not create business'),
@@ -159,6 +163,7 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -166,11 +171,16 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
   Widget build(BuildContext context) {
     final formState = ref.watch(createBusinessFormProvider);
 
-    ref.listen<CreateBusinessFormState>(createBusinessFormProvider, (prev, next) {
+    ref.listen<CreateBusinessFormState>(createBusinessFormProvider, (
+      prev,
+      next,
+    ) {
       if (next.showGenericErrorDialog &&
           (prev == null || !prev.showGenericErrorDialog)) {
         _showGenericErrorDialog();
-        ref.read(createBusinessFormProvider.notifier).acknowledgeGenericDialog();
+        ref
+            .read(createBusinessFormProvider.notifier)
+            .acknowledgeGenericDialog();
       }
     });
 
@@ -301,7 +311,8 @@ class _CreateBusinessFormContent extends StatelessWidget {
                   children: [
                     Text(
                       'Create Business',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
                           ),
@@ -310,8 +321,8 @@ class _CreateBusinessFormContent extends StatelessWidget {
                     Text(
                       "Let's set up your first business.",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -548,9 +559,9 @@ class _SectionHeader extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
         ),
       ],
     );

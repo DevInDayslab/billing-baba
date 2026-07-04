@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart' as api;
 import 'package:flutter/material.dart';
 
 /// Document types that share the estimate/proforma form layout.
@@ -11,18 +12,28 @@ enum SaleDocumentType {
     SaleDocumentType.estimate => 'Estimate saved',
     SaleDocumentType.proforma => 'Proforma invoice saved',
   };
+
+  api.SalesDocumentType get backendType => api.SalesDocumentType.estimate;
+
+  String get documentSeries => switch (this) {
+    SaleDocumentType.estimate => api.SalesConstants.estimateSeries,
+    SaleDocumentType.proforma => api.SalesConstants.proformaSeries,
+  };
 }
 
 /// Form state for Estimate/Quotation and Proforma Invoice pages.
 class SaleDocumentFormState {
   const SaleDocumentFormState({
     this.isFormOpen = false,
+    this.documentId,
+    this.partyId,
     this.party = '',
     this.refNo = '',
     this.invoiceDate,
     this.invoiceTime,
     this.stateOfSupply = '',
     this.godown = 'Main Godown',
+    this.godownId,
     this.items = const [],
     this.description = '',
     this.attachedImages = const [],
@@ -30,15 +41,21 @@ class SaleDocumentFormState {
     this.taxOption = 'NONE',
     this.roundOff = false,
     this.showValidationErrors = false,
+    this.isLoading = false,
+    this.isSaving = false,
+    this.saveError,
   });
 
   final bool isFormOpen;
+  final String? documentId;
+  final String? partyId;
   final String party;
   final String refNo;
   final DateTime? invoiceDate;
   final TimeOfDay? invoiceTime;
   final String stateOfSupply;
   final String godown;
+  final String? godownId;
   final List<SaleLineItem> items;
   final String description;
   final List<SaleFormAttachment> attachedImages;
@@ -46,6 +63,9 @@ class SaleDocumentFormState {
   final String taxOption;
   final bool roundOff;
   final bool showValidationErrors;
+  final bool isLoading;
+  final bool isSaving;
+  final String? saveError;
 
   double get subtotal =>
       items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
@@ -66,25 +86,30 @@ class SaleDocumentFormState {
     return roundOff ? grand.roundToDouble() : grand;
   }
 
-  bool get partyHasError =>
-      showValidationErrors && party.trim().isEmpty;
+  bool get partyHasError => showValidationErrors && party.trim().isEmpty;
 
   bool get hasValidLineItems =>
       items.any((item) => item.itemName.trim().isNotEmpty);
 
-  bool get lineItemsHasError =>
-      showValidationErrors && !hasValidLineItems;
+  bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
-  bool get isValid => party.trim().isNotEmpty && hasValidLineItems;
+  bool get isValid =>
+      party.trim().isNotEmpty &&
+      partyId != null &&
+      partyId!.isNotEmpty &&
+      hasValidLineItems;
 
   SaleDocumentFormState copyWith({
     bool? isFormOpen,
+    String? documentId,
+    String? partyId,
     String? party,
     String? refNo,
     DateTime? invoiceDate,
     TimeOfDay? invoiceTime,
     String? stateOfSupply,
     String? godown,
+    String? godownId,
     List<SaleLineItem>? items,
     String? description,
     List<SaleFormAttachment>? attachedImages,
@@ -92,23 +117,32 @@ class SaleDocumentFormState {
     String? taxOption,
     bool? roundOff,
     bool? showValidationErrors,
+    bool? isLoading,
+    bool? isSaving,
+    String? saveError,
+    bool clearSaveError = false,
   }) {
     return SaleDocumentFormState(
       isFormOpen: isFormOpen ?? this.isFormOpen,
+      documentId: documentId ?? this.documentId,
+      partyId: partyId ?? this.partyId,
       party: party ?? this.party,
       refNo: refNo ?? this.refNo,
       invoiceDate: invoiceDate ?? this.invoiceDate,
       invoiceTime: invoiceTime ?? this.invoiceTime,
       stateOfSupply: stateOfSupply ?? this.stateOfSupply,
       godown: godown ?? this.godown,
+      godownId: godownId ?? this.godownId,
       items: items ?? this.items,
       description: description ?? this.description,
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       taxOption: taxOption ?? this.taxOption,
       roundOff: roundOff ?? this.roundOff,
-      showValidationErrors:
-          showValidationErrors ?? this.showValidationErrors,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
+      isLoading: isLoading ?? this.isLoading,
+      isSaving: isSaving ?? this.isSaving,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }
 }

@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,10 +47,12 @@ class _SelectItemsForCategoryDialogState
   _ItemSortField _sortField = _ItemSortField.name;
   var _sortAscending = true;
 
+  bool _isMoving = false;
+
   bool _isInTargetCategory(InventoryItem item) {
-    if (widget.targetCategoryId == InventoryCatalog.uncategorizedCategoryId) {
+    if (widget.targetCategoryId == uncategorizedCategoryId) {
       return item.categoryId == null ||
-          item.categoryId == InventoryCatalog.uncategorizedCategoryId;
+          item.categoryId == uncategorizedCategoryId;
     }
     return item.categoryId == widget.targetCategoryId;
   }
@@ -62,17 +64,17 @@ class _SelectItemsForCategoryDialogState
         .where(
           (item) => query.isEmpty || item.name.toLowerCase().contains(query),
         )
-        .toList();
-
-    items.sort((a, b) {
-      final comparison = switch (_sortField) {
-        _ItemSortField.name => a.name.toLowerCase().compareTo(
-          b.name.toLowerCase(),
-        ),
-        _ItemSortField.quantity => (a.quantity ?? 0).compareTo(b.quantity ?? 0),
-      };
-      return _sortAscending ? comparison : -comparison;
-    });
+        .toList()
+      ..sort((a, b) {
+        final comparison = switch (_sortField) {
+          _ItemSortField.name => a.name.toLowerCase().compareTo(
+            b.name.toLowerCase(),
+          ),
+          _ItemSortField.quantity =>
+            (a.quantity ?? 0).compareTo(b.quantity ?? 0),
+        };
+        return _sortAscending ? comparison : -comparison;
+      });
 
     return items;
   }
@@ -90,7 +92,8 @@ class _SelectItemsForCategoryDialogState
 
   void _toggleSelectAll(List<InventoryItem> visibleItems) {
     setState(() {
-      if (_selectedIds.length == visibleItems.length && visibleItems.isNotEmpty) {
+      if (_selectedIds.length == visibleItems.length &&
+          visibleItems.isNotEmpty) {
         _selectedIds.clear();
       } else {
         _selectedIds
@@ -110,23 +113,37 @@ class _SelectItemsForCategoryDialogState
     });
   }
 
-  void _moveItems() {
-    if (_selectedIds.isEmpty) return;
+  Future<void> _moveItems() async {
+    if (_selectedIds.isEmpty || _isMoving) return;
 
-    ref.read(inventoryItemsProvider.notifier).moveItemsToCategory(
+    setState(() => _isMoving = true);
+    final error = await ref
+        .read(inventoryItemsProvider.notifier)
+        .moveItemsToCategory(
           itemIds: _selectedIds.toList(),
           categoryId: widget.targetCategoryId,
           removeFromExistingCategory: _removeFromExistingCategory,
         );
+
+    if (!mounted) return;
+    setState(() => _isMoving = false);
+
+    if (error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
 
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final allItems = ref.watch(inventoryItemsProvider);
+    final allItems = ref.watch(inventoryItemsProvider).value ?? [];
     final visibleItems = _filteredItems(allItems);
-    final allVisibleSelected = visibleItems.isNotEmpty &&
+    final allVisibleSelected =
+        visibleItems.isNotEmpty &&
         visibleItems.every((item) => _selectedIds.contains(item.id));
 
     return ConstrainedBox(
@@ -155,7 +172,10 @@ class _SelectItemsForCategoryDialogState
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -245,17 +265,21 @@ class _SelectItemsForCategoryDialogState
                     ),
                     child: const Text(
                       'Cancel',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   FilledButton(
-                    onPressed: _selectedIds.isEmpty ? null : _moveItems,
+                    onPressed: _selectedIds.isEmpty || _isMoving ? null : _moveItems,
                     style: FilledButton.styleFrom(
                       backgroundColor: inventoryNegativeColor,
-                      disabledBackgroundColor: inventoryNegativeColor.withValues(
-                        alpha: 0.4,
-                      ),
+                      disabledBackgroundColor: inventoryNegativeColor
+                          .withValues(
+                            alpha: 0.4,
+                          ),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -267,7 +291,10 @@ class _SelectItemsForCategoryDialogState
                     ),
                     child: const Text(
                       'Move to this category',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -302,7 +329,10 @@ class _ItemsTableHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 10,
+      ),
       decoration: const BoxDecoration(
         color: Color(0xFFF5F5F5),
         border: Border(bottom: BorderSide(color: inventoryCardBorder)),

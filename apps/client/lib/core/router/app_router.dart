@@ -11,6 +11,17 @@ import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.da
 import 'package:billing_baba/features/inventory/presentation/pages/items_page.dart';
 import 'package:billing_baba/features/parties/presentation/pages/party_details_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/pages/plans_pricing_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/add_debit_note_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/add_expense_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/add_purchase_fa_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/add_purchase_order_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/add_purchase_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/expenses_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/payment_out_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/purchase_bills_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/purchase_fa_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/purchase_order_page.dart';
+import 'package:billing_baba/features/purchases/presentation/pages/purchase_return_page.dart';
 import 'package:billing_baba/features/reports/presentation/pages/reports_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/add_credit_note_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/add_sale_page.dart';
@@ -49,8 +60,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           AuthStatus.needsBusinessSelection => AppRoutes.businessList,
           AuthStatus.needsBusinessCreation => AppRoutes.businessList,
           AuthStatus.otpSent => AppRoutes.verifyOtp,
-          AuthStatus.unauthenticated || AuthStatus.initializing =>
-            AppRoutes.login,
+          AuthStatus.unauthenticated ||
+          AuthStatus.initializing => AppRoutes.login,
         };
       }
 
@@ -95,7 +106,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.parties,
-            redirect: (_, __) => AppRoutes.partyDetails,
+            redirect: (_, _) => AppRoutes.partyDetails,
           ),
           GoRoute(
             path: AppRoutes.partyDetails,
@@ -178,20 +189,56 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.purchase,
-            builder: (context, state) => const ComingSoonPage(title: 'Purchase'),
+            redirect: (context, state) => AppRoutes.purchaseBills,
           ),
           GoRoute(
-            path: AppRoutes.purchaseReturn,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Purchase Return'),
+            path: AppRoutes.purchaseBills,
+            builder: (context, state) => const PurchaseBillsPage(),
           ),
           GoRoute(
-            path: AppRoutes.expenses,
-            builder: (context, state) => const ComingSoonPage(title: 'Expenses'),
+            path: AppRoutes.purchasePaymentOut,
+            builder: (context, state) => const PaymentOutPage(),
           ),
           GoRoute(
-            path: AppRoutes.debitNote,
-            builder: (context, state) => const ComingSoonPage(title: 'Debit Note'),
+            path: AppRoutes.purchaseExpenses,
+            builder: (context, state) => const ExpensesPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.purchaseOrder,
+            builder: (context, state) => const PurchaseOrderPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.purchaseReturnDebitNote,
+            builder: (context, state) => const PurchaseReturnPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addDebitNote,
+            name: 'addDebitNote',
+            builder: (context, state) => const AddDebitNotePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.purchaseFa,
+            builder: (context, state) => const PurchaseFaPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addPurchaseFa,
+            name: 'addPurchaseFa',
+            builder: (context, state) => const AddPurchaseFaPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addPurchase,
+            name: 'addPurchase',
+            builder: (context, state) => const AddPurchasePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addPurchaseOrder,
+            name: 'addPurchaseOrder',
+            builder: (context, state) => const AddPurchaseOrderPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addExpense,
+            name: 'addExpense',
+            builder: (context, state) => const AddExpensePage(),
           ),
           GoRoute(
             path: AppRoutes.reports,

@@ -10,4 +10,3 @@ enum PartyReportSubSection {
 
   final String label;
 }
-

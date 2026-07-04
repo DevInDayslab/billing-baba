@@ -13,6 +13,7 @@ class PaymentInModel {
     required this.status,
     required this.totalAmount,
     required this.receivedAmount,
+    this.partyId,
     this.discount = 0,
     this.description = '',
     this.user = 'Admin',
@@ -23,6 +24,7 @@ class PaymentInModel {
   final String receiptNo;
   final DateTime date;
   final String partyName;
+  final String? partyId;
   final String paymentType;
   final PaymentInStatus status;
   final double totalAmount;
@@ -39,6 +41,7 @@ class PaymentInModel {
     String? receiptNo,
     DateTime? date,
     String? partyName,
+    String? partyId,
     String? paymentType,
     PaymentInStatus? status,
     double? totalAmount,
@@ -53,6 +56,7 @@ class PaymentInModel {
       receiptNo: receiptNo ?? this.receiptNo,
       date: date ?? this.date,
       partyName: partyName ?? this.partyName,
+      partyId: partyId ?? this.partyId,
       paymentType: paymentType ?? this.paymentType,
       status: status ?? this.status,
       totalAmount: totalAmount ?? this.totalAmount,
@@ -63,4 +67,18 @@ class PaymentInModel {
       godown: godown ?? this.godown,
     );
   }
+}
+
+class PaginatedPaymentIn {
+  const PaginatedPaymentIn({
+    required this.items,
+    required this.currentPage,
+    required this.totalPages,
+    required this.totalItems,
+  });
+
+  final List<PaymentInModel> items;
+  final int currentPage;
+  final int totalPages;
+  final int totalItems;
 }

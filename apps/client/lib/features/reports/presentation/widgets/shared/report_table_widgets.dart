@@ -112,8 +112,9 @@ class ReportTableShell extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (toolbar != null) toolbar!,
-          if (toolbar != null) const Divider(height: 1, color: reportCardBorder),
+          ?toolbar,
+          if (toolbar != null)
+            const Divider(height: 1, color: reportCardBorder),
           header,
           const Divider(height: 1, color: reportCardBorder),
           body,

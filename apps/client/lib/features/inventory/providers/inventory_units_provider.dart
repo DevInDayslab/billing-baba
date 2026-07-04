@@ -1,15 +1,22 @@
+import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
+import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-const _uuid = Uuid();
+part 'inventory_units_provider.g.dart';
 
-final inventoryUnitsProvider =
-    NotifierProvider<InventoryUnits, List<InventoryUnit>>(
-      InventoryUnits.new,
-    );
+final unitBackendSearchProvider =
+    NotifierProvider<UnitBackendSearch, String>(UnitBackendSearch.new);
+
+class UnitBackendSearch extends Notifier<String> {
+  @override
+  String build() => '';
+
+  String get query => state;
+  set query(String value) => state = value;
+}
 
 class AddUnitResult {
   const AddUnitResult({this.unit, this.error});
@@ -29,14 +36,43 @@ class AddConversionResult {
   bool get isSuccess => conversion != null;
 }
 
-class InventoryUnits extends Notifier<List<InventoryUnit>> {
+@Riverpod(keepAlive: true)
+class InventoryUnits extends _$InventoryUnits {
   @override
-  List<InventoryUnit> build() => List.of(InventoryCatalog.units);
+  Future<List<InventoryUnit>> build() async {
+    final service = await ref.watch(inventoryServiceProvider.future);
+    return service.fetchUnits();
+  }
 
-  AddUnitResult addUnit({
+  Future<void> refresh({String? searchQuery}) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final service = await ref.read(inventoryServiceProvider.future);
+      return service.fetchUnits(
+        searchQuery: searchQuery ?? ref.read(unitBackendSearchProvider),
+      );
+    });
+  }
+
+  Future<InventoryUnit?> loadUnitDetail(String id) async {
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      final unit = await service.getUnit(id);
+      final current = state.value ?? [];
+      state = AsyncData([
+        for (final existing in current)
+          if (existing.id == id) unit else existing,
+      ]);
+      return unit;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  Future<AddUnitResult> addUnit({
     required String fullName,
     required String shortName,
-  }) {
+  }) async {
     final trimmedFullName = fullName.trim();
     final trimmedShortName = shortName.trim();
 
@@ -47,91 +83,123 @@ class InventoryUnits extends Notifier<List<InventoryUnit>> {
       return const AddUnitResult(error: 'Short name is required');
     }
 
-    final normalizedFullName = trimmedFullName.toLowerCase();
-    final normalizedShortName = trimmedShortName.toLowerCase();
-
-    final fullNameExists = state.any(
-      (unit) => unit.fullName.toLowerCase() == normalizedFullName,
-    );
-    if (fullNameExists) {
-      return const AddUnitResult(
-        error: 'A unit with this name already exists',
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      final unit = await service.createUnit(
+        fullName: trimmedFullName,
+        shortName: trimmedShortName,
       );
-    }
-
-    final shortNameExists = state.any(
-      (unit) => unit.shortName.toLowerCase() == normalizedShortName,
-    );
-    if (shortNameExists) {
-      return const AddUnitResult(
-        error: 'A unit with this short name already exists',
+      await refresh();
+      return AddUnitResult(unit: unit);
+    } on ApiValidationException catch (error) {
+      return AddUnitResult(
+        error:
+            error.fieldErrors['name'] ??
+            error.fieldErrors['short_name'] ??
+            error.message,
       );
+    } on InventoryException catch (error) {
+      return AddUnitResult(error: error.message);
+    } catch (error) {
+      return AddUnitResult(error: InventoryErrorMapper.messageFor(error));
     }
-
-    final unit = InventoryUnit(
-      id: 'unit-${_uuid.v4()}',
-      fullName: trimmedFullName.toUpperCase(),
-      shortName: trimmedShortName,
-    );
-    state = [...state, unit];
-    return AddUnitResult(unit: unit);
   }
 
-  AddConversionResult addConversion({
+  Future<AddUnitResult> updateUnit({
+    required String id,
+    required String fullName,
+    required String shortName,
+  }) async {
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      final unit = await service.updateUnit(
+        id: id,
+        fullName: fullName.trim(),
+        shortName: shortName.trim(),
+      );
+      await refresh();
+      return AddUnitResult(unit: unit);
+    } on ApiValidationException catch (error) {
+      return AddUnitResult(
+        error:
+            error.fieldErrors['name'] ??
+            error.fieldErrors['short_name'] ??
+            error.message,
+      );
+    } on InventoryException catch (error) {
+      return AddUnitResult(error: error.message);
+    } catch (error) {
+      return AddUnitResult(error: InventoryErrorMapper.messageFor(error));
+    }
+  }
+
+  Future<String?> deleteUnit(String id) async {
+    final previous = state;
+    final current = state.value ?? [];
+    state = AsyncData(current.where((unit) => unit.id != id).toList());
+
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      await service.deleteUnit(id);
+      await refresh();
+      return null;
+    } on InventoryException catch (error) {
+      state = previous;
+      return error.message;
+    } catch (error) {
+      state = previous;
+      return InventoryErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<AddConversionResult> addConversion({
     required String baseUnitId,
     required String secondaryUnitId,
     required double rate,
-  }) {
+  }) async {
     if (baseUnitId == secondaryUnitId) {
       return const AddConversionResult(
         error: 'Base and secondary units must be different',
       );
     }
 
-    final baseUnitIndex = state.indexWhere((unit) => unit.id == baseUnitId);
-    if (baseUnitIndex == -1) {
-      return const AddConversionResult(error: 'Base unit not found');
+    if (rate <= 0) {
+      return const AddConversionResult(error: 'Conversion rate must be positive');
     }
 
-    final secondaryUnit = state
-        .where((unit) => unit.id == secondaryUnitId)
-        .firstOrNull;
-    if (secondaryUnit == null) {
-      return const AddConversionResult(error: 'Secondary unit not found');
-    }
-
-    final baseUnit = state[baseUnitIndex];
-    final duplicateExists = baseUnit.conversions.any(
-      (conversion) =>
-          conversion.label.contains(secondaryUnit.fullName) &&
-          conversion.factor == rate,
-    );
-    if (duplicateExists) {
-      return const AddConversionResult(
-        error: 'This conversion already exists',
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      final conversion = await service.createUnitConversion(
+        fromUnitId: baseUnitId,
+        toUnitId: secondaryUnitId,
+        factor: rate,
       );
+      await loadUnitDetail(baseUnitId);
+      return AddConversionResult(conversion: conversion);
+    } on ApiValidationException catch (error) {
+      return AddConversionResult(
+        error:
+            error.fieldErrors['conversion_factor'] ??
+            error.fieldErrors['from_unit_id'] ??
+            error.message,
+      );
+    } on InventoryException catch (error) {
+      return AddConversionResult(error: error.message);
+    } catch (error) {
+      return AddConversionResult(error: InventoryErrorMapper.messageFor(error));
     }
+  }
 
-    final label =
-        '1 ${baseUnit.fullName} = ${rate == rate.roundToDouble() ? rate.toInt() : rate} ${secondaryUnit.fullName}';
-    final conversion = UnitConversion(
-      id: 'conv-${_uuid.v4()}',
-      label: label,
-      factor: rate,
-    );
-
-    final updatedUnit = InventoryUnit(
-      id: baseUnit.id,
-      fullName: baseUnit.fullName,
-      shortName: baseUnit.shortName,
-      conversions: [...baseUnit.conversions, conversion],
-    );
-
-    state = [
-      for (var i = 0; i < state.length; i++)
-        if (i == baseUnitIndex) updatedUnit else state[i],
-    ];
-
-    return AddConversionResult(conversion: conversion);
+  Future<String?> deleteConversion(String conversionId, String unitId) async {
+    try {
+      final service = await ref.read(inventoryServiceProvider.future);
+      await service.deleteUnitConversion(conversionId);
+      await loadUnitDetail(unitId);
+      return null;
+    } on InventoryException catch (error) {
+      return error.message;
+    } catch (error) {
+      return InventoryErrorMapper.messageFor(error);
+    }
   }
 }

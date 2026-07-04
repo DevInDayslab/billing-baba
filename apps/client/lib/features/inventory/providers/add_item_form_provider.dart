@@ -14,8 +14,8 @@ String _nextRowId() {
 
 final NotifierProvider<AddItemForm, AddItemFormState> addItemFormProvider =
     NotifierProvider.autoDispose<AddItemForm, AddItemFormState>(
-  AddItemForm.new,
-);
+      AddItemForm.new,
+    );
 
 class AddItemForm extends Notifier<AddItemFormState> {
   @override
@@ -73,6 +73,26 @@ class AddItemForm extends Notifier<AddItemFormState> {
       clearCategory: categoryId == null,
       isDirty: true,
     );
+  }
+
+  void setBrand(String? brandId) {
+    state = state.copyWith(
+      brandId: brandId,
+      clearBrand: brandId == null,
+      isDirty: true,
+    );
+  }
+
+  void setGodown(String? godownId) {
+    state = state.copyWith(
+      godownId: godownId,
+      clearGodown: godownId == null,
+      isDirty: true,
+    );
+  }
+
+  void updatePrimaryImageUrl(String value) {
+    state = state.copyWith(primaryImageUrl: value, isDirty: true);
   }
 
   void updateDescription(String value) {
@@ -157,7 +177,10 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   void addRawMaterialRow() {
     state = state.copyWith(
-      rawMaterials: [...state.rawMaterials, RawMaterialRow(id: _nextRowId())],
+      rawMaterials: [
+        ...state.rawMaterials,
+        RawMaterialRow(id: _nextRowId()),
+      ],
       isDirty: true,
     );
   }
@@ -199,8 +222,9 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   void removeAdditionalCost(String id) {
     state = state.copyWith(
-      additionalCosts:
-          state.additionalCosts.where((row) => row.id != id).toList(),
+      additionalCosts: state.additionalCosts
+          .where((row) => row.id != id)
+          .toList(),
       isDirty: true,
     );
   }

@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/credit_note_footer.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/credit_note_line_items_table.dart';
@@ -112,6 +113,11 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                         emptyPlaceholder: 'Search Party...',
                         errorMessage: 'Party is required',
                         onSelected: notifier.updateParty,
+                        onPartySelectedWithId: (partyId, name) =>
+                            notifier.updatePartyWithId(
+                              partyId: partyId,
+                              partyName: name,
+                            ),
                         onPartyCreated: (party) {
                           notifier.updateParty(party.partyName);
                           if (party.phone.isNotEmpty) {
@@ -216,6 +222,7 @@ class _BottomActionBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(creditNoteFormProvider);
     final notifier = ref.read(creditNoteFormProvider.notifier);
 
     return Padding(
@@ -235,22 +242,18 @@ class _BottomActionBar extends ConsumerWidget {
             child: const Text('Cancel', style: TextStyle(fontSize: 13)),
           ),
           const SizedBox(width: AppSpacing.sm),
-          OutlinedButton.icon(
-            onPressed: () {
+          ShareMenuButton(
+            onChannelSelected: (channel) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Share coming soon')),
+                SnackBar(content: Text('${channel.label} coming soon')),
               );
             },
-            icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-            label: const Text('Share', style: TextStyle(fontSize: 13)),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              side: const BorderSide(color: _cardBorder),
-            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           FilledButton(
-            onPressed: () => _handleSave(context, ref, notifier),
+            onPressed: form.isSaving
+                ? null
+                : () => _handleSave(context, ref, notifier),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -290,13 +293,19 @@ class _BottomActionBar extends ConsumerWidget {
     if (context.mounted) context.pop();
   }
 
-  void _handleSave(
+  Future<void> _handleSave(
     BuildContext context,
     WidgetRef ref,
     CreditNoteForm notifier,
-  ) {
-    final saved = notifier.save();
-    if (!saved) return;
+  ) async {
+    final error = await notifier.save();
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Credit note saved successfully')),

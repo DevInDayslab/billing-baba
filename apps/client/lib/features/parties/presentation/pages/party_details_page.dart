@@ -1,5 +1,8 @@
+import 'dart:async';
+
+import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/master_detail_split_layout.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_detail_panel.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_list_panel.dart';
@@ -9,34 +12,101 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _successSnackBarColor = Color(0xFF2E7D32);
+const _compactBreakpoint = 800.0;
 
 Future<void> _openAddPartyDialog(BuildContext context, WidgetRef ref) async {
   final result = await showAddPartyDialog(context);
   if (!context.mounted || result == null) return;
 
   final messenger = ScaffoldMessenger.maybeOf(context);
-  messenger?.showSnackBar(
-    SnackBar(
-      content: Text(
-        'Party "${result.partyName}" saved successfully',
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Colors.white,
+
+  try {
+    await ref.read(partyListProvider.notifier).createParty(result);
+    if (!context.mounted) return;
+    messenger?.showSnackBar(
+      SnackBar(
+        content: Text(
+          'Party "${result.partyName}" saved successfully',
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
+        backgroundColor: _successSnackBarColor,
+        behavior: SnackBarBehavior.floating,
       ),
-      backgroundColor: _successSnackBarColor,
-      behavior: SnackBarBehavior.floating,
-      duration: const Duration(seconds: 3),
-    ),
-  );
+    );
+  } on PartyOfflineException {
+    if (!context.mounted) return;
+    messenger?.showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Party saved offline. It will sync when you are back online.',
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  } on ApiValidationException catch (e) {
+    if (!context.mounted) return;
+    messenger?.showSnackBar(
+      SnackBar(
+        content: Text(e.message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  } on PartyException catch (e) {
+    if (!context.mounted) return;
+    messenger?.showSnackBar(
+      SnackBar(
+        content: Text(e.message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 }
 
-class PartyDetailsPage extends ConsumerWidget {
+class PartyDetailsPage extends ConsumerStatefulWidget {
   const PartyDetailsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selectedParty = ref.watch(selectedPartyProvider);
+  ConsumerState<PartyDetailsPage> createState() => _PartyDetailsPageState();
+}
+
+class _PartyDetailsPageState extends ConsumerState<PartyDetailsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restorePreferences());
+  }
+
+  Future<void> _restorePreferences() async {
+    final service = await ref.read(partyServiceProvider.future);
+    final remembered = service.readRememberedSelectedParty();
+    if (remembered != null && mounted) {
+      ref.read(selectedPartyIdProvider.notifier).selected = remembered;
+    }
+    final filter = service.readRememberedListFilter();
+    if (filter != null && mounted) {
+      ref.read(partyListFilterProvider.notifier).filter = filter;
+    }
+  }
+
+  void _clearSelection() {
+    ref.read(selectedPartyIdProvider.notifier).selected = null;
+    unawaited(
+      ref
+          .read(partyServiceProvider.future)
+          .then(
+            (service) => service.rememberSelectedParty(null),
+          ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedId = ref.watch(selectedPartyIdProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -52,18 +122,72 @@ class PartyDetailsPage extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               Expanded(
-                child: MasterDetailSplitLayout(
-                  listPanel: const PartyListPanel(),
-                  detailPanel: selectedParty == null
-                      ? const MasterDetailPlaceholder(
-                          message: 'Select a party to view details',
-                        )
-                      : PartyDetailPanel(party: selectedParty),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isCompact = constraints.maxWidth < _compactBreakpoint;
+
+                    if (isCompact) {
+                      if (selectedId == null) {
+                        return _buildListShell();
+                      }
+                      return PartyDetailPanel(
+                        partyId: selectedId,
+                        onBack: _clearSelection,
+                      );
+                    }
+
+                    return _buildListShell(
+                      detailPanel: selectedId == null
+                          ? const MasterDetailPlaceholder(
+                              message: 'Select a party to view details',
+                            )
+                          : PartyDetailPanel(partyId: selectedId),
+                    );
+                  },
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildListShell({Widget? detailPanel}) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: detailPanel == null
+            ? const PartyListPanel()
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(width: 360, child: PartyListPanel()),
+                  const VerticalDivider(width: 1, color: Color(0xFFE0E0E0)),
+                  Expanded(child: detailPanel),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class MasterDetailPlaceholder extends StatelessWidget {
+  const MasterDetailPlaceholder({required this.message, super.key});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        message,
+        style: const TextStyle(color: AppColors.textSecondary),
       ),
     );
   }

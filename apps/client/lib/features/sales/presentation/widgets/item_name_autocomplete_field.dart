@@ -1,11 +1,26 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+SaleItemOption saleItemOptionFromInventory(InventoryItem item) {
+  return SaleItemOption(
+    id: item.id,
+    name: item.name,
+    salePrice: item.salePrice ?? 0,
+    purchasePrice: item.purchasePrice ?? 0,
+    mfgCost: item.purchasePrice ?? 0,
+    stock: item.availableForSale ?? item.quantity ?? 0,
+    unit: item.baseUnitShortName,
+  );
+}
+
 /// Item name field with autocomplete overlay on focus.
-class ItemNameAutocompleteField extends StatefulWidget {
+class ItemNameAutocompleteField extends ConsumerStatefulWidget {
   const ItemNameAutocompleteField({
     required this.value,
     required this.onChanged,
@@ -18,11 +33,12 @@ class ItemNameAutocompleteField extends StatefulWidget {
   final ValueChanged<SaleItemOption> onItemSelected;
 
   @override
-  State<ItemNameAutocompleteField> createState() =>
+  ConsumerState<ItemNameAutocompleteField> createState() =>
       ItemNameAutocompleteFieldState();
 }
 
-class ItemNameAutocompleteFieldState extends State<ItemNameAutocompleteField> {
+class ItemNameAutocompleteFieldState
+    extends ConsumerState<ItemNameAutocompleteField> {
   final LayerLink _layerLink = LayerLink();
   final FocusNode _focusNode = FocusNode();
   OverlayEntry? _overlayEntry;
@@ -73,9 +89,15 @@ class ItemNameAutocompleteFieldState extends State<ItemNameAutocompleteField> {
   }
 
   List<SaleItemOption> get _filteredItems {
+    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final options = inventory
+        .where((item) => item.type == ItemType.product)
+        .map(saleItemOptionFromInventory)
+        .toList();
+
     final query = _controller.text.trim().toLowerCase();
-    if (query.isEmpty) return SaleItemCatalog.items;
-    return SaleItemCatalog.items
+    if (query.isEmpty) return options;
+    return options
         .where((item) => item.name.toLowerCase().contains(query))
         .toList();
   }
@@ -88,6 +110,7 @@ class ItemNameAutocompleteFieldState extends State<ItemNameAutocompleteField> {
 
     _overlayEntry = OverlayEntry(
       builder: (overlayContext) {
+        final itemsAsync = ref.watch(inventoryItemsProvider);
         final items = _filteredItems;
         return Stack(
           children: [
@@ -206,84 +229,114 @@ class ItemNameAutocompleteFieldState extends State<ItemNameAutocompleteField> {
                           ],
                         ),
                       ),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 200),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          padding: EdgeInsets.zero,
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final item = items[index];
-                            final isSelected = item.name == widget.value;
-                            return InkWell(
-                              onTap: () {
-                                _controller.text = item.name;
-                                widget.onChanged(item.name);
-                                widget.onItemSelected(item);
-                                _removeOverlay();
-                                _focusNode.unfocus();
-                              },
-                              hoverColor: const Color(0xFFF5F5F5),
-                              child: Container(
-                                color: isSelected
-                                    ? const Color(
-                                        0xFFD32F2F,
-                                      ).withValues(alpha: 0.06)
-                                    : null,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: Text(
-                                        item.name,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: isSelected
-                                              ? FontWeight.w600
-                                              : FontWeight.normal,
-                                          color: isSelected
-                                              ? const Color(0xFFD32F2F)
-                                              : AppColors.textPrimary,
+                      itemsAsync.when(
+                        loading: () => const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        error: (error, _) => const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Text(
+                            'Failed to load items',
+                            style: TextStyle(color: AppColors.error),
+                          ),
+                        ),
+                        data: (_) => ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 200),
+                          child: items.isEmpty
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: Text('No items found'),
+                                )
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  padding: EdgeInsets.zero,
+                                  itemCount: items.length,
+                                  itemBuilder: (context, index) {
+                                    final item = items[index];
+                                    final isSelected = item.name == widget.value;
+                                    return InkWell(
+                                      onTap: () {
+                                        _controller.text = item.name;
+                                        widget.onChanged(item.name);
+                                        widget.onItemSelected(item);
+                                        _removeOverlay();
+                                        _focusNode.unfocus();
+                                      },
+                                      hoverColor: const Color(0xFFF5F5F5),
+                                      child: Container(
+                                        color: isSelected
+                                            ? const Color(
+                                                0xFFD32F2F,
+                                              ).withValues(alpha: 0.06)
+                                            : null,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              flex: 3,
+                                              child: Text(
+                                                item.name,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.w600
+                                                      : FontWeight.normal,
+                                                  color: isSelected
+                                                      ? const Color(0xFFD32F2F)
+                                                      : AppColors.textPrimary,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                _priceFormat.format(
+                                                  item.salePrice,
+                                                ),
+                                                textAlign: TextAlign.right,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                _priceFormat.format(
+                                                  item.purchasePrice,
+                                                ),
+                                                textAlign: TextAlign.right,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                _priceFormat.format(item.mfgCost),
+                                                textAlign: TextAlign.right,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                '${item.stock.toInt()}',
+                                                textAlign: TextAlign.right,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        _priceFormat.format(item.salePrice),
-                                        textAlign: TextAlign.right,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        _priceFormat.format(item.purchasePrice),
-                                        textAlign: TextAlign.right,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        _priceFormat.format(item.mfgCost),
-                                        textAlign: TextAlign.right,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        '${item.stock.toInt()}',
-                                        textAlign: TextAlign.right,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ),
-                                  ],
+                                    );
+                                  },
                                 ),
-                              ),
-                            );
-                          },
                         ),
                       ),
                     ],

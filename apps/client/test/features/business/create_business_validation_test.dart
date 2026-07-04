@@ -15,8 +15,10 @@ void main() {
     });
 
     test('requiredPhone rejects invalid phone', () {
-      expect(Validators.requiredPhone('12345'),
-          'Enter a valid 10 digit phone number');
+      expect(
+        Validators.requiredPhone('12345'),
+        'Enter a valid 10 digit phone number',
+      );
     });
 
     test('email rejects invalid format', () {
@@ -75,8 +77,10 @@ void main() {
       );
 
       expect(exception, isNotNull);
-      expect(exception!.fieldErrors['gstin'],
-          'Too big: expected string to have <=15 characters');
+      expect(
+        exception!.fieldErrors['gstin'],
+        'Too big: expected string to have <=15 characters',
+      );
     });
   });
 }

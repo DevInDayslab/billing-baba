@@ -185,7 +185,10 @@ class _RawMaterialRow extends ConsumerWidget {
               width: 28,
               child: Text(
                 '${index + 1}',
-                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ),
             Expanded(
@@ -193,8 +196,10 @@ class _RawMaterialRow extends ConsumerWidget {
               child: _CompactTextField(
                 initialValue: item.itemName,
                 hintText: 'Item Name',
-                onChanged: (value) =>
-                    notifier.updateRawMaterial(index, item.copyWith(itemName: value)),
+                onChanged: (value) => notifier.updateRawMaterial(
+                  index,
+                  item.copyWith(itemName: value),
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -204,7 +209,9 @@ class _RawMaterialRow extends ConsumerWidget {
                 initialValue: item.qty == 0 ? '0' : item.qty.toString(),
                 hintText: '0',
                 textAlign: TextAlign.center,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                 ],
@@ -222,8 +229,10 @@ class _RawMaterialRow extends ConsumerWidget {
                 options: SaleDropdownOptions.units,
                 hintText: 'NONE',
                 compact: true,
-                onSelected: (value) =>
-                    notifier.updateRawMaterial(index, item.copyWith(unit: value)),
+                onSelected: (value) => notifier.updateRawMaterial(
+                  index,
+                  item.copyWith(unit: value),
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -235,7 +244,9 @@ class _RawMaterialRow extends ConsumerWidget {
                     : item.purchasePrice.toString(),
                 hintText: '0',
                 textAlign: TextAlign.right,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                 ],
@@ -322,7 +333,10 @@ class _CompactTextFieldState extends State<_CompactTextField> {
       controller: _controller,
       style: saleFieldTextStyle.copyWith(fontSize: 13),
       textAlign: widget.textAlign,
-      decoration: buildSaleFieldDecoration(hint: widget.hintText, compact: true),
+      decoration: buildSaleFieldDecoration(
+        hint: widget.hintText,
+        compact: true,
+      ),
       keyboardType: widget.keyboardType,
       inputFormatters: widget.inputFormatters,
       onChanged: widget.onChanged,

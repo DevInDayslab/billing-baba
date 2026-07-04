@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/models/auth_user.dart';
 import 'package:billing_baba/features/auth/models/business_summary.dart';
@@ -9,6 +10,8 @@ import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/auth_service.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_flow_logger.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -118,12 +121,14 @@ class AuthState {
       otpPhase: otpPhase ?? this.otpPhase,
       phone: phone ?? this.phone,
       reqId: clearReqId ? '' : reqId ?? this.reqId,
-      msg91AccessToken:
-          clearMsg91Token ? null : msg91AccessToken ?? this.msg91AccessToken,
+      msg91AccessToken: clearMsg91Token
+          ? null
+          : msg91AccessToken ?? this.msg91AccessToken,
       error: clearError ? null : error ?? this.error,
       session: clearSession ? null : session ?? this.session,
-      resendAvailableAt:
-          clearResendTimer ? null : resendAvailableAt ?? this.resendAvailableAt,
+      resendAvailableAt: clearResendTimer
+          ? null
+          : resendAvailableAt ?? this.resendAvailableAt,
       otpSessionVersion: otpSessionVersion ?? this.otpSessionVersion,
       backendLoginCompleted:
           backendLoginCompleted ?? this.backendLoginCompleted,
@@ -160,7 +165,7 @@ class Auth extends _$Auth {
   AuthState build() {
     if (!_autoLoginStarted) {
       _autoLoginStarted = true;
-      Future.microtask(tryAutoLogin);
+      unawaited(Future.microtask(tryAutoLogin));
     }
     return const AuthState();
   }
@@ -182,13 +187,30 @@ class Auth extends _$Auth {
     if (session.businesses.isEmpty) {
       return AuthStatus.needsBusinessSelection;
     }
-    if (session.businesses.length > 1) {
-      final hasBusinessScope = session.user.role != null;
-      return hasBusinessScope
-          ? AuthStatus.authenticated
-          : AuthStatus.needsBusinessSelection;
+    if (session.user.role == null) {
+      return AuthStatus.needsBusinessSelection;
     }
     return AuthStatus.authenticated;
+  }
+
+  bool _hasBusinessScope(AuthSession? session) =>
+      session != null && session.user.role != null;
+
+  Future<void> _invalidateBusinessProviders({bool includeList = false}) async {
+    if (includeList) {
+      ref.invalidate(businessListProvider);
+    }
+    ref
+      ..invalidate(businessProfileProvider)
+      ..invalidate(businessServiceProvider)
+      ..invalidate(partyListProvider)
+      ..invalidate(partyServiceProvider);
+  }
+
+  Future<void> _clearBusinessScopedCaches() async {
+    final storage = await ref.read(storageServiceProvider.future);
+    await SessionCacheCleanup(storage).clearBusinessScopedData();
+    await _invalidateBusinessProviders(includeList: true);
   }
 
   void _onOtpSent(String reqId, {required String phone}) {
@@ -250,7 +272,7 @@ class Auth extends _$Auth {
     try {
       final service = await _service();
       await service.persistSession(session);
-    } catch (_) {
+    } on Object catch (_) {
       // Best-effort until backend login is wired.
     }
 
@@ -332,7 +354,7 @@ class Auth extends _$Auth {
         return;
       }
       _onBackendLoginFailed(generation, _backendLoginErrorMessage(e));
-    } catch (e) {
+    } on Object catch (e) {
       if (generation != _verifyGeneration || state.backendLoginCompleted) {
         return;
       }
@@ -352,15 +374,14 @@ class Auth extends _$Auth {
 
     try {
       final service = await _service().timeout(const Duration(seconds: 8));
-      final sessionFuture = service
-          .loadStoredSession()
-          .timeout(const Duration(seconds: 8));
+      final sessionFuture = service.loadStoredSession().timeout(
+        const Duration(seconds: 8),
+      );
       final results = await Future.wait<Object?>([
         Future<void>.delayed(_splashMinDuration),
         sessionFuture,
       ]);
       final session = results[1] as AuthSession?;
-
       if (session == null) {
         _setAuthStatus(AuthStatus.unauthenticated);
         state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
@@ -379,7 +400,7 @@ class Auth extends _$Auth {
       await Future<void>.delayed(_splashMinDuration);
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
-    } catch (e) {
+    } on Object catch (e) {
       await Future<void>.delayed(_splashMinDuration);
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
@@ -417,7 +438,7 @@ class Auth extends _$Auth {
       _setOtpPhase(OtpPhase.idle);
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(clearReqId: true, error: e.message);
-    } catch (e) {
+    } on Object catch (e) {
       _setOtpPhase(OtpPhase.idle);
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
@@ -430,9 +451,7 @@ class Auth extends _$Auth {
   }
 
   Future<void> verifyOtp(String otp) async {
-    if (_verifyInFlight ||
-        state.backendLoginCompleted ||
-        !state.canVerifyOtp) {
+    if (_verifyInFlight || state.backendLoginCompleted || !state.canVerifyOtp) {
       return;
     }
 
@@ -484,7 +503,7 @@ class Auth extends _$Auth {
             ? 'Please check your internet connection.'
             : e.message,
       );
-    } catch (e) {
+    } on Object catch (e) {
       if (state.backendLoginCompleted || generation != _verifyGeneration) {
         return;
       }
@@ -527,7 +546,7 @@ class Auth extends _$Auth {
       debugPrint('[DEV_LOGIN] Failed: ${e.response?.statusCode ?? 'network'}');
       _setOtpPhase(OtpPhase.idle);
       state = state.copyWith(error: _devLoginErrorMessage(e));
-    } catch (e) {
+    } on Object catch (e) {
       debugPrint('[DEV_LOGIN] Failed: unknown');
       _setOtpPhase(OtpPhase.idle);
       state = state.copyWith(error: _devLoginErrorMessage(e));
@@ -537,9 +556,7 @@ class Auth extends _$Auth {
   }
 
   Future<void> resendOtp() async {
-    if (_resendInFlight ||
-        !state.canResendOtp ||
-        state.backendLoginCompleted) {
+    if (_resendInFlight || !state.canResendOtp || state.backendLoginCompleted) {
       return;
     }
 
@@ -568,7 +585,7 @@ class Auth extends _$Auth {
     } on OtpException catch (e) {
       _setOtpPhase(OtpPhase.otpSent);
       state = state.copyWith(error: e.message);
-    } catch (e) {
+    } on Object catch (e) {
       _setOtpPhase(OtpPhase.otpSent);
       state = state.copyWith(error: _messageFromError(e));
     } finally {
@@ -593,9 +610,16 @@ class Auth extends _$Auth {
         businessId: businessId,
         refreshToken: refreshToken,
       );
+      if (!_hasBusinessScope(session)) {
+        state = state.copyWith(
+          error: 'Could not select business. Please try again.',
+        );
+        return;
+      }
       _setAuthStatus(AuthStatus.authenticated);
       state = state.copyWith(session: session);
-    } catch (e) {
+      await _invalidateBusinessProviders();
+    } on Object catch (e) {
       state = state.copyWith(error: _messageFromError(e));
     }
   }
@@ -606,9 +630,11 @@ class Auth extends _$Auth {
 
     state = state.copyWith(clearError: true);
     try {
+      await _clearBusinessScopedCaches();
       final service = await _service();
       final session = await service.refreshStoredSession(
         refreshToken: refreshToken,
+        preserveBusinessScope: false,
       );
       if (session == null) {
         _setAuthStatus(AuthStatus.unauthenticated);
@@ -617,7 +643,7 @@ class Auth extends _$Auth {
       }
       _setAuthStatus(AuthStatus.needsBusinessSelection);
       state = state.copyWith(session: session);
-    } catch (e) {
+    } on Object catch (e) {
       state = state.copyWith(error: _messageFromError(e));
     }
   }
@@ -666,13 +692,15 @@ class Auth extends _$Auth {
   Future<AuthSession?> refreshAccessToken({String? businessId}) async {
     try {
       final service = await _service();
-      final session = await service.refreshStoredSession(businessId: businessId);
+      final session = await service.refreshStoredSession(
+        businessId: businessId,
+      );
       if (session != null) {
         _setAuthStatus(_statusForSession(session));
         state = state.copyWith(session: session);
       }
       return session;
-    } catch (_) {
+    } on Object catch (_) {
       return null;
     }
   }
@@ -681,6 +709,7 @@ class Auth extends _$Auth {
     try {
       final service = await _service();
       await service.logout();
+      await _invalidateBusinessProviders(includeList: true);
     } finally {
       AuthFlowLogger.reset();
       state = const AuthState(status: AuthStatus.unauthenticated);

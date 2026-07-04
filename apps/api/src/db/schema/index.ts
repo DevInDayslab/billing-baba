@@ -10,6 +10,8 @@ export * from './identity/relations';
 export * from './identity/tables';
 export * from './inventory/relations';
 export * from './inventory/tables';
+export * from './job-work/relations';
+export * from './job-work/tables';
 export * from './meta/tables';
 export * from './notifications/relations';
 export * from './notifications/tables';

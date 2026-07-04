@@ -1,24 +1,15 @@
 import swagger from '@fastify/swagger';
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '../config/app_config';
+import { buildOpenApiDocument } from '../openapi/document';
 
 export async function registerSwaggerPlugin(
   app: FastifyInstance,
   config: AppConfig,
 ): Promise<void> {
+  const document = buildOpenApiDocument(config);
+
   await app.register(swagger, {
-    openapi: {
-      info: {
-        title: config.appName,
-        version: config.version,
-        description: 'Billing Baba REST API — infrastructure endpoints only.',
-      },
-      servers: [
-        {
-          url: config.apiPrefix,
-          description: `${config.environment} API`,
-        },
-      ],
-    },
+    openapi: document as Record<string, unknown>,
   });
 }

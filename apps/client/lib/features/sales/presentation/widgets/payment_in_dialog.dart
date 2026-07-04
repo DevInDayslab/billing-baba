@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
@@ -71,20 +72,27 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
     }
   }
 
-  void _handleSave() {
+  Future<void> _handleSave() async {
     final notifier = ref.read(paymentInFormProvider.notifier);
     final payment = notifier.buildPaymentModel();
     if (payment == null) return;
 
-    notifier.savePayment();
-    if (mounted) {
+    final error = await notifier.savePayment();
+    if (!mounted) return;
+
+    if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Payment ${payment.receiptNo} saved successfully'),
-        ),
+        SnackBar(content: Text(error)),
       );
-      Navigator.of(context).pop();
+      return;
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Payment ${payment.receiptNo} saved successfully'),
+      ),
+    );
+    Navigator.of(context).pop();
   }
 
   @override
@@ -122,6 +130,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                               value: form.party,
                               emptyPlaceholder: 'Select Party',
                               onSelected: notifier.updateParty,
+                              onPartySelectedWithId: (partyId, name) =>
+                                  notifier.updateParty(name, partyId: partyId),
                               hasError:
                                   form.showValidationErrors &&
                                   form.party.trim().isEmpty,
@@ -135,8 +145,7 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                               width: 160,
                               child: SaleGenericSelectDropdown(
                                 value: form.paymentType,
-                                options:
-                                    PaymentInDropdownOptions.paymentTypes,
+                                options: PaymentInDropdownOptions.paymentTypes,
                                 compact: true,
                                 onSelected: notifier.updatePaymentType,
                               ),
@@ -159,7 +168,10 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                           const SizedBox(height: _sectionGap),
                           OutlinedButton.icon(
                             onPressed: notifier.toggleDescriptionField,
-                            icon: const Icon(Icons.description_outlined, size: 16),
+                            icon: const Icon(
+                              Icons.description_outlined,
+                              size: 16,
+                            ),
                             label: const Text(
                               'ADD DESCRIPTION',
                               style: TextStyle(
@@ -253,8 +265,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                 controller: _receivedController,
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                      decimal: true,
+                                    ),
                                 inputFormatters: [
                                   FilteringTextInputFormatter.allow(
                                     RegExp(r'^\d*\.?\d{0,2}'),
@@ -284,8 +296,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                                 controller: _discountController,
                                 keyboardType:
                                     const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                      decimal: true,
+                                    ),
                                 inputFormatters: [
                                   FilteringTextInputFormatter.allow(
                                     RegExp(r'^\d*\.?\d{0,2}'),
@@ -322,21 +334,14 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('Share'),
-                        SizedBox(width: 4),
-                        Icon(Icons.keyboard_arrow_down, size: 18),
-                      ],
-                    ),
+                  ShareMenuButton(
+                    onChannelSelected: (channel) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${channel.label} coming soon'),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   FilledButton(
@@ -520,10 +525,7 @@ class _AmountRow extends StatelessWidget {
       children: [
         Text(label, style: textStyle),
         const Spacer(),
-        if (child != null)
-          child!
-        else
-          Text(value ?? '', style: textStyle),
+        if (child != null) child! else Text(value ?? '', style: textStyle),
       ],
     );
   }

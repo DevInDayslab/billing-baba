@@ -62,7 +62,13 @@ function extractMobileValue(data: unknown): string | undefined {
     }
   }
 
-  for (const nested of [record.data, record.result, record.user, record.contact, record.payload]) {
+  for (const nested of [
+    record.data,
+    record.result,
+    record.user,
+    record.contact,
+    record.payload,
+  ]) {
     if (nested !== undefined && nested !== null) {
       const found = extractMobileValue(nested);
       if (found) return found;
@@ -78,7 +84,10 @@ function decodeJwtPayload(jwtStr: string): Record<string, unknown> | undefined {
   if (parts.length < 2 || !parts[1]) return undefined;
   try {
     const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const padded = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      '=',
+    );
     const json = Buffer.from(padded, 'base64').toString('utf8');
     const parsed = JSON.parse(json) as unknown;
     if (parsed && typeof parsed === 'object') {
@@ -115,7 +124,12 @@ function tryMobileFromWidgetJwt(jwtStr: string): string | undefined {
     if (found && TEN_DIGIT_MSISDN.test(found)) return found;
   }
 
-  for (const nested of [payload.customer, payload.user, payload.data, payload.payload]) {
+  for (const nested of [
+    payload.customer,
+    payload.user,
+    payload.data,
+    payload.payload,
+  ]) {
     if (nested !== undefined && nested !== null) {
       const found = extractMobileValue(nested);
       if (found && TEN_DIGIT_MSISDN.test(found)) return found;
@@ -128,7 +142,8 @@ function tryMobileFromWidgetJwt(jwtStr: string): string | undefined {
 function extractMsg91Code(data: unknown): number | undefined {
   if (data == null || typeof data !== 'object') return undefined;
   const record = data as Record<string, unknown>;
-  const raw = record.code ?? record.Code ?? record.error_code ?? record.errorCode;
+  const raw =
+    record.code ?? record.Code ?? record.error_code ?? record.errorCode;
   if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
   if (typeof raw === 'string') {
     const parsed = Number.parseInt(raw, 10);

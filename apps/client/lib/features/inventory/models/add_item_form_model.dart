@@ -64,6 +64,9 @@ class AddItemFormState {
     this.baseUnitId,
     this.secondaryUnitId,
     this.categoryId,
+    this.brandId,
+    this.godownId,
+    this.primaryImageUrl = '',
     this.description = '',
     this.activeTab = 0,
     this.salePrice = 0,
@@ -91,6 +94,9 @@ class AddItemFormState {
   final String? baseUnitId;
   final String? secondaryUnitId;
   final String? categoryId;
+  final String? brandId;
+  final String? godownId;
+  final String primaryImageUrl;
   final String description;
   final int activeTab;
   final double salePrice;
@@ -129,6 +135,11 @@ class AddItemFormState {
     bool clearSecondaryUnit = false,
     String? categoryId,
     bool clearCategory = false,
+    String? brandId,
+    bool clearBrand = false,
+    String? godownId,
+    bool clearGodown = false,
+    String? primaryImageUrl,
     String? description,
     int? activeTab,
     double? salePrice,
@@ -154,9 +165,13 @@ class AddItemFormState {
       hsn: hsn ?? this.hsn,
       itemCode: itemCode ?? this.itemCode,
       baseUnitId: clearBaseUnit ? null : (baseUnitId ?? this.baseUnitId),
-      secondaryUnitId:
-          clearSecondaryUnit ? null : (secondaryUnitId ?? this.secondaryUnitId),
+      secondaryUnitId: clearSecondaryUnit
+          ? null
+          : (secondaryUnitId ?? this.secondaryUnitId),
       categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
+      brandId: clearBrand ? null : (brandId ?? this.brandId),
+      godownId: clearGodown ? null : (godownId ?? this.godownId),
+      primaryImageUrl: primaryImageUrl ?? this.primaryImageUrl,
       description: description ?? this.description,
       activeTab: activeTab ?? this.activeTab,
       salePrice: salePrice ?? this.salePrice,

@@ -79,7 +79,8 @@ class OtpService {
         throw const OtpException('Unable to send OTP. Please try again later.');
       }
 
-      if (_isErrorType(result) || result['message'] == 'AuthenticationFailure') {
+      if (_isErrorType(result) ||
+          result['message'] == 'AuthenticationFailure') {
         throw const OtpException(
           'Unable to send OTP. Please try again later.',
         );
@@ -93,7 +94,7 @@ class OtpService {
       throw const OtpException(
         'OTP was sent but the session expired. Go back and try again.',
       );
-    } catch (e) {
+    } on Object catch (e) {
       throw _wrapSendError(e);
     }
   }
@@ -119,7 +120,7 @@ class OtpService {
         throw _mapSdkError(result, fallback: 'Failed to resend OTP');
       }
       return trimmed;
-    } catch (e) {
+    } on Object catch (e) {
       if (e is OtpException) rethrow;
       throw _wrapNetworkError(e);
     }
@@ -157,7 +158,10 @@ class OtpService {
 
       final type = result['type']?.toString().toLowerCase() ?? '';
       if (type != 'success') {
-        throw _mapSdkError(result, fallback: 'Invalid OTP. Please check and try again.');
+        throw _mapSdkError(
+          result,
+          fallback: 'Invalid OTP. Please check and try again.',
+        );
       }
 
       final accessToken = _extractAccessToken(result);
@@ -166,7 +170,7 @@ class OtpService {
       }
 
       return accessToken;
-    } catch (e) {
+    } on Object catch (e) {
       if (e is OtpException) rethrow;
       throw _wrapNetworkError(e);
     }
@@ -273,9 +277,7 @@ class OtpService {
     }
 
     final message = result['message']?.toString().trim();
-    if (message != null &&
-        message.isNotEmpty &&
-        _looksLikeReqId(message)) {
+    if (message != null && message.isNotEmpty && _looksLikeReqId(message)) {
       return message;
     }
 

@@ -548,6 +548,7 @@ Party ledger reads: `GET /ledger-entries?party_id={id}` (Accounting module).
 | UI label | API value | Stock on finalize |
 |----------|-----------|-------------------|
 | Estimate / Quotation | `estimate` | No |
+| Sale Order | `sale_order` | No |
 | Delivery Challan | `delivery_challan` | Yes |
 | Tax Invoice (Pakka) | `tax_invoice` | Yes |
 | Bill of Supply | `bill_of_supply` | Yes |

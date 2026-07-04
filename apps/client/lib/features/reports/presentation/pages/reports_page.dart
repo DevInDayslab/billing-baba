@@ -52,8 +52,7 @@ class _ReportsPageState extends State<ReportsPage> {
           padding: const EdgeInsets.all(AppSpacing.md),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final navWidth =
-                  (constraints.maxWidth * 0.2).clamp(200.0, 280.0);
+              final navWidth = (constraints.maxWidth * 0.2).clamp(200.0, 280.0);
 
               return DecoratedBox(
                 decoration: BoxDecoration(
@@ -158,7 +157,8 @@ class _ReportsPageState extends State<ReportsPage> {
                       Expanded(
                         child: ReportContentPanel(
                           navGroup: _navGroup,
-                          transactionSub: _navGroup == ReportNavGroup.transaction
+                          transactionSub:
+                              _navGroup == ReportNavGroup.transaction
                               ? _selectedTransactionSub
                               : null,
                           partySub: _navGroup == ReportNavGroup.party
@@ -181,7 +181,8 @@ class _ReportsPageState extends State<ReportsPage> {
                               ? _selectedExpenseSub
                               : null,
                           salePurchaseOrderSub:
-                              _navGroup == ReportNavGroup.salePurchaseOrderReport
+                              _navGroup ==
+                                  ReportNavGroup.salePurchaseOrderReport
                               ? _selectedSalePurchaseOrderSub
                               : null,
                           otherIncomeSub:

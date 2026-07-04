@@ -30,14 +30,15 @@ class _ItemsPageState extends ConsumerState<ItemsPage>
     if (!_tabController.indexIsChanging) {
       ref
           .read(inventoryItemsTabIndexProvider.notifier)
-          .select(_tabController.index);
+          .tabIndex = _tabController.index;
     }
   }
 
   @override
   void dispose() {
-    _tabController.removeListener(_onTabChanged);
-    _tabController.dispose();
+    _tabController
+      ..removeListener(_onTabChanged)
+      ..dispose();
     super.dispose();
   }
 

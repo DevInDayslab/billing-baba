@@ -84,7 +84,8 @@ class InventoryPrimaryButton extends StatelessWidget {
             ),
           ),
           _DropdownTrigger(
-            onSelected: onDropdownSelected ??
+            onSelected:
+                onDropdownSelected ??
                 (value) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('$value coming soon')),

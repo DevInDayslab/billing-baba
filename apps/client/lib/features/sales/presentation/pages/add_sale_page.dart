@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/add_sale_footer.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
@@ -139,11 +140,40 @@ class _PageHeader extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.md),
-        GodownLabelSelector(
+        _GodownSelector(
           value: form.godown,
           onSelected: notifier.updateGodown,
         ),
       ],
+    );
+  }
+}
+
+class _GodownSelector extends ConsumerWidget {
+  const _GodownSelector({
+    required this.value,
+    required this.onSelected,
+  });
+
+  final String value;
+  final void Function(String name, {String? godownId}) onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final godownsAsync = ref.watch(inventoryGodownsProvider);
+    final options = godownsAsync.maybeWhen(
+      data: (godowns) => godowns.map((godown) => godown.name).toList(),
+      orElse: () => SaleDropdownOptions.godowns,
+    );
+
+    return GodownLabelSelector(
+      value: value,
+      options: options,
+      onSelected: (name) {
+        final godowns = ref.read(inventoryGodownsProvider).value ?? [];
+        final match = godowns.where((godown) => godown.name == name).firstOrNull;
+        onSelected(name, godownId: match?.id);
+      },
     );
   }
 }
@@ -249,8 +279,7 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
     final notifier = ref.read(
       addSaleFormProvider(invoiceId: widget.invoiceId).notifier,
     );
-    final isAutoNumber =
-        form.invoiceNumberMode == InvoiceNumberMode.auto;
+    final isAutoNumber = form.invoiceNumberMode == InvoiceNumberMode.auto;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,9 +293,14 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                   Expanded(
                     child: BillingNamePartySearchField(
                       value: form.billingName,
-                      hasError: form.billingNameHasError,
+                      hasError: form.partyHasError,
                       emptyPlaceholder: 'Billing Name (Optional)',
                       onSelected: notifier.updateBillingName,
+                      onPartySelectedWithId: (partyId, name) =>
+                          notifier.updateParty(
+                            partyId: partyId,
+                            partyName: name,
+                          ),
                       onPartyCreated: (party) {
                         notifier.updateBillingName(party.partyName);
                         if (party.phone.isNotEmpty) {
@@ -539,19 +573,23 @@ class _BottomActionBar extends ConsumerWidget {
     if (context.mounted) context.pop();
   }
 
-  void _handleSave(
+  Future<void> _handleSave(
     BuildContext context,
     WidgetRef ref,
     AddSaleForm notifier,
-  ) {
-    final invoice = notifier.buildInvoiceModel();
-    if (invoice == null) return;
+  ) async {
+    final error = await notifier.saveInvoice();
+    if (!context.mounted) return;
 
-    notifier.saveInvoice();
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Invoice ${invoice.invoiceNo} saved successfully'),
-      ),
+      const SnackBar(content: Text('Invoice saved successfully')),
     );
     context.go(AppRoutes.saleInvoices);
   }

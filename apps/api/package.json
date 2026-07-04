@@ -4,15 +4,18 @@
   "description": "Billing Baba REST API",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "bun --watch src/server.ts",
     "start": "node dist/server.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/db/migrate.ts",
-    "db:seed": "tsx src/db/seed.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:migrate": "bun src/db/migrate.ts",
+    "db:seed": "bun src/db/seed.ts",
+    "db:studio": "drizzle-kit studio",
+    "test": "bun test tests",
+    "test:inventory": "bun test tests/inventory.integration.test.ts",
+    "test:sales": "bun test tests/sales.integration.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -29,7 +32,9 @@
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.8.5",
     "postgres": "^3.4.9",
-    "zod": "^4.1.12"
+    "yaml": "^2.9.0",
+    "zod": "^4.1.12",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.4",

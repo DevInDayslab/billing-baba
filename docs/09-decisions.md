@@ -31,6 +31,9 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-016: Event-based Inventory Ledger](#adr-016-event-based-inventory-ledger)
 - [ADR-017: Double Entry Accounting](#adr-017-double-entry-accounting)
 - [ADR-018: OTP Authentication and Accounts Identity](#adr-018-otp-authentication-and-accounts-identity)
+- [ADR-019: Sale Order Document Type](#adr-019-sale-order-document-type)
+- [ADR-020: Job Work Out Domain](#adr-020-job-work-out-domain)
+- [ADR-021: Sales Document Attachments Deferred](#adr-021-sales-document-attachments-deferred)
 
 ---
 
@@ -56,6 +59,9 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 | ADR-016 | Event-based Inventory Ledger | June 2026 | Accepted |
 | ADR-017 | Double Entry Accounting | June 2026 | Accepted |
 | ADR-018 | OTP Authentication and Accounts Identity | July 2026 | Accepted |
+| ADR-019 | Sale Order Document Type | July 2026 | Accepted |
+| ADR-020 | Job Work Out Domain | July 2026 | Accepted |
+| ADR-021 | Sales Document Attachments Deferred | July 2026 | Accepted |
 
 ---
 
@@ -751,6 +757,29 @@ Use append-only **`inventory_movements`** as the stock event ledger. `stock_leve
 
 ---
 
+## ADR-019: Business Unit Dictionary
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+
+### Context
+
+The Flutter Units tab manages a business-wide unit list with conversions. The original schema only had `item_units` (per-item alternate units) and `items.base_unit` (free text). Global unit CRUD requires persistent business-scoped definitions.
+
+### Decision
+
+Add **`unit_definitions`** (business unit dictionary: `full_name`, `short_name`) and **`unit_conversions`** (directed pairs with `conversion_factor`). Items continue to reference units via `items.base_unit` text matching `short_name`. Per-item `item_units` remains for item-specific alternate units at sale time.
+
+### Consequences
+
+- Units tab maps to `unit_definitions` + `unit_conversions` APIs
+- Item create validates `base_unit` against active unit definitions
+- Two unit models coexist: global dictionary vs per-item `item_units`
+
+---
+
 ## ADR-017: Double Entry Accounting
 
 | Field | Value |
@@ -837,6 +866,123 @@ Phase 1 authentication uses phone OTP via MSG91 on the Flutter client. The backe
 | Separate `select-business` endpoint | Reuses `/auth/refresh` with optional `business_id` |
 
 **References:** [05-api.md](05-api.md#authentication-apis), [01-architecture.md](01-architecture.md#authentication-flow)
+
+---
+
+## ADR-019: Sale Order Document Type
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Technical Lead |
+
+### Context
+
+The Flutter Sales UI has a dedicated Sale Order page. Purchase documents already use `purchase_order` as a distinct type with no stock impact on finalize. The architecture doc describes sale order as a committed step before dispatch but did not originally include a `sales_document_type` enum value.
+
+### Decision
+
+Add `sale_order` to `sales_document_type`. Sale orders behave like purchase orders: no inventory or ledger impact on finalize; convertible to delivery challan or invoice via `converted_from_id`.
+
+### Consequences
+
+**Positive:**
+
+- Mirrors purchase order mental model
+- Dedicated list/filter in API without overloading `estimate`
+- UI maps 1:1 to persisted type
+
+**Negative:**
+
+- One additional enum value and per-type service rules
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Treat as confirmed `estimate` | UI and workflow treat sale order as distinct committed step |
+| Separate `sale_orders` table | Violates ADR-014 unified documents pattern |
+
+**References:** [04-database.md](04-database.md#sales_documents), [ADR-014](#adr-014-unified-sales-documents)
+
+---
+
+## ADR-020: Job Work Out Domain
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Technical Lead |
+
+### Context
+
+Job Work Out (subcontract manufacturing) has a full Flutter UI with finished goods, raw material lines, and additional costs. It does not fit the `sales_documents` polymorphic model — no party invoice structure, different line semantics (raw materials consumed vs goods sold).
+
+### Decision
+
+Introduce a separate domain with tables `job_work_orders`, `job_work_raw_material_lines`, and `job_work_additional_costs`. API module at `apps/api/src/modules/job-work/`. Status enum: `open`, `closed`, `cancelled`.
+
+### Consequences
+
+**Positive:**
+
+- Schema matches UI model (finished good + raw materials + costs)
+- Avoids polluting `sales_document_lines` with non-sale semantics
+- Independent sync entity type for future offline support
+
+**Negative:**
+
+- Additional module surface; not part of unified sales documents API
+- Stock impact rules (raw material issue) deferred to service layer in Phase 5
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Store in `sales_documents.notes` | No structured lines, no reporting |
+| Embed raw materials as JSON on header | Poor query and sync characteristics |
+
+**References:** [04-database.md](04-database.md)
+
+---
+
+## ADR-021: Sales Document Attachments Deferred
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Technical Lead |
+
+### Context
+
+Flutter sales forms include `SaleFormAttachment` for images and documents. CRM has `party_attachments` but no sales-document attachment table exists.
+
+### Decision
+
+Defer sales document attachment persistence to post-MVP. Phase 1 sales backend will not include attachment upload endpoints. UI attachments remain client-only until blob storage strategy and table design are finalized.
+
+### Consequences
+
+**Positive:**
+
+- Unblocks sales document CRUD and finalize without storage infrastructure
+- Avoids premature schema tied to unknown file size/CDN strategy
+
+**Negative:**
+
+- Attachments lost on refresh until implemented
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Reuse `party_attachments` | Wrong entity scope; attachments belong to documents |
+| JSON array of URLs on `sales_documents` | No metadata, poor sync conflict handling |
+
+**References:** [ADR-014](#adr-014-unified-sales-documents)
 
 ---
 

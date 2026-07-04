@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/sales/models/sale_document_model.dart';
+import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_document_line_items_table.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
@@ -9,7 +11,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_se
 import 'package:billing_baba/features/sales/presentation/widgets/sale_page_title_bar.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/providers/sale_document_form_provider.dart';
-import 'package:billing_baba/features/sales/providers/saved_sale_documents_provider.dart';
+import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -107,13 +109,19 @@ class _EmptyState extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final savedDocuments = ref
-        .watch(savedSaleDocumentsProvider)
-        .where((doc) => doc.documentType == documentType)
-        .toList();
+    final scope = switch (documentType) {
+      SaleDocumentType.estimate => estimateListScope(),
+      SaleDocumentType.proforma => proformaListScope(),
+    };
+    final documentsAsync = ref.watch(salesDocumentsListProvider(scope));
+    final documents = documentsAsync.maybeWhen(
+      data: (page) => page.items,
+      orElse: () => const <SaleInvoiceModel>[],
+    );
+    final listNotifier = ref.read(salesDocumentsListProvider(scope).notifier);
 
     return SizedBox(
-      height: savedDocuments.isEmpty ? 480 : null,
+      height: documents.isEmpty && !documentsAsync.isLoading ? 480 : null,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -173,7 +181,29 @@ class _EmptyState extends ConsumerWidget {
                 ),
               ),
             ),
-            if (savedDocuments.isNotEmpty) ...[
+            if (documentsAsync.isLoading)
+              const Padding(
+                padding: EdgeInsets.all(AppSpacing.lg),
+                child: CircularProgressIndicator(),
+              )
+            else if (documentsAsync.hasError)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  children: [
+                    Text(
+                      documentsAsync.error.toString(),
+                      style: const TextStyle(color: AppColors.error),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton(
+                      onPressed: listNotifier.refresh,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              )
+            else if (documents.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.lg),
               const Text(
                 'Saved documents',
@@ -185,16 +215,19 @@ class _EmptyState extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480, maxHeight: 200),
+                constraints: const BoxConstraints(
+                  maxWidth: 480,
+                  maxHeight: 200,
+                ),
                 child: ListView.separated(
                   shrinkWrap: true,
-                  itemCount: savedDocuments.length,
+                  itemCount: documents.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
-                    final saved = savedDocuments[index];
-                    final dateLabel = saved.invoiceDate != null
-                        ? DateFormat('dd MMM yyyy').format(saved.invoiceDate!)
-                        : 'No date';
+                    final saved = documents[index];
+                    final dateLabel = DateFormat('dd MMM yyyy').format(
+                      saved.date,
+                    );
                     return Material(
                       color: const Color(0xFFF5F5F5),
                       borderRadius: BorderRadius.circular(8),
@@ -204,7 +237,7 @@ class _EmptyState extends ConsumerWidget {
                               .read(
                                 saleDocumentFormProvider(documentType).notifier,
                               )
-                              .loadSavedDocument(saved);
+                              .loadDocument(saved.id);
                         },
                         borderRadius: BorderRadius.circular(8),
                         child: Padding(
@@ -219,28 +252,21 @@ class _EmptyState extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      saved.party.isEmpty
+                                      saved.partyName.isEmpty
                                           ? 'Untitled'
-                                          : saved.party,
+                                          : saved.partyName,
                                       style: const TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                     Text(
-                                      '$dateLabel · ${saved.attachedImages.length} image(s) · ${saved.attachedDocuments.length} doc(s)',
+                                      '$dateLabel · ${saved.invoiceNo}',
                                       style: const TextStyle(
                                         fontSize: 11,
                                         color: AppColors.textSecondary,
                                       ),
                                     ),
-                                    if (saved.description.isNotEmpty)
-                                      Text(
-                                        saved.description,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 11),
-                                      ),
                                   ],
                                 ),
                               ),
@@ -249,21 +275,31 @@ class _EmptyState extends ConsumerWidget {
                                   locale: 'en_IN',
                                   symbol: '₹',
                                   decimalDigits: 2,
-                                ).format(saved.total),
+                                ).format(saved.amount),
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline, size: 18),
-                                tooltip: 'Delete',
-                                onPressed: () {
-                                  ref
-                                      .read(savedSaleDocumentsProvider.notifier)
-                                      .removeDocument(saved.id);
-                                },
-                              ),
+                              if (saved.isDraft)
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    size: 18,
+                                  ),
+                                  tooltip: 'Delete',
+                                  onPressed: () async {
+                                    final error = await listNotifier
+                                        .deleteDraft(saved.id);
+                                    if (!context.mounted) return;
+                                    if (error != null) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(content: Text(error)),
+                                      );
+                                    }
+                                  },
+                                ),
                             ],
                           ),
                         ),
@@ -544,6 +580,8 @@ class _DocumentFormFieldsState extends ConsumerState<_DocumentFormFields> {
               emptyPlaceholder: 'Search Party Name',
               errorMessage: 'Party is required',
               onSelected: notifier.updateParty,
+              onPartySelectedWithId: (partyId, name) =>
+                  notifier.updatePartyWithId(partyId: partyId, partyName: name),
             ),
           ),
         ),
@@ -571,8 +609,7 @@ class _DocumentFormFieldsState extends ConsumerState<_DocumentFormFields> {
                   child: _PickerField(
                     value: formatSaleSingleDate(form.invoiceDate),
                     icon: Icons.calendar_today_outlined,
-                    onTap: () =>
-                        _invoiceDatePickerKey.currentState?.toggle(),
+                    onTap: () => _invoiceDatePickerKey.currentState?.toggle(),
                   ),
                 ),
               ),
@@ -784,6 +821,7 @@ class _BottomActionBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(saleDocumentFormProvider(documentType));
     final notifier = ref.read(
       saleDocumentFormProvider(documentType).notifier,
     );
@@ -804,37 +842,12 @@ class _BottomActionBar extends ConsumerWidget {
       child: Row(
         children: [
           const Spacer(),
-          PopupMenuButton<String>(
-            onSelected: (_) {
+          ShareMenuButton(
+            onChannelSelected: (channel) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Coming soon')),
+                SnackBar(content: Text('${channel.label} coming soon')),
               );
             },
-            offset: const Offset(0, 40),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-              side: const BorderSide(color: _cardBorder),
-            ),
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'pdf', child: Text('PDF')),
-              const PopupMenuItem(value: 'whatsapp', child: Text('WhatsApp')),
-              const PopupMenuItem(value: 'print', child: Text('Print')),
-            ],
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: _cardBorder),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Share', style: TextStyle(fontSize: 13)),
-                  SizedBox(width: 4),
-                  Icon(Icons.keyboard_arrow_down, size: 16),
-                ],
-              ),
-            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Column(
@@ -859,15 +872,23 @@ class _BottomActionBar extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           FilledButton(
-            onPressed: () {
-              final saved = notifier.save();
-              if (!saved) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(documentType.saveSuccessMessage),
-                ),
-              );
-            },
+            onPressed: form.isSaving
+                ? null
+                : () async {
+                    final error = await notifier.save();
+                    if (!context.mounted) return;
+                    if (error != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error)),
+                      );
+                      return;
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(documentType.saveSuccessMessage),
+                      ),
+                    );
+                  },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -1045,9 +1066,7 @@ class _AmountFieldState extends State<_AmountField> {
   @override
   void didUpdateWidget(_AmountField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newText = widget.value == 0
-        ? '0'
-        : widget.value.toStringAsFixed(2);
+    final newText = widget.value == 0 ? '0' : widget.value.toStringAsFixed(2);
     if (widget.value != oldWidget.value && newText != _controller.text) {
       _controller.text = newText;
     }

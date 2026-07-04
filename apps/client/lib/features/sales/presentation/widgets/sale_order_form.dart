@@ -1,7 +1,8 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/sales/models/sale_order_form_model.dart';
+import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/preview_share_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
@@ -12,6 +13,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_order_foot
 import 'package:billing_baba/features/sales/presentation/widgets/sale_order_line_items_table.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/providers/sale_order_form_provider.dart';
+import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -27,20 +29,66 @@ class SaleOrderContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(saleOrderFormProvider);
-    final savedOrders = ref.watch(savedSaleOrdersProvider);
 
     if (form.isFormOpen) {
       return const _SaleOrderFormCard();
     }
 
-    if (savedOrders.isEmpty) {
-      return _EmptyState(
-        onAddPressed: () =>
-            ref.read(saleOrderFormProvider.notifier).openForm(),
+    return _SaleOrderListState(
+      onAddPressed: () => ref.read(saleOrderFormProvider.notifier).openForm(),
+    );
+  }
+}
+
+class _SaleOrderListState extends ConsumerWidget {
+  const _SaleOrderListState({required this.onAddPressed});
+
+  final VoidCallback onAddPressed;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scope = saleOrderListScope();
+    final documentsAsync = ref.watch(salesDocumentsListProvider(scope));
+    final documents = documentsAsync.maybeWhen(
+      data: (page) => page.items,
+      orElse: () => const <SaleInvoiceModel>[],
+    );
+    final listNotifier = ref.read(salesDocumentsListProvider(scope).notifier);
+
+    if (documentsAsync.isLoading && documents.isEmpty) {
+      return const SizedBox(
+        height: 480,
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
-    return _SavedOrdersList(orders: savedOrders);
+    if (documentsAsync.hasError && documents.isEmpty) {
+      return SizedBox(
+        height: 480,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                documentsAsync.error.toString(),
+                style: const TextStyle(color: AppColors.error),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              OutlinedButton(
+                onPressed: listNotifier.refresh,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (documents.isEmpty) {
+      return _EmptyState(onAddPressed: onAddPressed);
+    }
+
+    return _SavedOrdersList(orders: documents);
   }
 }
 
@@ -101,7 +149,7 @@ class _EmptyState extends StatelessWidget {
 class _SavedOrdersList extends ConsumerWidget {
   const _SavedOrdersList({required this.orders});
 
-  final List<SavedSaleOrder> orders;
+  final List<SaleInvoiceModel> orders;
 
   static final _dateFormat = DateFormat('dd/MM/yyyy');
   static final _currencyFormat = NumberFormat.currency(
@@ -137,7 +185,7 @@ class _SavedOrdersList extends ConsumerWidget {
               borderRadius: BorderRadius.circular(8),
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
-                onTap: () => notifier.loadSavedOrder(order),
+                onTap: () => notifier.loadDocument(order.id),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Row(
@@ -147,7 +195,7 @@ class _SavedOrdersList extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              order.party,
+                              order.partyName.isEmpty ? 'Untitled' : order.partyName,
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -155,9 +203,7 @@ class _SavedOrdersList extends ConsumerWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              order.orderDate != null
-                                  ? _dateFormat.format(order.orderDate!)
-                                  : '—',
+                              _dateFormat.format(order.date),
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppColors.textSecondary,
@@ -167,21 +213,32 @@ class _SavedOrdersList extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        _currencyFormat.format(order.total),
+                        _currencyFormat.format(order.amount),
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 18),
-                        tooltip: 'Delete',
-                        onPressed: () {
-                          ref
-                              .read(savedSaleOrdersProvider.notifier)
-                              .removeOrder(order.id);
-                        },
-                      ),
+                      if (order.isDraft)
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          tooltip: 'Delete',
+                          onPressed: () async {
+                            final error = await ref
+                                .read(
+                                  salesDocumentsListProvider(
+                                    saleOrderListScope(),
+                                  ).notifier,
+                                )
+                                .deleteDraft(order.id);
+                            if (!context.mounted) return;
+                            if (error != null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(error)),
+                              );
+                            }
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -266,6 +323,8 @@ class _SaleOrderFormFieldsState extends ConsumerState<_SaleOrderFormFields> {
               emptyPlaceholder: 'Search by Name/Phone',
               errorMessage: 'Party is required',
               onSelected: notifier.updateParty,
+              onPartySelectedWithId: (partyId, name) =>
+                  notifier.updatePartyWithId(partyId: partyId, partyName: name),
             ),
           ),
         ),
@@ -334,6 +393,7 @@ class _SaleOrderBottomActionBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(saleOrderFormProvider);
     final notifier = ref.read(saleOrderFormProvider.notifier);
 
     return Padding(
@@ -352,9 +412,9 @@ class _SaleOrderBottomActionBar extends ConsumerWidget {
             child: const Text('Cancel', style: TextStyle(fontSize: 13)),
           ),
           const Spacer(),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'share') {
+          ShareMenuButton(
+            onChannelSelected: (channel) {
+              if (channel == ShareChannel.email) {
                 unawaited(
                   showPreviewShareDialog(
                     context,
@@ -364,44 +424,27 @@ class _SaleOrderBottomActionBar extends ConsumerWidget {
                 return;
               }
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('$value coming soon')),
+                SnackBar(content: Text('${channel.label} coming soon')),
               );
             },
-            offset: const Offset(0, 40),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-              side: const BorderSide(color: _cardBorder),
-            ),
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'share', child: Text('Share')),
-              const PopupMenuItem(value: 'whatsapp', child: Text('WhatsApp')),
-              const PopupMenuItem(value: 'print', child: Text('Print')),
-            ],
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: _cardBorder),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Share', style: TextStyle(fontSize: 13)),
-                  SizedBox(width: 4),
-                  Icon(Icons.keyboard_arrow_down, size: 16),
-                ],
-              ),
-            ),
           ),
           const SizedBox(width: AppSpacing.md),
           FilledButton(
-            onPressed: () {
-              final saved = notifier.save();
-              if (!saved) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Sale order saved')),
-              );
-            },
+            onPressed: form.isSaving
+                ? null
+                : () async {
+                    final error = await notifier.save();
+                    if (!context.mounted) return;
+                    if (error != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(error)),
+                      );
+                      return;
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Sale order saved')),
+                    );
+                  },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,

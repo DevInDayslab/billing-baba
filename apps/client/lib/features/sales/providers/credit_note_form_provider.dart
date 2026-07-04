@@ -1,6 +1,12 @@
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
+import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/credit_note_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
+import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'credit_note_form_provider.g.dart';
@@ -26,12 +32,58 @@ class CreditNoteForm extends _$CreditNoteForm {
   @override
   CreditNoteFormState build() => _initialCreditNoteFormState();
 
+  Map<String, String> _itemNameToId() {
+    final items = ref.read(inventoryItemsProvider).value ?? [];
+    return {for (final item in items) item.name.trim(): item.id};
+  }
+
   void resetForm() {
     state = _initialCreditNoteFormState();
   }
 
+  Future<void> loadDocument(String documentId) async {
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final loaded = await service.loadSaleDocumentForm(documentId);
+      final items = await _resolveItemNames(loaded.items);
+      state = CreditNoteFormState(
+        documentId: loaded.documentId,
+        partyId: loaded.partyId,
+        party: loaded.party,
+        returnNo: loaded.refNo,
+        returnDate: loaded.invoiceDate,
+        stateOfSupply: loaded.stateOfSupply,
+        items: items,
+        description: loaded.description,
+      );
+    } catch (error) {
+      state = state.copyWith(saveError: SalesErrorMapper.messageFor(error));
+    }
+  }
+
+  Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
+    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final itemNames = {for (final item in inventory) item.id: item.name};
+    return [
+      for (final line in items)
+        if (line.itemId != null && line.itemName.isEmpty)
+          line.copyWith(itemName: itemNames[line.itemId] ?? '')
+        else
+          line,
+    ];
+  }
+
   void updateParty(String value) {
-    state = state.copyWith(party: value, isDirty: true);
+    state = state.copyWith(party: value, isDirty: true, clearSaveError: true);
+  }
+
+  void updatePartyWithId({required String partyId, required String partyName}) {
+    state = state.copyWith(
+      partyId: partyId,
+      party: partyName,
+      isDirty: true,
+      clearSaveError: true,
+    );
   }
 
   void updatePhone(String value) {
@@ -103,8 +155,9 @@ class CreditNoteForm extends _$CreditNoteForm {
 
   void removeImage(String id) {
     state = state.copyWith(
-      attachedImages:
-          state.attachedImages.where((image) => image.id != id).toList(),
+      attachedImages: state.attachedImages
+          .where((image) => image.id != id)
+          .toList(),
       isDirty: true,
     );
   }
@@ -166,7 +219,7 @@ class CreditNoteForm extends _$CreditNoteForm {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
-    state = state.copyWith(items: items, isDirty: true);
+    state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
   }
 
   bool validate() {
@@ -177,29 +230,54 @@ class CreditNoteForm extends _$CreditNoteForm {
     return isValid;
   }
 
-  bool save() {
-    if (!validate()) return false;
-    final saved = SavedCreditNote.fromFormState(
-      id: nextSavedCreditNoteId(),
-      form: state,
-    );
-    ref.read(savedCreditNotesProvider.notifier).addCreditNote(saved);
-    resetForm();
-    return true;
+  SalesDocumentDraftInput _draftInput() => SalesDocumentDraftInput(
+    documentId: state.documentId,
+    partyId: state.partyId,
+    documentType: SalesDocumentType.salesReturn,
+    documentSeries: SalesConstants.creditNoteSeries,
+    documentDate: state.returnDate,
+    notes: state.description,
+    items: state.items,
+  );
+
+  Future<String?> save() async {
+    if (!validate()) return 'Please fill required fields';
+
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      await service.saveDocumentDraft(
+        _draftInput(),
+        itemNameToId: _itemNameToId(),
+      );
+      ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
+      resetForm();
+      return null;
+    } catch (error) {
+      final message = SalesErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
   }
-}
 
-@riverpod
-class SavedCreditNotesNotifier extends _$SavedCreditNotesNotifier {
-  @override
-  List<SavedCreditNote> build() => [];
+  Future<String?> finalize() async {
+    if (!validate()) return 'Please fill required fields';
 
-  void addCreditNote(SavedCreditNote creditNote) {
-    state = [creditNote, ...state];
-  }
-
-  void removeCreditNote(String id) {
-    state = state.where((note) => note.id != id).toList();
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      await service.finalizeDocumentDraft(
+        _draftInput(),
+        itemNameToId: _itemNameToId(),
+      );
+      ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
+      resetForm();
+      return null;
+    } catch (error) {
+      final message = SalesErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
   }
 }
 

@@ -38,9 +38,12 @@ class CreateBusinessFormState {
       fieldErrors: clearFieldErrors
           ? const {}
           : fieldErrors ?? this.fieldErrors,
-      generalError:
-          clearGeneralError ? null : generalError ?? this.generalError,
-      showGenericErrorDialog: !clearGenericDialog && (showGenericErrorDialog ?? this.showGenericErrorDialog),
+      generalError: clearGeneralError
+          ? null
+          : generalError ?? this.generalError,
+      showGenericErrorDialog:
+          !clearGenericDialog &&
+          (showGenericErrorDialog ?? this.showGenericErrorDialog),
     );
   }
 }
@@ -115,7 +118,7 @@ class CreateBusinessForm extends _$CreateBusinessForm {
         showGenericErrorDialog: true,
       );
       return null;
-    } catch (_) {
+    } on Object catch (_) {
       state = state.copyWith(
         isSubmitting: false,
         showGenericErrorDialog: true,

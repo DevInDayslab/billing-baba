@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/providers/sale_return_provider.dart';
+import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -39,6 +40,9 @@ class SaleReturnTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final paginated = ref.watch(paginatedSaleReturnsProvider);
+    final listNotifier = ref.read(
+      salesDocumentsListProvider(salesReturnListScope()).notifier,
+    );
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -66,10 +70,10 @@ class SaleReturnTable extends ConsumerWidget {
                 ),
                 const Spacer(),
                 IconButton(
-                  onPressed: () => debugPrint('Search tapped'),
-                  icon: const Icon(Icons.search, size: 20),
+                  onPressed: listNotifier.refresh,
+                  icon: const Icon(Icons.refresh, size: 20),
                   color: AppColors.textSecondary,
-                  tooltip: 'Search',
+                  tooltip: 'Refresh',
                 ),
                 _XlsChip(onTap: () => debugPrint('Export xls tapped')),
                 IconButton(
@@ -82,7 +86,32 @@ class SaleReturnTable extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          if (paginated.items.isEmpty)
+          if (paginated.isLoading)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.xl),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (paginated.error != null)
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      paginated.error.toString(),
+                      style: const TextStyle(color: AppColors.error),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton(
+                      onPressed: listNotifier.refresh,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else if (paginated.items.isEmpty)
             const Padding(
               padding: EdgeInsets.all(AppSpacing.xl),
               child: Center(

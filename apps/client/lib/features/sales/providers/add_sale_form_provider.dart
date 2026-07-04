@@ -1,6 +1,8 @@
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
+import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
-import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -14,27 +16,75 @@ String _nextLineItemId() {
   return 'line_$_lineItemCounter';
 }
 
+AddSaleFormState _defaultFormState({String? documentId}) {
+  final now = DateTime.now();
+  return AddSaleFormState(
+    documentId: documentId,
+    invoiceNumber: 'Auto',
+    invoiceDate: DateTime(now.year, now.month, now.day),
+    invoiceTime: TimeOfDay.fromDateTime(now),
+    items: [SaleLineItem.empty(id: _nextLineItemId())],
+    isLoading: documentId != null,
+  );
+}
+
 @riverpod
 class AddSaleForm extends _$AddSaleForm {
   @override
   AddSaleFormState build({String? invoiceId}) {
-    final invoices = ref.watch(saleInvoicesProvider);
-    final now = DateTime.now();
-    final invoiceNumber = generateNextInvoiceNumber(
-      invoices.map((invoice) => invoice.invoiceNo).toList(),
-    );
+    if (invoiceId != null) {
+      Future.microtask(() => _loadDocument(invoiceId));
+      return _defaultFormState(documentId: invoiceId);
+    }
+    return _defaultFormState();
+  }
 
-    // TODO(dev): load existing invoice when invoiceId is provided (edit mode).
-    return AddSaleFormState(
-      invoiceNumber: invoiceNumber,
-      invoiceDate: DateTime(now.year, now.month, now.day),
-      invoiceTime: TimeOfDay.fromDateTime(now),
-      items: [SaleLineItem.empty(id: _nextLineItemId())],
-    );
+  Future<void> _loadDocument(String documentId) async {
+    if (state.documentId == documentId && !state.isLoading) return;
+
+    state = state.copyWith(isLoading: true, clearSaveError: true);
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final loaded = await service.loadSaleForm(documentId);
+      final items = await _resolveItemNames(loaded.items);
+      state = loaded.copyWith(items: items, isLoading: false);
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        saveError: SalesErrorMapper.messageFor(error),
+      );
+    }
+  }
+
+  Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
+    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final itemNames = {for (final item in inventory) item.id: item.name};
+
+    return [
+      for (final line in items)
+        if (line.itemId != null && line.itemName.isEmpty)
+          line.copyWith(itemName: itemNames[line.itemId] ?? '')
+        else
+          line,
+    ];
+  }
+
+  Map<String, String> _itemNameToId() {
+    final items = ref.read(inventoryItemsProvider).value ?? [];
+    return {for (final item in items) item.name.trim(): item.id};
   }
 
   void updateBillingName(String value) {
-    state = state.copyWith(billingName: value, isDirty: true);
+    state = state.copyWith(billingName: value, isDirty: true, clearSaveError: true);
+  }
+
+  void updateParty({required String partyId, required String partyName}) {
+    state = state.copyWith(
+      partyId: partyId,
+      billingName: partyName,
+      isDirty: true,
+      clearSaveError: true,
+    );
   }
 
   void updatePhone(String value) {
@@ -66,13 +116,9 @@ class AddSaleForm extends _$AddSaleForm {
 
   void toggleInvoiceNumberMode(InvoiceNumberMode mode) {
     if (mode == InvoiceNumberMode.auto) {
-      final invoices = ref.read(saleInvoicesProvider);
-      final autoNumber = generateNextInvoiceNumber(
-        invoices.map((invoice) => invoice.invoiceNo).toList(),
-      );
       state = state.copyWith(
         invoiceNumberMode: mode,
-        invoiceNumber: autoNumber,
+        invoiceNumber: 'Auto',
         isDirty: true,
       );
     } else {
@@ -100,8 +146,12 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(eWayBillNo: value, isDirty: true);
   }
 
-  void updateGodown(String value) {
-    state = state.copyWith(godown: value, isDirty: true);
+  void updateGodown(String value, {String? godownId}) {
+    state = state.copyWith(
+      godown: value,
+      godownId: godownId,
+      isDirty: true,
+    );
   }
 
   void addLineItem() {
@@ -122,7 +172,7 @@ class AddSaleForm extends _$AddSaleForm {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
-    state = state.copyWith(items: items, isDirty: true);
+    state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
   }
 
   void updatePaymentType(String type) {
@@ -146,7 +196,6 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   void addPaymentType() {
-    // TODO(dev): support multiple payment splits — stub adds a second entry.
     final payments = [
       ...state.payments,
       const SalePaymentEntry(type: 'UPI'),
@@ -167,8 +216,9 @@ class AddSaleForm extends _$AddSaleForm {
 
   void removeImage(String id) {
     state = state.copyWith(
-      attachedImages:
-          state.attachedImages.where((image) => image.id != id).toList(),
+      attachedImages: state.attachedImages
+          .where((image) => image.id != id)
+          .toList(),
       isDirty: true,
     );
   }
@@ -237,64 +287,72 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(loyaltyPointsUsed: value, isDirty: true);
   }
 
-  bool validate() {
-    final isValid = state.hasValidLineItems;
+  bool validate({bool finalize = false}) {
+    final hasLines = state.hasValidLineItems;
+    final hasParty = state.partyId != null && state.partyId!.isNotEmpty;
+
+    final isValid = hasLines && (!finalize || hasParty);
     if (!isValid) {
       state = state.copyWith(showValidationErrors: true);
     }
     return isValid;
   }
 
-  SaleInvoiceModel? buildInvoiceModel() {
-    if (!validate()) return null;
+  Future<String?> saveDraft() async {
+    if (!validate()) return 'Add at least one item with name and quantity';
 
-    final invoices = ref.read(saleInvoicesProvider);
-    final nextId = invoices.length + 1;
-    final grandTotal = state.grandTotal;
-    final received = state.receivedEnabled
-        ? state.receivedAmount
-        : state.saleType == SaleType.cash
-        ? grandTotal
-        : 0.0;
-    final balance = state.balanceAmount;
-
-    final status = balance <= 0
-        ? SaleInvoiceStatus.paid
-        : received > 0
-        ? SaleInvoiceStatus.partiallyPaid
-        : SaleInvoiceStatus.unpaid;
-
-    final date = state.invoiceDate ?? DateTime.now();
-    final time = state.invoiceTime ?? TimeOfDay.now();
-    final invoiceDateTime = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
-
-    return SaleInvoiceModel(
-      id: '$nextId',
-      invoiceNo: state.invoiceNumber,
-      date: invoiceDateTime,
-      partyName: state.billingName.trim().isEmpty
-          ? 'Cash Sale'
-          : state.billingName.trim(),
-      transactionType: 'Sale',
-      paymentType: state.paymentType,
-      status: status,
-      amount: grandTotal,
-      balance: balance,
-      godown: state.godown,
-    );
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final document = await service.saveDraft(
+        state,
+        itemNameToId: _itemNameToId(),
+      );
+      state = state.copyWith(
+        documentId: document.id,
+        isSaving: false,
+        isDirty: false,
+      );
+      ref.invalidate(saleInvoicesProvider);
+      return null;
+    } catch (error) {
+      final message = SalesErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
   }
 
-  void saveInvoice() {
-    final invoice = buildInvoiceModel();
-    if (invoice == null) return;
-    ref.read(saleInvoicesProvider.notifier).addInvoice(invoice);
-    ref.invalidateSelf();
+  Future<String?> saveInvoice({bool finalize = true}) async {
+    if (!validate(finalize: finalize)) {
+      if (state.partyId == null || state.partyId!.isEmpty) {
+        return 'Party is required';
+      }
+      return 'Add at least one item with name and quantity';
+    }
+
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+
+      if (finalize) {
+        await service.createAndFinalizeSale(
+          state,
+          partyId: state.partyId,
+          itemNameToId: _itemNameToId(),
+          godownId: state.godownId,
+        );
+      } else {
+        await service.saveDraft(state, itemNameToId: _itemNameToId());
+      }
+
+      ref.invalidate(saleInvoicesProvider);
+      ref.invalidateSelf();
+      return null;
+    } catch (error) {
+      final message = SalesErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
   }
 }
 

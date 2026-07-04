@@ -42,7 +42,7 @@ final class JobWorkOutFormNotifierProvider
 }
 
 String _$jobWorkOutFormNotifierHash() =>
-    r'f2938c87259a10065e8cc9a0eef46d640dc304d8';
+    r'57981f66a32c1b48cc58a9f93e13617b7bc50170';
 
 abstract class _$JobWorkOutFormNotifier extends $Notifier<JobWorkOutFormState> {
   JobWorkOutFormState build();
@@ -55,60 +55,6 @@ abstract class _$JobWorkOutFormNotifier extends $Notifier<JobWorkOutFormState> {
             as $ClassProviderElement<
               AnyNotifier<JobWorkOutFormState, JobWorkOutFormState>,
               JobWorkOutFormState,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
-
-@ProviderFor(SavedJobWorkOutsNotifier)
-final savedJobWorkOutsProvider = SavedJobWorkOutsNotifierProvider._();
-
-final class SavedJobWorkOutsNotifierProvider
-    extends $NotifierProvider<SavedJobWorkOutsNotifier, List<SavedJobWorkOut>> {
-  SavedJobWorkOutsNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'savedJobWorkOutsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$savedJobWorkOutsNotifierHash();
-
-  @$internal
-  @override
-  SavedJobWorkOutsNotifier create() => SavedJobWorkOutsNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<SavedJobWorkOut> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<SavedJobWorkOut>>(value),
-    );
-  }
-}
-
-String _$savedJobWorkOutsNotifierHash() =>
-    r'a67df268cd302682cc3f857b3417a16ba1cb96e4';
-
-abstract class _$SavedJobWorkOutsNotifier
-    extends $Notifier<List<SavedJobWorkOut>> {
-  List<SavedJobWorkOut> build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<List<SavedJobWorkOut>, List<SavedJobWorkOut>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<List<SavedJobWorkOut>, List<SavedJobWorkOut>>,
-              List<SavedJobWorkOut>,
               Object?,
               Object?
             >;

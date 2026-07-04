@@ -8,6 +8,8 @@ enum InvoiceNumberMode { auto, manual }
 class SaleLineItem {
   const SaleLineItem({
     required this.id,
+    this.serverLineId,
+    this.itemId,
     this.itemName = '',
     this.qty = 0,
     this.unit = 'NONE',
@@ -19,6 +21,8 @@ class SaleLineItem {
   factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
 
   final String id;
+  final String? serverLineId;
+  final String? itemId;
   final String itemName;
   final double qty;
   final String unit;
@@ -34,6 +38,8 @@ class SaleLineItem {
 
   SaleLineItem copyWith({
     String? id,
+    String? serverLineId,
+    String? itemId,
     String? itemName,
     double? qty,
     String? unit,
@@ -43,6 +49,8 @@ class SaleLineItem {
   }) {
     return SaleLineItem(
       id: id ?? this.id,
+      serverLineId: serverLineId ?? this.serverLineId,
+      itemId: itemId ?? this.itemId,
       itemName: itemName ?? this.itemName,
       qty: qty ?? this.qty,
       unit: unit ?? this.unit,
@@ -72,6 +80,8 @@ class SalePaymentEntry {
 
 class AddSaleFormState {
   const AddSaleFormState({
+    this.documentId,
+    this.partyId,
     this.billingName = '',
     this.phone = '',
     this.billingAddress = '',
@@ -84,6 +94,7 @@ class AddSaleFormState {
     this.stateOfSupply = 'Madhya Pradesh',
     this.eWayBillNo = '',
     this.godown = 'Main Location',
+    this.godownId,
     this.items = const [],
     this.payments = const [SalePaymentEntry(type: 'Cash')],
     this.description = '',
@@ -97,8 +108,13 @@ class AddSaleFormState {
     this.saleType = SaleType.cash,
     this.showValidationErrors = false,
     this.isDirty = false,
+    this.isLoading = false,
+    this.saveError,
+    this.isSaving = false,
   });
 
+  final String? documentId;
+  final String? partyId;
   final String billingName;
   final String phone;
   final String billingAddress;
@@ -111,6 +127,7 @@ class AddSaleFormState {
   final String stateOfSupply;
   final String eWayBillNo;
   final String godown;
+  final String? godownId;
   final List<SaleLineItem> items;
   final List<SalePaymentEntry> payments;
   final String description;
@@ -124,6 +141,9 @@ class AddSaleFormState {
   final SaleType saleType;
   final bool showValidationErrors;
   final bool isDirty;
+  final bool isLoading;
+  final String? saveError;
+  final bool isSaving;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -149,8 +169,7 @@ class AddSaleFormState {
   }
 
   /// 1 loyalty point = ₹1 (placeholder until loyalty module exists).
-  double get loyaltyPointsValue =>
-      loyaltyPointsEnabled ? loyaltyPointsUsed : 0;
+  double get loyaltyPointsValue => loyaltyPointsEnabled ? loyaltyPointsUsed : 0;
 
   double get remainingAmount =>
       (grandTotal - loyaltyPointsValue).clamp(0, double.infinity);
@@ -178,7 +197,15 @@ class AddSaleFormState {
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
+  bool get partyRequired =>
+      saleType == SaleType.credit || billingName.trim().isNotEmpty;
+
+  bool get partyHasError =>
+      showValidationErrors && partyRequired && (partyId == null || partyId!.isEmpty);
+
   AddSaleFormState copyWith({
+    String? documentId,
+    String? partyId,
     String? billingName,
     String? phone,
     String? billingAddress,
@@ -191,6 +218,7 @@ class AddSaleFormState {
     String? stateOfSupply,
     String? eWayBillNo,
     String? godown,
+    String? godownId,
     List<SaleLineItem>? items,
     List<SalePaymentEntry>? payments,
     String? description,
@@ -204,8 +232,14 @@ class AddSaleFormState {
     SaleType? saleType,
     bool? showValidationErrors,
     bool? isDirty,
+    bool? isLoading,
+    String? saveError,
+    bool clearSaveError = false,
+    bool? isSaving,
   }) {
     return AddSaleFormState(
+      documentId: documentId ?? this.documentId,
+      partyId: partyId ?? this.partyId,
       billingName: billingName ?? this.billingName,
       phone: phone ?? this.phone,
       billingAddress: billingAddress ?? this.billingAddress,
@@ -218,6 +252,7 @@ class AddSaleFormState {
       stateOfSupply: stateOfSupply ?? this.stateOfSupply,
       eWayBillNo: eWayBillNo ?? this.eWayBillNo,
       godown: godown ?? this.godown,
+      godownId: godownId ?? this.godownId,
       items: items ?? this.items,
       payments: payments ?? this.payments,
       description: description ?? this.description,
@@ -231,6 +266,9 @@ class AddSaleFormState {
       saleType: saleType ?? this.saleType,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isDirty: isDirty ?? this.isDirty,
+      isLoading: isLoading ?? this.isLoading,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
+      isSaving: isSaving ?? this.isSaving,
     );
   }
 }

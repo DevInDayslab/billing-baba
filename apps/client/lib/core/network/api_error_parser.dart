@@ -6,8 +6,9 @@ abstract final class ApiErrorParser {
     final data = error.response?.data;
     if (data is! Map<String, dynamic>) return null;
 
-    final code = data['code']?.toString();
-    final rawErrors = data['errors'];
+    final envelope = _readErrorEnvelope(data);
+    final code = envelope?['code']?.toString() ?? data['code']?.toString();
+    final rawErrors = envelope?['details'] ?? data['errors'];
     if (code != 'VALIDATION_ERROR' || rawErrors is! Map) return null;
 
     final fieldErrors = <String, String>{};
@@ -22,7 +23,30 @@ abstract final class ApiErrorParser {
 
     if (fieldErrors.isEmpty) return null;
 
-    final message = data['message']?.toString() ?? 'Validation failed';
+    final message =
+        envelope?['message']?.toString() ??
+        data['message']?.toString() ??
+        'Validation failed';
     return ApiValidationException(message: message, fieldErrors: fieldErrors);
+  }
+
+  static String? errorCode(DioException error) {
+    final data = error.response?.data;
+    if (data is! Map<String, dynamic>) return null;
+    final envelope = _readErrorEnvelope(data);
+    return envelope?['code']?.toString() ?? data['code']?.toString();
+  }
+
+  static String? errorMessage(DioException error) {
+    final data = error.response?.data;
+    if (data is! Map<String, dynamic>) return null;
+    final envelope = _readErrorEnvelope(data);
+    return envelope?['message']?.toString() ?? data['message']?.toString();
+  }
+
+  static Map<String, dynamic>? _readErrorEnvelope(Map<String, dynamic> data) {
+    final nested = data['error'];
+    if (nested is Map<String, dynamic>) return nested;
+    return null;
   }
 }

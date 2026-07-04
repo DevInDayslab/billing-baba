@@ -6,15 +6,17 @@ import 'package:dio/dio.dart';
 
 class AuthRepository {
   AuthRepository({Dio? dio})
-      : _dio = dio ??
-            Dio(
-              BaseOptions(
-                baseUrl: AppConfig.apiBaseUrl,
-                connectTimeout: const Duration(seconds: 30),
-                receiveTimeout: const Duration(seconds: 30),
-                headers: {'Content-Type': 'application/json'},
-              ),
-            )..interceptors.add(buildJsonBodyInterceptor());
+    : _dio =
+          dio ??
+                Dio(
+                  BaseOptions(
+                    baseUrl: AppConfig.apiBaseUrl,
+                    connectTimeout: const Duration(seconds: 30),
+                    receiveTimeout: const Duration(seconds: 30),
+                    headers: {'Content-Type': 'application/json'},
+                  ),
+                )
+            ..interceptors.add(buildJsonBodyInterceptor());
 
   final Dio _dio;
 

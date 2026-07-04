@@ -4,10 +4,6 @@ import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { AuthRepository } from './auth.repository';
-import {
-  phoneLookupVariants,
-  verifyMsg91WidgetAccessToken,
-} from './msg91-widget.service';
 import type {
   AccountProfileResponse,
   AccountRecord,
@@ -17,6 +13,10 @@ import type {
   JwtAccessPayload,
   MeResponse,
 } from './auth.types';
+import {
+  phoneLookupVariants,
+  verifyMsg91WidgetAccessToken,
+} from './msg91-widget.service';
 
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -59,9 +59,7 @@ function buildUserResponse(
   };
 }
 
-function buildProfileResponse(
-  account: AccountRecord,
-): AccountProfileResponse {
+function buildProfileResponse(account: AccountRecord): AccountProfileResponse {
   return {
     display_name: account.name,
     phone: account.phone,
@@ -116,11 +114,15 @@ export class AuthService {
     phoneHint?: string,
   ): Promise<string> {
     this.ensureAuthSecrets();
-    return verifyMsg91WidgetAccessToken(
-      accessToken,
-      this.config.msg91AuthKey!,
-      phoneHint,
-    );
+    const authKey = this.config.msg91AuthKey;
+    if (!authKey) {
+      throw new AppError(
+        'AUTH_NOT_CONFIGURED',
+        'MSG91 auth key is not configured',
+        503,
+      );
+    }
+    return verifyMsg91WidgetAccessToken(accessToken, authKey, phoneHint);
   }
 
   private async findOrCreateAccountByPhone(phone: string) {
@@ -258,6 +260,10 @@ export class AuthService {
         phone: DEV_LOGIN_PHONE,
       });
       memberships = [membership];
+    }
+
+    for (const membership of memberships) {
+      await this.repository.ensureInventorySeeds(membership.businessId);
     }
 
     if (this.config.environment === 'development') {

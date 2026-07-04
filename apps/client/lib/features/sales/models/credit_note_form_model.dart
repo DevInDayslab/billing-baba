@@ -3,6 +3,8 @@ import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart'
 
 class CreditNoteFormState {
   const CreditNoteFormState({
+    this.documentId,
+    this.partyId,
     this.party = '',
     this.phone = '',
     this.returnNo = '1',
@@ -18,8 +20,12 @@ class CreditNoteFormState {
     this.roundOff = false,
     this.showValidationErrors = false,
     this.isDirty = false,
+    this.isSaving = false,
+    this.saveError,
   });
 
+  final String? documentId;
+  final String? partyId;
   final String party;
   final String phone;
   final String returnNo;
@@ -35,6 +41,8 @@ class CreditNoteFormState {
   final bool roundOff;
   final bool showValidationErrors;
   final bool isDirty;
+  final bool isSaving;
+  final String? saveError;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -58,12 +66,17 @@ class CreditNoteFormState {
   bool get hasValidLineItems =>
       items.any((item) => item.itemName.trim().isNotEmpty);
 
-  bool get lineItemsHasError =>
-      showValidationErrors && !hasValidLineItems;
+  bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
-  bool get isValid => party.trim().isNotEmpty && hasValidLineItems;
+  bool get isValid =>
+      party.trim().isNotEmpty &&
+      partyId != null &&
+      partyId!.isNotEmpty &&
+      hasValidLineItems;
 
   CreditNoteFormState copyWith({
+    String? documentId,
+    String? partyId,
     String? party,
     String? phone,
     String? returnNo,
@@ -79,8 +92,13 @@ class CreditNoteFormState {
     bool? roundOff,
     bool? showValidationErrors,
     bool? isDirty,
+    bool? isSaving,
+    String? saveError,
+    bool clearSaveError = false,
   }) {
     return CreditNoteFormState(
+      documentId: documentId ?? this.documentId,
+      partyId: partyId ?? this.partyId,
       party: party ?? this.party,
       phone: phone ?? this.phone,
       returnNo: returnNo ?? this.returnNo,
@@ -94,78 +112,10 @@ class CreditNoteFormState {
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       roundOff: roundOff ?? this.roundOff,
-      showValidationErrors:
-          showValidationErrors ?? this.showValidationErrors,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isDirty: isDirty ?? this.isDirty,
+      isSaving: isSaving ?? this.isSaving,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }
-}
-
-class SavedCreditNote {
-  const SavedCreditNote({
-    required this.id,
-    required this.party,
-    required this.phone,
-    required this.returnNo,
-    required this.originalInvoiceNo,
-    required this.originalInvoiceDate,
-    required this.returnDate,
-    required this.stateOfSupply,
-    required this.items,
-    required this.description,
-    required this.attachedImages,
-    required this.attachedDocuments,
-    required this.roundOff,
-    required this.paymentType,
-    required this.total,
-    required this.savedAt,
-  });
-
-  factory SavedCreditNote.fromFormState({
-    required String id,
-    required CreditNoteFormState form,
-  }) {
-    return SavedCreditNote(
-      id: id,
-      party: form.party,
-      phone: form.phone,
-      returnNo: form.returnNo,
-      originalInvoiceNo: form.originalInvoiceNo,
-      originalInvoiceDate: form.originalInvoiceDate,
-      returnDate: form.returnDate,
-      stateOfSupply: form.stateOfSupply,
-      items: List<SaleLineItem>.from(form.items),
-      description: form.description,
-      attachedImages: List<SaleFormAttachment>.from(form.attachedImages),
-      attachedDocuments: List<SaleFormAttachment>.from(form.attachedDocuments),
-      roundOff: form.roundOff,
-      paymentType: form.paymentType,
-      total: form.total,
-      savedAt: DateTime.now(),
-    );
-  }
-
-  final String id;
-  final String party;
-  final String phone;
-  final String returnNo;
-  final String originalInvoiceNo;
-  final DateTime? originalInvoiceDate;
-  final DateTime? returnDate;
-  final String stateOfSupply;
-  final List<SaleLineItem> items;
-  final String description;
-  final List<SaleFormAttachment> attachedImages;
-  final List<SaleFormAttachment> attachedDocuments;
-  final bool roundOff;
-  final String paymentType;
-  final double total;
-  final DateTime savedAt;
-}
-
-int _savedCreditNoteCounter = 0;
-
-String nextSavedCreditNoteId() {
-  _savedCreditNoteCounter += 1;
-  return 'credit_note_$_savedCreditNoteCounter';
 }

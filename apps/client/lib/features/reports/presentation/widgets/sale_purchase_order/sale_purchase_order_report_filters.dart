@@ -23,7 +23,7 @@ class _SalePurchaseOrderReportFiltersState
   String _orderType = 'SALE ORDER';
   String _status = 'All Orders';
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 3),
   );
 

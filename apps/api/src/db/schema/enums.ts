@@ -33,12 +33,19 @@ export const documentStatusEnum = pgEnum('document_status', [
 
 export const salesDocumentTypeEnum = pgEnum('sales_document_type', [
   'estimate',
+  'sale_order',
   'delivery_challan',
   'tax_invoice',
   'bill_of_supply',
   'normal_invoice',
   'pos',
   'sales_return',
+]);
+
+export const jobWorkOrderStatusEnum = pgEnum('job_work_order_status', [
+  'open',
+  'closed',
+  'cancelled',
 ]);
 
 export const purchaseDocumentTypeEnum = pgEnum('purchase_document_type', [

@@ -1,26 +1,30 @@
+import 'package:billing_baba/features/inventory/application/inventory_service.dart';
+import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
+import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
+import 'package:billing_baba/features/inventory/models/item_image_model.dart';
+import 'package:billing_baba/features/inventory/models/item_location_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/price_history_model.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
+import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod/src/providers/provider.dart';
 
 final productsProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(productSearchQueryProvider).toLowerCase();
-  return ref.watch(inventoryItemsProvider)
+  return (ref.watch(inventoryItemsProvider).value ?? [])
       .where((item) => item.type == ItemType.product)
       .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
       .toList();
 });
 
-final servicesProvider = FutureProvider<List<InventoryItem>>((ref) async {
-  await Future<void>.delayed(const Duration(milliseconds: 800));
+final servicesProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(serviceSearchQueryProvider).toLowerCase();
-  return ref.watch(inventoryItemsProvider)
+  return (ref.watch(inventoryItemsProvider).value ?? [])
       .where((item) => item.type == ItemType.service)
       .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
       .toList();
@@ -28,30 +32,19 @@ final servicesProvider = FutureProvider<List<InventoryItem>>((ref) async {
 
 final categoriesProvider = Provider<List<InventoryCategory>>((ref) {
   final query = ref.watch(categorySearchQueryProvider).toLowerCase();
-  final items = ref.watch(inventoryItemsProvider);
+  final categories = ref.watch(inventoryCategoriesProvider).value ?? [];
+  final items = ref.watch(inventoryItemsProvider).value ?? [];
+  final serviceAsync = ref.watch(inventoryServiceProvider);
 
-  int itemCountFor(InventoryCategory category) {
-    if (category.isUncategorized) {
-      return items
-          .where(
-            (item) =>
-                item.categoryId == null ||
-                item.categoryId == InventoryCatalog.uncategorizedCategoryId,
-          )
-          .length;
-    }
-    return items.where((item) => item.categoryId == category.id).length;
-  }
+  final withUncategorized = serviceAsync.maybeWhen(
+    data: (service) => service.withUncategorizedCategory(
+      categories: categories,
+      items: items,
+    ),
+    orElse: () => categories,
+  );
 
-  return ref.watch(inventoryCategoriesProvider)
-      .map(
-        (category) => InventoryCategory(
-          id: category.id,
-          name: category.name,
-          itemCount: itemCountFor(category),
-          isUncategorized: category.isUncategorized,
-        ),
-      )
+  return withUncategorized
       .where(
         (category) =>
             query.isEmpty || category.name.toLowerCase().contains(query),
@@ -59,20 +52,31 @@ final categoriesProvider = Provider<List<InventoryCategory>>((ref) {
       .toList();
 });
 
-final ProviderFamily<List<InventoryItem>, String> categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
   ref,
   categoryId,
 ) {
   final query = ref.watch(categoryItemSearchQueryProvider).toLowerCase();
-  return ref.watch(inventoryItemsProvider)
-      .where((item) => item.categoryId == categoryId)
+  final items = ref.watch(inventoryItemsProvider).value ?? [];
+
+  final filteredItems = categoryId == uncategorizedCategoryId
+      ? items.where(
+          (item) =>
+              item.categoryId == null ||
+              item.categoryId == uncategorizedCategoryId,
+        )
+      : items.where((item) => item.categoryId == categoryId);
+
+  return filteredItems
       .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
       .toList();
 });
 
 final unitsProvider = Provider<List<InventoryUnit>>((ref) {
   final query = ref.watch(unitSearchQueryProvider).toLowerCase();
-  return ref.watch(inventoryUnitsProvider)
+  return (ref.watch(inventoryUnitsProvider).value ?? [])
       .where(
         (unit) =>
             query.isEmpty ||
@@ -92,7 +96,8 @@ class InventoryItemsTabIndex extends Notifier<int> {
   @override
   int build() => inventoryProductsTabIndex;
 
-  void select(int index) => state = index;
+  int get tabIndex => state;
+  set tabIndex(int index) => state = index;
 
   void selectForItemType(ItemType type) {
     state = type == ItemType.product
@@ -101,23 +106,28 @@ class InventoryItemsTabIndex extends Notifier<int> {
   }
 }
 
-final selectedProductIdProvider =
-    NotifierProvider<SelectedProductId, String?>(SelectedProductId.new);
+final selectedProductIdProvider = NotifierProvider<SelectedProductId, String?>(
+  SelectedProductId.new,
+);
 
-final selectedServiceIdProvider =
-    NotifierProvider<SelectedServiceId, String?>(SelectedServiceId.new);
+final selectedServiceIdProvider = NotifierProvider<SelectedServiceId, String?>(
+  SelectedServiceId.new,
+);
 
 final selectedCategoryIdProvider =
     NotifierProvider<SelectedCategoryId, String?>(SelectedCategoryId.new);
 
-final selectedUnitIdProvider =
-    NotifierProvider<SelectedUnitId, String?>(SelectedUnitId.new);
+final selectedUnitIdProvider = NotifierProvider<SelectedUnitId, String?>(
+  SelectedUnitId.new,
+);
 
-final productSearchQueryProvider =
-    NotifierProvider<ProductSearchQuery, String>(ProductSearchQuery.new);
+final productSearchQueryProvider = NotifierProvider<ProductSearchQuery, String>(
+  ProductSearchQuery.new,
+);
 
-final serviceSearchQueryProvider =
-    NotifierProvider<ServiceSearchQuery, String>(ServiceSearchQuery.new);
+final serviceSearchQueryProvider = NotifierProvider<ServiceSearchQuery, String>(
+  ServiceSearchQuery.new,
+);
 
 final categorySearchQueryProvider =
     NotifierProvider<CategorySearchQuery, String>(CategorySearchQuery.new);
@@ -127,8 +137,9 @@ final categoryItemSearchQueryProvider =
       CategoryItemSearchQuery.new,
     );
 
-final unitSearchQueryProvider =
-    NotifierProvider<UnitSearchQuery, String>(UnitSearchQuery.new);
+final unitSearchQueryProvider = NotifierProvider<UnitSearchQuery, String>(
+  UnitSearchQuery.new,
+);
 
 final unitConversionSearchQueryProvider =
     NotifierProvider<UnitConversionSearchQuery, String>(
@@ -140,12 +151,19 @@ final productTransactionSearchQueryProvider =
       ProductTransactionSearchQuery.new,
     );
 
-final ProviderFamily<List<ProductTransaction>, String> productTransactionsProvider =
-    Provider.family<List<ProductTransaction>, String>((ref, itemId) {
-      final query =
-          ref.watch(productTransactionSearchQueryProvider).toLowerCase();
-      return InventoryCatalog.productTransactions
-          .where((txn) => txn.itemId == itemId)
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final productTransactionsProvider =
+    FutureProvider.family<List<ProductTransaction>, String>((
+      ref,
+      itemId,
+    ) async {
+      final query = ref
+          .watch(productTransactionSearchQueryProvider)
+          .toLowerCase();
+      final service = await ref.watch(inventoryServiceProvider.future);
+      final transactions = await service.fetchProductTransactions(itemId);
+      return transactions
           .where(
             (txn) =>
                 query.isEmpty ||
@@ -154,86 +172,146 @@ final ProviderFamily<List<ProductTransaction>, String> productTransactionsProvid
                 txn.partyName.toLowerCase().contains(query) ||
                 txn.status.toLowerCase().contains(query),
           )
-          .toList()
-        ..sort((a, b) => b.date.compareTo(a.date));
+          .toList();
+    });
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final productDetailProvider = FutureProvider.family<InventoryItem, String>((
+  ref,
+  itemId,
+) async {
+  final service = await ref.watch(inventoryServiceProvider.future);
+  return service.getItem(itemId);
+});
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final itemStockLevelsProvider =
+    FutureProvider.family<List<StockLevelDto>, String>((ref, itemId) async {
+      final service = await ref.watch(inventoryServiceProvider.future);
+      return service.fetchItemStockLevels(itemId);
+    });
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final itemTierPricesProvider =
+    FutureProvider.family<List<TierPriceModel>, String>((ref, itemId) async {
+      final service = await ref.watch(inventoryServiceProvider.future);
+      return service.fetchItemTierPrices(itemId);
+    });
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final itemImagesProvider =
+    FutureProvider.family<List<ItemImageModel>, String>((ref, itemId) async {
+      final service = await ref.watch(inventoryServiceProvider.future);
+      return service.fetchItemImages(itemId);
+    });
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final itemLocationsProvider =
+    FutureProvider.family<List<ItemLocationModel>, String>((ref, itemId) async {
+      final service = await ref.watch(inventoryServiceProvider.future);
+      return service.fetchItemLocations(itemId);
+    });
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final priceHistoryProvider =
+    FutureProvider.family<List<PriceHistoryModel>, String>((ref, itemId) async {
+      final service = await ref.watch(inventoryServiceProvider.future);
+      return service.fetchItemPriceHistory(itemId);
     });
 
 class SelectedProductId extends Notifier<String?> {
   @override
   String? build() => null;
 
-  void select(String? id) => state = id;
+  String? get selected => state;
+  set selected(String? id) => state = id;
 }
 
 class SelectedServiceId extends Notifier<String?> {
   @override
   String? build() => null;
 
-  void select(String? id) => state = id;
+  String? get selected => state;
+  set selected(String? id) => state = id;
 }
 
 class SelectedCategoryId extends Notifier<String?> {
   @override
-  String? build() => InventoryCatalog.uncategorizedCategoryId;
+  String? build() => uncategorizedCategoryId;
 
-  void select(String? id) => state = id;
+  String? get selected => state;
+  set selected(String? id) => state = id;
 }
 
 class SelectedUnitId extends Notifier<String?> {
   @override
   String? build() {
-    final units = ref.watch(inventoryUnitsProvider);
+    final units = ref.watch(inventoryUnitsProvider).value ?? [];
     return units.isEmpty ? null : units.first.id;
   }
 
-  void select(String? id) => state = id;
+  String? get selected => state;
+  set selected(String? id) => state = id;
 }
 
 class ProductSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class ServiceSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class CategorySearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class CategoryItemSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class UnitSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class UnitConversionSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
 
 class ProductTransactionSearchQuery extends Notifier<String> {
   @override
   String build() => '';
 
-  void update(String query) => state = query;
+  String get query => state;
+  set query(String value) => state = value;
 }
