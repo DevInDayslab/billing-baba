@@ -6,7 +6,9 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -17,30 +19,36 @@ class AllTransactionsReportContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rows = ref.watch(reportAllTransactionsProvider);
+    final reportAsync = ref.watch(allTransactionsReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () =>
+          ref.read(allTransactionsReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ReportCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
+            const ReportCard(
+              padding: EdgeInsets.all(AppSpacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const ReportPeriodFilterBar(),
-                  const SizedBox(height: AppSpacing.sm),
+                  ReportPeriodFilterBar(),
+                  SizedBox(height: AppSpacing.sm),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      const ReportTextActionButton(
+                      ReportTextActionButton(
                         label: 'Excel Report',
                         icon: Icons.table_chart_outlined,
                       ),
-                      const ReportTextActionButton(
+                      ReportTextActionButton(
                         label: 'Print',
                         icon: Icons.print_outlined,
                       ),
@@ -117,7 +125,7 @@ class AllTransactionsReportContent extends ConsumerWidget {
                         _AllTransactionsRow(row: rows[i], index: i),
                     ],
                     emptyState: const ReportEmptyTableState(
-                      message: 'No data available',
+                      
                     ),
                   ),
                 ],
@@ -126,6 +134,8 @@ class AllTransactionsReportContent extends ConsumerWidget {
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

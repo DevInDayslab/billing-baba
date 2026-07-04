@@ -2,7 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -23,9 +24,14 @@ class _LowStockSummaryReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportLowStockProvider);
+    final reportAsync = ref.watch(lowStockReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(lowStockReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -96,7 +102,7 @@ class _LowStockSummaryReportContentState
           ),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
+              padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,
                 0,
                 AppSpacing.lg,
@@ -108,11 +114,11 @@ class _LowStockSummaryReportContentState
                   children: [
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     Expanded(
                                       child: ReportAlignedHeaderCell(
                                         label: 'ITEM NAME',
@@ -134,9 +140,9 @@ class _LowStockSummaryReportContentState
                                       alignment: Alignment.centerRight,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No low stock items found based on the selected filters.',
@@ -223,6 +229,8 @@ class _LowStockSummaryReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

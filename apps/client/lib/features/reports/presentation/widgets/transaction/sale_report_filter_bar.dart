@@ -1,29 +1,36 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 
-class SaleReportFilterBar extends StatefulWidget {
+class SaleReportFilterBar extends ConsumerWidget {
   const SaleReportFilterBar({super.key});
 
+  static const _periodOptions = [
+    'All Time',
+    'Today',
+    'Yesterday',
+    'This Week',
+    'Last Week',
+    'This Month',
+    'Last Month',
+    'This Quarter',
+    'This Year',
+    'Custom',
+  ];
+
   @override
-  State<SaleReportFilterBar> createState() => _SaleReportFilterBarState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filters = ref.watch(reportFiltersProvider);
+    final notifier = ref.read(reportFiltersProvider.notifier);
+    final dateRange = filters.customDateRange ??
+        DateTimeRange(start: DateTime.now(), end: DateTime.now());
 
-class _SaleReportFilterBarState extends State<SaleReportFilterBar> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-
-  String _timeRange = 'This Month';
-  String _firm = 'All Firms';
-  DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2025, 9),
-    end: DateTime(2025, 9, 30),
-  );
-
-  @override
-  Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -49,33 +56,22 @@ class _SaleReportFilterBarState extends State<SaleReportFilterBar> {
               ),
             ),
             SaleFilterDropdown(
-              label: _timeRange,
-              options: const [
-                'All Time',
-                'Today',
-                'This Week',
-                'This Month',
-                'This Year',
-                'Custom',
-              ],
-              selected: _timeRange,
-              onSelected: (value) => setState(() => _timeRange = value),
+              label: filters.periodLabel,
+              options: _periodOptions,
+              selected: filters.periodLabel,
+              onSelected: (value) {
+                notifier.setPeriod(ReportPeriod.fromLabel(value));
+              },
             ),
-            SaleDateRangePickerAnchor(
-              key: _datePickerKey,
-              initialRange: _dateRange,
-              onRangeSelected: (range) => setState(() => _dateRange = range),
-              child: SaleFilterChip(
-                label: formatSaleDateRangeLabel(_dateRange),
-                onTap: () => _datePickerKey.currentState?.toggle(),
+            if (filters.period == ReportPeriod.custom)
+              SaleDateRangePickerAnchor(
+                initialRange: dateRange,
+                onRangeSelected: notifier.setCustomDateRange,
+                child: SaleFilterChip(
+                  label: formatSaleDateRangeLabel(dateRange),
+                  onTap: () {},
+                ),
               ),
-            ),
-            SaleFilterDropdown(
-              label: _firm,
-              options: const ['All Firms', 'Firm A', 'Firm B'],
-              selected: _firm,
-              onSelected: (value) => setState(() => _firm = value),
-            ),
           ],
         ),
       ),

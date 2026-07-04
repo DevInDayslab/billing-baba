@@ -5,7 +5,7 @@ import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -61,7 +61,7 @@ class _Gstr1ReportContentState extends ConsumerState<Gstr1ReportContent> {
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportGstr1SaleProvider);
+    final rows = ref.watch(gstr1ReportProvider).value?.rows ?? [];
 
     return ColoredBox(
       color: AppColors.background,
@@ -161,7 +161,7 @@ class _Gstr1ReportContentState extends ConsumerState<Gstr1ReportContent> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.stretch,
                                         children: [
-                                          _Gstr1TableHeader(
+                                          const _Gstr1TableHeader(
                                             headerStyle: _headerStyle,
                                           ),
                                           for (var i = 0; i < rows.length; i++)
@@ -203,10 +203,10 @@ class _Gstr1ColumnLayout {
   static const taxableWidth = 100.0;
   static const integratedWidth = 110.0;
 
-  static const invoiceDetailsWidth =
+  static const double invoiceDetailsWidth =
       invoiceNoWidth + dateWidth + valueWidth + taxRateWidth;
 
-  static const minWidth = indexWidth +
+  static const double minWidth = indexWidth +
       gstinWidth +
       partyWidth +
       invoiceNoWidth +
@@ -265,16 +265,16 @@ class _Gstr1DataRow extends StatelessWidget {
     );
   }
 
-  static const indexWidth = _Gstr1ColumnLayout.indexWidth;
-  static const gstinWidth = _Gstr1ColumnLayout.gstinWidth;
-  static const partyWidth = _Gstr1ColumnLayout.partyWidth;
-  static const invoiceNoWidth = _Gstr1ColumnLayout.invoiceNoWidth;
-  static const dateWidth = _Gstr1ColumnLayout.dateWidth;
-  static const valueWidth = _Gstr1ColumnLayout.valueWidth;
-  static const taxRateWidth = _Gstr1ColumnLayout.taxRateWidth;
-  static const cessWidth = _Gstr1ColumnLayout.cessWidth;
-  static const taxableWidth = _Gstr1ColumnLayout.taxableWidth;
-  static const integratedWidth = _Gstr1ColumnLayout.integratedWidth;
+  static const double indexWidth = _Gstr1ColumnLayout.indexWidth;
+  static const double gstinWidth = _Gstr1ColumnLayout.gstinWidth;
+  static const double partyWidth = _Gstr1ColumnLayout.partyWidth;
+  static const double invoiceNoWidth = _Gstr1ColumnLayout.invoiceNoWidth;
+  static const double dateWidth = _Gstr1ColumnLayout.dateWidth;
+  static const double valueWidth = _Gstr1ColumnLayout.valueWidth;
+  static const double taxRateWidth = _Gstr1ColumnLayout.taxRateWidth;
+  static const double cessWidth = _Gstr1ColumnLayout.cessWidth;
+  static const double taxableWidth = _Gstr1ColumnLayout.taxableWidth;
+  static const double integratedWidth = _Gstr1ColumnLayout.integratedWidth;
 }
 
 class _MonthField extends StatelessWidget {
@@ -475,9 +475,9 @@ class _Gstr1TableHeader extends StatelessWidget {
             ),
             child: Row(
               children: [
-                SizedBox(width: _Gstr1ColumnLayout.indexWidth),
-                SizedBox(width: _Gstr1ColumnLayout.gstinWidth),
-                SizedBox(width: _Gstr1ColumnLayout.partyWidth),
+                const SizedBox(width: _Gstr1ColumnLayout.indexWidth),
+                const SizedBox(width: _Gstr1ColumnLayout.gstinWidth),
+                const SizedBox(width: _Gstr1ColumnLayout.partyWidth),
                 SizedBox(
                   width: _Gstr1ColumnLayout.invoiceNoWidth,
                   child: Text('Invoice No.', style: headerStyle),
@@ -500,9 +500,9 @@ class _Gstr1TableHeader extends StatelessWidget {
                     child: Text('Tax Rate', style: headerStyle),
                   ),
                 ),
-                SizedBox(width: _Gstr1ColumnLayout.cessWidth),
-                SizedBox(width: _Gstr1ColumnLayout.taxableWidth),
-                SizedBox(width: _Gstr1ColumnLayout.integratedWidth),
+                const SizedBox(width: _Gstr1ColumnLayout.cessWidth),
+                const SizedBox(width: _Gstr1ColumnLayout.taxableWidth),
+                const SizedBox(width: _Gstr1ColumnLayout.integratedWidth),
               ],
             ),
           ),

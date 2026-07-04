@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +11,8 @@ class SaleReportSummaryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final summary = ref.watch(reportSaleSummaryProvider);
+    final report = ref.watch(saleReportProvider).value;
+    final summary = report;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -24,59 +25,16 @@ class SaleReportSummaryCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Total Sales Amount',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.arrow_upward,
-                        size: 12,
-                        color: Colors.green.shade700,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '0%',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                const Text(
-                  'vs last month',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
+            const Text(
+              'Total Sales Amount',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              formatReportCurrency(summary.totalSalesAmount),
+              formatReportCurrency(summary?.totalSalesAmount ?? 0),
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -87,8 +45,8 @@ class SaleReportSummaryCard extends ConsumerWidget {
             const Divider(height: 1, color: _cardBorder),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Received: ${formatReportCurrency(summary.receivedAmount)} | '
-              'Balance: ${formatReportCurrency(summary.balanceAmount)}',
+              'Received: ${formatReportCurrency(summary?.receivedAmount ?? 0)} | '
+              'Balance: ${formatReportCurrency(summary?.balanceAmount ?? 0)}',
               style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textSecondary,

@@ -4,7 +4,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,7 +53,7 @@ class _Gstr3bReportContentState extends ConsumerState<Gstr3bReportContent> {
 
   @override
   Widget build(BuildContext context) {
-    final supplyRows = ref.watch(reportGstr3bProvider);
+    final supplyRows = ref.watch(gstr3bReportProvider).value?.rows ?? [];
 
     return ColoredBox(
       color: AppColors.background,
@@ -155,14 +155,14 @@ class _Gstr3bReportContentState extends ConsumerState<Gstr3bReportContent> {
                       ),
                     ),
                     const Divider(height: 1, color: reportCardBorder),
-                    _SectionTitle(
+                    const _SectionTitle(
                       title:
                           'Details of outward supplies and inward supplies '
                           'liable to reverse charge',
                     ),
                     _TaxSupplyTable(rows: supplyRows),
                     const Divider(height: 1, color: reportCardBorder),
-                    _SectionTitle(
+                    const _SectionTitle(
                       title:
                           '5. Details of inter-State supplies made to '
                           'unregistered persons, composition dealer and UIN holders',
@@ -172,7 +172,7 @@ class _Gstr3bReportContentState extends ConsumerState<Gstr3bReportContent> {
                     const _SectionTitle(title: '3. Eligible ITC'),
                     const _ItcTable(),
                     const Divider(height: 1, color: reportCardBorder),
-                    _SectionTitle(
+                    const _SectionTitle(
                       title:
                           '4. Details of exempt, nil-rated and non-GST '
                           'inward supplies',
@@ -288,7 +288,7 @@ class _TaxSupplyTable extends StatelessWidget {
   static const _natureWidth = 280.0;
   static const _valueWidth = 120.0;
   static const _cessWidth = 80.0;
-  static const minWidth =
+  static const double minWidth =
       _natureWidth + (_valueWidth * 4) + _cessWidth + 32;
 
   @override
@@ -380,10 +380,10 @@ class _InterStateSuppliesTable extends StatelessWidget {
 
   static const _placeWidth = 160.0;
   static const _valueWidth = 130.0;
-  static const _groupWidth = _valueWidth * 2;
-  static const _columnsWidth = _placeWidth + (_groupWidth * 3);
-  static const _horizontalPadding = AppSpacing.md * 2;
-  static const minWidth = _columnsWidth + _horizontalPadding;
+  static const double _groupWidth = _valueWidth * 2;
+  static const double _columnsWidth = _placeWidth + (_groupWidth * 3);
+  static const double _horizontalPadding = AppSpacing.md * 2;
+  static const double minWidth = _columnsWidth + _horizontalPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -488,7 +488,7 @@ class _ItcTable extends StatelessWidget {
   static const _detailWidth = 360.0;
   static const _taxWidth = 120.0;
   static const _cessWidth = 80.0;
-  static const minWidth = _detailWidth + (_taxWidth * 3) + _cessWidth + 32;
+  static const double minWidth = _detailWidth + (_taxWidth * 3) + _cessWidth + 32;
 
   @override
   Widget build(BuildContext context) {
@@ -621,7 +621,7 @@ class _ExemptSuppliesTable extends StatelessWidget {
 
   static const _natureWidth = 320.0;
   static const _valueWidth = 160.0;
-  static const minWidth = _natureWidth + (_valueWidth * 2) + 32;
+  static const double minWidth = _natureWidth + (_valueWidth * 2) + 32;
 
   @override
   Widget build(BuildContext context) {

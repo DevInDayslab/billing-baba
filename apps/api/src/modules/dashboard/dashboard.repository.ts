@@ -6,12 +6,20 @@ import {
   payments,
 } from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
-import { godowns, items, stockLevels } from '../../db/schema/inventory/tables';
 import {
   expenses,
   purchaseDocuments,
 } from '../../db/schema/purchases/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
+import {
+  PURCHASE_BILL_TYPE,
+  REVENUE_SALES_TYPES,
+} from '../../shared/reporting/constants';
+import {
+  countLowAndNegativeStock,
+  getTotalStockValue,
+  listStockItemAggregates,
+} from '../../shared/reporting/inventory-summary';
 import { OutstandingRepository } from '../accounting/outstanding.repository';
 import type { ResolvedDashboardPeriod } from './dashboard-period';
 import type {
@@ -23,15 +31,6 @@ import type {
   DashboardRecentTransaction,
   DashboardSalesSummary,
 } from './dashboard.types';
-
-const REVENUE_SALES_TYPES = [
-  'tax_invoice',
-  'bill_of_supply',
-  'normal_invoice',
-  'pos',
-] as const;
-
-const PURCHASE_BILL_TYPE = 'purchase_bill' as const;
 
 export class DashboardRepository {
   private readonly outstandingRepository: OutstandingRepository;
@@ -188,85 +187,24 @@ export class DashboardRepository {
   async getInventorySummary(
     businessId: string,
   ): Promise<DashboardInventorySummary> {
-    const [valueRow] = await this.db
-      .select({
-        total: sql<string>`COALESCE(SUM(
-          ${stockLevels.quantity}::numeric * ${stockLevels.averageCost}::numeric
-        ), 0)`,
-      })
-      .from(stockLevels)
-      .innerJoin(items, eq(stockLevels.itemId, items.id))
-      .innerJoin(godowns, eq(stockLevels.godownId, godowns.id))
-      .where(
-        and(
-          eq(stockLevels.businessId, businessId),
-          eq(stockLevels.isDeleted, false),
-          eq(items.isDeleted, false),
-          eq(godowns.isDeleted, false),
-        ),
-      );
-
-    const itemAgg = this.db
-      .select({
-        itemId: items.id,
-        itemName: items.name,
-        totalQty: sql<string>`SUM(${stockLevels.quantity}::numeric)`.as(
-          'total_qty',
-        ),
-        reorderLevel:
-          sql<string>`MAX(COALESCE(${stockLevels.reorderLevel}, ${items.reorderLevel}))`.as(
-            'reorder_level',
-          ),
-      })
-      .from(stockLevels)
-      .innerJoin(items, eq(stockLevels.itemId, items.id))
-      .innerJoin(godowns, eq(stockLevels.godownId, godowns.id))
-      .where(
-        and(
-          eq(stockLevels.businessId, businessId),
-          eq(stockLevels.isDeleted, false),
-          eq(items.isDeleted, false),
-          eq(godowns.isDeleted, false),
-        ),
-      )
-      .groupBy(items.id, items.name)
-      .as('item_agg');
-
-    const lowStockRows = await this.db
-      .select({
-        itemId: itemAgg.itemId,
-        itemName: itemAgg.itemName,
-        quantity: itemAgg.totalQty,
-        reorderLevel: itemAgg.reorderLevel,
-      })
-      .from(itemAgg)
-      .where(
-        sql`${itemAgg.totalQty}::numeric <= ${itemAgg.reorderLevel}::numeric
-          AND ${itemAgg.reorderLevel} IS NOT NULL`,
-      )
-      .orderBy(itemAgg.totalQty)
-      .limit(5);
-
-    const [counts] = await this.db
-      .select({
-        lowStockCount: sql<number>`COUNT(*) FILTER (
-          WHERE ${itemAgg.totalQty}::numeric <= ${itemAgg.reorderLevel}::numeric
-            AND ${itemAgg.reorderLevel} IS NOT NULL
-        )::int`,
-        negativeStockCount: sql<number>`COUNT(*) FILTER (
-          WHERE ${itemAgg.totalQty}::numeric < 0
-        )::int`,
-      })
-      .from(itemAgg);
+    const [totalStockValue, counts, lowStockResult] = await Promise.all([
+      getTotalStockValue(this.db, businessId),
+      countLowAndNegativeStock(this.db, businessId),
+      listStockItemAggregates(this.db, businessId, {
+        lowStockOnly: true,
+        page: 1,
+        limit: 5,
+      }),
+    ]);
 
     return {
-      total_stock_value: valueRow?.total ?? '0',
-      low_stock_count: Number(counts?.lowStockCount ?? 0),
-      negative_stock_count: Number(counts?.negativeStockCount ?? 0),
-      low_stock_items: lowStockRows.map((row) => ({
+      total_stock_value: totalStockValue,
+      low_stock_count: counts.lowStockCount,
+      negative_stock_count: counts.negativeStockCount,
+      low_stock_items: lowStockResult.rows.map((row) => ({
         item_id: row.itemId,
         item_name: row.itemName,
-        quantity: row.quantity ?? '0',
+        quantity: row.totalQty,
         reorder_level: row.reorderLevel ?? '0',
       })),
     };

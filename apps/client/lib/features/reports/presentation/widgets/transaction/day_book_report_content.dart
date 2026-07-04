@@ -1,12 +1,14 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -33,18 +35,25 @@ class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
     super.initState();
     final now = DateTime.now();
     _selectedDate = DateTime(now.year, now.month, now.day);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(reportFiltersProvider.notifier).setSelectedDate(_selectedDate);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportDayBookProvider(_selectedDate));
-    final totalMoneyIn =
-        rows.fold<double>(0, (sum, row) => sum + row.moneyIn);
-    final totalMoneyOut =
-        rows.fold<double>(0, (sum, row) => sum + row.moneyOut);
-    final netTotal = totalMoneyIn - totalMoneyOut;
+    final reportAsync = ref.watch(dayBookReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(dayBookReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalMoneyIn = report.totalMoneyIn;
+        final totalMoneyOut = report.totalMoneyOut;
+        final netTotal = report.netTotal;
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -73,8 +82,12 @@ class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
                     start: _selectedDate,
                     end: _selectedDate,
                   ),
-                  onRangeSelected: (range) =>
-                      setState(() => _selectedDate = range.start),
+                  onRangeSelected: (range) {
+                    setState(() => _selectedDate = range.start);
+                    ref
+                        .read(reportFiltersProvider.notifier)
+                        .setSelectedDate(range.start);
+                  },
                   child: SaleFilterChip(
                     label: _dateFormat.format(_selectedDate),
                     onTap: () => _datePickerKey.currentState?.toggle(),
@@ -182,6 +195,8 @@ class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

@@ -3,7 +3,8 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
@@ -38,11 +39,15 @@ class _StockSummaryReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportStockSummaryProvider);
-    final totalStockValue =
-        rows.fold<double>(0, (sum, row) => sum + row.stockValue);
+    final reportAsync = ref.watch(stockSummaryReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(stockSummaryReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalStockValue = report.totalStockValue;
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -207,11 +212,11 @@ class _StockSummaryReportContentState
                     const Divider(height: 1, color: reportCardBorder),
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     Expanded(
                                       child: ReportAlignedHeaderCell(
                                         label: 'ITEM NAME',
@@ -238,9 +243,9 @@ class _StockSummaryReportContentState
                                       alignment: Alignment.centerRight,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No stock items to display.',
@@ -372,6 +377,8 @@ class _StockSummaryReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

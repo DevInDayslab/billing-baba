@@ -1,12 +1,14 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/parties/providers/party_catalog.dart';
+import 'package:billing_baba/features/parties/providers/parties_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_view_toggle.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -27,27 +29,36 @@ class _PartyStatementReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final partyId = ref.watch(reportSelectedPartyIdProvider);
-    final parties = PartyCatalog.parties;
+    final partyId = ref.watch(reportFiltersProvider).partyId;
+    final parties = ref.watch(partiesListProvider);
     final selectedParty = parties
         .where((party) => party.id == partyId)
         .firstOrNull;
     final partyNames = parties.map((party) => party.name).toList();
-    final statement = ref.watch(reportPartyStatementProvider(partyId));
-    final summary = ref.watch(reportPartyStatementSummaryProvider(partyId));
+    final statementAsync = ref.watch(partyStatementReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: statementAsync,
+      onRetry: () =>
+          ref.read(partyStatementReportProvider.notifier).refresh(),
+      data: (data) {
+        if (data == null) {
+          return const Center(child: Text('Select a party to view statement'));
+        }
+        final statement = data.entries;
+        final summary = data.summary;
+        return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ReportCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
+            const ReportCard(
+              padding: EdgeInsets.all(AppSpacing.md),
               child: ReportPeriodFilterBar(
                 showFirmFilter: false,
-                trailing: const Row(
+                trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ReportTextActionButton(
@@ -74,9 +85,7 @@ class _PartyStatementReportContentState
                   final party =
                       parties.where((p) => p.name == name).firstOrNull;
                   if (party != null) {
-                    ref
-                        .read(reportSelectedPartyIdProvider.notifier)
-                        .select(party.id);
+                    ref.read(reportFiltersProvider.notifier).setPartyId(party.id);
                   }
                 },
               ),
@@ -259,6 +268,8 @@ class _PartyStatementReportContentState
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

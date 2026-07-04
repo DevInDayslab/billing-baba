@@ -1,11 +1,12 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,19 +25,24 @@ class _ProfitLossReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final items = ref.watch(reportProfitLossProvider);
+    final reportAsync = ref.watch(profitLossReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(profitLossReportProvider.notifier).refresh(),
+      data: (report) {
+        final items = report.items;
+        return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ReportDateRangeBar(
+            const ReportDateRangeBar(
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   ReportIconActionButton(
                     icon: Icons.picture_as_pdf_outlined,
                     tooltip: 'Export PDF',
@@ -134,6 +140,8 @@ class _ProfitLossReportContentState
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

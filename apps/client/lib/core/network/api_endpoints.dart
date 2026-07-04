@@ -105,4 +105,18 @@ abstract final class ApiEndpoints {
   static String jobWorkOrder(String id) => '$jobWorkOrders/$id';
 
   static const dashboard = '/api/v1/dashboard';
+
+  static const reports = '/api/v1/reports';
+  static const reportsSales = '$reports/sales';
+  static const reportsPurchases = '$reports/purchases';
+  static const reportsStockSummary = '$reports/stock-summary';
+  static const reportsLowStock = '$reports/low-stock';
+  static const reportsPartyOutstanding = '$reports/party-outstanding';
+  static const reportsPartyStatement = '$reports/party-statement';
+  static const reportsDayBook = '$reports/day-book';
+  static const reportsAllTransactions = '$reports/all-transactions';
+  static const reportsProfitLoss = '$reports/profit-loss';
+  static const reportsGstr1 = '$reports/gstr-1';
+  static const reportsGstr2 = '$reports/gstr-2';
+  static const reportsGstr3b = '$reports/gstr-3b';
 }

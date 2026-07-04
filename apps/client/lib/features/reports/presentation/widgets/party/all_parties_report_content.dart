@@ -5,7 +5,8 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -25,10 +26,16 @@ class _AllPartiesReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final parties = ref.watch(reportAllPartiesProvider);
-    final summary = ref.watch(reportPartyBalanceSummaryProvider);
+    final reportAsync = ref.watch(partyOutstandingReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () =>
+          ref.read(partyOutstandingReportProvider.notifier).refresh(),
+      data: (report) {
+        final parties = report.rows;
+        final summary = report;
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -131,7 +138,7 @@ class _AllPartiesReportContentState
                           ),
                         ),
                       ),
-                      headerChildren: [
+                      headerChildren: const [
                         SizedBox(
                           width: 48,
                           child: Checkbox(
@@ -140,26 +147,26 @@ class _AllPartiesReportContentState
                             visualDensity: VisualDensity.compact,
                           ),
                         ),
-                        const ReportAlignedHeaderCell(label: '#', width: 40),
-                        const Expanded(
+                        ReportAlignedHeaderCell(label: '#', width: 40),
+                        Expanded(
                           child: ReportAlignedHeaderCell(label: 'PARTY NAME'),
                         ),
-                        const ReportAlignedHeaderCell(label: 'EMAIL', width: 140),
-                        const ReportAlignedHeaderCell(
+                        ReportAlignedHeaderCell(label: 'EMAIL', width: 140),
+                        ReportAlignedHeaderCell(
                           label: 'PHONE NO.',
                           width: 110,
                         ),
-                        const ReportAlignedHeaderCell(
+                        ReportAlignedHeaderCell(
                           label: 'RECEIVABLE BALANCE',
                           width: 140,
                           alignment: Alignment.centerRight,
                         ),
-                        const ReportAlignedHeaderCell(
+                        ReportAlignedHeaderCell(
                           label: 'PAYABLE BALANCE',
                           width: 130,
                           alignment: Alignment.centerRight,
                         ),
-                        const ReportAlignedHeaderCell(
+                        ReportAlignedHeaderCell(
                           label: 'CREDIT LIMIT',
                           width: 110,
                           alignment: Alignment.centerRight,
@@ -212,6 +219,8 @@ class _AllPartiesReportContentState
         ],
       ),
     );
+      },
+    );
   }
 }
 
@@ -234,7 +243,7 @@ class _PartyRow extends StatelessWidget {
 
     return ReportAlignedDataRow(
       cells: [
-        ReportAlignedCell.fixed(
+        const ReportAlignedCell.fixed(
           48,
           child: Checkbox(
             value: false,
