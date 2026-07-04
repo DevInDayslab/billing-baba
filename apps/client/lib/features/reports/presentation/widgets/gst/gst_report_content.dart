@@ -26,6 +26,7 @@ class GstReportContent extends StatelessWidget {
     GstReportSubSection.gstr3b => 'GSTR-3B Report',
     GstReportSubSection.gstr9 => 'GSTR-9 Report',
     GstReportSubSection.saleSummaryByHsn => 'Sale Summary By HSN',
+    GstReportSubSection.sacReport => 'SAC Report',
   };
 
   List<_TableColumn> get _columns => switch (subSection) {
@@ -73,6 +74,16 @@ class GstReportContent extends StatelessWidget {
       _TableColumn('CGST', 80, right: true),
       _TableColumn('SGST', 80, right: true),
     ],
+    GstReportSubSection.sacReport => const [
+      _TableColumn('SAC', 90),
+      _TableColumn('INVOICE TYPE', 110),
+      _TableColumn('TOTAL VALUE', 110, right: true),
+      _TableColumn('TAXABLE VALUE', 120, right: true),
+      _TableColumn('IGST AMOUNT', 110, right: true),
+      _TableColumn('CGST AMOUNT', 110, right: true),
+      _TableColumn('SGST AMOUNT', 110, right: true),
+      _TableColumn('ADD. CESS', 100, right: true),
+    ],
   };
 
   @override
@@ -97,7 +108,8 @@ class GstReportContent extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                if (subSection != GstReportSubSection.saleSummaryByHsn)
+                if (subSection != GstReportSubSection.saleSummaryByHsn &&
+                    subSection != GstReportSubSection.sacReport)
                   TextButton(
                     onPressed: () {},
                     style: TextButton.styleFrom(

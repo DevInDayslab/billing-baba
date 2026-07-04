@@ -1,24 +1,27 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_summary_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/transaction_report_filter_bar.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_empty_state_card.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_status_badge.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
-class PurchaseReportContent extends StatelessWidget {
+class PurchaseReportContent extends ConsumerWidget {
   const PurchaseReportContent({super.key});
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹ ',
-    decimalDigits: 2,
-  );
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final purchases = ref.watch(reportPurchasesProvider);
+    final summary = ref.watch(reportPurchaseSummaryProvider);
+
     return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
@@ -32,28 +35,97 @@ class PurchaseReportContent extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             ReportSummaryCard(
               amountLabel: 'Total Purchase Amount',
-              totalAmount: 0,
+              totalAmount: summary.total,
               secondaryLabel:
-                  'Paid: ${_currencyFormat.format(0)} | '
-                  'Balance: ${_currencyFormat.format(0)}',
+                  'Paid: ${formatReportCurrency(summary.paid)} | '
+                  'Balance: ${formatReportCurrency(summary.balance)}',
               trendUp: false,
             ),
             const SizedBox(height: AppSpacing.md),
-            SaleEmptyStateCard(
-              illustration: const SaleGeometricIllustration(
-                circleColor: Color(0xFFE8F5E9),
-                shapeColor: Color(0xFF81C784),
-                shapeIcon: Icons.shopping_basket_outlined,
+            if (purchases.isEmpty)
+              SaleEmptyStateCard(
+                illustration: const SaleGeometricIllustration(
+                  circleColor: Color(0xFFE8F5E9),
+                  shapeColor: Color(0xFF81C784),
+                  shapeIcon: Icons.shopping_basket_outlined,
+                ),
+                title: 'No Transactions to show',
+                description: "You haven't added any purchases yet.",
+                buttonLabel: 'Add Purchase',
+                buttonColor: reportAddRed,
+                buttonIcon: Icons.add,
+                onPressed: () => context.push(AppRoutes.purchase),
+              )
+            else
+              ReportCard(
+                child: ReportSyncScrollTable(
+                  minWidth: 840,
+                  headerChildren: const [
+                    ReportAlignedHeaderCell(label: 'DATE', width: 100),
+                    ReportAlignedHeaderCell(label: 'INVOICE NO', width: 120),
+                    Expanded(
+                      child: ReportAlignedHeaderCell(label: 'PARTY'),
+                    ),
+                    ReportAlignedHeaderCell(label: 'PAYMENT TYPE', width: 120),
+                    ReportAlignedHeaderCell(label: 'STATUS', width: 100),
+                    ReportAlignedHeaderCell(
+                      label: 'AMOUNT',
+                      width: 100,
+                      alignment: Alignment.centerRight,
+                    ),
+                    ReportAlignedHeaderCell(
+                      label: 'BALANCE',
+                      width: 100,
+                      alignment: Alignment.centerRight,
+                    ),
+                  ],
+                  rows: [
+                    for (var i = 0; i < purchases.length; i++)
+                      _PurchaseRow(purchase: purchases[i], index: i),
+                  ],
+                ),
               ),
-              title: 'No Transactions to show',
-              description: "You haven't added any purchases yet.",
-              buttonLabel: 'Add Purchase',
-              buttonColor: reportAddRed,
-              buttonIcon: Icons.add,
-              onPressed: () => context.push(AppRoutes.purchase),
-            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PurchaseRow extends StatelessWidget {
+  const _PurchaseRow({required this.purchase, required this.index});
+
+  final ReportPurchaseRow purchase;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return ReportAlignedRowStrip(
+      index: index,
+      child: ReportAlignedDataRow(
+        cells: [
+          ReportAlignedCell.fixed(
+            100,
+            child: Text(formatReportDate(purchase.date)),
+          ),
+          ReportAlignedCell.fixed(120, child: Text(purchase.invoiceNo)),
+          ReportAlignedCell.flex(child: Text(purchase.partyName)),
+          ReportAlignedCell.fixed(120, child: Text(purchase.paymentType)),
+          ReportAlignedCell.fixed(
+            100,
+            child: SaleInvoiceStatusBadge(status: purchase.status),
+          ),
+          ReportAlignedCell.fixed(
+            100,
+            alignment: Alignment.centerRight,
+            child: Text(formatReportCurrencyCompact(purchase.amount)),
+          ),
+          ReportAlignedCell.fixed(
+            100,
+            alignment: Alignment.centerRight,
+            child: Text(formatReportCurrencyCompact(purchase.balance)),
+          ),
+        ],
       ),
     );
   }

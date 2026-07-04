@@ -1,20 +1,18 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 
-class SaleReportSummaryCard extends StatelessWidget {
+class SaleReportSummaryCard extends ConsumerWidget {
   const SaleReportSummaryCard({super.key});
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹ ',
-    decimalDigits: 2,
-  );
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summary = ref.watch(reportSaleSummaryProvider);
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -78,7 +76,7 @@ class SaleReportSummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              _currencyFormat.format(26614.13),
+              formatReportCurrency(summary.totalSalesAmount),
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -89,8 +87,8 @@ class SaleReportSummaryCard extends StatelessWidget {
             const Divider(height: 1, color: _cardBorder),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Received: ${_currencyFormat.format(25338.35)} | '
-              'Balance: ${_currencyFormat.format(1275.78)}',
+              'Received: ${formatReportCurrency(summary.receivedAmount)} | '
+              'Balance: ${formatReportCurrency(summary.balanceAmount)}',
               style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textSecondary,

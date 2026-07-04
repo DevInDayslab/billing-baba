@@ -1,32 +1,33 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AllPartiesReportContent extends StatefulWidget {
+class AllPartiesReportContent extends ConsumerStatefulWidget {
   const AllPartiesReportContent({super.key});
 
   @override
-  State<AllPartiesReportContent> createState() =>
+  ConsumerState<AllPartiesReportContent> createState() =>
       _AllPartiesReportContentState();
 }
 
-class _AllPartiesReportContentState extends State<AllPartiesReportContent> {
+class _AllPartiesReportContentState
+    extends ConsumerState<AllPartiesReportContent> {
   bool _dateFilterEnabled = false;
-
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹ ',
-    decimalDigits: 2,
-  );
 
   @override
   Widget build(BuildContext context) {
+    final parties = ref.watch(reportAllPartiesProvider);
+    final summary = ref.watch(reportPartyBalanceSummaryProvider);
+
     return ColoredBox(
       color: AppColors.background,
       child: Column(
@@ -102,9 +103,35 @@ class _AllPartiesReportContentState extends State<AllPartiesReportContent> {
                       ),
                       child: ReportSearchField(),
                     ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const ReportTableHeaderRow(
-                      children: [
+                    ReportSyncScrollTable(
+                      minWidth: 900,
+                      emptyState: const SizedBox(
+                        height: 220,
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'No parties to display.',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              SizedBox(height: AppSpacing.xs),
+                              Text(
+                                'Add parties to see them here.',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      headerChildren: [
                         SizedBox(
                           width: 48,
                           child: Checkbox(
@@ -113,58 +140,38 @@ class _AllPartiesReportContentState extends State<AllPartiesReportContent> {
                             visualDensity: VisualDensity.compact,
                           ),
                         ),
-                        ReportTableHeaderCell(label: '#', width: 40),
-                        Expanded(
-                          child: ReportTableHeaderCell(label: 'PARTY NAME'),
+                        const ReportAlignedHeaderCell(label: '#', width: 40),
+                        const Expanded(
+                          child: ReportAlignedHeaderCell(label: 'PARTY NAME'),
                         ),
-                        ReportTableHeaderCell(label: 'EMAIL', width: 140),
-                        ReportTableHeaderCell(
+                        const ReportAlignedHeaderCell(label: 'EMAIL', width: 140),
+                        const ReportAlignedHeaderCell(
                           label: 'PHONE NO.',
                           width: 110,
                         ),
-                        ReportTableHeaderCell(
+                        const ReportAlignedHeaderCell(
                           label: 'RECEIVABLE BALANCE',
                           width: 140,
                           alignment: Alignment.centerRight,
                         ),
-                        ReportTableHeaderCell(
+                        const ReportAlignedHeaderCell(
                           label: 'PAYABLE BALANCE',
                           width: 130,
                           alignment: Alignment.centerRight,
                         ),
-                        ReportTableHeaderCell(
+                        const ReportAlignedHeaderCell(
                           label: 'CREDIT LIMIT',
                           width: 110,
                           alignment: Alignment.centerRight,
                         ),
                       ],
-                    ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const SizedBox(
-                      height: 220,
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'No parties to display.',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            SizedBox(height: AppSpacing.xs),
-                            Text(
-                              'Add parties to see them here.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      rows: [
+                        for (var i = 0; i < parties.length; i++)
+                          ReportAlignedRowStrip(
+                            index: i,
+                            child: _PartyRow(index: i, party: parties[i]),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -183,7 +190,7 @@ class _AllPartiesReportContentState extends State<AllPartiesReportContent> {
             child: Row(
               children: [
                 Text(
-                  'Total Receivable: ${_currencyFormat.format(0)}',
+                  'Total Receivable: ${formatReportCurrency(summary.totalReceivable)}',
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -192,7 +199,7 @@ class _AllPartiesReportContentState extends State<AllPartiesReportContent> {
                 ),
                 const Spacer(),
                 Text(
-                  'Total Payable: ${_currencyFormat.format(0)}',
+                  'Total Payable: ${formatReportCurrency(summary.totalPayable)}',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -204,6 +211,62 @@ class _AllPartiesReportContentState extends State<AllPartiesReportContent> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PartyRow extends StatelessWidget {
+  const _PartyRow({required this.index, required this.party});
+
+  final int index;
+  final PartyModel party;
+
+  @override
+  Widget build(BuildContext context) {
+    final email = party.email.isEmpty ? '—' : party.email;
+    final receivable =
+        party.balance > 0 ? formatReportCurrency(party.balance) : '—';
+    final payable =
+        party.balance < 0 ? formatReportCurrency(party.balance.abs()) : '—';
+    final creditLimit = party.creditLimit.isEmpty
+        ? '—'
+        : formatReportCurrency(double.tryParse(party.creditLimit) ?? 0);
+
+    return ReportAlignedDataRow(
+      cells: [
+        ReportAlignedCell.fixed(
+          48,
+          child: Checkbox(
+            value: false,
+            onChanged: null,
+            visualDensity: VisualDensity.compact,
+          ),
+        ),
+        ReportAlignedCell.fixed(40, child: Text('${index + 1}')),
+        ReportAlignedCell.flex(
+          child: Text(
+            party.name,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        ReportAlignedCell.fixed(140, child: Text(email)),
+        ReportAlignedCell.fixed(110, child: Text(party.phone)),
+        ReportAlignedCell.fixed(
+          140,
+          alignment: Alignment.centerRight,
+          child: Text(receivable),
+        ),
+        ReportAlignedCell.fixed(
+          130,
+          alignment: Alignment.centerRight,
+          child: Text(payable),
+        ),
+        ReportAlignedCell.fixed(
+          110,
+          alignment: Alignment.centerRight,
+          child: Text(creditLimit),
+        ),
+      ],
     );
   }
 }

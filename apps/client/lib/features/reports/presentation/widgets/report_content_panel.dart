@@ -6,13 +6,33 @@ import 'package:billing_baba/features/reports/models/item_stock_report_subsectio
 import 'package:billing_baba/features/reports/models/party_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/report_nav_group.dart';
 import 'package:billing_baba/features/reports/models/sale_purchase_order_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/loan_accounts_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/other_income_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/taxes_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/business_status/bank_statement_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/expense/expense_category_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/expense/expense_item_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/expense/expense_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/gst/gst_report_content.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/item_stock/item_stock_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/gst/gstr1_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/gst/gstr2_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/gst/gstr3b_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/gst/gstr9_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/gst/sac_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/gst/sale_summary_by_hsn_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/consumption_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/item_category_wise_profit_loss_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/item_detail_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/item_report_by_party_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/item_wise_discount_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/item_wise_profit_loss_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/low_stock_summary_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/manufacturing_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/sale_purchase_report_by_item_category_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/stock_detail_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/stock_summary_report_by_item_category_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/stock_summary_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/item_stock/stock_transfer_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/party/all_parties_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/party/party_report_by_item_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/party/party_statement_report_content.dart';
@@ -22,6 +42,11 @@ import 'package:billing_baba/features/reports/presentation/widgets/party/sale_pu
 import 'package:billing_baba/features/reports/presentation/widgets/sale_purchase_order/sale_purchase_order_item_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/sale_purchase_order/sale_purchase_orders_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_panel_scope.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/loan_accounts/loan_statement_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/other_income/other_income_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/taxes/gst_tax_rate_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/taxes/gst_tax_report_content.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/taxes/tax_invoice_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/transaction/all_transactions_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/transaction/balance_sheet_report_content.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/transaction/bill_wise_profit_report_content.dart';
@@ -41,8 +66,11 @@ class ReportContentPanel extends StatelessWidget {
     this.gstSub,
     this.itemStockSub,
     this.businessStatusSub,
+    this.taxesSub,
     this.expenseSub,
     this.salePurchaseOrderSub,
+    this.otherIncomeSub,
+    this.loanAccountsSub,
     super.key,
   });
 
@@ -52,8 +80,11 @@ class ReportContentPanel extends StatelessWidget {
   final GstReportSubSection? gstSub;
   final ItemStockReportSubSection? itemStockSub;
   final BusinessStatusReportSubSection? businessStatusSub;
+  final TaxesReportSubSection? taxesSub;
   final ExpenseReportSubSection? expenseSub;
   final SalePurchaseOrderReportSubSection? salePurchaseOrderSub;
+  final OtherIncomeReportSubSection? otherIncomeSub;
+  final LoanAccountsReportSubSection? loanAccountsSub;
 
   @override
   Widget build(BuildContext context) {
@@ -97,16 +128,73 @@ class ReportContentPanel extends StatelessWidget {
     }
 
     if (navGroup == ReportNavGroup.gst && gstSub != null) {
-      return _scoped(GstReportContent(subSection: gstSub!));
+      return _scoped(
+        switch (gstSub!) {
+          GstReportSubSection.gstr1 => const Gstr1ReportContent(),
+          GstReportSubSection.gstr2 => const Gstr2ReportContent(),
+          GstReportSubSection.gstr3b => const Gstr3bReportContent(),
+          GstReportSubSection.gstr9 => const Gstr9ReportContent(),
+          GstReportSubSection.saleSummaryByHsn =>
+            const SaleSummaryByHsnReportContent(),
+          GstReportSubSection.sacReport => const SacReportContent(),
+        },
+      );
     }
 
     if (navGroup == ReportNavGroup.itemStock && itemStockSub != null) {
-      return _scoped(ItemStockReportContent(subSection: itemStockSub!));
+      return _scoped(
+        switch (itemStockSub!) {
+          ItemStockReportSubSection.stockSummary =>
+            const StockSummaryReportContent(),
+          ItemStockReportSubSection.itemReportByParty =>
+            const ItemReportByPartyReportContent(),
+          ItemStockReportSubSection.itemWiseProfitLoss =>
+            const ItemWiseProfitLossReportContent(),
+          ItemStockReportSubSection.lowStockSummary =>
+            const LowStockSummaryReportContent(),
+          ItemStockReportSubSection.stockDetail =>
+            const StockDetailReportContent(),
+          ItemStockReportSubSection.itemDetail =>
+            const ItemDetailReportContent(),
+          ItemStockReportSubSection.salePurchaseReportByItemCategory =>
+            const SalePurchaseReportByItemCategoryReportContent(),
+          ItemStockReportSubSection.stockSummaryReportByItemCategory =>
+            const StockSummaryReportByItemCategoryReportContent(),
+          ItemStockReportSubSection.itemCategoryWiseProfitLoss =>
+            const ItemCategoryWiseProfitLossReportContent(),
+          ItemStockReportSubSection.itemWiseDiscount =>
+            const ItemWiseDiscountReportContent(),
+          ItemStockReportSubSection.manufacturingReport =>
+            const ManufacturingReportContent(),
+          ItemStockReportSubSection.consumptionReport =>
+            const ConsumptionReportContent(),
+          ItemStockReportSubSection.stockTransferReport =>
+            const StockTransferReportContent(),
+        },
+      );
     }
 
     if (navGroup == ReportNavGroup.businessStatus &&
         businessStatusSub != null) {
       return _scoped(const BankStatementReportContent());
+    }
+
+    if (navGroup == ReportNavGroup.taxes && taxesSub != null) {
+      return _scoped(
+        switch (taxesSub!) {
+          TaxesReportSubSection.gstReport => const GstTaxReportContent(),
+          TaxesReportSubSection.gstRateReport =>
+            const GstTaxRateReportContent(),
+          TaxesReportSubSection.formNo27Eq =>
+            TaxInvoiceReportContent(subSection: taxesSub!),
+          TaxesReportSubSection.tcsReceivable =>
+            TaxInvoiceReportContent(subSection: taxesSub!),
+          TaxesReportSubSection.tdsPayable =>
+            TaxInvoiceReportContent(subSection: taxesSub!),
+          TaxesReportSubSection.tdsReceivable =>
+            TaxInvoiceReportContent(subSection: taxesSub!),
+        },
+      );
     }
 
     if (navGroup == ReportNavGroup.expenseReport && expenseSub != null) {
@@ -133,6 +221,24 @@ class ReportContentPanel extends StatelessWidget {
       );
     }
 
+    if (navGroup == ReportNavGroup.otherIncomeReport &&
+        otherIncomeSub != null) {
+      return _scoped(
+        switch (otherIncomeSub!) {
+          OtherIncomeReportSubSection.otherIncome =>
+            const OtherIncomeReportContent(),
+          OtherIncomeReportSubSection.otherIncomeCategoryReport =>
+            const OtherIncomeCategoryReportContent(),
+          OtherIncomeReportSubSection.otherIncomeItemReport =>
+            const OtherIncomeItemReportContent(),
+        },
+      );
+    }
+
+    if (navGroup == ReportNavGroup.loanAccounts && loanAccountsSub != null) {
+      return _scoped(const LoanStatementReportContent());
+    }
+
     final title = switch (navGroup) {
       ReportNavGroup.transaction =>
         transactionSub?.label ?? 'Transaction Report',
@@ -141,9 +247,15 @@ class ReportContentPanel extends StatelessWidget {
       ReportNavGroup.itemStock => itemStockSub?.label ?? 'Item/Stock Report',
       ReportNavGroup.businessStatus =>
         businessStatusSub?.label ?? 'Business Status',
-      ReportNavGroup.expenseReport => expenseSub?.label ?? 'Expense Report',
+      ReportNavGroup.taxes => taxesSub?.label ?? 'Taxes',
+      ReportNavGroup.expenseReport =>
+        expenseSub?.label ?? 'Expense Report',
       ReportNavGroup.salePurchaseOrderReport =>
         salePurchaseOrderSub?.label ?? 'Sale/Purchase Order Report',
+      ReportNavGroup.otherIncomeReport =>
+        otherIncomeSub?.label ?? 'Other Income Report',
+      ReportNavGroup.loanAccounts =>
+        loanAccountsSub?.label ?? 'Loan Accounts',
     };
 
     return ColoredBox(

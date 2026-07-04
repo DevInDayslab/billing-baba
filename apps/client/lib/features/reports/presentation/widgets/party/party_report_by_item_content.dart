@@ -1,18 +1,35 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PartyReportByItemContent extends StatelessWidget {
+class PartyReportByItemContent extends ConsumerStatefulWidget {
   const PartyReportByItemContent({super.key});
 
   @override
+  ConsumerState<PartyReportByItemContent> createState() =>
+      _PartyReportByItemContentState();
+}
+
+class _PartyReportByItemContentState
+    extends ConsumerState<PartyReportByItemContent> {
+  String _selectedItem = 'caty';
+
+  List<String> get _itemNames =>
+      InventoryCatalog.items.map((item) => item.name).toList();
+
+  @override
   Widget build(BuildContext context) {
+    final rows = ref.watch(reportPartyByItemProvider(_selectedItem));
+
     return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
@@ -25,23 +42,7 @@ class PartyReportByItemContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ReportPeriodFilterBar(
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SaleFilterDropdown(
-                          label: 'All Godown',
-                          options: const [
-                            'All Godown',
-                            'Main Location',
-                            'Warehouse B',
-                          ],
-                          selected: 'All Godown',
-                          onSelected: (_) {},
-                        ),
-                      ],
-                    ),
-                  ),
+                  const ReportPeriodFilterBar(),
                   const SizedBox(height: AppSpacing.sm),
                   const Row(
                     children: [
@@ -72,9 +73,13 @@ class PartyReportByItemContent extends StatelessWidget {
                       ),
                       SaleFilterDropdown(
                         label: 'All Items',
-                        options: const ['All Items', 'Item 1', 'Item 2'],
-                        selected: 'All Items',
-                        onSelected: (_) {},
+                        options: ['All Items', ..._itemNames],
+                        selected: _selectedItem,
+                        onSelected: (value) {
+                          if (value != 'All Items') {
+                            setState(() => _selectedItem = value);
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -84,50 +89,94 @@ class PartyReportByItemContent extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             const ReportSearchField(hintText: 'Search Party...'),
             const SizedBox(height: AppSpacing.md),
-            const ReportCard(
+            ReportCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ReportTableHeaderRow(
-                    children: [
-                      ReportTableHeaderCell(label: '#', width: 40),
-                      Expanded(
-                        child: ReportTableHeaderCell(label: 'PARTY NAME'),
+                  ReportSyncScrollTable(
+                    minWidth: 700,
+                    emptyState: const SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: Text(
+                          'No data available for the selected period.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ),
-                      ReportTableHeaderCell(
+                    ),
+                    headerChildren: const [
+                      ReportAlignedHeaderCell(label: '#', width: 40),
+                      Expanded(
+                        child: ReportAlignedHeaderCell(label: 'PARTY NAME'),
+                      ),
+                      ReportAlignedHeaderCell(
                         label: 'SALE QUANTITY',
                         width: 120,
                         alignment: Alignment.centerRight,
                       ),
-                      ReportTableHeaderCell(
+                      ReportAlignedHeaderCell(
                         label: 'SALE AMOUNT',
                         width: 120,
                         alignment: Alignment.centerRight,
                       ),
-                      ReportTableHeaderCell(
+                      ReportAlignedHeaderCell(
                         label: 'PURCHASE QUANTITY',
                         width: 140,
                         alignment: Alignment.centerRight,
                       ),
-                      ReportTableHeaderCell(
+                      ReportAlignedHeaderCell(
                         label: 'PURCHASE AMOUNT',
                         width: 140,
                         alignment: Alignment.centerRight,
                       ),
                     ],
-                  ),
-                  Divider(height: 1, color: reportCardBorder),
-                  SizedBox(
-                    height: 200,
-                    child: Center(
-                      child: Text(
-                        'No data available for the selected period.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
+                    rows: [
+                      for (var i = 0; i < rows.length; i++)
+                        ReportAlignedRowStrip(
+                          index: i,
+                          child: ReportAlignedDataRow(
+                            cells: [
+                              ReportAlignedCell.fixed(
+                                40,
+                                child: Text('${i + 1}'),
+                              ),
+                              ReportAlignedCell.flex(
+                                child: Text(
+                                  rows[i].partyName,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              ReportAlignedCell.fixed(
+                                120,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  rows[i].quantity.toStringAsFixed(0),
+                                ),
+                              ),
+                              ReportAlignedCell.fixed(
+                                120,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  formatReportCurrency(rows[i].amount),
+                                ),
+                              ),
+                              ReportAlignedCell.fixed(
+                                140,
+                                alignment: Alignment.centerRight,
+                                child: const Text('—'),
+                              ),
+                              ReportAlignedCell.fixed(
+                                140,
+                                alignment: Alignment.centerRight,
+                                child: const Text('—'),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
+                    ],
                   ),
                 ],
               ),

@@ -1,35 +1,41 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/parties/providers/party_catalog.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_view_toggle.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PartyStatementReportContent extends StatefulWidget {
+class PartyStatementReportContent extends ConsumerStatefulWidget {
   const PartyStatementReportContent({super.key});
 
   @override
-  State<PartyStatementReportContent> createState() =>
+  ConsumerState<PartyStatementReportContent> createState() =>
       _PartyStatementReportContentState();
 }
 
 class _PartyStatementReportContentState
-    extends State<PartyStatementReportContent> {
+    extends ConsumerState<PartyStatementReportContent> {
   String _viewMode = 'Vyapar';
   bool _summaryExpanded = true;
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 2,
-  );
-
   @override
   Widget build(BuildContext context) {
+    final partyId = ref.watch(reportSelectedPartyIdProvider);
+    final parties = PartyCatalog.parties;
+    final selectedParty = parties
+        .where((party) => party.id == partyId)
+        .firstOrNull;
+    final partyNames = parties.map((party) => party.name).toList();
+    final statement = ref.watch(reportPartyStatementProvider(partyId));
+    final summary = ref.watch(reportPartyStatementSummaryProvider(partyId));
+
     return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
@@ -37,11 +43,11 @@ class _PartyStatementReportContentState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const ReportCard(
-              padding: EdgeInsets.all(AppSpacing.md),
+            ReportCard(
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: ReportPeriodFilterBar(
                 showFirmFilter: false,
-                trailing: Row(
+                trailing: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ReportTextActionButton(
@@ -57,9 +63,23 @@ class _PartyStatementReportContentState
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            const ReportCard(
-              padding: EdgeInsets.all(AppSpacing.md),
-              child: ReportSearchField(hintText: 'Select Party'),
+            ReportCard(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: SaleFilterDropdown(
+                label: 'Select Party',
+                options: partyNames,
+                selected: selectedParty?.name ?? partyNames.first,
+                showSearchField: true,
+                onSelected: (name) {
+                  final party =
+                      parties.where((p) => p.name == name).firstOrNull;
+                  if (party != null) {
+                    ref
+                        .read(reportSelectedPartyIdProvider.notifier)
+                        .select(party.id);
+                  }
+                },
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             ReportCard(
@@ -73,31 +93,67 @@ class _PartyStatementReportContentState
                       onChanged: (v) => setState(() => _viewMode = v),
                     ),
                   ),
-                  const Divider(height: 1, color: reportCardBorder),
-                  const ReportTableHeaderRow(
-                    children: [
-                      ReportTableHeaderCell(label: 'DATE', width: 100),
-                      ReportTableHeaderCell(label: 'TYPE', width: 100),
-                      ReportTableHeaderCell(label: 'REF NO.', width: 110),
-                      Expanded(child: ReportTableHeaderCell(label: 'TOTAL')),
-                      ReportTableHeaderCell(
+                  ReportSyncScrollTable(
+                    minWidth: 520,
+                    emptyState: const SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: Text(
+                          'No statement entries for this party.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    headerChildren: const [
+                      ReportAlignedHeaderCell(label: 'DATE', width: 100),
+                      ReportAlignedHeaderCell(label: 'TYPE', width: 100),
+                      ReportAlignedHeaderCell(label: 'REF NO.', width: 110),
+                      Expanded(child: ReportAlignedHeaderCell(label: 'TOTAL')),
+                      ReportAlignedHeaderCell(
                         label: 'BALANCE',
                         width: 100,
                         alignment: Alignment.centerRight,
                       ),
                     ],
-                  ),
-                  const SizedBox(
-                    height: 200,
-                    child: Center(
-                      child: Text(
-                        'Select a party to view statement.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
+                    rows: [
+                      for (var i = 0; i < statement.length; i++)
+                        ReportAlignedRowStrip(
+                          index: i,
+                          child: ReportAlignedDataRow(
+                            cells: [
+                              ReportAlignedCell.fixed(
+                                100,
+                                child: Text(
+                                  formatReportDate(statement[i].date),
+                                ),
+                              ),
+                              ReportAlignedCell.fixed(
+                                100,
+                                child: Text(statement[i].type),
+                              ),
+                              ReportAlignedCell.fixed(
+                                110,
+                                child: Text(statement[i].refNo),
+                              ),
+                              ReportAlignedCell.flex(
+                                child: Text(
+                                  formatReportCurrency(statement[i].total),
+                                ),
+                              ),
+                              ReportAlignedCell.fixed(
+                                100,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  formatReportCurrency(statement[i].balance),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -147,19 +203,22 @@ class _PartyStatementReportContentState
                                 _SummaryMetric(
                                   label: 'Total Sale',
                                   subLabel: '(Sale - Sale Return)',
-                                  amount: _currencyFormat.format(0),
+                                  amount: formatReportCurrency(summary.totalSale),
                                 ),
                                 _SummaryMetric(
                                   label: 'Total Purchase',
-                                  amount: _currencyFormat.format(0),
+                                  amount:
+                                      formatReportCurrency(summary.totalPurchase),
                                 ),
                                 _SummaryMetric(
                                   label: 'Total Money-in',
-                                  amount: _currencyFormat.format(0),
+                                  amount:
+                                      formatReportCurrency(summary.totalMoneyIn),
                                 ),
                                 _SummaryMetric(
                                   label: 'Total Money-out',
-                                  amount: _currencyFormat.format(0),
+                                  amount:
+                                      formatReportCurrency(summary.totalMoneyOut),
                                 ),
                               ],
                             ),
@@ -181,7 +240,7 @@ class _PartyStatementReportContentState
                                 ),
                               ),
                               Text(
-                                _currencyFormat.format(0),
+                                formatReportCurrency(summary.totalReceivable),
                                 style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,

@@ -3,7 +3,8 @@ enum GstReportSubSection {
   gstr2('GSTR 2'),
   gstr3b('GSTR 3 B'),
   gstr9('GSTR 9'),
-  saleSummaryByHsn('Sale Summary By HSN');
+  saleSummaryByHsn('Sale Summary By HSN'),
+  sacReport('SAC Report');
 
   const GstReportSubSection(this.label);
 

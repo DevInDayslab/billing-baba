@@ -1,30 +1,49 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class DayBookReportContent extends StatefulWidget {
+class DayBookReportContent extends ConsumerStatefulWidget {
   const DayBookReportContent({super.key});
 
   @override
-  State<DayBookReportContent> createState() => _DayBookReportContentState();
+  ConsumerState<DayBookReportContent> createState() =>
+      _DayBookReportContentState();
 }
 
-class _DayBookReportContentState extends State<DayBookReportContent> {
+class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  DateTime _selectedDate = DateTime(2026, 7, 3);
+  late DateTime _selectedDate;
 
   static final _dateFormat = DateFormat('dd/MM/yyyy');
 
   @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _selectedDate = DateTime(now.year, now.month, now.day);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final rows = ref.watch(reportDayBookProvider(_selectedDate));
+    final totalMoneyIn =
+        rows.fold<double>(0, (sum, row) => sum + row.moneyIn);
+    final totalMoneyOut =
+        rows.fold<double>(0, (sum, row) => sum + row.moneyOut);
+    final netTotal = totalMoneyIn - totalMoneyOut;
+
     return ColoredBox(
       color: AppColors.background,
       child: Column(
@@ -73,9 +92,9 @@ class _DayBookReportContentState extends State<DayBookReportContent> {
               ],
             ),
           ),
-          const Expanded(
+          Expanded(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
+              padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,
                 0,
                 AppSpacing.lg,
@@ -85,50 +104,54 @@ class _DayBookReportContentState extends State<DayBookReportContent> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Padding(
+                    const Padding(
                       padding: EdgeInsets.all(AppSpacing.md),
                       child: ReportSearchField(
                         hintText: 'Search transactions...',
                       ),
                     ),
-                    Divider(height: 1, color: reportCardBorder),
-                    ReportTableHeaderRow(
-                      children: [
-                        Expanded(
-                          child: ReportTableHeaderCell(label: 'NAME'),
-                        ),
-                        ReportTableHeaderCell(label: 'REF NO.', width: 100),
-                        ReportTableHeaderCell(label: 'TYPE', width: 90),
-                        ReportTableHeaderCell(
-                          label: 'TOTAL',
-                          width: 90,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'MONEY IN',
-                          width: 100,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'MONEY OUT',
-                          width: 100,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'PRINT/ SHARE',
-                          width: 110,
-                          showFilter: false,
-                        ),
-                      ],
-                    ),
-                    Divider(height: 1, color: reportCardBorder),
+                    const Divider(height: 1, color: reportCardBorder),
                     Expanded(
-                      child: Center(
-                        child: Text(
-                          'No transactions to show',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
+                      child: ReportSyncScrollTable(
+                        minWidth: 800,
+                        headerChildren: const [
+                          Expanded(
+                            child: ReportAlignedHeaderCell(label: 'NAME'),
+                          ),
+                          ReportAlignedHeaderCell(label: 'REF NO.', width: 100),
+                          ReportAlignedHeaderCell(label: 'TYPE', width: 90),
+                          ReportAlignedHeaderCell(
+                            label: 'TOTAL',
+                            width: 90,
+                            alignment: Alignment.centerRight,
+                          ),
+                          ReportAlignedHeaderCell(
+                            label: 'MONEY IN',
+                            width: 100,
+                            alignment: Alignment.centerRight,
+                          ),
+                          ReportAlignedHeaderCell(
+                            label: 'MONEY OUT',
+                            width: 100,
+                            alignment: Alignment.centerRight,
+                          ),
+                          ReportAlignedHeaderCell(
+                            label: 'PRINT/ SHARE',
+                            width: 110,
+                            showFilter: false,
+                          ),
+                        ],
+                        rows: [
+                          for (var i = 0; i < rows.length; i++)
+                            _DayBookRow(row: rows[i], index: i),
+                        ],
+                        emptyState: const Center(
+                          child: Text(
+                            'No transactions to show',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       ),
@@ -137,17 +160,17 @@ class _DayBookReportContentState extends State<DayBookReportContent> {
                       items: [
                         ReportMoneySummaryItem(
                           label: 'Total Money-In',
-                          amount: '₹0.00',
+                          amount: formatReportCurrency(totalMoneyIn),
                           color: reportTeal,
                         ),
                         ReportMoneySummaryItem(
                           label: 'Total Money-Out',
-                          amount: '₹0.00',
+                          amount: formatReportCurrency(totalMoneyOut),
                           color: reportAddRed,
                         ),
                         ReportMoneySummaryItem(
                           label: 'Total Money In - Total Money Out',
-                          amount: '₹0.00',
+                          amount: formatReportCurrency(netTotal),
                           bold: true,
                         ),
                       ],
@@ -155,6 +178,78 @@ class _DayBookReportContentState extends State<DayBookReportContent> {
                   ],
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DayBookRow extends StatelessWidget {
+  const _DayBookRow({required this.row, required this.index});
+
+  final ReportTransactionRow row;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return ReportAlignedRowStrip(
+      index: index,
+      child: ReportAlignedDataRow(
+        cells: [
+          ReportAlignedCell.flex(child: Text(row.partyName)),
+          ReportAlignedCell.fixed(100, child: Text(row.refNo)),
+          ReportAlignedCell.fixed(90, child: Text(row.type)),
+          ReportAlignedCell.fixed(
+            90,
+            alignment: Alignment.centerRight,
+            child: Text(formatReportCurrencyCompact(row.total)),
+          ),
+          ReportAlignedCell.fixed(
+            100,
+            alignment: Alignment.centerRight,
+            child: Text(
+              row.moneyIn > 0
+                  ? formatReportCurrencyCompact(row.moneyIn)
+                  : '',
+            ),
+          ),
+          ReportAlignedCell.fixed(
+            100,
+            alignment: Alignment.centerRight,
+            child: Text(
+              row.moneyOut > 0
+                  ? formatReportCurrencyCompact(row.moneyOut)
+                  : '',
+            ),
+          ),
+          ReportAlignedCell.fixed(
+            110,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.print_outlined, size: 18),
+                  color: AppColors.textSecondary,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.share_outlined, size: 18),
+                  color: AppColors.textSecondary,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

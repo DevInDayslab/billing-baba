@@ -1,22 +1,24 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/sale_purchase_order/sale_purchase_order_report_filters.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SalePurchaseOrderItemReportContent extends StatelessWidget {
+class SalePurchaseOrderItemReportContent extends ConsumerWidget {
   const SalePurchaseOrderItemReportContent({super.key});
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹ ',
-    decimalDigits: 2,
-  );
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final rows = ref.watch(reportOrderItemsProvider);
+    final totalQty =
+        rows.fold<double>(0, (sum, row) => sum + row.quantity);
+    final totalAmount =
+        rows.fold<double>(0, (sum, row) => sum + row.amount);
+
     return ColoredBox(
       color: AppColors.background,
       child: Column(
@@ -43,34 +45,110 @@ class SalePurchaseOrderItemReportContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const ReportTableHeaderRow(
-                      children: [
-                        Expanded(
-                          child: ReportTableHeaderCell(label: 'ITEM NAME'),
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'QUANTITY',
-                          width: 140,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'AMOUNT',
-                          width: 140,
-                          alignment: Alignment.centerRight,
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const Expanded(
-                      child: Center(
-                        child: Text(
-                          'No order items for the selected period.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
+                    Expanded(
+                      child: rows.isEmpty
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ReportSyncScrollTable(
+                                  headerChildren: const [
+                                    Expanded(
+                                      child: ReportAlignedHeaderCell(
+                                        label: 'ITEM NAME',
+                                      ),
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'QUANTITY',
+                                      width: 140,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'AMOUNT',
+                                      width: 140,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                  ],
+                                  rows: const [],
+                                ),
+                                const Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      'No order items for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : SingleChildScrollView(
+                              child: ReportSyncScrollTable(
+                                headerChildren: const [
+                                  Expanded(
+                                    child: ReportAlignedHeaderCell(
+                                      label: 'ITEM NAME',
+                                    ),
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'QUANTITY',
+                                    width: 140,
+                                    alignment: Alignment.centerRight,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'AMOUNT',
+                                    width: 140,
+                                    alignment: Alignment.centerRight,
+                                  ),
+                                ],
+                                rows: [
+                                  for (var i = 0; i < rows.length; i++)
+                                    ReportAlignedRowStrip(
+                                      index: i,
+                                      child: ReportAlignedDataRow(
+                                        cells: [
+                                          ReportAlignedCell.flex(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(rows[i].itemName),
+                                                Text(
+                                                  '${rows[i].orderNo} · ${rows[i].partyName}',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: AppColors
+                                                        .textSecondary,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            140,
+                                            alignment: Alignment.centerRight,
+                                            child: Text(
+                                              rows[i]
+                                                  .quantity
+                                                  .toStringAsFixed(0),
+                                            ),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            140,
+                                            alignment: Alignment.centerRight,
+                                            child: Text(
+                                              formatReportCurrency(
+                                                rows[i].amount,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -78,25 +156,23 @@ class SalePurchaseOrderItemReportContent extends StatelessWidget {
                         vertical: AppSpacing.md,
                       ),
                       decoration: const BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: reportCardBorder),
-                        ),
+                        border: Border(top: BorderSide(color: reportCardBorder)),
                       ),
                       child: Row(
                         children: [
-                          const Text.rich(
+                          Text.rich(
                             TextSpan(
-                              style: TextStyle(fontSize: 14),
+                              style: const TextStyle(fontSize: 14),
                               children: [
-                                TextSpan(
+                                const TextSpan(
                                   text: 'Total Quantity: ',
                                   style: TextStyle(
                                     color: AppColors.textSecondary,
                                   ),
                                 ),
                                 TextSpan(
-                                  text: '0',
-                                  style: TextStyle(
+                                  text: totalQty.toStringAsFixed(0),
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     color: reportTeal,
                                   ),
@@ -116,7 +192,7 @@ class SalePurchaseOrderItemReportContent extends StatelessWidget {
                                   ),
                                 ),
                                 TextSpan(
-                                  text: _currencyFormat.format(0),
+                                  text: formatReportCurrency(totalAmount),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     color: reportTeal,

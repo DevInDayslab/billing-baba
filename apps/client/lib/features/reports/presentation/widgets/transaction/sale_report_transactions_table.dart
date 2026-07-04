@@ -1,10 +1,11 @@
-import 'dart:math' as math;
-
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_status_badge.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 
@@ -16,8 +17,7 @@ const _statusColWidth = 100.0;
 const _amountColWidth = 100.0;
 const _balanceColWidth = 90.0;
 const _actionsColWidth = 120.0;
-const _partyColumnMinWidth = 140.0;
-const double _fixedColumnsWidth =
+const _minTableWidth =
     _dateColWidth +
     _invoiceColWidth +
     _transactionColWidth +
@@ -25,20 +25,16 @@ const double _fixedColumnsWidth =
     _statusColWidth +
     _amountColWidth +
     _balanceColWidth +
-    _actionsColWidth;
+    _actionsColWidth +
+    140;
 
-class SaleReportTransactionsTable extends StatelessWidget {
+class SaleReportTransactionsTable extends ConsumerWidget {
   const SaleReportTransactionsTable({super.key});
 
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 0,
-  );
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final invoices = ref.watch(reportSaleInvoicesProvider).take(20).toList();
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -81,87 +77,150 @@ class SaleReportTransactionsTable extends StatelessWidget {
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          const _TableHeaderRow(),
-          const Divider(height: 1, color: _cardBorder),
-          _TableDataRow(
-            children: [
-              _TableCell(
-                width: _dateColWidth,
-                child: Text(_dateFormat.format(DateTime(2026, 4, 4))),
-              ),
-              const _TableCell(
-                width: _invoiceColWidth,
-                child: Text('1773124034247'),
-              ),
-              const Expanded(
-                child: _TableCell(child: Text('PartyAv')),
-              ),
-              const _TableCell(
-                width: _transactionColWidth,
-                child: Text('Sale'),
-              ),
-              const _TableCell(
-                width: _paymentColWidth,
-                child: Text('Cash'),
-              ),
-              const _TableCell(
-                width: _statusColWidth,
-                child: SaleInvoiceStatusBadge(
-                  status: SaleInvoiceStatus.cancelled,
+          ReportSyncScrollTable(
+            minWidth: _minTableWidth,
+            emptyState: const Padding(
+              padding: EdgeInsets.all(AppSpacing.lg),
+              child: Center(
+                child: Text(
+                  'No transactions to show',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
-              _TableCell(
+            ),
+            headerChildren: const [
+              ReportAlignedHeaderCell(label: 'Date', width: _dateColWidth),
+              ReportAlignedHeaderCell(
+                label: 'Invoice no',
+                width: _invoiceColWidth,
+              ),
+              Expanded(
+                child: ReportAlignedHeaderCell(label: 'Party Name'),
+              ),
+              ReportAlignedHeaderCell(
+                label: 'Transaction',
+                width: _transactionColWidth,
+              ),
+              ReportAlignedHeaderCell(
+                label: 'Payment Type',
+                width: _paymentColWidth,
+              ),
+              ReportAlignedHeaderCell(
+                label: 'Status',
+                width: _statusColWidth,
+              ),
+              ReportAlignedHeaderCell(
+                label: 'Amount',
                 width: _amountColWidth,
                 alignment: Alignment.centerRight,
-                child: Text(_currencyFormat.format(297)),
               ),
-              _TableCell(
+              ReportAlignedHeaderCell(
+                label: 'Balance',
                 width: _balanceColWidth,
                 alignment: Alignment.centerRight,
-                child: Text(_currencyFormat.format(297)),
               ),
-              _TableCell(
+              ReportAlignedHeaderCell(
+                label: 'Actions',
                 width: _actionsColWidth,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.print_outlined, size: 18),
-                      color: AppColors.textSecondary,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.share_outlined, size: 18),
-                      color: AppColors.textSecondary,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.more_vert, size: 18),
-                      color: AppColors.textSecondary,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                    ),
-                  ],
-                ),
+                showFilter: false,
               ),
+            ],
+            rows: [
+              for (var i = 0; i < invoices.length; i++)
+                ReportAlignedRowStrip(
+                  index: i,
+                  child: _InvoiceDataRow(invoice: invoices[i]),
+                ),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _InvoiceDataRow extends StatelessWidget {
+  const _InvoiceDataRow({required this.invoice});
+
+  final SaleInvoiceModel invoice;
+
+  @override
+  Widget build(BuildContext context) {
+    return ReportAlignedDataRow(
+      cells: [
+        ReportAlignedCell.fixed(
+          _dateColWidth,
+          child: Text(formatReportDate(invoice.date)),
+        ),
+        ReportAlignedCell.fixed(
+          _invoiceColWidth,
+          child: Text(invoice.invoiceNo),
+        ),
+        ReportAlignedCell.flex(child: Text(invoice.partyName)),
+        ReportAlignedCell.fixed(
+          _transactionColWidth,
+          child: Text(invoice.transactionType),
+        ),
+        ReportAlignedCell.fixed(
+          _paymentColWidth,
+          child: Text(invoice.paymentType),
+        ),
+        ReportAlignedCell.fixed(
+          _statusColWidth,
+          child: SaleInvoiceStatusBadge(status: invoice.status),
+        ),
+        ReportAlignedCell.fixed(
+          _amountColWidth,
+          alignment: Alignment.centerRight,
+          child: Text(formatReportCurrencyCompact(invoice.amount)),
+        ),
+        ReportAlignedCell.fixed(
+          _balanceColWidth,
+          alignment: Alignment.centerRight,
+          child: Text(formatReportCurrencyCompact(invoice.balance)),
+        ),
+        ReportAlignedCell.fixed(
+          _actionsColWidth,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.print_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 32,
+                  minHeight: 32,
+                ),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.share_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 32,
+                  minHeight: 32,
+                ),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.more_vert, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 32,
+                  minHeight: 32,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -192,141 +251,5 @@ class _XlsChip extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _TableHeaderRow extends StatelessWidget {
-  const _TableHeaderRow();
-
-  static const _headerStyle = TextStyle(
-    fontSize: 13,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textSecondary,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.background,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: const _ScrollableTableRow(
-        child: Row(
-          children: [
-            _TableCell(
-              width: _dateColWidth,
-              child: Text('Date', style: _headerStyle),
-            ),
-            _TableCell(
-              width: _invoiceColWidth,
-              child: Text('Invoice no', style: _headerStyle),
-            ),
-            Expanded(
-              child: _TableCell(child: Text('Party Name', style: _headerStyle)),
-            ),
-            _TableCell(
-              width: _transactionColWidth,
-              child: Text('Transaction', style: _headerStyle),
-            ),
-            _TableCell(
-              width: _paymentColWidth,
-              child: Text('Payment Type', style: _headerStyle),
-            ),
-            _TableCell(
-              width: _statusColWidth,
-              child: Text('Status', style: _headerStyle),
-            ),
-            _TableCell(
-              width: _amountColWidth,
-              alignment: Alignment.centerRight,
-              child: Text('Amount', style: _headerStyle),
-            ),
-            _TableCell(
-              width: _balanceColWidth,
-              alignment: Alignment.centerRight,
-              child: Text('Balance', style: _headerStyle),
-            ),
-            _TableCell(
-              width: _actionsColWidth,
-              child: Text('Actions', style: _headerStyle),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TableDataRow extends StatelessWidget {
-  const _TableDataRow({required this.children});
-
-  final List<Widget> children;
-
-  static const _dataStyle = TextStyle(
-    fontSize: 13,
-    color: AppColors.textPrimary,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: _dataStyle,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        child: _ScrollableTableRow(child: Row(children: children)),
-      ),
-    );
-  }
-}
-
-class _ScrollableTableRow extends StatelessWidget {
-  const _ScrollableTableRow({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const minTableWidth = _fixedColumnsWidth + _partyColumnMinWidth;
-        final tableWidth = constraints.maxWidth.isFinite
-            ? math.max(constraints.maxWidth, minTableWidth)
-            : minTableWidth;
-
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: tableWidth,
-            child: child,
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _TableCell extends StatelessWidget {
-  const _TableCell({
-    required this.child,
-    this.width,
-    this.alignment = Alignment.centerLeft,
-  });
-
-  final Widget child;
-  final double? width;
-  final Alignment alignment;
-
-  @override
-  Widget build(BuildContext context) {
-    final content = Align(alignment: alignment, child: child);
-    if (width != null) {
-      return SizedBox(width: width, child: content);
-    }
-    return content;
   }
 }

@@ -1,39 +1,42 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SalePurchaseByPartyGroupReportContent extends StatelessWidget {
+class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
   const SalePurchaseByPartyGroupReportContent({super.key});
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹ ',
-    decimalDigits: 2,
-  );
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final rows = ref.watch(reportSalePurchaseByPartyGroupProvider);
+    final totalSale =
+        rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
+    final totalPurchase =
+        rows.fold<double>(0, (sum, row) => sum + row.purchaseAmount);
+    final netBalance = totalSale - totalPurchase;
+
     return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.md,
             ),
             child: ReportPeriodFilterBar(
-              trailing: Row(
+              trailing: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ReportTextActionButton(
@@ -96,42 +99,111 @@ class SalePurchaseByPartyGroupReportContent extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const ReportTableHeaderRow(
-                      children: [
-                        ReportTableHeaderCell(label: '#', width: 40),
-                        ReportTableHeaderCell(label: 'PARTY GROUP', width: 130),
-                        Expanded(
-                          child: ReportTableHeaderCell(label: 'PARTY NAME'),
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'SALE AMOUNT',
-                          width: 120,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'PURCHASE AMOUNT',
-                          width: 130,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'NET BALANCE',
-                          width: 110,
-                          alignment: Alignment.centerRight,
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const Expanded(
-                      child: Center(
-                        child: Text(
-                          'No data available for the selected period.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
+                    Expanded(
+                      child: rows.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No data available for the selected period.',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            )
+                          : SingleChildScrollView(
+                              child: ReportSyncScrollTable(
+                                minWidth: 700,
+                                headerChildren: const [
+                                  ReportAlignedHeaderCell(label: '#', width: 40),
+                                  ReportAlignedHeaderCell(
+                                    label: 'PARTY GROUP',
+                                    width: 130,
+                                  ),
+                                  Expanded(
+                                    child: ReportAlignedHeaderCell(
+                                      label: 'PARTY NAME',
+                                    ),
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'SALE AMOUNT',
+                                    width: 120,
+                                    alignment: Alignment.centerRight,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'PURCHASE AMOUNT',
+                                    width: 130,
+                                    alignment: Alignment.centerRight,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'NET BALANCE',
+                                    width: 110,
+                                    alignment: Alignment.centerRight,
+                                  ),
+                                ],
+                                rows: [
+                                  for (var i = 0; i < rows.length; i++)
+                                    ReportAlignedRowStrip(
+                                      index: i,
+                                      child: ReportAlignedDataRow(
+                                        cells: [
+                                          ReportAlignedCell.fixed(
+                                            40,
+                                            child: Text('${i + 1}'),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            130,
+                                            child: Text(rows[i].partyGroup),
+                                          ),
+                                          ReportAlignedCell.flex(
+                                            child: Text(
+                                              rows[i].partyName,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            120,
+                                            alignment: Alignment.centerRight,
+                                            child: Text(
+                                              formatReportCurrency(
+                                                rows[i].saleAmount,
+                                              ),
+                                            ),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            130,
+                                            alignment: Alignment.centerRight,
+                                            child: Text(
+                                              formatReportCurrency(
+                                                rows[i].purchaseAmount,
+                                              ),
+                                            ),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            110,
+                                            alignment: Alignment.centerRight,
+                                            child: Text(
+                                              formatReportCurrency(
+                                                rows[i].saleAmount -
+                                                    rows[i].purchaseAmount,
+                                              ),
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color:
+                                                    rows[i].saleAmount -
+                                                            rows[i]
+                                                                .purchaseAmount >=
+                                                        0
+                                                    ? reportTeal
+                                                    : Colors.red.shade700,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -139,14 +211,12 @@ class SalePurchaseByPartyGroupReportContent extends StatelessWidget {
                         vertical: AppSpacing.sm,
                       ),
                       decoration: const BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: reportCardBorder),
-                        ),
+                        border: Border(top: BorderSide(color: reportCardBorder)),
                       ),
                       child: Row(
                         children: [
                           Text(
-                            'Total Sale: ${_currencyFormat.format(0)}',
+                            'Total Sale: ${formatReportCurrency(totalSale)}',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -154,7 +224,7 @@ class SalePurchaseByPartyGroupReportContent extends StatelessWidget {
                           ),
                           const Spacer(),
                           Text(
-                            'Total Purchase: ${_currencyFormat.format(0)}',
+                            'Total Purchase: ${formatReportCurrency(totalPurchase)}',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -162,7 +232,7 @@ class SalePurchaseByPartyGroupReportContent extends StatelessWidget {
                           ),
                           const SizedBox(width: AppSpacing.xl),
                           Text(
-                            'Net Balance: ${_currencyFormat.format(0)}',
+                            'Net Balance: ${formatReportCurrency(netBalance)}',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
