@@ -1,25 +1,27 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PartyWiseProfitLossReportContent extends StatelessWidget {
+class PartyWiseProfitLossReportContent extends ConsumerWidget {
   const PartyWiseProfitLossReportContent({super.key});
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹ ',
-    decimalDigits: 2,
-  );
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final rows = ref.watch(reportPartyWiseProfitLossProvider);
+    final totalSale =
+        rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
+    final totalProfit =
+        rows.fold<double>(0, (sum, row) => sum + row.profit);
+
     return ColoredBox(
       color: AppColors.background,
       child: Column(
@@ -73,7 +75,11 @@ class PartyWiseProfitLossReportContent extends StatelessWidget {
                             width: 180,
                             child: SaleFilterDropdown(
                               label: 'All Parties',
-                              options: const ['All Parties', 'Customers', 'Suppliers'],
+                              options: const [
+                                'All Parties',
+                                'Customers',
+                                'Suppliers',
+                              ],
                               selected: 'All Parties',
                               onSelected: (_) {},
                             ),
@@ -83,49 +89,106 @@ class PartyWiseProfitLossReportContent extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    ReportTableHeaderRow(
-                      children: const [
-                        ReportTableHeaderCell(label: '#', width: 40),
-                        Expanded(child: ReportTableHeaderCell(label: 'PARTY NAME')),
-                        ReportTableHeaderCell(label: 'PHONE NO.', width: 120),
-                        ReportTableHeaderCell(
-                          label: 'TOTAL SALE AMOUNT',
-                          width: 150,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'PROFIT (+) / LOSS (-)',
-                          width: 150,
-                          alignment: Alignment.centerRight,
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const Expanded(
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'No data available.',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textSecondary,
+                    Expanded(
+                      child: rows.isEmpty
+                          ? const Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'No data available.',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    'Try adjusting the date range or filters.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : SingleChildScrollView(
+                              child: ReportSyncScrollTable(
+                                minWidth: 600,
+                                headerChildren: const [
+                                  ReportAlignedHeaderCell(label: '#', width: 40),
+                                  Expanded(
+                                    child: ReportAlignedHeaderCell(
+                                      label: 'PARTY NAME',
+                                    ),
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'PHONE NO.',
+                                    width: 120,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'TOTAL SALE AMOUNT',
+                                    width: 150,
+                                    alignment: Alignment.centerRight,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'PROFIT (+) / LOSS (-)',
+                                    width: 150,
+                                    alignment: Alignment.centerRight,
+                                  ),
+                                ],
+                                rows: [
+                                  for (var i = 0; i < rows.length; i++)
+                                    ReportAlignedRowStrip(
+                                      index: i,
+                                      child: ReportAlignedDataRow(
+                                        cells: [
+                                          ReportAlignedCell.fixed(
+                                            40,
+                                            child: Text('${i + 1}'),
+                                          ),
+                                          ReportAlignedCell.flex(
+                                            child: Text(
+                                              rows[i].partyName,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            120,
+                                            child: Text(rows[i].phone),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            150,
+                                            alignment: Alignment.centerRight,
+                                            child: Text(
+                                              formatReportCurrency(
+                                                rows[i].saleAmount,
+                                              ),
+                                            ),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            150,
+                                            alignment: Alignment.centerRight,
+                                            child: Text(
+                                              formatReportCurrency(
+                                                rows[i].profit,
+                                              ),
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: rows[i].profit >= 0
+                                                    ? reportTeal
+                                                    : Colors.red.shade700,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
-                            SizedBox(height: AppSpacing.xs),
-                            Text(
-                              'Try adjusting the date range or filters.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -138,7 +201,7 @@ class PartyWiseProfitLossReportContent extends StatelessWidget {
                       child: Row(
                         children: [
                           Text(
-                            'Total Sale Amount: ${_currencyFormat.format(0)}',
+                            'Total Sale Amount: ${formatReportCurrency(totalSale)}',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -147,7 +210,7 @@ class PartyWiseProfitLossReportContent extends StatelessWidget {
                           const Spacer(),
                           Text(
                             'Total Profit(+) / Loss (-): '
-                            '${_currencyFormat.format(0)}',
+                            '${formatReportCurrency(totalProfit)}',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,

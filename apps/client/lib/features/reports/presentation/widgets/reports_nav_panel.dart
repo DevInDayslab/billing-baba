@@ -2,9 +2,12 @@ import 'package:billing_baba/features/reports/models/business_status_report_subs
 import 'package:billing_baba/features/reports/models/expense_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/gst_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/item_stock_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/loan_accounts_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/other_income_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/party_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/report_nav_group.dart';
 import 'package:billing_baba/features/reports/models/sale_purchase_order_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/taxes_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
 import 'package:flutter/material.dart';
 
@@ -23,15 +26,21 @@ class ReportsNavPanel extends StatelessWidget {
     required this.selectedGstSub,
     required this.selectedItemStockSub,
     required this.selectedBusinessStatusSub,
+    required this.selectedTaxesSub,
     required this.selectedExpenseSub,
     required this.selectedSalePurchaseOrderSub,
+    required this.selectedOtherIncomeSub,
+    required this.selectedLoanAccountsSub,
     required this.onTransactionSubSelected,
     required this.onPartySubSelected,
     required this.onGstSubSelected,
     required this.onItemStockSubSelected,
     required this.onBusinessStatusSubSelected,
+    required this.onTaxesSubSelected,
     required this.onExpenseSubSelected,
     required this.onSalePurchaseOrderSubSelected,
+    required this.onOtherIncomeSubSelected,
+    required this.onLoanAccountsSubSelected,
     super.key,
   });
 
@@ -41,16 +50,22 @@ class ReportsNavPanel extends StatelessWidget {
   final GstReportSubSection selectedGstSub;
   final ItemStockReportSubSection selectedItemStockSub;
   final BusinessStatusReportSubSection selectedBusinessStatusSub;
+  final TaxesReportSubSection selectedTaxesSub;
   final ExpenseReportSubSection selectedExpenseSub;
   final SalePurchaseOrderReportSubSection selectedSalePurchaseOrderSub;
+  final OtherIncomeReportSubSection selectedOtherIncomeSub;
+  final LoanAccountsReportSubSection selectedLoanAccountsSub;
   final ValueChanged<TransactionReportSubSection> onTransactionSubSelected;
   final ValueChanged<PartyReportSubSection> onPartySubSelected;
   final ValueChanged<GstReportSubSection> onGstSubSelected;
   final ValueChanged<ItemStockReportSubSection> onItemStockSubSelected;
   final ValueChanged<BusinessStatusReportSubSection> onBusinessStatusSubSelected;
+  final ValueChanged<TaxesReportSubSection> onTaxesSubSelected;
   final ValueChanged<ExpenseReportSubSection> onExpenseSubSelected;
   final ValueChanged<SalePurchaseOrderReportSubSection>
   onSalePurchaseOrderSubSelected;
+  final ValueChanged<OtherIncomeReportSubSection> onOtherIncomeSubSelected;
+  final ValueChanged<LoanAccountsReportSubSection> onLoanAccountsSubSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -108,6 +123,15 @@ class ReportsNavPanel extends StatelessWidget {
               onTap: () => onBusinessStatusSubSelected(sub),
             ),
           const SizedBox(height: 8),
+          const _SectionHeader(label: 'Taxes'),
+          for (final sub in TaxesReportSubSection.values)
+            _NavItemTile(
+              label: sub.label,
+              isSelected:
+                  navGroup == ReportNavGroup.taxes && sub == selectedTaxesSub,
+              onTap: () => onTaxesSubSelected(sub),
+            ),
+          const SizedBox(height: 8),
           const _SectionHeader(label: 'Expense report'),
           for (final sub in ExpenseReportSubSection.values)
             _NavItemTile(
@@ -126,6 +150,26 @@ class ReportsNavPanel extends StatelessWidget {
                   navGroup == ReportNavGroup.salePurchaseOrderReport &&
                   sub == selectedSalePurchaseOrderSub,
               onTap: () => onSalePurchaseOrderSubSelected(sub),
+            ),
+          const SizedBox(height: 8),
+          const _SectionHeader(label: 'Other Income Report'),
+          for (final sub in OtherIncomeReportSubSection.values)
+            _NavItemTile(
+              label: sub.label,
+              isSelected:
+                  navGroup == ReportNavGroup.otherIncomeReport &&
+                  sub == selectedOtherIncomeSub,
+              onTap: () => onOtherIncomeSubSelected(sub),
+            ),
+          const SizedBox(height: 8),
+          const _SectionHeader(label: 'Loan Accounts'),
+          for (final sub in LoanAccountsReportSubSection.values)
+            _NavItemTile(
+              label: sub.label,
+              isSelected:
+                  navGroup == ReportNavGroup.loanAccounts &&
+                  sub == selectedLoanAccountsSub,
+              onTap: () => onLoanAccountsSubSelected(sub),
             ),
         ],
       ),

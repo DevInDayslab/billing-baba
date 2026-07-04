@@ -22,7 +22,6 @@ class _SalePurchaseOrderReportFiltersState
   String _user = 'ALL USER';
   String _orderType = 'SALE ORDER';
   String _status = 'All Orders';
-  String _godown = 'All Godown';
   DateTimeRange _dateRange = DateTimeRange(
     start: DateTime(2026, 7, 1),
     end: DateTime(2026, 7, 3),
@@ -204,12 +203,6 @@ class _SalePurchaseOrderReportFiltersState
                 ],
                 selected: _status,
                 onSelected: (value) => setState(() => _status = value),
-              ),
-              SaleFilterDropdown(
-                label: _godown,
-                options: const ['All Godown', 'Main Godown', 'Godown 2'],
-                selected: _godown,
-                onSelected: (value) => setState(() => _godown = value),
               ),
             ],
           ),

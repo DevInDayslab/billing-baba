@@ -1,22 +1,28 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class BankStatementReportContent extends StatefulWidget {
+class BankStatementReportContent extends ConsumerStatefulWidget {
   const BankStatementReportContent({super.key});
 
   @override
-  State<BankStatementReportContent> createState() =>
+  ConsumerState<BankStatementReportContent> createState() =>
       _BankStatementReportContentState();
 }
 
-class _BankStatementReportContentState extends State<BankStatementReportContent> {
+class _BankStatementReportContentState
+    extends ConsumerState<BankStatementReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   String _selectedBank = 'Select bank account';
   DateTimeRange _dateRange = DateTimeRange(
@@ -25,14 +31,16 @@ class _BankStatementReportContentState extends State<BankStatementReportContent>
   );
 
   static final _dateFormat = DateFormat('dd/MM/yyyy');
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 2,
-  );
 
   @override
   Widget build(BuildContext context) {
+    final bankSelected = _selectedBank != 'Select bank account';
+    final rows = bankSelected
+        ? ref.watch(reportBankStatementProvider(_selectedBank))
+        : const <ReportBankStatementRow>[];
+    final closingBalance =
+        rows.isEmpty ? 0.0 : rows.last.balance;
+
     return ColoredBox(
       color: AppColors.background,
       child: Column(
@@ -45,35 +53,9 @@ class _BankStatementReportContentState extends State<BankStatementReportContent>
               AppSpacing.lg,
               AppSpacing.md,
             ),
-            child: Row(
-              children: [
-                const Text(
-                  'Bank Statement',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {},
-                  style: TextButton.styleFrom(
-                    backgroundColor: const Color(0xFFE8F1FB),
-                    foregroundColor: reportActiveBlue,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: 8,
-                    ),
-                  ),
-                  child: const Text(
-                    'Share With Accountant',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+            child: ReportTitleActionsRow(
+              title: 'Bank Statement',
+              actions: [
                 const ReportTextActionButton(
                   label: 'Excel',
                   icon: Icons.table_chart_outlined,
@@ -219,93 +201,202 @@ class _BankStatementReportContentState extends State<BankStatementReportContent>
                         ),
                       ),
                     ),
-                    ReportTableHeaderRow(
-                      children: const [
-                        ReportTableHeaderCell(label: 'DATE', width: 110),
-                        Expanded(
-                          child: ReportTableHeaderCell(label: 'DESCRIPTION'),
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'WITHDRAWAL AMOUNT',
-                          width: 150,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'DEPOSIT AMOUNT',
-                          width: 130,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'BALANCE AMOUNT',
-                          width: 130,
-                          alignment: Alignment.centerRight,
-                        ),
-                      ],
+                    Expanded(
+                      child: !bankSelected
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ReportSyncScrollTable(
+                                  headerChildren: const [
+                                    ReportAlignedHeaderCell(
+                                      label: 'DATE',
+                                      width: 110,
+                                    ),
+                                    Expanded(
+                                      child: ReportAlignedHeaderCell(
+                                        label: 'DESCRIPTION',
+                                      ),
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'WITHDRAWAL AMOUNT',
+                                      width: 150,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'DEPOSIT AMOUNT',
+                                      width: 130,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'BALANCE AMOUNT',
+                                      width: 130,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                  ],
+                                  rows: const [],
+                                ),
+                                const Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      'Select a bank account to view the statement.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : rows.isEmpty
+                              ? Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    ReportSyncScrollTable(
+                                      headerChildren: const [
+                                        ReportAlignedHeaderCell(
+                                          label: 'DATE',
+                                          width: 110,
+                                        ),
+                                        Expanded(
+                                          child: ReportAlignedHeaderCell(
+                                            label: 'DESCRIPTION',
+                                          ),
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'WITHDRAWAL AMOUNT',
+                                          width: 150,
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'DEPOSIT AMOUNT',
+                                          width: 130,
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'BALANCE AMOUNT',
+                                          width: 130,
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                      ],
+                                      rows: const [],
+                                    ),
+                                    const Expanded(
+                                      child: Center(
+                                        child: Text(
+                                          'No transactions for the selected period.',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : SingleChildScrollView(
+                                  child: ReportSyncScrollTable(
+                                    headerChildren: const [
+                                      ReportAlignedHeaderCell(
+                                        label: 'DATE',
+                                        width: 110,
+                                      ),
+                                      Expanded(
+                                        child: ReportAlignedHeaderCell(
+                                          label: 'DESCRIPTION',
+                                        ),
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'WITHDRAWAL AMOUNT',
+                                        width: 150,
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'DEPOSIT AMOUNT',
+                                        width: 130,
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'BALANCE AMOUNT',
+                                        width: 130,
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                    ],
+                                    rows: [
+                                      for (var i = 0; i < rows.length; i++)
+                                        ReportAlignedRowStrip(
+                                          index: i,
+                                          child: ReportAlignedDataRow(
+                                            cells: [
+                                              ReportAlignedCell.fixed(
+                                                110,
+                                                child: Text(
+                                                  formatReportDate(
+                                                    rows[i].date,
+                                                  ),
+                                                ),
+                                              ),
+                                              ReportAlignedCell.flex(
+                                                child: Text(
+                                                  rows[i].description,
+                                                ),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                150,
+                                                alignment: Alignment.centerRight,
+                                                child: Text(
+                                                  rows[i].moneyOut > 0
+                                                      ? formatReportCurrency(
+                                                          rows[i].moneyOut,
+                                                        )
+                                                      : '-',
+                                                  style: TextStyle(
+                                                    color: rows[i].moneyOut > 0
+                                                        ? const Color(
+                                                            0xFFE53935,
+                                                          )
+                                                        : AppColors
+                                                            .textPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                130,
+                                                alignment: Alignment.centerRight,
+                                                child: Text(
+                                                  rows[i].moneyIn > 0
+                                                      ? formatReportCurrency(
+                                                          rows[i].moneyIn,
+                                                        )
+                                                      : '-',
+                                                  style: TextStyle(
+                                                    color: rows[i].moneyIn > 0
+                                                        ? reportTeal
+                                                        : AppColors
+                                                            .textPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                130,
+                                                alignment: Alignment.centerRight,
+                                                child: Text(
+                                                  formatReportCurrency(
+                                                    rows[i].balance,
+                                                  ),
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
                     ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 110,
-                            child: Text(
-                              _dateFormat.format(_dateRange.start),
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                          ),
-                          const Expanded(
-                            child: Text(
-                              'Bank balance forward',
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ),
-                          const SizedBox(
-                            width: 150,
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                '-',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFFE53935),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(
-                            width: 130,
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                '-',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: reportTeal,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 130,
-                            child: Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                _currencyFormat.format(0),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.md,
@@ -327,7 +418,7 @@ class _BankStatementReportContentState extends State<BankStatementReportContent>
                                 ),
                               ),
                               TextSpan(
-                                text: _currencyFormat.format(0),
+                                text: formatReportCurrency(closingBalance),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.textPrimary,

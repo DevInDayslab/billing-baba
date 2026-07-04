@@ -1,23 +1,31 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ProfitLossReportContent extends StatefulWidget {
+class ProfitLossReportContent extends ConsumerStatefulWidget {
   const ProfitLossReportContent({super.key});
 
   @override
-  State<ProfitLossReportContent> createState() => _ProfitLossReportContentState();
+  ConsumerState<ProfitLossReportContent> createState() =>
+      _ProfitLossReportContentState();
 }
 
-class _ProfitLossReportContentState extends State<ProfitLossReportContent> {
+class _ProfitLossReportContentState
+    extends ConsumerState<ProfitLossReportContent> {
   String _viewMode = 'Vyapar';
 
   @override
   Widget build(BuildContext context) {
+    final items = ref.watch(reportProfitLossProvider);
+
     return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
@@ -28,7 +36,7 @@ class _ProfitLossReportContentState extends State<ProfitLossReportContent> {
             ReportDateRangeBar(
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: const [
                   ReportIconActionButton(
                     icon: Icons.picture_as_pdf_outlined,
                     tooltip: 'Export PDF',
@@ -96,29 +104,81 @@ class _ProfitLossReportContentState extends State<ProfitLossReportContent> {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   const Divider(height: 1, color: reportCardBorder),
-                  ReportTableHeaderRow(
-                    children: const [
+                  ReportSyncScrollTable(
+                    minWidth: 480,
+                    headerChildren: const [
                       Expanded(
-                        child: ReportTableHeaderCell(
+                        child: ReportAlignedHeaderCell(
                           label: 'Particulars',
                           showFilter: false,
                         ),
                       ),
-                      ReportTableHeaderCell(
+                      ReportAlignedHeaderCell(
                         label: 'Amount',
                         width: 120,
                         alignment: Alignment.centerRight,
                         showFilter: false,
                       ),
                     ],
+                    rows: [
+                      for (var i = 0; i < items.length; i++)
+                        ReportAlignedRowStrip(
+                          index: i,
+                          child: _ProfitLossRow(item: items[i], index: i),
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 120),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProfitLossRow extends StatelessWidget {
+  const _ProfitLossRow({required this.item, required this.index});
+
+  final ReportProfitLossItem item;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    final indentPadding = AppSpacing.md + (item.indent * AppSpacing.lg);
+    final textStyle = item.isHeader
+        ? const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          )
+        : const TextStyle(fontSize: 13, color: AppColors.textPrimary);
+
+    return ReportAlignedDataRow(
+      padding: EdgeInsets.fromLTRB(
+        indentPadding,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
+      cells: [
+        ReportAlignedCell.flex(
+          child: Text(item.particular, style: textStyle),
+        ),
+        ReportAlignedCell.fixed(
+          120,
+          alignment: Alignment.centerRight,
+          child: Text(
+            item.isHeader && item.amount == 0
+                ? ''
+                : formatReportCurrency(item.amount),
+            style: textStyle.copyWith(
+              color: item.amount < 0 ? reportAddRed : AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

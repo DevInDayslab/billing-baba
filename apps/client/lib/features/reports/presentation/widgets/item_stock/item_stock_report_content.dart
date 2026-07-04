@@ -4,7 +4,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -25,8 +25,19 @@ class ItemStockReportContent extends StatelessWidget {
     ItemStockReportSubSection.stockSummary => 'Stock Summary Report',
     ItemStockReportSubSection.stockDetail => 'Stock Detail Report',
     ItemStockReportSubSection.itemWiseProfitLoss => 'Item Wise Profit/Loss',
-    ItemStockReportSubSection.lowStockDetails => 'Low Stock Details',
     ItemStockReportSubSection.itemReportByParty => 'Item Report By Party',
+    ItemStockReportSubSection.lowStockSummary => 'Low Stock Summary',
+    ItemStockReportSubSection.itemDetail => 'Item Detail',
+    ItemStockReportSubSection.salePurchaseReportByItemCategory =>
+      'Sale/Purchase Report By Item Category',
+    ItemStockReportSubSection.stockSummaryReportByItemCategory =>
+      'Stock Summary Report By Item Category',
+    ItemStockReportSubSection.itemCategoryWiseProfitLoss =>
+      'Item Category Wise Profit And Loss',
+    ItemStockReportSubSection.itemWiseDiscount => 'Item Wise Discount',
+    ItemStockReportSubSection.manufacturingReport => 'Manufacturing Report',
+    ItemStockReportSubSection.consumptionReport => 'Consumption Report',
+    ItemStockReportSubSection.stockTransferReport => 'Stock Transfer Report',
   };
 
   List<_TableColumn> get _columns => switch (subSection) {
@@ -55,14 +66,6 @@ class ItemStockReportContent extends StatelessWidget {
       _TableColumn('PURCHASE AMOUNT', 140, right: true),
       _TableColumn('PROFIT (+) / LOSS (-)', 150, right: true),
     ],
-    ItemStockReportSubSection.lowStockDetails => const [
-      _TableColumn('#', 40),
-      _TableColumn('ITEM NAME', null),
-      _TableColumn('CATEGORY', 120),
-      _TableColumn('MIN QTY', 90, right: true),
-      _TableColumn('CURRENT QTY', 110, right: true),
-      _TableColumn('SHORTAGE', 100, right: true),
-    ],
     ItemStockReportSubSection.itemReportByParty => const [
       _TableColumn('#', 40),
       _TableColumn('PARTY NAME', null),
@@ -72,16 +75,85 @@ class ItemStockReportContent extends StatelessWidget {
       _TableColumn('PURCHASE QTY', 120, right: true),
       _TableColumn('PURCHASE AMOUNT', 140, right: true),
     ],
+    ItemStockReportSubSection.lowStockSummary => const [
+      _TableColumn('ITEM NAME', null),
+      _TableColumn('MINIMUM STOCK QTY', 150, right: true),
+      _TableColumn('STOCK QTY', 110, right: true),
+      _TableColumn('STOCK VALUE', 120, right: true),
+    ],
+    ItemStockReportSubSection.itemDetail => const [
+      _TableColumn('DATE', 100),
+      _TableColumn('SALE QUANTITY', 120, right: true),
+      _TableColumn('PURCHASE QUANTITY', 140, right: true),
+      _TableColumn('ADJUSTMENT QUANTITY', 150, right: true),
+      _TableColumn('CLOSING QUANTITY', 130, right: true),
+    ],
+    ItemStockReportSubSection.salePurchaseReportByItemCategory => const [
+      _TableColumn('ITEM CATEGORY', null),
+      _TableColumn('SALE QUANTITY', 120, right: true),
+      _TableColumn('TOTAL SALE AMOUNT', 140, right: true),
+      _TableColumn('PURCHASE QUANTITY', 140, right: true),
+      _TableColumn('TOTAL PURCHASE AMOUNT', 150, right: true),
+    ],
+    ItemStockReportSubSection.stockSummaryReportByItemCategory => const [
+      _TableColumn('ITEM CATEGORY', null),
+      _TableColumn('NO. OF ITEMS', 110, right: true),
+      _TableColumn('STOCK QTY', 100, right: true),
+      _TableColumn('PURCHASE VALUE', 130, right: true),
+      _TableColumn('SALE VALUE', 110, right: true),
+      _TableColumn('LOW STOCK ITEMS', 130, right: true),
+    ],
+    ItemStockReportSubSection.itemCategoryWiseProfitLoss => const [
+      _TableColumn('ITEM CATEGORY', 150),
+      _TableColumn('SALE', 100, right: true),
+      _TableColumn('CR. NOTE / SALE RETURN', 150, right: true),
+      _TableColumn('PURCHASE', 110, right: true),
+      _TableColumn('DR. NOTE / PURCHASE RETURN', 170, right: true),
+      _TableColumn('OPENING STOCK', 120, right: true),
+      _TableColumn('CLOSING STOCK', 120, right: true),
+      _TableColumn('NET PROFIT (+) / LOSS (-)', 160, right: true),
+    ],
+    ItemStockReportSubSection.itemWiseDiscount => const [
+      _TableColumn('#', 40),
+      _TableColumn('ITEM NAME', null),
+      _TableColumn('TOTAL QTY SOLD', 120, right: true),
+      _TableColumn('TOTAL SALE AMOUNT', 140, right: true),
+      _TableColumn('TOTAL DISC. AMOUNT', 140, right: true),
+      _TableColumn('AVG. DISC. (%)', 110, right: true),
+      _TableColumn('DETAILS', 80),
+    ],
+    ItemStockReportSubSection.manufacturingReport => const [
+      _TableColumn('#', 40),
+      _TableColumn('ITEM NAME', null),
+      _TableColumn('DATE', 100),
+      _TableColumn('QTY MANUFACTURED', 150, right: true),
+      _TableColumn('AMOUNT', 110, right: true),
+      _TableColumn('DETAILS', 80),
+    ],
+    ItemStockReportSubSection.consumptionReport => const [
+      _TableColumn('#', 40),
+      _TableColumn('ITEM NAME', null),
+      _TableColumn('DATE', 100),
+      _TableColumn('QTY CONSUMED', 130, right: true),
+      _TableColumn('AMOUNT', 110, right: true),
+      _TableColumn('DETAILS', 80),
+    ],
+    ItemStockReportSubSection.stockTransferReport => const [
+      _TableColumn('#', 40),
+      _TableColumn('TRANSFER NO.', 110),
+      _TableColumn('DATE', 100),
+      _TableColumn('ITEM NAME', 160),
+      _TableColumn('FROM GODOWN', 120),
+      _TableColumn('TO GODOWN', 120),
+      _TableColumn('QTY TRANSFERRED', 130, right: true),
+      _TableColumn('VALUE', 100, right: true),
+      _TableColumn('DETAILS', 80),
+    ],
   };
 
   bool get _showCategoryFilter =>
       subSection == ItemStockReportSubSection.stockSummary ||
-      subSection == ItemStockReportSubSection.stockDetail ||
-      subSection == ItemStockReportSubSection.lowStockDetails;
-
-  bool get _showGodownFilter =>
-      subSection == ItemStockReportSubSection.stockDetail ||
-      subSection == ItemStockReportSubSection.itemReportByParty;
+      subSection == ItemStockReportSubSection.stockDetail;
 
   bool get _showSummaryFooter =>
       subSection == ItemStockReportSubSection.stockSummary ||
@@ -125,21 +197,7 @@ class ItemStockReportContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ReportPeriodFilterBar(
-                    showFirmFilter: false,
-                    trailing: _showGodownFilter
-                        ? SaleFilterDropdown(
-                            label: 'All Godown',
-                            options: const [
-                              'All Godown',
-                              'Main Location',
-                              'Warehouse B',
-                            ],
-                            selected: 'All Godown',
-                            onSelected: (_) {},
-                          )
-                        : null,
-                  ),
+                  const ReportPeriodFilterBar(showFirmFilter: false),
                   if (_showCategoryFilter) ...[
                     const SizedBox(height: AppSpacing.sm),
                     Wrap(
@@ -156,48 +214,22 @@ class ItemStockReportContent extends StatelessWidget {
                           selected: 'All Categories',
                           onSelected: (_) {},
                         ),
-                        if (subSection != ItemStockReportSubSection.lowStockDetails)
-                          SaleFilterDropdown(
-                            label: 'All Items',
-                            options: const [
-                              'All Items',
-                              'Item 1',
-                              'Item 2',
-                            ],
-                            selected: 'All Items',
-                            onSelected: (_) {},
-                          ),
+                        SaleFilterDropdown(
+                          label: 'All Items',
+                          options: const [
+                            'All Items',
+                            'Item 1',
+                            'Item 2',
+                          ],
+                          selected: 'All Items',
+                          onSelected: (_) {},
+                        ),
                       ],
                     ),
                   ],
                 ],
               ),
             ),
-            if (subSection == ItemStockReportSubSection.lowStockDetails) ...[
-              const SizedBox(height: AppSpacing.md),
-              ReportCard(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      size: 20,
-                      color: Colors.orange.shade700,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    const Expanded(
-                      child: Text(
-                        'Items at or below minimum stock level are shown here.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
             const SizedBox(height: AppSpacing.md),
             ReportSearchField(
               hintText: subSection == ItemStockReportSubSection.itemReportByParty
@@ -209,12 +241,12 @@ class ItemStockReportContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ReportTableHeaderRow(
-                    children: [
+                  ReportSyncScrollTable(
+                    headerChildren: [
                       for (final col in _columns)
                         if (col.width == null)
                           Expanded(
-                            child: ReportTableHeaderCell(
+                            child: ReportAlignedHeaderCell(
                               label: col.label,
                               alignment: col.right
                                   ? Alignment.centerRight
@@ -222,7 +254,7 @@ class ItemStockReportContent extends StatelessWidget {
                             ),
                           )
                         else
-                          ReportTableHeaderCell(
+                          ReportAlignedHeaderCell(
                             label: col.label,
                             width: col.width,
                             alignment: col.right
@@ -230,8 +262,8 @@ class ItemStockReportContent extends StatelessWidget {
                                 : Alignment.centerLeft,
                           ),
                     ],
+                    rows: const [],
                   ),
-                  const Divider(height: 1, color: reportCardBorder),
                   ReportEmptyTableState(
                     message: _emptyMessage,
                     minHeight: 220,
@@ -285,10 +317,25 @@ class ItemStockReportContent extends StatelessWidget {
       'No stock movements found for the selected period.',
     ItemStockReportSubSection.itemWiseProfitLoss =>
       'No profit or loss data for the selected period.',
-    ItemStockReportSubSection.lowStockDetails =>
-      'No items are below minimum stock level.',
+    ItemStockReportSubSection.lowStockSummary =>
+      'No low stock items found based on the selected filters.',
     ItemStockReportSubSection.itemReportByParty =>
       'No item transactions found for parties.',
+    ItemStockReportSubSection.itemDetail =>
+      'Please enter an item name to see the details.',
+    ItemStockReportSubSection.salePurchaseReportByItemCategory =>
+      'No data to display.',
+    ItemStockReportSubSection.stockSummaryReportByItemCategory =>
+      'No stock data found for the selected filters.',
+    ItemStockReportSubSection.itemCategoryWiseProfitLoss =>
+      'No profit or loss data for the selected period.',
+    ItemStockReportSubSection.itemWiseDiscount => 'No Items',
+    ItemStockReportSubSection.manufacturingReport =>
+      'No manufacturing records found for the selected period.',
+    ItemStockReportSubSection.consumptionReport =>
+      'No consumption records found for the selected period.',
+    ItemStockReportSubSection.stockTransferReport =>
+      'No stock transfer records found for the selected period.',
   };
 
   String get _footerPrimaryLabel => switch (subSection) {

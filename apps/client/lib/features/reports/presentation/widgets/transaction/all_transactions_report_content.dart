@@ -1,18 +1,24 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AllTransactionsReportContent extends StatelessWidget {
+class AllTransactionsReportContent extends ConsumerWidget {
   const AllTransactionsReportContent({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final rows = ref.watch(reportAllTransactionsProvider);
+
     return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
@@ -30,24 +36,6 @@ class AllTransactionsReportContent extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(
-                        onPressed: () {},
-                        style: TextButton.styleFrom(
-                          backgroundColor: const Color(0xFFE8F1FB),
-                          foregroundColor: reportActiveBlue,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: 8,
-                          ),
-                        ),
-                        child: const Text(
-                          'Share With Accountant',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
                       const ReportTextActionButton(
                         label: 'Excel Report',
                         icon: Icons.table_chart_outlined,
@@ -91,45 +79,119 @@ class AllTransactionsReportContent extends StatelessWidget {
                     ),
                   ),
                   const Divider(height: 1, color: reportCardBorder),
-                  ReportTableHeaderRow(
-                    children: const [
-                      ReportTableHeaderCell(label: '#', width: 40),
-                      ReportTableHeaderCell(label: 'DATE', width: 90),
-                      ReportTableHeaderCell(label: 'REF NO.', width: 90),
-                      Expanded(child: ReportTableHeaderCell(label: 'PARTY NAME')),
-                      ReportTableHeaderCell(label: 'CATEGORY', width: 90),
-                      ReportTableHeaderCell(label: 'TYPE', width: 80),
-                      ReportTableHeaderCell(
+                  ReportSyncScrollTable(
+                    headerChildren: const [
+                      ReportAlignedHeaderCell(label: '#', width: 40),
+                      ReportAlignedHeaderCell(label: 'DATE', width: 90),
+                      ReportAlignedHeaderCell(label: 'REF NO.', width: 90),
+                      Expanded(
+                        child: ReportAlignedHeaderCell(label: 'PARTY NAME'),
+                      ),
+                      ReportAlignedHeaderCell(label: 'CATEGORY', width: 90),
+                      ReportAlignedHeaderCell(label: 'TYPE', width: 80),
+                      ReportAlignedHeaderCell(
                         label: 'TOTAL',
                         width: 80,
                         alignment: Alignment.centerRight,
                       ),
-                      ReportTableHeaderCell(
+                      ReportAlignedHeaderCell(
                         label: 'RECEIVED',
                         width: 90,
                         alignment: Alignment.centerRight,
                       ),
-                      ReportTableHeaderCell(
+                      ReportAlignedHeaderCell(
                         label: 'BALANCE',
                         width: 80,
                         alignment: Alignment.centerRight,
                       ),
-                      ReportTableHeaderCell(label: 'DUE DATE', width: 90),
-                      ReportTableHeaderCell(label: 'STATUS', width: 80),
-                      ReportTableHeaderCell(
+                      ReportAlignedHeaderCell(label: 'DUE DATE', width: 90),
+                      ReportAlignedHeaderCell(label: 'STATUS', width: 80),
+                      ReportAlignedHeaderCell(
                         label: 'PRINT',
                         width: 60,
                         showFilter: false,
                       ),
                     ],
+                    rows: [
+                      for (var i = 0; i < rows.length; i++)
+                        _AllTransactionsRow(row: rows[i], index: i),
+                    ],
+                    emptyState: const ReportEmptyTableState(
+                      message: 'No data available',
+                    ),
                   ),
-                  const Divider(height: 1, color: reportCardBorder),
-                  const ReportEmptyTableState(message: 'No data available'),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AllTransactionsRow extends StatelessWidget {
+  const _AllTransactionsRow({required this.row, required this.index});
+
+  final ReportTransactionRow row;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return ReportAlignedRowStrip(
+      index: index,
+      child: ReportAlignedDataRow(
+        cells: [
+          ReportAlignedCell.fixed(40, child: Text('${index + 1}')),
+          ReportAlignedCell.fixed(
+            90,
+            child: Text(formatReportDate(row.date)),
+          ),
+          ReportAlignedCell.fixed(90, child: Text(row.refNo)),
+          ReportAlignedCell.flex(child: Text(row.partyName)),
+          ReportAlignedCell.fixed(90, child: Text(row.category)),
+          ReportAlignedCell.fixed(80, child: Text(row.type)),
+          ReportAlignedCell.fixed(
+            80,
+            alignment: Alignment.centerRight,
+            child: Text(formatReportCurrencyCompact(row.total)),
+          ),
+          ReportAlignedCell.fixed(
+            90,
+            alignment: Alignment.centerRight,
+            child: Text(
+              row.received > 0
+                  ? formatReportCurrencyCompact(row.received)
+                  : '',
+            ),
+          ),
+          ReportAlignedCell.fixed(
+            80,
+            alignment: Alignment.centerRight,
+            child: Text(
+              row.balance > 0
+                  ? formatReportCurrencyCompact(row.balance)
+                  : '',
+            ),
+          ),
+          ReportAlignedCell.fixed(
+            90,
+            child: Text(
+              row.dueDate != null ? formatReportDate(row.dueDate!) : '',
+            ),
+          ),
+          ReportAlignedCell.fixed(80, child: Text(row.status)),
+          ReportAlignedCell.fixed(
+            60,
+            child: IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.print_outlined, size: 18),
+              color: AppColors.textSecondary,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            ),
+          ),
+        ],
       ),
     );
   }

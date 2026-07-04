@@ -7,6 +7,9 @@ import 'package:billing_baba/features/reports/models/item_stock_report_subsectio
 import 'package:billing_baba/features/reports/models/party_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/report_nav_group.dart';
 import 'package:billing_baba/features/reports/models/sale_purchase_order_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/loan_accounts_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/other_income_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/taxes_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/report_content_panel.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/reports_nav_panel.dart';
@@ -30,10 +33,15 @@ class _ReportsPageState extends State<ReportsPage> {
       ItemStockReportSubSection.stockSummary;
   BusinessStatusReportSubSection _selectedBusinessStatusSub =
       BusinessStatusReportSubSection.bankStatement;
+  TaxesReportSubSection _selectedTaxesSub = TaxesReportSubSection.gstReport;
   ExpenseReportSubSection _selectedExpenseSub =
       ExpenseReportSubSection.expense;
   SalePurchaseOrderReportSubSection _selectedSalePurchaseOrderSub =
       SalePurchaseOrderReportSubSection.salePurchaseOrders;
+  OtherIncomeReportSubSection _selectedOtherIncomeSub =
+      OtherIncomeReportSubSection.otherIncome;
+  LoanAccountsReportSubSection _selectedLoanAccountsSub =
+      LoanAccountsReportSubSection.loanStatement;
 
   @override
   Widget build(BuildContext context) {
@@ -74,9 +82,12 @@ class _ReportsPageState extends State<ReportsPage> {
                           selectedGstSub: _selectedGstSub,
                           selectedItemStockSub: _selectedItemStockSub,
                           selectedBusinessStatusSub: _selectedBusinessStatusSub,
+                          selectedTaxesSub: _selectedTaxesSub,
                           selectedExpenseSub: _selectedExpenseSub,
                           selectedSalePurchaseOrderSub:
                               _selectedSalePurchaseOrderSub,
+                          selectedOtherIncomeSub: _selectedOtherIncomeSub,
+                          selectedLoanAccountsSub: _selectedLoanAccountsSub,
                           onTransactionSubSelected: (sub) {
                             setState(() {
                               _navGroup = ReportNavGroup.transaction;
@@ -107,6 +118,12 @@ class _ReportsPageState extends State<ReportsPage> {
                               _selectedBusinessStatusSub = sub;
                             });
                           },
+                          onTaxesSubSelected: (sub) {
+                            setState(() {
+                              _navGroup = ReportNavGroup.taxes;
+                              _selectedTaxesSub = sub;
+                            });
+                          },
                           onExpenseSubSelected: (sub) {
                             setState(() {
                               _navGroup = ReportNavGroup.expenseReport;
@@ -115,8 +132,21 @@ class _ReportsPageState extends State<ReportsPage> {
                           },
                           onSalePurchaseOrderSubSelected: (sub) {
                             setState(() {
-                              _navGroup = ReportNavGroup.salePurchaseOrderReport;
+                              _navGroup =
+                                  ReportNavGroup.salePurchaseOrderReport;
                               _selectedSalePurchaseOrderSub = sub;
+                            });
+                          },
+                          onOtherIncomeSubSelected: (sub) {
+                            setState(() {
+                              _navGroup = ReportNavGroup.otherIncomeReport;
+                              _selectedOtherIncomeSub = sub;
+                            });
+                          },
+                          onLoanAccountsSubSelected: (sub) {
+                            setState(() {
+                              _navGroup = ReportNavGroup.loanAccounts;
+                              _selectedLoanAccountsSub = sub;
                             });
                           },
                         ),
@@ -144,12 +174,23 @@ class _ReportsPageState extends State<ReportsPage> {
                               _navGroup == ReportNavGroup.businessStatus
                               ? _selectedBusinessStatusSub
                               : null,
+                          taxesSub: _navGroup == ReportNavGroup.taxes
+                              ? _selectedTaxesSub
+                              : null,
                           expenseSub: _navGroup == ReportNavGroup.expenseReport
                               ? _selectedExpenseSub
                               : null,
                           salePurchaseOrderSub:
                               _navGroup == ReportNavGroup.salePurchaseOrderReport
                               ? _selectedSalePurchaseOrderSub
+                              : null,
+                          otherIncomeSub:
+                              _navGroup == ReportNavGroup.otherIncomeReport
+                              ? _selectedOtherIncomeSub
+                              : null,
+                          loanAccountsSub:
+                              _navGroup == ReportNavGroup.loanAccounts
+                              ? _selectedLoanAccountsSub
                               : null,
                         ),
                       ),

@@ -1,22 +1,27 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-class ExpenseItemReportContent extends StatefulWidget {
+class ExpenseItemReportContent extends ConsumerStatefulWidget {
   const ExpenseItemReportContent({super.key});
 
   @override
-  State<ExpenseItemReportContent> createState() => _ExpenseItemReportContentState();
+  ConsumerState<ExpenseItemReportContent> createState() =>
+      _ExpenseItemReportContentState();
 }
 
-class _ExpenseItemReportContentState extends State<ExpenseItemReportContent> {
+class _ExpenseItemReportContentState extends ConsumerState<ExpenseItemReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   DateTimeRange _dateRange = DateTimeRange(
     start: DateTime(2026, 7, 1),
@@ -24,14 +29,13 @@ class _ExpenseItemReportContentState extends State<ExpenseItemReportContent> {
   );
 
   static final _dateFormat = DateFormat('dd/MM/yyyy');
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 2,
-  );
 
   @override
   Widget build(BuildContext context) {
+    final rows = ref.watch(reportExpenseByItemProvider);
+    final totalExpense =
+        rows.fold<double>(0, (sum, row) => sum + row.amount);
+
     return ColoredBox(
       color: AppColors.background,
       child: Column(
@@ -44,22 +48,14 @@ class _ExpenseItemReportContentState extends State<ExpenseItemReportContent> {
               AppSpacing.lg,
               AppSpacing.md,
             ),
-            child: Row(
-              children: [
-                const Text(
-                  'Expense Item Report',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                const ReportTextActionButton(
+            child: ReportTitleActionsRow(
+              title: 'Expense Item Report',
+              actions: const [
+                ReportTextActionButton(
                   label: 'Excel',
                   icon: Icons.table_chart_outlined,
                 ),
-                const ReportTextActionButton(
+                ReportTextActionButton(
                   label: 'Print',
                   icon: Icons.print_outlined,
                 ),
@@ -79,9 +75,11 @@ class _ExpenseItemReportContentState extends State<ExpenseItemReportContent> {
                 horizontal: AppSpacing.md,
                 vertical: AppSpacing.sm,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                   const Text(
                     'From',
                     style: TextStyle(
@@ -143,6 +141,7 @@ class _ExpenseItemReportContentState extends State<ExpenseItemReportContent> {
                 ],
               ),
             ),
+            ),
           ),
           Expanded(
             child: Padding(
@@ -200,33 +199,89 @@ class _ExpenseItemReportContentState extends State<ExpenseItemReportContent> {
                         ],
                       ),
                     ),
-                    ReportTableHeaderRow(
-                      children: const [
-                        Expanded(
-                          child: ReportTableHeaderCell(label: 'EXPENSE ITEM'),
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'CATEGORY TYPE',
-                          width: 180,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'AMOUNT',
-                          width: 140,
-                          alignment: Alignment.centerRight,
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const Expanded(
-                      child: Center(
-                        child: Text(
-                          'No expense records found for the selected period.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
+                    Expanded(
+                      child: rows.isEmpty
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ReportSyncScrollTable(
+                                  headerChildren: const [
+                                    Expanded(
+                                      child: ReportAlignedHeaderCell(
+                                        label: 'EXPENSE ITEM',
+                                      ),
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'CATEGORY TYPE',
+                                      width: 180,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'AMOUNT',
+                                      width: 140,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                  ],
+                                  rows: const [],
+                                ),
+                                const Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      'No expense records found for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : SingleChildScrollView(
+                              child: ReportSyncScrollTable(
+                                headerChildren: const [
+                                  Expanded(
+                                    child: ReportAlignedHeaderCell(
+                                      label: 'EXPENSE ITEM',
+                                    ),
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'CATEGORY TYPE',
+                                    width: 180,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'AMOUNT',
+                                    width: 140,
+                                    alignment: Alignment.centerRight,
+                                  ),
+                                ],
+                                rows: [
+                                  for (var i = 0; i < rows.length; i++)
+                                    ReportAlignedRowStrip(
+                                      index: i,
+                                      child: ReportAlignedDataRow(
+                                        cells: [
+                                          ReportAlignedCell.flex(
+                                            child: Text(rows[i].itemName),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            180,
+                                            child: Text(rows[i].category),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            140,
+                                            alignment: Alignment.centerRight,
+                                            child: Text(
+                                              formatReportCurrency(
+                                                rows[i].amount,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -249,7 +304,7 @@ class _ExpenseItemReportContentState extends State<ExpenseItemReportContent> {
                                 ),
                               ),
                               TextSpan(
-                                text: _currencyFormat.format(0),
+                                text: formatReportCurrency(totalExpense),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: reportAddRed,

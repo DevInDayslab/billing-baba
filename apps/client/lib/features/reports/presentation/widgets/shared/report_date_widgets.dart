@@ -46,52 +46,56 @@ class _ReportDateRangeBarState extends State<ReportDateRangeBar> {
                 horizontal: AppSpacing.md,
                 vertical: AppSpacing.sm,
               ),
-              child: Row(
-                children: [
-                  Text(
-                    widget.fromLabel,
-                    style: const TextStyle(
-                      fontSize: 13,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.fromLabel,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 16,
                       color: AppColors.textSecondary,
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _dateFormat.format(_dateRange.start),
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Text(
-                    widget.toLabel,
-                    style: const TextStyle(
-                      fontSize: 13,
+                    const SizedBox(width: 4),
+                    Text(
+                      _dateFormat.format(_dateRange.start),
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Text(
+                      widget.toLabel,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 16,
                       color: AppColors.textSecondary,
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 4),
-                  SaleDateRangePickerAnchor(
-                    key: _datePickerKey,
-                    initialRange: _dateRange,
-                    onRangeSelected: (range) =>
-                        setState(() => _dateRange = range),
-                    child: SaleFilterChip(
-                      label: _dateFormat.format(_dateRange.end),
-                      onTap: () => _datePickerKey.currentState?.toggle(),
+                    const SizedBox(width: 4),
+                    SaleDateRangePickerAnchor(
+                      key: _datePickerKey,
+                      initialRange: _dateRange,
+                      onRangeSelected: (range) =>
+                          setState(() => _dateRange = range),
+                      child: SaleFilterChip(
+                        label: _dateFormat.format(_dateRange.end),
+                        onTap: () => _datePickerKey.currentState?.toggle(),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

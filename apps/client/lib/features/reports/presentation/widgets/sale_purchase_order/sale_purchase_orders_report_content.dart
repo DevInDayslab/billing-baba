@@ -1,22 +1,22 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/sale_purchase_order/sale_purchase_order_report_filters.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SalePurchaseOrdersReportContent extends StatelessWidget {
+class SalePurchaseOrdersReportContent extends ConsumerWidget {
   const SalePurchaseOrdersReportContent({super.key});
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹ ',
-    decimalDigits: 2,
-  );
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final rows = ref.watch(reportOrdersProvider);
+    final totalAmount =
+        rows.fold<double>(0, (sum, row) => sum + row.amount);
+
     return ColoredBox(
       color: AppColors.background,
       child: Column(
@@ -43,42 +43,171 @@ class SalePurchaseOrdersReportContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ReportTableHeaderRow(
-                      children: const [
-                        ReportTableHeaderCell(label: 'DATE', width: 100),
-                        ReportTableHeaderCell(label: 'ORDER NO.', width: 110),
-                        Expanded(child: ReportTableHeaderCell(label: 'NAME')),
-                        ReportTableHeaderCell(label: 'DUE DATE', width: 100),
-                        ReportTableHeaderCell(label: 'STATUS', width: 90),
-                        ReportTableHeaderCell(label: 'TYPE', width: 100),
-                        ReportTableHeaderCell(
-                          label: 'TOTAL',
-                          width: 100,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'ADVANCE',
-                          width: 100,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportTableHeaderCell(
-                          label: 'BALANCE',
-                          width: 100,
-                          alignment: Alignment.centerRight,
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const Expanded(
-                      child: Center(
-                        child: Text(
-                          'No orders found for the selected period.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
+                    Expanded(
+                      child: rows.isEmpty
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ReportSyncScrollTable(
+                                  headerChildren: const [
+                                    ReportAlignedHeaderCell(
+                                      label: 'DATE',
+                                      width: 100,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'ORDER NO.',
+                                      width: 110,
+                                    ),
+                                    Expanded(
+                                      child: ReportAlignedHeaderCell(
+                                        label: 'NAME',
+                                      ),
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'DUE DATE',
+                                      width: 100,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'STATUS',
+                                      width: 90,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'TYPE',
+                                      width: 100,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'TOTAL',
+                                      width: 100,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'ADVANCE',
+                                      width: 100,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                    ReportAlignedHeaderCell(
+                                      label: 'BALANCE',
+                                      width: 100,
+                                      alignment: Alignment.centerRight,
+                                    ),
+                                  ],
+                                  rows: const [],
+                                ),
+                                const Expanded(
+                                  child: Center(
+                                    child: Text(
+                                      'No orders found for the selected period.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : SingleChildScrollView(
+                              child: ReportSyncScrollTable(
+                                headerChildren: const [
+                                  ReportAlignedHeaderCell(
+                                    label: 'DATE',
+                                    width: 100,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'ORDER NO.',
+                                    width: 110,
+                                  ),
+                                  Expanded(
+                                    child: ReportAlignedHeaderCell(
+                                      label: 'NAME',
+                                    ),
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'DUE DATE',
+                                    width: 100,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'STATUS',
+                                    width: 90,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'TYPE',
+                                    width: 100,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'TOTAL',
+                                    width: 100,
+                                    alignment: Alignment.centerRight,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'ADVANCE',
+                                    width: 100,
+                                    alignment: Alignment.centerRight,
+                                  ),
+                                  ReportAlignedHeaderCell(
+                                    label: 'BALANCE',
+                                    width: 100,
+                                    alignment: Alignment.centerRight,
+                                  ),
+                                ],
+                                rows: [
+                                  for (var i = 0; i < rows.length; i++)
+                                    ReportAlignedRowStrip(
+                                      index: i,
+                                      child: ReportAlignedDataRow(
+                                        cells: [
+                                          ReportAlignedCell.fixed(
+                                            100,
+                                            child: Text(
+                                              formatReportDate(rows[i].date),
+                                            ),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            110,
+                                            child: Text(rows[i].orderNo),
+                                          ),
+                                          ReportAlignedCell.flex(
+                                            child: Text(rows[i].partyName),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            100,
+                                            child: Text(
+                                              formatReportDate(rows[i].dueDate),
+                                            ),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            90,
+                                            child: Text(rows[i].status),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            100,
+                                            child: Text(rows[i].type),
+                                          ),
+                                          ReportAlignedCell.fixed(
+                                            100,
+                                            alignment: Alignment.centerRight,
+                                            child: Text(
+                                              formatReportCurrency(
+                                                rows[i].amount,
+                                              ),
+                                            ),
+                                          ),
+                                          const ReportAlignedCell.fixed(
+                                            100,
+                                            alignment: Alignment.centerRight,
+                                            child: Text('-'),
+                                          ),
+                                          const ReportAlignedCell.fixed(
+                                            100,
+                                            alignment: Alignment.centerRight,
+                                            child: Text('-'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -101,7 +230,7 @@ class SalePurchaseOrdersReportContent extends StatelessWidget {
                                 ),
                               ),
                               TextSpan(
-                                text: _currencyFormat.format(0),
+                                text: formatReportCurrency(totalAmount),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   color: reportTeal,

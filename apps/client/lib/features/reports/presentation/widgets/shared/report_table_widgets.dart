@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
@@ -49,9 +51,14 @@ class ReportTableHeaderCell extends StatelessWidget {
 }
 
 class ReportTableHeaderRow extends StatelessWidget {
-  const ReportTableHeaderRow({required this.children, super.key});
+  const ReportTableHeaderRow({
+    required this.children,
+    this.minWidth = 960,
+    super.key,
+  });
 
   final List<Widget> children;
+  final double minWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -63,15 +70,21 @@ class ReportTableHeaderRow extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // Expanded children need a bounded max width; minWidth-only constraints
-          // leave the cross-axis unbounded inside a horizontal scroll view.
           if (!constraints.maxWidth.isFinite) {
-            return Row(children: children);
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: minWidth,
+                child: Row(children: children),
+              ),
+            );
           }
+
+          final tableWidth = math.max(constraints.maxWidth, minWidth);
           return SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: SizedBox(
-              width: constraints.maxWidth,
+              width: tableWidth,
               child: Row(children: children),
             ),
           );

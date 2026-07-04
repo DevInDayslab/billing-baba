@@ -1,23 +1,26 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BillWiseProfitReportContent extends StatelessWidget {
+class BillWiseProfitReportContent extends ConsumerWidget {
   const BillWiseProfitReportContent({super.key});
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹ ',
-    decimalDigits: 2,
-  );
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final rows = ref.watch(reportBillWiseProfitProvider);
+    final totalSale =
+        rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
+    final totalProfit =
+        rows.fold<double>(0, (sum, row) => sum + row.profit);
+
     return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
@@ -28,7 +31,7 @@ class BillWiseProfitReportContent extends StatelessWidget {
             ReportDateRangeBar(
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: const [
                   ReportIconActionButton(
                     icon: Icons.table_chart_outlined,
                     tooltip: 'Excel',
@@ -106,37 +109,43 @@ class BillWiseProfitReportContent extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   const Divider(height: 1, color: reportCardBorder),
-                  ReportTableHeaderRow(
-                    children: const [
-                      ReportTableHeaderCell(label: 'DATE', width: 90),
-                      ReportTableHeaderCell(label: 'INVOICE NO', width: 110),
-                      Expanded(child: ReportTableHeaderCell(label: 'PARTY')),
-                      ReportTableHeaderCell(
+                  ReportSyncScrollTable(
+                    minWidth: 800,
+                    headerChildren: const [
+                      ReportAlignedHeaderCell(label: 'DATE', width: 90),
+                      ReportAlignedHeaderCell(label: 'INVOICE NO', width: 110),
+                      Expanded(
+                        child: ReportAlignedHeaderCell(label: 'PARTY'),
+                      ),
+                      ReportAlignedHeaderCell(
                         label: 'TOTAL SALE AMOUNT',
                         width: 140,
                         alignment: Alignment.centerRight,
                       ),
-                      ReportTableHeaderCell(
+                      ReportAlignedHeaderCell(
                         label: 'PROFIT (+) / LOSS (-)',
                         width: 140,
                         alignment: Alignment.centerRight,
                       ),
-                      ReportTableHeaderCell(
+                      ReportAlignedHeaderCell(
                         label: 'DETAILS',
                         width: 80,
                         showFilter: false,
                       ),
                     ],
-                  ),
-                  const Divider(height: 1, color: reportCardBorder),
-                  const SizedBox(
-                    height: 160,
-                    child: Center(
-                      child: Text(
-                        'No data for selected period',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
+                    rows: [
+                      for (var i = 0; i < rows.length; i++)
+                        _BillWiseProfitRow(row: rows[i], index: i),
+                    ],
+                    emptyState: const SizedBox(
+                      height: 160,
+                      child: Center(
+                        child: Text(
+                          'No data for selected period',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                     ),
@@ -158,13 +167,13 @@ class BillWiseProfitReportContent extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              'Total Sale Amount: ${_currencyFormat.format(0)}',
+                              'Total Sale Amount: ${formatReportCurrency(totalSale)}',
                               style: const TextStyle(fontSize: 13),
                             ),
                             const SizedBox(width: AppSpacing.xl),
                             Text(
                               'Total Profit(+)/Loss(-): '
-                              '${_currencyFormat.format(0)}',
+                              '${formatReportCurrency(totalProfit)}',
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: reportTeal,
@@ -181,6 +190,56 @@ class BillWiseProfitReportContent extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _BillWiseProfitRow extends StatelessWidget {
+  const _BillWiseProfitRow({required this.row, required this.index});
+
+  final ReportBillWiseProfitRow row;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return ReportAlignedRowStrip(
+      index: index,
+      child: ReportAlignedDataRow(
+        cells: [
+          ReportAlignedCell.fixed(
+            90,
+            child: Text(formatReportDate(row.date)),
+          ),
+          ReportAlignedCell.fixed(110, child: Text(row.invoiceNo)),
+          ReportAlignedCell.flex(child: Text(row.partyName)),
+          ReportAlignedCell.fixed(
+            140,
+            alignment: Alignment.centerRight,
+            child: Text(formatReportCurrency(row.saleAmount)),
+          ),
+          ReportAlignedCell.fixed(
+            140,
+            alignment: Alignment.centerRight,
+            child: Text(
+              formatReportCurrency(row.profit),
+              style: TextStyle(
+                color: row.profit >= 0 ? reportTeal : reportAddRed,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ReportAlignedCell.fixed(
+            80,
+            child: IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.visibility_outlined, size: 18),
+              color: AppColors.textSecondary,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            ),
+          ),
+        ],
       ),
     );
   }

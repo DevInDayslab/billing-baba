@@ -1,22 +1,28 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class TrialBalanceReportContent extends StatefulWidget {
+class TrialBalanceReportContent extends ConsumerStatefulWidget {
   const TrialBalanceReportContent({super.key});
 
   @override
-  State<TrialBalanceReportContent> createState() =>
+  ConsumerState<TrialBalanceReportContent> createState() =>
       _TrialBalanceReportContentState();
 }
 
-class _TrialBalanceReportContentState extends State<TrialBalanceReportContent> {
+class _TrialBalanceReportContentState
+    extends ConsumerState<TrialBalanceReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   String _period = 'Custom';
   bool _showWorkingTrialBalance = false;
@@ -30,6 +36,17 @@ class _TrialBalanceReportContentState extends State<TrialBalanceReportContent> {
 
   @override
   Widget build(BuildContext context) {
+    final allRows = ref.watch(reportTrialBalanceProvider);
+    final rows = _showZeroBalances
+        ? allRows
+        : allRows
+            .where((row) => row.debit > 0 || row.credit > 0)
+            .toList();
+    final totalDebit =
+        rows.fold<double>(0, (sum, row) => sum + row.debit);
+    final totalCredit =
+        rows.fold<double>(0, (sum, row) => sum + row.credit);
+
     return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
@@ -152,56 +169,49 @@ class _TrialBalanceReportContentState extends State<TrialBalanceReportContent> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    color: reportTableHeaderBg,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    child: const Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'ACCOUNT',
-                            style: reportTableHeaderStyle,
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              Text(
-                                'CLOSING BALANCE',
-                                style: reportTableHeaderStyle,
-                                textAlign: TextAlign.center,
-                              ),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      'DEBIT',
-                                      style: reportTableHeaderStyle,
-                                      textAlign: TextAlign.right,
-                                    ),
+                  ReportSyncScrollTable(
+                    minWidth: 640,
+                    headerChildren: [
+                      const Expanded(
+                        child: ReportAlignedHeaderCell(label: 'ACCOUNT'),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text(
+                              'CLOSING BALANCE',
+                              style: reportTableHeaderStyle,
+                              textAlign: TextAlign.center,
+                            ),
+                            Row(
+                              children: const [
+                                Expanded(
+                                  child: ReportAlignedHeaderCell(
+                                    label: 'DEBIT',
+                                    alignment: Alignment.centerRight,
                                   ),
-                                  Expanded(
-                                    child: Text(
-                                      'CREDIT',
-                                      style: reportTableHeaderStyle,
-                                      textAlign: TextAlign.right,
-                                    ),
+                                ),
+                                Expanded(
+                                  child: ReportAlignedHeaderCell(
+                                    label: 'CREDIT',
+                                    alignment: Alignment.centerRight,
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                    ],
+                    rows: [
+                      for (var i = 0; i < rows.length; i++)
+                        _TrialBalanceRow(row: rows[i], index: i),
+                    ],
+                    emptyState: const ReportEmptyTableState(
+                      message: 'No data available for the selected period.',
+                      minHeight: 180,
                     ),
-                  ),
-                  const Divider(height: 1, color: reportCardBorder),
-                  const ReportEmptyTableState(
-                    message: 'No data available for the selected period.',
-                    minHeight: 180,
                   ),
                   Container(
                     color: const Color(0xFFE8F1FB),
@@ -209,9 +219,9 @@ class _TrialBalanceReportContentState extends State<TrialBalanceReportContent> {
                       horizontal: AppSpacing.md,
                       vertical: AppSpacing.sm,
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Expanded(
+                        const Expanded(
                           child: Text(
                             'Total',
                             style: TextStyle(
@@ -226,8 +236,10 @@ class _TrialBalanceReportContentState extends State<TrialBalanceReportContent> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  '--',
-                                  style: TextStyle(
+                                  totalDebit > 0
+                                      ? formatReportCurrency(totalDebit)
+                                      : '--',
+                                  style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                     color: reportActiveBlue,
@@ -237,8 +249,10 @@ class _TrialBalanceReportContentState extends State<TrialBalanceReportContent> {
                               ),
                               Expanded(
                                 child: Text(
-                                  '--',
-                                  style: TextStyle(
+                                  totalCredit > 0
+                                      ? formatReportCurrency(totalCredit)
+                                      : '--',
+                                  style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                     color: reportActiveBlue,
@@ -257,6 +271,43 @@ class _TrialBalanceReportContentState extends State<TrialBalanceReportContent> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TrialBalanceRow extends StatelessWidget {
+  const _TrialBalanceRow({required this.row, required this.index});
+
+  final ReportTrialBalanceRow row;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return ReportAlignedRowStrip(
+      index: index,
+      child: ReportAlignedDataRow(
+        cells: [
+          ReportAlignedCell.flex(child: Text(row.accountName)),
+          ReportAlignedCell.flex(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    row.debit > 0 ? formatReportCurrency(row.debit) : '',
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    row.credit > 0 ? formatReportCurrency(row.credit) : '',
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
