@@ -3,6 +3,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
+import 'package:billing_baba/features/dashboard/presentation/widgets/app_top_bar.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:flutter/material.dart';
@@ -146,7 +147,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
               color: AppColors.background,
               child: Column(
                 children: [
-                  _buildTopBar(),
+                  AppTopBar(pageTitle: _pageTitleFor(currentLocation)),
                   Expanded(child: widget.child),
                 ],
               ),
@@ -369,84 +370,15 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     );
   }
 
-  Widget _buildTopBar() {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0))),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: 40,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search Transactions',
-                  hintStyle: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                  ),
-                  prefixIcon: const Icon(
-                    Icons.search,
-                    color: AppColors.textSecondary,
-                    size: 20,
-                  ),
-                  filled: true,
-                  fillColor: AppColors.background,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.sm,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: AppRadius.mdBorder,
-                    borderSide: BorderSide.none,
-                  ),
-                  isDense: true,
-                ),
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Flexible(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _TopBarButton(
-                    label: 'Add Sale',
-                    color: AppColors.error,
-                    onPressed: () => context.push(AppRoutes.addSale),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  _TopBarButton(
-                    label: 'Add Purchase',
-                    color: AppColors.primary,
-                    onPressed: () => context.push(AppRoutes.addPurchase),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  _TopBarIconButton(icon: Icons.add, onPressed: () {}),
-                  _TopBarIconButton(
-                    icon: Icons.print_outlined,
-                    onPressed: () {},
-                  ),
-                  _TopBarIconButton(icon: Icons.more_vert, onPressed: () {}),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  String _pageTitleFor(String location) {
+    if (location == AppRoutes.home) return 'Dashboard';
+    if (location.startsWith(AppRoutes.parties)) return 'Parties';
+    if (location.startsWith(AppRoutes.items)) return 'Items';
+    if (location.startsWith(AppRoutes.sale)) return 'Sale';
+    if (location.startsWith(AppRoutes.purchase)) return 'Purchase & Expense';
+    if (location.startsWith(AppRoutes.reports)) return 'Reports';
+    if (location.startsWith(AppRoutes.settings)) return 'Settings';
+    return 'Billing Baba';
   }
 }
 
@@ -682,49 +614,6 @@ class _SidebarNavTile extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _TopBarButton extends StatelessWidget {
-  const _TopBarButton({
-    required this.label,
-    required this.color,
-    required this.onPressed,
-  });
-
-  final String label;
-  final Color color;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilledButton(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-        minimumSize: const Size(0, 36),
-        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-      ),
-      child: Text(label),
-    );
-  }
-}
-
-class _TopBarIconButton extends StatelessWidget {
-  const _TopBarIconButton({required this.icon, required this.onPressed});
-
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(icon, color: AppColors.textSecondary, size: 22),
-      onPressed: onPressed,
-      tooltip: '',
     );
   }
 }
