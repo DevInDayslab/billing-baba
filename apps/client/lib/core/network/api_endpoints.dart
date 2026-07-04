@@ -96,6 +96,10 @@ abstract final class ApiEndpoints {
   static const expenseCategories = '$purchases/expense-categories';
   static String expenseCategory(String id) => '$expenseCategories/$id';
 
+  static const fixedAssetPurchases = '$purchases/fixed-asset-purchases';
+  static String fixedAssetPurchase(String batchId) =>
+      '$fixedAssetPurchases/$batchId';
+
   static const jobWork = '/api/v1/job-work';
   static const jobWorkOrders = '$jobWork/job-work-orders';
   static String jobWorkOrder(String id) => '$jobWorkOrders/$id';

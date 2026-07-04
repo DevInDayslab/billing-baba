@@ -4,6 +4,7 @@ import {
   boolean,
   date,
   integer,
+  jsonb,
   pgTable,
   text,
   uniqueIndex,
@@ -14,8 +15,10 @@ import { money, syncedBusinessColumns, timestamptz } from '../columns';
 import { parties } from '../crm/tables';
 import {
   documentStatusEnum,
+  expenseCategoryTypeEnum,
   paymentModeEnum,
   purchaseDocumentTypeEnum,
+  purchaseFaStatusEnum,
   taxTypeEnum,
 } from '../enums';
 import { items } from '../inventory/tables';
@@ -23,12 +26,23 @@ import { items } from '../inventory/tables';
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);
 
-export const expenseCategories = pgTable('expense_categories', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  name: text('name').notNull(),
-  isSystem: boolean('is_system').notNull().default(false),
-});
+export const expenseCategories = pgTable(
+  'expense_categories',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    name: text('name').notNull(),
+    categoryType: expenseCategoryTypeEnum('category_type')
+      .notNull()
+      .default('direct'),
+    isSystem: boolean('is_system').notNull().default(false),
+  },
+  (table) => [
+    uniqueIndex('uq_expense_categories_business_name')
+      .on(table.businessId, sql`lower(${table.name})`)
+      .where(sql`${table.isDeleted} = false`),
+  ],
+);
 
 export const purchaseDocuments = pgTable(
   'purchase_documents',
@@ -97,7 +111,64 @@ export const expenses = pgTable('expenses', {
     .references(() => expenseCategories.id),
   partyId: uuid('party_id').references(() => parties.id),
   amount: money('amount').notNull(),
+  taxAmount: money('tax_amount').notNull().default('0'),
+  taxRate: money('tax_rate').notNull().default('0'),
   description: text('description'),
+  notes: text('notes'),
+  referenceNumber: text('reference_number'),
+  attachments: jsonb('attachments').$type<string[]>().default([]),
   expenseDate: date('expense_date').notNull(),
   paymentMode: paymentModeEnum('payment_mode'),
 });
+
+export const purchaseFaBatches = pgTable('purchase_fa_batches', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  partyId: uuid('party_id')
+    .notNull()
+    .references(() => parties.id),
+  referenceNumber: text('reference_number'),
+  purchaseDate: date('purchase_date').notNull(),
+  dueDate: date('due_date'),
+  paymentMode: paymentModeEnum('payment_mode'),
+  subtotal: money('subtotal').notNull().default('0'),
+  taxAmount: money('tax_amount').notNull().default('0'),
+  totalAmount: money('total_amount').notNull().default('0'),
+  balanceDue: money('balance_due').notNull().default('0'),
+  status: purchaseFaStatusEnum('status').notNull().default('unpaid'),
+  notes: text('notes'),
+  description: text('description'),
+});
+
+export const purchaseFixedAssets = pgTable(
+  'purchase_fixed_assets',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    batchId: uuid('batch_id')
+      .notNull()
+      .references(() => purchaseFaBatches.id),
+    purchaseDocumentId: uuid('purchase_document_id').references(
+      () => purchaseDocuments.id,
+    ),
+    assetName: text('asset_name').notNull(),
+    assetCategory: text('asset_category'),
+    serialNumber: text('serial_number'),
+    purchasePrice: money('purchase_price').notNull(),
+    location: text('location'),
+    warrantyExpiry: date('warranty_expiry'),
+    description: text('description'),
+    qty: money('qty').notNull().default('1'),
+    taxRate: money('tax_rate').notNull().default('0'),
+    taxAmount: money('tax_amount').notNull().default('0'),
+    lineTotal: money('line_total').notNull(),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex('uq_purchase_fixed_assets_business_serial')
+      .on(table.businessId, table.serialNumber)
+      .where(
+        sql`${table.serialNumber} IS NOT NULL AND ${table.isDeleted} = false`,
+      ),
+  ],
+);

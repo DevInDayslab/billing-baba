@@ -1,5 +1,4 @@
 import 'package:billing_baba/core/network/api_error_parser.dart';
-import 'package:billing_baba/features/purchases/application/expense_service.dart';
 import 'package:dio/dio.dart';
 
 class PurchaseException implements Exception {
@@ -61,7 +60,6 @@ String _friendlyMessage(String? code, String fallback) {
 
 abstract final class PurchaseErrorMapper {
   static String messageFor(Object error) {
-    if (error is ExpensesNotAvailableException) return error.toString();
     if (error is PurchaseException) return error.message;
     return mapPurchaseError(error).message;
   }

@@ -233,6 +233,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AddPurchaseFaPage(),
           ),
           GoRoute(
+            path: '${AppRoutes.editPurchaseFa}/:batchId',
+            name: 'editPurchaseFa',
+            builder: (context, state) => AddPurchaseFaPage(
+              batchId: state.pathParameters['batchId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.addPurchase,
             name: 'addPurchase',
             builder: (context, state) => const AddPurchasePage(),
@@ -260,6 +267,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.addExpense,
             name: 'addExpense',
             builder: (context, state) => const AddExpensePage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editExpense}/:expenseId',
+            name: 'editExpense',
+            builder: (context, state) => AddExpensePage(
+              expenseId: state.pathParameters['expenseId'],
+            ),
           ),
           GoRoute(
             path: AppRoutes.reports,

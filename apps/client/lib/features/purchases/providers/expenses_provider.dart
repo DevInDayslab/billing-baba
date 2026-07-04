@@ -1,6 +1,7 @@
 import 'package:billing_baba/features/purchases/application/expense_service.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
+import 'package:billing_baba/features/purchases/models/mappers/expense_mapper.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
@@ -93,13 +94,40 @@ class ExpenseCategories extends _$ExpenseCategories {
     });
   }
 
-  Future<String?> addCategory(String name) async {
+  Future<String?> addCategory(String name, {String categoryType = 'direct'}) async {
     try {
       final service = await ref.read(expenseServiceProvider.future);
       await service.createCategory(
-        CreateExpenseCategoryRequest(name: name),
+        CreateExpenseCategoryRequest(name: name, categoryType: categoryType),
       );
       await refresh();
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<String?> updateCategory(
+    String id,
+    UpdateExpenseCategoryRequest request,
+  ) async {
+    try {
+      final service = await ref.read(expenseServiceProvider.future);
+      await service.updateCategory(id, request);
+      await refresh();
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<String?> deleteCategory(String id) async {
+    try {
+      final service = await ref.read(expenseServiceProvider.future);
+      await service.deleteCategory(id);
+      await refresh();
+      ref.invalidate(expenseTransactionsProvider);
+      ref.invalidate(expenseItemsProvider);
       return null;
     } catch (error) {
       return PurchaseErrorMapper.messageFor(error);
@@ -135,27 +163,65 @@ class ExpenseTransactions extends _$ExpenseTransactions {
       final filters = ref.read(expenseFiltersProvider);
       final service = await ref.read(expenseServiceProvider.future);
       return service.fetchExpenses(
-        query: ExpenseListQuery(page: filters.currentPage),
+        query: ExpenseListQuery(
+          page: filters.currentPage,
+          from: _resolveTimeRange(
+            filters.timeRangeOption,
+            filters.customDateRange,
+          )?.start.toUtc().toIso8601String(),
+          to: _resolveTimeRange(
+            filters.timeRangeOption,
+            filters.customDateRange,
+          )?.end.toUtc().toIso8601String(),
+        ),
       );
     });
+  }
+
+  Future<String?> updateExpense(
+    String id,
+    UpdateExpenseRequest request,
+  ) async {
+    try {
+      final service = await ref.read(expenseServiceProvider.future);
+      await service.updateExpense(id, request);
+      await refresh();
+      ref.invalidate(expenseCategoriesProvider);
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<String?> deleteExpense(String id) async {
+    try {
+      final service = await ref.read(expenseServiceProvider.future);
+      await service.deleteExpense(id);
+      await refresh();
+      ref.invalidate(expenseCategoriesProvider);
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
   }
 }
 
 @riverpod
-class ExpenseItems extends _$ExpenseItems {
-  @override
-  List<ExpenseItemModel> build() => const [];
+List<ExpenseItemModel> expenseItems(Ref ref) {
+  final transactionsAsync = ref.watch(expenseTransactionsProvider);
+  final categoriesAsync = ref.watch(expenseCategoriesProvider);
+  final categoryNames = categoriesAsync.maybeWhen(
+    data: (categories) => {for (final category in categories) category.id: category.name},
+    orElse: () => const <String, String>{},
+  );
 
-  void upsertItem(ExpenseItemModel item) {
-    final index = state.indexWhere((existing) => existing.id == item.id);
-    if (index >= 0) {
-      final updated = [...state];
-      updated[index] = item;
-      state = updated;
-    } else {
-      state = [item, ...state];
-    }
-  }
+  return transactionsAsync.maybeWhen(
+    data: (transactions) => ExpenseMapper.groupTransactionsToItems(
+      transactions,
+      categoryNames: categoryNames,
+    ),
+    orElse: () => const <ExpenseItemModel>[],
+  );
 }
 
 @riverpod

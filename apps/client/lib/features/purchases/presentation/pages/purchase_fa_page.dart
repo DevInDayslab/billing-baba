@@ -13,8 +13,11 @@ class PurchaseFaPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final records = ref.watch(purchaseFaRecordsProvider);
-    final isEmpty = records.isEmpty;
+    final faAsync = ref.watch(purchaseFaProvider);
+    final isEmpty = faAsync.maybeWhen(
+      data: (page) => page.totalItems == 0,
+      orElse: () => false,
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,

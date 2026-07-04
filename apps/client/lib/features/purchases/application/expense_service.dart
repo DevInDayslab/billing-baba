@@ -4,19 +4,12 @@ import 'package:billing_baba/features/purchases/data/expense_remote_data_source.
 import 'package:billing_baba/features/purchases/data/expense_repository.dart';
 import 'package:billing_baba/features/purchases/models/dto/expense_dto.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
+import 'package:billing_baba/features/purchases/models/mappers/expense_mapper.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'expense_service.g.dart';
-
-/// Thrown when the expenses API is not deployed yet.
-class ExpensesNotAvailableException implements Exception {
-  const ExpensesNotAvailableException();
-
-  @override
-  String toString() => 'Expenses are not available on this server yet.';
-}
 
 @Riverpod(keepAlive: true)
 Future<ExpenseService> expenseService(Ref ref) async {
@@ -29,29 +22,25 @@ Future<ExpenseService> expenseService(Ref ref) async {
 }
 
 class ExpenseService {
-  ExpenseService({required this._repository});
+  ExpenseService({required ExpenseRepository repository})
+    : _repository = repository;
 
   final ExpenseRepository _repository;
 
   Future<List<ExpenseCategoryModel>> fetchCategories() async {
     try {
       final response = await _repository.listCategories();
-      return response.categories
-          .map(
-            (dto) => ExpenseCategoryModel(
-              id: dto.id,
-              name: dto.name,
-              type: ExpenseCategoryType.direct,
-              variant: ExpenseCategoryVariant.standard,
-              totalAmount: 0,
-              balance: 0,
-            ),
-          )
-          .toList();
+      return response.categories.map(ExpenseMapper.toCategoryModel).toList();
     } on DioException catch (error) {
-      if (error.response?.statusCode == 404) {
-        throw const ExpensesNotAvailableException();
-      }
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<ExpenseCategoryModel> getCategory(String id) async {
+    try {
+      final dto = await _repository.getCategory(id);
+      return ExpenseMapper.toCategoryModel(dto);
+    } on DioException catch (error) {
       throw mapPurchaseError(error);
     }
   }
@@ -63,25 +52,25 @@ class ExpenseService {
       final response = await _repository.listExpenses(
         query ?? const ExpenseListQuery(limit: 100),
       );
-      return response.expenses
-          .map(
-            (dto) => ExpenseTransactionModel(
-              id: dto.id,
-              categoryId: dto.categoryId,
-              date: DateTime.tryParse(dto.expenseDate) ?? DateTime.now(),
-              transactionNo: dto.id.substring(0, 8),
-              party: '',
-              paymentType: dto.paymentMode,
-              amount: double.tryParse(dto.amount) ?? 0,
-              balance: 0,
-              status: ExpenseStatus.paid,
-            ),
-          )
-          .toList();
+      return ExpenseMapper.toTransactionModels(response.expenses);
     } on DioException catch (error) {
-      if (error.response?.statusCode == 404) {
-        throw const ExpensesNotAvailableException();
-      }
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<ExpenseDto> fetchExpenseDto(String id) async {
+    try {
+      return await _repository.getExpense(id);
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<ExpenseTransactionModel> fetchExpense(String id) async {
+    try {
+      final dto = await _repository.getExpense(id);
+      return ExpenseMapper.toTransactionModel(dto);
+    } on DioException catch (error) {
       throw mapPurchaseError(error);
     }
   }
@@ -90,9 +79,25 @@ class ExpenseService {
     try {
       return _repository.createExpense(request);
     } on DioException catch (error) {
-      if (error.response?.statusCode == 404) {
-        throw const ExpensesNotAvailableException();
-      }
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<ExpenseDto> updateExpense(
+    String id,
+    UpdateExpenseRequest request,
+  ) async {
+    try {
+      return _repository.updateExpense(id, request);
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<void> deleteExpense(String id) async {
+    try {
+      await _repository.deleteExpense(id);
+    } on DioException catch (error) {
       throw mapPurchaseError(error);
     }
   }
@@ -103,9 +108,25 @@ class ExpenseService {
     try {
       return _repository.createCategory(request);
     } on DioException catch (error) {
-      if (error.response?.statusCode == 404) {
-        throw const ExpensesNotAvailableException();
-      }
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<ExpenseCategoryDto> updateCategory(
+    String id,
+    UpdateExpenseCategoryRequest request,
+  ) async {
+    try {
+      return _repository.updateCategory(id, request);
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<void> deleteCategory(String id) async {
+    try {
+      await _repository.deleteCategory(id);
+    } on DioException catch (error) {
       throw mapPurchaseError(error);
     }
   }

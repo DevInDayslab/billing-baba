@@ -14,7 +14,9 @@ const _cardBorder = Color(0xFFE0E0E0);
 const _linkColor = Color(0xFF1565C0);
 
 class AddPurchaseFaFooter extends ConsumerWidget {
-  const AddPurchaseFaFooter({super.key});
+  const AddPurchaseFaFooter({this.batchId, super.key});
+
+  final String? batchId;
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -24,10 +26,12 @@ class AddPurchaseFaFooter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addPurchaseFaFormProvider);
-    final notifier = ref.read(addPurchaseFaFormProvider.notifier);
-    final totalTax = ref.watch(addPurchaseFaTotalTaxProvider);
-    final grandTotal = ref.watch(addPurchaseFaGrandTotalProvider);
+    final form = ref.watch(addPurchaseFaFormProvider(batchId: batchId));
+    final notifier =
+        ref.read(addPurchaseFaFormProvider(batchId: batchId).notifier);
+    final totalTax = ref.watch(addPurchaseFaTotalTaxProvider(batchId: batchId));
+    final grandTotal =
+        ref.watch(addPurchaseFaGrandTotalProvider(batchId: batchId));
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

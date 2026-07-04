@@ -4,7 +4,6 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_l
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
-import 'package:billing_baba/features/purchases/application/expense_service.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/expense_status_badge.dart';
@@ -36,9 +35,7 @@ class ExpensesCategoryTabContent extends ConsumerWidget {
     return categoriesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) {
-        final message = error is ExpensesNotAvailableException
-            ? error.toString()
-            : PurchaseErrorMapper.messageFor(error);
+        final message = PurchaseErrorMapper.messageFor(error);
         return Center(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),

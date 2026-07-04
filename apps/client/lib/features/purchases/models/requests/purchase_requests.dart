@@ -237,6 +237,11 @@ class CreateExpenseRequest {
     required this.expenseDate,
     this.partyId,
     this.description,
+    this.notes,
+    this.referenceNumber,
+    this.taxAmount,
+    this.taxRate,
+    this.attachments,
     this.paymentMode,
   });
 
@@ -245,6 +250,11 @@ class CreateExpenseRequest {
   final String expenseDate;
   final String? partyId;
   final String? description;
+  final String? notes;
+  final String? referenceNumber;
+  final String? taxAmount;
+  final String? taxRate;
+  final List<String>? attachments;
   final String? paymentMode;
 
   Map<String, dynamic> toJson() => {
@@ -253,6 +263,12 @@ class CreateExpenseRequest {
     'expense_date': expenseDate,
     if (partyId != null) 'party_id': partyId,
     if (description != null) 'description': description,
+    if (notes != null) 'notes': notes,
+    if (referenceNumber != null) 'reference_number': referenceNumber,
+    if (taxAmount != null) 'tax_amount': taxAmount,
+    if (taxRate != null) 'tax_rate': taxRate,
+    if (attachments != null && attachments!.isNotEmpty)
+      'attachments': attachments,
     if (paymentMode != null) 'payment_mode': paymentMode,
   };
 }
@@ -264,6 +280,11 @@ class UpdateExpenseRequest {
     this.expenseDate,
     this.partyId,
     this.description,
+    this.notes,
+    this.referenceNumber,
+    this.taxAmount,
+    this.taxRate,
+    this.attachments,
     this.paymentMode,
   });
 
@@ -272,6 +293,11 @@ class UpdateExpenseRequest {
   final String? expenseDate;
   final String? partyId;
   final String? description;
+  final String? notes;
+  final String? referenceNumber;
+  final String? taxAmount;
+  final String? taxRate;
+  final List<String>? attachments;
   final String? paymentMode;
 
   Map<String, dynamic> toJson() => {
@@ -280,14 +306,38 @@ class UpdateExpenseRequest {
     if (expenseDate != null) 'expense_date': expenseDate,
     if (partyId != null) 'party_id': partyId,
     if (description != null) 'description': description,
+    if (notes != null) 'notes': notes,
+    if (referenceNumber != null) 'reference_number': referenceNumber,
+    if (taxAmount != null) 'tax_amount': taxAmount,
+    if (taxRate != null) 'tax_rate': taxRate,
+    if (attachments != null) 'attachments': attachments,
     if (paymentMode != null) 'payment_mode': paymentMode,
   };
 }
 
 class CreateExpenseCategoryRequest {
-  const CreateExpenseCategoryRequest({required this.name});
+  const CreateExpenseCategoryRequest({
+    required this.name,
+    this.categoryType = 'direct',
+  });
 
   final String name;
+  final String categoryType;
 
-  Map<String, dynamic> toJson() => {'name': name};
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'category_type': categoryType,
+  };
+}
+
+class UpdateExpenseCategoryRequest {
+  const UpdateExpenseCategoryRequest({this.name, this.categoryType});
+
+  final String? name;
+  final String? categoryType;
+
+  Map<String, dynamic> toJson() => {
+    if (name != null) 'name': name,
+    if (categoryType != null) 'category_type': categoryType,
+  };
 }

@@ -22,7 +22,9 @@ const _linkPaymentGreen = Color(0xFF2E7D32);
 const _saveBlue = Color(0xFF1565C0);
 
 class AddPurchaseFaPage extends ConsumerWidget {
-  const AddPurchaseFaPage({super.key});
+  const AddPurchaseFaPage({this.batchId, super.key});
+
+  final String? batchId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,10 +53,10 @@ class AddPurchaseFaPage extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
+                  const Padding(
                     padding: EdgeInsets.fromLTRB(
                       _sectionGap,
                       _sectionGap,
@@ -63,20 +65,23 @@ class AddPurchaseFaPage extends ConsumerWidget {
                     ),
                     child: _PageHeader(),
                   ),
-                  SizedBox(height: _sectionGap),
+                  const SizedBox(height: _sectionGap),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: _sectionGap),
-                    child: _FormFields(),
+                    padding: const EdgeInsets.symmetric(horizontal: _sectionGap),
+                    child: _FormFields(batchId: batchId),
                   ),
-                  SizedBox(height: _sectionGap),
-                  PurchaseFaLineItemsTable(embedded: true),
-                  Divider(height: 1, color: _cardBorder),
+                  const SizedBox(height: _sectionGap),
+                  PurchaseFaLineItemsTable(
+                    embedded: true,
+                    batchId: batchId,
+                  ),
+                  const Divider(height: 1, color: _cardBorder),
                   Padding(
-                    padding: EdgeInsets.all(_sectionGap),
-                    child: AddPurchaseFaFooter(),
+                    padding: const EdgeInsets.all(_sectionGap),
+                    child: AddPurchaseFaFooter(batchId: batchId),
                   ),
-                  Divider(height: 1, color: _cardBorder),
-                  _BottomActionBar(),
+                  const Divider(height: 1, color: _cardBorder),
+                  _BottomActionBar(batchId: batchId),
                 ],
               ),
             ),
@@ -104,7 +109,9 @@ class _PageHeader extends StatelessWidget {
 }
 
 class _FormFields extends ConsumerStatefulWidget {
-  const _FormFields();
+  const _FormFields({this.batchId});
+
+  final String? batchId;
 
   @override
   ConsumerState<_FormFields> createState() => _FormFieldsState();
@@ -116,8 +123,16 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
 
   @override
   Widget build(BuildContext context) {
-    final form = ref.watch(addPurchaseFaFormProvider);
-    final notifier = ref.read(addPurchaseFaFormProvider.notifier);
+    final form = ref.watch(addPurchaseFaFormProvider(batchId: widget.batchId));
+    final notifier =
+        ref.read(addPurchaseFaFormProvider(batchId: widget.batchId).notifier);
+
+    if (form.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(AppSpacing.xl),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -134,6 +149,8 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                   hasError: form.partyHasError,
                   errorMessage: 'Party is required',
                   onSelected: notifier.updateParty,
+                  onPartySelectedWithId: (partyId, name) =>
+                      notifier.updateParty(name, partyId: partyId),
                 ),
               ),
             ),
@@ -278,18 +295,23 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
       initialTime: current ?? TimeOfDay.now(),
     );
     if (picked != null) {
-      ref.read(addPurchaseFaFormProvider.notifier).updateBillTime(picked);
+      ref
+          .read(addPurchaseFaFormProvider(batchId: widget.batchId).notifier)
+          .updateBillTime(picked);
     }
   }
 }
 
 class _BottomActionBar extends ConsumerWidget {
-  const _BottomActionBar();
+  const _BottomActionBar({this.batchId});
+
+  final String? batchId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addPurchaseFaFormProvider);
-    final notifier = ref.read(addPurchaseFaFormProvider.notifier);
+    final form = ref.watch(addPurchaseFaFormProvider(batchId: batchId));
+    final notifier =
+        ref.read(addPurchaseFaFormProvider(batchId: batchId).notifier);
     final showLinkPayment = form.party.trim().isNotEmpty;
 
     return Padding(
@@ -336,7 +358,9 @@ class _BottomActionBar extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           FilledButton(
-            onPressed: () => _handleSave(context, ref, notifier),
+            onPressed: form.isSaving
+                ? null
+                : () => _handleSave(context, ref, notifier),
             style: FilledButton.styleFrom(
               backgroundColor: _saveBlue,
               foregroundColor: Colors.white,
@@ -350,7 +374,7 @@ class _BottomActionBar extends ConsumerWidget {
   }
 
   Future<void> _handleCancel(BuildContext context, WidgetRef ref) async {
-    final form = ref.read(addPurchaseFaFormProvider);
+    final form = ref.read(addPurchaseFaFormProvider(batchId: batchId));
     if (form.isDirty) {
       final discard = await showDialog<bool>(
         context: context,
@@ -376,13 +400,19 @@ class _BottomActionBar extends ConsumerWidget {
     if (context.mounted) context.pop();
   }
 
-  void _handleSave(
+  Future<void> _handleSave(
     BuildContext context,
     WidgetRef ref,
     AddPurchaseFaForm notifier,
-  ) {
-    final saved = notifier.save();
-    if (!saved) return;
+  ) async {
+    final error = await notifier.save();
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
 
     showTransactionSuccessToast(context);
     context.go(AppRoutes.purchaseFa);

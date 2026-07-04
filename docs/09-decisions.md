@@ -715,6 +715,24 @@ Single polymorphic table `purchase_documents` with `document_type` enum and shar
 
 ---
 
+## ADR-017: Purchase Fixed Assets — Batch + Asset Lines
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+
+### Decision
+
+Purchase Fixed Assets use `purchase_fa_batches` (header) and `purchase_fixed_assets` (line rows). Each form save creates one batch with N asset lines, matching the existing multi-line FA UI without extending `purchase_documents`.
+
+### Consequences
+
+- List API returns batches; detail includes asset lines.
+- Serial number uniqueness enforced per business on asset lines.
+
+---
+
 ## ADR-016: Event-based Inventory Ledger
 
 | Field | Value |

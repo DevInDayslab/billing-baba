@@ -63,6 +63,15 @@ class ExpenseRemoteDataSource {
     return PaginatedExpenseCategoriesDto.fromJson(response.data ?? {});
   }
 
+  Future<ExpenseCategoryDto> getCategory(String id) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.expenseCategory(id),
+    );
+    return ExpenseCategoryDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
   Future<ExpenseCategoryDto> createCategory(
     CreateExpenseCategoryRequest request,
   ) async {
@@ -73,5 +82,22 @@ class ExpenseRemoteDataSource {
     return ExpenseCategoryDto.fromJson(
       (response.data?['data'] as Map<String, dynamic>?) ?? {},
     );
+  }
+
+  Future<ExpenseCategoryDto> updateCategory(
+    String id,
+    UpdateExpenseCategoryRequest request,
+  ) async {
+    final response = await _dio.patch<Map<String, dynamic>>(
+      ApiEndpoints.expenseCategory(id),
+      data: request.toJson(),
+    );
+    return ExpenseCategoryDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<void> deleteCategory(String id) async {
+    await _dio.delete<void>(ApiEndpoints.expenseCategory(id));
   }
 }

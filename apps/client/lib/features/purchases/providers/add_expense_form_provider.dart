@@ -1,7 +1,6 @@
 import 'package:billing_baba/features/purchases/application/expense_service.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/expense_form_model.dart';
-import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
@@ -18,18 +17,93 @@ String _nextExpenseLineItemId() {
   return 'expense_line_$_expenseLineItemCounter';
 }
 
+AddExpenseFormState _defaultFormState({String? expenseId}) {
+  final now = DateTime.now();
+  return AddExpenseFormState(
+    expenseId: expenseId,
+    expenseNumber: 'Auto',
+    expenseDate: DateTime(now.year, now.month, now.day),
+    expenseTime: TimeOfDay.fromDateTime(now),
+    dueDate: DateTime(now.year, now.month, now.day),
+    items: [ExpenseLineItem.empty(id: _nextExpenseLineItemId())],
+    isLoading: expenseId != null,
+  );
+}
+
+String _formatExpenseDate(DateTime date) {
+  final month = date.month.toString().padLeft(2, '0');
+  final day = date.day.toString().padLeft(2, '0');
+  return '${date.year}-$month-$day';
+}
+
 @riverpod
 class AddExpenseForm extends _$AddExpenseForm {
   @override
-  AddExpenseFormState build() {
-    final now = DateTime.now();
-    return AddExpenseFormState(
-      expenseNumber: 'Auto',
-      expenseDate: DateTime(now.year, now.month, now.day),
-      expenseTime: TimeOfDay.fromDateTime(now),
-      dueDate: DateTime(now.year, now.month, now.day),
-      items: [ExpenseLineItem.empty(id: _nextExpenseLineItemId())],
-    );
+  AddExpenseFormState build({String? expenseId}) {
+    if (expenseId != null) {
+      Future.microtask(() => _loadExpense(expenseId));
+    }
+    return _defaultFormState(expenseId: expenseId);
+  }
+
+  Future<void> _loadExpense(String id) async {
+    state = state.copyWith(isLoading: true, clearSaveError: true);
+    try {
+      final service = await ref.read(expenseServiceProvider.future);
+      final dto = await service.fetchExpenseDto(id);
+      final transaction = await service.fetchExpense(id);
+      final categories = await ref.read(expenseCategoriesProvider.future);
+      final category = categories
+          .where((item) => item.id == dto.categoryId)
+          .firstOrNull;
+      final expenseDate = DateTime.tryParse(dto.expenseDate) ?? DateTime.now();
+      final amount = double.tryParse(dto.amount) ?? 0;
+      final taxAmount = double.tryParse(dto.taxAmount ?? '') ?? 0;
+      final taxRate = double.tryParse(dto.taxRate ?? '') ?? 0;
+
+      state = state.copyWith(
+        expenseId: id,
+        categoryId: dto.categoryId,
+        category: dto.categoryName ?? category?.name ?? '',
+        party: dto.partyName?.trim() ?? transaction.party,
+        partyId: dto.partyId,
+        expenseNumber: dto.referenceNumber?.trim().isNotEmpty == true
+            ? dto.referenceNumber!.trim()
+            : transaction.transactionNo,
+        expenseDate: DateTime(
+          expenseDate.year,
+          expenseDate.month,
+          expenseDate.day,
+        ),
+        expenseTime: TimeOfDay.fromDateTime(expenseDate),
+        description: dto.notes ?? '',
+        payments: [
+          ExpensePaymentEntry(
+            type: transaction.paymentType ?? 'Cash',
+            amount: amount,
+            referenceNo: dto.referenceNumber ?? '',
+          ),
+        ],
+        gstEnabled: taxAmount > 0 || dto.partyId != null,
+        items: [
+          ExpenseLineItem(
+            id: _nextExpenseLineItemId(),
+            itemName: dto.description?.trim() ?? '',
+            description: dto.description ?? '',
+            qty: 1,
+            pricePerUnit: amount,
+            taxPercent: taxRate,
+          ),
+        ],
+        isLoading: false,
+        isDirty: false,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        saveError: PurchaseErrorMapper.messageFor(error),
+      );
+    }
   }
 
   void toggleGst({required bool value}) {
@@ -44,8 +118,12 @@ class AddExpenseForm extends _$AddExpenseForm {
     );
   }
 
-  void updateParty(String value) {
-    state = state.copyWith(party: value, isDirty: true);
+  void updateParty(String value, {String? partyId}) {
+    state = state.copyWith(
+      party: value,
+      partyId: partyId ?? state.partyId,
+      isDirty: true,
+    );
   }
 
   void updateExpenseNumber(String value) {
@@ -202,6 +280,26 @@ class AddExpenseForm extends _$AddExpenseForm {
     return isValid;
   }
 
+  String? _lineItemDescription() {
+    final descriptions = state.items
+        .map((item) => item.description.trim())
+        .where((value) => value.isNotEmpty)
+        .toList();
+    if (descriptions.isNotEmpty) return descriptions.join(', ');
+
+    final names = state.items
+        .map((item) => item.itemName.trim())
+        .where((value) => value.isNotEmpty)
+        .toList();
+    return names.isEmpty ? null : names.join(', ');
+  }
+
+  String? _effectiveTaxRate() {
+    final taxableItems = state.items.where((item) => item.taxPercent > 0);
+    if (taxableItems.isEmpty) return null;
+    return taxableItems.first.taxPercent.toStringAsFixed(4);
+  }
+
   Future<String?> saveExpense() async {
     if (!validate()) return 'Please fill required fields';
 
@@ -213,26 +311,51 @@ class AddExpenseForm extends _$AddExpenseForm {
     try {
       final service = await ref.read(expenseServiceProvider.future);
       final date = state.expenseDate ?? DateTime.now();
-      final time = state.expenseTime ?? TimeOfDay.now();
-      final expenseDateTime = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
+      final expenseDate = _formatExpenseDate(date);
+      final referenceNumber = state.payments.isNotEmpty
+          ? state.payments.first.referenceNo.trim()
+          : '';
+      final notes = state.description.trim();
+      final description = _lineItemDescription();
+      final taxAmount = state.totalTax > 0
+          ? state.totalTax.toStringAsFixed(4)
+          : null;
+      final taxRate = _effectiveTaxRate();
+      final partyId = state.partyId;
+
+      final request = CreateExpenseRequest(
+        categoryId: categoryId,
+        amount: state.grandTotal.toStringAsFixed(4),
+        expenseDate: expenseDate,
+        partyId: partyId?.isNotEmpty == true ? partyId : null,
+        description: description,
+        notes: notes.isEmpty ? null : notes,
+        referenceNumber: referenceNumber.isEmpty ? null : referenceNumber,
+        taxAmount: taxAmount,
+        taxRate: taxRate,
+        paymentMode: PurchasePaymentModes.toApi(state.paymentType),
       );
 
-      await service.createExpense(
-        CreateExpenseRequest(
-          categoryId: categoryId,
-          amount: state.grandTotal.toStringAsFixed(4),
-          expenseDate: expenseDateTime.toUtc().toIso8601String(),
-          description: state.description.trim().isEmpty
-              ? null
-              : state.description.trim(),
-          paymentMode: PurchasePaymentModes.toApi(state.paymentType),
-        ),
-      );
+      final expenseId = state.expenseId;
+      if (expenseId != null && expenseId.isNotEmpty) {
+        await service.updateExpense(
+          expenseId,
+          UpdateExpenseRequest(
+            categoryId: request.categoryId,
+            amount: request.amount,
+            expenseDate: request.expenseDate,
+            partyId: request.partyId,
+            description: request.description,
+            notes: request.notes,
+            referenceNumber: request.referenceNumber,
+            taxAmount: request.taxAmount,
+            taxRate: request.taxRate,
+            paymentMode: request.paymentMode,
+          ),
+        );
+      } else {
+        await service.createExpense(request);
+      }
 
       ref.invalidate(expenseTransactionsProvider);
       ref.invalidate(expenseCategoriesProvider);
@@ -242,22 +365,17 @@ class AddExpenseForm extends _$AddExpenseForm {
       return PurchaseErrorMapper.messageFor(error);
     }
   }
-
-  bool save() {
-    validate();
-    return false;
-  }
 }
 
 @riverpod
-double addExpenseGrandTotal(Ref ref) {
-  final form = ref.watch(addExpenseFormProvider);
+double addExpenseGrandTotal(Ref ref, {String? expenseId}) {
+  final form = ref.watch(addExpenseFormProvider(expenseId: expenseId));
   return form.grandTotal;
 }
 
 @riverpod
-double addExpenseTotalTax(Ref ref) {
-  final form = ref.watch(addExpenseFormProvider);
+double addExpenseTotalTax(Ref ref, {String? expenseId}) {
+  final form = ref.watch(addExpenseFormProvider(expenseId: expenseId));
   return form.totalTax;
 }
 

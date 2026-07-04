@@ -1,5 +1,6 @@
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_fa_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_fa_form_model.dart';
-import 'package:billing_baba/features/purchases/models/purchase_fa_model.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_fa_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
@@ -15,35 +16,56 @@ String _nextPurchaseFaLineItemId() {
   return 'purchase_fa_line_$_purchaseFaLineItemCounter';
 }
 
+AddPurchaseFaFormState _defaultFormState({String? batchId}) {
+  final now = DateTime.now();
+  return AddPurchaseFaFormState(
+    batchId: batchId,
+    billNumber: 'Auto',
+    billDate: DateTime(now.year, now.month, now.day),
+    billTime: TimeOfDay.fromDateTime(now),
+    dueDate: DateTime(now.year, now.month, now.day),
+    items: [FixedAssetLineItem.empty(id: _nextPurchaseFaLineItemId())],
+    isLoading: batchId != null,
+  );
+}
+
 @riverpod
 class AddPurchaseFaForm extends _$AddPurchaseFaForm {
   @override
-  AddPurchaseFaFormState build() {
-    final records = ref.watch(purchaseFaRecordsProvider);
-    final now = DateTime.now();
-    final billNumber = generateNextPurchaseFaNumber(
-      records.map((record) => record.invoiceNo).toList(),
-    );
-
-    return AddPurchaseFaFormState(
-      billNumber: billNumber,
-      billDate: DateTime(now.year, now.month, now.day),
-      billTime: TimeOfDay.fromDateTime(now),
-      dueDate: DateTime(now.year, now.month, now.day),
-      items: [FixedAssetLineItem.empty(id: _nextPurchaseFaLineItemId())],
-    );
+  AddPurchaseFaFormState build({String? batchId}) {
+    if (batchId != null) {
+      Future.microtask(() => _loadBatch(batchId));
+      return _defaultFormState(batchId: batchId);
+    }
+    return _defaultFormState();
   }
 
-  void updateParty(String value) {
+  Future<void> _loadBatch(String batchId) async {
+    state = state.copyWith(isLoading: true, clearSaveError: true);
+    try {
+      final service = await ref.read(purchaseFaServiceProvider.future);
+      final loaded = await service.loadForm(batchId);
+      state = loaded.copyWith(isLoading: false);
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        saveError: PurchaseErrorMapper.messageFor(error),
+      );
+    }
+  }
+
+  void updateParty(String value, {String? partyId}) {
     state = state.copyWith(
       party: value,
+      partyId: partyId ?? state.partyId,
       billingName: state.billingName.isEmpty ? value : state.billingName,
       isDirty: true,
+      clearSaveError: true,
     );
   }
 
   void updateBillingName(String value) {
-    state = state.copyWith(billingName: value, isDirty: true);
+    state = state.copyWith(billingName: value, isDirty: true, clearSaveError: true);
   }
 
   void updateEWayBillNo(String value) {
@@ -202,63 +224,45 @@ class AddPurchaseFaForm extends _$AddPurchaseFaForm {
     return isValid;
   }
 
-  PurchaseFaModel? buildRecordModel() {
-    if (!validate()) return null;
+  Future<String?> save() async {
+    if (!validate()) {
+      if ((state.partyId == null || state.partyId!.isEmpty) &&
+          state.party.trim().isEmpty) {
+        return 'Supplier is required';
+      }
+      return 'Add at least one asset with name and quantity';
+    }
 
-    final records = ref.read(purchaseFaRecordsProvider);
-    final nextId = (records.length + 1).toString();
-    final grandTotal = state.grandTotal;
-    final paid = state.paymentAmount;
-    final balance = state.balanceAmount;
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(purchaseFaServiceProvider.future);
+      if (state.batchId != null) {
+        await service.updateBatch(state.batchId!, state);
+      } else {
+        final created = await service.createBatch(state);
+        state = state.copyWith(batchId: created.batchId);
+      }
 
-    final status = balance <= 0
-        ? PurchaseFaStatus.paid
-        : paid > 0
-        ? PurchaseFaStatus.partiallyPaid
-        : PurchaseFaStatus.unpaid;
-
-    final date = state.billDate ?? DateTime.now();
-    final time = state.billTime ?? TimeOfDay.now();
-    final billDateTime = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
-
-    return PurchaseFaModel(
-      id: nextId,
-      invoiceNo: state.billNumber,
-      date: billDateTime,
-      partyName: state.billingName.trim().isNotEmpty
-          ? state.billingName.trim()
-          : state.party.trim(),
-      paymentType: state.paymentType,
-      status: status,
-      amount: grandTotal,
-      balanceDue: balance,
-      dueDate: state.dueDate ?? billDateTime,
-    );
-  }
-
-  bool save() {
-    final record = buildRecordModel();
-    if (record == null) return false;
-    ref.read(purchaseFaRecordsProvider.notifier).addRecord(record);
-    ref.invalidateSelf();
-    return true;
+      ref.invalidate(purchaseFaProvider);
+      state = state.copyWith(isSaving: false, isDirty: false);
+      ref.invalidateSelf();
+      return null;
+    } catch (error) {
+      final message = PurchaseErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
   }
 }
 
 @riverpod
-double addPurchaseFaTotalTax(Ref ref) {
-  final form = ref.watch(addPurchaseFaFormProvider);
+double addPurchaseFaTotalTax(Ref ref, {String? batchId}) {
+  final form = ref.watch(addPurchaseFaFormProvider(batchId: batchId));
   return form.totalTax;
 }
 
 @riverpod
-double addPurchaseFaGrandTotal(Ref ref) {
-  final form = ref.watch(addPurchaseFaFormProvider);
+double addPurchaseFaGrandTotal(Ref ref, {String? batchId}) {
+  final form = ref.watch(addPurchaseFaFormProvider(batchId: batchId));
   return form.grandTotal;
 }

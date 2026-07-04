@@ -3,7 +3,7 @@ import 'package:billing_baba/features/purchases/models/dto/expense_dto.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 
 class ExpenseRepository {
-  ExpenseRepository({required this._remote});
+  ExpenseRepository({required ExpenseRemoteDataSource remote}) : _remote = remote;
 
   final ExpenseRemoteDataSource _remote;
 
@@ -25,7 +25,16 @@ class ExpenseRepository {
     int limit = 100,
   }) => _remote.listCategories(page: page, limit: limit);
 
+  Future<ExpenseCategoryDto> getCategory(String id) => _remote.getCategory(id);
+
   Future<ExpenseCategoryDto> createCategory(
     CreateExpenseCategoryRequest request,
   ) => _remote.createCategory(request);
+
+  Future<ExpenseCategoryDto> updateCategory(
+    String id,
+    UpdateExpenseCategoryRequest request,
+  ) => _remote.updateCategory(id, request);
+
+  Future<void> deleteCategory(String id) => _remote.deleteCategory(id);
 }

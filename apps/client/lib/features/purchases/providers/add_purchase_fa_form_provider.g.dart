@@ -10,23 +10,30 @@ part of 'add_purchase_fa_form_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(AddPurchaseFaForm)
-final addPurchaseFaFormProvider = AddPurchaseFaFormProvider._();
+final addPurchaseFaFormProvider = AddPurchaseFaFormFamily._();
 
 final class AddPurchaseFaFormProvider
     extends $NotifierProvider<AddPurchaseFaForm, AddPurchaseFaFormState> {
-  AddPurchaseFaFormProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'addPurchaseFaFormProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  AddPurchaseFaFormProvider._({
+    required AddPurchaseFaFormFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'addPurchaseFaFormProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$addPurchaseFaFormHash();
+
+  @override
+  String toString() {
+    return r'addPurchaseFaFormProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -39,12 +46,50 @@ final class AddPurchaseFaFormProvider
       providerOverride: $SyncValueProvider<AddPurchaseFaFormState>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AddPurchaseFaFormProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
-String _$addPurchaseFaFormHash() => r'e97fb738afc8f4c9a9babaad2e0fb7ae5e5399a3';
+String _$addPurchaseFaFormHash() => r'5511bf41c4876e991e3f2ca1835ac41b784eadc7';
+
+final class AddPurchaseFaFormFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          AddPurchaseFaForm,
+          AddPurchaseFaFormState,
+          AddPurchaseFaFormState,
+          AddPurchaseFaFormState,
+          String?
+        > {
+  AddPurchaseFaFormFamily._()
+    : super(
+        retry: null,
+        name: r'addPurchaseFaFormProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AddPurchaseFaFormProvider call({String? batchId}) =>
+      AddPurchaseFaFormProvider._(argument: batchId, from: this);
+
+  @override
+  String toString() => r'addPurchaseFaFormProvider';
+}
 
 abstract class _$AddPurchaseFaForm extends $Notifier<AddPurchaseFaFormState> {
-  AddPurchaseFaFormState build();
+  late final _$args = ref.$arg as String?;
+  String? get batchId => _$args;
+
+  AddPurchaseFaFormState build({String? batchId});
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -58,30 +103,37 @@ abstract class _$AddPurchaseFaForm extends $Notifier<AddPurchaseFaFormState> {
               Object?,
               Object?
             >;
-    return element.handleCreate(ref, build);
+    return element.handleCreate(ref, () => build(batchId: _$args));
   }
 }
 
 @ProviderFor(addPurchaseFaTotalTax)
-final addPurchaseFaTotalTaxProvider = AddPurchaseFaTotalTaxProvider._();
+final addPurchaseFaTotalTaxProvider = AddPurchaseFaTotalTaxFamily._();
 
 final class AddPurchaseFaTotalTaxProvider
     extends $FunctionalProvider<double, double, double>
     with $Provider<double> {
-  AddPurchaseFaTotalTaxProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'addPurchaseFaTotalTaxProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  AddPurchaseFaTotalTaxProvider._({
+    required AddPurchaseFaTotalTaxFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'addPurchaseFaTotalTaxProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$addPurchaseFaTotalTaxHash();
 
+  @override
+  String toString() {
+    return r'addPurchaseFaTotalTaxProvider'
+        ''
+        '($argument)';
+  }
+
   @$internal
   @override
   $ProviderElement<double> $createElement($ProviderPointer pointer) =>
@@ -89,7 +141,8 @@ final class AddPurchaseFaTotalTaxProvider
 
   @override
   double create(Ref ref) {
-    return addPurchaseFaTotalTax(ref);
+    final argument = this.argument as String?;
+    return addPurchaseFaTotalTax(ref, batchId: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -98,31 +151,66 @@ final class AddPurchaseFaTotalTaxProvider
       origin: this,
       providerOverride: $SyncValueProvider<double>(value),
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AddPurchaseFaTotalTaxProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
   }
 }
 
 String _$addPurchaseFaTotalTaxHash() =>
-    r'70146c6e60b7ead33f5b370791a0af66e5168fdc';
+    r'c0eda9cee25eb67dd863e009ca3b51e714a37856';
+
+final class AddPurchaseFaTotalTaxFamily extends $Family
+    with $FunctionalFamilyOverride<double, String?> {
+  AddPurchaseFaTotalTaxFamily._()
+    : super(
+        retry: null,
+        name: r'addPurchaseFaTotalTaxProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AddPurchaseFaTotalTaxProvider call({String? batchId}) =>
+      AddPurchaseFaTotalTaxProvider._(argument: batchId, from: this);
+
+  @override
+  String toString() => r'addPurchaseFaTotalTaxProvider';
+}
 
 @ProviderFor(addPurchaseFaGrandTotal)
-final addPurchaseFaGrandTotalProvider = AddPurchaseFaGrandTotalProvider._();
+final addPurchaseFaGrandTotalProvider = AddPurchaseFaGrandTotalFamily._();
 
 final class AddPurchaseFaGrandTotalProvider
     extends $FunctionalProvider<double, double, double>
     with $Provider<double> {
-  AddPurchaseFaGrandTotalProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'addPurchaseFaGrandTotalProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  AddPurchaseFaGrandTotalProvider._({
+    required AddPurchaseFaGrandTotalFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'addPurchaseFaGrandTotalProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$addPurchaseFaGrandTotalHash();
+
+  @override
+  String toString() {
+    return r'addPurchaseFaGrandTotalProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -131,7 +219,8 @@ final class AddPurchaseFaGrandTotalProvider
 
   @override
   double create(Ref ref) {
-    return addPurchaseFaGrandTotal(ref);
+    final argument = this.argument as String?;
+    return addPurchaseFaGrandTotal(ref, batchId: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -141,7 +230,36 @@ final class AddPurchaseFaGrandTotalProvider
       providerOverride: $SyncValueProvider<double>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AddPurchaseFaGrandTotalProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$addPurchaseFaGrandTotalHash() =>
-    r'323102f21597cdda24d05bd023f79309ac570f9d';
+    r'8cf3c2f52ec550e6d6220c33a5e95258ceace4da';
+
+final class AddPurchaseFaGrandTotalFamily extends $Family
+    with $FunctionalFamilyOverride<double, String?> {
+  AddPurchaseFaGrandTotalFamily._()
+    : super(
+        retry: null,
+        name: r'addPurchaseFaGrandTotalProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AddPurchaseFaGrandTotalProvider call({String? batchId}) =>
+      AddPurchaseFaGrandTotalProvider._(argument: batchId, from: this);
+
+  @override
+  String toString() => r'addPurchaseFaGrandTotalProvider';
+}

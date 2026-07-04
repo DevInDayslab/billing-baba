@@ -34,7 +34,7 @@ final class ExpenseCategoriesProvider
   ExpenseCategories create() => ExpenseCategories();
 }
 
-String _$expenseCategoriesHash() => r'842e5816f18d6a63ec1f05f33a3520217299bb9b';
+String _$expenseCategoriesHash() => r'72230b0ed35fa7d65884a14f9fcb55d47810912b';
 
 abstract class _$ExpenseCategories
     extends $AsyncNotifier<List<ExpenseCategoryModel>> {
@@ -92,7 +92,7 @@ final class ExpenseTransactionsProvider
 }
 
 String _$expenseTransactionsHash() =>
-    r'ad2ec8dc1b906d4fadb3de51737b587baf3bbd5a';
+    r'33afffaa5cf0bfc96af3538d8d4a56b7262b94c5';
 
 abstract class _$ExpenseTransactions
     extends $AsyncNotifier<List<ExpenseTransactionModel>> {
@@ -121,11 +121,17 @@ abstract class _$ExpenseTransactions
   }
 }
 
-@ProviderFor(ExpenseItems)
+@ProviderFor(expenseItems)
 final expenseItemsProvider = ExpenseItemsProvider._();
 
 final class ExpenseItemsProvider
-    extends $NotifierProvider<ExpenseItems, List<ExpenseItemModel>> {
+    extends
+        $FunctionalProvider<
+          List<ExpenseItemModel>,
+          List<ExpenseItemModel>,
+          List<ExpenseItemModel>
+        >
+    with $Provider<List<ExpenseItemModel>> {
   ExpenseItemsProvider._()
     : super(
         from: null,
@@ -142,7 +148,14 @@ final class ExpenseItemsProvider
 
   @$internal
   @override
-  ExpenseItems create() => ExpenseItems();
+  $ProviderElement<List<ExpenseItemModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<ExpenseItemModel> create(Ref ref) {
+    return expenseItems(ref);
+  }
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<ExpenseItemModel> value) {
@@ -153,26 +166,7 @@ final class ExpenseItemsProvider
   }
 }
 
-String _$expenseItemsHash() => r'4f4f231306a599cecd33a6f11e734381003eed51';
-
-abstract class _$ExpenseItems extends $Notifier<List<ExpenseItemModel>> {
-  List<ExpenseItemModel> build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref =
-        this.ref as $Ref<List<ExpenseItemModel>, List<ExpenseItemModel>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<List<ExpenseItemModel>, List<ExpenseItemModel>>,
-              List<ExpenseItemModel>,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
+String _$expenseItemsHash() => r'aaee8d3e4544ddbc2a5beccafe6a3580d26e9d08';
 
 @ProviderFor(ExpenseTabIndex)
 final expenseTabIndexProvider = ExpenseTabIndexProvider._();

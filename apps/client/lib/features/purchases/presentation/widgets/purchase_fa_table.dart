@@ -1,10 +1,13 @@
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/purchase_fa_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_fa_status_badge.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_fa_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
@@ -43,8 +46,9 @@ class PurchaseFaTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final faAsync = ref.watch(purchaseFaProvider);
     final paginated = ref.watch(paginatedPurchaseFaRecordsProvider);
-    final filtersNotifier = ref.read(purchaseFaFiltersProvider.notifier);
+    final notifier = ref.read(purchaseFaProvider.notifier);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -76,7 +80,9 @@ class PurchaseFaTable extends ConsumerWidget {
                   width: 200,
                   height: 36,
                   child: TextField(
-                    onChanged: filtersNotifier.setSearchQuery,
+                    onChanged: (value) => ref
+                        .read(purchaseFaSearchQueryProvider.notifier)
+                        .setQuery(value),
                     decoration: InputDecoration(
                       hintText: 'Search',
                       hintStyle: const TextStyle(
@@ -102,48 +108,76 @@ class PurchaseFaTable extends ConsumerWidget {
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
+                IconButton(
+                  onPressed: notifier.refresh,
+                  icon: const Icon(Icons.refresh, size: 20),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Refresh',
+                ),
               ],
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final tableWidth = constraints.maxWidth.clamp(
-                _minTableWidth,
-                double.infinity,
-              );
+          faAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(AppSpacing.xl),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, _) => Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                children: [
+                  Text(
+                    PurchaseErrorMapper.messageFor(error),
+                    style: const TextStyle(color: AppColors.error),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton(
+                    onPressed: notifier.refresh,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+            data: (_) => LayoutBuilder(
+              builder: (context, constraints) {
+                final tableWidth = constraints.maxWidth.clamp(
+                  _minTableWidth,
+                  double.infinity,
+                );
 
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  width: tableWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const _TableHeaderRow(),
-                      if (paginated.items.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(AppSpacing.xl),
-                          child: Center(
-                            child: Text(
-                              'No fixed asset purchases found',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: tableWidth,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const _TableHeaderRow(),
+                        if (paginated.items.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(AppSpacing.xl),
+                            child: Center(
+                              child: Text(
+                                'No fixed asset purchases found',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ),
-                          ),
-                        )
-                      else
-                        for (var i = 0; i < paginated.items.length; i++) ...[
-                          if (i > 0)
-                            const Divider(height: 1, color: _cardBorder),
-                          _buildRow(context, paginated.items[i]),
-                        ],
-                    ],
+                          )
+                        else
+                          for (var i = 0; i < paginated.items.length; i++) ...[
+                            if (i > 0)
+                              const Divider(height: 1, color: _cardBorder),
+                            _buildRow(context, ref, paginated.items[i]),
+                          ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
           if (paginated.totalPages > 1) ...[
             const Divider(height: 1, color: _cardBorder),
@@ -157,7 +191,11 @@ class PurchaseFaTable extends ConsumerWidget {
     );
   }
 
-  Widget _buildRow(BuildContext context, PurchaseFaModel record) {
+  Widget _buildRow(
+    BuildContext context,
+    WidgetRef ref,
+    PurchaseFaModel record,
+  ) {
     return _TableDataRow(
       children: [
         _TableCell(
@@ -229,7 +267,7 @@ class PurchaseFaTable extends ConsumerWidget {
                 ),
               ),
               IconButton(
-                onPressed: () => debugPrint('More ${record.invoiceNo}'),
+                onPressed: () => _showRecordActions(context, ref, record),
                 icon: const Icon(Icons.more_vert, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
@@ -241,6 +279,55 @@ class PurchaseFaTable extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _showRecordActions(
+    BuildContext context,
+    WidgetRef ref,
+    PurchaseFaModel record,
+  ) async {
+    final action = await showMenu<String>(
+      context: context,
+      position: const RelativeRect.fromLTRB(200, 400, 200, 0),
+      items: const [
+        PopupMenuItem(value: 'open', child: Text('Open')),
+        PopupMenuItem(value: 'delete', child: Text('Delete')),
+      ],
+    );
+
+    if (action == null || !context.mounted) return;
+    final notifier = ref.read(purchaseFaProvider.notifier);
+
+    switch (action) {
+      case 'open':
+        await context.push('${AppRoutes.editPurchaseFa}/${record.batchId}');
+      case 'delete':
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Delete purchase?'),
+            content: Text('Delete ${record.invoiceNo}?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true || !context.mounted) return;
+        final error = await notifier.deleteBatch(record.batchId);
+        if (!context.mounted) return;
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        }
+    }
   }
 }
 
