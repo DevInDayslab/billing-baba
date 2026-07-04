@@ -1,9 +1,9 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
-import { SalesSharedRepository } from './sales.shared-repository';
+import { BusinessMembershipRepository } from '../../shared/repositories/business-membership.repository';
 
 export abstract class SalesServiceBase {
-  protected readonly sharedRepository: SalesSharedRepository;
+  protected readonly sharedRepository: BusinessMembershipRepository;
 
   protected constructor(db = getDb()) {
     if (!db) {
@@ -13,7 +13,7 @@ export abstract class SalesServiceBase {
         503,
       );
     }
-    this.sharedRepository = new SalesSharedRepository(db);
+    this.sharedRepository = new BusinessMembershipRepository(db);
   }
 
   protected async assertBusinessAccess(

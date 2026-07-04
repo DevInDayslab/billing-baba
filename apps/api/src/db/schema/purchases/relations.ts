@@ -22,6 +22,11 @@ export const purchaseDocumentsRelations = relations(
       fields: [purchaseDocuments.partyId],
       references: [parties.id],
     }),
+    convertedFrom: one(purchaseDocuments, {
+      fields: [purchaseDocuments.convertedFromId],
+      references: [purchaseDocuments.id],
+      relationName: 'conversion_chain',
+    }),
     lines: many(purchaseDocumentLines),
   }),
 );

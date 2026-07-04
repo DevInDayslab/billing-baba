@@ -1,7 +1,9 @@
 import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   boolean,
   date,
+  integer,
   pgTable,
   text,
   uniqueIndex,
@@ -40,10 +42,19 @@ export const purchaseDocuments = pgTable(
     partyId: uuid('party_id')
       .notNull()
       .references(() => parties.id),
+    isGstFormal: boolean('is_gst_formal').notNull().default(false),
+    partyStateCode: text('party_state_code'),
     subtotal: money('subtotal').notNull().default('0'),
+    discountTotal: money('discount_total').notNull().default('0'),
     taxAmount: money('tax_amount').notNull().default('0'),
     totalAmount: money('total_amount').notNull().default('0'),
     documentDate: timestamptz('document_date').notNull().defaultNow(),
+    convertedFromId: uuid('converted_from_id').references(
+      (): AnyPgColumn => purchaseDocuments.id,
+    ),
+    supplierInvoiceNumber: text('supplier_invoice_number'),
+    dueDate: date('due_date'),
+    notes: text('notes'),
   },
   (table) => [
     uniqueIndex('uq_purchase_documents_business_series_number')
@@ -52,22 +63,31 @@ export const purchaseDocuments = pgTable(
   ],
 );
 
-export const purchaseDocumentLines = pgTable('purchase_document_lines', {
-  ...syncedBusinessColumns,
-  businessId: businessId(),
-  purchaseDocumentId: uuid('purchase_document_id')
-    .notNull()
-    .references(() => purchaseDocuments.id),
-  itemId: uuid('item_id')
-    .notNull()
-    .references(() => items.id),
-  quantity: money('quantity').notNull(),
-  unit: text('unit').notNull(),
-  unitPrice: money('unit_price').notNull(),
-  taxType: taxTypeEnum('tax_type').notNull().default('none'),
-  taxRate: money('tax_rate').notNull().default('0'),
-  lineTotal: money('line_total').notNull(),
-});
+export const purchaseDocumentLines = pgTable(
+  'purchase_document_lines',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    purchaseDocumentId: uuid('purchase_document_id')
+      .notNull()
+      .references(() => purchaseDocuments.id),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => items.id),
+    quantity: money('quantity').notNull(),
+    unit: text('unit').notNull(),
+    unitPrice: money('unit_price').notNull(),
+    discountAmount: money('discount_amount').notNull().default('0'),
+    taxType: taxTypeEnum('tax_type').notNull().default('none'),
+    taxRate: money('tax_rate').notNull().default('0'),
+    cgstAmount: money('cgst_amount').notNull().default('0'),
+    sgstAmount: money('sgst_amount').notNull().default('0'),
+    igstAmount: money('igst_amount').notNull().default('0'),
+    lineTotal: money('line_total').notNull(),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (table) => [sql`CHECK (${table.quantity} > 0)`],
+);
 
 export const expenses = pgTable('expenses', {
   ...syncedBusinessColumns,
