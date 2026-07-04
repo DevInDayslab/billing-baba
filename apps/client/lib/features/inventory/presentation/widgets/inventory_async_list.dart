@@ -118,7 +118,7 @@ class _InventoryErrorBanner extends StatelessWidget {
               ),
             ),
             TextButton(
-              onPressed: () => onRetry(),
+              onPressed: onRetry,
               child: const Text('Retry'),
             ),
           ],
@@ -155,7 +155,7 @@ class _InventoryErrorBody extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             TextButton(
-              onPressed: () => onRetry(),
+              onPressed: onRetry,
               child: const Text('Retry'),
             ),
           ],

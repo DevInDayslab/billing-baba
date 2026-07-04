@@ -18,19 +18,19 @@ const _linkColor = Color(0xFF1565C0);
 
 Future<bool?> showJobWorkOutDialog(
   BuildContext context, {
-  SavedJobWorkOut? existing,
+  String? orderId,
 }) {
   return showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (context) => JobWorkOutDialog(existing: existing),
+    builder: (context) => JobWorkOutDialog(orderId: orderId),
   );
 }
 
 class JobWorkOutDialog extends ConsumerStatefulWidget {
-  const JobWorkOutDialog({this.existing, super.key});
+  const JobWorkOutDialog({this.orderId, super.key});
 
-  final SavedJobWorkOut? existing;
+  final String? orderId;
 
   @override
   ConsumerState<JobWorkOutDialog> createState() => _JobWorkOutDialogState();
@@ -45,8 +45,8 @@ class _JobWorkOutDialogState extends ConsumerState<JobWorkOutDialog> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notifier = ref.read(jobWorkOutFormProvider.notifier);
-      if (widget.existing != null) {
-        notifier.loadSaved(widget.existing!);
+      if (widget.orderId != null) {
+        notifier.loadOrder(widget.orderId!);
       } else {
         notifier.resetForm();
       }
@@ -132,15 +132,20 @@ class _JobWorkOutDialogState extends ConsumerState<JobWorkOutDialog> {
             ),
             const Divider(height: 1, color: _cardBorder),
             _DialogBottomBar(
-              onSave: () {
-                final saved = notifier.save();
-                if (!saved) return;
-                if (context.mounted) {
-                  Navigator.of(context).pop(true);
+              isSaving: form.isSaving,
+              onSave: () async {
+                final error = await notifier.save();
+                if (!context.mounted) return;
+                if (error != null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Job work out saved')),
+                    SnackBar(content: Text(error)),
                   );
+                  return;
                 }
+                Navigator.of(context).pop(true);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Job work out saved')),
+                );
               },
             ),
           ],
@@ -188,9 +193,13 @@ class _DialogHeader extends StatelessWidget {
 }
 
 class _DialogBottomBar extends StatelessWidget {
-  const _DialogBottomBar({required this.onSave});
+  const _DialogBottomBar({
+    required this.onSave,
+    this.isSaving = false,
+  });
 
   final VoidCallback onSave;
+  final bool isSaving;
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +212,7 @@ class _DialogBottomBar extends StatelessWidget {
         children: [
           const Spacer(),
           FilledButton(
-            onPressed: onSave,
+            onPressed: isSaving ? null : onSave,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -247,6 +256,11 @@ class _JobWorkOutFormFields extends StatelessWidget {
                   hasError: form.partyHasError,
                   errorMessage: 'Party is required',
                   onSelected: notifier.updateParty,
+                  onPartySelectedWithId: (partyId, name) =>
+                      notifier.updatePartyWithId(
+                        partyId: partyId,
+                        partyName: name,
+                      ),
                 ),
               ),
               const SizedBox(height: _sectionGap),

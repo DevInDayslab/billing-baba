@@ -20,6 +20,7 @@ class SalesDocumentMapper {
       date: DateTime.tryParse(dto.documentDate) ?? DateTime.now(),
       partyName: partyName,
       partyId: dto.partyId,
+      documentSeries: dto.documentSeries,
       transactionType: _mapDocumentTypeLabel(dto.documentType),
       paymentType: 'Credit',
       status: status,

@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 class DeliveryChallanFormState {
   const DeliveryChallanFormState({
     this.isFormOpen = false,
+    this.documentId,
+    this.partyId,
     this.party = '',
     this.godown = 'Main Godown',
+    this.godownId,
     this.challanNo = '1',
     this.invoiceDate,
     this.invoiceTime,
@@ -18,11 +21,16 @@ class DeliveryChallanFormState {
     this.attachedDocuments = const [],
     this.roundOff = false,
     this.showValidationErrors = false,
+    this.isSaving = false,
+    this.saveError,
   });
 
   final bool isFormOpen;
+  final String? documentId;
+  final String? partyId;
   final String party;
   final String godown;
+  final String? godownId;
   final String challanNo;
   final DateTime? invoiceDate;
   final TimeOfDay? invoiceTime;
@@ -34,6 +42,8 @@ class DeliveryChallanFormState {
   final List<SaleFormAttachment> attachedDocuments;
   final bool roundOff;
   final bool showValidationErrors;
+  final bool isSaving;
+  final String? saveError;
 
   double get rawGrandTotal =>
       items.fold<double>(0, (sum, item) => sum + item.amount);
@@ -55,12 +65,19 @@ class DeliveryChallanFormState {
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
-  bool get isValid => party.trim().isNotEmpty && hasValidLineItems;
+  bool get isValid =>
+      party.trim().isNotEmpty &&
+      partyId != null &&
+      partyId!.isNotEmpty &&
+      hasValidLineItems;
 
   DeliveryChallanFormState copyWith({
     bool? isFormOpen,
+    String? documentId,
+    String? partyId,
     String? party,
     String? godown,
+    String? godownId,
     String? challanNo,
     DateTime? invoiceDate,
     TimeOfDay? invoiceTime,
@@ -72,11 +89,17 @@ class DeliveryChallanFormState {
     List<SaleFormAttachment>? attachedDocuments,
     bool? roundOff,
     bool? showValidationErrors,
+    bool? isSaving,
+    String? saveError,
+    bool clearSaveError = false,
   }) {
     return DeliveryChallanFormState(
       isFormOpen: isFormOpen ?? this.isFormOpen,
+      documentId: documentId ?? this.documentId,
+      partyId: partyId ?? this.partyId,
       party: party ?? this.party,
       godown: godown ?? this.godown,
+      godownId: godownId ?? this.godownId,
       challanNo: challanNo ?? this.challanNo,
       invoiceDate: invoiceDate ?? this.invoiceDate,
       invoiceTime: invoiceTime ?? this.invoiceTime,
@@ -88,72 +111,8 @@ class DeliveryChallanFormState {
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       roundOff: roundOff ?? this.roundOff,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
+      isSaving: isSaving ?? this.isSaving,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }
-}
-
-class SavedDeliveryChallan {
-  const SavedDeliveryChallan({
-    required this.id,
-    required this.party,
-    required this.godown,
-    required this.challanNo,
-    required this.invoiceDate,
-    required this.invoiceTime,
-    required this.dueDate,
-    required this.stateOfSupply,
-    required this.items,
-    required this.description,
-    required this.attachedImages,
-    required this.attachedDocuments,
-    required this.roundOff,
-    required this.total,
-    required this.savedAt,
-  });
-
-  factory SavedDeliveryChallan.fromFormState({
-    required String id,
-    required DeliveryChallanFormState form,
-  }) {
-    return SavedDeliveryChallan(
-      id: id,
-      party: form.party,
-      godown: form.godown,
-      challanNo: form.challanNo,
-      invoiceDate: form.invoiceDate,
-      invoiceTime: form.invoiceTime,
-      dueDate: form.dueDate,
-      stateOfSupply: form.stateOfSupply,
-      items: List<SaleLineItem>.from(form.items),
-      description: form.description,
-      attachedImages: List<SaleFormAttachment>.from(form.attachedImages),
-      attachedDocuments: List<SaleFormAttachment>.from(form.attachedDocuments),
-      roundOff: form.roundOff,
-      total: form.total,
-      savedAt: DateTime.now(),
-    );
-  }
-
-  final String id;
-  final String party;
-  final String godown;
-  final String challanNo;
-  final DateTime? invoiceDate;
-  final TimeOfDay? invoiceTime;
-  final DateTime? dueDate;
-  final String stateOfSupply;
-  final List<SaleLineItem> items;
-  final String description;
-  final List<SaleFormAttachment> attachedImages;
-  final List<SaleFormAttachment> attachedDocuments;
-  final bool roundOff;
-  final double total;
-  final DateTime savedAt;
-}
-
-int _savedDeliveryChallanCounter = 0;
-
-String nextSavedDeliveryChallanId() {
-  _savedDeliveryChallanCounter += 1;
-  return 'delivery_challan_$_savedDeliveryChallanCounter';
 }

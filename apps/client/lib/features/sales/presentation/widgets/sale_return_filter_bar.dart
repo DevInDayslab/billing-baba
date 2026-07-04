@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:billing_baba/features/sales/providers/credit_note_form_provider.dart';
@@ -29,6 +30,14 @@ class _SaleReturnFilterBarState extends ConsumerState<SaleReturnFilterBar> {
   Widget build(BuildContext context) {
     final filters = ref.watch(saleReturnFiltersProvider);
     final filtersNotifier = ref.read(saleReturnFiltersProvider.notifier);
+    final godownsAsync = ref.watch(inventoryGodownsProvider);
+    final godownOptions = godownsAsync.maybeWhen(
+      data: (godowns) => [
+        'All Godown',
+        ...godowns.map((godown) => godown.name),
+      ],
+      orElse: () => const ['All Godown', 'Main Location'],
+    );
 
     final customRange = filters.customDateRange;
     final dateRangeLabel = customRange != null
@@ -117,7 +126,7 @@ class _SaleReturnFilterBarState extends ConsumerState<SaleReturnFilterBar> {
               ),
               SaleFilterDropdown(
                 label: filters.selectedGodown,
-                options: const ['All Godown', 'Main Location'],
+                options: godownOptions,
                 selected: filters.selectedGodown,
                 onSelected: filtersNotifier.setGodown,
               ),
@@ -126,10 +135,8 @@ class _SaleReturnFilterBarState extends ConsumerState<SaleReturnFilterBar> {
                 options: const [
                   'All Status',
                   'Cancelled',
-                  'Paid',
-                  'Overdue',
-                  'Unpaid',
-                  'Partial',
+                  'Draft',
+                  'Finalized',
                 ],
                 selected: filters.selectedStatus,
                 onSelected: filtersNotifier.setStatus,

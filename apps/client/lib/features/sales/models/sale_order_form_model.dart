@@ -4,6 +4,8 @@ import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart'
 class SaleOrderFormState {
   const SaleOrderFormState({
     this.isFormOpen = false,
+    this.documentId,
+    this.partyId,
     this.party = '',
     this.orderNo = '',
     this.orderDate,
@@ -17,9 +19,13 @@ class SaleOrderFormState {
     this.attachedDocuments = const [],
     this.roundOff = false,
     this.showValidationErrors = false,
+    this.isSaving = false,
+    this.saveError,
   });
 
   final bool isFormOpen;
+  final String? documentId;
+  final String? partyId;
   final String party;
   final String orderNo;
   final DateTime? orderDate;
@@ -33,6 +39,8 @@ class SaleOrderFormState {
   final List<SaleFormAttachment> attachedDocuments;
   final bool roundOff;
   final bool showValidationErrors;
+  final bool isSaving;
+  final String? saveError;
 
   double get subtotal =>
       items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
@@ -62,10 +70,16 @@ class SaleOrderFormState {
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
-  bool get isValid => party.trim().isNotEmpty && hasValidLineItems;
+  bool get isValid =>
+      party.trim().isNotEmpty &&
+      partyId != null &&
+      partyId!.isNotEmpty &&
+      hasValidLineItems;
 
   SaleOrderFormState copyWith({
     bool? isFormOpen,
+    String? documentId,
+    String? partyId,
     String? party,
     String? orderNo,
     DateTime? orderDate,
@@ -79,9 +93,14 @@ class SaleOrderFormState {
     List<SaleFormAttachment>? attachedDocuments,
     bool? roundOff,
     bool? showValidationErrors,
+    bool? isSaving,
+    String? saveError,
+    bool clearSaveError = false,
   }) {
     return SaleOrderFormState(
       isFormOpen: isFormOpen ?? this.isFormOpen,
+      documentId: documentId ?? this.documentId,
+      partyId: partyId ?? this.partyId,
       party: party ?? this.party,
       orderNo: orderNo ?? this.orderNo,
       orderDate: orderDate ?? this.orderDate,
@@ -95,63 +114,8 @@ class SaleOrderFormState {
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       roundOff: roundOff ?? this.roundOff,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
+      isSaving: isSaving ?? this.isSaving,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }
-}
-
-class SavedSaleOrder {
-  const SavedSaleOrder({
-    required this.id,
-    required this.party,
-    required this.orderNo,
-    required this.orderDate,
-    required this.dueDate,
-    required this.stateOfSupply,
-    required this.items,
-    required this.paymentType,
-    required this.advanceAmount,
-    required this.total,
-    required this.balanceAmount,
-    required this.savedAt,
-  });
-
-  factory SavedSaleOrder.fromFormState({
-    required String id,
-    required SaleOrderFormState form,
-  }) {
-    return SavedSaleOrder(
-      id: id,
-      party: form.party,
-      orderNo: form.orderNo,
-      orderDate: form.orderDate,
-      dueDate: form.dueDate,
-      stateOfSupply: form.stateOfSupply,
-      items: List<SaleLineItem>.from(form.items),
-      paymentType: form.paymentType,
-      advanceAmount: form.advanceAmount,
-      total: form.total,
-      balanceAmount: form.balanceAmount,
-      savedAt: DateTime.now(),
-    );
-  }
-
-  final String id;
-  final String party;
-  final String orderNo;
-  final DateTime? orderDate;
-  final DateTime? dueDate;
-  final String stateOfSupply;
-  final List<SaleLineItem> items;
-  final String paymentType;
-  final double advanceAmount;
-  final double total;
-  final double balanceAmount;
-  final DateTime savedAt;
-}
-
-int _savedSaleOrderCounter = 0;
-
-String nextSavedSaleOrderId() {
-  _savedSaleOrderCounter += 1;
-  return 'sale_order_$_savedSaleOrderCounter';
 }

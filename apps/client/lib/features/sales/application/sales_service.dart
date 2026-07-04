@@ -8,8 +8,10 @@ import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
 import 'package:billing_baba/features/sales/models/mappers/sales_document_mapper.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
+import 'package:billing_baba/features/sales/models/sale_document_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
+import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -149,30 +151,7 @@ class SalesService {
           : '';
 
       final date = DateTime.tryParse(document.documentDate) ?? DateTime.now();
-      final items = document.lines.isEmpty
-          ? [SaleLineItem.empty(id: 'line_1')]
-          : document.lines.map((line) {
-              final qty = double.tryParse(line.quantity) ?? 0;
-              final price = double.tryParse(line.unitPrice) ?? 0;
-              final discountAmount =
-                  double.tryParse(line.discountAmount) ?? 0;
-              final lineSubtotal = qty * price;
-              final discountPercent = lineSubtotal > 0
-                  ? (discountAmount / lineSubtotal) * 100
-                  : 0.0;
-              final taxPercent = double.tryParse(line.taxRate) ?? 0;
-
-              return SaleLineItem(
-                id: line.id,
-                serverLineId: line.id,
-                itemId: line.itemId,
-                qty: qty,
-                unit: line.unit,
-                pricePerUnit: price,
-                discountPercent: discountPercent,
-                taxPercent: taxPercent,
-              );
-            }).toList();
+      final items = _linesToSaleLineItems(document.lines);
 
       return AddSaleFormState(
         documentId: document.id,
@@ -192,18 +171,28 @@ class SalesService {
     }
   }
 
-  Future<SalesDocumentDto> saveDraft(
-    AddSaleFormState form, {
+  Future<SalesDocumentDto> saveDocumentDraft(
+    SalesDocumentDraftInput input, {
     required Map<String, String> itemNameToId,
   }) async {
     try {
-      final document = form.documentId == null
-          ? await _createDocumentHeader(form)
-          : await _syncDocumentHeader(form);
+      final document = input.documentId == null
+          ? await _repository.createDocument(
+              CreateSalesDocumentRequest(
+                documentType: input.documentType.apiValue,
+                documentSeries: input.documentSeries,
+                partyId: input.partyId,
+                isGstFormal: input.isGstFormal,
+                documentDate: input.documentDate?.toUtc().toIso8601String(),
+                convertedFromId: input.convertedFromId,
+                notes: input.notes?.trim().isEmpty ?? true ? null : input.notes,
+              ),
+            )
+          : await _syncGenericDocumentHeader(input);
 
-      await _syncLines(
+      await _syncLinesGeneric(
         documentId: document.id,
-        form: form,
+        items: input.items,
         itemNameToId: itemNameToId,
         existingLines: document.lines,
       );
@@ -213,6 +202,174 @@ class SalesService {
       throw mapSalesError(error);
     }
   }
+
+  Future<SalesDocumentDto> saveDraft(
+    AddSaleFormState form, {
+    required Map<String, String> itemNameToId,
+  }) {
+    return saveDocumentDraft(
+      SalesDocumentDraftInput(
+        documentId: form.documentId,
+        partyId: form.partyId,
+        documentType: SalesDocumentType.taxInvoice,
+        documentSeries: SalesConstants.defaultDocumentSeries,
+        documentDate: form.invoiceDate,
+        notes: form.description,
+        godownId: form.godownId,
+        isGstFormal: true,
+        items: form.items,
+      ),
+      itemNameToId: itemNameToId,
+    );
+  }
+
+  Future<SalesDocumentDto> finalizeDocumentDraft(
+    SalesDocumentDraftInput input, {
+    required Map<String, String> itemNameToId,
+    String? godownId,
+  }) async {
+    if (input.partyId == null || input.partyId!.isEmpty) {
+      throw const SalesException('Party is required');
+    }
+
+    final draft = await saveDocumentDraft(input, itemNameToId: itemNameToId);
+    return _repository.finalizeDocument(
+      draft.id,
+      godownId: godownId ?? input.godownId,
+    );
+  }
+
+  Future<SaleDocumentFormState> loadSaleDocumentForm(String documentId) async {
+    try {
+      final document = await _repository.getDocument(documentId);
+      final partyNames = await _partyNameMap();
+      final partyName = document.partyId != null
+          ? (partyNames[document.partyId] ?? '')
+          : '';
+
+      final date = DateTime.tryParse(document.documentDate) ?? DateTime.now();
+      final items = _linesToSaleLineItems(document.lines);
+
+      return SaleDocumentFormState(
+        isFormOpen: true,
+        documentId: document.id,
+        partyId: document.partyId,
+        party: partyName,
+        refNo: document.documentNumber ?? '',
+        invoiceDate: DateTime(date.year, date.month, date.day),
+        invoiceTime: TimeOfDay.fromDateTime(date),
+        description: document.notes ?? '',
+        items: items,
+      );
+    } on DioException catch (error) {
+      throw mapSalesError(error);
+    }
+  }
+
+  List<SaleLineItem> _linesToSaleLineItems(List<SalesDocumentLineDto> lines) {
+    if (lines.isEmpty) {
+      return [SaleLineItem.empty(id: 'line_1')];
+    }
+
+    return lines.map((line) {
+      final qty = double.tryParse(line.quantity) ?? 0;
+      final price = double.tryParse(line.unitPrice) ?? 0;
+      final discountAmount = double.tryParse(line.discountAmount) ?? 0;
+      final lineSubtotal = qty * price;
+      final discountPercent = lineSubtotal > 0
+          ? (discountAmount / lineSubtotal) * 100
+          : 0.0;
+      final taxPercent = double.tryParse(line.taxRate) ?? 0;
+
+      return SaleLineItem(
+        id: line.id,
+        serverLineId: line.id,
+        itemId: line.itemId,
+        qty: qty,
+        unit: line.unit,
+        pricePerUnit: price,
+        discountPercent: discountPercent,
+        taxPercent: taxPercent,
+      );
+    }).toList();
+  }
+
+  Future<SalesDocumentDto> _syncGenericDocumentHeader(
+    SalesDocumentDraftInput input,
+  ) async {
+    await _repository.updateDocument(
+      input.documentId!,
+      UpdateSalesDocumentRequest(
+        partyId: input.partyId,
+        documentDate: input.documentDate?.toUtc().toIso8601String(),
+        notes: input.notes?.trim().isEmpty ?? true ? null : input.notes,
+      ),
+    );
+    return _repository.getDocument(input.documentId!);
+  }
+
+  Future<void> _syncLinesGeneric({
+    required String documentId,
+    required List<SaleLineItem> items,
+    required Map<String, String> itemNameToId,
+    required List<SalesDocumentLineDto> existingLines,
+  }) async {
+    final existingIds = existingLines.map((line) => line.id).toSet();
+    final keptServerIds = <String>{};
+
+    for (var i = 0; i < items.length; i++) {
+      final line = items[i];
+      if (line.qty <= 0 && line.itemName.trim().isEmpty) continue;
+
+      final itemId = line.itemId ?? itemNameToId[line.itemName.trim()];
+      if (itemId == null && line.itemName.trim().isNotEmpty) {
+        throw SalesException('Item not found: ${line.itemName}');
+      }
+      if (itemId == null) continue;
+
+      final request = CreateSalesLineRequest(
+        itemId: itemId,
+        quantity: line.qty.toStringAsFixed(4),
+        unit: line.unit,
+        unitPrice: line.pricePerUnit.toStringAsFixed(4),
+        discountAmount: (line.qty *
+                line.pricePerUnit *
+                (line.discountPercent / 100))
+            .toStringAsFixed(4),
+        taxRate: line.taxPercent.toStringAsFixed(4),
+        taxType: line.taxPercent > 0 ? 'cgst_sgst' : 'none',
+        sortOrder: i,
+      );
+
+      if (line.serverLineId != null) {
+        keptServerIds.add(line.serverLineId!);
+        await _repository.updateLine(
+          documentId,
+          line.serverLineId!,
+          UpdateSalesLineRequest(
+            itemId: itemId,
+            quantity: request.quantity,
+            unit: request.unit,
+            unitPrice: request.unitPrice,
+            discountAmount: request.discountAmount,
+            taxRate: request.taxRate,
+            taxType: request.taxType,
+            sortOrder: i,
+          ),
+        );
+      } else {
+        final created = await _repository.addLine(documentId, request);
+        keptServerIds.add(created.id);
+      }
+    }
+
+    for (final existingId in existingIds) {
+      if (!keptServerIds.contains(existingId)) {
+        await _repository.deleteLine(documentId, existingId);
+      }
+    }
+  }
+
 
   Future<SalesDocumentDto> createAndFinalizeSale(
     AddSaleFormState form, {
@@ -317,90 +474,5 @@ class SalesService {
       ),
     );
     return page.items.fold<double>(0, (sum, invoice) => sum + invoice.balance);
-  }
-
-  Future<SalesDocumentDto> _createDocumentHeader(AddSaleFormState form) {
-    return _repository.createDocument(
-      CreateSalesDocumentRequest(
-        documentType: SalesDocumentType.taxInvoice.apiValue,
-        documentSeries: SalesConstants.defaultDocumentSeries,
-        partyId: form.partyId,
-        isGstFormal: true,
-        documentDate: form.invoiceDate?.toUtc().toIso8601String(),
-        notes: form.description.trim().isEmpty ? null : form.description,
-      ),
-    );
-  }
-
-  Future<SalesDocumentDto> _syncDocumentHeader(AddSaleFormState form) async {
-    await _repository.updateDocument(
-      form.documentId!,
-      UpdateSalesDocumentRequest(
-        partyId: form.partyId,
-        documentDate: form.invoiceDate?.toUtc().toIso8601String(),
-        notes: form.description.trim().isEmpty ? null : form.description,
-      ),
-    );
-    return _repository.getDocument(form.documentId!);
-  }
-
-  Future<void> _syncLines({
-    required String documentId,
-    required AddSaleFormState form,
-    required Map<String, String> itemNameToId,
-    required List<SalesDocumentLineDto> existingLines,
-  }) async {
-    final existingIds = existingLines.map((line) => line.id).toSet();
-    final keptServerIds = <String>{};
-
-    for (var i = 0; i < form.items.length; i++) {
-      final line = form.items[i];
-      if (line.qty <= 0) continue;
-
-      final itemId = line.itemId ?? itemNameToId[line.itemName.trim()];
-      if (itemId == null && line.itemName.trim().isNotEmpty) {
-        throw SalesException('Item not found: ${line.itemName}');
-      }
-      if (itemId == null) continue;
-
-      final request = CreateSalesLineRequest(
-        itemId: itemId,
-        quantity: line.qty.toStringAsFixed(4),
-        unit: line.unit,
-        unitPrice: line.pricePerUnit.toStringAsFixed(4),
-        discountAmount: (line.qty * line.pricePerUnit * (line.discountPercent / 100))
-            .toStringAsFixed(4),
-        taxRate: line.taxPercent.toStringAsFixed(4),
-        taxType: line.taxPercent > 0 ? 'cgst_sgst' : 'none',
-        sortOrder: i,
-      );
-
-      if (line.serverLineId != null) {
-        keptServerIds.add(line.serverLineId!);
-        await _repository.updateLine(
-          documentId,
-          line.serverLineId!,
-          UpdateSalesLineRequest(
-            itemId: itemId,
-            quantity: request.quantity,
-            unit: request.unit,
-            unitPrice: request.unitPrice,
-            discountAmount: request.discountAmount,
-            taxRate: request.taxRate,
-            taxType: request.taxType,
-            sortOrder: i,
-          ),
-        );
-      } else {
-        final created = await _repository.addLine(documentId, request);
-        keptServerIds.add(created.id);
-      }
-    }
-
-    for (final existingId in existingIds) {
-      if (!keptServerIds.contains(existingId)) {
-        await _repository.deleteLine(documentId, existingId);
-      }
-    }
   }
 }

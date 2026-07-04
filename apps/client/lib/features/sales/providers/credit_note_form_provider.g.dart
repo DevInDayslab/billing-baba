@@ -41,7 +41,7 @@ final class CreditNoteFormProvider
   }
 }
 
-String _$creditNoteFormHash() => r'e95390bb9c2c6ecc9b010f7483e8582b5229f674';
+String _$creditNoteFormHash() => r'86c8f44947faaf8a5770b0096fcc1550a773d572';
 
 abstract class _$CreditNoteForm extends $Notifier<CreditNoteFormState> {
   CreditNoteFormState build();
@@ -54,60 +54,6 @@ abstract class _$CreditNoteForm extends $Notifier<CreditNoteFormState> {
             as $ClassProviderElement<
               AnyNotifier<CreditNoteFormState, CreditNoteFormState>,
               CreditNoteFormState,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
-
-@ProviderFor(SavedCreditNotesNotifier)
-final savedCreditNotesProvider = SavedCreditNotesNotifierProvider._();
-
-final class SavedCreditNotesNotifierProvider
-    extends $NotifierProvider<SavedCreditNotesNotifier, List<SavedCreditNote>> {
-  SavedCreditNotesNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'savedCreditNotesProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$savedCreditNotesNotifierHash();
-
-  @$internal
-  @override
-  SavedCreditNotesNotifier create() => SavedCreditNotesNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<SavedCreditNote> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<SavedCreditNote>>(value),
-    );
-  }
-}
-
-String _$savedCreditNotesNotifierHash() =>
-    r'f2efdb64eadf32106980f01eade6ba1e1fb1e4c2';
-
-abstract class _$SavedCreditNotesNotifier
-    extends $Notifier<List<SavedCreditNote>> {
-  List<SavedCreditNote> build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<List<SavedCreditNote>, List<SavedCreditNote>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<List<SavedCreditNote>, List<SavedCreditNote>>,
-              List<SavedCreditNote>,
               Object?,
               Object?
             >;

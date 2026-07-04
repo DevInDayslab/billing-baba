@@ -1,0 +1,60 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'job_work_orders_provider.dart';
+
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(JobWorkOrdersList)
+final jobWorkOrdersListProvider = JobWorkOrdersListProvider._();
+
+final class JobWorkOrdersListProvider
+    extends $AsyncNotifierProvider<JobWorkOrdersList, PaginatedJobWorkOrders> {
+  JobWorkOrdersListProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'jobWorkOrdersListProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$jobWorkOrdersListHash();
+
+  @$internal
+  @override
+  JobWorkOrdersList create() => JobWorkOrdersList();
+}
+
+String _$jobWorkOrdersListHash() => r'2f51955b719c7c14df5e40cfcbb12772f9e52242';
+
+abstract class _$JobWorkOrdersList
+    extends $AsyncNotifier<PaginatedJobWorkOrders> {
+  FutureOr<PaginatedJobWorkOrders> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<PaginatedJobWorkOrders>, PaginatedJobWorkOrders>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<PaginatedJobWorkOrders>,
+                PaginatedJobWorkOrders
+              >,
+              AsyncValue<PaginatedJobWorkOrders>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}

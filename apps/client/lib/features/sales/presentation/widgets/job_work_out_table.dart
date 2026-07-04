@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_dialog.dart';
-import 'package:billing_baba/features/sales/providers/job_work_out_form_provider.dart';
+import 'package:billing_baba/features/sales/providers/job_work_orders_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -32,15 +32,76 @@ class JobWorkOutTable extends ConsumerWidget {
 
   Future<void> _openForm(
     BuildContext context, {
-    SavedJobWorkOut? existing,
+    String? orderId,
   }) async {
-    await showJobWorkOutDialog(context, existing: existing);
+    await showJobWorkOutDialog(context, orderId: orderId);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(savedJobWorkOutsProvider);
+    final ordersAsync = ref.watch(jobWorkOrdersListProvider);
+    final listNotifier = ref.read(jobWorkOrdersListProvider.notifier);
 
+    return ordersAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(AppSpacing.xl),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                error.toString(),
+                style: const TextStyle(color: AppColors.error),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              OutlinedButton(
+                onPressed: listNotifier.refresh,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      data: (page) => _JobWorkOutTableContent(
+        items: page.items,
+        onAdd: () => _openForm(context),
+        onEdit: (item) => _openForm(context, orderId: item.id),
+        onDelete: (id) async {
+          final error = await listNotifier.deleteOrder(id);
+          if (!context.mounted) return;
+          if (error != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(error)),
+            );
+          }
+        },
+        onRefresh: listNotifier.refresh,
+      ),
+    );
+  }
+}
+
+class _JobWorkOutTableContent extends StatelessWidget {
+  const _JobWorkOutTableContent({
+    required this.items,
+    required this.onAdd,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onRefresh,
+  });
+
+  final List<JobWorkOrderListItem> items;
+  final VoidCallback onAdd;
+  final void Function(JobWorkOrderListItem item) onEdit;
+  final Future<void> Function(String id) onDelete;
+  final Future<void> Function() onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -66,8 +127,14 @@ class JobWorkOutTable extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
+                IconButton(
+                  onPressed: onRefresh,
+                  icon: const Icon(Icons.refresh, size: 18),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Refresh',
+                ),
                 FilledButton.icon(
-                  onPressed: () => _openForm(context),
+                  onPressed: onAdd,
                   style: FilledButton.styleFrom(
                     backgroundColor: _addJobWorkRed,
                     foregroundColor: Colors.white,
@@ -120,10 +187,8 @@ class JobWorkOutTable extends ConsumerWidget {
                             const Divider(height: 1, color: _cardBorder),
                           _DataRow(
                             item: items[i],
-                            onTap: () => _openForm(context, existing: items[i]),
-                            onDelete: () => ref
-                                .read(savedJobWorkOutsProvider.notifier)
-                                .removeJobWorkOut(items[i].id),
+                            onTap: () => onEdit(items[i]),
+                            onDelete: () => onDelete(items[i].id),
                           ),
                         ],
                       ],
@@ -194,7 +259,7 @@ class _DataRow extends StatelessWidget {
     required this.onDelete,
   });
 
-  final SavedJobWorkOut item;
+  final JobWorkOrderListItem item;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
@@ -207,12 +272,16 @@ class _DataRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusLabel = item.status == JobWorkOutStatus.open
-        ? 'Open'
-        : 'Closed';
-    final statusColor = item.status == JobWorkOutStatus.open
-        ? _statusOpenColor
-        : _statusClosedColor;
+    final statusLabel = switch (item.status) {
+      JobWorkOutStatus.open => 'Open',
+      JobWorkOutStatus.closed => 'Closed',
+      JobWorkOutStatus.cancelled => 'Cancelled',
+    };
+    final statusColor = switch (item.status) {
+      JobWorkOutStatus.open => _statusOpenColor,
+      JobWorkOutStatus.closed => _statusClosedColor,
+      JobWorkOutStatus.cancelled => AppColors.error,
+    };
 
     return Material(
       color: Colors.transparent,

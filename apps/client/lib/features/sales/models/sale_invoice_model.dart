@@ -21,6 +21,7 @@ class SaleInvoiceModel {
     required this.balance,
     this.documentStatus = SalesDocumentStatus.finalized,
     this.partyId,
+    this.documentSeries,
     this.user = 'Admin',
     this.godown = 'Main Location',
   });
@@ -34,6 +35,7 @@ class SaleInvoiceModel {
   final String paymentType;
   final SaleInvoiceStatus status;
   final SalesDocumentStatus documentStatus;
+  final String? documentSeries;
   final double amount;
   final double balance;
   final String user;
@@ -51,6 +53,7 @@ class SaleInvoiceModel {
     String? paymentType,
     SaleInvoiceStatus? status,
     SalesDocumentStatus? documentStatus,
+    String? documentSeries,
     double? amount,
     double? balance,
     String? user,
@@ -66,6 +69,7 @@ class SaleInvoiceModel {
       paymentType: paymentType ?? this.paymentType,
       status: status ?? this.status,
       documentStatus: documentStatus ?? this.documentStatus,
+      documentSeries: documentSeries ?? this.documentSeries,
       amount: amount ?? this.amount,
       balance: balance ?? this.balance,
       user: user ?? this.user,

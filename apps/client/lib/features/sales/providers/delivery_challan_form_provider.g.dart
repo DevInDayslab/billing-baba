@@ -46,7 +46,7 @@ final class DeliveryChallanFormNotifierProvider
 }
 
 String _$deliveryChallanFormNotifierHash() =>
-    r'437d4e1cedbf57f390ee65db94f739e402c7a791';
+    r'35746999b5a59053ad5817f1c5f7b1ee7df219ab';
 
 abstract class _$DeliveryChallanFormNotifier
     extends $Notifier<DeliveryChallanFormState> {
@@ -61,69 +61,6 @@ abstract class _$DeliveryChallanFormNotifier
             as $ClassProviderElement<
               AnyNotifier<DeliveryChallanFormState, DeliveryChallanFormState>,
               DeliveryChallanFormState,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
-
-@ProviderFor(SavedDeliveryChallansNotifier)
-final savedDeliveryChallansProvider = SavedDeliveryChallansNotifierProvider._();
-
-final class SavedDeliveryChallansNotifierProvider
-    extends
-        $NotifierProvider<
-          SavedDeliveryChallansNotifier,
-          List<SavedDeliveryChallan>
-        > {
-  SavedDeliveryChallansNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'savedDeliveryChallansProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$savedDeliveryChallansNotifierHash();
-
-  @$internal
-  @override
-  SavedDeliveryChallansNotifier create() => SavedDeliveryChallansNotifier();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<SavedDeliveryChallan> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<SavedDeliveryChallan>>(value),
-    );
-  }
-}
-
-String _$savedDeliveryChallansNotifierHash() =>
-    r'a10552c8b0cdf380620e0e82301702b5eea6d70e';
-
-abstract class _$SavedDeliveryChallansNotifier
-    extends $Notifier<List<SavedDeliveryChallan>> {
-  List<SavedDeliveryChallan> build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref =
-        this.ref
-            as $Ref<List<SavedDeliveryChallan>, List<SavedDeliveryChallan>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<
-                List<SavedDeliveryChallan>,
-                List<SavedDeliveryChallan>
-              >,
-              List<SavedDeliveryChallan>,
               Object?,
               Object?
             >;

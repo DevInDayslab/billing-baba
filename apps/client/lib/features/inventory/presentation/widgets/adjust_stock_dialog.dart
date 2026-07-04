@@ -168,10 +168,10 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
               const Text('Godown', style: saleFieldLabelStyle),
               const SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
-                value: _godownId,
+                initialValue: _godownId,
                 items: godowns
                     .map(
-                      (GodownModel godown) => DropdownMenuItem(
+                      (godown) => DropdownMenuItem(
                         value: godown.id,
                         child: Text(godown.name),
                       ),
