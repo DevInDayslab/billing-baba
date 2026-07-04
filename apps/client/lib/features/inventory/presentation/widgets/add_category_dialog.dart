@@ -106,7 +106,7 @@ class _AddCategoryDialogState extends ConsumerState<AddCategoryDialog> {
                   Expanded(
                     child: Text(
                       _isEditing ? 'Edit Category' : 'Add Category',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,

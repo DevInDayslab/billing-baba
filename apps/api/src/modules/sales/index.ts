@@ -1,5 +1,16 @@
 import type { FastifyPluginAsync } from 'fastify';
+import {
+  createPosSessionRoutes,
+  createDocumentSequenceRoutes,
+  createSalesDocumentRoutes,
+} from './sales-document.routes';
 
-export const salesModule: FastifyPluginAsync = async (_app) => {
-  // TODO: Register sales routes, controllers, services, and repositories.
+export const salesModule: FastifyPluginAsync = async (app) => {
+  await app.register(createSalesDocumentRoutes(), {
+    prefix: '/sales-documents',
+  });
+  await app.register(createPosSessionRoutes(), { prefix: '/pos-sessions' });
+  await app.register(createDocumentSequenceRoutes(), {
+    prefix: '/document-sequences',
+  });
 };

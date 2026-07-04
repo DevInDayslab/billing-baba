@@ -1,6 +1,12 @@
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
+import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_order_form_model.dart';
+import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
+import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_order_form_provider.g.dart';
@@ -27,6 +33,11 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
   @override
   SaleOrderFormState build() => _initialSaleOrderFormState();
 
+  Map<String, String> _itemNameToId() {
+    final items = ref.read(inventoryItemsProvider).value ?? [];
+    return {for (final item in items) item.name.trim(): item.id};
+  }
+
   void openForm() {
     state = _initialSaleOrderFormState().copyWith(isFormOpen: true);
   }
@@ -39,8 +50,50 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     state = state.copyWith(isFormOpen: false);
   }
 
+  Future<void> loadDocument(String documentId) async {
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final loaded = await service.loadSaleDocumentForm(documentId);
+      final items = await _resolveItemNames(loaded.items);
+      state = SaleOrderFormState(
+        isFormOpen: true,
+        documentId: loaded.documentId,
+        partyId: loaded.partyId,
+        party: loaded.party,
+        orderNo: loaded.refNo,
+        orderDate: loaded.invoiceDate,
+        dueDate: loaded.invoiceDate,
+        stateOfSupply: loaded.stateOfSupply,
+        items: items,
+        description: loaded.description,
+      );
+    } catch (error) {
+      state = state.copyWith(saveError: SalesErrorMapper.messageFor(error));
+    }
+  }
+
+  Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
+    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final itemNames = {for (final item in inventory) item.id: item.name};
+    return [
+      for (final line in items)
+        if (line.itemId != null && line.itemName.isEmpty)
+          line.copyWith(itemName: itemNames[line.itemId] ?? '')
+        else
+          line,
+    ];
+  }
+
   void updateParty(String value) {
-    state = state.copyWith(party: value);
+    state = state.copyWith(party: value, clearSaveError: true);
+  }
+
+  void updatePartyWithId({required String partyId, required String partyName}) {
+    state = state.copyWith(
+      partyId: partyId,
+      party: partyName,
+      clearSaveError: true,
+    );
   }
 
   void updateOrderNo(String value) {
@@ -121,22 +174,6 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     );
   }
 
-  void loadSavedOrder(SavedSaleOrder saved) {
-    state = SaleOrderFormState(
-      isFormOpen: true,
-      party: saved.party,
-      orderNo: saved.orderNo,
-      orderDate: saved.orderDate,
-      dueDate: saved.dueDate,
-      stateOfSupply: saved.stateOfSupply,
-      items: saved.items.isEmpty
-          ? [SaleLineItem.empty(id: _nextSaleOrderLineItemId())]
-          : List<SaleLineItem>.from(saved.items),
-      paymentType: saved.paymentType,
-      advanceAmount: saved.advanceAmount,
-    );
-  }
-
   void addLineItem() {
     final items = [
       ...state.items,
@@ -158,7 +195,7 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
-    state = state.copyWith(items: items);
+    state = state.copyWith(items: items, clearSaveError: true);
   }
 
   bool validate() {
@@ -169,29 +206,34 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     return isValid;
   }
 
-  bool save() {
-    if (!validate()) return false;
-    final saved = SavedSaleOrder.fromFormState(
-      id: nextSavedSaleOrderId(),
-      form: state,
-    );
-    ref.read(savedSaleOrdersProvider.notifier).addOrder(saved);
-    resetForm();
-    return true;
-  }
-}
+  SalesDocumentDraftInput _draftInput() => SalesDocumentDraftInput(
+    documentId: state.documentId,
+    partyId: state.partyId,
+    documentType: SalesDocumentType.saleOrder,
+    documentSeries: SalesConstants.saleOrderSeries,
+    documentDate: state.orderDate,
+    notes: state.description,
+    items: state.items,
+  );
 
-@riverpod
-class SavedSaleOrdersNotifier extends _$SavedSaleOrdersNotifier {
-  @override
-  List<SavedSaleOrder> build() => [];
+  Future<String?> save() async {
+    if (!validate()) return 'Please fill required fields';
 
-  void addOrder(SavedSaleOrder order) {
-    state = [order, ...state];
-  }
-
-  void removeOrder(String id) {
-    state = state.where((order) => order.id != id).toList();
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      await service.saveDocumentDraft(
+        _draftInput(),
+        itemNameToId: _itemNameToId(),
+      );
+      ref.invalidate(salesDocumentsListProvider(saleOrderListScope()));
+      resetForm();
+      return null;
+    } catch (error) {
+      final message = SalesErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
   }
 }
 

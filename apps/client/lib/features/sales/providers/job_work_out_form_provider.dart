@@ -1,5 +1,9 @@
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/sales/application/job_work_service.dart';
+import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
+import 'package:billing_baba/features/sales/providers/job_work_orders_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'job_work_out_form_provider.g.dart';
@@ -19,34 +23,43 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
   @override
   JobWorkOutFormState build() => _initialJobWorkOutFormState();
 
+  Map<String, String> _itemNameToId() {
+    final items = ref.read(inventoryItemsProvider).value ?? [];
+    return {for (final item in items) item.name.trim(): item.id};
+  }
+
+  Map<String, String> _itemIdToName() {
+    final items = ref.read(inventoryItemsProvider).value ?? [];
+    return {for (final item in items) item.id: item.name};
+  }
+
   void resetForm() {
     state = _initialJobWorkOutFormState();
   }
 
-  void loadSaved(SavedJobWorkOut saved) {
-    state = JobWorkOutFormState(
-      party: saved.party,
-      phoneNo: saved.phoneNo,
-      jobId: saved.jobId,
-      invoiceDate: saved.invoiceDate,
-      deliveryDate: saved.deliveryDate,
-      finishedGoodName: saved.finishedGoodName,
-      finishedGoodQty: saved.finishedGoodQty,
-      finishedGoodUnit: saved.finishedGoodUnit,
-      rawMaterials: saved.rawMaterials.isEmpty
-          ? [JobWorkOutRawMaterialItem.empty(id: nextRawMaterialId())]
-          : List<JobWorkOutRawMaterialItem>.from(saved.rawMaterials),
-      additionalCosts: List<JobWorkOutAdditionalCost>.from(
-        saved.additionalCosts,
-      ),
-      description: saved.description,
-      attachedImages: List<SaleFormAttachment>.from(saved.attachedImages),
-      attachedDocuments: List<SaleFormAttachment>.from(saved.attachedDocuments),
-    );
+  Future<void> loadOrder(String orderId) async {
+    try {
+      final service = await ref.read(jobWorkServiceProvider.future);
+      final loaded = await service.loadOrderFormWithItems(
+        orderId,
+        _itemIdToName(),
+      );
+      state = loaded;
+    } catch (error) {
+      state = state.copyWith(saveError: SalesErrorMapper.messageFor(error));
+    }
   }
 
   void updateParty(String value) {
-    state = state.copyWith(party: value);
+    state = state.copyWith(party: value, clearSaveError: true);
+  }
+
+  void updatePartyWithId({required String partyId, required String partyName}) {
+    state = state.copyWith(
+      partyId: partyId,
+      party: partyName,
+      clearSaveError: true,
+    );
   }
 
   void updatePhoneNo(String value) {
@@ -66,7 +79,7 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
   }
 
   void updateFinishedGoodName(String value) {
-    state = state.copyWith(finishedGoodName: value);
+    state = state.copyWith(finishedGoodName: value, clearSaveError: true);
   }
 
   void updateFinishedGoodQty(double value) {
@@ -149,7 +162,7 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
     if (index < 0 || index >= state.rawMaterials.length) return;
     final materials = [...state.rawMaterials];
     materials[index] = item;
-    state = state.copyWith(rawMaterials: materials);
+    state = state.copyWith(rawMaterials: materials, clearSaveError: true);
   }
 
   void addAdditionalCost() {
@@ -186,29 +199,21 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
     return isValid;
   }
 
-  bool save() {
-    if (!validate()) return false;
-    final saved = SavedJobWorkOut.fromFormState(
-      id: nextSavedJobWorkOutId(),
-      form: state,
-    );
-    ref.read(savedJobWorkOutsProvider.notifier).addJobWorkOut(saved);
-    resetForm();
-    return true;
-  }
-}
+  Future<String?> save() async {
+    if (!validate()) return 'Please fill required fields';
 
-@riverpod
-class SavedJobWorkOutsNotifier extends _$SavedJobWorkOutsNotifier {
-  @override
-  List<SavedJobWorkOut> build() => [];
-
-  void addJobWorkOut(SavedJobWorkOut jobWorkOut) {
-    state = [jobWorkOut, ...state];
-  }
-
-  void removeJobWorkOut(String id) {
-    state = state.where((item) => item.id != id).toList();
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+    try {
+      final service = await ref.read(jobWorkServiceProvider.future);
+      await service.saveOrder(state, itemNameToId: _itemNameToId());
+      ref.invalidate(jobWorkOrdersListProvider);
+      resetForm();
+      return null;
+    } catch (error) {
+      final message = SalesErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
   }
 }
 

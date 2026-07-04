@@ -4,6 +4,7 @@ class BillingNamePartySearchField extends PartySearchField {
   const BillingNamePartySearchField({
     required super.value,
     required super.onSelected,
+    super.onPartySelectedWithId,
     super.onPartyCreated,
     super.hasError,
     super.emptyPlaceholder,

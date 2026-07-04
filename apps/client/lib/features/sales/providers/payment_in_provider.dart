@@ -1,5 +1,9 @@
+import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
+import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
+import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -67,110 +71,6 @@ class PaymentInSummaryData {
   final double receivedAmount;
 }
 
-class PaginatedPaymentIn {
-  const PaginatedPaymentIn({
-    required this.items,
-    required this.currentPage,
-    required this.totalPages,
-    required this.totalItems,
-  });
-
-  final List<PaymentInModel> items;
-  final int currentPage;
-  final int totalPages;
-  final int totalItems;
-}
-
-List<PaymentInModel> _mockPaymentInRecords() {
-  const parties = [
-    'Abhivank',
-    'Aashray Narang',
-    'PartyAv',
-    'naitik',
-    'Sharma Traders',
-    'Patel Electronics',
-    'Gupta General Store',
-    'Mehta Hardware',
-    'Singh & Sons',
-    'Kumar Agencies',
-    'Reddy Mart',
-    'Joshi Distributors',
-  ];
-
-  const paymentTypes = PaymentInDropdownOptions.paymentTypes;
-
-  PaymentInModel buildRecord({
-    required int id,
-    required DateTime date,
-    required PaymentInStatus status,
-    int partyIndex = 0,
-    double? amount,
-  }) {
-    final total = amount ?? (120 + (id * 137) % 50000).toDouble();
-    final received = total;
-    return PaymentInModel(
-      id: '$id',
-      receiptNo: id <= 3 ? '$id' : 'REC-${1773217264824 + id}',
-      date: date,
-      partyName: parties[partyIndex % parties.length],
-      paymentType: paymentTypes[id % paymentTypes.length],
-      status: status,
-      totalAmount: total,
-      receivedAmount: received,
-      user: id % 3 == 0 ? 'Admin' : 'Staff',
-      godown: id % 4 == 0 ? 'Main Location' : 'Warehouse B',
-    );
-  }
-
-  return [
-    buildRecord(
-      id: 1,
-      date: DateTime(2026, 3, 13, 17, 23),
-      status: PaymentInStatus.used,
-      amount: 120,
-    ),
-    buildRecord(
-      id: 2,
-      date: DateTime(2026, 3, 21, 17, 46),
-      status: PaymentInStatus.used,
-      partyIndex: 1,
-      amount: 128,
-    ),
-    buildRecord(
-      id: 3,
-      date: DateTime(2026, 3, 25, 17, 54),
-      status: PaymentInStatus.used,
-      partyIndex: 2,
-      amount: 20,
-    ),
-    buildRecord(
-      id: 4,
-      date: DateTime(2026, 2, 10, 14, 30),
-      status: PaymentInStatus.unused,
-      partyIndex: 3,
-      amount: 2000000,
-    ),
-    buildRecord(
-      id: 5,
-      date: DateTime(2026, 1, 15, 11),
-      status: PaymentInStatus.unused,
-      partyIndex: 4,
-      amount: 5000,
-    ),
-    ...List.generate(15, (index) {
-      final id = index + 6;
-      final month = (index % 6) + 1;
-      final day = (index % 28) + 1;
-      return buildRecord(
-        id: id,
-        date: DateTime(2026, month, day, 10 + (index % 8), index % 60),
-        status: index.isEven ? PaymentInStatus.used : PaymentInStatus.unused,
-        partyIndex: index + 4,
-      );
-    }),
-  ];
-}
-
 PaymentInStatus? _statusFromFilterLabel(String label) => switch (label) {
   'Used' => PaymentInStatus.used,
   'Unused' => PaymentInStatus.unused,
@@ -182,12 +82,6 @@ DateTime _startOfDay(DateTime date) =>
 
 DateTime _endOfDay(DateTime date) =>
     DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
-
-bool _isWithinRange(DateTime date, DateTime start, DateTime end) {
-  final normalized = _startOfDay(date);
-  return !normalized.isBefore(_startOfDay(start)) &&
-      !normalized.isAfter(_startOfDay(end));
-}
 
 DateTimeRange? _resolveTimeRange(
   TimeRangeOption option,
@@ -217,71 +111,25 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-String generateReceiptNo() {
-  return 'REC-${DateTime.now().millisecondsSinceEpoch}';
-}
-
-@riverpod
-class PaymentInRecords extends _$PaymentInRecords {
-  @override
-  List<PaymentInModel> build() => _mockPaymentInRecords();
-
-  void addPayment(PaymentInModel payment) {
-    state = [payment, ...state];
-  }
-}
-
-@riverpod
-class PaymentInFilters extends _$PaymentInFilters {
-  @override
-  PaymentInFiltersState build() => const PaymentInFiltersState();
-
-  void setTimeRange(String label) {
-    state = state.copyWith(
-      timeRangeOption: TimeRangeOptionX.fromLabel(label),
-      currentPage: 1,
-    );
-  }
-
-  void setCustomDateRange(
-    DateTimeRange range, {
-    bool autoSwitchToCustom = false,
-  }) {
-    state = state.copyWith(
-      timeRangeOption: autoSwitchToCustom
-          ? TimeRangeOption.custom
-          : state.timeRangeOption,
-      customDateRange: range,
-      currentPage: 1,
-    );
-  }
-
-  void setUser(String user) {
-    state = state.copyWith(selectedUser: user, currentPage: 1);
-  }
-
-  void setGodown(String godown) {
-    state = state.copyWith(selectedGodown: godown, currentPage: 1);
-  }
-
-  void setStatus(String status) {
-    state = state.copyWith(selectedStatus: status, currentPage: 1);
-  }
-
-  void setPage(int page) {
-    state = state.copyWith(currentPage: page);
-  }
-}
-
-@riverpod
-List<PaymentInModel> filteredPaymentInRecords(Ref ref) {
-  final records = ref.watch(paymentInRecordsProvider);
-  final filters = ref.watch(paymentInFiltersProvider);
-
+PaymentListQuery _buildPaymentListQuery(PaymentInFiltersState filters) {
   final dateRange = _resolveTimeRange(
     filters.timeRangeOption,
     filters.customDateRange,
   );
+
+  return PaymentListQuery(
+    page: filters.currentPage,
+    limit: paymentInPageSize,
+    direction: 'received',
+    from: dateRange?.start.toUtc().toIso8601String(),
+    to: dateRange?.end.toUtc().toIso8601String(),
+  );
+}
+
+List<PaymentInModel> _applyClientFilters(
+  List<PaymentInModel> records,
+  PaymentInFiltersState filters,
+) {
   final statusFilter = _statusFromFilterLabel(filters.selectedStatus);
 
   return records.where((record) {
@@ -296,38 +144,103 @@ List<PaymentInModel> filteredPaymentInRecords(Ref ref) {
         record.godown != filters.selectedGodown) {
       return false;
     }
-    if (dateRange != null &&
-        !_isWithinRange(record.date, dateRange.start, dateRange.end)) {
-      return false;
-    }
     return true;
   }).toList();
 }
 
+@Riverpod(keepAlive: true)
+class PaymentInRecords extends _$PaymentInRecords {
+  @override
+  Future<PaginatedPaymentIn> build() async {
+    ref.watch(paymentInFiltersProvider);
+    return _fetchPage();
+  }
+
+  Future<PaginatedPaymentIn> _fetchPage() async {
+    final filters = ref.read(paymentInFiltersProvider);
+    final service = await ref.read(salesServiceProvider.future);
+    final page = await service.fetchPaymentsPage(_buildPaymentListQuery(filters));
+
+    return PaginatedPaymentIn(
+      items: _applyClientFilters(page.items, filters),
+      currentPage: page.currentPage,
+      totalPages: page.totalPages,
+      totalItems: page.totalItems,
+    );
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(_fetchPage);
+  }
+}
+
+@riverpod
+class PaymentInFilters extends _$PaymentInFilters {
+  @override
+  PaymentInFiltersState build() => const PaymentInFiltersState();
+
+  void setTimeRange(String label) {
+    state = state.copyWith(
+      timeRangeOption: TimeRangeOptionX.fromLabel(label),
+      currentPage: 1,
+    );
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setCustomDateRange(
+    DateTimeRange range, {
+    bool autoSwitchToCustom = false,
+  }) {
+    state = state.copyWith(
+      timeRangeOption: autoSwitchToCustom
+          ? TimeRangeOption.custom
+          : state.timeRangeOption,
+      customDateRange: range,
+      currentPage: 1,
+    );
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setUser(String user) {
+    state = state.copyWith(selectedUser: user, currentPage: 1);
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setGodown(String godown) {
+    state = state.copyWith(selectedGodown: godown, currentPage: 1);
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setStatus(String status) {
+    state = state.copyWith(selectedStatus: status, currentPage: 1);
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setPage(int page) {
+    state = state.copyWith(currentPage: page);
+    ref.invalidate(paymentInRecordsProvider);
+  }
+}
+
 @riverpod
 PaginatedPaymentIn paginatedPaymentInRecords(Ref ref) {
-  final filtered = ref.watch(filteredPaymentInRecordsProvider);
-  final filters = ref.watch(paymentInFiltersProvider);
-
-  final totalItems = filtered.length;
-  final totalPages = totalItems == 0
-      ? 1
-      : (totalItems / paymentInPageSize).ceil();
-  final currentPage = filters.currentPage.clamp(1, totalPages);
-  final startIndex = (currentPage - 1) * paymentInPageSize;
-  final endIndex = (startIndex + paymentInPageSize).clamp(0, totalItems);
-
-  return PaginatedPaymentIn(
-    items: filtered.sublist(startIndex, endIndex),
-    currentPage: currentPage,
-    totalPages: totalPages,
-    totalItems: totalItems,
+  final recordsAsync = ref.watch(paymentInRecordsProvider);
+  return recordsAsync.maybeWhen(
+    data: (page) => page,
+    orElse: () => const PaginatedPaymentIn(
+      items: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+    ),
   );
 }
 
 @riverpod
 PaymentInSummaryData paymentInSummary(Ref ref) {
-  final records = ref.watch(filteredPaymentInRecordsProvider);
+  final page = ref.watch(paginatedPaymentInRecordsProvider);
+  final records = page.items;
   final totalAmount = records.fold<double>(
     0,
     (sum, record) => sum + record.totalAmount,
@@ -345,6 +258,7 @@ PaymentInSummaryData paymentInSummary(Ref ref) {
 
 class PaymentInFormState {
   const PaymentInFormState({
+    this.partyId,
     this.party = '',
     this.paymentType = 'Cash',
     this.receiptNo = '',
@@ -356,8 +270,11 @@ class PaymentInFormState {
     this.description = '',
     this.showDescriptionField = false,
     this.showValidationErrors = false,
+    this.saveError,
+    this.isSaving = false,
   });
 
+  final String? partyId;
   final String party;
   final String paymentType;
   final String receiptNo;
@@ -369,13 +286,20 @@ class PaymentInFormState {
   final String description;
   final bool showDescriptionField;
   final bool showValidationErrors;
+  final String? saveError;
+  final bool isSaving;
 
   double get remainingBalance =>
       (balanceDue - receivedAmount - discount).clamp(0, double.infinity);
 
-  bool get isValid => party.trim().isNotEmpty && receivedAmount > 0;
+  bool get isValid =>
+      party.trim().isNotEmpty &&
+      partyId != null &&
+      partyId!.isNotEmpty &&
+      receivedAmount > 0;
 
   PaymentInFormState copyWith({
+    String? partyId,
     String? party,
     String? paymentType,
     String? receiptNo,
@@ -387,8 +311,12 @@ class PaymentInFormState {
     String? description,
     bool? showDescriptionField,
     bool? showValidationErrors,
+    String? saveError,
+    bool clearSaveError = false,
+    bool? isSaving,
   }) {
     return PaymentInFormState(
+      partyId: partyId ?? this.partyId,
       party: party ?? this.party,
       paymentType: paymentType ?? this.paymentType,
       receiptNo: receiptNo ?? this.receiptNo,
@@ -400,8 +328,14 @@ class PaymentInFormState {
       description: description ?? this.description,
       showDescriptionField: showDescriptionField ?? this.showDescriptionField,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
+      isSaving: isSaving ?? this.isSaving,
     );
   }
+}
+
+String generateReceiptNo() {
+  return 'REC-${DateTime.now().millisecondsSinceEpoch}';
 }
 
 PaymentInFormState _initialPaymentInFormState() {
@@ -422,12 +356,26 @@ class PaymentInForm extends _$PaymentInForm {
     state = _initialPaymentInFormState();
   }
 
-  void updateParty(String value) {
-    state = state.copyWith(party: value);
+  Future<void> updateParty(String name, {String? partyId}) async {
+    state = state.copyWith(
+      party: name,
+      partyId: partyId,
+      clearSaveError: true,
+    );
+
+    if (partyId != null && partyId.isNotEmpty) {
+      try {
+        final service = await ref.read(salesServiceProvider.future);
+        final balanceDue = await service.fetchPartyBalanceDue(partyId);
+        state = state.copyWith(balanceDue: balanceDue);
+      } catch (_) {
+        // Balance lookup is best-effort for the dialog.
+      }
+    }
   }
 
   void updatePaymentType(String value) {
-    state = state.copyWith(paymentType: value);
+    state = state.copyWith(paymentType: value, clearSaveError: true);
   }
 
   void updateDate(DateTime date) {
@@ -439,11 +387,11 @@ class PaymentInForm extends _$PaymentInForm {
   }
 
   void updateReceivedAmount(double value) {
-    state = state.copyWith(receivedAmount: value);
+    state = state.copyWith(receivedAmount: value, clearSaveError: true);
   }
 
   void updateDiscount(double value) {
-    state = state.copyWith(discount: value);
+    state = state.copyWith(discount: value, clearSaveError: true);
   }
 
   void updateDescription(String value) {
@@ -475,6 +423,7 @@ class PaymentInForm extends _$PaymentInForm {
       receiptNo: state.receiptNo,
       date: dateTime,
       partyName: state.party.trim(),
+      partyId: state.partyId,
       paymentType: state.paymentType,
       status: PaymentInStatus.unused,
       totalAmount: state.receivedAmount + state.discount,
@@ -484,10 +433,40 @@ class PaymentInForm extends _$PaymentInForm {
     );
   }
 
-  void savePayment() {
+  Future<String?> savePayment() async {
     final payment = buildPaymentModel();
-    if (payment == null) return;
-    ref.read(paymentInRecordsProvider.notifier).addPayment(payment);
-    reset();
+    if (payment == null) return 'Please fill required fields';
+
+    state = state.copyWith(isSaving: true, clearSaveError: true);
+
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final allocations = await service.buildFifoAllocations(
+        partyId: state.partyId!,
+        amount: payment.receivedAmount,
+      );
+
+      await service.createPayment(
+        CreatePaymentRequest(
+          partyId: state.partyId!,
+          direction: 'received',
+          amount: payment.receivedAmount.toStringAsFixed(4),
+          paymentMode: SalesPaymentModes.toApi(payment.paymentType),
+          paymentDate: payment.date.toUtc().toIso8601String(),
+          referenceNumber: payment.receiptNo,
+          notes: payment.description.trim().isEmpty ? null : payment.description,
+          allocations: allocations,
+        ),
+      );
+
+      ref.invalidate(paymentInRecordsProvider);
+      ref.invalidate(saleInvoicesProvider);
+      reset();
+      return null;
+    } catch (error) {
+      final message = SalesErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
+    }
   }
 }

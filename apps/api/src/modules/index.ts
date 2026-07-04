@@ -5,6 +5,7 @@ import { createAuthModule } from './auth';
 import { businessModule, businessProfileModule } from './business';
 import { createHealthModule } from './health';
 import { inventoryModule } from './inventory';
+import { jobWorkModule } from './job-work';
 import { partiesModule } from './parties';
 import { purchasesModule } from './purchases';
 import { reportsModule } from './reports';
@@ -25,6 +26,7 @@ export async function registerModules(
       await api.register(partiesModule, { prefix: '/parties' });
       await api.register(inventoryModule, { prefix: '/inventory' });
       await api.register(salesModule, { prefix: '/sales' });
+      await api.register(jobWorkModule, { prefix: '/job-work' });
       await api.register(purchasesModule, { prefix: '/purchases' });
       await api.register(accountingModule, { prefix: '/accounting' });
       await api.register(reportsModule, { prefix: '/reports' });

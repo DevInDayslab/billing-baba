@@ -1,9 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class InventoryAsyncList<T> extends StatelessWidget {
   const InventoryAsyncList({
@@ -118,7 +118,7 @@ class _InventoryErrorBanner extends StatelessWidget {
               ),
             ),
             TextButton(
-              onPressed: () => onRetry(),
+              onPressed: onRetry,
               child: const Text('Retry'),
             ),
           ],
@@ -155,7 +155,7 @@ class _InventoryErrorBody extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             TextButton(
-              onPressed: () => onRetry(),
+              onPressed: onRetry,
               child: const Text('Retry'),
             ),
           ],

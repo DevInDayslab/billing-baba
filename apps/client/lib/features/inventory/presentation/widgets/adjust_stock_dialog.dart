@@ -1,12 +1,11 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
-import 'package:billing_baba/features/inventory/models/godown_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/requests/movement_requests.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
@@ -168,10 +167,10 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
               const Text('Godown', style: saleFieldLabelStyle),
               const SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
-                value: _godownId,
+                initialValue: _godownId,
                 items: godowns
                     .map(
-                      (GodownModel godown) => DropdownMenuItem(
+                      (godown) => DropdownMenuItem(
                         value: godown.id,
                         child: Text(godown.name),
                       ),
