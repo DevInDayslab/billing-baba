@@ -40,6 +40,28 @@ enum SalesDocumentType {
   };
 }
 
+abstract final class SalesPaymentModes {
+  static String toApi(String uiLabel) => switch (uiLabel) {
+    'Cash' => 'cash',
+    'UPI' => 'upi',
+    'Cheque' => 'cheque',
+    'Bank Transfer' => 'bank_transfer',
+    'Online' => 'upi',
+    'Credit' => 'other',
+    'Card' => 'card',
+    _ => 'other',
+  };
+
+  static String toUi(String apiValue) => switch (apiValue) {
+    'cash' => 'Cash',
+    'upi' => 'UPI',
+    'cheque' => 'Cheque',
+    'bank_transfer' => 'Bank Transfer',
+    'card' => 'Card',
+    _ => 'Cash',
+  };
+}
+
 enum SalesDocumentStatus {
   draft,
   finalized,

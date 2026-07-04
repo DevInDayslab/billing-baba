@@ -13,7 +13,7 @@ part of 'payment_in_provider.dart';
 final paymentInRecordsProvider = PaymentInRecordsProvider._();
 
 final class PaymentInRecordsProvider
-    extends $AsyncNotifierProvider<PaymentInRecords, List<PaymentInModel>> {
+    extends $AsyncNotifierProvider<PaymentInRecords, PaginatedPaymentIn> {
   PaymentInRecordsProvider._()
     : super(
         from: null,
@@ -33,24 +33,20 @@ final class PaymentInRecordsProvider
   PaymentInRecords create() => PaymentInRecords();
 }
 
-String _$paymentInRecordsHash() => r'c44f6e81971b7cd2c02f1600fc743fe8a6e70152';
+String _$paymentInRecordsHash() => r'f55165f2e69c7096a3b312431b0f6d52063f0459';
 
-abstract class _$PaymentInRecords extends $AsyncNotifier<List<PaymentInModel>> {
-  FutureOr<List<PaymentInModel>> build();
+abstract class _$PaymentInRecords extends $AsyncNotifier<PaginatedPaymentIn> {
+  FutureOr<PaginatedPaymentIn> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
-        this.ref
-            as $Ref<AsyncValue<List<PaymentInModel>>, List<PaymentInModel>>;
+        this.ref as $Ref<AsyncValue<PaginatedPaymentIn>, PaginatedPaymentIn>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<List<PaymentInModel>>,
-                List<PaymentInModel>
-              >,
-              AsyncValue<List<PaymentInModel>>,
+              AnyNotifier<AsyncValue<PaginatedPaymentIn>, PaginatedPaymentIn>,
+              AsyncValue<PaginatedPaymentIn>,
               Object?,
               Object?
             >;
@@ -90,7 +86,7 @@ final class PaymentInFiltersProvider
   }
 }
 
-String _$paymentInFiltersHash() => r'fd8c086ebf67cf3fac2b9da4c2242cc72ce9afb5';
+String _$paymentInFiltersHash() => r'b34804a1ab12d3ad28444e5e06d317371e014a3b';
 
 abstract class _$PaymentInFilters extends $Notifier<PaymentInFiltersState> {
   PaymentInFiltersState build();
@@ -109,54 +105,6 @@ abstract class _$PaymentInFilters extends $Notifier<PaymentInFiltersState> {
     return element.handleCreate(ref, build);
   }
 }
-
-@ProviderFor(filteredPaymentInRecords)
-final filteredPaymentInRecordsProvider = FilteredPaymentInRecordsProvider._();
-
-final class FilteredPaymentInRecordsProvider
-    extends
-        $FunctionalProvider<
-          List<PaymentInModel>,
-          List<PaymentInModel>,
-          List<PaymentInModel>
-        >
-    with $Provider<List<PaymentInModel>> {
-  FilteredPaymentInRecordsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'filteredPaymentInRecordsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$filteredPaymentInRecordsHash();
-
-  @$internal
-  @override
-  $ProviderElement<List<PaymentInModel>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  List<PaymentInModel> create(Ref ref) {
-    return filteredPaymentInRecords(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<PaymentInModel> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<PaymentInModel>>(value),
-    );
-  }
-}
-
-String _$filteredPaymentInRecordsHash() =>
-    r'73dd29ddf5eb1b65328975b059194a882c6365b7';
 
 @ProviderFor(paginatedPaymentInRecords)
 final paginatedPaymentInRecordsProvider = PaginatedPaymentInRecordsProvider._();
@@ -204,7 +152,7 @@ final class PaginatedPaymentInRecordsProvider
 }
 
 String _$paginatedPaymentInRecordsHash() =>
-    r'b26898a0d740bf9407765f5321e603d3ac028e4d';
+    r'0016f0987c5c453bdfe6f4d3d2c4d7f1bc759be1';
 
 @ProviderFor(paymentInSummary)
 final paymentInSummaryProvider = PaymentInSummaryProvider._();
@@ -251,7 +199,7 @@ final class PaymentInSummaryProvider
   }
 }
 
-String _$paymentInSummaryHash() => r'3619c230b7edce2512d38585d5d7c963be08fded';
+String _$paymentInSummaryHash() => r'e1064a4ae0b8768cb8cb2ad2c4acbd14001dc0f4';
 
 @ProviderFor(PaymentInForm)
 final paymentInFormProvider = PaymentInFormProvider._();
@@ -285,7 +233,7 @@ final class PaymentInFormProvider
   }
 }
 
-String _$paymentInFormHash() => r'b6c35d4a46f7ee4e9af463fbba3477b5902f602f';
+String _$paymentInFormHash() => r'891bb6e2ce15e813ea8187fe4716b04496355836';
 
 abstract class _$PaymentInForm extends $Notifier<PaymentInFormState> {
   PaymentInFormState build();

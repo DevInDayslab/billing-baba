@@ -22,6 +22,13 @@ class SalesRepository {
   Future<SalesDocumentDto> createDocument(CreateSalesDocumentRequest request) =>
       _remote.createDocument(request);
 
+  Future<SalesDocumentDto> updateDocument(
+    String id,
+    UpdateSalesDocumentRequest request,
+  ) => _remote.updateDocument(id, request);
+
+  Future<void> deleteDocument(String id) => _remote.deleteDocument(id);
+
   Future<SalesDocumentDto> finalizeDocument(
     String id, {
     String? godownId,
@@ -32,9 +39,23 @@ class SalesRepository {
     CreateSalesLineRequest request,
   ) => _remote.addLine(documentId, request);
 
+  Future<SalesDocumentLineDto> updateLine(
+    String documentId,
+    String lineId,
+    UpdateSalesLineRequest request,
+  ) => _remote.updateLine(documentId, lineId, request);
+
+  Future<void> deleteLine(String documentId, String lineId) =>
+      _remote.deleteLine(documentId, lineId);
+
   Future<PaginatedPaymentsDto> listPayments(PaymentListQuery query) =>
       _remote.listPayments(query);
 
   Future<PaymentDto> createPayment(CreatePaymentRequest request) =>
       _remote.createPayment(request);
+
+  Future<PaymentDto> addPaymentAllocation(
+    String paymentId,
+    PaymentAllocationRequest request,
+  ) => _remote.addPaymentAllocation(paymentId, request);
 }

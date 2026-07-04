@@ -1,9 +1,12 @@
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_status_badge.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
@@ -40,7 +43,9 @@ class SaleInvoiceTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final invoicesAsync = ref.watch(saleInvoicesProvider);
     final paginated = ref.watch(paginatedSaleInvoicesProvider);
+    final notifier = ref.read(saleInvoicesProvider.notifier);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -68,7 +73,7 @@ class SaleInvoiceTable extends ConsumerWidget {
                 ),
                 const Spacer(),
                 IconButton(
-                  onPressed: () => debugPrint('Search tapped'),
+                  onPressed: () => _showSearchDialog(context, ref),
                   icon: const Icon(Icons.search, size: 20),
                   color: AppColors.textSecondary,
                   tooltip: 'Search',
@@ -80,32 +85,75 @@ class SaleInvoiceTable extends ConsumerWidget {
                   color: AppColors.textSecondary,
                   tooltip: 'Print',
                 ),
+                IconButton(
+                  onPressed: notifier.refresh,
+                  icon: const Icon(Icons.refresh, size: 20),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Refresh',
+                ),
               ],
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final tableWidth = constraints.maxWidth.clamp(
-                _minTableWidth,
-                double.infinity,
-              );
-
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  width: tableWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const _TableHeaderRow(),
-                      for (var i = 0; i < paginated.items.length; i++) ...[
-                        if (i > 0) const Divider(height: 1, color: _cardBorder),
-                        _buildRow(paginated.items[i]),
-                      ],
-                    ],
+          invoicesAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(AppSpacing.xl),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, _) => Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                children: [
+                  Text(
+                    SalesErrorMapper.messageFor(error),
+                    style: const TextStyle(color: AppColors.error),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton(
+                    onPressed: notifier.refresh,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+            data: (_) {
+              if (paginated.items.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(AppSpacing.xl),
+                  child: Center(
+                    child: Text(
+                      'No sale invoices found',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                );
+              }
+
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final tableWidth = constraints.maxWidth.clamp(
+                    _minTableWidth,
+                    double.infinity,
+                  );
+
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: tableWidth,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const _TableHeaderRow(),
+                          for (var i = 0; i < paginated.items.length; i++) ...[
+                            if (i > 0)
+                              const Divider(height: 1, color: _cardBorder),
+                            _buildRow(context, ref, paginated.items[i]),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -119,7 +167,42 @@ class SaleInvoiceTable extends ConsumerWidget {
     );
   }
 
-  Widget _buildRow(SaleInvoiceModel invoice) {
+  Future<void> _showSearchDialog(BuildContext context, WidgetRef ref) async {
+    final current = ref.read(saleInvoiceSearchQueryProvider);
+    final controller = TextEditingController(text: current);
+    final query = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Search invoices'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'Invoice no, party...'),
+          onSubmitted: (value) => Navigator.of(context).pop(value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(''),
+            child: const Text('Clear'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(controller.text),
+            child: const Text('Search'),
+          ),
+        ],
+      ),
+    );
+
+    if (query == null) return;
+    ref.read(saleInvoiceSearchQueryProvider.notifier).setQuery(query);
+    ref.invalidate(saleInvoicesProvider);
+  }
+
+  Widget _buildRow(
+    BuildContext context,
+    WidgetRef ref,
+    SaleInvoiceModel invoice,
+  ) {
     return _TableDataRow(
       children: [
         _TableCell(
@@ -182,7 +265,7 @@ class SaleInvoiceTable extends ConsumerWidget {
                 tooltip: 'Share',
               ),
               IconButton(
-                onPressed: () => debugPrint('More ${invoice.invoiceNo}'),
+                onPressed: () => _showInvoiceActions(context, ref, invoice),
                 icon: const Icon(Icons.more_vert, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
@@ -194,6 +277,67 @@ class SaleInvoiceTable extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _showInvoiceActions(
+    BuildContext context,
+    WidgetRef ref,
+    SaleInvoiceModel invoice,
+  ) async {
+    final action = await showMenu<String>(
+      context: context,
+      position: const RelativeRect.fromLTRB(200, 400, 200, 0),
+      items: [
+        if (invoice.isDraft)
+          const PopupMenuItem(value: 'edit', child: Text('Edit draft')),
+        if (invoice.isDraft)
+          const PopupMenuItem(value: 'finalize', child: Text('Finalize')),
+        if (invoice.isDraft)
+          const PopupMenuItem(value: 'delete', child: Text('Delete draft')),
+      ],
+    );
+
+    if (action == null || !context.mounted) return;
+    final notifier = ref.read(saleInvoicesProvider.notifier);
+
+    switch (action) {
+      case 'edit':
+        await context.push('${AppRoutes.editSale}/${invoice.id}');
+      case 'finalize':
+        final error = await notifier.finalizeInvoice(invoice.id);
+        if (!context.mounted) return;
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        }
+      case 'delete':
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Delete draft?'),
+            content: Text('Delete draft ${invoice.invoiceNo}?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true || !context.mounted) return;
+        final error = await notifier.deleteDraft(invoice.id);
+        if (!context.mounted) return;
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error)),
+          );
+        }
+    }
   }
 }
 

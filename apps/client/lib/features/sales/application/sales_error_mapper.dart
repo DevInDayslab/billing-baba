@@ -35,5 +35,14 @@ SalesException mapSalesError(Object error) {
     );
   }
 
+  if (error is SalesException) return error;
+
   return SalesException(error.toString());
+}
+
+abstract final class SalesErrorMapper {
+  static String messageFor(Object error) {
+    if (error is SalesException) return error.message;
+    return mapSalesError(error).message;
+  }
 }

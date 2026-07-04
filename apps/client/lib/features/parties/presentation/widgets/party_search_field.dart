@@ -13,6 +13,7 @@ class PartySearchField extends ConsumerStatefulWidget {
   const PartySearchField({
     required this.value,
     required this.onSelected,
+    this.onPartySelectedWithId,
     this.onPartyCreated,
     this.hasError = false,
     this.emptyPlaceholder = 'Select party',
@@ -22,6 +23,7 @@ class PartySearchField extends ConsumerStatefulWidget {
 
   final String value;
   final ValueChanged<String> onSelected;
+  final void Function(String partyId, String partyName)? onPartySelectedWithId;
   final ValueChanged<AddPartyResult>? onPartyCreated;
   final bool hasError;
   final String emptyPlaceholder;
@@ -61,6 +63,12 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
   void _selectParty(String party) {
     _removeOverlay();
     widget.onSelected(party);
+
+    final parties = ref.read(partiesListProvider);
+    final match = parties.where((item) => item.name == party).firstOrNull;
+    if (match != null) {
+      widget.onPartySelectedWithId?.call(match.id, match.name);
+    }
   }
 
   List<String> get _filteredParties {
@@ -97,6 +105,12 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
 
     if (!mounted) return;
     widget.onSelected(result.partyName);
+    final parties = ref.read(partiesListProvider);
+    final match =
+        parties.where((party) => party.name == result.partyName).firstOrNull;
+    if (match != null) {
+      widget.onPartySelectedWithId?.call(match.id, match.name);
+    }
     widget.onPartyCreated?.call(result);
   }
 

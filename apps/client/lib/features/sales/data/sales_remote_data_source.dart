@@ -39,18 +39,31 @@ class SalesRemoteDataSource {
     );
   }
 
+  Future<SalesDocumentDto> updateDocument(
+    String id,
+    UpdateSalesDocumentRequest request,
+  ) async {
+    final response = await _dio.patch<Map<String, dynamic>>(
+      ApiEndpoints.salesDocument(id),
+      data: request.toJson(),
+    );
+    return SalesDocumentDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<void> deleteDocument(String id) async {
+    await _dio.delete<void>(ApiEndpoints.salesDocument(id));
+  }
+
   Future<SalesDocumentDto> finalizeDocument(
     String id, {
     String? godownId,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
+    await _dio.post<Map<String, dynamic>>(
       ApiEndpoints.salesDocumentFinalize(id),
       data: {'godown_id': ?godownId},
     );
-    final data = response.data?['data'];
-    if (data is Map<String, dynamic> && data.containsKey('document_number')) {
-      return getDocument(id);
-    }
     return getDocument(id);
   }
 
@@ -67,6 +80,26 @@ class SalesRemoteDataSource {
     );
   }
 
+  Future<SalesDocumentLineDto> updateLine(
+    String documentId,
+    String lineId,
+    UpdateSalesLineRequest request,
+  ) async {
+    final response = await _dio.patch<Map<String, dynamic>>(
+      ApiEndpoints.salesDocumentLine(documentId, lineId),
+      data: request.toJson(),
+    );
+    return SalesDocumentLineDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<void> deleteLine(String documentId, String lineId) async {
+    await _dio.delete<void>(
+      ApiEndpoints.salesDocumentLine(documentId, lineId),
+    );
+  }
+
   Future<PaginatedPaymentsDto> listPayments(PaymentListQuery query) async {
     final response = await _dio.get<Map<String, dynamic>>(
       ApiEndpoints.payments,
@@ -78,6 +111,19 @@ class SalesRemoteDataSource {
   Future<PaymentDto> createPayment(CreatePaymentRequest request) async {
     final response = await _dio.post<Map<String, dynamic>>(
       ApiEndpoints.payments,
+      data: request.toJson(),
+    );
+    return PaymentDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<PaymentDto> addPaymentAllocation(
+    String paymentId,
+    PaymentAllocationRequest request,
+  ) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.paymentAllocations(paymentId),
       data: request.toJson(),
     );
     return PaymentDto.fromJson(

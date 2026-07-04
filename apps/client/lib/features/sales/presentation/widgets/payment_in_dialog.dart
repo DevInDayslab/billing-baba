@@ -77,12 +77,12 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
     final payment = notifier.buildPaymentModel();
     if (payment == null) return;
 
-    final saved = await notifier.savePayment();
+    final error = await notifier.savePayment();
     if (!mounted) return;
 
-    if (!saved) {
+    if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save payment')),
+        SnackBar(content: Text(error)),
       );
       return;
     }
@@ -130,6 +130,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                               value: form.party,
                               emptyPlaceholder: 'Select Party',
                               onSelected: notifier.updateParty,
+                              onPartySelectedWithId: (partyId, name) =>
+                                  notifier.updateParty(name, partyId: partyId),
                               hasError:
                                   form.showValidationErrors &&
                                   form.party.trim().isEmpty,

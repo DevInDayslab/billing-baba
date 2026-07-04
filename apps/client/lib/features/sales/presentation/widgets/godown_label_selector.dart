@@ -7,11 +7,13 @@ class GodownLabelSelector extends StatefulWidget {
   const GodownLabelSelector({
     required this.value,
     required this.onSelected,
+    this.options = SaleDropdownOptions.godowns,
     super.key,
   });
 
   final String value;
   final ValueChanged<String> onSelected;
+  final List<String> options;
 
   @override
   State<GodownLabelSelector> createState() => GodownLabelSelectorState();
@@ -37,7 +39,7 @@ class GodownLabelSelectorState extends State<GodownLabelSelector> {
         minimumSize: const WidgetStatePropertyAll(Size(160, 0)),
       ),
       menuChildren: [
-        for (final option in SaleDropdownOptions.godowns)
+        for (final option in widget.options)
           MenuItemButton(
             onPressed: () => widget.onSelected(option),
             style: ButtonStyle(

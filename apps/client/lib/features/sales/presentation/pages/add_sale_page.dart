@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/add_sale_footer.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
@@ -139,11 +140,40 @@ class _PageHeader extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.md),
-        GodownLabelSelector(
+        _GodownSelector(
           value: form.godown,
           onSelected: notifier.updateGodown,
         ),
       ],
+    );
+  }
+}
+
+class _GodownSelector extends ConsumerWidget {
+  const _GodownSelector({
+    required this.value,
+    required this.onSelected,
+  });
+
+  final String value;
+  final void Function(String name, {String? godownId}) onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final godownsAsync = ref.watch(inventoryGodownsProvider);
+    final options = godownsAsync.maybeWhen(
+      data: (godowns) => godowns.map((godown) => godown.name).toList(),
+      orElse: () => SaleDropdownOptions.godowns,
+    );
+
+    return GodownLabelSelector(
+      value: value,
+      options: options,
+      onSelected: (name) {
+        final godowns = ref.read(inventoryGodownsProvider).value ?? [];
+        final match = godowns.where((godown) => godown.name == name).firstOrNull;
+        onSelected(name, godownId: match?.id);
+      },
     );
   }
 }
@@ -263,9 +293,14 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                   Expanded(
                     child: BillingNamePartySearchField(
                       value: form.billingName,
-                      hasError: form.billingNameHasError,
+                      hasError: form.partyHasError,
                       emptyPlaceholder: 'Billing Name (Optional)',
                       onSelected: notifier.updateBillingName,
+                      onPartySelectedWithId: (partyId, name) =>
+                          notifier.updateParty(
+                            partyId: partyId,
+                            partyName: name,
+                          ),
                       onPartyCreated: (party) {
                         notifier.updateBillingName(party.partyName);
                         if (party.phone.isNotEmpty) {
@@ -543,14 +578,12 @@ class _BottomActionBar extends ConsumerWidget {
     WidgetRef ref,
     AddSaleForm notifier,
   ) async {
-    if (!notifier.validate()) return;
-
-    final saved = await notifier.saveInvoice();
+    final error = await notifier.saveInvoice();
     if (!context.mounted) return;
 
-    if (!saved) {
+    if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save invoice')),
+        SnackBar(content: Text(error)),
       );
       return;
     }
