@@ -1,10 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
@@ -44,16 +43,17 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
   Widget build(BuildContext context) {
     final filters = ref.watch(reportFiltersProvider);
     final selectedItemId = filters.itemId;
+    final items = ref.watch(inventoryItemsProvider).value ?? [];
     var selectedItemName = 'Select Item';
     if (selectedItemId != null) {
-      for (final item in InventoryCatalog.items) {
+      for (final item in items) {
         if (item.id == selectedItemId) {
           selectedItemName = item.name;
           break;
         }
       }
     }
-    final itemNames = InventoryCatalog.items.map((i) => i.name).toList();
+    final itemNames = items.map((item) => item.name).toList();
     final reportAsync = ref.watch(itemDetailReportProvider);
 
     return ReportAsyncBody(
@@ -233,10 +233,9 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
                                           .setItemId(null);
                                       return;
                                     }
-                                    final item = InventoryCatalog.items
-                                        .firstWhere(
-                                          (entry) => entry.name == value,
-                                        );
+                                    final item = items.firstWhere(
+                                      (entry) => entry.name == value,
+                                    );
                                     ref
                                         .read(reportFiltersProvider.notifier)
                                         .setItemId(item.id);

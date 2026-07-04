@@ -8,13 +8,21 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
-import 'package:billing_baba/features/reports/utils/report_export_service.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class BillWiseProfitReportContent extends ConsumerWidget {
   const BillWiseProfitReportContent({super.key});
+
+  static const _exportHeaders = [
+    'Date',
+    'Invoice No',
+    'Party',
+    'Total Sale Amount',
+    'Profit/Loss',
+  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,26 +39,24 @@ class BillWiseProfitReportContent extends ConsumerWidget {
             rows.fold<double>(0, (sum, row) => sum + row.profit);
 
         void exportCsv() {
-          ReportExportService.exportAndNotify(
+          reportExportTable(
             context: context,
             title: 'Bill Wise Profit',
             filename: 'bill-wise-profit',
-            headers: const [
-              'Date',
-              'Invoice No',
-              'Party',
-              'Total Sale Amount',
-              'Profit/Loss',
-            ],
+            headers: _exportHeaders,
             rows: [
-              for (final row in rows)
-                [
-                  formatReportDate(row.date),
-                  row.invoiceNo,
-                  row.partyName,
-                  formatReportCurrency(row.saleAmount),
-                  formatReportCurrency(row.profit),
-                ],
+              for (final row in rows) _billWiseProfitExportRow(row),
+            ],
+          );
+        }
+
+        void exportPrint() {
+          reportPrintTable(
+            context: context,
+            title: 'Bill Wise Profit',
+            headers: _exportHeaders,
+            rows: [
+              for (final row in rows) _billWiseProfitExportRow(row),
             ],
           );
         }
@@ -74,29 +80,7 @@ class BillWiseProfitReportContent extends ConsumerWidget {
                       ReportIconActionButton(
                         icon: Icons.print_outlined,
                         tooltip: 'Print',
-                        onTap: () => ReportExportService.showPrintPreview(
-                          context: context,
-                          title: 'Bill Wise Profit',
-                          content: ReportExportService.toCsv(
-                            headers: const [
-                              'Date',
-                              'Invoice No',
-                              'Party',
-                              'Total Sale Amount',
-                              'Profit/Loss',
-                            ],
-                            rows: [
-                              for (final row in rows)
-                                [
-                                  formatReportDate(row.date),
-                                  row.invoiceNo,
-                                  row.partyName,
-                                  formatReportCurrency(row.saleAmount),
-                                  formatReportCurrency(row.profit),
-                                ],
-                            ],
-                          ),
-                        ),
+                        onTap: exportPrint,
                       ),
                     ],
                   ),
@@ -278,6 +262,16 @@ class BillWiseProfitReportContent extends ConsumerWidget {
   }
 }
 
+List<String> _billWiseProfitExportRow(ReportBillWiseProfitRow row) {
+  return [
+    formatReportDate(row.date),
+    row.invoiceNo,
+    row.partyName,
+    formatReportCurrency(row.saleAmount),
+    formatReportCurrency(row.profit),
+  ];
+}
+
 class _BillWiseProfitRow extends StatelessWidget {
   const _BillWiseProfitRow({required this.row, required this.index});
 
@@ -315,7 +309,12 @@ class _BillWiseProfitRow extends StatelessWidget {
           ReportAlignedCell.fixed(
             80,
             child: IconButton(
-              onPressed: () {},
+              onPressed: () => reportPrintRow(
+                context: context,
+                title: 'Bill ${row.invoiceNo}',
+                headers: BillWiseProfitReportContent._exportHeaders,
+                row: _billWiseProfitExportRow(row),
+              ),
               icon: const Icon(Icons.visibility_outlined, size: 18),
               color: AppColors.textSecondary,
               padding: EdgeInsets.zero,

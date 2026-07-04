@@ -8,6 +8,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -59,6 +60,28 @@ class _Gstr9ReportContentState extends ConsumerState<Gstr9ReportContent> {
       onRetry: () => ref.read(gstr9ReportProvider.notifier).refresh(),
       data: (report) {
         final supplyRows = report.rows;
+        const exportHeaders = [
+          'Code',
+          'Nature of Supplies',
+          'Taxable Value',
+          'Central Tax',
+          'State Tax / UT Tax',
+          'Integrated Tax',
+          'Cess',
+        ];
+        const rowCodes = ['A', 'B', 'C', 'D'];
+        final exportRows = [
+          for (var i = 0; i < supplyRows.length; i++)
+            [
+              i < rowCodes.length ? rowCodes[i] : '${i + 1}',
+              supplyRows[i].label,
+              formatReportCurrency(supplyRows[i].taxableValue),
+              formatReportCurrency(supplyRows[i].centralTax),
+              formatReportCurrency(supplyRows[i].stateTax),
+              formatReportCurrency(supplyRows[i].integratedTax),
+              formatReportCurrency(supplyRows[i].cess),
+            ],
+        ];
 
         return ColoredBox(
       color: AppColors.background,
@@ -87,13 +110,26 @@ class _Gstr9ReportContentState extends ConsumerState<Gstr9ReportContent> {
                         setState(() => _financialYear = value),
                   ),
                   const Spacer(),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Excel',
                     icon: Icons.table_chart_outlined,
+                    onTap: () => reportExportTable(
+                      context: context,
+                      title: 'GSTR-9',
+                      filename: 'gstr9-report',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Print',
                     icon: Icons.print_outlined,
+                    onTap: () => reportPrintTable(
+                      context: context,
+                      title: 'GSTR-9',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
                 ],
               ),

@@ -6,13 +6,13 @@ import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_filter_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -127,18 +127,9 @@ class SalePurchaseByPartyReportContent extends ConsumerWidget {
                       padding: const EdgeInsets.all(AppSpacing.md),
                       child: Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 180,
-                            child: SaleFilterDropdown(
-                              label: 'All Parties',
-                              options: const [
-                                'All Parties',
-                                'Customers',
-                                'Suppliers',
-                              ],
-                              selected: 'All Parties',
-                              onSelected: (_) {},
-                            ),
+                            child: ReportPartyTypeFilter(),
                           ),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(

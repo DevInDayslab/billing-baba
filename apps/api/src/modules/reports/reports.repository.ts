@@ -56,15 +56,15 @@ export class ReportsRepository {
     return this.phase1.getPurchaseReport(businessId, query);
   }
 
-  getStockSummary(businessId: string, query: ReportBaseQuery) {
+  getStockSummary(businessId: string, query: ReportExtendedQuery) {
     return this.phase1.getStockSummary(businessId, query);
   }
 
-  getLowStock(businessId: string, query: ReportBaseQuery) {
+  getLowStock(businessId: string, query: ReportExtendedQuery) {
     return this.phase1.getLowStock(businessId, query);
   }
 
-  getPartyOutstanding(businessId: string, query: ReportBaseQuery) {
+  getPartyOutstanding(businessId: string, query: ReportExtendedQuery) {
     return this.phase1.getPartyOutstanding(businessId, query);
   }
 
@@ -76,7 +76,7 @@ export class ReportsRepository {
     return this.phase1.getDayBook(businessId, query);
   }
 
-  getAllTransactions(businessId: string, query: ReportBaseQuery) {
+  getAllTransactions(businessId: string, query: ReportExtendedQuery) {
     return this.phase1.getAllTransactions(businessId, query);
   }
 

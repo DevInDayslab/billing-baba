@@ -5,6 +5,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -58,6 +59,29 @@ class _ItemCategoryWiseProfitLossReportContentState
               0,
               (sum, row) => sum + (row.saleAmount - row.purchaseAmount),
             );
+        const exportHeaders = [
+          'Item Category',
+          'Sale',
+          'CR. Note / Sale Return',
+          'Purchase',
+          'DR. Note / Purchase Return',
+          'Opening Stock',
+          'Closing Stock',
+          'Net Profit (+) / Loss (-)',
+        ];
+        final exportRows = [
+          for (final row in rows)
+            [
+              row.category,
+              formatReportCurrency(row.saleAmount),
+              '-',
+              formatReportCurrency(row.purchaseAmount),
+              '-',
+              '-',
+              '-',
+              formatReportCurrency(row.saleAmount - row.purchaseAmount),
+            ],
+        ];
 
         return ColoredBox(
       color: AppColors.background,
@@ -182,13 +206,26 @@ class _ItemCategoryWiseProfitLossReportContentState
                       ),
                     ],
                   ),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Excel',
                     icon: Icons.table_chart_outlined,
+                    onTap: () => reportExportTable(
+                      context: context,
+                      title: 'Item Category Wise Profit / Loss',
+                      filename: 'item-category-wise-profit-loss',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Print',
                     icon: Icons.print_outlined,
+                    onTap: () => reportPrintTable(
+                      context: context,
+                      title: 'Item Category Wise Profit / Loss',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
                 ],
               ),

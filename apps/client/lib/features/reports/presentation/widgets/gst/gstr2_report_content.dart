@@ -2,14 +2,17 @@ import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/gst/gstr_month_filter_bar.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 class Gstr2ReportContent extends ConsumerStatefulWidget {
   const Gstr2ReportContent({super.key});
@@ -19,12 +22,22 @@ class Gstr2ReportContent extends ConsumerStatefulWidget {
 }
 
 class _Gstr2ReportContentState extends ConsumerState<Gstr2ReportContent> {
-  late DateTime _fromMonth;
-  late DateTime _toMonth;
   String _activeTab = 'Purchase';
   bool _considerNonTaxExempted = false;
 
-  static final _monthFormat = DateFormat('MM/yyyy');
+  static const _exportHeaders = [
+    '#',
+    'GSTIN/UIN',
+    'Party Name',
+    'Bill No.',
+    'Date',
+    'Value (₹)',
+    'Tax Rate',
+    'Cess Rate',
+    'Taxable Value',
+    'Integrated Tax',
+  ];
+
   static const _headerStyle = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w600,
@@ -32,161 +45,176 @@ class _Gstr2ReportContentState extends ConsumerState<Gstr2ReportContent> {
     letterSpacing: 0.4,
   );
 
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _fromMonth = DateTime(now.year, now.month);
-    _toMonth = DateTime(now.year, now.month);
-  }
-
-  Future<void> _pickMonth({required bool isFrom}) async {
-    final initial = isFrom ? _fromMonth : _toMonth;
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked == null || !mounted) return;
-    setState(() {
-      final month = DateTime(picked.year, picked.month);
-      if (isFrom) {
-        _fromMonth = month;
-      } else {
-        _toMonth = month;
-      }
-    });
+  List<List<String>> _exportRows(List<ReportGstrRow> rows) {
+    return [
+      for (var i = 0; i < rows.length; i++)
+        [
+          '${i + 1}',
+          rows[i].gstin,
+          rows[i].partyName,
+          rows[i].invoiceNo,
+          formatReportDate(rows[i].date),
+          formatReportCurrency(rows[i].value),
+          '${rows[i].taxRate}%',
+          rows[i].cessRate > 0 ? '${rows[i].cessRate}%' : '-',
+          formatReportCurrency(rows[i].taxableValue),
+          formatReportCurrency(rows[i].integratedTax),
+        ],
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(gstr2ReportProvider).value?.rows ?? [];
+    final reportAsync = ref.watch(gstr2ReportProvider);
 
-    return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: ReportCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Wrap(
-                spacing: AppSpacing.lg,
-                runSpacing: AppSpacing.sm,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  _MonthField(
-                    label: 'From:',
-                    value: _monthFormat.format(_fromMonth),
-                    onTap: () => _pickMonth(isFrom: true),
-                  ),
-                  _MonthField(
-                    label: 'To:',
-                    value: _monthFormat.format(_toMonth),
-                    onTap: () => _pickMonth(isFrom: false),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(gstr2ReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final exportRows = _exportRows(rows);
+
+        return ColoredBox(
+          color: AppColors.background,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
+                child: ReportCard(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Wrap(
+                    spacing: AppSpacing.lg,
+                    runSpacing: AppSpacing.sm,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Checkbox(
-                        value: _considerNonTaxExempted,
-                        onChanged: (value) => setState(
-                          () => _considerNonTaxExempted = value ?? false,
-                        ),
-                        visualDensity: VisualDensity.compact,
+                      const GstrMonthFilterBar(),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Checkbox(
+                            value: _considerNonTaxExempted,
+                            onChanged: (value) => setState(
+                              () => _considerNonTaxExempted = value ?? false,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          const Text(
+                            'Consider non-tax as exempted',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ],
                       ),
-                      const Text(
-                        'Consider non-tax as exempted',
-                        style: TextStyle(fontSize: 13),
+                      ReportTextActionButton(
+                        label: 'Excel Report',
+                        icon: Icons.table_chart_outlined,
+                        onTap: () => reportExportTable(
+                          context: context,
+                          title: 'GSTR-2',
+                          filename: 'gstr2-report',
+                          headers: _exportHeaders,
+                          rows: exportRows,
+                        ),
+                      ),
+                      ReportTextActionButton(
+                        label: 'Print',
+                        icon: Icons.print_outlined,
+                        onTap: () => reportPrintTable(
+                          context: context,
+                          title: 'GSTR-2',
+                          headers: _exportHeaders,
+                          rows: exportRows,
+                        ),
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: _GstrTabSwitcher(
-              activeTab: _activeTab,
-              onChanged: (tab) => setState(() => _activeTab = tab),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                0,
-                AppSpacing.lg,
-                AppSpacing.lg,
-              ),
-              child: ReportCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: rows.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'No data to display for the selected period.',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            )
-                          : LayoutBuilder(
-                              builder: (context, constraints) {
-                                final tableWidth = constraints.maxWidth.isFinite
-                                    ? math.max(
-                                        constraints.maxWidth,
-                                        _Gstr2ColumnLayout.minWidth,
-                                      )
-                                    : _Gstr2ColumnLayout.minWidth;
-
-                                return SingleChildScrollView(
-                                  child: SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: SizedBox(
-                                      width: tableWidth,
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [
-                                          const _Gstr2TableHeader(
-                                            headerStyle: _headerStyle,
-                                          ),
-                                          for (var i = 0; i < rows.length; i++)
-                                            ReportAlignedRowStrip(
-                                              index: i,
-                                              child: _Gstr2DataRow(
-                                                index: i + 1,
-                                                row: rows[i],
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                  ],
                 ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: _GstrTabSwitcher(
+                  activeTab: _activeTab,
+                  onChanged: (tab) => setState(() => _activeTab = tab),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: ReportCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: rows.isEmpty
+                              ? const Center(
+                                  child: Text(
+                                    'No data to display for the selected period.',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                )
+                              : LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final tableWidth =
+                                        constraints.maxWidth.isFinite
+                                            ? math.max(
+                                                constraints.maxWidth,
+                                                _Gstr2ColumnLayout.minWidth,
+                                              )
+                                            : _Gstr2ColumnLayout.minWidth;
+
+                                    return SingleChildScrollView(
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: SizedBox(
+                                          width: tableWidth,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              const _Gstr2TableHeader(
+                                                headerStyle: _headerStyle,
+                                              ),
+                                              for (var i = 0;
+                                                  i < rows.length;
+                                                  i++)
+                                                ReportAlignedRowStrip(
+                                                  index: i,
+                                                  child: _Gstr2DataRow(
+                                                    index: i + 1,
+                                                    row: rows[i],
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -282,62 +310,6 @@ class _Gstr2DataRow extends StatelessWidget {
   static const double cessWidth = _Gstr2ColumnLayout.cessWidth;
   static const double taxableWidth = _Gstr2ColumnLayout.taxableWidth;
   static const double integratedWidth = _Gstr2ColumnLayout.integratedWidth;
-}
-
-class _MonthField extends StatelessWidget {
-  const _MonthField({
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: 8,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              border: Border.all(color: reportCardBorder),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.calendar_today_outlined,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: 6),
-                Text(value, style: const TextStyle(fontSize: 13)),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 class _GstrTabSwitcher extends StatelessWidget {

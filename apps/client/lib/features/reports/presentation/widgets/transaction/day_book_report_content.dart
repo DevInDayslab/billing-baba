@@ -9,6 +9,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -18,6 +19,15 @@ import 'package:intl/intl.dart';
 
 class DayBookReportContent extends ConsumerStatefulWidget {
   const DayBookReportContent({super.key});
+
+  static const _exportHeaders = [
+    'Name',
+    'Ref No.',
+    'Type',
+    'Total',
+    'Money In',
+    'Money Out',
+  ];
 
   @override
   ConsumerState<DayBookReportContent> createState() =>
@@ -53,6 +63,9 @@ class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
         final totalMoneyIn = report.totalMoneyIn;
         final totalMoneyOut = report.totalMoneyOut;
         final netTotal = report.netTotal;
+        final exportRows = [
+          for (final row in rows) _dayBookExportRow(row),
+        ];
         return ColoredBox(
       color: AppColors.background,
       child: Column(
@@ -94,13 +107,26 @@ class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
                   ),
                 ),
                 const Spacer(),
-                const ReportTextActionButton(
+                ReportTextActionButton(
                   label: 'Excel Report',
                   icon: Icons.table_chart_outlined,
+                  onTap: () => reportExportTable(
+                    context: context,
+                    title: 'Day Book',
+                    filename: 'day-book',
+                    headers: DayBookReportContent._exportHeaders,
+                    rows: exportRows,
+                  ),
                 ),
-                const ReportTextActionButton(
+                ReportTextActionButton(
                   label: 'Print',
                   icon: Icons.print_outlined,
+                  onTap: () => reportPrintTable(
+                    context: context,
+                    title: 'Day Book',
+                    headers: DayBookReportContent._exportHeaders,
+                    rows: exportRows,
+                  ),
                 ),
               ],
             ),
@@ -201,6 +227,17 @@ class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
   }
 }
 
+List<String> _dayBookExportRow(ReportTransactionRow row) {
+  return [
+    row.partyName,
+    row.refNo,
+    row.type,
+    formatReportCurrencyCompact(row.total),
+    if (row.moneyIn > 0) formatReportCurrencyCompact(row.moneyIn) else '',
+    if (row.moneyOut > 0) formatReportCurrencyCompact(row.moneyOut) else '',
+  ];
+}
+
 class _DayBookRow extends StatelessWidget {
   const _DayBookRow({required this.row, required this.index});
 
@@ -245,7 +282,12 @@ class _DayBookRow extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () => reportPrintRow(
+                    context: context,
+                    title: 'Day Book ${row.refNo}',
+                    headers: DayBookReportContent._exportHeaders,
+                    row: _dayBookExportRow(row),
+                  ),
                   icon: const Icon(Icons.print_outlined, size: 18),
                   color: AppColors.textSecondary,
                   padding: EdgeInsets.zero,
@@ -254,14 +296,17 @@ class _DayBookRow extends StatelessWidget {
                     minHeight: 32,
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.share_outlined, size: 18),
-                  color: AppColors.textSecondary,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
+                const Tooltip(
+                  message: 'Share is not available yet.',
+                  child: IconButton(
+                    onPressed: null,
+                    icon: Icon(Icons.share_outlined, size: 18),
+                    color: AppColors.textSecondary,
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                 ),
               ],

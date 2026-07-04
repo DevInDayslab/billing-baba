@@ -59,6 +59,7 @@ import type {
   PartyStatementQuery,
   ReportBaseQuery,
   ReportDateQuery,
+  ReportExtendedQuery,
 } from '../reports.schema';
 import { resolveRange, resolveSingleDate, toPeriodMeta } from './reports.helpers';
 
@@ -291,15 +292,16 @@ export class Phase1ReportsRepository {
 
   async getStockSummary(
     businessId: string,
-    query: ReportBaseQuery,
+    query: ReportExtendedQuery,
   ): Promise<{ payload: StockSummaryPayload; total: number }> {
     const [totalStockValue, result] = await Promise.all([
       getTotalStockValue(this.db, businessId, query.godown_id),
       listStockItemAggregates(this.db, businessId, {
         godownId: query.godown_id,
         itemId: query.item_id,
+        categoryId: query.category_id,
         q: query.q,
-        inStockOnly: false,
+        inStockOnly: query.in_stock_only ?? false,
         page: query.page,
         limit: query.limit,
       }),
@@ -345,11 +347,13 @@ export class Phase1ReportsRepository {
 
   async getLowStock(
     businessId: string,
-    query: ReportBaseQuery,
+    query: ReportExtendedQuery,
   ): Promise<{ payload: LowStockPayload; total: number }> {
     const result = await listStockItemAggregates(this.db, businessId, {
       godownId: query.godown_id,
+      categoryId: query.category_id,
       q: query.q,
+      inStockOnly: query.in_stock_only ?? false,
       lowStockOnly: true,
       page: query.page,
       limit: query.limit,
@@ -376,7 +380,7 @@ export class Phase1ReportsRepository {
 
   async getPartyOutstanding(
     businessId: string,
-    query: ReportBaseQuery,
+    query: ReportExtendedQuery,
   ): Promise<{ payload: PartyOutstandingPayload; total: number }> {
     const summary =
       await this.outstandingRepository.getOutstandingSummary(businessId);
@@ -389,6 +393,9 @@ export class Phase1ReportsRepository {
         name: parties.name,
         phone: parties.mobile,
         email: parties.email,
+        partyType: parties.partyType,
+        partyCategory: parties.partyCategory,
+        isActive: parties.isActive,
       })
       .from(parties)
       .where(
@@ -425,6 +432,39 @@ export class Phase1ReportsRepository {
           row.party_name.toLowerCase().includes(needle) ||
           (row.phone?.toLowerCase().includes(needle) ?? false),
       );
+    }
+
+    if (query.party_type) {
+      rows = rows.filter((row) => {
+        const party = partyRows.find((p) => p.id === row.party_id);
+        if (!party) return false;
+        if (query.party_type === 'customer') {
+          return party.partyType === 'customer' || party.partyType === 'both';
+        }
+        if (query.party_type === 'supplier') {
+          return party.partyType === 'supplier' || party.partyType === 'both';
+        }
+        return party.partyType === query.party_type;
+      });
+    }
+
+    if (query.party_group) {
+      rows = rows.filter((row) => {
+        const party = partyRows.find((p) => p.id === row.party_id);
+        return party?.partyCategory === query.party_group;
+      });
+    }
+
+    if (query.status === 'active') {
+      rows = rows.filter((row) => {
+        const party = partyRows.find((p) => p.id === row.party_id);
+        return party?.isActive ?? true;
+      });
+    } else if (query.status === 'inactive') {
+      rows = rows.filter((row) => {
+        const party = partyRows.find((p) => p.id === row.party_id);
+        return party?.isActive === false;
+      });
     }
 
     const total = rows.length;
@@ -678,15 +718,16 @@ export class Phase1ReportsRepository {
 
   async getAllTransactions(
     businessId: string,
-    query: ReportBaseQuery,
+    query: ReportExtendedQuery,
   ): Promise<{ payload: AllTransactionsPayload; total: number }> {
     const range = resolveRange(query);
-    const dayBookStyle = await this.buildTransactionUnion(
+    let dayBookStyle = await this.buildTransactionUnion(
       businessId,
       range.from,
       range.to,
       query.party_id,
       query.q,
+      query.document_type,
     );
 
     const total = dayBookStyle.length;
@@ -708,6 +749,7 @@ export class Phase1ReportsRepository {
     to: Date,
     partyId?: string,
     q?: string,
+    documentType?: string,
   ) {
     const salesFilters = [
       eq(salesDocuments.businessId, businessId),
@@ -844,8 +886,26 @@ export class Phase1ReportsRepository {
       }),
     ];
 
-    return rows.sort(
+    const typeFilter = documentType
+      ? this.mapDocumentTypeFilter(documentType)
+      : null;
+    const filteredRows = typeFilter
+      ? rows.filter((row) => row.type === typeFilter)
+      : rows;
+
+    return filteredRows.sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+  }
+
+  private mapDocumentTypeFilter(documentType: string): string | null {
+    return (
+      {
+        sale: 'Sale',
+        purchase: 'Purchase',
+        payment_in: 'Payment In',
+        payment_out: 'Payment Out',
+      }[documentType] ?? null
     );
   }
 

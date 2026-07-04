@@ -87,6 +87,7 @@ export async function listStockItemAggregates(
   options: {
     godownId?: string;
     itemId?: string;
+    categoryId?: string;
     q?: string;
     inStockOnly?: boolean;
     lowStockOnly?: boolean;
@@ -101,6 +102,9 @@ export async function listStockItemAggregates(
   const conditions = [];
   if (options.itemId) {
     conditions.push(sql`${itemAgg.itemId} = ${options.itemId}`);
+  }
+  if (options.categoryId) {
+    conditions.push(sql`${itemAgg.categoryId} = ${options.categoryId}`);
   }
   if (options.q) {
     conditions.push(sql`${itemAgg.itemName} ILIKE ${`%${options.q}%`}`);

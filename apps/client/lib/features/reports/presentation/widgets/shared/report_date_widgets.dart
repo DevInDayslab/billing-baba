@@ -1,9 +1,99 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+
+class ReportPeriodFilterBar extends ConsumerStatefulWidget {
+  const ReportPeriodFilterBar({
+    this.showFirmFilter = true,
+    this.trailing,
+    super.key,
+  });
+
+  final bool showFirmFilter;
+  final Widget? trailing;
+
+  @override
+  ConsumerState<ReportPeriodFilterBar> createState() =>
+      _ReportPeriodFilterBarState();
+}
+
+class _ReportPeriodFilterBarState extends ConsumerState<ReportPeriodFilterBar> {
+  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
+
+  static const _periodOptions = [
+    'All Time',
+    'Today',
+    'Yesterday',
+    'This Week',
+    'Last Week',
+    'This Month',
+    'Last Month',
+    'This Quarter',
+    'This Year',
+    'Custom',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final filters = ref.watch(reportFiltersProvider);
+    final notifier = ref.read(reportFiltersProvider.notifier);
+    final dateRange = filters.customDateRange ??
+        DateTimeRange(start: DateTime.now(), end: DateTime.now());
+
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        SaleFilterDropdown(
+          label: filters.periodLabel,
+          options: _periodOptions,
+          selected: filters.periodLabel,
+          onSelected: (value) {
+            notifier.setPeriod(ReportPeriod.fromLabel(value));
+          },
+        ),
+        if (filters.period == ReportPeriod.custom) ...[
+          const Text(
+            'Between',
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          ),
+          SaleDateRangePickerAnchor(
+            key: _datePickerKey,
+            initialRange: dateRange,
+            onRangeSelected: notifier.setCustomDateRange,
+            child: SaleFilterChip(
+              label: formatSaleDateRangeLabel(dateRange),
+              onTap: () => _datePickerKey.currentState?.toggle(),
+            ),
+          ),
+        ],
+        if (widget.showFirmFilter)
+          Tooltip(
+            message: 'Multi-firm filtering is not available.',
+            child: IgnorePointer(
+              child: Opacity(
+                opacity: 0.55,
+                child: SaleFilterDropdown(
+                  label: 'ALL FIRMS',
+                  options: const ['ALL FIRMS'],
+                  selected: 'ALL FIRMS',
+                  onSelected: (_) {},
+                ),
+              ),
+            ),
+          ),
+        if (widget.trailing != null) widget.trailing!,
+      ],
+    );
+  }
+}
 
 class ReportDateRangeBar extends StatefulWidget {
   const ReportDateRangeBar({
@@ -104,75 +194,6 @@ class _ReportDateRangeBarState extends State<ReportDateRangeBar> {
           const SizedBox(width: AppSpacing.sm),
           widget.trailing!,
         ],
-      ],
-    );
-  }
-}
-
-class ReportPeriodFilterBar extends StatefulWidget {
-  const ReportPeriodFilterBar({
-    this.showFirmFilter = true,
-    this.trailing,
-    super.key,
-  });
-
-  final bool showFirmFilter;
-  final Widget? trailing;
-
-  @override
-  State<ReportPeriodFilterBar> createState() => _ReportPeriodFilterBarState();
-}
-
-class _ReportPeriodFilterBarState extends State<ReportPeriodFilterBar> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  String _period = 'This Month';
-  String _firm = 'ALL FIRMS';
-  DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2025, 9),
-    end: DateTime(2025, 9, 30),
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        SaleFilterDropdown(
-          label: _period,
-          options: const [
-            'All Time',
-            'Today',
-            'This Week',
-            'This Month',
-            'This Year',
-            'Custom',
-          ],
-          selected: _period,
-          onSelected: (value) => setState(() => _period = value),
-        ),
-        const Text(
-          'Between',
-          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-        ),
-        SaleDateRangePickerAnchor(
-          key: _datePickerKey,
-          initialRange: _dateRange,
-          onRangeSelected: (range) => setState(() => _dateRange = range),
-          child: SaleFilterChip(
-            label: formatSaleDateRangeLabel(_dateRange),
-            onTap: () => _datePickerKey.currentState?.toggle(),
-          ),
-        ),
-        if (widget.showFirmFilter)
-          SaleFilterDropdown(
-            label: _firm,
-            options: const ['ALL FIRMS', 'Firm A', 'Firm B'],
-            selected: _firm,
-            onSelected: (value) => setState(() => _firm = value),
-          ),
-        if (widget.trailing != null) widget.trailing!,
       ],
     );
   }

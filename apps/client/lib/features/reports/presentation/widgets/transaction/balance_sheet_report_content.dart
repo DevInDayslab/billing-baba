@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
@@ -6,6 +7,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,17 +34,21 @@ class _BalanceSheetReportContentState
     return ReportAsyncBody(
       value: reportAsync,
       onRetry: () => ref.read(balanceSheetReportProvider.notifier).refresh(),
-      data: (report) => ColoredBox(
+      data: (report) {
+        const exportHeaders = ['Section', 'Account', 'Amount'];
+        final exportRows = _balanceSheetExportRows(report);
+
+        return ColoredBox(
         color: AppColors.background,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Spacer(),
-                  Text(
+                  const Spacer(),
+                  const Text(
                     'Balance Sheet',
                     style: TextStyle(
                       fontSize: 22,
@@ -50,10 +56,25 @@ class _BalanceSheetReportContentState
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  Spacer(),
-                  ReportPdfChip(),
-                  SizedBox(width: AppSpacing.sm),
-                  ReportXlsChip(),
+                  const Spacer(),
+                  ReportPdfChip(
+                    onTap: () => reportPrintTable(
+                      context: context,
+                      title: 'Balance Sheet',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  ReportXlsChip(
+                    onTap: () => reportExportTable(
+                      context: context,
+                      title: 'Balance Sheet',
+                      filename: 'balance-sheet',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
@@ -138,9 +159,41 @@ class _BalanceSheetReportContentState
             ],
           ),
         ),
-      ),
+      );
+      },
     );
   }
+}
+
+List<List<String>> _balanceSheetExportRows(BalanceSheetReportData report) {
+  final rows = <List<String>>[
+    ['Assets', '', ''],
+    for (final item in report.assets)
+      [
+        '',
+        item.name,
+        item.isHeader ? '' : formatReportCurrencyCompact(item.amount),
+      ],
+    [
+      '',
+      'Total Assets',
+      formatReportCurrencyCompact(report.assetsTotal),
+    ],
+    ['', '', ''],
+    ['Equities & Liabilities', '', ''],
+    for (final item in report.liabilities)
+      [
+        '',
+        item.name,
+        item.isHeader ? '' : formatReportCurrencyCompact(item.amount),
+      ],
+    [
+      '',
+      'Total Equities & Liabilities',
+      formatReportCurrencyCompact(report.liabilitiesTotal),
+    ],
+  ];
+  return rows;
 }
 
 class _BalanceColumn extends StatelessWidget {

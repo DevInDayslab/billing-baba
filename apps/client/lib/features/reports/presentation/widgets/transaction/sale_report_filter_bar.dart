@@ -8,8 +8,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 
-class SaleReportFilterBar extends ConsumerWidget {
+class SaleReportFilterBar extends ConsumerStatefulWidget {
   const SaleReportFilterBar({super.key});
+
+  @override
+  ConsumerState<SaleReportFilterBar> createState() =>
+      _SaleReportFilterBarState();
+}
+
+class _SaleReportFilterBarState extends ConsumerState<SaleReportFilterBar> {
+  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
 
   static const _periodOptions = [
     'All Time',
@@ -25,7 +33,7 @@ class SaleReportFilterBar extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final filters = ref.watch(reportFiltersProvider);
     final notifier = ref.read(reportFiltersProvider.notifier);
     final dateRange = filters.customDateRange ??
@@ -65,11 +73,12 @@ class SaleReportFilterBar extends ConsumerWidget {
             ),
             if (filters.period == ReportPeriod.custom)
               SaleDateRangePickerAnchor(
+                key: _datePickerKey,
                 initialRange: dateRange,
                 onRangeSelected: notifier.setCustomDateRange,
                 child: SaleFilterChip(
                   label: formatSaleDateRangeLabel(dateRange),
-                  onTap: () {},
+                  onTap: () => _datePickerKey.currentState?.toggle(),
                 ),
               ),
           ],

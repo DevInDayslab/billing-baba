@@ -9,13 +9,24 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
-import 'package:billing_baba/features/reports/utils/report_export_service.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CashFlowReportContent extends ConsumerStatefulWidget {
   const CashFlowReportContent({super.key});
+
+  static const _exportHeaders = [
+    'Date',
+    'Ref No',
+    'Name',
+    'Category',
+    'Type',
+    'Cash In',
+    'Cash Out',
+    'Running Balance',
+  ];
 
   @override
   ConsumerState<CashFlowReportContent> createState() =>
@@ -50,36 +61,26 @@ class _CashFlowReportContentState extends ConsumerState<CashFlowReportContent> {
         }).toList();
 
         void exportCsv() {
-          ReportExportService.exportAndNotify(
+          reportExportTable(
             context: context,
             title: 'Cash Flow',
             filename: 'cash-flow',
-            headers: const [
-              'Date',
-              'Ref No',
-              'Name',
-              'Category',
-              'Type',
-              'Cash In',
-              'Cash Out',
-              'Running Balance',
-            ],
+            headers: CashFlowReportContent._exportHeaders,
             rows: [
               for (final entry in rowsWithBalance)
-                [
-                  formatReportDate(entry.row.date),
-                  entry.row.refNo,
-                  entry.row.partyName,
-                  entry.row.category,
-                  entry.row.type,
-                  entry.row.moneyIn > 0
-                      ? formatReportCurrencyCompact(entry.row.moneyIn)
-                      : '',
-                  entry.row.moneyOut > 0
-                      ? formatReportCurrencyCompact(entry.row.moneyOut)
-                      : '',
-                  formatReportCurrencyCompact(entry.balance),
-                ],
+                _cashFlowExportRow(entry.row, entry.balance),
+            ],
+          );
+        }
+
+        void exportPrint() {
+          reportPrintTable(
+            context: context,
+            title: 'Cash Flow',
+            headers: CashFlowReportContent._exportHeaders,
+            rows: [
+              for (final entry in rowsWithBalance)
+                _cashFlowExportRow(entry.row, entry.balance),
             ],
           );
         }
@@ -108,43 +109,7 @@ class _CashFlowReportContentState extends ConsumerState<CashFlowReportContent> {
                       ReportTextActionButton(
                         label: 'Print',
                         icon: Icons.print_outlined,
-                        onTap: () => ReportExportService.showPrintPreview(
-                          context: context,
-                          title: 'Cash Flow',
-                          content: ReportExportService.toCsv(
-                            headers: const [
-                              'Date',
-                              'Ref No',
-                              'Name',
-                              'Category',
-                              'Type',
-                              'Cash In',
-                              'Cash Out',
-                              'Running Balance',
-                            ],
-                            rows: [
-                              for (final entry in rowsWithBalance)
-                                [
-                                  formatReportDate(entry.row.date),
-                                  entry.row.refNo,
-                                  entry.row.partyName,
-                                  entry.row.category,
-                                  entry.row.type,
-                                  entry.row.moneyIn > 0
-                                      ? formatReportCurrencyCompact(
-                                          entry.row.moneyIn,
-                                        )
-                                      : '',
-                                  entry.row.moneyOut > 0
-                                      ? formatReportCurrencyCompact(
-                                          entry.row.moneyOut,
-                                        )
-                                      : '',
-                                  formatReportCurrencyCompact(entry.balance),
-                                ],
-                            ],
-                          ),
-                        ),
+                        onTap: exportPrint,
                       ),
                     ],
                   ),
@@ -288,6 +253,19 @@ class _CashFlowReportContentState extends ConsumerState<CashFlowReportContent> {
   }
 }
 
+List<String> _cashFlowExportRow(ReportTransactionRow row, double runningBalance) {
+  return [
+    formatReportDate(row.date),
+    row.refNo,
+    row.partyName,
+    row.category,
+    row.type,
+    if (row.moneyIn > 0) formatReportCurrencyCompact(row.moneyIn) else '',
+    if (row.moneyOut > 0) formatReportCurrencyCompact(row.moneyOut) else '',
+    formatReportCurrencyCompact(runningBalance),
+  ];
+}
+
 class _CashFlowRow extends StatelessWidget {
   const _CashFlowRow({
     required this.row,
@@ -342,7 +320,12 @@ class _CashFlowRow extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () => reportPrintRow(
+                    context: context,
+                    title: 'Cash Flow ${row.refNo}',
+                    headers: CashFlowReportContent._exportHeaders,
+                    row: _cashFlowExportRow(row, runningBalance),
+                  ),
                   icon: const Icon(Icons.print_outlined, size: 18),
                   color: AppColors.textSecondary,
                   padding: EdgeInsets.zero,
@@ -351,14 +334,17 @@ class _CashFlowRow extends StatelessWidget {
                     minHeight: 32,
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.share_outlined, size: 18),
-                  color: AppColors.textSecondary,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
+                const Tooltip(
+                  message: 'Share is not available yet.',
+                  child: IconButton(
+                    onPressed: null,
+                    icon: Icon(Icons.share_outlined, size: 18),
+                    color: AppColors.textSecondary,
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                 ),
               ],

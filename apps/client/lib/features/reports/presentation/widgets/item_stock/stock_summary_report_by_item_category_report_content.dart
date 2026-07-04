@@ -1,5 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
@@ -8,6 +7,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:flutter/material.dart';
@@ -33,24 +33,6 @@ class _StockSummaryReportByItemCategoryReportContentState
 
   static final _dateFormat = DateFormat('dd/MM/yyyy');
 
-  int _itemCountForCategory(String categoryName) {
-    final cat = InventoryCatalog.categories
-        .where((c) => c.name == categoryName)
-        .firstOrNull;
-    if (cat == null) return 0;
-    return InventoryCatalog.items.where((i) => i.categoryId == cat.id).length;
-  }
-
-  int _lowStockCountForCategory(String categoryName) {
-    final cat = InventoryCatalog.categories
-        .where((c) => c.name == categoryName)
-        .firstOrNull;
-    if (cat == null) return 0;
-    return InventoryCatalog.items
-        .where((i) => i.categoryId == cat.id && (i.quantity ?? 0) <= 2)
-        .length;
-  }
-
   @override
   void initState() {
     super.initState();
@@ -69,19 +51,33 @@ class _StockSummaryReportByItemCategoryReportContentState
           .refresh(),
       data: (report) {
         final rows = report.rows;
-        final totalItems = rows.fold<int>(
+        final totalPurchaseValue = rows.fold<double>(
           0,
-          (sum, row) => sum + _itemCountForCategory(row.category),
+          (sum, row) => sum + row.purchaseAmount,
         );
-        final totalStockQty =
-        rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
-    final totalPurchaseValue =
-        rows.fold<double>(0, (sum, row) => sum + row.purchaseAmount);
-    final totalSaleValue = totalPurchaseValue * 1.15;
-    final totalLowStock = rows.fold<int>(
-      0,
-      (sum, row) => sum + _lowStockCountForCategory(row.category),
-    );
+        final totalSaleValue = rows.fold<double>(
+          0,
+          (sum, row) => sum + row.saleAmount,
+        );
+        const exportHeaders = [
+          'Item Category',
+          'No. of Items',
+          'Stock Qty',
+          'Purchase Value',
+          'Sale Value',
+          'Low Stock Items',
+        ];
+        final exportRows = [
+          for (final row in rows)
+            [
+              row.category,
+              '—',
+              '—',
+              formatReportCurrency(row.purchaseAmount),
+              formatReportCurrency(row.saleAmount),
+              '—',
+            ],
+        ];
 
     return ColoredBox(
       color: AppColors.background,
@@ -205,13 +201,26 @@ class _StockSummaryReportByItemCategoryReportContentState
                       ),
                     ],
                   ),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Excel',
                     icon: Icons.table_chart_outlined,
+                    onTap: () => reportExportTable(
+                      context: context,
+                      title: 'Stock Summary by Item Category',
+                      filename: 'stock-summary-by-item-category',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
-                  const ReportTextActionButton(
+                  ReportTextActionButton(
                     label: 'Print',
                     icon: Icons.print_outlined,
+                    onTap: () => reportPrintTable(
+                      context: context,
+                      title: 'Stock Summary by Item Category',
+                      headers: exportHeaders,
+                      rows: exportRows,
+                    ),
                   ),
                 ],
               ),
@@ -264,15 +273,15 @@ class _StockSummaryReportByItemCategoryReportContentState
                             icon: Icons.category_outlined,
                           ),
                           _SummaryChip(
-                            label: 'Total Items',
-                            value: '$totalItems',
-                            icon: Icons.inventory_2_outlined,
-                          ),
-                          _SummaryChip(
                             label: 'Stock Value',
                             value: formatReportCurrency(totalPurchaseValue),
                             icon: Icons.payments_outlined,
                             highlight: true,
+                          ),
+                          _SummaryChip(
+                            label: 'Sale Value',
+                            value: formatReportCurrency(totalSaleValue),
+                            icon: Icons.trending_up_outlined,
                           ),
                           const SizedBox(
                             width: 280,
@@ -396,18 +405,12 @@ class _StockSummaryReportByItemCategoryReportContentState
                                           ReportAlignedCell.fixed(
                                             110,
                                             alignment: Alignment.centerRight,
-                                            child: Text(
-                                              '${_itemCountForCategory(rows[i].category)}',
-                                            ),
+                                            child: const Text('—'),
                                           ),
                                           ReportAlignedCell.fixed(
                                             100,
                                             alignment: Alignment.centerRight,
-                                            child: Text(
-                                              rows[i]
-                                                  .saleAmount
-                                                  .toStringAsFixed(0),
-                                            ),
+                                            child: const Text('—'),
                                           ),
                                           ReportAlignedCell.fixed(
                                             130,
@@ -423,16 +426,14 @@ class _StockSummaryReportByItemCategoryReportContentState
                                             alignment: Alignment.centerRight,
                                             child: Text(
                                               formatReportCurrency(
-                                                rows[i].purchaseAmount * 1.15,
+                                                rows[i].saleAmount,
                                               ),
                                             ),
                                           ),
-                                          ReportAlignedCell.fixed(
+                                          const ReportAlignedCell.fixed(
                                             130,
                                             alignment: Alignment.centerRight,
-                                            child: Text(
-                                              '${_lowStockCountForCategory(rows[i].category)}',
-                                            ),
+                                            child: Text('—'),
                                           ),
                                         ],
                                       ),
@@ -472,7 +473,7 @@ class _StockSummaryReportByItemCategoryReportContentState
                               child: Align(
                                 alignment: Alignment.centerRight,
                                 child: Text(
-                                  '$totalItems',
+                                  '—',
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -485,7 +486,7 @@ class _StockSummaryReportByItemCategoryReportContentState
                               child: Align(
                                 alignment: Alignment.centerRight,
                                 child: Text(
-                                  totalStockQty.toStringAsFixed(0),
+                                  '—',
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -525,7 +526,7 @@ class _StockSummaryReportByItemCategoryReportContentState
                               child: Align(
                                 alignment: Alignment.centerRight,
                                 child: Text(
-                                  '$totalLowStock',
+                                  '—',
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,

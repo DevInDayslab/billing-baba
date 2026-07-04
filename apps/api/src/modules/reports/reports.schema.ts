@@ -49,15 +49,22 @@ export const reportBaseQuerySchema = z.object({
   format: reportFormatSchema.optional(),
 });
 
+export const partyTypeFilterSchema = z.enum(['customer', 'supplier', 'both']);
+
 export const reportExtendedQuerySchema = reportBaseQuerySchema.extend({
   category_id: z.string().uuid().optional(),
   payment_mode: paymentModeSchema.optional(),
   document_type: z.string().trim().optional(),
   party_group: partyGroupSchema.optional(),
+  party_type: partyTypeFilterSchema.optional(),
   bank_name: z.string().trim().optional(),
   tax_rate: z.coerce.number().min(0).optional(),
   loan_account: z.string().trim().optional(),
   status: z.string().trim().optional(),
+  in_stock_only: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
 });
 
 export const reportDateQuerySchema = reportExtendedQuerySchema.extend({

@@ -4,13 +4,13 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_filter_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -129,32 +129,14 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
                       padding: const EdgeInsets.all(AppSpacing.md),
                       child: Row(
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 160,
-                            child: SaleFilterDropdown(
-                              label: 'All Groups',
-                              options: const [
-                                'All Groups',
-                                'Group A',
-                                'Group B',
-                              ],
-                              selected: 'All Groups',
-                              onSelected: (_) {},
-                            ),
+                            child: ReportPartyGroupFilter(),
                           ),
                           const SizedBox(width: AppSpacing.sm),
-                          SizedBox(
+                          const SizedBox(
                             width: 160,
-                            child: SaleFilterDropdown(
-                              label: 'All Parties',
-                              options: const [
-                                'All Parties',
-                                'Customers',
-                                'Suppliers',
-                              ],
-                              selected: 'All Parties',
-                              onSelected: (_) {},
-                            ),
+                            child: ReportPartyTypeFilter(),
                           ),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(

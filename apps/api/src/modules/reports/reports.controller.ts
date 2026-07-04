@@ -38,7 +38,7 @@ export function createReportsController() {
       handlePaginatedReport(
         request,
         reply,
-        reportBaseQuerySchema,
+        reportExtendedQuerySchema,
         service.getStockSummary.bind(service),
         'stock-summary.csv',
       ),
@@ -47,7 +47,7 @@ export function createReportsController() {
       handlePaginatedReport(
         request,
         reply,
-        reportBaseQuerySchema,
+        reportExtendedQuerySchema,
         service.getLowStock.bind(service),
         'low-stock.csv',
       ),
@@ -56,7 +56,7 @@ export function createReportsController() {
       handlePaginatedReport(
         request,
         reply,
-        reportBaseQuerySchema,
+        reportExtendedQuerySchema,
         service.getPartyOutstanding.bind(service),
         'party-outstanding.csv',
       ),
@@ -81,7 +81,7 @@ export function createReportsController() {
       handlePaginatedReport(
         request,
         reply,
-        reportBaseQuerySchema,
+        reportExtendedQuerySchema,
         service.getAllTransactions.bind(service),
         'all-transactions.csv',
       ),

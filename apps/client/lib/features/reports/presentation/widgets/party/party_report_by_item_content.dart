@@ -1,10 +1,12 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_filter_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
@@ -24,23 +26,21 @@ class PartyReportByItemContent extends ConsumerStatefulWidget {
 
 class _PartyReportByItemContentState
     extends ConsumerState<PartyReportByItemContent> {
-  List<String> get _itemNames =>
-      InventoryCatalog.items.map((item) => item.name).toList();
-
-  String? _selectedItemName(String? itemId) {
-    if (itemId == null || itemId.isEmpty) return null;
-    for (final item in InventoryCatalog.items) {
+  String _selectedItemName(List<InventoryItem> items, String? itemId) {
+    if (itemId == null || itemId.isEmpty) return 'All Items';
+    for (final item in items) {
       if (item.id == itemId) return item.name;
     }
-    return null;
+    return 'All Items';
   }
 
   @override
   Widget build(BuildContext context) {
     final filters = ref.watch(reportFiltersProvider);
+    final items = ref.watch(inventoryItemsProvider).value ?? [];
     final selectedItemId = filters.itemId;
-    final selectedItemName =
-        _selectedItemName(selectedItemId) ?? 'All Items';
+    final selectedItemName = _selectedItemName(items, selectedItemId);
+    final itemNames = items.map((item) => item.name).toList();
     final reportAsync = ref.watch(partyReportByItemReportProvider);
 
     return ReportAsyncBody(
@@ -126,19 +126,10 @@ class _PartyReportByItemContentState
                     spacing: AppSpacing.sm,
                     runSpacing: AppSpacing.sm,
                     children: [
+                      const ReportCategoryFilter(),
                       SaleFilterDropdown(
-                        label: 'All Categories',
-                        options: const [
-                          'All Categories',
-                          'Category A',
-                          'Category B',
-                        ],
-                        selected: 'All Categories',
-                        onSelected: (_) {},
-                      ),
-                      SaleFilterDropdown(
-                        label: 'All Items',
-                        options: ['All Items', ..._itemNames],
+                        label: selectedItemName,
+                        options: ['All Items', ...itemNames],
                         selected: selectedItemName,
                         onSelected: (value) {
                           if (value == 'All Items') {
@@ -147,7 +138,7 @@ class _PartyReportByItemContentState
                                 .setItemId(null);
                             return;
                           }
-                          final item = InventoryCatalog.items.firstWhere(
+                          final item = items.firstWhere(
                             (entry) => entry.name == value,
                           );
                           ref

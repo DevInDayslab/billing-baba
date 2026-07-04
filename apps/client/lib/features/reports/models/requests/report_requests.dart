@@ -73,6 +73,8 @@ class ReportQuery {
     this.taxRate,
     this.loanAccount,
     this.status,
+    this.partyType,
+    this.inStockOnly = false,
     this.format,
     this.sort,
     this.order,
@@ -96,6 +98,8 @@ class ReportQuery {
   final String? taxRate;
   final String? loanAccount;
   final String? status;
+  final String? partyType;
+  final bool inStockOnly;
   final String? format;
   final String? sort;
   final String? order;
@@ -138,6 +142,10 @@ class ReportQuery {
       params['loan_account'] = loanAccount!;
     }
     if (status != null && status!.isNotEmpty) params['status'] = status!;
+    if (partyType != null && partyType!.isNotEmpty) {
+      params['party_type'] = partyType!;
+    }
+    if (inStockOnly) params['in_stock_only'] = 'true';
     if (format != null && format!.isNotEmpty) params['format'] = format!;
     if (sort != null) params['sort'] = sort!;
     if (order != null) params['order'] = order!;
@@ -163,6 +171,8 @@ class ReportQuery {
     String? taxRate,
     String? loanAccount,
     String? status,
+    String? partyType,
+    bool? inStockOnly,
     String? format,
     String? sort,
     String? order,
@@ -177,6 +187,7 @@ class ReportQuery {
     bool clearTaxRate = false,
     bool clearLoanAccount = false,
     bool clearStatus = false,
+    bool clearPartyType = false,
     bool clearFormat = false,
     bool clearSearch = false,
   }) {
@@ -200,6 +211,8 @@ class ReportQuery {
       taxRate: clearTaxRate ? null : (taxRate ?? this.taxRate),
       loanAccount: clearLoanAccount ? null : (loanAccount ?? this.loanAccount),
       status: clearStatus ? null : (status ?? this.status),
+      partyType: clearPartyType ? null : (partyType ?? this.partyType),
+      inStockOnly: inStockOnly ?? this.inStockOnly,
       format: clearFormat ? null : (format ?? this.format),
       sort: sort ?? this.sort,
       order: order ?? this.order,
@@ -223,6 +236,8 @@ class ReportFiltersState {
     this.taxRate,
     this.loanAccount,
     this.status,
+    this.partyType,
+    this.inStockOnly = false,
     this.format,
     this.searchQuery = '',
     this.currentPage = 1,
@@ -243,6 +258,8 @@ class ReportFiltersState {
   final String? taxRate;
   final String? loanAccount;
   final String? status;
+  final String? partyType;
+  final bool inStockOnly;
   final String? format;
   final String searchQuery;
   final int currentPage;
@@ -270,6 +287,8 @@ class ReportFiltersState {
       taxRate: taxRate,
       loanAccount: loanAccount,
       status: status,
+      partyType: partyType,
+      inStockOnly: inStockOnly,
       format: format ?? this.format,
     );
   }
@@ -290,6 +309,8 @@ class ReportFiltersState {
     String? taxRate,
     String? loanAccount,
     String? status,
+    String? partyType,
+    bool? inStockOnly,
     String? format,
     String? searchQuery,
     int? currentPage,
@@ -305,6 +326,7 @@ class ReportFiltersState {
     bool clearTaxRate = false,
     bool clearLoanAccount = false,
     bool clearStatus = false,
+    bool clearPartyType = false,
     bool clearFormat = false,
   }) {
     return ReportFiltersState(
@@ -325,6 +347,8 @@ class ReportFiltersState {
       taxRate: clearTaxRate ? null : (taxRate ?? this.taxRate),
       loanAccount: clearLoanAccount ? null : (loanAccount ?? this.loanAccount),
       status: clearStatus ? null : (status ?? this.status),
+      partyType: clearPartyType ? null : (partyType ?? this.partyType),
+      inStockOnly: inStockOnly ?? this.inStockOnly,
       format: clearFormat ? null : (format ?? this.format),
       searchQuery: searchQuery ?? this.searchQuery,
       currentPage: currentPage ?? this.currentPage,

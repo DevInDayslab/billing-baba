@@ -88,14 +88,18 @@ export class ReportsService {
   getStockSummary(
     businessId: string,
     accountId: string,
-    query: ReportBaseQuery,
+    query: ReportExtendedQuery,
   ) {
     return this.paginated(businessId, accountId, query, (id, q) =>
       this.repository.getStockSummary(id, q),
     );
   }
 
-  getLowStock(businessId: string, accountId: string, query: ReportBaseQuery) {
+  getLowStock(
+    businessId: string,
+    accountId: string,
+    query: ReportExtendedQuery,
+  ) {
     return this.paginated(businessId, accountId, query, (id, q) =>
       this.repository.getLowStock(id, q),
     );
@@ -104,7 +108,7 @@ export class ReportsService {
   getPartyOutstanding(
     businessId: string,
     accountId: string,
-    query: ReportBaseQuery,
+    query: ReportExtendedQuery,
   ) {
     return this.paginated(businessId, accountId, query, (id, q) =>
       this.repository.getPartyOutstanding(id, q),
@@ -132,7 +136,7 @@ export class ReportsService {
   getAllTransactions(
     businessId: string,
     accountId: string,
-    query: ReportBaseQuery,
+    query: ReportExtendedQuery,
   ) {
     return this.paginated(businessId, accountId, query, (id, q) =>
       this.repository.getAllTransactions(id, q),

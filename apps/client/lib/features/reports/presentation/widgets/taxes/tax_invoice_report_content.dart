@@ -8,6 +8,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/taxes/taxes_report_filter_bar.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,6 +56,31 @@ class TaxInvoiceReportContent extends ConsumerWidget {
       onRetry: onRetry,
       data: (report) {
         final rows = report.rows;
+        const exportHeaders = [
+          '#',
+          'Party Name',
+          'Invoice No',
+          'Total Value',
+          'Amount Received',
+          'Total Tax Collected',
+          'Date of Collection',
+          'Tax Name',
+          'TCS Rate',
+        ];
+        final exportRows = [
+          for (var i = 0; i < rows.length; i++)
+            [
+              '${i + 1}',
+              rows[i].partyName,
+              rows[i].invoiceNo,
+              formatReportCurrency(rows[i].totalValue),
+              formatReportCurrency(rows[i].amountReceived),
+              formatReportCurrency(rows[i].totalTaxCollected),
+              formatReportDate(rows[i].collectionDate),
+              rows[i].taxName,
+              rows[i].taxRate.toStringAsFixed(2),
+            ],
+        ];
 
         return ColoredBox(
           color: AppColors.background,
@@ -87,7 +113,21 @@ class TaxInvoiceReportContent extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const TaxInvoiceReportFilterBar(),
+                        TaxInvoiceReportFilterBar(
+                          onExportExcel: () => reportExportTable(
+                            context: context,
+                            title: subSection.pageTitle,
+                            filename: 'tax-invoice-report',
+                            headers: exportHeaders,
+                            rows: exportRows,
+                          ),
+                          onPrint: () => reportPrintTable(
+                            context: context,
+                            title: subSection.pageTitle,
+                            headers: exportHeaders,
+                            rows: exportRows,
+                          ),
+                        ),
                         const Divider(height: 1, color: reportCardBorder),
                         Padding(
                           padding: const EdgeInsets.all(AppSpacing.md),

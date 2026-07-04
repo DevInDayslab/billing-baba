@@ -8,7 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class SalePurchaseOrderReportFilters extends StatefulWidget {
-  const SalePurchaseOrderReportFilters({super.key});
+  const SalePurchaseOrderReportFilters({
+    this.onExportExcel,
+    this.onPrint,
+    super.key,
+  });
+
+  final VoidCallback? onExportExcel;
+  final VoidCallback? onPrint;
 
   @override
   State<SalePurchaseOrderReportFilters> createState() =>
@@ -119,13 +126,15 @@ class _SalePurchaseOrderReportFiltersState
                 selected: _user,
                 onSelected: (value) => setState(() => _user = value),
               ),
-              const ReportTextActionButton(
+              ReportTextActionButton(
                 label: 'Excel',
                 icon: Icons.table_chart_outlined,
+                onTap: widget.onExportExcel,
               ),
-              const ReportTextActionButton(
+              ReportTextActionButton(
                 label: 'Print',
                 icon: Icons.print_outlined,
+                onTap: widget.onPrint,
               ),
             ],
           ),

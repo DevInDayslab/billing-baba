@@ -5,6 +5,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,20 +27,43 @@ class SalePurchaseOrderItemReportContent extends ConsumerWidget {
             rows.fold<double>(0, (sum, row) => sum + row.quantity);
         final totalAmount =
             rows.fold<double>(0, (sum, row) => sum + row.amount);
+        const exportHeaders = ['Item Name', 'Quantity', 'Amount'];
+        final exportRows = [
+          for (final row in rows)
+            [
+              row.itemName,
+              row.quantity.toStringAsFixed(0),
+              formatReportCurrency(row.amount),
+            ],
+        ];
 
         return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.md,
             ),
-            child: SalePurchaseOrderReportFilters(),
+            child: SalePurchaseOrderReportFilters(
+              onExportExcel: () => reportExportTable(
+                context: context,
+                title: 'Sale / Purchase Order Items',
+                filename: 'sale-purchase-order-items',
+                headers: exportHeaders,
+                rows: exportRows,
+              ),
+              onPrint: () => reportPrintTable(
+                context: context,
+                title: 'Sale / Purchase Order Items',
+                headers: exportHeaders,
+                rows: exportRows,
+              ),
+            ),
           ),
           Expanded(
             child: Padding(

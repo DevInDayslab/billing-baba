@@ -4,6 +4,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/taxes/taxes_report_filter_bar.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,20 +21,53 @@ class GstTaxRateReportContent extends ConsumerWidget {
       onRetry: () => ref.read(gstTaxRateReportProvider.notifier).refresh(),
       data: (report) {
         final rows = report.rows;
+        const exportHeaders = [
+          'Tax Name',
+          'Tax Percent',
+          'Taxable Sale Amount',
+          'Tax In',
+          'Taxable Purchase/Expense Amount',
+          'Tax Out',
+        ];
+        final exportRows = [
+          for (final row in rows)
+            [
+              row.taxName,
+              '${row.taxPercent}%',
+              formatReportCurrency(row.taxableSaleAmount),
+              formatReportCurrency(row.taxIn),
+              formatReportCurrency(row.taxablePurchaseExpenseAmount),
+              formatReportCurrency(row.taxOut),
+            ],
+        ];
 
         return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.md,
             ),
-            child: TaxesReportFilterBar(),
+            child: TaxesReportFilterBar(
+              onExportExcel: () => reportExportTable(
+                context: context,
+                title: 'GST Tax Rate Report',
+                filename: 'gst-tax-rate-report',
+                headers: exportHeaders,
+                rows: exportRows,
+              ),
+              onPrint: () => reportPrintTable(
+                context: context,
+                title: 'GST Tax Rate Report',
+                headers: exportHeaders,
+                rows: exportRows,
+              ),
+            ),
           ),
           const Padding(
             padding: EdgeInsets.fromLTRB(

@@ -125,6 +125,22 @@ class ReportFilters extends _$ReportFilters {
     );
   }
 
+  void setPartyType(String? partyType) {
+    state = state.copyWith(
+      partyType: partyType,
+      clearPartyType: partyType == null || partyType.isEmpty,
+      currentPage: 1,
+    );
+  }
+
+  void setInStockOnly(bool inStockOnly) {
+    state = state.copyWith(inStockOnly: inStockOnly, currentPage: 1);
+  }
+
+  void setPageSize(int pageSize) {
+    state = state.copyWith(pageSize: pageSize, currentPage: 1);
+  }
+
   void setFormat(String? format) {
     state = state.copyWith(
       format: format,
