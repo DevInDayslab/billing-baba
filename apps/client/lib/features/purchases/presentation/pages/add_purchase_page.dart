@@ -22,7 +22,9 @@ const _sectionGap = 16.0;
 const _addPurchaseRed = Color(0xFFD32F2F);
 
 class AddPurchasePage extends ConsumerWidget {
-  const AddPurchasePage({super.key});
+  const AddPurchasePage({this.billId, super.key});
+
+  final String? billId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,32 +53,32 @@ class AddPurchasePage extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding: EdgeInsets.fromLTRB(
+                    padding: const EdgeInsets.fromLTRB(
                       _sectionGap,
                       _sectionGap,
                       _sectionGap,
                       0,
                     ),
-                    child: _PageHeader(),
+                    child: _PageHeader(billId: billId),
                   ),
-                  SizedBox(height: _sectionGap),
+                  const SizedBox(height: _sectionGap),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: _sectionGap),
-                    child: _FormFields(),
+                    padding: const EdgeInsets.symmetric(horizontal: _sectionGap),
+                    child: _FormFields(billId: billId),
                   ),
-                  SizedBox(height: _sectionGap),
-                  PurchaseLineItemsTable(embedded: true),
-                  Divider(height: 1, color: _cardBorder),
+                  const SizedBox(height: _sectionGap),
+                  PurchaseLineItemsTable(embedded: true, billId: billId),
+                  const Divider(height: 1, color: _cardBorder),
                   Padding(
-                    padding: EdgeInsets.all(_sectionGap),
-                    child: AddPurchaseFooter(),
+                    padding: const EdgeInsets.all(_sectionGap),
+                    child: AddPurchaseFooter(billId: billId),
                   ),
-                  Divider(height: 1, color: _cardBorder),
-                  _BottomActionBar(),
+                  const Divider(height: 1, color: _cardBorder),
+                  _BottomActionBar(billId: billId),
                 ],
               ),
             ),
@@ -88,12 +90,14 @@ class AddPurchasePage extends ConsumerWidget {
 }
 
 class _PageHeader extends ConsumerWidget {
-  const _PageHeader();
+  const _PageHeader({this.billId});
+
+  final String? billId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addPurchaseFormProvider);
-    final notifier = ref.read(addPurchaseFormProvider.notifier);
+    final form = ref.watch(addPurchaseFormProvider(billId: billId));
+    final notifier = ref.read(addPurchaseFormProvider(billId: billId).notifier);
 
     return Row(
       children: [
@@ -116,7 +120,9 @@ class _PageHeader extends ConsumerWidget {
 }
 
 class _FormFields extends ConsumerStatefulWidget {
-  const _FormFields();
+  const _FormFields({this.billId});
+
+  final String? billId;
 
   @override
   ConsumerState<_FormFields> createState() => _FormFieldsState();
@@ -128,8 +134,9 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
 
   @override
   Widget build(BuildContext context) {
-    final form = ref.watch(addPurchaseFormProvider);
-    final notifier = ref.read(addPurchaseFormProvider.notifier);
+    final form = ref.watch(addPurchaseFormProvider(billId: widget.billId));
+    final notifier =
+        ref.read(addPurchaseFormProvider(billId: widget.billId).notifier);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -146,6 +153,8 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                   hasError: form.partyHasError,
                   errorMessage: 'Party is required',
                   onSelected: notifier.updateParty,
+                  onPartySelectedWithId: (partyId, name) =>
+                      notifier.updateParty(name, partyId: partyId),
                 ),
               ),
             ),
@@ -290,17 +299,22 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
       initialTime: current ?? TimeOfDay.now(),
     );
     if (picked != null) {
-      ref.read(addPurchaseFormProvider.notifier).updateBillTime(picked);
+      ref
+          .read(addPurchaseFormProvider(billId: widget.billId).notifier)
+          .updateBillTime(picked);
     }
   }
 }
 
 class _BottomActionBar extends ConsumerWidget {
-  const _BottomActionBar();
+  const _BottomActionBar({this.billId});
+
+  final String? billId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(addPurchaseFormProvider.notifier);
+    final form = ref.watch(addPurchaseFormProvider(billId: billId));
+    final notifier = ref.read(addPurchaseFormProvider(billId: billId).notifier);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -341,7 +355,9 @@ class _BottomActionBar extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           FilledButton(
-            onPressed: () => _handleSave(context, ref, notifier),
+            onPressed: form.isSaving
+                ? null
+                : () => _handleSave(context, ref, notifier),
             style: FilledButton.styleFrom(
               backgroundColor: _addPurchaseRed,
               foregroundColor: Colors.white,
@@ -355,7 +371,7 @@ class _BottomActionBar extends ConsumerWidget {
   }
 
   Future<void> _handleCancel(BuildContext context, WidgetRef ref) async {
-    final form = ref.read(addPurchaseFormProvider);
+    final form = ref.read(addPurchaseFormProvider(billId: billId));
     if (form.isDirty) {
       final discard = await showDialog<bool>(
         context: context,
@@ -381,13 +397,19 @@ class _BottomActionBar extends ConsumerWidget {
     if (context.mounted) context.pop();
   }
 
-  void _handleSave(
+  Future<void> _handleSave(
     BuildContext context,
     WidgetRef ref,
     AddPurchaseForm notifier,
-  ) {
-    final saved = notifier.save();
-    if (!saved) return;
+  ) async {
+    final error = await notifier.saveBill();
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
 
     showTransactionSuccessToast(context);
     context.go(AppRoutes.purchaseBills);

@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 
 class PurchaseReturnModel {
   const PurchaseReturnModel({
@@ -13,6 +14,8 @@ class PurchaseReturnModel {
     required this.receivedPaid,
     required this.balance,
     required this.dueDate,
+    this.partyId,
+    this.documentStatus,
     this.paymentType = 'Cash',
     this.user = 'Admin',
     this.firm = 'All Firms',
@@ -23,9 +26,11 @@ class PurchaseReturnModel {
   final String debitNoteNo;
   final DateTime date;
   final String partyName;
+  final String? partyId;
   final String categoryName;
   final String type;
   final PurchaseBillStatus status;
+  final PurchaseDocumentStatus? documentStatus;
   final double total;
   final double receivedPaid;
   final double balance;

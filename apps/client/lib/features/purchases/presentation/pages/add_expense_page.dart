@@ -366,13 +366,19 @@ class _BottomActionBar extends ConsumerWidget {
     if (context.mounted) context.pop();
   }
 
-  void _handleSave(
+  Future<void> _handleSave(
     BuildContext context,
     WidgetRef ref,
     AddExpenseForm notifier,
-  ) {
-    final saved = notifier.save();
-    if (!saved) return;
+  ) async {
+    final error = await notifier.saveExpense();
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
 
     showTransactionSuccessToast(context);
     context.go(AppRoutes.purchaseExpenses);

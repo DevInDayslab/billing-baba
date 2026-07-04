@@ -41,7 +41,7 @@ final class AddExpenseFormProvider
   }
 }
 
-String _$addExpenseFormHash() => r'61542261e42986fc32ca5cc1e4abe9b1b4f5d546';
+String _$addExpenseFormHash() => r'7e5b7d2b971cdf7a4a0afca54e26551f400bc283';
 
 abstract class _$AddExpenseForm extends $Notifier<AddExpenseFormState> {
   AddExpenseFormState build();
@@ -185,4 +185,4 @@ final class ExpenseCategoryOptionsProvider
 }
 
 String _$expenseCategoryOptionsHash() =>
-    r'41fc999a71174cbd6cb4fe98aaeb997c7439abda';
+    r'b59541e113a213537f8c232edc5fc526a94b2a80';

@@ -13,14 +13,14 @@ part of 'payment_out_provider.dart';
 final paymentOutRecordsProvider = PaymentOutRecordsProvider._();
 
 final class PaymentOutRecordsProvider
-    extends $NotifierProvider<PaymentOutRecords, List<PaymentOutModel>> {
+    extends $AsyncNotifierProvider<PaymentOutRecords, PaginatedPaymentOut> {
   PaymentOutRecordsProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'paymentOutRecordsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -31,29 +31,22 @@ final class PaymentOutRecordsProvider
   @$internal
   @override
   PaymentOutRecords create() => PaymentOutRecords();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<PaymentOutModel> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<PaymentOutModel>>(value),
-    );
-  }
 }
 
-String _$paymentOutRecordsHash() => r'c5b2cf4564dd5f0c0f551ce1838fbfc84f37099e';
+String _$paymentOutRecordsHash() => r'0b41139641bf83151c85e4dd5c3ee234be8ed0b7';
 
-abstract class _$PaymentOutRecords extends $Notifier<List<PaymentOutModel>> {
-  List<PaymentOutModel> build();
+abstract class _$PaymentOutRecords extends $AsyncNotifier<PaginatedPaymentOut> {
+  FutureOr<PaginatedPaymentOut> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<List<PaymentOutModel>, List<PaymentOutModel>>;
+    final ref =
+        this.ref as $Ref<AsyncValue<PaginatedPaymentOut>, PaginatedPaymentOut>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<List<PaymentOutModel>, List<PaymentOutModel>>,
-              List<PaymentOutModel>,
+              AnyNotifier<AsyncValue<PaginatedPaymentOut>, PaginatedPaymentOut>,
+              AsyncValue<PaginatedPaymentOut>,
               Object?,
               Object?
             >;
@@ -93,7 +86,7 @@ final class PaymentOutFiltersProvider
   }
 }
 
-String _$paymentOutFiltersHash() => r'aab30c972a21999976bfd4f9652f8eeef1f4208b';
+String _$paymentOutFiltersHash() => r'f22540069388ec2fbc45a09addd88cd7dc783ace';
 
 abstract class _$PaymentOutFilters extends $Notifier<PaymentOutFiltersState> {
   PaymentOutFiltersState build();
@@ -113,54 +106,6 @@ abstract class _$PaymentOutFilters extends $Notifier<PaymentOutFiltersState> {
     return element.handleCreate(ref, build);
   }
 }
-
-@ProviderFor(filteredPaymentOutRecords)
-final filteredPaymentOutRecordsProvider = FilteredPaymentOutRecordsProvider._();
-
-final class FilteredPaymentOutRecordsProvider
-    extends
-        $FunctionalProvider<
-          List<PaymentOutModel>,
-          List<PaymentOutModel>,
-          List<PaymentOutModel>
-        >
-    with $Provider<List<PaymentOutModel>> {
-  FilteredPaymentOutRecordsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'filteredPaymentOutRecordsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$filteredPaymentOutRecordsHash();
-
-  @$internal
-  @override
-  $ProviderElement<List<PaymentOutModel>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  List<PaymentOutModel> create(Ref ref) {
-    return filteredPaymentOutRecords(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<PaymentOutModel> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<PaymentOutModel>>(value),
-    );
-  }
-}
-
-String _$filteredPaymentOutRecordsHash() =>
-    r'235a147831d1dc3db1edc96fa758e06ad87aad5d';
 
 @ProviderFor(paginatedPaymentOutRecords)
 final paginatedPaymentOutRecordsProvider =
@@ -209,7 +154,7 @@ final class PaginatedPaymentOutRecordsProvider
 }
 
 String _$paginatedPaymentOutRecordsHash() =>
-    r'd1c98767b7769c46f6a2b6a712e5da19cf92406c';
+    r'3d89c219c60bcc53956863c54981204881f6cf54';
 
 @ProviderFor(paymentOutSummary)
 final paymentOutSummaryProvider = PaymentOutSummaryProvider._();
@@ -256,7 +201,7 @@ final class PaymentOutSummaryProvider
   }
 }
 
-String _$paymentOutSummaryHash() => r'e0f14890f487d0acc1cce012609ebb7e88fcaeaa';
+String _$paymentOutSummaryHash() => r'8a69371472d8804fe000928fa1339e81567f9ca7';
 
 @ProviderFor(PaymentOutForm)
 final paymentOutFormProvider = PaymentOutFormProvider._();
@@ -290,7 +235,7 @@ final class PaymentOutFormProvider
   }
 }
 
-String _$paymentOutFormHash() => r'e178999aa0d8aa213762356ed84514fc624f39c3';
+String _$paymentOutFormHash() => r'35cbef12bf37ed1f9f84eaf0ad3b7bebf36a7309';
 
 abstract class _$PaymentOutForm extends $Notifier<PaymentOutFormState> {
   PaymentOutFormState build();

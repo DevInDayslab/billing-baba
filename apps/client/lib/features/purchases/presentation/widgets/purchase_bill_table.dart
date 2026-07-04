@@ -86,6 +86,9 @@ class PurchaseBillTable extends ConsumerWidget {
                       ),
                       isDense: true,
                     ),
+                    onChanged: (value) => ref
+                        .read(purchaseBillSearchQueryProvider.notifier)
+                        .setQuery(value),
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),

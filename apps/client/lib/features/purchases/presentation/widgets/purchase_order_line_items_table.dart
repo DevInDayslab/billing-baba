@@ -42,8 +42,8 @@ class PurchaseOrderLineItemsTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addPurchaseOrderFormProvider);
-    final notifier = ref.read(addPurchaseOrderFormProvider.notifier);
+    final form = ref.watch(addPurchaseOrderFormProvider());
+    final notifier = ref.read(addPurchaseOrderFormProvider().notifier);
 
     final tableContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -433,7 +433,7 @@ class _LineItemRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(addPurchaseOrderFormProvider.notifier);
+    final notifier = ref.read(addPurchaseOrderFormProvider().notifier);
 
     return SizedBox(
       height: _rowHeight,

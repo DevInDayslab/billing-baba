@@ -33,7 +33,7 @@ final class JobWorkOrdersListProvider
   JobWorkOrdersList create() => JobWorkOrdersList();
 }
 
-String _$jobWorkOrdersListHash() => r'2f51955b719c7c14df5e40cfcbb12772f9e52242';
+String _$jobWorkOrdersListHash() => r'b8b4a2958e13ab019ddda3b18714dc61dc30c4c5';
 
 abstract class _$JobWorkOrdersList
     extends $AsyncNotifier<PaginatedJobWorkOrders> {

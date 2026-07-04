@@ -28,7 +28,11 @@ class ExpensesCategoryTabContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(filteredExpenseCategoriesProvider);
-    final allCategories = ref.watch(expenseCategoriesProvider);
+    final allCategoriesAsync = ref.watch(expenseCategoriesProvider);
+    final allCategories = allCategoriesAsync.maybeWhen(
+      data: (items) => items,
+      orElse: () => const <ExpenseCategoryModel>[],
+    );
     final selectedId = ref.watch(selectedExpenseCategoryIdProvider);
 
     final selectedCategory = selectedId == null

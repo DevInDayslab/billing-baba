@@ -75,17 +75,21 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
     }
   }
 
-  void _handleSave({bool saveAndNew = false}) {
+  Future<void> _handleSave({bool saveAndNew = false}) async {
     final notifier = ref.read(paymentOutFormProvider.notifier);
-    final payment = notifier.buildPaymentModel();
-    if (payment == null) return;
-
-    notifier.savePayment();
+    final receiptNo = ref.read(paymentOutFormProvider).receiptNo;
+    final error = await notifier.savePayment();
     if (!mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
 
     showTransactionSuccessToast(
       context,
-      message: 'Payment ${payment.receiptNo} saved successfully',
+      message: 'Payment $receiptNo saved successfully',
     );
 
     if (saveAndNew) {
@@ -138,6 +142,8 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                               value: form.party,
                               emptyPlaceholder: 'Select Party',
                               onSelected: notifier.updateParty,
+                              onPartySelectedWithId: (partyId, name) =>
+                                  notifier.updateParty(name, partyId: partyId),
                               hasError:
                                   form.showValidationErrors &&
                                   form.party.trim().isEmpty,

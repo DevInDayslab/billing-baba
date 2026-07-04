@@ -89,8 +89,8 @@ class _PageHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(debitNoteFormProvider);
-    final notifier = ref.read(debitNoteFormProvider.notifier);
+    final form = ref.watch(debitNoteFormProvider());
+    final notifier = ref.read(debitNoteFormProvider().notifier);
 
     return Row(
       children: [
@@ -125,8 +125,8 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
 
   @override
   Widget build(BuildContext context) {
-    final form = ref.watch(debitNoteFormProvider);
-    final notifier = ref.read(debitNoteFormProvider.notifier);
+    final form = ref.watch(debitNoteFormProvider());
+    final notifier = ref.read(debitNoteFormProvider().notifier);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,7 +239,7 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
       initialTime: current ?? TimeOfDay.now(),
     );
     if (picked != null) {
-      ref.read(debitNoteFormProvider.notifier).updateReturnTime(picked);
+      ref.read(debitNoteFormProvider().notifier).updateReturnTime(picked);
     }
   }
 }
@@ -249,7 +249,7 @@ class _BottomActionBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(debitNoteFormProvider.notifier);
+    final notifier = ref.read(debitNoteFormProvider().notifier);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -291,7 +291,7 @@ class _BottomActionBar extends ConsumerWidget {
   }
 
   Future<void> _handleCancel(BuildContext context, WidgetRef ref) async {
-    final form = ref.read(debitNoteFormProvider);
+    final form = ref.read(debitNoteFormProvider());
     if (form.isDirty) {
       final discard = await showDialog<bool>(
         context: context,
@@ -317,13 +317,19 @@ class _BottomActionBar extends ConsumerWidget {
     if (context.mounted) context.pop();
   }
 
-  void _handleSave(
+  Future<void> _handleSave(
     BuildContext context,
     WidgetRef ref,
     DebitNoteForm notifier,
-  ) {
-    final saved = notifier.save();
-    if (!saved) return;
+  ) async {
+    final error = await notifier.saveDebitNote();
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Debit note saved successfully')),

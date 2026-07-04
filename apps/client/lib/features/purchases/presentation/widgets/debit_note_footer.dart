@@ -22,8 +22,8 @@ class DebitNoteFooter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(debitNoteFormProvider);
-    final notifier = ref.read(debitNoteFormProvider.notifier);
+    final form = ref.watch(debitNoteFormProvider());
+    final notifier = ref.read(debitNoteFormProvider().notifier);
     final grandTotal = ref.watch(debitNoteGrandTotalProvider);
 
     return Row(

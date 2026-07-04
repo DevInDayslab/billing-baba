@@ -1,12 +1,12 @@
+import 'package:billing_baba/features/purchases/application/expense_service.dart';
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
+import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'expenses_provider.g.dart';
-
-const _loyaltyCategoryId = 'loyalty_redeemed';
-const _paymentDiscountCategoryId = 'payment_in_discount';
 
 class ExpenseFiltersState {
   const ExpenseFiltersState({
@@ -42,182 +42,109 @@ class ExpenseFiltersState {
   }
 }
 
-List<ExpenseCategoryModel> _mockExpenseCategories() {
-  return const [
-    ExpenseCategoryModel(
-      id: _loyaltyCategoryId,
-      name: 'Loyalty Redeemed',
-      type: ExpenseCategoryType.indirect,
-      variant: ExpenseCategoryVariant.loyaltyRedeemed,
-      totalAmount: 103,
-      balance: 0,
+DateTime _startOfDay(DateTime date) =>
+    DateTime(date.year, date.month, date.day);
+
+DateTime _endOfDay(DateTime date) =>
+    DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+
+DateTimeRange? _resolveTimeRange(
+  TimeRangeOption option,
+  DateTimeRange? custom,
+) {
+  final now = DateTime.now();
+  final today = _startOfDay(now);
+
+  return switch (option) {
+    TimeRangeOption.allTime => null,
+    TimeRangeOption.today => DateTimeRange(start: today, end: _endOfDay(today)),
+    TimeRangeOption.thisWeek => DateTimeRange(
+      start: today.subtract(Duration(days: today.weekday % 7)),
+      end: _endOfDay(
+        today.add(Duration(days: 6 - (today.weekday % 7))),
+      ),
     ),
-    ExpenseCategoryModel(
-      id: _paymentDiscountCategoryId,
-      name: 'Payment-in Discount',
-      type: ExpenseCategoryType.direct,
-      variant: ExpenseCategoryVariant.standard,
-      totalAmount: 69,
-      balance: 0,
+    TimeRangeOption.thisMonth => DateTimeRange(
+      start: DateTime(now.year, now.month),
+      end: _endOfDay(DateTime(now.year, now.month + 1, 0)),
     ),
-    ExpenseCategoryModel(
-      id: 'petrol',
-      name: 'Petrol',
-      type: ExpenseCategoryType.direct,
-      variant: ExpenseCategoryVariant.standard,
-      totalAmount: 0,
-      balance: 0,
+    TimeRangeOption.thisYear => DateTimeRange(
+      start: DateTime(now.year),
+      end: _endOfDay(DateTime(now.year, 12, 31)),
     ),
-    ExpenseCategoryModel(
-      id: 'rent',
-      name: 'Rent',
-      type: ExpenseCategoryType.direct,
-      variant: ExpenseCategoryVariant.standard,
-      totalAmount: 0,
-      balance: 0,
-    ),
-    ExpenseCategoryModel(
-      id: 'salary',
-      name: 'Salary',
-      type: ExpenseCategoryType.direct,
-      variant: ExpenseCategoryVariant.standard,
-      totalAmount: 0,
-      balance: 0,
-    ),
-    ExpenseCategoryModel(
-      id: 'tea',
-      name: 'Tea',
-      type: ExpenseCategoryType.indirect,
-      variant: ExpenseCategoryVariant.standard,
-      totalAmount: 0,
-      balance: 0,
-    ),
-    ExpenseCategoryModel(
-      id: 'transport',
-      name: 'Transport',
-      type: ExpenseCategoryType.direct,
-      variant: ExpenseCategoryVariant.standard,
-      totalAmount: 0,
-      balance: 0,
-    ),
-  ];
+    TimeRangeOption.custom => custom,
+  };
 }
 
-List<ExpenseTransactionModel> _mockExpenseTransactions() {
-  return [
-    ExpenseTransactionModel(
-      id: 'lr-1',
-      categoryId: _loyaltyCategoryId,
-      date: DateTime(2026, 2, 23),
-      transactionNo: '9',
-      party: 'ADVWDV',
-      loyaltyPoints: 1.03,
-      loyaltyValue: 103,
-    ),
-    ExpenseTransactionModel(
-      id: 'pd-1',
-      categoryId: _paymentDiscountCategoryId,
-      date: DateTime(2026, 3, 20),
-      transactionNo: '9',
-      party: 'ADVWDV',
-      paymentType: 'Cash',
-      amount: 59,
-      balance: 0,
-      dueDate: DateTime(2026, 7, 2),
-      status: ExpenseStatus.partial,
-    ),
-    ExpenseTransactionModel(
-      id: 'pd-2',
-      categoryId: _paymentDiscountCategoryId,
-      date: DateTime(2026, 3, 20),
-      transactionNo: '8',
-      party: 'PARTYAV',
-      paymentType: 'Cash',
-      amount: 10,
-      balance: 0,
-      dueDate: DateTime(2026, 7, 2),
-    ),
-  ];
-}
-
-List<ExpenseItemModel> _mockExpenseItems() {
-  return const [
-    ExpenseItemModel(
-      id: 'august-month',
-      name: 'august month',
-      category: 'Misc',
-      amount: 19800,
-    ),
-    ExpenseItemModel(
-      id: 'crips',
-      name: 'Crips',
-      category: 'Misc',
-      amount: 26,
-    ),
-  ];
-}
-
-List<ExpenseTransactionModel> _mockItemExpenseTransactions() {
-  return [
-    ExpenseTransactionModel(
-      id: 'crips-1',
-      itemId: 'crips',
-      date: DateTime(2026, 2, 16, 12, 30),
-      transactionNo: '',
-      party: '',
-      paymentType: 'Cash',
-      amount: 26,
-      balance: 0,
-      status: ExpenseStatus.paid,
-    ),
-  ];
-}
-
-@riverpod
+@Riverpod(keepAlive: true)
 class ExpenseCategories extends _$ExpenseCategories {
   @override
-  List<ExpenseCategoryModel> build() => _mockExpenseCategories();
-
-  void addCategory(ExpenseCategoryModel category) {
-    if (state.any((c) => c.id == category.id)) return;
-    state = [...state, category];
+  Future<List<ExpenseCategoryModel>> build() async {
+    ref.watch(expenseFiltersProvider);
+    final service = await ref.read(expenseServiceProvider.future);
+    return service.fetchCategories();
   }
 
-  void updateCategoryTotals(String categoryId, double amount, double balance) {
-    state = [
-      for (final category in state)
-        if (category.id == categoryId)
-          ExpenseCategoryModel(
-            id: category.id,
-            name: category.name,
-            type: category.type,
-            variant: category.variant,
-            totalAmount: category.totalAmount + amount,
-            balance: category.balance + balance,
-          )
-        else
-          category,
-    ];
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final service = await ref.read(expenseServiceProvider.future);
+      return service.fetchCategories();
+    });
+  }
+
+  Future<String?> addCategory(String name) async {
+    try {
+      final service = await ref.read(expenseServiceProvider.future);
+      await service.createCategory(
+        CreateExpenseCategoryRequest(name: name),
+      );
+      await refresh();
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class ExpenseTransactions extends _$ExpenseTransactions {
   @override
-  List<ExpenseTransactionModel> build() => [
-    ..._mockExpenseTransactions(),
-    ..._mockItemExpenseTransactions(),
-  ];
+  Future<List<ExpenseTransactionModel>> build() async {
+    ref.watch(expenseFiltersProvider);
+    final filters = ref.read(expenseFiltersProvider);
+    final service = await ref.read(expenseServiceProvider.future);
+    return service.fetchExpenses(
+      query: ExpenseListQuery(
+        page: filters.currentPage,
+        from: _resolveTimeRange(
+          filters.timeRangeOption,
+          filters.customDateRange,
+        )?.start.toUtc().toIso8601String(),
+        to: _resolveTimeRange(
+          filters.timeRangeOption,
+          filters.customDateRange,
+        )?.end.toUtc().toIso8601String(),
+      ),
+    );
+  }
 
-  void addTransaction(ExpenseTransactionModel transaction) {
-    state = [transaction, ...state];
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final filters = ref.read(expenseFiltersProvider);
+      final service = await ref.read(expenseServiceProvider.future);
+      return service.fetchExpenses(
+        query: ExpenseListQuery(page: filters.currentPage),
+      );
+    });
   }
 }
 
 @riverpod
 class ExpenseItems extends _$ExpenseItems {
   @override
-  List<ExpenseItemModel> build() => _mockExpenseItems();
+  List<ExpenseItemModel> build() => const [];
 
   void upsertItem(ExpenseItemModel item) {
     final index = state.indexWhere((existing) => existing.id == item.id);
@@ -243,7 +170,7 @@ class ExpenseTabIndex extends _$ExpenseTabIndex {
 @riverpod
 class SelectedExpenseCategoryId extends _$SelectedExpenseCategoryId {
   @override
-  String? build() => _loyaltyCategoryId;
+  String? build() => null;
 
   String? get selected => state;
   set selected(String? id) => state = id;
@@ -252,7 +179,7 @@ class SelectedExpenseCategoryId extends _$SelectedExpenseCategoryId {
 @riverpod
 class SelectedExpenseItemId extends _$SelectedExpenseItemId {
   @override
-  String? build() => 'crips';
+  String? build() => null;
 
   String? get selected => state;
   set selected(String? id) => state = id;
@@ -305,6 +232,7 @@ class ExpenseFilters extends _$ExpenseFilters {
       timeRangeOption: TimeRangeOptionX.fromLabel(label),
       currentPage: 1,
     );
+    ref.invalidate(expenseTransactionsProvider);
   }
 
   void setFirm(String firm) {
@@ -318,7 +246,11 @@ class ExpenseFilters extends _$ExpenseFilters {
 
 @riverpod
 List<ExpenseCategoryModel> filteredExpenseCategories(Ref ref) {
-  final categories = ref.watch(expenseCategoriesProvider);
+  final categoriesAsync = ref.watch(expenseCategoriesProvider);
+  final categories = categoriesAsync.maybeWhen(
+    data: (items) => items,
+    orElse: () => const <ExpenseCategoryModel>[],
+  );
   final query = ref
       .watch(expenseCategorySearchQueryProvider)
       .trim()
@@ -333,7 +265,11 @@ List<ExpenseTransactionModel> categoryExpenseTransactions(
   Ref ref,
   String categoryId,
 ) {
-  final transactions = ref.watch(expenseTransactionsProvider);
+  final transactionsAsync = ref.watch(expenseTransactionsProvider);
+  final transactions = transactionsAsync.maybeWhen(
+    data: (items) => items,
+    orElse: () => const <ExpenseTransactionModel>[],
+  );
   final query = ref
       .watch(expenseTransactionSearchQueryProvider)
       .trim()
@@ -364,7 +300,11 @@ List<ExpenseTransactionModel> itemExpenseTransactions(
   Ref ref,
   String itemId,
 ) {
-  final transactions = ref.watch(expenseTransactionsProvider);
+  final transactionsAsync = ref.watch(expenseTransactionsProvider);
+  final transactions = transactionsAsync.maybeWhen(
+    data: (items) => items,
+    orElse: () => const <ExpenseTransactionModel>[],
+  );
   final query = ref
       .watch(expenseItemTransactionSearchQueryProvider)
       .trim()
@@ -381,6 +321,10 @@ List<ExpenseTransactionModel> itemExpenseTransactions(
 
 @riverpod
 double expensesTotalAmount(Ref ref) {
-  final categories = ref.watch(expenseCategoriesProvider);
+  final categoriesAsync = ref.watch(expenseCategoriesProvider);
+  final categories = categoriesAsync.maybeWhen(
+    data: (items) => items,
+    orElse: () => const <ExpenseCategoryModel>[],
+  );
   return categories.fold<double>(0, (sum, c) => sum + c.totalAmount);
 }

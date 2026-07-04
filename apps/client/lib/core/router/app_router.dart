@@ -231,6 +231,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AddPurchasePage(),
           ),
           GoRoute(
+            path: '${AppRoutes.editPurchase}/:billId',
+            name: 'editPurchase',
+            builder: (context, state) => AddPurchasePage(
+              billId: state.pathParameters['billId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.addPurchaseOrder,
             name: 'addPurchaseOrder',
             builder: (context, state) => const AddPurchaseOrderPage(),

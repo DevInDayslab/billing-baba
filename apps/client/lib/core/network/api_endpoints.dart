@@ -77,6 +77,25 @@ abstract final class ApiEndpoints {
   static String paymentAllocation(String id, String allocationId) =>
       '${paymentAllocations(id)}/$allocationId';
 
+  static const purchases = '/api/v1/purchases';
+  static const purchaseDocuments = '$purchases/purchase-documents';
+  static String purchaseDocument(String id) => '$purchaseDocuments/$id';
+  static String purchaseDocumentLines(String id) =>
+      '${purchaseDocument(id)}/lines';
+  static String purchaseDocumentLine(String id, String lineId) =>
+      '${purchaseDocumentLines(id)}/$lineId';
+  static String purchaseDocumentFinalize(String id) =>
+      '${purchaseDocument(id)}/finalize';
+  static String purchaseDocumentCancel(String id) =>
+      '${purchaseDocument(id)}/cancel';
+  static String purchaseDocumentConvert(String id) =>
+      '${purchaseDocument(id)}/convert';
+
+  static const expenses = '$purchases/expenses';
+  static String expense(String id) => '$expenses/$id';
+  static const expenseCategories = '$purchases/expense-categories';
+  static String expenseCategory(String id) => '$expenseCategories/$id';
+
   static const jobWork = '/api/v1/job-work';
   static const jobWorkOrders = '$jobWork/job-work-orders';
   static String jobWorkOrder(String id) => '$jobWorkOrders/$id';

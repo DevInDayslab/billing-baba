@@ -10,23 +10,30 @@ part of 'add_purchase_order_form_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(AddPurchaseOrderForm)
-final addPurchaseOrderFormProvider = AddPurchaseOrderFormProvider._();
+final addPurchaseOrderFormProvider = AddPurchaseOrderFormFamily._();
 
 final class AddPurchaseOrderFormProvider
     extends $NotifierProvider<AddPurchaseOrderForm, AddPurchaseOrderFormState> {
-  AddPurchaseOrderFormProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'addPurchaseOrderFormProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  AddPurchaseOrderFormProvider._({
+    required AddPurchaseOrderFormFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'addPurchaseOrderFormProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$addPurchaseOrderFormHash();
+
+  @override
+  String toString() {
+    return r'addPurchaseOrderFormProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -39,14 +46,52 @@ final class AddPurchaseOrderFormProvider
       providerOverride: $SyncValueProvider<AddPurchaseOrderFormState>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AddPurchaseOrderFormProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$addPurchaseOrderFormHash() =>
-    r'33f7f043defcf97ca360c64ec9cab8417ae1d4da';
+    r'bd3b8891e37d4135ae156c6de97321a2bcf36a77';
+
+final class AddPurchaseOrderFormFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          AddPurchaseOrderForm,
+          AddPurchaseOrderFormState,
+          AddPurchaseOrderFormState,
+          AddPurchaseOrderFormState,
+          String?
+        > {
+  AddPurchaseOrderFormFamily._()
+    : super(
+        retry: null,
+        name: r'addPurchaseOrderFormProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AddPurchaseOrderFormProvider call({String? orderId}) =>
+      AddPurchaseOrderFormProvider._(argument: orderId, from: this);
+
+  @override
+  String toString() => r'addPurchaseOrderFormProvider';
+}
 
 abstract class _$AddPurchaseOrderForm
     extends $Notifier<AddPurchaseOrderFormState> {
-  AddPurchaseOrderFormState build();
+  late final _$args = ref.$arg as String?;
+  String? get orderId => _$args;
+
+  AddPurchaseOrderFormState build({String? orderId});
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -60,7 +105,7 @@ abstract class _$AddPurchaseOrderForm
               Object?,
               Object?
             >;
-    return element.handleCreate(ref, build);
+    return element.handleCreate(ref, () => build(orderId: _$args));
   }
 }
 
@@ -104,7 +149,7 @@ final class AddPurchaseOrderTotalTaxProvider
 }
 
 String _$addPurchaseOrderTotalTaxHash() =>
-    r'cd3575420d11236bee8059c9665f9ad8ed2f775a';
+    r'99e158b2ede73ed8579311672d6ede5efefdc412';
 
 @ProviderFor(addPurchaseOrderGrandTotal)
 final addPurchaseOrderGrandTotalProvider =
@@ -147,4 +192,4 @@ final class AddPurchaseOrderGrandTotalProvider
 }
 
 String _$addPurchaseOrderGrandTotalHash() =>
-    r'08104b630ff148895917984492b2cbbf6ec464df';
+    r'e5e2cbc566af3c2e507f8ca2e25b7e10d2ba5e8d';

@@ -92,8 +92,8 @@ class _PageHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addPurchaseOrderFormProvider);
-    final notifier = ref.read(addPurchaseOrderFormProvider.notifier);
+    final form = ref.watch(addPurchaseOrderFormProvider());
+    final notifier = ref.read(addPurchaseOrderFormProvider().notifier);
 
     return Row(
       children: [
@@ -128,8 +128,8 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
 
   @override
   Widget build(BuildContext context) {
-    final form = ref.watch(addPurchaseOrderFormProvider);
-    final notifier = ref.read(addPurchaseOrderFormProvider.notifier);
+    final form = ref.watch(addPurchaseOrderFormProvider());
+    final notifier = ref.read(addPurchaseOrderFormProvider().notifier);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -279,7 +279,7 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
       initialTime: current ?? TimeOfDay.now(),
     );
     if (picked != null) {
-      ref.read(addPurchaseOrderFormProvider.notifier).updateOrderTime(picked);
+      ref.read(addPurchaseOrderFormProvider().notifier).updateOrderTime(picked);
     }
   }
 }
@@ -289,7 +289,7 @@ class _BottomActionBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(addPurchaseOrderFormProvider.notifier);
+    final notifier = ref.read(addPurchaseOrderFormProvider().notifier);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -331,7 +331,7 @@ class _BottomActionBar extends ConsumerWidget {
   }
 
   Future<void> _handleCancel(BuildContext context, WidgetRef ref) async {
-    final form = ref.read(addPurchaseOrderFormProvider);
+    final form = ref.read(addPurchaseOrderFormProvider());
     if (form.isDirty) {
       final discard = await showDialog<bool>(
         context: context,
@@ -357,13 +357,19 @@ class _BottomActionBar extends ConsumerWidget {
     if (context.mounted) context.pop();
   }
 
-  void _handleSave(
+  Future<void> _handleSave(
     BuildContext context,
     WidgetRef ref,
     AddPurchaseOrderForm notifier,
-  ) {
-    final saved = notifier.save();
-    if (!saved) return;
+  ) async {
+    final error = await notifier.saveOrder();
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
 
     showTransactionSuccessToast(context);
     context.go(AppRoutes.purchaseOrder);

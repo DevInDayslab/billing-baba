@@ -1,4 +1,8 @@
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
+import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -62,144 +66,19 @@ class PurchaseBillSummaryData {
   final double totalAmount;
 }
 
-class PaginatedPurchaseBills {
-  const PaginatedPurchaseBills({
-    required this.items,
-    required this.currentPage,
-    required this.totalPages,
-    required this.totalItems,
-  });
+PurchaseBillStatus? _paymentStatusFromFilterLabel(String label) =>
+    switch (label) {
+      'Paid' => PurchaseBillStatus.paid,
+      'Unpaid' => PurchaseBillStatus.unpaid,
+      'Partial' => PurchaseBillStatus.partiallyPaid,
+      'Overdue' => PurchaseBillStatus.overdue,
+      'Cancelled' => PurchaseBillStatus.cancelled,
+      _ => null,
+    };
 
-  final List<PurchaseBillModel> items;
-  final int currentPage;
-  final int totalPages;
-  final int totalItems;
-}
-
-List<PurchaseBillModel> _mockPurchaseBills() {
-  const parties = [
-    'KK INDUSTRIES',
-    'Sharma Traders',
-    'Patel Electronics',
-    'Gupta General Store',
-    'Mehta Hardware',
-    'Singh & Sons',
-    'Kumar Agencies',
-    'Reddy Mart',
-    'Joshi Distributors',
-    'Verma Enterprises',
-  ];
-
-  const paymentTypes = ['Cash', 'Credit', 'UPI', 'Cheque'];
-
-  PurchaseBillModel buildBill({
-    required int id,
-    required DateTime date,
-    required PurchaseBillStatus status,
-    int partyIndex = 0,
-    double? amount,
-    double? balanceDue,
-    DateTime? dueDate,
-  }) {
-    final billAmount = amount ?? (5000 + (id * 750) % 25000).toDouble();
-    final balance =
-        balanceDue ??
-        switch (status) {
-          PurchaseBillStatus.paid => 0.0,
-          PurchaseBillStatus.cancelled => 0.0,
-          PurchaseBillStatus.unpaid => billAmount,
-          PurchaseBillStatus.overdue => billAmount,
-          PurchaseBillStatus.partiallyPaid =>
-            (billAmount * 0.2).roundToDouble(),
-        };
-
-    return PurchaseBillModel(
-      id: '$id',
-      invoiceNo: 'PB-${1000 + id}',
-      date: date,
-      partyName: parties[partyIndex % parties.length],
-      paymentType: paymentTypes[id % paymentTypes.length],
-      status: status,
-      amount: billAmount,
-      balanceDue: balance,
-      dueDate: dueDate ?? date.add(const Duration(days: 15)),
-      user: id % 3 == 0 ? 'Admin' : 'Staff',
-      firm: id.isEven ? 'Main Firm' : 'Branch Firm',
-    );
-  }
-
-  return [
-    buildBill(
-      id: 1,
-      date: DateTime(2026, 7, 2, 18, 23),
-      status: PurchaseBillStatus.partiallyPaid,
-      amount: 25000,
-      balanceDue: 5000,
-      dueDate: DateTime(2026, 7, 2),
-    ),
-    buildBill(
-      id: 2,
-      date: DateTime(2026, 7, 5),
-      status: PurchaseBillStatus.paid,
-      partyIndex: 1,
-    ),
-    buildBill(
-      id: 3,
-      date: DateTime(2026, 7, 8),
-      status: PurchaseBillStatus.unpaid,
-      partyIndex: 2,
-    ),
-    buildBill(
-      id: 4,
-      date: DateTime(2026, 6, 20),
-      status: PurchaseBillStatus.overdue,
-      partyIndex: 3,
-    ),
-    buildBill(
-      id: 5,
-      date: DateTime(2026, 7, 12),
-      status: PurchaseBillStatus.partiallyPaid,
-      partyIndex: 4,
-    ),
-    buildBill(
-      id: 6,
-      date: DateTime(2026, 7, 15),
-      status: PurchaseBillStatus.paid,
-      partyIndex: 5,
-    ),
-    buildBill(
-      id: 7,
-      date: DateTime(2026, 7, 18),
-      status: PurchaseBillStatus.unpaid,
-      partyIndex: 6,
-    ),
-    buildBill(
-      id: 8,
-      date: DateTime(2026, 7, 22),
-      status: PurchaseBillStatus.cancelled,
-      partyIndex: 7,
-    ),
-    buildBill(
-      id: 9,
-      date: DateTime(2026, 7, 25),
-      status: PurchaseBillStatus.paid,
-      partyIndex: 8,
-    ),
-    buildBill(
-      id: 10,
-      date: DateTime(2026, 7, 28),
-      status: PurchaseBillStatus.partiallyPaid,
-      partyIndex: 9,
-    ),
-  ];
-}
-
-PurchaseBillStatus? _statusFromFilterLabel(String label) => switch (label) {
-  'Paid' => PurchaseBillStatus.paid,
-  'Unpaid' => PurchaseBillStatus.unpaid,
-  'Partial' => PurchaseBillStatus.partiallyPaid,
-  'Overdue' => PurchaseBillStatus.overdue,
-  'Cancelled' => PurchaseBillStatus.cancelled,
+String? _documentStatusFromFilterLabel(String label) => switch (label) {
+  'Cancelled' => 'cancelled',
+  'Draft' => 'draft',
   _ => null,
 };
 
@@ -208,12 +87,6 @@ DateTime _startOfDay(DateTime date) =>
 
 DateTime _endOfDay(DateTime date) =>
     DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
-
-bool _isWithinRange(DateTime date, DateTime start, DateTime end) {
-  final normalized = _startOfDay(date);
-  return !normalized.isBefore(_startOfDay(start)) &&
-      !normalized.isAfter(_startOfDay(end));
-}
 
 DateTimeRange? _resolveTimeRange(
   TimeRangeOption option,
@@ -243,13 +116,121 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
+PurchaseDocumentListQuery _buildListQuery(
+  PurchaseBillFiltersState filters,
+  String searchQuery,
+) {
+  final dateRange = _resolveTimeRange(
+    filters.timeRangeOption,
+    filters.customDateRange,
+  );
+
+  return PurchaseDocumentListQuery(
+    page: filters.currentPage,
+    limit: purchaseBillsPageSize,
+    documentType: PurchaseDocumentType.purchaseBill.apiValue,
+    status: _documentStatusFromFilterLabel(filters.selectedStatus),
+    from: dateRange?.start.toUtc().toIso8601String(),
+    to: dateRange?.end.toUtc().toIso8601String(),
+    q: searchQuery.trim().isEmpty ? null : searchQuery.trim(),
+  );
+}
+
+List<PurchaseBillModel> _applyClientFilters(
+  List<PurchaseBillModel> bills,
+  PurchaseBillFiltersState filters,
+) {
+  final paymentStatus = _paymentStatusFromFilterLabel(filters.selectedStatus);
+
+  return bills.where((bill) {
+    if (paymentStatus != null && bill.status != paymentStatus) {
+      return false;
+    }
+    if (filters.selectedUser != 'All Users' &&
+        bill.user != filters.selectedUser) {
+      return false;
+    }
+    if (filters.selectedFirm != 'All Firms' &&
+        bill.firm != filters.selectedFirm) {
+      return false;
+    }
+    return true;
+  }).toList();
+}
+
 @riverpod
+class PurchaseBillSearchQuery extends _$PurchaseBillSearchQuery {
+  @override
+  String build() => '';
+
+  void setQuery(String value) => state = value;
+}
+
+@Riverpod(keepAlive: true)
 class PurchaseBills extends _$PurchaseBills {
   @override
-  List<PurchaseBillModel> build() => _mockPurchaseBills();
+  Future<PaginatedPurchaseBills> build() async {
+    ref.watch(purchaseBillFiltersProvider);
+    ref.watch(purchaseBillSearchQueryProvider);
+    return _fetchPage();
+  }
 
-  void addBill(PurchaseBillModel bill) {
-    state = [bill, ...state];
+  Future<PaginatedPurchaseBills> _fetchPage() async {
+    final filters = ref.read(purchaseBillFiltersProvider);
+    final search = ref.read(purchaseBillSearchQueryProvider);
+    final service = await ref.read(purchaseServiceProvider.future);
+    final page = await service.fetchBillsPage(
+      _buildListQuery(filters, search),
+    );
+
+    final filteredItems = _applyClientFilters(page.items, filters);
+    return PaginatedPurchaseBills(
+      items: filteredItems,
+      currentPage: page.currentPage,
+      totalPages: page.totalPages,
+      totalItems: page.totalItems,
+    );
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(_fetchPage);
+  }
+
+  Future<String?> deleteDraft(String documentId) async {
+    final previous = state;
+    final current = state.value;
+    if (current != null) {
+      state = AsyncData(
+        PaginatedPurchaseBills(
+          items: current.items.where((item) => item.id != documentId).toList(),
+          currentPage: current.currentPage,
+          totalPages: current.totalPages,
+          totalItems: current.totalItems - 1,
+        ),
+      );
+    }
+
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      await service.deleteDraft(documentId);
+      await refresh();
+      return null;
+    } catch (error) {
+      state = previous;
+      return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<String?> finalizeBill(String documentId, {String? godownId}) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      await service.finalizeDraft(documentId, godownId: godownId);
+      await refresh();
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
   }
 }
 
@@ -263,6 +244,7 @@ class PurchaseBillFilters extends _$PurchaseBillFilters {
       timeRangeOption: TimeRangeOptionX.fromLabel(label),
       currentPage: 1,
     );
+    ref.invalidate(purchaseBillsProvider);
   }
 
   void setCustomDateRange(
@@ -276,80 +258,48 @@ class PurchaseBillFilters extends _$PurchaseBillFilters {
       customDateRange: range,
       currentPage: 1,
     );
+    ref.invalidate(purchaseBillsProvider);
   }
 
   void setFirm(String firm) {
     state = state.copyWith(selectedFirm: firm, currentPage: 1);
+    ref.invalidate(purchaseBillsProvider);
   }
 
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
+    ref.invalidate(purchaseBillsProvider);
   }
 
   void setStatus(String status) {
     state = state.copyWith(selectedStatus: status, currentPage: 1);
+    ref.invalidate(purchaseBillsProvider);
   }
 
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
+    ref.invalidate(purchaseBillsProvider);
   }
 }
 
 @riverpod
-List<PurchaseBillModel> filteredPurchaseBills(Ref ref) {
-  final bills = ref.watch(purchaseBillsProvider);
-  final filters = ref.watch(purchaseBillFiltersProvider);
-
-  final dateRange = _resolveTimeRange(
-    filters.timeRangeOption,
-    filters.customDateRange,
-  );
-  final statusFilter = _statusFromFilterLabel(filters.selectedStatus);
-
-  return bills.where((bill) {
-    if (statusFilter != null && bill.status != statusFilter) {
-      return false;
-    }
-    if (filters.selectedUser != 'All Users' &&
-        bill.user != filters.selectedUser) {
-      return false;
-    }
-    if (filters.selectedFirm != 'All Firms' &&
-        bill.firm != filters.selectedFirm) {
-      return false;
-    }
-    if (dateRange != null &&
-        !_isWithinRange(bill.date, dateRange.start, dateRange.end)) {
-      return false;
-    }
-    return true;
-  }).toList();
-}
-
-@riverpod
 PaginatedPurchaseBills paginatedPurchaseBills(Ref ref) {
-  final filtered = ref.watch(filteredPurchaseBillsProvider);
-  final filters = ref.watch(purchaseBillFiltersProvider);
-
-  final totalItems = filtered.length;
-  final totalPages = totalItems == 0
-      ? 1
-      : (totalItems / purchaseBillsPageSize).ceil();
-  final currentPage = filters.currentPage.clamp(1, totalPages);
-  final startIndex = (currentPage - 1) * purchaseBillsPageSize;
-  final endIndex = (startIndex + purchaseBillsPageSize).clamp(0, totalItems);
-
-  return PaginatedPurchaseBills(
-    items: filtered.sublist(startIndex, endIndex),
-    currentPage: currentPage,
-    totalPages: totalPages,
-    totalItems: totalItems,
+  final billsAsync = ref.watch(purchaseBillsProvider);
+  return billsAsync.maybeWhen(
+    data: (page) => page,
+    orElse: () => const PaginatedPurchaseBills(
+      items: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+    ),
   );
 }
 
 @riverpod
 PurchaseBillSummaryData purchaseBillSummary(Ref ref) {
-  final bills = ref.watch(filteredPurchaseBillsProvider);
+  final page = ref.watch(paginatedPurchaseBillsProvider);
+  final bills = page.items;
 
   var paidAmount = 0.0;
   var unpaidAmount = 0.0;

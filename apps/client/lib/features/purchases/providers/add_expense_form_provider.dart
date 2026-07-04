@@ -1,6 +1,10 @@
+import 'package:billing_baba/features/purchases/application/expense_service.dart';
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/expense_form_model.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
+import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -18,14 +22,9 @@ String _nextExpenseLineItemId() {
 class AddExpenseForm extends _$AddExpenseForm {
   @override
   AddExpenseFormState build() {
-    final transactions = ref.watch(expenseTransactionsProvider);
     final now = DateTime.now();
-    final expenseNumber = generateNextExpenseNumber(
-      transactions.map((t) => t.transactionNo).toList(),
-    );
-
     return AddExpenseFormState(
-      expenseNumber: expenseNumber,
+      expenseNumber: 'Auto',
       expenseDate: DateTime(now.year, now.month, now.day),
       expenseTime: TimeOfDay.fromDateTime(now),
       dueDate: DateTime(now.year, now.month, now.day),
@@ -203,84 +202,50 @@ class AddExpenseForm extends _$AddExpenseForm {
     return isValid;
   }
 
+  Future<String?> saveExpense() async {
+    if (!validate()) return 'Please fill required fields';
+
+    final categoryId = state.categoryId;
+    if (categoryId.isEmpty) {
+      return 'Category is required';
+    }
+
+    try {
+      final service = await ref.read(expenseServiceProvider.future);
+      final date = state.expenseDate ?? DateTime.now();
+      final time = state.expenseTime ?? TimeOfDay.now();
+      final expenseDateTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+
+      await service.createExpense(
+        CreateExpenseRequest(
+          categoryId: categoryId,
+          amount: state.grandTotal.toStringAsFixed(4),
+          expenseDate: expenseDateTime.toUtc().toIso8601String(),
+          description: state.description.trim().isEmpty
+              ? null
+              : state.description.trim(),
+          paymentMode: PurchasePaymentModes.toApi(state.paymentType),
+        ),
+      );
+
+      ref.invalidate(expenseTransactionsProvider);
+      ref.invalidate(expenseCategoriesProvider);
+      ref.invalidateSelf();
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+
   bool save() {
-    if (!validate()) return false;
-
-    final categoryId = state.categoryId.isNotEmpty
-        ? state.categoryId
-        : state.category.trim().toLowerCase().replaceAll(' ', '_');
-
-    final categories = ref.read(expenseCategoriesProvider);
-    if (!categories.any((c) => c.id == categoryId)) {
-      ref
-          .read(expenseCategoriesProvider.notifier)
-          .addCategory(
-            ExpenseCategoryModel(
-              id: categoryId,
-              name: state.category.trim(),
-              type: ExpenseCategoryType.direct,
-              variant: ExpenseCategoryVariant.standard,
-              totalAmount: 0,
-              balance: 0,
-            ),
-          );
-    }
-
-    final date = state.expenseDate ?? DateTime.now();
-    final time = state.expenseTime ?? TimeOfDay.now();
-    final expenseDateTime = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
-
-    final grandTotal = state.grandTotal;
-    final paid = state.paymentAmount > 0 ? state.paymentAmount : grandTotal;
-    final balance = grandTotal - paid;
-
-    final status = balance <= 0
-        ? ExpenseStatus.paid
-        : paid > 0
-        ? ExpenseStatus.partial
-        : ExpenseStatus.pending;
-
-    final transaction = ExpenseTransactionModel(
-      id: 'exp-${DateTime.now().millisecondsSinceEpoch}',
-      categoryId: categoryId,
-      date: expenseDateTime,
-      transactionNo: state.expenseNumber,
-      party: state.party.trim().isNotEmpty ? state.party.trim() : '—',
-      paymentType: state.paymentType,
-      amount: grandTotal,
-      balance: balance,
-      dueDate: state.dueDate ?? expenseDateTime,
-      status: status,
-    );
-
-    ref.read(expenseTransactionsProvider.notifier).addTransaction(transaction);
-    ref
-        .read(expenseCategoriesProvider.notifier)
-        .updateCategoryTotals(categoryId, grandTotal, balance);
-
-    for (final item in state.items) {
-      if (item.itemName.trim().isEmpty || item.qty <= 0) continue;
-      ref
-          .read(expenseItemsProvider.notifier)
-          .upsertItem(
-            ExpenseItemModel(
-              id: item.id,
-              name: item.itemName.trim(),
-              category: state.category,
-              amount: item.amount,
-              description: item.description.trim(),
-            ),
-          );
-    }
-
-    ref.invalidateSelf();
-    return true;
+    validate();
+    return false;
   }
 }
 
@@ -298,6 +263,9 @@ double addExpenseTotalTax(Ref ref) {
 
 @riverpod
 List<String> expenseCategoryOptions(Ref ref) {
-  final categories = ref.watch(expenseCategoriesProvider);
-  return categories.map((c) => c.name).toList();
+  final categoriesAsync = ref.watch(expenseCategoriesProvider);
+  return categoriesAsync.maybeWhen(
+    data: (categories) => categories.map((c) => c.name).toList(),
+    orElse: () => const <String>[],
+  );
 }

@@ -1,7 +1,9 @@
-import 'package:billing_baba/features/purchases/models/debit_note_form_model.dart';
+import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_return_model.dart';
-import 'package:billing_baba/features/purchases/providers/debit_note_form_provider.dart';
+import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -67,20 +69,6 @@ class PurchaseReturnFiltersState {
   }
 }
 
-class PaginatedPurchaseReturns {
-  const PaginatedPurchaseReturns({
-    required this.items,
-    required this.currentPage,
-    required this.totalPages,
-    required this.totalItems,
-  });
-
-  final List<PurchaseReturnModel> items;
-  final int currentPage;
-  final int totalPages;
-  final int totalItems;
-}
-
 class PurchaseReturnSummaryData {
   const PurchaseReturnSummaryData({
     required this.totalAmount,
@@ -89,54 +77,6 @@ class PurchaseReturnSummaryData {
 
   final double totalAmount;
   final double balance;
-}
-
-List<PurchaseReturnModel> _mockPurchaseReturns() {
-  return [
-    PurchaseReturnModel(
-      id: '1',
-      debitNoteNo: '1',
-      date: DateTime(2026, 7, 2, 19, 11),
-      partyName: 'KK INDUSTRIES',
-      categoryName: '',
-      type: 'Debit Note',
-      status: PurchaseBillStatus.unpaid,
-      total: 50,
-      receivedPaid: 0,
-      balance: 50,
-      dueDate: DateTime(2026, 7, 2),
-    ),
-  ];
-}
-
-PurchaseReturnModel _fromSavedDebitNote(SavedDebitNote note) {
-  final date = note.returnDate ?? note.savedAt;
-  final time = note.returnTime;
-  final dateTime = time != null
-      ? DateTime(
-          date.year,
-          date.month,
-          date.day,
-          time.hour,
-          time.minute,
-        )
-      : date;
-
-  return PurchaseReturnModel(
-    id: note.id,
-    debitNoteNo: note.returnNo,
-    date: dateTime,
-    partyName: note.party,
-    categoryName: '',
-    type: 'Debit Note',
-    status: note.status,
-    total: note.total,
-    receivedPaid: note.paymentAmount,
-    balance: note.balance,
-    dueDate: date.add(const Duration(days: 15)),
-    paymentType: note.paymentType,
-    godown: note.godown,
-  );
 }
 
 PurchaseBillStatus? _statusFromFilterLabel(String label) => switch (label) {
@@ -148,17 +88,17 @@ PurchaseBillStatus? _statusFromFilterLabel(String label) => switch (label) {
   _ => null,
 };
 
+String? _documentStatusFromFilterLabel(String label) => switch (label) {
+  'Cancelled' => 'cancelled',
+  'Draft' => 'draft',
+  _ => null,
+};
+
 DateTime _startOfDay(DateTime date) =>
     DateTime(date.year, date.month, date.day);
 
 DateTime _endOfDay(DateTime date) =>
     DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
-
-bool _isWithinRange(DateTime date, DateTime start, DateTime end) {
-  final normalized = _startOfDay(date);
-  return !normalized.isBefore(_startOfDay(start)) &&
-      !normalized.isAfter(_startOfDay(end));
-}
 
 DateTimeRange? _resolveTimeRange(
   TimeRangeOption option,
@@ -188,91 +128,28 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-@riverpod
-class PurchaseReturns extends _$PurchaseReturns {
-  @override
-  List<PurchaseReturnModel> build() => _mockPurchaseReturns();
-}
-
-@riverpod
-class PurchaseReturnFilters extends _$PurchaseReturnFilters {
-  @override
-  PurchaseReturnFiltersState build() => const PurchaseReturnFiltersState();
-
-  void setTimeRange(String label) {
-    state = state.copyWith(
-      timeRangeOption: TimeRangeOptionX.fromLabel(label),
-      currentPage: 1,
-    );
-  }
-
-  void setCustomDateRange(
-    DateTimeRange range, {
-    bool autoSwitchToCustom = false,
-  }) {
-    state = state.copyWith(
-      timeRangeOption: autoSwitchToCustom
-          ? TimeRangeOption.custom
-          : state.timeRangeOption,
-      customDateRange: range,
-      currentPage: 1,
-    );
-  }
-
-  void setTransaction(String transaction) {
-    state = state.copyWith(selectedTransaction: transaction, currentPage: 1);
-  }
-
-  void setFirm(String firm) {
-    state = state.copyWith(selectedFirm: firm, currentPage: 1);
-  }
-
-  void setUser(String user) {
-    state = state.copyWith(selectedUser: user, currentPage: 1);
-  }
-
-  void setGodown(String godown) {
-    state = state.copyWith(selectedGodown: godown, currentPage: 1);
-  }
-
-  void setPayment(String payment) {
-    state = state.copyWith(selectedPayment: payment, currentPage: 1);
-  }
-
-  void setStatus(String status) {
-    state = state.copyWith(selectedStatus: status, currentPage: 1);
-  }
-
-  void setSearchQuery(String query) {
-    state = state.copyWith(searchQuery: query, currentPage: 1);
-  }
-
-  void setPage(int page) {
-    state = state.copyWith(currentPage: page);
-  }
-}
-
-@riverpod
-List<PurchaseReturnModel> allPurchaseReturns(Ref ref) {
-  final mock = ref.watch(purchaseReturnsProvider);
-  final saved = ref
-      .watch(savedDebitNotesProvider)
-      .map(_fromSavedDebitNote)
-      .toList();
-  return [...saved, ...mock];
-}
-
-@riverpod
-List<PurchaseReturnModel> filteredPurchaseReturns(Ref ref) {
-  final returns = ref.watch(allPurchaseReturnsProvider);
-  final filters = ref.watch(purchaseReturnFiltersProvider);
-
+PurchaseDocumentListQuery _buildListQuery(PurchaseReturnFiltersState filters) {
   final dateRange = _resolveTimeRange(
     filters.timeRangeOption,
     filters.customDateRange,
   );
+
+  return PurchaseDocumentListQuery(
+    page: filters.currentPage,
+    limit: purchaseReturnPageSize,
+    documentType: PurchaseDocumentType.purchaseReturn.apiValue,
+    status: _documentStatusFromFilterLabel(filters.selectedStatus),
+    from: dateRange?.start.toUtc().toIso8601String(),
+    to: dateRange?.end.toUtc().toIso8601String(),
+    q: filters.searchQuery.trim().isEmpty ? null : filters.searchQuery.trim(),
+  );
+}
+
+List<PurchaseReturnModel> _applyClientFilters(
+  List<PurchaseReturnModel> returns,
+  PurchaseReturnFiltersState filters,
+) {
   final statusFilter = _statusFromFilterLabel(filters.selectedStatus);
-  final query = filters.searchQuery.trim().toLowerCase();
 
   return returns.where((item) {
     if (statusFilter != null && item.status != statusFilter) {
@@ -294,46 +171,145 @@ List<PurchaseReturnModel> filteredPurchaseReturns(Ref ref) {
         item.paymentType != filters.selectedPayment) {
       return false;
     }
-    if (dateRange != null &&
-        !_isWithinRange(item.date, dateRange.start, dateRange.end)) {
-      return false;
-    }
-    if (query.isNotEmpty) {
-      final matchesParty = item.partyName.toLowerCase().contains(query);
-      final matchesRef = item.debitNoteNo.toLowerCase().contains(query);
-      final matchesCategory = item.categoryName.toLowerCase().contains(query);
-      if (!matchesParty && !matchesRef && !matchesCategory) {
-        return false;
-      }
-    }
     return true;
   }).toList();
 }
 
+@Riverpod(keepAlive: true)
+class PurchaseReturns extends _$PurchaseReturns {
+  @override
+  Future<PaginatedPurchaseReturns> build() async {
+    ref.watch(purchaseReturnFiltersProvider);
+    return _fetchPage();
+  }
+
+  Future<PaginatedPurchaseReturns> _fetchPage() async {
+    final filters = ref.read(purchaseReturnFiltersProvider);
+    final service = await ref.read(purchaseServiceProvider.future);
+    final page = await service.fetchReturnsPage(_buildListQuery(filters));
+
+    return PaginatedPurchaseReturns(
+      items: _applyClientFilters(page.items, filters),
+      currentPage: page.currentPage,
+      totalPages: page.totalPages,
+      totalItems: page.totalItems,
+    );
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(_fetchPage);
+  }
+
+  Future<String?> deleteDraft(String documentId) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      await service.deleteDraft(documentId);
+      await refresh();
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<String?> finalizeReturn(String documentId, {String? godownId}) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      await service.finalizeDraft(documentId, godownId: godownId);
+      await refresh();
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+}
+
+@riverpod
+class PurchaseReturnFilters extends _$PurchaseReturnFilters {
+  @override
+  PurchaseReturnFiltersState build() => const PurchaseReturnFiltersState();
+
+  void setTimeRange(String label) {
+    state = state.copyWith(
+      timeRangeOption: TimeRangeOptionX.fromLabel(label),
+      currentPage: 1,
+    );
+    ref.invalidate(purchaseReturnsProvider);
+  }
+
+  void setCustomDateRange(
+    DateTimeRange range, {
+    bool autoSwitchToCustom = false,
+  }) {
+    state = state.copyWith(
+      timeRangeOption: autoSwitchToCustom
+          ? TimeRangeOption.custom
+          : state.timeRangeOption,
+      customDateRange: range,
+      currentPage: 1,
+    );
+    ref.invalidate(purchaseReturnsProvider);
+  }
+
+  void setTransaction(String transaction) {
+    state = state.copyWith(selectedTransaction: transaction, currentPage: 1);
+    ref.invalidate(purchaseReturnsProvider);
+  }
+
+  void setFirm(String firm) {
+    state = state.copyWith(selectedFirm: firm, currentPage: 1);
+    ref.invalidate(purchaseReturnsProvider);
+  }
+
+  void setUser(String user) {
+    state = state.copyWith(selectedUser: user, currentPage: 1);
+    ref.invalidate(purchaseReturnsProvider);
+  }
+
+  void setGodown(String godown) {
+    state = state.copyWith(selectedGodown: godown, currentPage: 1);
+    ref.invalidate(purchaseReturnsProvider);
+  }
+
+  void setPayment(String payment) {
+    state = state.copyWith(selectedPayment: payment, currentPage: 1);
+    ref.invalidate(purchaseReturnsProvider);
+  }
+
+  void setStatus(String status) {
+    state = state.copyWith(selectedStatus: status, currentPage: 1);
+    ref.invalidate(purchaseReturnsProvider);
+  }
+
+  void setSearchQuery(String query) {
+    state = state.copyWith(searchQuery: query, currentPage: 1);
+    ref.invalidate(purchaseReturnsProvider);
+  }
+
+  void setPage(int page) {
+    state = state.copyWith(currentPage: page);
+    ref.invalidate(purchaseReturnsProvider);
+  }
+}
+
 @riverpod
 PaginatedPurchaseReturns paginatedPurchaseReturns(Ref ref) {
-  final filtered = ref.watch(filteredPurchaseReturnsProvider);
-  final filters = ref.watch(purchaseReturnFiltersProvider);
-
-  final totalItems = filtered.length;
-  final totalPages = totalItems == 0
-      ? 1
-      : (totalItems / purchaseReturnPageSize).ceil();
-  final currentPage = filters.currentPage.clamp(1, totalPages);
-  final startIndex = (currentPage - 1) * purchaseReturnPageSize;
-  final endIndex = (startIndex + purchaseReturnPageSize).clamp(0, totalItems);
-
-  return PaginatedPurchaseReturns(
-    items: filtered.sublist(startIndex, endIndex),
-    currentPage: currentPage,
-    totalPages: totalPages,
-    totalItems: totalItems,
+  final returnsAsync = ref.watch(purchaseReturnsProvider);
+  return returnsAsync.maybeWhen(
+    data: (page) => page,
+    orElse: () => const PaginatedPurchaseReturns(
+      items: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+    ),
   );
 }
 
 @riverpod
 PurchaseReturnSummaryData purchaseReturnSummary(Ref ref) {
-  final returns = ref.watch(filteredPurchaseReturnsProvider);
+  final page = ref.watch(paginatedPurchaseReturnsProvider);
+  final returns = page.items;
 
   var totalAmount = 0.0;
   var balance = 0.0;

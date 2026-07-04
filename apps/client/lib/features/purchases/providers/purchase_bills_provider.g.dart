@@ -9,18 +9,71 @@ part of 'purchase_bills_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(PurchaseBillSearchQuery)
+final purchaseBillSearchQueryProvider = PurchaseBillSearchQueryProvider._();
+
+final class PurchaseBillSearchQueryProvider
+    extends $NotifierProvider<PurchaseBillSearchQuery, String> {
+  PurchaseBillSearchQueryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'purchaseBillSearchQueryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$purchaseBillSearchQueryHash();
+
+  @$internal
+  @override
+  PurchaseBillSearchQuery create() => PurchaseBillSearchQuery();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String>(value),
+    );
+  }
+}
+
+String _$purchaseBillSearchQueryHash() =>
+    r'e97de9891cd7d28e96cd81515d7758cf2c1c3b6c';
+
+abstract class _$PurchaseBillSearchQuery extends $Notifier<String> {
+  String build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<String, String>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<String, String>,
+              String,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(PurchaseBills)
 final purchaseBillsProvider = PurchaseBillsProvider._();
 
 final class PurchaseBillsProvider
-    extends $NotifierProvider<PurchaseBills, List<PurchaseBillModel>> {
+    extends $AsyncNotifierProvider<PurchaseBills, PaginatedPurchaseBills> {
   PurchaseBillsProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'purchaseBillsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -31,30 +84,26 @@ final class PurchaseBillsProvider
   @$internal
   @override
   PurchaseBills create() => PurchaseBills();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<PurchaseBillModel> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<PurchaseBillModel>>(value),
-    );
-  }
 }
 
-String _$purchaseBillsHash() => r'c05bdd71318e342c054103b8ac516a9c57dc8b76';
+String _$purchaseBillsHash() => r'b830c9950f7d7b781307f8a6cf651e1f781f8648';
 
-abstract class _$PurchaseBills extends $Notifier<List<PurchaseBillModel>> {
-  List<PurchaseBillModel> build();
+abstract class _$PurchaseBills extends $AsyncNotifier<PaginatedPurchaseBills> {
+  FutureOr<PaginatedPurchaseBills> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
-        this.ref as $Ref<List<PurchaseBillModel>, List<PurchaseBillModel>>;
+        this.ref
+            as $Ref<AsyncValue<PaginatedPurchaseBills>, PaginatedPurchaseBills>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<List<PurchaseBillModel>, List<PurchaseBillModel>>,
-              List<PurchaseBillModel>,
+              AnyNotifier<
+                AsyncValue<PaginatedPurchaseBills>,
+                PaginatedPurchaseBills
+              >,
+              AsyncValue<PaginatedPurchaseBills>,
               Object?,
               Object?
             >;
@@ -95,7 +144,7 @@ final class PurchaseBillFiltersProvider
 }
 
 String _$purchaseBillFiltersHash() =>
-    r'eebf8c41dbbf6c80c0ac5d3aa890b5117ca1b1c6';
+    r'fc5b6d4dde51ef6d473515d01560f47ca318505b';
 
 abstract class _$PurchaseBillFilters
     extends $Notifier<PurchaseBillFiltersState> {
@@ -116,54 +165,6 @@ abstract class _$PurchaseBillFilters
     return element.handleCreate(ref, build);
   }
 }
-
-@ProviderFor(filteredPurchaseBills)
-final filteredPurchaseBillsProvider = FilteredPurchaseBillsProvider._();
-
-final class FilteredPurchaseBillsProvider
-    extends
-        $FunctionalProvider<
-          List<PurchaseBillModel>,
-          List<PurchaseBillModel>,
-          List<PurchaseBillModel>
-        >
-    with $Provider<List<PurchaseBillModel>> {
-  FilteredPurchaseBillsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'filteredPurchaseBillsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$filteredPurchaseBillsHash();
-
-  @$internal
-  @override
-  $ProviderElement<List<PurchaseBillModel>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  List<PurchaseBillModel> create(Ref ref) {
-    return filteredPurchaseBills(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(List<PurchaseBillModel> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<List<PurchaseBillModel>>(value),
-    );
-  }
-}
-
-String _$filteredPurchaseBillsHash() =>
-    r'0b15a30d5082b01d0c95ae6b437e0199009e63c5';
 
 @ProviderFor(paginatedPurchaseBills)
 final paginatedPurchaseBillsProvider = PaginatedPurchaseBillsProvider._();
@@ -211,7 +212,7 @@ final class PaginatedPurchaseBillsProvider
 }
 
 String _$paginatedPurchaseBillsHash() =>
-    r'7ef6dcddd81fbc79cd03b5779f109467b44411d6';
+    r'446aaf3db4fee10ddc49a849113d8049657b6f5b';
 
 @ProviderFor(purchaseBillSummary)
 final purchaseBillSummaryProvider = PurchaseBillSummaryProvider._();
@@ -259,4 +260,4 @@ final class PurchaseBillSummaryProvider
 }
 
 String _$purchaseBillSummaryHash() =>
-    r'f87e89e2d879886392c9631cf6ec5d67c220512c';
+    r'70693f45ba610989f6f6192eff5aba39056b0bae';

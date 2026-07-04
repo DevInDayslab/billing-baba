@@ -24,8 +24,8 @@ class AddPurchaseOrderFooter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addPurchaseOrderFormProvider);
-    final notifier = ref.read(addPurchaseOrderFormProvider.notifier);
+    final form = ref.watch(addPurchaseOrderFormProvider());
+    final notifier = ref.read(addPurchaseOrderFormProvider().notifier);
     final totalTax = ref.watch(addPurchaseOrderTotalTaxProvider);
     final grandTotal = ref.watch(addPurchaseOrderGrandTotalProvider);
 

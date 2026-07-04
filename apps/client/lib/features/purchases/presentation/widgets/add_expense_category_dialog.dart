@@ -23,7 +23,11 @@ class ExpenseCategoryDropdown extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final categories = ref.watch(expenseCategoriesProvider);
+    final categoriesAsync = ref.watch(expenseCategoriesProvider);
+    final categories = categoriesAsync.maybeWhen(
+      data: (items) => items,
+      orElse: () => const <ExpenseCategoryModel>[],
+    );
     final options = [
       ...categories.map((c) => c.name),
       _addCategoryLabel,
@@ -89,29 +93,29 @@ class _AddExpenseCategoryDialogState
     super.dispose();
   }
 
-  void _handleSave() {
+  Future<void> _handleSave() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       setState(() => _showError = true);
       return;
     }
 
-    final id = name.toLowerCase().replaceAll(RegExp('[^a-z0-9]+'), '_');
-    final type = _expenseType == 'Direct Expense'
-        ? ExpenseCategoryType.direct
-        : ExpenseCategoryType.indirect;
+    final error = await ref
+        .read(expenseCategoriesProvider.notifier)
+        .addCategory(name);
+    if (!mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
 
-    final category = ExpenseCategoryModel(
-      id: id,
-      name: name,
-      type: type,
-      variant: ExpenseCategoryVariant.standard,
-      totalAmount: 0,
-      balance: 0,
-    );
-
-    ref.read(expenseCategoriesProvider.notifier).addCategory(category);
-    Navigator.of(context).pop(category);
+    final categories = ref.read(expenseCategoriesProvider).value ?? [];
+    final created = categories.where((c) => c.name == name).firstOrNull;
+    if (created != null) {
+      Navigator.of(context).pop(created);
+    }
   }
 
   @override
