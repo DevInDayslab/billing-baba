@@ -1,5 +1,5 @@
 import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
-import 'package:billing_baba/features/parties/providers/parties_provider.dart';
+import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/parties/providers/party_catalog.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
@@ -7,6 +7,7 @@ import 'package:billing_baba/features/reports/providers/report_catalog.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/src/providers/provider.dart';
 
 // ── Transaction reports ────────────────────────────────────────────────
 
@@ -14,7 +15,7 @@ final reportAllTransactionsProvider = Provider<List<ReportTransactionRow>>(
   (ref) => ReportCatalog.allTransactions(),
 );
 
-final reportDayBookProvider =
+final ProviderFamily<List<ReportTransactionRow>, DateTime> reportDayBookProvider =
     Provider.family<List<ReportTransactionRow>, DateTime>((ref, date) {
   return ReportCatalog.dayBookForDate(date);
 });
@@ -54,7 +55,7 @@ final reportBalanceSheetLiabilitiesProvider =
 
 // Sale report reuses sale invoices provider
 final reportSaleInvoicesProvider = Provider<List<SaleInvoiceModel>>(
-  (ref) => ref.watch(saleInvoicesProvider),
+  (ref) => ref.watch(paginatedSaleInvoicesProvider).items,
 );
 
 final reportSaleSummaryProvider = Provider<SaleInvoiceSummaryData>(
@@ -63,19 +64,21 @@ final reportSaleSummaryProvider = Provider<SaleInvoiceSummaryData>(
 
 // ── Party reports ────────────────────────────────────────────────────────
 
-final reportAllPartiesProvider = Provider((ref) => ref.watch(partiesProvider));
+final reportAllPartiesProvider = Provider<List<PartyModel>>(
+  (ref) => ref.watch(partiesListProvider),
+);
 
-final reportPartyBalanceSummaryProvider = Provider(
+final Provider<PartyBalanceSummary> reportPartyBalanceSummaryProvider = Provider(
   (ref) => ref.watch(partyBalanceSummaryProvider),
 );
 
-final reportPartyStatementProvider =
+final ProviderFamily<List<ReportPartyStatementEntry>, String?> reportPartyStatementProvider =
     Provider.family<List<ReportPartyStatementEntry>, String?>((ref, partyId) {
   if (partyId == null) return [];
   return ReportCatalog.partyStatement(partyId);
 });
 
-final reportPartyStatementSummaryProvider =
+final ProviderFamily<ReportPartyStatementSummary, String?> reportPartyStatementSummaryProvider =
     Provider.family<ReportPartyStatementSummary, String?>((ref, partyId) {
   if (partyId == null) {
     return const ReportPartyStatementSummary(
@@ -104,7 +107,7 @@ final reportSalePurchaseByPartyGroupProvider =
   (ref) => ReportCatalog.salePurchaseByPartyGroup(),
 );
 
-final reportPartyByItemProvider =
+final ProviderFamily<List<ReportPartyByItemRow>, String> reportPartyByItemProvider =
     Provider.family<List<ReportPartyByItemRow>, String>((ref, itemName) {
   return ReportCatalog.partyByItem(itemName);
 });
@@ -158,7 +161,7 @@ final reportStockDetailProvider = Provider<List<ReportStockDetailRow>>(
   (ref) => ReportCatalog.stockDetail(),
 );
 
-final reportItemDetailProvider =
+final ProviderFamily<List<ReportItemDetailRow>, String> reportItemDetailProvider =
     Provider.family<List<ReportItemDetailRow>, String>((ref, itemName) {
   return ReportCatalog.itemDetail(itemName);
 });
@@ -211,7 +214,7 @@ final reportExpenseByItemProvider = Provider<List<ReportExpenseItemRow>>(
 
 // ── Business status ──────────────────────────────────────────────────────
 
-final reportBankStatementProvider =
+final ProviderFamily<List<ReportBankStatementRow>, String> reportBankStatementProvider =
     Provider.family<List<ReportBankStatementRow>, String>((ref, bank) {
   return ReportCatalog.bankStatement(bank);
 });
@@ -248,7 +251,7 @@ final reportOtherIncomeByItemProvider =
   (ref) => ReportCatalog.otherIncomeByItem(),
 );
 
-final reportLoanStatementProvider =
+final ProviderFamily<List<ReportLoanStatementRow>, String> reportLoanStatementProvider =
     Provider.family<List<ReportLoanStatementRow>, String>(
   (ref, loanAccount) => ReportCatalog.loanStatement(loanAccount),
 );
