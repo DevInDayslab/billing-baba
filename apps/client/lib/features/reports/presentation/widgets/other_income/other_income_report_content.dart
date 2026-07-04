@@ -1,11 +1,14 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:flutter/material.dart';
@@ -32,11 +35,47 @@ class _OtherIncomeReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportOtherIncomesProvider);
-    final totalAmount =
-        rows.fold<double>(0, (sum, row) => sum + row.amount);
+    final reportAsync = ref.watch(otherIncomeReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(otherIncomeReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalAmount = report.totalAmount;
+
+        void exportCsv() {
+          ReportExportService.exportAndNotify(
+            context: context,
+            title: 'Other Income',
+            filename: 'other-income-report',
+            headers: const [
+              'Date',
+              'Inc No',
+              'Party',
+              'Category',
+              'Payment Type',
+              'Amount',
+              'Due Date',
+              'Status',
+            ],
+            rows: [
+              for (final row in rows)
+                [
+                  formatReportDate(row.date),
+                  row.incomeNo,
+                  row.partyName,
+                  row.category,
+                  row.paymentType,
+                  formatReportCurrency(row.amount),
+                  formatReportDate(row.dueDate),
+                  row.status,
+                ],
+            ],
+          );
+        }
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -50,14 +89,44 @@ class _OtherIncomeReportContentState
             ),
             child: ReportTitleActionsRow(
               title: 'Other Income',
-              actions: const [
+              actions: [
                 ReportTextActionButton(
                   label: 'Excel Report',
                   icon: Icons.table_chart_outlined,
+                  onTap: exportCsv,
                 ),
                 ReportTextActionButton(
                   label: 'Print',
                   icon: Icons.print_outlined,
+                  onTap: () => ReportExportService.showPrintPreview(
+                    context: context,
+                    title: 'Other Income',
+                    content: ReportExportService.toCsv(
+                      headers: const [
+                        'Date',
+                        'Inc No',
+                        'Party',
+                        'Category',
+                        'Payment Type',
+                        'Amount',
+                        'Due Date',
+                        'Status',
+                      ],
+                      rows: [
+                        for (final row in rows)
+                          [
+                            formatReportDate(row.date),
+                            row.incomeNo,
+                            row.partyName,
+                            row.category,
+                            row.paymentType,
+                            formatReportCurrency(row.amount),
+                            formatReportDate(row.dueDate),
+                            row.status,
+                          ],
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -95,8 +164,8 @@ class _OtherIncomeReportContentState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
                         AppSpacing.md,
                         AppSpacing.md,
                         AppSpacing.md,
@@ -104,7 +173,7 @@ class _OtherIncomeReportContentState
                       ),
                       child: Row(
                         children: [
-                          Text(
+                          const Text(
                             'TRANSACTIONS',
                             style: TextStyle(
                               fontSize: 12,
@@ -113,10 +182,13 @@ class _OtherIncomeReportContentState
                               letterSpacing: 0.6,
                             ),
                           ),
-                          SizedBox(width: AppSpacing.lg),
+                          const SizedBox(width: AppSpacing.lg),
                           Expanded(
                             child: ReportSearchField(
                               hintText: 'Search other income...',
+                              onChanged: ref
+                                  .read(reportFiltersProvider.notifier)
+                                  .setSearchQuery,
                             ),
                           ),
                         ],
@@ -189,6 +261,20 @@ class _OtherIncomeReportContentState
                       amount: formatReportCurrency(totalAmount),
                       amountColor: reportTeal,
                     ),
+                    ReportPaginationBar(
+                      page: report.meta.page,
+                      totalPages: report.meta.totalPages,
+                      onPrevious: report.meta.page > 1
+                          ? () => ref
+                                .read(otherIncomeReportProvider.notifier)
+                                .goToPage(report.meta.page - 1)
+                          : null,
+                      onNext: report.meta.page < report.meta.totalPages
+                          ? () => ref
+                                .read(otherIncomeReportProvider.notifier)
+                                .goToPage(report.meta.page + 1)
+                          : null,
+                    ),
                   ],
                 ),
               ),
@@ -196,6 +282,8 @@ class _OtherIncomeReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 
@@ -258,11 +346,35 @@ class _OtherIncomeCategoryReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportOtherIncomeByCategoryProvider);
-    final totalIncome =
-        rows.fold<double>(0, (sum, row) => sum + row.amount);
+    final reportAsync = ref.watch(otherIncomeByCategoryReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () =>
+          ref.read(otherIncomeByCategoryReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalIncome =
+            rows.fold<double>(0, (sum, row) => sum + row.amount);
+
+        void exportCsv() {
+          ReportExportService.exportAndNotify(
+            context: context,
+            title: 'Other Income Category Report',
+            filename: 'other-income-category-report',
+            headers: const ['Income Category', 'Count', 'Amount'],
+            rows: [
+              for (final row in rows)
+                [
+                  row.category,
+                  '${row.count}',
+                  formatReportCurrency(row.amount),
+                ],
+            ],
+          );
+        }
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -276,14 +388,30 @@ class _OtherIncomeCategoryReportContentState
             ),
             child: ReportTitleActionsRow(
               title: 'Other Income Category Report',
-              actions: const [
+              actions: [
                 ReportTextActionButton(
                   label: 'Excel',
                   icon: Icons.table_chart_outlined,
+                  onTap: exportCsv,
                 ),
                 ReportTextActionButton(
                   label: 'Print',
                   icon: Icons.print_outlined,
+                  onTap: () => ReportExportService.showPrintPreview(
+                    context: context,
+                    title: 'Other Income Category Report',
+                    content: ReportExportService.toCsv(
+                      headers: const ['Income Category', 'Count', 'Amount'],
+                      rows: [
+                        for (final row in rows)
+                          [
+                            row.category,
+                            '${row.count}',
+                            formatReportCurrency(row.amount),
+                          ],
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -388,6 +516,8 @@ class _OtherIncomeCategoryReportContentState
         ],
       ),
     );
+      },
+    );
   }
 
   static const _categoryHeaders = [
@@ -450,11 +580,35 @@ class _OtherIncomeItemReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportOtherIncomeByItemProvider);
-    final totalIncome =
-        rows.fold<double>(0, (sum, row) => sum + row.amount);
+    final reportAsync = ref.watch(otherIncomeByItemReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () =>
+          ref.read(otherIncomeByItemReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalIncome =
+            rows.fold<double>(0, (sum, row) => sum + row.amount);
+
+        void exportCsv() {
+          ReportExportService.exportAndNotify(
+            context: context,
+            title: 'Other Income Item Report',
+            filename: 'other-income-item-report',
+            headers: const ['Income Item', 'Category', 'Amount'],
+            rows: [
+              for (final row in rows)
+                [
+                  row.itemName,
+                  row.category,
+                  formatReportCurrency(row.amount),
+                ],
+            ],
+          );
+        }
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -468,14 +622,30 @@ class _OtherIncomeItemReportContentState
             ),
             child: ReportTitleActionsRow(
               title: 'Other Income Item Report',
-              actions: const [
+              actions: [
                 ReportTextActionButton(
                   label: 'Excel',
                   icon: Icons.table_chart_outlined,
+                  onTap: exportCsv,
                 ),
                 ReportTextActionButton(
                   label: 'Print',
                   icon: Icons.print_outlined,
+                  onTap: () => ReportExportService.showPrintPreview(
+                    context: context,
+                    title: 'Other Income Item Report',
+                    content: ReportExportService.toCsv(
+                      headers: const ['Income Item', 'Category', 'Amount'],
+                      rows: [
+                        for (final row in rows)
+                          [
+                            row.itemName,
+                            row.category,
+                            formatReportCurrency(row.amount),
+                          ],
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -578,6 +748,8 @@ class _OtherIncomeItemReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 

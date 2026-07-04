@@ -13,6 +13,25 @@ export const reportPeriodSchema = z.enum([
   'custom',
 ]);
 
+export const partyGroupSchema = z.enum([
+  'customer',
+  'retailer',
+  'wholesaler',
+  'manufacturer',
+  'custom',
+]);
+
+export const paymentModeSchema = z.enum([
+  'cash',
+  'upi',
+  'card',
+  'cheque',
+  'bank_transfer',
+  'other',
+]);
+
+export const reportFormatSchema = z.enum(['json', 'csv']).default('json');
+
 export const reportBaseQuerySchema = z.object({
   period: reportPeriodSchema.optional(),
   from: z.string().datetime().optional(),
@@ -27,16 +46,34 @@ export const reportBaseQuerySchema = z.object({
     .enum(['date', 'document_date', 'amount', 'party_name', 'created_at'])
     .optional(),
   order: z.enum(['asc', 'desc']).optional(),
+  format: reportFormatSchema.optional(),
 });
 
-export const reportDateQuerySchema = reportBaseQuerySchema.extend({
+export const reportExtendedQuerySchema = reportBaseQuerySchema.extend({
+  category_id: z.string().uuid().optional(),
+  payment_mode: paymentModeSchema.optional(),
+  document_type: z.string().trim().optional(),
+  party_group: partyGroupSchema.optional(),
+  bank_name: z.string().trim().optional(),
+  tax_rate: z.coerce.number().min(0).optional(),
+  loan_account: z.string().trim().optional(),
+  status: z.string().trim().optional(),
+});
+
+export const reportDateQuerySchema = reportExtendedQuerySchema.extend({
   date: z.string().datetime().optional(),
 });
 
-export const partyStatementQuerySchema = reportBaseQuerySchema.extend({
+export const partyStatementQuerySchema = reportExtendedQuerySchema.extend({
   party_id: z.string().uuid(),
 });
 
+export const loanStatementQuerySchema = reportExtendedQuerySchema.extend({
+  loan_account: z.string().trim().min(1),
+});
+
 export type ReportBaseQuery = z.infer<typeof reportBaseQuerySchema>;
+export type ReportExtendedQuery = z.infer<typeof reportExtendedQuerySchema>;
 export type ReportDateQuery = z.infer<typeof reportDateQuerySchema>;
 export type PartyStatementQuery = z.infer<typeof partyStatementQuerySchema>;
+export type LoanStatementQuery = z.infer<typeof loanStatementQuerySchema>;

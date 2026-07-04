@@ -4,7 +4,8 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -36,12 +37,18 @@ class _ManufacturingReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportManufacturingProvider);
-    final totalQty =
-        rows.fold<double>(0, (sum, row) => sum + row.quantity);
-    final totalAmount = rows.fold<double>(0, (sum, row) => sum + row.cost);
+    final reportAsync = ref.watch(manufacturingReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(manufacturingReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalQty =
+            rows.fold<double>(0, (sum, row) => sum + row.quantity);
+        final totalAmount = rows.fold<double>(0, (sum, row) => sum + row.cost);
+
+        return ColoredBox(
       color: AppColors.background,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -309,6 +316,8 @@ class _ManufacturingReportContentState
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

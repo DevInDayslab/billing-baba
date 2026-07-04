@@ -594,3 +594,105 @@ abstract class _$Gstr3bReport extends $AsyncNotifier<Gstr3bReportData> {
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(TrialBalanceReport)
+final trialBalanceReportProvider = TrialBalanceReportProvider._();
+
+final class TrialBalanceReportProvider
+    extends $AsyncNotifierProvider<TrialBalanceReport, TrialBalanceReportData> {
+  TrialBalanceReportProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'trialBalanceReportProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$trialBalanceReportHash();
+
+  @$internal
+  @override
+  TrialBalanceReport create() => TrialBalanceReport();
+}
+
+String _$trialBalanceReportHash() =>
+    r'b09406a9623242392bb4a966fc5f6e6cd3ea1ece';
+
+abstract class _$TrialBalanceReport
+    extends $AsyncNotifier<TrialBalanceReportData> {
+  FutureOr<TrialBalanceReportData> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<TrialBalanceReportData>, TrialBalanceReportData>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<TrialBalanceReportData>,
+                TrialBalanceReportData
+              >,
+              AsyncValue<TrialBalanceReportData>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(BalanceSheetReport)
+final balanceSheetReportProvider = BalanceSheetReportProvider._();
+
+final class BalanceSheetReportProvider
+    extends $AsyncNotifierProvider<BalanceSheetReport, BalanceSheetReportData> {
+  BalanceSheetReportProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'balanceSheetReportProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$balanceSheetReportHash();
+
+  @$internal
+  @override
+  BalanceSheetReport create() => BalanceSheetReport();
+}
+
+String _$balanceSheetReportHash() =>
+    r'd9a293c5b74543879be4a9e127f6d70761b86b8a';
+
+abstract class _$BalanceSheetReport
+    extends $AsyncNotifier<BalanceSheetReportData> {
+  FutureOr<BalanceSheetReportData> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<BalanceSheetReportData>, BalanceSheetReportData>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<BalanceSheetReportData>,
+                BalanceSheetReportData
+              >,
+              AsyncValue<BalanceSheetReportData>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}

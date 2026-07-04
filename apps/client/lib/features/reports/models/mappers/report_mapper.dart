@@ -154,4 +154,28 @@ abstract final class ReportMapper {
       cess: _parseAmount(dto.cess),
     );
   }
+
+  static ReportTrialBalanceRow toTrialBalanceRow(ReportTrialBalanceRowDto dto) {
+    final closing = _parseAmount(dto.closing);
+    final isDebit = dto.balanceType == 'debit';
+    return ReportTrialBalanceRow(
+      accountName: dto.accountName,
+      opening: _parseAmount(dto.opening),
+      debit: _parseAmount(dto.debit),
+      credit: _parseAmount(dto.credit),
+      closingDebit: isDebit ? closing : 0,
+      closingCredit: isDebit ? 0 : closing,
+    );
+  }
+
+  static ReportBalanceSheetItem toBalanceSheetItem(
+    ReportBalanceSheetItemDto dto,
+  ) {
+    return ReportBalanceSheetItem(
+      name: dto.name,
+      amount: _parseAmount(dto.amount),
+      indent: dto.indent,
+      isHeader: dto.isHeader,
+    );
+  }
 }

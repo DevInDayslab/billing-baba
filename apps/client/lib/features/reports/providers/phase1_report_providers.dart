@@ -274,3 +274,41 @@ class Gstr3bReport extends _$Gstr3bReport {
     return service.fetchGstr3b(_currentQuery(ref));
   }
 }
+
+@riverpod
+class TrialBalanceReport extends _$TrialBalanceReport {
+  @override
+  Future<TrialBalanceReportData> build() async {
+    ref.watch(reportFiltersProvider);
+    return _load();
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(_load);
+  }
+
+  Future<TrialBalanceReportData> _load() async {
+    final service = await ref.read(reportsServiceProvider.future);
+    return service.fetchTrialBalance(_currentQuery(ref));
+  }
+}
+
+@riverpod
+class BalanceSheetReport extends _$BalanceSheetReport {
+  @override
+  Future<BalanceSheetReportData> build() async {
+    ref.watch(reportFiltersProvider);
+    return _load();
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(_load);
+  }
+
+  Future<BalanceSheetReportData> _load() async {
+    final service = await ref.read(reportsServiceProvider.future);
+    return service.fetchBalanceSheet(_currentQuery(ref));
+  }
+}

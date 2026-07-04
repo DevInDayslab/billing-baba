@@ -6,7 +6,8 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:flutter/material.dart';
@@ -59,12 +60,20 @@ class _StockSummaryReportByItemCategoryReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportStockSummaryByCategoryProvider);
-    final totalItems = rows.fold<int>(
-      0,
-      (sum, row) => sum + _itemCountForCategory(row.category),
-    );
-    final totalStockQty =
+    final reportAsync = ref.watch(stockSummaryByItemCategoryReportProvider);
+
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref
+          .read(stockSummaryByItemCategoryReportProvider.notifier)
+          .refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalItems = rows.fold<int>(
+          0,
+          (sum, row) => sum + _itemCountForCategory(row.category),
+        );
+        final totalStockQty =
         rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
     final totalPurchaseValue =
         rows.fold<double>(0, (sum, row) => sum + row.purchaseAmount);
@@ -535,6 +544,8 @@ class _StockSummaryReportByItemCategoryReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

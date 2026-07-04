@@ -60,4 +60,75 @@ class ReportFilters extends _$ReportFilters {
   void resetPage() {
     state = state.copyWith(currentPage: 1);
   }
+
+  void setCategoryId(String? categoryId) {
+    state = state.copyWith(
+      categoryId: categoryId,
+      clearCategoryId: categoryId == null,
+      currentPage: 1,
+    );
+  }
+
+  void setPaymentMode(String? paymentMode) {
+    state = state.copyWith(
+      paymentMode: paymentMode,
+      clearPaymentMode: paymentMode == null || paymentMode.isEmpty,
+      currentPage: 1,
+    );
+  }
+
+  void setDocumentType(String? documentType) {
+    state = state.copyWith(
+      documentType: documentType,
+      clearDocumentType: documentType == null || documentType.isEmpty,
+      currentPage: 1,
+    );
+  }
+
+  void setPartyGroup(String? partyGroup) {
+    state = state.copyWith(
+      partyGroup: partyGroup,
+      clearPartyGroup: partyGroup == null || partyGroup.isEmpty,
+      currentPage: 1,
+    );
+  }
+
+  void setBankName(String? bankName) {
+    state = state.copyWith(
+      bankName: bankName,
+      clearBankName: bankName == null || bankName.isEmpty,
+      currentPage: 1,
+    );
+  }
+
+  void setTaxRate(String? taxRate) {
+    state = state.copyWith(
+      taxRate: taxRate,
+      clearTaxRate: taxRate == null || taxRate.isEmpty,
+      currentPage: 1,
+    );
+  }
+
+  void setLoanAccount(String? loanAccount) {
+    state = state.copyWith(
+      loanAccount: loanAccount,
+      clearLoanAccount: loanAccount == null || loanAccount.isEmpty,
+      currentPage: 1,
+    );
+  }
+
+  void setStatus(String? status) {
+    state = state.copyWith(
+      status: status,
+      clearStatus: status == null || status.isEmpty,
+      currentPage: 1,
+    );
+  }
+
+  void setFormat(String? format) {
+    state = state.copyWith(
+      format: format,
+      clearFormat: format == null || format.isEmpty,
+    );
+  }
 }

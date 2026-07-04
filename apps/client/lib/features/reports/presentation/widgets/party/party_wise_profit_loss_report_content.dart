@@ -4,8 +4,10 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -16,13 +18,20 @@ class PartyWiseProfitLossReportContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rows = ref.watch(reportPartyWiseProfitLossProvider);
-    final totalSale =
-        rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
-    final totalProfit =
-        rows.fold<double>(0, (sum, row) => sum + row.profit);
+    final reportAsync = ref.watch(partyWiseProfitLossReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () =>
+          ref.read(partyWiseProfitLossReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalSale =
+            rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
+        final totalProfit =
+            rows.fold<double>(0, (sum, row) => sum + row.profit);
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -85,7 +94,13 @@ class PartyWiseProfitLossReportContent extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
-                          const Expanded(child: ReportSearchField()),
+                          Expanded(
+                            child: ReportSearchField(
+                              onChanged: ref
+                                  .read(reportFiltersProvider.notifier)
+                                  .setSearchQuery,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -220,6 +235,20 @@ class PartyWiseProfitLossReportContent extends ConsumerWidget {
                         ],
                       ),
                     ),
+                    ReportPaginationBar(
+                      page: report.meta.page,
+                      totalPages: report.meta.totalPages,
+                      onPrevious: report.meta.page > 1
+                          ? () => ref
+                                .read(partyWiseProfitLossReportProvider.notifier)
+                                .goToPage(report.meta.page - 1)
+                          : null,
+                      onNext: report.meta.page < report.meta.totalPages
+                          ? () => ref
+                                .read(partyWiseProfitLossReportProvider.notifier)
+                                .goToPage(report.meta.page + 1)
+                          : null,
+                    ),
                   ],
                 ),
               ),
@@ -227,6 +256,8 @@ class PartyWiseProfitLossReportContent extends ConsumerWidget {
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

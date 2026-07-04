@@ -1,5 +1,7 @@
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 
+export 'report_extended_dto.dart';
+
 class ReportPeriodDto {
   const ReportPeriodDto({
     required this.period,
@@ -680,6 +682,147 @@ class Gstr3bPayloadDto {
 
   final ReportPeriodDto period;
   final List<ReportGstr3bRowDto> rows;
+}
+
+class ReportTrialBalanceRowDto {
+  const ReportTrialBalanceRowDto({
+    required this.accountName,
+    required this.opening,
+    required this.debit,
+    required this.credit,
+    required this.closing,
+    required this.balanceType,
+  });
+
+  factory ReportTrialBalanceRowDto.fromJson(Map<String, dynamic> json) {
+    return ReportTrialBalanceRowDto(
+      accountName: json['account_name'] as String? ?? '',
+      opening: json['opening'] as String? ?? '0',
+      debit: json['debit'] as String? ?? '0',
+      credit: json['credit'] as String? ?? '0',
+      closing: json['closing'] as String? ?? '0',
+      balanceType: json['balance_type'] as String? ?? 'debit',
+    );
+  }
+
+  final String accountName;
+  final String opening;
+  final String debit;
+  final String credit;
+  final String closing;
+  final String balanceType;
+}
+
+class TrialBalancePayloadDto {
+  const TrialBalancePayloadDto({
+    required this.period,
+    required this.rows,
+    required this.totalDebit,
+    required this.totalCredit,
+    required this.isBalanced,
+  });
+
+  factory TrialBalancePayloadDto.fromJson(Map<String, dynamic> json) {
+    return TrialBalancePayloadDto(
+      period: ReportPeriodDto.fromJson(
+        (json['period'] as Map<String, dynamic>?) ?? {},
+      ),
+      rows: (json['rows'] as List<dynamic>? ?? [])
+          .map((e) => ReportTrialBalanceRowDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      totalDebit: json['total_debit'] as String? ?? '0',
+      totalCredit: json['total_credit'] as String? ?? '0',
+      isBalanced: json['is_balanced'] as bool? ?? false,
+    );
+  }
+
+  final ReportPeriodDto period;
+  final List<ReportTrialBalanceRowDto> rows;
+  final String totalDebit;
+  final String totalCredit;
+  final bool isBalanced;
+}
+
+class ReportBalanceSheetItemDto {
+  const ReportBalanceSheetItemDto({
+    required this.name,
+    required this.amount,
+    required this.indent,
+    required this.isHeader,
+  });
+
+  factory ReportBalanceSheetItemDto.fromJson(Map<String, dynamic> json) {
+    return ReportBalanceSheetItemDto(
+      name: json['name'] as String? ?? '',
+      amount: json['amount'] as String? ?? '0',
+      indent: (json['indent'] as num?)?.toInt() ?? 0,
+      isHeader: json['is_header'] as bool? ?? false,
+    );
+  }
+
+  final String name;
+  final String amount;
+  final int indent;
+  final bool isHeader;
+}
+
+class BalanceSheetPayloadDto {
+  const BalanceSheetPayloadDto({
+    required this.period,
+    required this.asOn,
+    required this.assets,
+    required this.liabilities,
+    required this.assetsTotal,
+    required this.liabilitiesTotal,
+    required this.netProfit,
+    required this.openingAssets,
+    required this.closingAssets,
+    required this.openingLiabilities,
+    required this.closingLiabilities,
+    required this.openingEquity,
+    required this.closingEquity,
+    required this.isBalanced,
+  });
+
+  factory BalanceSheetPayloadDto.fromJson(Map<String, dynamic> json) {
+    return BalanceSheetPayloadDto(
+      period: ReportPeriodDto.fromJson(
+        (json['period'] as Map<String, dynamic>?) ?? {},
+      ),
+      asOn: json['as_on'] as String? ?? '',
+      assets: (json['assets'] as List<dynamic>? ?? [])
+          .map((e) => ReportBalanceSheetItemDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      liabilities: (json['liabilities'] as List<dynamic>? ?? [])
+          .map((e) => ReportBalanceSheetItemDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      assetsTotal: json['assets_total'] as String? ?? '0',
+      liabilitiesTotal: json['liabilities_total'] as String? ?? '0',
+      netProfit: json['net_profit'] as String? ?? '0',
+      openingAssets: json['opening_assets'] as String? ?? '0',
+      closingAssets: json['closing_assets'] as String? ?? '0',
+      openingLiabilities: json['opening_liabilities'] as String? ?? '0',
+      closingLiabilities: json['closing_liabilities'] as String? ?? '0',
+      openingEquity: json['opening_equity'] as String? ?? '0',
+      closingEquity: json['closing_equity'] as String? ?? '0',
+      isBalanced: json['is_balanced'] as bool? ?? false,
+    );
+  }
+
+  final ReportPeriodDto period;
+  final String asOn;
+  final List<ReportBalanceSheetItemDto> assets;
+  final List<ReportBalanceSheetItemDto> liabilities;
+  final String assetsTotal;
+  final String liabilitiesTotal;
+  final String netProfit;
+  final String openingAssets;
+  final String closingAssets;
+  final String openingLiabilities;
+  final String closingLiabilities;
+  final String openingEquity;
+  final String closingEquity;
+  final bool isBalanced;
 }
 
 class PaginatedReportResponse<T> {

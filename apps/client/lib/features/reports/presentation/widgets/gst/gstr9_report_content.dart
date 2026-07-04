@@ -4,9 +4,10 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -51,9 +52,15 @@ class _Gstr9ReportContentState extends ConsumerState<Gstr9ReportContent> {
 
   @override
   Widget build(BuildContext context) {
-    final supplyRows = ref.watch(reportGstr9SupplyProvider);
+    final reportAsync = ref.watch(gstr9ReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref.read(gstr9ReportProvider.notifier).refresh(),
+      data: (report) {
+        final supplyRows = report.rows;
+
+        return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -157,6 +164,8 @@ class _Gstr9ReportContentState extends ConsumerState<Gstr9ReportContent> {
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

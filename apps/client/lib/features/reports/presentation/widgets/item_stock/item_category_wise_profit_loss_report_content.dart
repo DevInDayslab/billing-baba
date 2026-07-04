@@ -3,7 +3,8 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -41,13 +42,24 @@ class _ItemCategoryWiseProfitLossReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportCategoryWiseProfitLossProvider);
-    final totalSale =
-        rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
-    final totalProfit =
-        rows.fold<double>(0, (sum, row) => sum + row.profit);
+    final reportAsync = ref.watch(itemCategoryWiseProfitLossReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () => ref
+          .read(itemCategoryWiseProfitLossReportProvider.notifier)
+          .refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalSale =
+            rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
+        final totalProfit =
+            rows.fold<double>(
+              0,
+              (sum, row) => sum + (row.saleAmount - row.purchaseAmount),
+            );
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -263,7 +275,7 @@ class _ItemCategoryWiseProfitLossReportContentState
                                       index: i,
                                       child: ReportAlignedDataRow(
                                         cells: [
-                                          ReportAlignedCell.fixed(150, child: Text(rows[i].itemName)),
+                                          ReportAlignedCell.fixed(150, child: Text(rows[i].category)),
                                           ReportAlignedCell.fixed(100, alignment: Alignment.centerRight, child: Text(formatReportCurrency(rows[i].saleAmount))),
                                           const ReportAlignedCell.fixed(150, alignment: Alignment.centerRight, child: Text('-')),
                                           ReportAlignedCell.fixed(110, alignment: Alignment.centerRight, child: Text(formatReportCurrency(rows[i].purchaseAmount))),
@@ -274,9 +286,17 @@ class _ItemCategoryWiseProfitLossReportContentState
                                             160,
                                             alignment: Alignment.centerRight,
                                             child: Text(
-                                              formatReportCurrency(rows[i].profit),
+                                              formatReportCurrency(
+                                                rows[i].saleAmount -
+                                                    rows[i].purchaseAmount,
+                                              ),
                                               style: TextStyle(
-                                                color: rows[i].profit >= 0 ? reportTeal : reportAddRed,
+                                                color: rows[i].saleAmount -
+                                                            rows[i]
+                                                                .purchaseAmount >=
+                                                        0
+                                                    ? reportTeal
+                                                    : reportAddRed,
                                               ),
                                             ),
                                           ),
@@ -325,6 +345,8 @@ class _ItemCategoryWiseProfitLossReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

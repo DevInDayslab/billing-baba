@@ -65,6 +65,15 @@ class ReportQuery {
     this.partyId,
     this.godownId,
     this.itemId,
+    this.categoryId,
+    this.paymentMode,
+    this.documentType,
+    this.partyGroup,
+    this.bankName,
+    this.taxRate,
+    this.loanAccount,
+    this.status,
+    this.format,
     this.sort,
     this.order,
   });
@@ -79,6 +88,15 @@ class ReportQuery {
   final String? partyId;
   final String? godownId;
   final String? itemId;
+  final String? categoryId;
+  final String? paymentMode;
+  final String? documentType;
+  final String? partyGroup;
+  final String? bankName;
+  final String? taxRate;
+  final String? loanAccount;
+  final String? status;
+  final String? format;
   final String? sort;
   final String? order;
 
@@ -100,6 +118,27 @@ class ReportQuery {
     if (partyId != null) params['party_id'] = partyId!;
     if (godownId != null) params['godown_id'] = godownId!;
     if (itemId != null) params['item_id'] = itemId!;
+    if (categoryId != null) params['category_id'] = categoryId!;
+    if (paymentMode != null && paymentMode!.isNotEmpty) {
+      params['payment_mode'] = paymentMode!;
+    }
+    if (documentType != null && documentType!.isNotEmpty) {
+      params['document_type'] = documentType!;
+    }
+    if (partyGroup != null && partyGroup!.isNotEmpty) {
+      params['party_group'] = partyGroup!;
+    }
+    if (bankName != null && bankName!.isNotEmpty) {
+      params['bank_name'] = bankName!;
+    }
+    if (taxRate != null && taxRate!.isNotEmpty) {
+      params['tax_rate'] = taxRate!;
+    }
+    if (loanAccount != null && loanAccount!.isNotEmpty) {
+      params['loan_account'] = loanAccount!;
+    }
+    if (status != null && status!.isNotEmpty) params['status'] = status!;
+    if (format != null && format!.isNotEmpty) params['format'] = format!;
     if (sort != null) params['sort'] = sort!;
     if (order != null) params['order'] = order!;
     return params;
@@ -116,11 +155,29 @@ class ReportQuery {
     String? partyId,
     String? godownId,
     String? itemId,
+    String? categoryId,
+    String? paymentMode,
+    String? documentType,
+    String? partyGroup,
+    String? bankName,
+    String? taxRate,
+    String? loanAccount,
+    String? status,
+    String? format,
     String? sort,
     String? order,
     bool clearPartyId = false,
     bool clearGodownId = false,
     bool clearItemId = false,
+    bool clearCategoryId = false,
+    bool clearPaymentMode = false,
+    bool clearDocumentType = false,
+    bool clearPartyGroup = false,
+    bool clearBankName = false,
+    bool clearTaxRate = false,
+    bool clearLoanAccount = false,
+    bool clearStatus = false,
+    bool clearFormat = false,
     bool clearSearch = false,
   }) {
     return ReportQuery(
@@ -134,6 +191,16 @@ class ReportQuery {
       partyId: clearPartyId ? null : (partyId ?? this.partyId),
       godownId: clearGodownId ? null : (godownId ?? this.godownId),
       itemId: clearItemId ? null : (itemId ?? this.itemId),
+      categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
+      paymentMode: clearPaymentMode ? null : (paymentMode ?? this.paymentMode),
+      documentType:
+          clearDocumentType ? null : (documentType ?? this.documentType),
+      partyGroup: clearPartyGroup ? null : (partyGroup ?? this.partyGroup),
+      bankName: clearBankName ? null : (bankName ?? this.bankName),
+      taxRate: clearTaxRate ? null : (taxRate ?? this.taxRate),
+      loanAccount: clearLoanAccount ? null : (loanAccount ?? this.loanAccount),
+      status: clearStatus ? null : (status ?? this.status),
+      format: clearFormat ? null : (format ?? this.format),
       sort: sort ?? this.sort,
       order: order ?? this.order,
     );
@@ -148,6 +215,15 @@ class ReportFiltersState {
     this.godownId,
     this.partyId,
     this.itemId,
+    this.categoryId,
+    this.paymentMode,
+    this.documentType,
+    this.partyGroup,
+    this.bankName,
+    this.taxRate,
+    this.loanAccount,
+    this.status,
+    this.format,
     this.searchQuery = '',
     this.currentPage = 1,
     this.pageSize = 20,
@@ -159,13 +235,22 @@ class ReportFiltersState {
   final String? godownId;
   final String? partyId;
   final String? itemId;
+  final String? categoryId;
+  final String? paymentMode;
+  final String? documentType;
+  final String? partyGroup;
+  final String? bankName;
+  final String? taxRate;
+  final String? loanAccount;
+  final String? status;
+  final String? format;
   final String searchQuery;
   final int currentPage;
   final int pageSize;
 
   String get periodLabel => period.label;
 
-  ReportQuery toQuery({int? page, int? limit}) {
+  ReportQuery toQuery({int? page, int? limit, String? format}) {
     return ReportQuery(
       period: period,
       from: customDateRange?.start,
@@ -177,6 +262,15 @@ class ReportFiltersState {
       partyId: partyId,
       godownId: godownId,
       itemId: itemId,
+      categoryId: categoryId,
+      paymentMode: paymentMode,
+      documentType: documentType,
+      partyGroup: partyGroup,
+      bankName: bankName,
+      taxRate: taxRate,
+      loanAccount: loanAccount,
+      status: status,
+      format: format ?? this.format,
     );
   }
 
@@ -188,12 +282,30 @@ class ReportFiltersState {
     String? godownId,
     String? partyId,
     String? itemId,
+    String? categoryId,
+    String? paymentMode,
+    String? documentType,
+    String? partyGroup,
+    String? bankName,
+    String? taxRate,
+    String? loanAccount,
+    String? status,
+    String? format,
     String? searchQuery,
     int? currentPage,
     int? pageSize,
     bool clearPartyId = false,
     bool clearGodownId = false,
     bool clearItemId = false,
+    bool clearCategoryId = false,
+    bool clearPaymentMode = false,
+    bool clearDocumentType = false,
+    bool clearPartyGroup = false,
+    bool clearBankName = false,
+    bool clearTaxRate = false,
+    bool clearLoanAccount = false,
+    bool clearStatus = false,
+    bool clearFormat = false,
   }) {
     return ReportFiltersState(
       period: period ?? this.period,
@@ -204,6 +316,16 @@ class ReportFiltersState {
       godownId: clearGodownId ? null : (godownId ?? this.godownId),
       partyId: clearPartyId ? null : (partyId ?? this.partyId),
       itemId: clearItemId ? null : (itemId ?? this.itemId),
+      categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
+      paymentMode: clearPaymentMode ? null : (paymentMode ?? this.paymentMode),
+      documentType:
+          clearDocumentType ? null : (documentType ?? this.documentType),
+      partyGroup: clearPartyGroup ? null : (partyGroup ?? this.partyGroup),
+      bankName: clearBankName ? null : (bankName ?? this.bankName),
+      taxRate: clearTaxRate ? null : (taxRate ?? this.taxRate),
+      loanAccount: clearLoanAccount ? null : (loanAccount ?? this.loanAccount),
+      status: clearStatus ? null : (status ?? this.status),
+      format: clearFormat ? null : (format ?? this.format),
       searchQuery: searchQuery ?? this.searchQuery,
       currentPage: currentPage ?? this.currentPage,
       pageSize: pageSize ?? this.pageSize,

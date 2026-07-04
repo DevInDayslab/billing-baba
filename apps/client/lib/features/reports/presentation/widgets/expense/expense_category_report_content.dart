@@ -3,9 +3,11 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/providers/report_data_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:flutter/material.dart';
@@ -33,17 +35,41 @@ class _ExpenseCategoryReportContentState
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(reportExpenseByCategoryProvider);
-    final totalExpense =
-        rows.fold<double>(0, (sum, row) => sum + row.amount);
+    final reportAsync = ref.watch(expenseByCategoryReportProvider);
 
-    return ColoredBox(
+    return ReportAsyncBody(
+      value: reportAsync,
+      onRetry: () =>
+          ref.read(expenseByCategoryReportProvider.notifier).refresh(),
+      data: (report) {
+        final rows = report.rows;
+        final totalExpense =
+            rows.fold<double>(0, (sum, row) => sum + row.amount);
+
+        void exportCsv() {
+          ReportExportService.exportAndNotify(
+            context: context,
+            title: 'Expense Category Report',
+            filename: 'expense-category-report',
+            headers: const ['Expense Category', 'Category Type', 'Amount'],
+            rows: [
+              for (final row in rows)
+                [
+                  row.category,
+                  'Direct Expense',
+                  formatReportCurrency(row.amount),
+                ],
+            ],
+          );
+        }
+
+        return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
@@ -55,10 +81,30 @@ class _ExpenseCategoryReportContentState
                 ReportTextActionButton(
                   label: 'Excel',
                   icon: Icons.table_chart_outlined,
+                  onTap: exportCsv,
                 ),
                 ReportTextActionButton(
                   label: 'Print',
                   icon: Icons.print_outlined,
+                  onTap: () => ReportExportService.showPrintPreview(
+                    context: context,
+                    title: 'Expense Category Report',
+                    content: ReportExportService.toCsv(
+                      headers: const [
+                        'Expense Category',
+                        'Category Type',
+                        'Amount',
+                      ],
+                      rows: [
+                        for (final row in rows)
+                          [
+                            row.category,
+                            'Direct Expense',
+                            formatReportCurrency(row.amount),
+                          ],
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -323,6 +369,8 @@ class _ExpenseCategoryReportContentState
           ),
         ],
       ),
+    );
+      },
     );
   }
 }
