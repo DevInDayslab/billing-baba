@@ -67,8 +67,17 @@ class PrintService {
 
   String _defaultFilename(PrintRequest request) {
     return switch (request) {
-      SaleInvoicePrintRequest() => 'invoice_${request.id}',
-      _ => '${request.kind.name}_${request.id}',
+      SaleInvoicePrintRequest(:final id) => 'invoice_$id',
+      PurchaseBillPrintRequest(:final id) => 'purchase_bill_$id',
+      EstimatePrintRequest(:final id) => 'quotation_$id',
+      ProformaInvoicePrintRequest(:final id) => 'proforma_$id',
+      DeliveryChallanPrintRequest(:final id) => 'challan_$id',
+      CreditNotePrintRequest(:final id) => 'credit_note_$id',
+      DebitNotePrintRequest(:final id) => 'debit_note_$id',
+      SaleOrderPrintRequest(:final id) => 'sale_order_$id',
+      PurchaseOrderPrintRequest(:final id) => 'purchase_order_$id',
+      PaymentInPrintRequest(:final id) => 'payment_in_$id',
+      PaymentOutPrintRequest(:final id) => 'payment_out_$id',
     };
   }
 }

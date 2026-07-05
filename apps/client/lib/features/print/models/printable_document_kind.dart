@@ -7,6 +7,8 @@ enum PrintableDocumentKind {
   deliveryChallan,
   creditNote,
   debitNote,
+  saleOrder,
+  purchaseOrder,
   paymentIn,
   paymentOut;
 
@@ -18,7 +20,24 @@ enum PrintableDocumentKind {
     PrintableDocumentKind.deliveryChallan => 'Delivery Challan',
     PrintableDocumentKind.creditNote => 'Credit Note',
     PrintableDocumentKind.debitNote => 'Debit Note',
+    PrintableDocumentKind.saleOrder => 'Sale Order',
+    PrintableDocumentKind.purchaseOrder => 'Purchase Order',
     PrintableDocumentKind.paymentIn => 'Payment In',
     PrintableDocumentKind.paymentOut => 'Payment Out',
+  };
+
+  /// Commercial documents rendered by the A4 commercial template.
+  bool get isCommercial => switch (this) {
+    saleInvoice ||
+    purchaseBill ||
+    estimate ||
+    proformaInvoice ||
+    deliveryChallan ||
+    creditNote ||
+    debitNote ||
+    saleOrder ||
+    purchaseOrder =>
+      true,
+    paymentIn || paymentOut => false,
   };
 }

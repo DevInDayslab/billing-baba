@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/providers/sale_return_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +16,7 @@ const _paymentColWidth = 110.0;
 const _statusColWidth = 100.0;
 const _amountColWidth = 100.0;
 const _balanceColWidth = 90.0;
-const _actionsColWidth = 48.0;
+const _actionsColWidth = 88.0;
 
 const double _minTableWidth =
     _dateColWidth +
@@ -77,7 +79,13 @@ class SaleReturnTable extends ConsumerWidget {
                 ),
                 _XlsChip(onTap: () => debugPrint('Export xls tapped')),
                 IconButton(
-                  onPressed: () => debugPrint('Print tapped'),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Use row actions to print a credit note'),
+                      ),
+                    );
+                  },
                   icon: const Icon(Icons.print_outlined, size: 20),
                   color: AppColors.textSecondary,
                   tooltip: 'Print',
@@ -143,7 +151,7 @@ class SaleReturnTable extends ConsumerWidget {
                         for (var i = 0; i < paginated.items.length; i++) ...[
                           if (i > 0)
                             const Divider(height: 1, color: _cardBorder),
-                          _buildRow(paginated.items[i]),
+                          _buildRow(context, ref, paginated.items[i]),
                         ],
                       ],
                     ),
@@ -156,7 +164,11 @@ class SaleReturnTable extends ConsumerWidget {
     );
   }
 
-  Widget _buildRow(SaleReturnRecord record) {
+  Widget _buildRow(
+    BuildContext context,
+    WidgetRef ref,
+    SaleReturnRecord record,
+  ) {
     return _TableDataRow(
       children: [
         _TableCell(
@@ -199,12 +211,36 @@ class SaleReturnTable extends ConsumerWidget {
         ),
         _TableCell(
           width: _actionsColWidth,
-          child: IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_vert, size: 20),
-            color: AppColors.textSecondary,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () => DocumentPrintActions.preview(
+                  context,
+                  ref,
+                  PrintRequest.creditNote(record.id),
+                  filename: DocumentPrintActions.filenameFor(record.invoiceNo),
+                ),
+                icon: const Icon(Icons.print_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Print',
+              ),
+              IconButton(
+                onPressed: () => DocumentPrintActions.share(
+                  context,
+                  ref,
+                  PrintRequest.creditNote(record.id),
+                  filename: DocumentPrintActions.filenameFor(record.invoiceNo),
+                ),
+                icon: const Icon(Icons.share_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Share',
+              ),
+            ],
           ),
         ),
       ],

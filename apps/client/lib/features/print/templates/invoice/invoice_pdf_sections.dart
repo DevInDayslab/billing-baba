@@ -1,11 +1,11 @@
 import 'package:billing_baba/features/print/application/print_amount_words.dart';
 import 'package:billing_baba/features/print/models/printable_document.dart';
 import 'package:billing_baba/features/print/models/printable_line_item.dart';
-import 'package:intl/intl.dart';
-import 'package:pdf/widgets.dart' as pw;
-
+import 'package:billing_baba/features/print/templates/commercial_document_layout_config.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_fonts.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_theme.dart';
+import 'package:intl/intl.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 final _currencyFormat = NumberFormat.currency(
   locale: 'en_IN',
@@ -15,7 +15,7 @@ final _currencyFormat = NumberFormat.currency(
 
 final _dateFormat = DateFormat('dd MMM yyyy');
 
-abstract final class InvoicePdfSections {
+abstract final class CommercialDocumentPdfSections {
   static pw.Widget? watermark(String status) {
     final label = switch (status) {
       'draft' => 'DRAFT',
@@ -95,9 +95,15 @@ abstract final class InvoicePdfSections {
     );
   }
 
-  static pw.Widget invoiceHeaderSection(PrintableDocument document) {
+  static pw.Widget documentHeaderSection(
+    PrintableDocument document,
+    CommercialDocumentLayoutConfig config,
+  ) {
     final meta = document.metadata;
     final date = DateTime.tryParse(meta.documentDate);
+    final dueDate = meta.dueDate != null
+        ? DateTime.tryParse(meta.dueDate!)
+        : null;
 
     return pw.Container(
       margin: const pw.EdgeInsets.only(top: 16, bottom: 12),
@@ -115,12 +121,21 @@ abstract final class InvoicePdfSections {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('TAX INVOICE', style: InvoicePdfTheme.title(size: 16)),
+              pw.Text(config.title, style: InvoicePdfTheme.title(size: 16)),
               pw.SizedBox(height: 4),
               pw.Text(
-                'Invoice No: ${meta.displayNumber}',
+                '${config.documentNumberLabel}: ${meta.displayNumber}',
                 style: InvoicePdfTheme.heading(size: 9),
               ),
+              if (config.showSupplierInvoiceNumber &&
+                  meta.supplierInvoiceNumber != null &&
+                  meta.supplierInvoiceNumber!.isNotEmpty) ...[
+                pw.SizedBox(height: 2),
+                pw.Text(
+                  'Supplier Inv: ${meta.supplierInvoiceNumber}',
+                  style: InvoicePdfTheme.mutedBody(),
+                ),
+              ],
             ],
           ),
           pw.Column(
@@ -130,6 +145,13 @@ abstract final class InvoicePdfSections {
                 'Date: ${date != null ? _dateFormat.format(date) : meta.documentDate}',
                 style: InvoicePdfTheme.body(),
               ),
+              if (config.showDueDate && dueDate != null) ...[
+                pw.SizedBox(height: 4),
+                pw.Text(
+                  'Due: ${_dateFormat.format(dueDate)}',
+                  style: InvoicePdfTheme.body(),
+                ),
+              ],
               pw.SizedBox(height: 4),
               pw.Text(
                 'Status: ${_statusLabel(meta.status)}',
@@ -142,7 +164,10 @@ abstract final class InvoicePdfSections {
     );
   }
 
-  static pw.Widget partySection(PrintableDocument document) {
+  static pw.Widget partySection(
+    PrintableDocument document,
+    CommercialDocumentLayoutConfig config,
+  ) {
     final party = document.party;
 
     return pw.Container(
@@ -152,7 +177,7 @@ abstract final class InvoicePdfSections {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text('Bill To', style: InvoicePdfTheme.heading()),
+          pw.Text(config.partyHeading, style: InvoicePdfTheme.heading()),
           pw.SizedBox(height: 6),
           if (party != null) ...[
             pw.Text(party.dto.name, style: InvoicePdfTheme.body()),
@@ -174,10 +199,34 @@ abstract final class InvoicePdfSections {
                 style: InvoicePdfTheme.mutedBody(),
               ),
           ] else
-            pw.Text('Walk-in Customer', style: InvoicePdfTheme.body()),
+            pw.Text(config.emptyPartyLabel, style: InvoicePdfTheme.body()),
         ],
       ),
     );
+  }
+
+  static Map<int, pw.TableColumnWidth> tableColumnWidths({required bool showGst}) {
+    return showGst
+        ? {
+            0: const pw.FixedColumnWidth(20),
+            1: const pw.FlexColumnWidth(3),
+            2: const pw.FixedColumnWidth(42),
+            3: const pw.FixedColumnWidth(32),
+            4: const pw.FixedColumnWidth(32),
+            5: const pw.FixedColumnWidth(48),
+            6: const pw.FixedColumnWidth(36),
+            7: const pw.FixedColumnWidth(36),
+            8: const pw.FixedColumnWidth(52),
+          }
+        : {
+            0: const pw.FixedColumnWidth(20),
+            1: const pw.FlexColumnWidth(3),
+            2: const pw.FixedColumnWidth(32),
+            3: const pw.FixedColumnWidth(32),
+            4: const pw.FixedColumnWidth(48),
+            5: const pw.FixedColumnWidth(36),
+            6: const pw.FixedColumnWidth(52),
+          };
   }
 
   static List<pw.TableRow> itemsTableHeader({required bool showGst}) {
@@ -209,44 +258,12 @@ abstract final class InvoicePdfSections {
     ];
   }
 
-  static pw.Widget itemsTable({
-    required List<PrintableLineItem> lines,
-    required bool showGst,
-  }) {
-    return pw.Table(
-      border: pw.TableBorder.all(color: InvoicePdfTheme.border, width: 0.5),
-      columnWidths: showGst
-          ? {
-              0: const pw.FixedColumnWidth(20),
-              1: const pw.FlexColumnWidth(3),
-              2: const pw.FixedColumnWidth(42),
-              3: const pw.FixedColumnWidth(32),
-              4: const pw.FixedColumnWidth(32),
-              5: const pw.FixedColumnWidth(48),
-              6: const pw.FixedColumnWidth(36),
-              7: const pw.FixedColumnWidth(36),
-              8: const pw.FixedColumnWidth(52),
-            }
-          : {
-              0: const pw.FixedColumnWidth(20),
-              1: const pw.FlexColumnWidth(3),
-              2: const pw.FixedColumnWidth(32),
-              3: const pw.FixedColumnWidth(32),
-              4: const pw.FixedColumnWidth(48),
-              5: const pw.FixedColumnWidth(36),
-              6: const pw.FixedColumnWidth(52),
-            },
-      children: [
-        ...itemsTableHeader(showGst: showGst),
-        ...itemsTableRows(lines: lines, showGst: showGst),
-      ],
-    );
-  }
-
-  static pw.Widget totalsSection(PrintableDocument document) {
+  static pw.Widget totalsSection(
+    PrintableDocument document,
+    CommercialDocumentLayoutConfig config,
+  ) {
     final totals = document.totals;
     final tax = document.taxSummary;
-    final showGst = document.metadata.isGstFormal;
 
     return pw.Container(
       margin: const pw.EdgeInsets.only(top: 12),
@@ -254,12 +271,12 @@ abstract final class InvoicePdfSections {
         children: [
           pw.Spacer(),
           pw.SizedBox(
-            width: 240,
+            width: 260,
             child: pw.Column(
               children: [
                 _totalRow('Subtotal', totals.subtotal),
                 _totalRow('Discount', totals.discountTotal),
-                if (showGst) ...[
+                if (config.showTaxSummary) ...[
                   _totalRow('CGST', tax.cgstTotal),
                   _totalRow('SGST', tax.sgstTotal),
                   _totalRow('IGST', tax.igstTotal),
@@ -316,11 +333,20 @@ abstract final class InvoicePdfSections {
     );
   }
 
+  static pw.Widget footerNoteSection(String note) {
+    return pw.Container(
+      margin: const pw.EdgeInsets.only(top: 12),
+      padding: const pw.EdgeInsets.all(8),
+      decoration: InvoicePdfTheme.sectionBorder(),
+      child: pw.Text(note, style: InvoicePdfTheme.mutedBody(size: 8)),
+    );
+  }
+
   static pw.Widget signatureSection(PrintableDocument document) {
     final hasSignature = document.assets.signatureBytes != null;
 
     return pw.Container(
-      margin: const pw.EdgeInsets.only(top: 24),
+      margin: const pw.EdgeInsets.only(top: 24, bottom: 8),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.end,
         children: [
@@ -393,7 +419,7 @@ abstract final class InvoicePdfSections {
     return pw.TableRow(
       children: [
         _cell('$index'),
-        _cell(description),
+        _cell(description, maxLines: 4),
         if (showGst) _cell(item.hsnCode ?? '-'),
         _cell(line.quantity),
         _cell(line.unit),
@@ -405,12 +431,21 @@ abstract final class InvoicePdfSections {
     );
   }
 
-  static pw.Widget _cell(String text, {pw.TextAlign align = pw.TextAlign.left}) {
+  static pw.Widget _cell(
+    String text, {
+    pw.TextAlign align = pw.TextAlign.left,
+    int maxLines = 2,
+  }) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 5),
       child: pw.Align(
         alignment: _toAlignment(align),
-        child: pw.Text(text, style: InvoicePdfTheme.tableCell()),
+        child: pw.Text(
+          text,
+          style: InvoicePdfTheme.tableCell(),
+          maxLines: maxLines,
+          overflow: pw.TextOverflow.clip,
+        ),
       ),
     );
   }
@@ -421,11 +456,14 @@ abstract final class InvoicePdfSections {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text(
-            label,
-            style: bold
-                ? InvoicePdfTheme.heading(size: 9)
-                : InvoicePdfTheme.body(),
+          pw.SizedBox(
+            width: 120,
+            child: pw.Text(
+              label,
+              style: bold
+                  ? InvoicePdfTheme.heading(size: 9)
+                  : InvoicePdfTheme.body(),
+            ),
           ),
           pw.Text(
             _format(amount),
@@ -462,3 +500,6 @@ abstract final class InvoicePdfSections {
     };
   }
 }
+
+/// @deprecated Use [CommercialDocumentPdfSections].
+typedef InvoicePdfSections = CommercialDocumentPdfSections;

@@ -13,6 +13,9 @@ sealed class PrintRequest {
       DeliveryChallanPrintRequest;
   const factory PrintRequest.creditNote(String id) = CreditNotePrintRequest;
   const factory PrintRequest.debitNote(String id) = DebitNotePrintRequest;
+  const factory PrintRequest.saleOrder(String id) = SaleOrderPrintRequest;
+  const factory PrintRequest.purchaseOrder(String id) =
+      PurchaseOrderPrintRequest;
   const factory PrintRequest.paymentIn(String id) = PaymentInPrintRequest;
   const factory PrintRequest.paymentOut(String id) = PaymentOutPrintRequest;
 
@@ -88,6 +91,26 @@ final class DebitNotePrintRequest extends PrintRequest {
 
   @override
   PrintableDocumentKind get kind => PrintableDocumentKind.debitNote;
+}
+
+final class SaleOrderPrintRequest extends PrintRequest {
+  const SaleOrderPrintRequest(this.id);
+
+  @override
+  final String id;
+
+  @override
+  PrintableDocumentKind get kind => PrintableDocumentKind.saleOrder;
+}
+
+final class PurchaseOrderPrintRequest extends PrintRequest {
+  const PurchaseOrderPrintRequest(this.id);
+
+  @override
+  final String id;
+
+  @override
+  PrintableDocumentKind get kind => PrintableDocumentKind.purchaseOrder;
 }
 
 final class PaymentInPrintRequest extends PrintRequest {

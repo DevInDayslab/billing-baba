@@ -279,16 +279,18 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
       );
 
       if (finalize) {
-        await service.finalizeDocumentDraft(
+        final document = await service.finalizeDocumentDraft(
           input,
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
         );
+        state = state.copyWith(documentId: document.id, isSaving: false);
       } else {
-        await service.saveDocumentDraft(
+        final document = await service.saveDocumentDraft(
           input,
           itemNameToId: _itemNameToId(),
         );
+        state = state.copyWith(documentId: document.id, isSaving: false);
       }
 
       ref.invalidate(purchaseOrdersProvider);

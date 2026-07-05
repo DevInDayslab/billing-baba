@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/purchase_order_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_order_status_badge.dart';
@@ -239,31 +240,31 @@ class PurchaseOrderTable extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Tooltip(
-                message: 'Share',
-                child: ShareMenuButton(
-                  overlayOffset: const Offset(0, 4),
-                  targetAnchor: Alignment.bottomRight,
-                  followerAnchor: Alignment.topRight,
-                  onChannelSelected: (channel) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${channel.label} ${order.orderNo} coming soon',
-                        ),
-                      ),
-                    );
-                  },
-                  child: const SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: Icon(
-                      Icons.share_outlined,
-                      size: 18,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
+              IconButton(
+                onPressed: () => DocumentPrintActions.preview(
+                  context,
+                  ref,
+                  PrintRequest.purchaseOrder(order.id),
+                  filename: DocumentPrintActions.filenameFor(order.orderNo),
                 ),
+                icon: const Icon(Icons.print_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Print',
+              ),
+              IconButton(
+                onPressed: () => DocumentPrintActions.share(
+                  context,
+                  ref,
+                  PrintRequest.purchaseOrder(order.id),
+                  filename: DocumentPrintActions.filenameFor(order.orderNo),
+                ),
+                icon: const Icon(Icons.share_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Share',
               ),
               IconButton(
                 onPressed: () => _showOrderActions(context, ref, order),

@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
+import 'package:billing_baba/features/sales/models/delivery_challan_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/delivery_challan_footer.dart';
@@ -494,14 +496,25 @@ class _DeliveryChallanBottomActionBar extends ConsumerWidget {
             child: const Text('Cancel', style: TextStyle(fontSize: 13)),
           ),
           const Spacer(),
-          ShareMenuButton(
-            onChannelSelected: (channel) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${channel.label} coming soon')),
-              );
-            },
-          ),
-          const SizedBox(width: AppSpacing.md),
+          if (form.documentId != null) ...[
+            OutlinedButton.icon(
+              onPressed: () => _handlePrintPreview(context, ref, form),
+              icon: const Icon(Icons.print_outlined, size: 16),
+              label: const Text('Print / Preview', style: TextStyle(fontSize: 13)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                side: const BorderSide(color: _cardBorder),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            IconButton(
+              onPressed: () => _handleShare(context, ref, form),
+              icon: const Icon(Icons.share_outlined, size: 20),
+              color: AppColors.textSecondary,
+              tooltip: 'Share PDF',
+            ),
+            const SizedBox(width: AppSpacing.sm),
+          ],
           FilledButton(
             onPressed: form.isSaving
                 ? null
@@ -527,6 +540,36 @@ class _DeliveryChallanBottomActionBar extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _handlePrintPreview(
+    BuildContext context,
+    WidgetRef ref,
+    DeliveryChallanFormState form,
+  ) async {
+    final docId = form.documentId;
+    if (docId == null) return;
+    await DocumentPrintActions.preview(
+      context,
+      ref,
+      PrintRequest.deliveryChallan(docId),
+      filename: DocumentPrintActions.filenameFor(form.challanNo),
+    );
+  }
+
+  Future<void> _handleShare(
+    BuildContext context,
+    WidgetRef ref,
+    DeliveryChallanFormState form,
+  ) async {
+    final docId = form.documentId;
+    if (docId == null) return;
+    await DocumentPrintActions.share(
+      context,
+      ref,
+      PrintRequest.deliveryChallan(docId),
+      filename: DocumentPrintActions.filenameFor(form.challanNo),
     );
   }
 }

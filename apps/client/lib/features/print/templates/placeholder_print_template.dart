@@ -12,7 +12,9 @@ class PlaceholderPrintTemplate implements PrintTemplate {
   String get id => 'placeholder_v1';
 
   @override
-  bool supports(PrintableDocumentKind kind) => true;
+  bool supports(PrintableDocumentKind kind) =>
+      kind == PrintableDocumentKind.paymentIn ||
+      kind == PrintableDocumentKind.paymentOut;
 
   @override
   Future<Uint8List> render(PrintableDocument document) async {

@@ -47,22 +47,26 @@ class PrintDataService {
       EstimatePrintRequest() ||
       ProformaInvoicePrintRequest() ||
       DeliveryChallanPrintRequest() ||
-      CreditNotePrintRequest() => _loadSalesDocument(request),
-      PurchaseBillPrintRequest() || DebitNotePrintRequest() =>
-        _loadPurchaseDocument(request),
-      PaymentInPrintRequest() => _loadPayment(request, expectedDirection: 'received'),
-      PaymentOutPrintRequest() => _loadPayment(request, expectedDirection: 'paid'),
+      CreditNotePrintRequest() ||
+      SaleOrderPrintRequest() => _loadSalesDocument(request),
+      PurchaseBillPrintRequest() ||
+      DebitNotePrintRequest() ||
+      PurchaseOrderPrintRequest() => _loadPurchaseDocument(request),
+      PaymentInPrintRequest() =>
+        _loadPayment(request, expectedDirection: 'received'),
+      PaymentOutPrintRequest() =>
+        _loadPayment(request, expectedDirection: 'paid'),
     };
   }
 
   Future<PrintableDocument> _loadSalesDocument(PrintRequest request) async {
     final documentFuture = _salesRepository.getDocument(request.id);
-    final companyFuture = _businessService.fetchBusinessProfile();
+    final profileFuture = _businessService.fetchBusinessProfile();
 
     final document = await documentFuture;
     _assertSalesDocumentKind(document, request.kind);
 
-    final profile = await companyFuture;
+    final profile = await profileFuture;
     final company = PrintableCompany(profile: profile);
 
     final partyFuture = _loadParty(document.partyId);
@@ -86,7 +90,7 @@ class PrintDataService {
       party: party,
       lines: lines,
       metadata: _metadataFromSales(document),
-      totals: PrintableTotals(
+      totals: _totalsFromDocument(
         subtotal: document.subtotal,
         discountTotal: document.discountTotal,
         taxAmount: document.taxAmount,
@@ -99,13 +103,28 @@ class PrintDataService {
   }
 
   Future<PrintableDocument> _loadPurchaseDocument(PrintRequest request) async {
-    final document = await _purchaseRepository.getDocument(request.id);
+    final documentFuture = _purchaseRepository.getDocument(request.id);
+    final profileFuture = _businessService.fetchBusinessProfile();
+
+    final document = await documentFuture;
     _assertPurchaseDocumentKind(document, request.kind);
 
-    final company = await _loadCompany();
-    final party = await _loadParty(document.partyId);
-    final lines = await _enrichPurchaseLines(document.lines);
-    final assets = await _loadAssets(company.profile.logoUrl, company.profile.signatureUrl);
+    final profile = await profileFuture;
+    final company = PrintableCompany(profile: profile);
+
+    final partyFuture = _loadParty(document.partyId);
+    final linesFuture = _enrichPurchaseLines(document.lines);
+    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+
+    late final PrintableParty? party;
+    late final List<PrintableLineItem> lines;
+    late final PrintableAssets assets;
+
+    await Future.wait<void>([
+      partyFuture.then((value) => party = value),
+      linesFuture.then((value) => lines = value),
+      assetsFuture.then((value) => assets = value),
+    ]);
 
     return PrintableDocument(
       kind: request.kind,
@@ -114,7 +133,7 @@ class PrintDataService {
       party: party,
       lines: lines,
       metadata: _metadataFromPurchase(document),
-      totals: PrintableTotals(
+      totals: _totalsFromDocument(
         subtotal: document.subtotal,
         discountTotal: document.discountTotal,
         taxAmount: document.taxAmount,
@@ -138,9 +157,19 @@ class PrintDataService {
       );
     }
 
-    final company = await _loadCompany();
-    final party = await _loadParty(payment.partyId);
-    final assets = await _loadAssets(company.profile.logoUrl, company.profile.signatureUrl);
+    final profile = await _businessService.fetchBusinessProfile();
+    final company = PrintableCompany(profile: profile);
+
+    final partyFuture = _loadParty(payment.partyId);
+    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+
+    late final PrintableParty? party;
+    late final PrintableAssets assets;
+
+    await Future.wait<void>([
+      partyFuture.then((value) => party = value),
+      assetsFuture.then((value) => assets = value),
+    ]);
 
     return PrintableDocument(
       kind: request.kind,
@@ -157,7 +186,7 @@ class PrintDataService {
         paymentDirection: payment.direction,
         notes: payment.notes,
       ),
-      totals: PrintableTotals(
+      totals: _totalsFromDocument(
         subtotal: payment.amount,
         discountTotal: '0',
         taxAmount: '0',
@@ -169,11 +198,6 @@ class PrintDataService {
     );
   }
 
-  Future<PrintableCompany> _loadCompany() async {
-    final profile = await _businessService.fetchBusinessProfile();
-    return PrintableCompany(profile: profile);
-  }
-
   Future<PrintableParty?> _loadParty(String? partyId) async {
     if (partyId == null || partyId.isEmpty) {
       return null;
@@ -182,7 +206,10 @@ class PrintDataService {
     return PrintableParty(dto: dto);
   }
 
-  Future<PrintableAssets> _loadAssets(String? logoUrl, String? signatureUrl) async {
+  Future<PrintableAssets> _loadAssets(
+    String? logoUrl,
+    String? signatureUrl,
+  ) async {
     final results = await Future.wait([
       _imageCache.getBytes(logoUrl),
       _imageCache.getBytes(signatureUrl),
@@ -246,6 +273,20 @@ class PrintDataService {
     return Map.fromEntries(entries);
   }
 
+  PrintableTotals _totalsFromDocument({
+    required String subtotal,
+    required String discountTotal,
+    required String taxAmount,
+    required String totalAmount,
+  }) {
+    return PrintableTotals(
+      subtotal: subtotal,
+      discountTotal: discountTotal,
+      taxAmount: taxAmount,
+      totalAmount: totalAmount,
+    );
+  }
+
   void _assertSalesDocumentKind(
     SalesDocumentDto document,
     PrintableDocumentKind kind,
@@ -293,8 +334,16 @@ class PrintDataService {
           );
         }
         return;
+      case PrintableDocumentKind.saleOrder:
+        if (document.documentType != SalesDocumentType.saleOrder.apiValue) {
+          throw PrintException(
+            'Document ${document.id} is not a sale order',
+          );
+        }
+        return;
       case PrintableDocumentKind.purchaseBill:
       case PrintableDocumentKind.debitNote:
+      case PrintableDocumentKind.purchaseOrder:
       case PrintableDocumentKind.paymentIn:
       case PrintableDocumentKind.paymentOut:
         throw PrintException('Unexpected sales document kind: $kind');
@@ -320,11 +369,19 @@ class PrintDataService {
           );
         }
         return;
+      case PrintableDocumentKind.purchaseOrder:
+        if (document.documentType != 'purchase_order') {
+          throw PrintException(
+            'Document ${document.id} is not a purchase order',
+          );
+        }
+        return;
       case PrintableDocumentKind.saleInvoice:
       case PrintableDocumentKind.estimate:
       case PrintableDocumentKind.proformaInvoice:
       case PrintableDocumentKind.deliveryChallan:
       case PrintableDocumentKind.creditNote:
+      case PrintableDocumentKind.saleOrder:
       case PrintableDocumentKind.paymentIn:
       case PrintableDocumentKind.paymentOut:
         throw PrintException('Unexpected purchase document kind: $kind');

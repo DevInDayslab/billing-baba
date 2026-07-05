@@ -1,15 +1,12 @@
-import 'package:billing_baba/features/print/application/print_service.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
-import 'package:billing_baba/features/print/presentation/providers/print_providers.dart';
+import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Sales invoice print/share actions via [PrintService].
+/// Sales invoice print/share actions via [DocumentPrintActions].
 abstract final class SaleInvoicePrintActions {
-  static String filenameFor(String invoiceNo) {
-    final safe = invoiceNo.replaceAll(RegExp(r'[^\w\-]+'), '_');
-    return safe.isEmpty ? 'invoice' : safe;
-  }
+  static String filenameFor(String invoiceNo) =>
+      DocumentPrintActions.filenameFor(invoiceNo);
 
   static Future<void> preview(
     BuildContext context,
@@ -17,14 +14,11 @@ abstract final class SaleInvoicePrintActions {
     String invoiceId, {
     String? filename,
   }) {
-    return _run(
+    return DocumentPrintActions.preview(
       context,
       ref,
-      (service) => service.preview(
-        context: context,
-        request: PrintRequest.saleInvoice(invoiceId),
-        name: filename,
-      ),
+      PrintRequest.saleInvoice(invoiceId),
+      filename: filename,
     );
   }
 
@@ -34,13 +28,11 @@ abstract final class SaleInvoicePrintActions {
     String invoiceId, {
     String? filename,
   }) {
-    return _run(
+    return DocumentPrintActions.print(
       context,
       ref,
-      (service) => service.print(
-        PrintRequest.saleInvoice(invoiceId),
-        name: filename,
-      ),
+      PrintRequest.saleInvoice(invoiceId),
+      filename: filename,
     );
   }
 
@@ -50,13 +42,11 @@ abstract final class SaleInvoicePrintActions {
     String invoiceId, {
     required String filename,
   }) {
-    return _run(
+    return DocumentPrintActions.share(
       context,
       ref,
-      (service) => service.share(
-        PrintRequest.saleInvoice(invoiceId),
-        filename: '$filename.pdf',
-      ),
+      PrintRequest.saleInvoice(invoiceId),
+      filename: filename,
     );
   }
 
@@ -66,44 +56,11 @@ abstract final class SaleInvoicePrintActions {
     String invoiceId, {
     required String filename,
   }) {
-    return _run(
+    return DocumentPrintActions.save(
       context,
       ref,
-      (service) async {
-        final path = await service.save(
-          PrintRequest.saleInvoice(invoiceId),
-          filename: '$filename.pdf',
-        );
-        if (!context.mounted) return;
-        final message = path != null
-            ? 'PDF saved to $path'
-            : 'PDF ready to share';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-      },
+      PrintRequest.saleInvoice(invoiceId),
+      filename: filename,
     );
-  }
-
-  static Future<void> _run(
-    BuildContext context,
-    WidgetRef ref,
-    Future<void> Function(PrintService service) action,
-  ) async {
-    try {
-      final service = await ref.read(printServiceProvider.future);
-      if (!context.mounted) return;
-      await action(service);
-    } on PrintException catch (error) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
-    } on Object catch (error) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Print failed: $error')),
-      );
-    }
   }
 }

@@ -71,7 +71,13 @@ class PurchaseBillSummaryCard extends ConsumerWidget {
           tooltip: 'Excel Report',
         ),
         IconButton(
-          onPressed: () => debugPrint('Print tapped'),
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Use row actions to print a purchase bill'),
+              ),
+            );
+          },
           icon: const Icon(Icons.print_outlined, size: 20),
           color: AppColors.textSecondary,
           tooltip: 'Print',
