@@ -66,6 +66,9 @@ class PrintService {
   }
 
   String _defaultFilename(PrintRequest request) {
-    return '${request.kind.name}_${request.id}';
+    return switch (request) {
+      SaleInvoicePrintRequest() => 'invoice_${request.id}',
+      _ => '${request.kind.name}_${request.id}',
+    };
   }
 }

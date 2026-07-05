@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/print/presentation/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_status_badge.dart';
@@ -80,7 +81,13 @@ class SaleInvoiceTable extends ConsumerWidget {
                 ),
                 _XlsChip(onTap: () => debugPrint('Export xls tapped')),
                 IconButton(
-                  onPressed: () => debugPrint('Print tapped'),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Use row actions to print an invoice'),
+                      ),
+                    );
+                  },
                   icon: const Icon(Icons.print_outlined, size: 20),
                   color: AppColors.textSecondary,
                   tooltip: 'Print',
@@ -249,7 +256,14 @@ class SaleInvoiceTable extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                onPressed: () => debugPrint('Print ${invoice.invoiceNo}'),
+                onPressed: () => SaleInvoicePrintActions.preview(
+                  context,
+                  ref,
+                  invoice.id,
+                  filename: SaleInvoicePrintActions.filenameFor(
+                    invoice.invoiceNo,
+                  ),
+                ),
                 icon: const Icon(Icons.print_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
@@ -257,7 +271,14 @@ class SaleInvoiceTable extends ConsumerWidget {
                 tooltip: 'Print',
               ),
               IconButton(
-                onPressed: () => debugPrint('Share ${invoice.invoiceNo}'),
+                onPressed: () => SaleInvoicePrintActions.share(
+                  context,
+                  ref,
+                  invoice.id,
+                  filename: SaleInvoicePrintActions.filenameFor(
+                    invoice.invoiceNo,
+                  ),
+                ),
                 icon: const Icon(Icons.share_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,

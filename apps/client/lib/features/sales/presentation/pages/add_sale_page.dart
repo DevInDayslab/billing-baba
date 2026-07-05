@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
+import 'package:billing_baba/features/print/presentation/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/add_sale_footer.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
@@ -492,11 +493,7 @@ class _BottomActionBar extends ConsumerWidget {
         children: [
           if (!isCash) ...[
             OutlinedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Print preview coming soon')),
-                );
-              },
+              onPressed: () => _handlePrintPreview(context, ref),
               icon: const Icon(Icons.print_outlined, size: 16),
               label: const Text(
                 'Print / Preview',
@@ -539,6 +536,8 @@ class _BottomActionBar extends ConsumerWidget {
             const Spacer(),
             _SaveSplitButton(
               onSave: () => _handleSave(context, ref, notifier),
+              onSaveAndPrint: () => _handleSaveAndPrint(context, ref),
+              onSaveAndShare: () => _handleSaveAndShare(context, ref),
             ),
           ],
         ],
@@ -571,6 +570,80 @@ class _BottomActionBar extends ConsumerWidget {
       if (discard != true || !context.mounted) return;
     }
     if (context.mounted) context.pop();
+  }
+
+  String? _documentId(AddSaleFormState form) => form.documentId ?? invoiceId;
+
+  String _filename(AddSaleFormState form) {
+    final number = form.invoiceNumber.trim();
+    if (number.isNotEmpty) {
+      return SaleInvoicePrintActions.filenameFor(number);
+    }
+    final id = _documentId(form);
+    return id == null ? 'invoice' : SaleInvoicePrintActions.filenameFor(id);
+  }
+
+  Future<void> _handlePrintPreview(BuildContext context, WidgetRef ref) async {
+    final form = ref.read(addSaleFormProvider(invoiceId: invoiceId));
+    final docId = _documentId(form);
+    if (docId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Save the invoice before printing')),
+      );
+      return;
+    }
+    await SaleInvoicePrintActions.preview(
+      context,
+      ref,
+      docId,
+      filename: _filename(form),
+    );
+  }
+
+  Future<void> _handleSaveAndPrint(BuildContext context, WidgetRef ref) async {
+    final notifier = ref.read(
+      addSaleFormProvider(invoiceId: invoiceId).notifier,
+    );
+    final error = await notifier.saveInvoice();
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
+    final form = ref.read(addSaleFormProvider(invoiceId: invoiceId));
+    final docId = form.documentId;
+    if (docId == null) return;
+    await SaleInvoicePrintActions.print(
+      context,
+      ref,
+      docId,
+      filename: _filename(form),
+    );
+  }
+
+  Future<void> _handleSaveAndShare(BuildContext context, WidgetRef ref) async {
+    final notifier = ref.read(
+      addSaleFormProvider(invoiceId: invoiceId).notifier,
+    );
+    final error = await notifier.saveInvoice();
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
+    final form = ref.read(addSaleFormProvider(invoiceId: invoiceId));
+    final docId = form.documentId;
+    if (docId == null) return;
+    await SaleInvoicePrintActions.share(
+      context,
+      ref,
+      docId,
+      filename: _filename(form),
+    );
   }
 
   Future<void> _handleSave(
@@ -723,9 +796,15 @@ class _PickerField extends StatelessWidget {
 
 /// Vyapar-style Save button with a dropdown for Save & Print / Share.
 class _SaveSplitButton extends StatelessWidget {
-  const _SaveSplitButton({required this.onSave});
+  const _SaveSplitButton({
+    required this.onSave,
+    required this.onSaveAndPrint,
+    required this.onSaveAndShare,
+  });
 
   final VoidCallback onSave;
+  final VoidCallback onSaveAndPrint;
+  final VoidCallback onSaveAndShare;
 
   @override
   Widget build(BuildContext context) {
@@ -753,10 +832,10 @@ class _SaveSplitButton extends StatelessWidget {
             onSelected: (value) {
               if (value == 'save') {
                 onSave();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('$value coming soon')),
-                );
+              } else if (value == 'Save & Print') {
+                onSaveAndPrint();
+              } else if (value == 'Save & Share') {
+                onSaveAndShare();
               }
             },
             offset: const Offset(0, 40),

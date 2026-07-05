@@ -39,6 +39,7 @@ class PrintDataService {
   final BusinessService _businessService;
   final PartyRepository _partyRepository;
   final PrintImageCache _imageCache;
+  final Map<String, ItemDetailDto> _itemCache = {};
 
   Future<PrintableDocument> load(PrintRequest request) {
     return switch (request) {
@@ -55,13 +56,28 @@ class PrintDataService {
   }
 
   Future<PrintableDocument> _loadSalesDocument(PrintRequest request) async {
-    final document = await _salesRepository.getDocument(request.id);
+    final documentFuture = _salesRepository.getDocument(request.id);
+    final companyFuture = _businessService.fetchBusinessProfile();
+
+    final document = await documentFuture;
     _assertSalesDocumentKind(document, request.kind);
 
-    final company = await _loadCompany();
-    final party = await _loadParty(document.partyId);
-    final lines = await _enrichSalesLines(document.lines);
-    final assets = await _loadAssets(company.profile.logoUrl, company.profile.signatureUrl);
+    final profile = await companyFuture;
+    final company = PrintableCompany(profile: profile);
+
+    final partyFuture = _loadParty(document.partyId);
+    final linesFuture = _enrichSalesLines(document.lines);
+    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+
+    late final PrintableParty? party;
+    late final List<PrintableLineItem> lines;
+    late final PrintableAssets assets;
+
+    await Future.wait<void>([
+      partyFuture.then((value) => party = value),
+      linesFuture.then((value) => lines = value),
+      assetsFuture.then((value) => assets = value),
+    ]);
 
     return PrintableDocument(
       kind: request.kind,
@@ -220,7 +236,10 @@ class PrintDataService {
     final uniqueIds = itemIds.toSet();
     final entries = await Future.wait(
       uniqueIds.map((id) async {
+        final cached = _itemCache[id];
+        if (cached != null) return MapEntry(id, cached);
         final item = await _inventoryRepository.getItem(id);
+        _itemCache[id] = item;
         return MapEntry(id, item);
       }),
     );

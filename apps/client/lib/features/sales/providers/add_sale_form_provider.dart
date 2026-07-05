@@ -335,14 +335,27 @@ class AddSaleForm extends _$AddSaleForm {
       final service = await ref.read(salesServiceProvider.future);
 
       if (finalize) {
-        await service.createAndFinalizeSale(
+        final document = await service.createAndFinalizeSale(
           state,
           partyId: state.partyId,
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
         );
+        state = state.copyWith(
+          documentId: document.id,
+          isSaving: false,
+          isDirty: false,
+        );
       } else {
-        await service.saveDraft(state, itemNameToId: _itemNameToId());
+        final document = await service.saveDraft(
+          state,
+          itemNameToId: _itemNameToId(),
+        );
+        state = state.copyWith(
+          documentId: document.id,
+          isSaving: false,
+          isDirty: false,
+        );
       }
 
       ref.invalidate(saleInvoicesProvider);

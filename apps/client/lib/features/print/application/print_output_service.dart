@@ -54,24 +54,22 @@ class PrintOutputService {
     required Uint8List bytes,
     required String filename,
   }) async {
+    final safeName = filename.endsWith('.pdf') ? filename : '$filename.pdf';
+
     if (kIsWeb) {
-      await Printing.sharePdf(bytes: bytes, filename: filename);
+      await Printing.sharePdf(bytes: bytes, filename: safeName);
       return null;
     }
 
-    final directory = await _resolveSaveDirectory();
-    final safeName = filename.endsWith('.pdf') ? filename : '$filename.pdf';
+    if (!kIsWeb &&
+        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      await Printing.sharePdf(bytes: bytes, filename: safeName);
+      return null;
+    }
+
+    final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/$safeName');
     await file.writeAsBytes(bytes, flush: true);
     return file.path;
-  }
-
-  Future<Directory> _resolveSaveDirectory() async {
-    if (!kIsWeb &&
-        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      final downloads = await getDownloadsDirectory();
-      if (downloads != null) return downloads;
-    }
-    return getApplicationDocumentsDirectory();
   }
 }
