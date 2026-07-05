@@ -51,7 +51,12 @@ dependencies:
   sendotp_flutter_sdk: ^0.0.2
   flutter_dotenv: ^6.0.1
   lucide_icons_flutter: ^3.1.14+2
-  fl_chart: ^0.70.2
+  fl_chart: ^1.2.0
+
+  # Print / PDF
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  share_plus: ^13.2.0
 
 dev_dependencies:
   flutter_test:
