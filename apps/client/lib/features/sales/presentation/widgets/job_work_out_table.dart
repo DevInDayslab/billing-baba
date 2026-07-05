@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_dialog.dart';
 import 'package:billing_baba/features/sales/providers/job_work_orders_provider.dart';
@@ -16,7 +17,7 @@ const _partyColWidth = 160.0;
 const _jobIdColWidth = 120.0;
 const _deliveryColWidth = 140.0;
 const _statusColWidth = 120.0;
-const _actionsColWidth = 80.0;
+const _actionsColWidth = 120.0;
 
 const double _minTableWidth =
     _dateColWidth +
@@ -252,7 +253,7 @@ class _TableHeaderRow extends StatelessWidget {
   }
 }
 
-class _DataRow extends StatelessWidget {
+class _DataRow extends ConsumerWidget {
   const _DataRow({
     required this.item,
     required this.onTap,
@@ -271,7 +272,7 @@ class _DataRow extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final statusLabel = switch (item.status) {
       JobWorkOutStatus.open => 'Open',
       JobWorkOutStatus.closed => 'Closed',
@@ -336,11 +337,52 @@ class _DataRow extends StatelessWidget {
                 ),
                 SizedBox(
                   width: _actionsColWidth,
-                  child: IconButton(
-                    onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline, size: 20),
-                    color: AppColors.textSecondary,
-                    tooltip: 'Delete',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () => VoucherPrintActions.previewJobWorkOrder(
+                          context,
+                          ref,
+                          item.id,
+                          filename: VoucherPrintActions.filenameFor(
+                            item.jobId.isNotEmpty ? item.jobId : item.id,
+                          ),
+                        ),
+                        icon: const Icon(Icons.print_outlined, size: 18),
+                        color: AppColors.textSecondary,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        tooltip: 'Print / Preview',
+                      ),
+                      IconButton(
+                        onPressed: () => VoucherPrintActions.shareJobWorkOrder(
+                          context,
+                          ref,
+                          item.id,
+                          filename: VoucherPrintActions.filenameFor(
+                            item.jobId.isNotEmpty ? item.jobId : item.id,
+                          ),
+                        ),
+                        icon: const Icon(Icons.share_outlined, size: 18),
+                        color: AppColors.textSecondary,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        tooltip: 'Share',
+                      ),
+                      IconButton(
+                        onPressed: onDelete,
+                        icon: const Icon(Icons.delete_outline, size: 20),
+                        color: AppColors.textSecondary,
+                        tooltip: 'Delete',
+                      ),
+                    ],
                   ),
                 ),
               ],

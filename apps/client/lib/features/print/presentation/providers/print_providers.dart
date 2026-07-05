@@ -12,9 +12,15 @@ import 'package:billing_baba/features/print/data/print_repository.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/models/printable_document.dart';
 import 'package:billing_baba/features/print/templates/template_registry.dart';
+import 'package:billing_baba/features/purchases/data/expense_remote_data_source.dart';
+import 'package:billing_baba/features/purchases/data/expense_repository.dart';
+import 'package:billing_baba/features/purchases/data/purchase_fa_remote_data_source.dart';
+import 'package:billing_baba/features/purchases/data/purchase_fa_repository.dart';
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_remote_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_repository.dart';
+import 'package:billing_baba/features/sales/data/job_work_remote_data_source.dart';
+import 'package:billing_baba/features/sales/data/job_work_repository.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_remote_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_repository.dart';
@@ -68,6 +74,15 @@ Future<PrintDataService> printDataService(Ref ref) async {
     printRepository: printRepository,
     businessService: businessService,
     partyRepository: PartyRepository(api.dio),
+    expenseRepository: ExpenseRepository(
+      remote: ExpenseRemoteDataSource(api.dio),
+    ),
+    purchaseFaRepository: PurchaseFaRepository(
+      remote: PurchaseFaRemoteDataSource(api.dio),
+    ),
+    jobWorkRepository: JobWorkRepository(
+      remote: JobWorkRemoteDataSource(api.dio),
+    ),
     imageCache: imageCache,
   );
 }

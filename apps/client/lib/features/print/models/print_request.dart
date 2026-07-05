@@ -18,6 +18,10 @@ sealed class PrintRequest {
       PurchaseOrderPrintRequest;
   const factory PrintRequest.paymentIn(String id) = PaymentInPrintRequest;
   const factory PrintRequest.paymentOut(String id) = PaymentOutPrintRequest;
+  const factory PrintRequest.expense(String id) = ExpensePrintRequest;
+  const factory PrintRequest.fixedAssetPurchase(String id) =
+      FixedAssetPurchasePrintRequest;
+  const factory PrintRequest.jobWorkOrder(String id) = JobWorkOrderPrintRequest;
 
   String get id;
   PrintableDocumentKind get kind;
@@ -131,4 +135,34 @@ final class PaymentOutPrintRequest extends PrintRequest {
 
   @override
   PrintableDocumentKind get kind => PrintableDocumentKind.paymentOut;
+}
+
+final class ExpensePrintRequest extends PrintRequest {
+  const ExpensePrintRequest(this.id);
+
+  @override
+  final String id;
+
+  @override
+  PrintableDocumentKind get kind => PrintableDocumentKind.expense;
+}
+
+final class FixedAssetPurchasePrintRequest extends PrintRequest {
+  const FixedAssetPurchasePrintRequest(this.id);
+
+  @override
+  final String id;
+
+  @override
+  PrintableDocumentKind get kind => PrintableDocumentKind.fixedAssetPurchase;
+}
+
+final class JobWorkOrderPrintRequest extends PrintRequest {
+  const JobWorkOrderPrintRequest(this.id);
+
+  @override
+  final String id;
+
+  @override
+  PrintableDocumentKind get kind => PrintableDocumentKind.jobWorkOrder;
 }

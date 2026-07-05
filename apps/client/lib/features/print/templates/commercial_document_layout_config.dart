@@ -128,8 +128,12 @@ class CommercialDocumentLayoutConfig {
         showDueDate: true,
         emptyPartyLabel: 'Supplier',
       ),
-      PrintableDocumentKind.paymentIn || PrintableDocumentKind.paymentOut =>
-        throw StateError('Payment documents use placeholder template'),
+      PrintableDocumentKind.paymentIn ||
+      PrintableDocumentKind.paymentOut ||
+      PrintableDocumentKind.expense ||
+      PrintableDocumentKind.fixedAssetPurchase ||
+      PrintableDocumentKind.jobWorkOrder =>
+        throw StateError('Voucher documents use A4VoucherTemplate'),
     };
   }
 }

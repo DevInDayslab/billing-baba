@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/purchase_fa_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_fa_status_badge.dart';
@@ -240,21 +241,31 @@ class PurchaseFaTable extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              IconButton(
+                onPressed: () => VoucherPrintActions.previewFixedAssetPurchase(
+                  context,
+                  ref,
+                  record.batchId,
+                  filename: VoucherPrintActions.filenameFor(record.invoiceNo),
+                ),
+                icon: const Icon(Icons.print_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Print / Preview',
+              ),
               Tooltip(
                 message: 'Share',
                 child: ShareMenuButton(
                   overlayOffset: const Offset(0, 4),
                   targetAnchor: Alignment.bottomRight,
                   followerAnchor: Alignment.topRight,
-                  onChannelSelected: (channel) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${channel.label} ${record.invoiceNo} coming soon',
-                        ),
-                      ),
-                    );
-                  },
+                  onChannelSelected: (_) => VoucherPrintActions.shareFixedAssetPurchase(
+                    context,
+                    ref,
+                    record.batchId,
+                    filename: VoucherPrintActions.filenameFor(record.invoiceNo),
+                  ),
                   child: const SizedBox(
                     width: 32,
                     height: 32,

@@ -6,6 +6,7 @@ import 'package:billing_baba/features/print/application/print_exception.dart';
 import 'package:billing_baba/features/print/application/print_image_cache.dart';
 import 'package:billing_baba/features/print/data/print_repository.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/models/printable_allocation.dart';
 import 'package:billing_baba/features/print/models/printable_assets.dart';
 import 'package:billing_baba/features/print/models/printable_company.dart';
 import 'package:billing_baba/features/print/models/printable_document.dart';
@@ -15,9 +16,13 @@ import 'package:billing_baba/features/print/models/printable_metadata.dart';
 import 'package:billing_baba/features/print/models/printable_party.dart';
 import 'package:billing_baba/features/print/models/printable_tax_summary.dart';
 import 'package:billing_baba/features/print/models/printable_totals.dart';
+import 'package:billing_baba/features/purchases/data/expense_repository.dart';
+import 'package:billing_baba/features/purchases/data/purchase_fa_repository.dart';
 import 'package:billing_baba/features/purchases/data/purchase_repository.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
+import 'package:billing_baba/features/sales/data/job_work_repository.dart';
 import 'package:billing_baba/features/sales/data/sales_repository.dart';
+import 'package:billing_baba/features/sales/models/dto/job_work_order_dto.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 
@@ -29,6 +34,9 @@ class PrintDataService {
     required this._printRepository,
     required this._businessService,
     required this._partyRepository,
+    required this._expenseRepository,
+    required this._purchaseFaRepository,
+    required this._jobWorkRepository,
     required this._imageCache,
   });
 
@@ -38,6 +46,9 @@ class PrintDataService {
   final PrintRepository _printRepository;
   final BusinessService _businessService;
   final PartyRepository _partyRepository;
+  final ExpenseRepository _expenseRepository;
+  final PurchaseFaRepository _purchaseFaRepository;
+  final JobWorkRepository _jobWorkRepository;
   final PrintImageCache _imageCache;
   final Map<String, ItemDetailDto> _itemCache = {};
 
@@ -56,6 +67,9 @@ class PrintDataService {
         _loadPayment(request, expectedDirection: 'received'),
       PaymentOutPrintRequest() =>
         _loadPayment(request, expectedDirection: 'paid'),
+      ExpensePrintRequest() => _loadExpense(request),
+      FixedAssetPurchasePrintRequest() => _loadFixedAssetPurchase(request),
+      JobWorkOrderPrintRequest() => _loadJobWorkOrder(request),
     };
   }
 
@@ -162,13 +176,16 @@ class PrintDataService {
 
     final partyFuture = _loadParty(payment.partyId);
     final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final allocationsFuture = _enrichAllocations(payment.allocations);
 
     late final PrintableParty? party;
     late final PrintableAssets assets;
+    late final List<PrintableAllocation> allocations;
 
     await Future.wait<void>([
       partyFuture.then((value) => party = value),
       assetsFuture.then((value) => assets = value),
+      allocationsFuture.then((value) => allocations = value),
     ]);
 
     return PrintableDocument(
@@ -176,6 +193,7 @@ class PrintDataService {
       request: request,
       company: company,
       party: party,
+      allocations: allocations,
       metadata: PrintableMetadata(
         documentNumber: payment.referenceNumber ?? payment.id,
         documentSeries: null,
@@ -196,6 +214,191 @@ class PrintDataService {
       assets: assets,
       payment: payment,
     );
+  }
+
+  Future<PrintableDocument> _loadExpense(PrintRequest request) async {
+    final expense = await _expenseRepository.getExpense(request.id);
+    final profile = await _businessService.fetchBusinessProfile();
+    final company = PrintableCompany(profile: profile);
+
+    final partyFuture = _loadParty(expense.partyId);
+    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+
+    late final PrintableParty? party;
+    late final PrintableAssets assets;
+
+    await Future.wait<void>([
+      partyFuture.then((value) => party = value),
+      assetsFuture.then((value) => assets = value),
+    ]);
+
+    return PrintableDocument(
+      kind: request.kind,
+      request: request,
+      company: company,
+      party: party,
+      metadata: PrintableMetadata(
+        documentNumber: expense.referenceNumber ?? expense.id,
+        documentSeries: null,
+        documentDate: expense.expenseDate,
+        status: 'finalized',
+        paymentMode: expense.paymentMode,
+        paymentReference: expense.referenceNumber,
+        notes: expense.notes,
+        expenseCategoryName: expense.categoryName,
+        expenseDescription: expense.description,
+      ),
+      totals: _totalsFromDocument(
+        subtotal: expense.amount,
+        discountTotal: '0',
+        taxAmount: expense.taxAmount ?? '0',
+        totalAmount: expense.amount,
+      ),
+      taxSummary: PrintableTaxSummary.zero,
+      assets: assets,
+      expense: expense,
+    );
+  }
+
+  Future<PrintableDocument> _loadFixedAssetPurchase(PrintRequest request) async {
+    final batch = await _purchaseFaRepository.getBatch(request.id);
+    final profile = await _businessService.fetchBusinessProfile();
+    final company = PrintableCompany(profile: profile);
+
+    final partyFuture = _loadParty(batch.partyId);
+    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+
+    late final PrintableParty? party;
+    late final PrintableAssets assets;
+
+    await Future.wait<void>([
+      partyFuture.then((value) => party = value),
+      assetsFuture.then((value) => assets = value),
+    ]);
+
+    return PrintableDocument(
+      kind: request.kind,
+      request: request,
+      company: company,
+      party: party,
+      metadata: PrintableMetadata(
+        documentNumber: batch.referenceNumber ?? batch.id,
+        documentSeries: null,
+        documentDate: batch.purchaseDate,
+        status: batch.status,
+        paymentMode: batch.paymentMode,
+        paymentReference: batch.referenceNumber,
+        notes: batch.notes,
+        dueDate: batch.dueDate,
+      ),
+      totals: _totalsFromDocument(
+        subtotal: batch.subtotal,
+        discountTotal: '0',
+        taxAmount: batch.taxAmount,
+        totalAmount: batch.totalAmount,
+      ),
+      taxSummary: PrintableTaxSummary.zero,
+      assets: assets,
+      purchaseFaBatch: batch,
+    );
+  }
+
+  Future<PrintableDocument> _loadJobWorkOrder(PrintRequest request) async {
+    final order = await _jobWorkRepository.getOrder(request.id);
+    final profile = await _businessService.fetchBusinessProfile();
+    final company = PrintableCompany(profile: profile);
+
+    final partyFuture = _loadParty(order.partyId);
+    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final materialNamesFuture = _loadJobWorkMaterialNames(order.rawMaterials);
+
+    late final PrintableParty? party;
+    late final PrintableAssets assets;
+    late final Map<String, String> materialNames;
+
+    await Future.wait<void>([
+      partyFuture.then((value) => party = value),
+      assetsFuture.then((value) => assets = value),
+      materialNamesFuture.then((value) => materialNames = value),
+    ]);
+
+    return PrintableDocument(
+      kind: request.kind,
+      request: request,
+      company: company,
+      party: party,
+      metadata: PrintableMetadata(
+        documentNumber: order.jobNumber ?? order.id,
+        documentSeries: null,
+        documentDate: order.orderDate,
+        status: order.status,
+        notes: order.notes,
+        dueDate: order.deliveryDate,
+      ),
+      totals: _totalsFromDocument(
+        subtotal: order.rawMaterialsTotal,
+        discountTotal: '0',
+        taxAmount: '0',
+        totalAmount: order.grandTotal,
+      ),
+      taxSummary: PrintableTaxSummary.zero,
+      assets: assets,
+      jobWorkOrder: order,
+      jobWorkMaterialNames: materialNames,
+    );
+  }
+
+  Future<List<PrintableAllocation>> _enrichAllocations(
+    List<PaymentAllocationDto> allocations,
+  ) async {
+    if (allocations.isEmpty) return const [];
+
+    final enriched = await Future.wait(
+      allocations.map(_enrichAllocation),
+    );
+    return enriched.whereType<PrintableAllocation>().toList();
+  }
+
+  Future<PrintableAllocation?> _enrichAllocation(
+    PaymentAllocationDto allocation,
+  ) async {
+    try {
+      if (allocation.salesDocumentId != null) {
+        final doc = await _salesRepository.getDocument(
+          allocation.salesDocumentId!,
+        );
+        return PrintableAllocation(
+          invoiceNumber: doc.documentNumber ?? doc.id,
+          invoiceDate: doc.documentDate,
+          allocatedAmount: allocation.allocatedAmount,
+        );
+      }
+      if (allocation.purchaseDocumentId != null) {
+        final doc = await _purchaseRepository.getDocument(
+          allocation.purchaseDocumentId!,
+        );
+        return PrintableAllocation(
+          invoiceNumber: doc.documentNumber ?? doc.id,
+          invoiceDate: doc.documentDate,
+          allocatedAmount: allocation.allocatedAmount,
+        );
+      }
+    } on Object {
+      return null;
+    }
+    return null;
+  }
+
+  Future<Map<String, String>> _loadJobWorkMaterialNames(
+    List<JobWorkRawMaterialDto> materials,
+  ) async {
+    if (materials.isEmpty) return const {};
+
+    final items = await _loadItemsById(materials.map((m) => m.itemId));
+    return {
+      for (final material in materials)
+        material.itemId: items[material.itemId]?.name ?? material.itemId,
+    };
   }
 
   Future<PrintableParty?> _loadParty(String? partyId) async {
@@ -346,6 +549,9 @@ class PrintDataService {
       case PrintableDocumentKind.purchaseOrder:
       case PrintableDocumentKind.paymentIn:
       case PrintableDocumentKind.paymentOut:
+      case PrintableDocumentKind.expense:
+      case PrintableDocumentKind.fixedAssetPurchase:
+      case PrintableDocumentKind.jobWorkOrder:
         throw PrintException('Unexpected sales document kind: $kind');
     }
   }
@@ -384,6 +590,9 @@ class PrintDataService {
       case PrintableDocumentKind.saleOrder:
       case PrintableDocumentKind.paymentIn:
       case PrintableDocumentKind.paymentOut:
+      case PrintableDocumentKind.expense:
+      case PrintableDocumentKind.fixedAssetPurchase:
+      case PrintableDocumentKind.jobWorkOrder:
         throw PrintException('Unexpected purchase document kind: $kind');
     }
   }

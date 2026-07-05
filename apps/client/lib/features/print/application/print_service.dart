@@ -76,8 +76,11 @@ class PrintService {
       DebitNotePrintRequest(:final id) => 'debit_note_$id',
       SaleOrderPrintRequest(:final id) => 'sale_order_$id',
       PurchaseOrderPrintRequest(:final id) => 'purchase_order_$id',
-      PaymentInPrintRequest(:final id) => 'payment_in_$id',
-      PaymentOutPrintRequest(:final id) => 'payment_out_$id',
+      PaymentInPrintRequest(:final id) => 'payment_receipt_$id',
+      PaymentOutPrintRequest(:final id) => 'payment_voucher_$id',
+      ExpensePrintRequest(:final id) => 'expense_$id',
+      FixedAssetPurchasePrintRequest(:final id) => 'fa_purchase_$id',
+      JobWorkOrderPrintRequest(:final id) => 'job_work_$id',
     };
   }
 }

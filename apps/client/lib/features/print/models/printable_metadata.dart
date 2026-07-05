@@ -13,6 +13,8 @@ class PrintableMetadata {
     this.paymentMode,
     this.paymentReference,
     this.paymentDirection,
+    this.expenseCategoryName,
+    this.expenseDescription,
   });
 
   final String? documentNumber;
@@ -27,6 +29,8 @@ class PrintableMetadata {
   final String? paymentMode;
   final String? paymentReference;
   final String? paymentDirection;
+  final String? expenseCategoryName;
+  final String? expenseDescription;
 
   String get displayNumber => documentNumber ?? 'Draft';
 }

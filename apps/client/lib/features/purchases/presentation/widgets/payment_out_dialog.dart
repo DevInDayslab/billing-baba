@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
@@ -40,6 +41,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
   final _datePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
   final _paidController = TextEditingController();
   final _discountController = TextEditingController();
+  String? _savedPaymentId;
 
   static final _amountFormat = NumberFormat('#,##0.##', 'en_IN');
 
@@ -78,13 +80,17 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
   Future<void> _handleSave({bool saveAndNew = false}) async {
     final notifier = ref.read(paymentOutFormProvider.notifier);
     final receiptNo = ref.read(paymentOutFormProvider).receiptNo;
-    final error = await notifier.savePayment();
+    final result = await notifier.savePayment();
     if (!mounted) return;
-    if (error != null) {
+    if (result.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(content: Text(result.error!)),
       );
       return;
+    }
+
+    if (result.paymentId != null) {
+      _savedPaymentId = result.paymentId;
     }
 
     showTransactionSuccessToast(
@@ -96,14 +102,61 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
       notifier.reset();
       _paidController.clear();
       _discountController.clear();
+      _savedPaymentId = null;
     } else {
       Navigator.of(context).pop();
     }
   }
 
-  void _showComingSoon(String action) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$action coming soon')),
+  Future<void> _handlePrintPreview() async {
+    var paymentId = _savedPaymentId;
+    final receiptNo = ref.read(paymentOutFormProvider).receiptNo;
+
+    if (paymentId == null) {
+      final result = await ref.read(paymentOutFormProvider.notifier).savePayment();
+      if (!mounted) return;
+      if (result.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.error!)),
+        );
+        return;
+      }
+      paymentId = result.paymentId;
+      if (paymentId == null) return;
+      _savedPaymentId = paymentId;
+    }
+
+    await VoucherPrintActions.previewPaymentOut(
+      context,
+      ref,
+      paymentId,
+      filename: VoucherPrintActions.filenameFor(receiptNo),
+    );
+  }
+
+  Future<void> _handleShare() async {
+    var paymentId = _savedPaymentId;
+    final receiptNo = ref.read(paymentOutFormProvider).receiptNo;
+
+    if (paymentId == null) {
+      final result = await ref.read(paymentOutFormProvider.notifier).savePayment();
+      if (!mounted) return;
+      if (result.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.error!)),
+        );
+        return;
+      }
+      paymentId = result.paymentId;
+      if (paymentId == null) return;
+      _savedPaymentId = paymentId;
+    }
+
+    await VoucherPrintActions.sharePaymentOut(
+      context,
+      ref,
+      paymentId,
+      filename: VoucherPrintActions.filenameFor(receiptNo),
     );
   }
 
@@ -342,10 +395,9 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   _PaymentOutActionsMenu(
-                    onPrint: () => _showComingSoon('Print'),
+                    onPrint: _handlePrintPreview,
                     onSaveAndNew: () => _handleSave(saveAndNew: true),
-                    onChannelSelected: (channel) =>
-                        _showComingSoon(channel.label),
+                    onChannelSelected: (_) => _handleShare(),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   FilledButton(
