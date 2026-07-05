@@ -218,7 +218,7 @@ final class PrintDataServiceProvider
   }
 }
 
-String _$printDataServiceHash() => r'224822bd1808d1fd9e269d764541a62e18141482';
+String _$printDataServiceHash() => r'6c76cd6c4d47bad0862983b205e5750e4527b09e';
 
 @ProviderFor(printService)
 final printServiceProvider = PrintServiceProvider._();

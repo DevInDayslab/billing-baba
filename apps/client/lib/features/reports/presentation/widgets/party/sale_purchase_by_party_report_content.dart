@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
@@ -39,7 +40,7 @@ class SalePurchaseByPartyReportContent extends ConsumerWidget {
             rows.fold<double>(0, (sum, row) => sum + row.purchaseAmount);
 
         void exportCsv() {
-          ReportExportService.exportAndNotify(
+          reportExportTable(
             context: context,
             title: 'Sale Purchase By Party',
             filename: 'sale-purchase-by-party',

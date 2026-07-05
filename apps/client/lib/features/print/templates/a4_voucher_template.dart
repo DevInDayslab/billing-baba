@@ -26,22 +26,29 @@ class A4VoucherTemplate implements PrintTemplate {
 
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 48),
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 48),
           buildBackground: (context) =>
               VoucherPdfSections.watermark(document.metadata.status) ??
               pw.SizedBox(),
         ),
         footer: VoucherPdfSections.footerSection,
+        header: (context) {
+          if (context.pageNumber != 1) {
+            return pw.SizedBox();
+          }
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+            children: [
+              VoucherPdfSections.companySection(document),
+              VoucherPdfSections.voucherHeaderSection(document, config),
+              VoucherPdfSections.partySection(document, config),
+              VoucherPdfSections.detailsSection(document),
+            ],
+          );
+        },
         build: (context) => [
-          if (context.pageNumber == 1) ...[
-            VoucherPdfSections.companySection(document),
-            VoucherPdfSections.voucherHeaderSection(document, config),
-            VoucherPdfSections.partySection(document, config),
-            VoucherPdfSections.detailsSection(document),
-          ],
           if (config.showAllocationTable)
             VoucherPdfSections.allocationTable(document.allocations),
           if (config.showAssetTable)

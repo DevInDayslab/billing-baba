@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/models/sale_document_model.dart';
@@ -206,13 +207,25 @@ class _EmptyState extends ConsumerWidget {
               )
             else if (documents.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.lg),
-              const Text(
-                'Saved documents',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+              Row(
+                children: [
+                  const Text(
+                    'Saved documents',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  _XlsChip(
+                    onTap: () => ModuleExportActions.exportSalesDocuments(
+                      context,
+                      ref,
+                      scope,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: AppSpacing.sm),
               ConstrainedBox(
@@ -1163,6 +1176,41 @@ class _AmountFieldState extends State<_AmountField> {
         FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
       ],
       onChanged: (text) => widget.onChanged(double.tryParse(text) ?? 0),
+    );
+  }
+}
+
+class _XlsChip extends StatelessWidget {
+  const _XlsChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: const Text(
+            'xls',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E7D32),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

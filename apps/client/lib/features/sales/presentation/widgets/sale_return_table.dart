@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/providers/sale_return_provider.dart';
@@ -77,7 +78,9 @@ class SaleReturnTable extends ConsumerWidget {
                   color: AppColors.textSecondary,
                   tooltip: 'Refresh',
                 ),
-                _XlsChip(onTap: () => debugPrint('Export xls tapped')),
+                _XlsChip(
+                  onTap: () => ModuleExportActions.exportCreditNotes(context, ref),
+                ),
                 IconButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(

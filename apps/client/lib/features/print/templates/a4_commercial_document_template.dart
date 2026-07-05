@@ -31,10 +31,9 @@ class A4CommercialDocumentTemplate implements PrintTemplate {
 
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 48),
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 48),
           buildBackground: (context) =>
               CommercialDocumentPdfSections.watermark(document.metadata.status) ??
               pw.SizedBox(),

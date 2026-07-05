@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -65,7 +66,7 @@ class PurchaseBillSummaryCard extends ConsumerWidget {
         ),
         const SizedBox(width: AppSpacing.md),
         IconButton(
-          onPressed: () => debugPrint('Export xls tapped'),
+          onPressed: () => ModuleExportActions.exportPurchaseBills(context, ref),
           icon: const Icon(Icons.table_chart_outlined, size: 20),
           color: AppColors.textSecondary,
           tooltip: 'Excel Report',

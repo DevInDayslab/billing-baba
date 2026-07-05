@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
@@ -101,7 +102,9 @@ class PurchaseReturnTable extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
-                _XlsChip(onTap: () => debugPrint('Export xls tapped')),
+                _XlsChip(
+                  onTap: () => ModuleExportActions.exportDebitNotes(context, ref),
+                ),
                 IconButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(

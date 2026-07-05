@@ -28,7 +28,7 @@ class PlaceholderPrintTemplate implements PrintTemplate {
               children: [
                 pw.Text(
                   document.kind.label,
-                  style: const pw.TextStyle(
+                  style: pw.TextStyle(
                     fontSize: 20,
                     fontWeight: pw.FontWeight.bold,
                   ),

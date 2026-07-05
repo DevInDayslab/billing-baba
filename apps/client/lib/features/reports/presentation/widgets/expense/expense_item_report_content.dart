@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
@@ -45,7 +46,7 @@ class _ExpenseItemReportContentState extends ConsumerState<ExpenseItemReportCont
             rows.fold<double>(0, (sum, row) => sum + row.amount);
 
         void exportCsv() {
-          ReportExportService.exportAndNotify(
+          reportExportTable(
             context: context,
             title: 'Expense Item Report',
             filename: 'expense-item-report',

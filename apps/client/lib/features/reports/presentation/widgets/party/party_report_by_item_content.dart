@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
@@ -51,7 +52,7 @@ class _PartyReportByItemContentState
         final rows = report?.rows ?? const [];
 
         void exportCsv() {
-          ReportExportService.exportAndNotify(
+          reportExportTable(
             context: context,
             title: 'Party Report By Item',
             filename: 'party-report-by-item',

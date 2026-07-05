@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
@@ -56,7 +57,7 @@ class _BankStatementReportContentState
         final closingBalance = rows.isEmpty ? 0.0 : rows.last.balance;
 
         void exportCsv() {
-          ReportExportService.exportAndNotify(
+          reportExportTable(
             context: context,
             title: 'Bank Statement',
             filename: 'bank-statement',

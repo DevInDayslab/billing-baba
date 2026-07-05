@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
@@ -168,13 +169,26 @@ class _SavedOrdersList extends ConsumerWidget {
       children: [
         Align(
           alignment: Alignment.centerRight,
-          child: FilledButton(
-            onPressed: notifier.openForm,
-            style: FilledButton.styleFrom(
-              backgroundColor: _addCtaOrange,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Add Sale Order'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _XlsChip(
+                onTap: () => ModuleExportActions.exportSalesDocuments(
+                  context,
+                  ref,
+                  saleOrderListScope(),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              FilledButton(
+                onPressed: notifier.openForm,
+                style: FilledButton.styleFrom(
+                  backgroundColor: _addCtaOrange,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Add Sale Order'),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -616,6 +630,41 @@ class _PickerField extends StatelessWidget {
           Expanded(child: Text(value, style: saleFieldTextStyle)),
           Icon(icon, size: 15, color: AppColors.textSecondary),
         ],
+      ),
+    );
+  }
+}
+
+class _XlsChip extends StatelessWidget {
+  const _XlsChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: const Text(
+            'xls',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E7D32),
+            ),
+          ),
+        ),
       ),
     );
   }

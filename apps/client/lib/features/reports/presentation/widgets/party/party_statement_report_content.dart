@@ -9,6 +9,8 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_view_toggle.dart';
 import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +49,45 @@ class _PartyStatementReportContentState
         }
         final statement = data.entries;
         final summary = data.summary;
+        void exportExcel() {
+          reportExportTable(
+            context: context,
+            title: 'Party Statement',
+            filename: 'party-statement',
+            headers: const ['Date', 'Type', 'Ref No', 'Total', 'Balance'],
+            rows: [
+              for (final row in statement)
+                [
+                  formatReportDate(row.date),
+                  row.type,
+                  row.refNo,
+                  formatReportCurrency(row.total),
+                  formatReportCurrency(row.balance),
+                ],
+            ],
+          );
+        }
+
+        void printReport() {
+          ReportExportService.showPrintPreview(
+            context: context,
+            title: 'Party Statement',
+            content: ReportExportService.toCsv(
+              headers: const ['Date', 'Type', 'Ref No', 'Total', 'Balance'],
+              rows: [
+                for (final row in statement)
+                  [
+                    formatReportDate(row.date),
+                    row.type,
+                    row.refNo,
+                    formatReportCurrency(row.total),
+                    formatReportCurrency(row.balance),
+                  ],
+              ],
+            ),
+          );
+        }
+
         return ColoredBox(
       color: AppColors.background,
       child: SingleChildScrollView(
@@ -54,8 +95,8 @@ class _PartyStatementReportContentState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const ReportCard(
-              padding: EdgeInsets.all(AppSpacing.md),
+            ReportCard(
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: ReportPeriodFilterBar(
                 showFirmFilter: false,
                 trailing: Row(
@@ -64,10 +105,12 @@ class _PartyStatementReportContentState
                     ReportTextActionButton(
                       label: 'Excel Report',
                       icon: Icons.table_chart_outlined,
+                      onTap: exportExcel,
                     ),
                     ReportTextActionButton(
                       label: 'Print',
                       icon: Icons.print_outlined,
+                      onTap: printReport,
                     ),
                   ],
                 ),

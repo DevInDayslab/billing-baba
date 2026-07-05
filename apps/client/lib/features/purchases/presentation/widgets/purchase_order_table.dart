@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
@@ -107,6 +108,10 @@ class PurchaseOrderTable extends ConsumerWidget {
                     ),
                     style: const TextStyle(fontSize: 13),
                   ),
+                ),
+                _XlsChip(
+                  onTap: () =>
+                      ModuleExportActions.exportPurchaseOrders(context, ref),
                 ),
                 IconButton(
                   onPressed: notifier.refresh,
@@ -573,6 +578,41 @@ class _PageNumber extends StatelessWidget {
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _XlsChip extends StatelessWidget {
+  const _XlsChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: const Text(
+            'xls',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E7D32),
+            ),
           ),
         ),
       ),

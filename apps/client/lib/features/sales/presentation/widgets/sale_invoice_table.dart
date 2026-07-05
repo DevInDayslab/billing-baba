@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/presentation/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
@@ -79,7 +80,9 @@ class SaleInvoiceTable extends ConsumerWidget {
                   color: AppColors.textSecondary,
                   tooltip: 'Search',
                 ),
-                _XlsChip(onTap: () => debugPrint('Export xls tapped')),
+                _XlsChip(
+                  onTap: () => ModuleExportActions.exportSaleInvoices(context, ref),
+                ),
                 IconButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(

@@ -6,6 +6,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -47,6 +48,44 @@ class _ConsumptionReportContentState extends ConsumerState<ConsumptionReportCont
             rows.fold<double>(0, (sum, row) => sum + row.quantity);
         final totalAmount = rows.fold<double>(0, (sum, row) => sum + row.value);
 
+        const exportHeaders = [
+          '#',
+          'Item Name',
+          'Date',
+          'Qty Consumed',
+          'Amount',
+        ];
+
+        List<List<String>> exportRows() => [
+              for (var i = 0; i < rows.length; i++)
+                [
+                  '${i + 1}',
+                  rows[i].itemName,
+                  formatReportDate(rows[i].date),
+                  rows[i].quantity.toStringAsFixed(0),
+                  formatReportCurrency(rows[i].value),
+                ],
+            ];
+
+        void exportExcel() {
+          reportExportTable(
+            context: context,
+            title: 'Consumption Report',
+            filename: 'consumption-report',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
+        }
+
+        void printReport() {
+          reportPrintTable(
+            context: context,
+            title: 'Consumption Report',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
+        }
+
         return ColoredBox(
       color: AppColors.background,
       child: Padding(
@@ -59,7 +98,7 @@ class _ConsumptionReportContentState extends ConsumerState<ConsumptionReportCont
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.fromLTRB(
                         AppSpacing.md,
                         AppSpacing.md,
@@ -80,10 +119,12 @@ class _ConsumptionReportContentState extends ConsumerState<ConsumptionReportCont
                           ReportTextActionButton(
                             label: 'Excel Report',
                             icon: Icons.table_chart_outlined,
+                            onTap: exportExcel,
                           ),
                           ReportTextActionButton(
                             label: 'Print',
                             icon: Icons.print_outlined,
+                            onTap: printReport,
                           ),
                         ],
                       ),

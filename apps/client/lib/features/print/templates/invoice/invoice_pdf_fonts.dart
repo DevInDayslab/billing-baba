@@ -8,6 +8,8 @@ abstract final class InvoicePdfFonts {
   static pw.Font? medium;
   static pw.Font? semiBold;
   static pw.Font? bold;
+  /// Fallback for glyphs missing from Inter (e.g. ₹ U+20B9).
+  static pw.Font? symbols;
   static bool _loaded = false;
 
   static Future<void> ensureLoaded() async {
@@ -23,6 +25,9 @@ abstract final class InvoicePdfFonts {
       await rootBundle.load('assets/fonts/Inter-SemiBold.ttf'),
     );
     bold = pw.Font.ttf(await rootBundle.load('assets/fonts/Inter-Bold.ttf'));
+    symbols = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/NotoSans-Regular.ttf'),
+    );
     _loaded = true;
   }
 
@@ -40,6 +45,7 @@ abstract final class InvoicePdfFonts {
       font: resolved,
       fontSize: fontSize,
       color: color ?? PdfColors.black,
+      fontFallback: symbols != null ? [symbols!] : const [],
     );
   }
 }

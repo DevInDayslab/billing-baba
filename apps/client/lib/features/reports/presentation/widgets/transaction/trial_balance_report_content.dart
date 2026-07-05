@@ -3,15 +3,26 @@ import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class TrialBalanceReportContent extends ConsumerWidget {
   const TrialBalanceReportContent({super.key});
+
+  static const _exportHeaders = [
+    'Account',
+    'Opening',
+    'Debit',
+    'Credit',
+    'Closing Dr',
+    'Closing Cr',
+  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,22 +31,71 @@ class TrialBalanceReportContent extends ConsumerWidget {
     return ReportAsyncBody(
       value: reportAsync,
       onRetry: () => ref.read(trialBalanceReportProvider.notifier).refresh(),
-      data: (report) => ColoredBox(
+      data: (report) {
+        final rows = report.rows;
+
+        List<List<String>> exportRows() => [
+              for (final row in rows)
+                [
+                  row.accountName,
+                  formatReportCurrency(row.opening),
+                  formatReportCurrency(row.debit),
+                  formatReportCurrency(row.credit),
+                  row.closingDebit > 0
+                      ? formatReportCurrency(row.closingDebit)
+                      : '—',
+                  row.closingCredit > 0
+                      ? formatReportCurrency(row.closingCredit)
+                      : '—',
+                ],
+            ];
+
+        void exportExcel() {
+          reportExportTable(
+            context: context,
+            title: 'Trial Balance Report',
+            filename: 'trial-balance-report',
+            headers: _exportHeaders,
+            rows: exportRows(),
+          );
+        }
+
+        void printReport() {
+          reportPrintTable(
+            context: context,
+            title: 'Trial Balance Report',
+            headers: _exportHeaders,
+            rows: exportRows(),
+          );
+        }
+
+        return ColoredBox(
         color: AppColors.background,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Text(
+                  const Text(
                     'Trial Balance Report',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF1A237E),
                     ),
+                  ),
+                  const Spacer(),
+                  ReportTextActionButton(
+                    label: 'Excel Report',
+                    icon: Icons.table_chart_outlined,
+                    onTap: exportExcel,
+                  ),
+                  ReportTextActionButton(
+                    label: 'Print',
+                    icon: Icons.print_outlined,
+                    onTap: printReport,
                   ),
                 ],
               ),
@@ -174,7 +234,8 @@ class TrialBalanceReportContent extends ConsumerWidget {
             ],
           ),
         ),
-      ),
+      );
+      },
     );
   }
 }

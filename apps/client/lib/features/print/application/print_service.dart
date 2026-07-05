@@ -21,7 +21,9 @@ class PrintService {
   final PrintOutputService _outputService;
   final TemplateRegistry _templateRegistry;
 
-  Future<Uint8List> generatePdf(PrintRequest request) async {
+  Future<Uint8List> generatePdf(PrintRequest request) => _renderPdf(request);
+
+  Future<Uint8List> _renderPdf(PrintRequest request) async {
     final document = await _dataService.load(request);
     final template = _templateRegistry.resolve(document.kind);
     return template.render(document);
@@ -32,7 +34,7 @@ class PrintService {
     required PrintRequest request,
     String? name,
   }) async {
-    final bytes = await generatePdf(request);
+    final bytes = await _renderPdf(request);
     if (!context.mounted) return;
     await _outputService.preview(
       context: context,
@@ -42,7 +44,7 @@ class PrintService {
   }
 
   Future<void> print(PrintRequest request, {String? name}) async {
-    final bytes = await generatePdf(request);
+    final bytes = await _renderPdf(request);
     await _outputService.print(
       bytes: bytes,
       name: name ?? _defaultFilename(request),
@@ -50,7 +52,7 @@ class PrintService {
   }
 
   Future<void> share(PrintRequest request, {String? filename}) async {
-    final bytes = await generatePdf(request);
+    final bytes = await _renderPdf(request);
     await _outputService.share(
       bytes: bytes,
       filename: filename ?? '${_defaultFilename(request)}.pdf',
@@ -58,7 +60,7 @@ class PrintService {
   }
 
   Future<String?> save(PrintRequest request, {String? filename}) async {
-    final bytes = await generatePdf(request);
+    final bytes = await _renderPdf(request);
     return _outputService.save(
       bytes: bytes,
       filename: filename ?? '${_defaultFilename(request)}.pdf',

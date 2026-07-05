@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
@@ -86,7 +87,7 @@ class JobWorkOutTable extends ConsumerWidget {
   }
 }
 
-class _JobWorkOutTableContent extends StatelessWidget {
+class _JobWorkOutTableContent extends ConsumerWidget {
   const _JobWorkOutTableContent({
     required this.items,
     required this.onAdd,
@@ -102,7 +103,7 @@ class _JobWorkOutTableContent extends StatelessWidget {
   final Future<void> Function() onRefresh;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -128,6 +129,9 @@ class _JobWorkOutTableContent extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
+                _XlsChip(
+                  onTap: () => ModuleExportActions.exportJobWork(context, ref),
+                ),
                 IconButton(
                   onPressed: onRefresh,
                   icon: const Icon(Icons.refresh, size: 18),
@@ -386,6 +390,41 @@ class _DataRow extends ConsumerWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _XlsChip extends StatelessWidget {
+  const _XlsChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: const Text(
+            'xls',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E7D32),
             ),
           ),
         ),

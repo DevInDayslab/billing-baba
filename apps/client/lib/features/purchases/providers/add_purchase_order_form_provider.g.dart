@@ -59,7 +59,7 @@ final class AddPurchaseOrderFormProvider
 }
 
 String _$addPurchaseOrderFormHash() =>
-    r'fabb50f8a559a0f179f68f6bd232c92dc531f93d';
+    r'4ab801b272142ac9d88d552e20a9eeb0c7074155';
 
 final class AddPurchaseOrderFormFamily extends $Family
     with

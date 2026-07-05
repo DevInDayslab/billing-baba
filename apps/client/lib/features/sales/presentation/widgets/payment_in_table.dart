@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
@@ -69,6 +70,13 @@ class PaymentInTable extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
+                IconButton(
+                  onPressed: () =>
+                      ModuleExportActions.exportPaymentIn(context, ref),
+                  icon: const Icon(Icons.table_chart_outlined, size: 20),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Excel Report',
+                ),
                 IconButton(
                   onPressed: notifier.refresh,
                   icon: const Icon(Icons.refresh, size: 20),

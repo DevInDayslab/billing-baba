@@ -1,13 +1,13 @@
-import 'dart:io';
-
+import 'package:billing_baba/core/utils/platform_file_output.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
-import 'package:share_plus/share_plus.dart';
 
 /// Native print, preview, share, and save for generated PDF bytes.
 class PrintOutputService {
+  /// Pre-rendered PDFs must use [dynamicLayout: false] on macOS/iOS — the
+  /// default dynamic path blocks the main thread waiting for layout while the
+  /// print dialog is open, which deadlocks Flutter's platform channel.
   Future<void> preview({
     required BuildContext context,
     required Uint8List bytes,
@@ -16,6 +16,7 @@ class PrintOutputService {
     await Printing.layoutPdf(
       onLayout: (_) async => bytes,
       name: name,
+      dynamicLayout: false,
     );
   }
 
@@ -26,6 +27,7 @@ class PrintOutputService {
     await Printing.layoutPdf(
       onLayout: (_) async => bytes,
       name: name,
+      dynamicLayout: false,
     );
   }
 
@@ -38,15 +40,11 @@ class PrintOutputService {
       return;
     }
 
-    final directory = await getTemporaryDirectory();
     final safeName = filename.endsWith('.pdf') ? filename : '$filename.pdf';
-    final file = File('${directory.path}/$safeName');
-    await file.writeAsBytes(bytes, flush: true);
-
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(file.path, mimeType: 'application/pdf')],
-      ),
+    await PlatformFileOutput.shareFromTemp(
+      filename: safeName,
+      bytes: bytes,
+      mimeType: 'application/pdf',
     );
   }
 
@@ -61,15 +59,21 @@ class PrintOutputService {
       return null;
     }
 
-    if (!kIsWeb &&
-        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      await Printing.sharePdf(bytes: bytes, filename: safeName);
-      return null;
+    if (PlatformFileOutput.isDesktop) {
+      try {
+        final path = await PlatformFileOutput.saveViaDialog(
+          filename: safeName,
+          bytes: bytes,
+        );
+        if (path != null) return path;
+        return null;
+      } on Object {
+        await share(bytes: bytes, filename: safeName);
+        return null;
+      }
     }
 
-    final directory = await getApplicationDocumentsDirectory();
-    final file = File('${directory.path}/$safeName');
-    await file.writeAsBytes(bytes, flush: true);
-    return file.path;
+    await share(bytes: bytes, filename: safeName);
+    return null;
   }
 }

@@ -5,6 +5,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -47,6 +48,48 @@ class _StockDetailReportContentState
       onRetry: () => ref.read(stockDetailReportProvider.notifier).refresh(),
       data: (report) {
         final rows = report.rows;
+
+        const exportHeaders = [
+          'Item Name',
+          'Beginning Quantity',
+          'Quantity In',
+          'Purchase Amount',
+          'Quantity Out',
+          'Sale Amount',
+          'Closing Quantity',
+        ];
+
+        List<List<String>> exportRows() => [
+              for (final row in rows)
+                [
+                  row.itemName,
+                  row.openingQty.toStringAsFixed(0),
+                  row.inQty.toStringAsFixed(0),
+                  formatReportCurrency(row.inQty * 150),
+                  row.outQty.toStringAsFixed(0),
+                  formatReportCurrency(row.outQty * 200),
+                  row.closingQty.toStringAsFixed(0),
+                ],
+            ];
+
+        void exportExcel() {
+          reportExportTable(
+            context: context,
+            title: 'Stock Detail Report',
+            filename: 'stock-detail-report',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
+        }
+
+        void printReport() {
+          reportPrintTable(
+            context: context,
+            title: 'Stock Detail Report',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
+        }
 
         return ColoredBox(
       color: AppColors.background,
@@ -133,13 +176,15 @@ class _StockDetailReportContentState
                         ),
                       ],
                     ),
-                  const ReportIconActionButton(
+                  ReportIconActionButton(
                     icon: Icons.table_chart_outlined,
                     tooltip: 'Excel',
+                    onTap: exportExcel,
                   ),
-                  const ReportIconActionButton(
+                  ReportIconActionButton(
                     icon: Icons.print_outlined,
                     tooltip: 'Print',
+                    onTap: printReport,
                   ),
                 ],
               ),

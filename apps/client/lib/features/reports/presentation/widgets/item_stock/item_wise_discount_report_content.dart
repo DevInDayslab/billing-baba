@@ -6,6 +6,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,13 +53,53 @@ class _ItemWiseDiscountReportContentState
           (sum, row) => sum + row.discountAmount,
         );
 
+        const exportHeaders = [
+          '#',
+          'Item Name',
+          'Total Qty Sold',
+          'Total Sale Amount',
+          'Total Disc. Amount',
+          'Avg. Disc. (%)',
+        ];
+
+        List<List<String>> exportRows() => [
+              for (var i = 0; i < rows.length; i++)
+                [
+                  '${i + 1}',
+                  rows[i].itemName,
+                  rows[i].saleQty.toStringAsFixed(0),
+                  formatReportCurrency(rows[i].saleQty * 200),
+                  formatReportCurrency(rows[i].discountAmount),
+                  '${rows[i].discountPercent.toStringAsFixed(1)}%',
+                ],
+            ];
+
+        void exportExcel() {
+          reportExportTable(
+            context: context,
+            title: 'Item Wise Discount',
+            filename: 'item-wise-discount',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
+        }
+
+        void printReport() {
+          reportPrintTable(
+            context: context,
+            title: 'Item Wise Discount',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
+        }
+
         return ColoredBox(
       color: AppColors.background,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
               AppSpacing.lg,
               AppSpacing.lg,
@@ -77,10 +118,12 @@ class _ItemWiseDiscountReportContentState
                       ReportTextActionButton(
                         label: 'Excel Report',
                         icon: Icons.table_chart_outlined,
+                        onTap: exportExcel,
                       ),
                       ReportTextActionButton(
                         label: 'Print',
                         icon: Icons.print_outlined,
+                        onTap: printReport,
                       ),
                     ],
                   ),

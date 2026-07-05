@@ -1,11 +1,12 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -48,6 +49,55 @@ class _ManufacturingReportContentState
             rows.fold<double>(0, (sum, row) => sum + row.quantity);
         final totalAmount = rows.fold<double>(0, (sum, row) => sum + row.cost);
 
+        void exportExcel() {
+          reportExportTable(
+            context: context,
+            title: 'Manufacturing Report',
+            filename: 'manufacturing-report',
+            headers: const [
+              '#',
+              'Item Name',
+              'Date',
+              'Qty Manufactured',
+              'Amount',
+            ],
+            rows: [
+              for (var i = 0; i < rows.length; i++)
+                [
+                  '${i + 1}',
+                  rows[i].itemName,
+                  formatReportDate(rows[i].date),
+                  rows[i].quantity.toStringAsFixed(0),
+                  formatReportCurrency(rows[i].cost),
+                ],
+            ],
+          );
+        }
+
+        void printReport() {
+          reportPrintTable(
+            context: context,
+            title: 'Manufacturing Report',
+            headers: const [
+              '#',
+              'Item Name',
+              'Date',
+              'Qty Manufactured',
+              'Amount',
+            ],
+            rows: [
+              for (var i = 0; i < rows.length; i++)
+                [
+                  '${i + 1}',
+                  rows[i].itemName,
+                  formatReportDate(rows[i].date),
+                  rows[i].quantity.toStringAsFixed(0),
+                  formatReportCurrency(rows[i].cost),
+                ],
+            ],
+          );
+        }
+
         return ColoredBox(
       color: AppColors.background,
       child: Padding(
@@ -60,8 +110,8 @@ class _ManufacturingReportContentState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
                         AppSpacing.md,
                         AppSpacing.md,
                         AppSpacing.md,
@@ -69,7 +119,7 @@ class _ManufacturingReportContentState
                       ),
                       child: Row(
                         children: [
-                          Text(
+                          const Text(
                             'Manufacturing Report',
                             style: TextStyle(
                               fontSize: 16,
@@ -77,14 +127,16 @@ class _ManufacturingReportContentState
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          Spacer(),
+                          const Spacer(),
                           ReportTextActionButton(
                             label: 'Excel Report',
                             icon: Icons.table_chart_outlined,
+                            onTap: exportExcel,
                           ),
                           ReportTextActionButton(
                             label: 'Print',
                             icon: Icons.print_outlined,
+                            onTap: printReport,
                           ),
                         ],
                       ),

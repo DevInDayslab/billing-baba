@@ -6,6 +6,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -51,6 +52,50 @@ class _StockTransferReportContentState
           (sum, row) => sum + row.quantity * 150,
         );
 
+        const exportHeaders = [
+          '#',
+          'Transfer No.',
+          'Date',
+          'Item Name',
+          'From Godown',
+          'To Godown',
+          'Qty Transferred',
+          'Value',
+        ];
+
+        List<List<String>> exportRows() => [
+              for (var i = 0; i < rows.length; i++)
+                [
+                  '${i + 1}',
+                  rows[i].refNo,
+                  formatReportDate(rows[i].date),
+                  rows[i].itemName,
+                  rows[i].fromGodown,
+                  rows[i].toGodown,
+                  rows[i].quantity.toStringAsFixed(0),
+                  formatReportCurrency(rows[i].quantity * 150),
+                ],
+            ];
+
+        void exportExcel() {
+          reportExportTable(
+            context: context,
+            title: 'Stock Transfer Report',
+            filename: 'stock-transfer-report',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
+        }
+
+        void printReport() {
+          reportPrintTable(
+            context: context,
+            title: 'Stock Transfer Report',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
+        }
+
         return ColoredBox(
       color: AppColors.background,
       child: Padding(
@@ -63,7 +108,7 @@ class _StockTransferReportContentState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.fromLTRB(
                         AppSpacing.md,
                         AppSpacing.md,
@@ -84,10 +129,12 @@ class _StockTransferReportContentState
                           ReportTextActionButton(
                             label: 'Excel Report',
                             icon: Icons.table_chart_outlined,
+                            onTap: exportExcel,
                           ),
                           ReportTextActionButton(
                             label: 'Print',
                             icon: Icons.print_outlined,
+                            onTap: printReport,
                           ),
                         ],
                       ),

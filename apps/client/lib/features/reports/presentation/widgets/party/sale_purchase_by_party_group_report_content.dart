@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
@@ -35,7 +36,7 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
         final netBalance = totalSale - totalPurchase;
 
         void exportCsv() {
-          ReportExportService.exportAndNotify(
+          reportExportTable(
             context: context,
             title: 'Sale Purchase By Party Group',
             filename: 'sale-purchase-by-party-group',

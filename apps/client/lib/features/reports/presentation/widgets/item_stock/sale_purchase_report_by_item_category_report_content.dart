@@ -6,6 +6,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:flutter/material.dart';
@@ -60,6 +61,44 @@ class _SalePurchaseReportByItemCategoryReportContentState
             rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
         final totalPurchaseAmount =
             rows.fold<double>(0, (sum, row) => sum + row.purchaseAmount);
+
+        const exportHeaders = [
+          'Item Category',
+          'Sale Quantity',
+          'Total Sale Amount',
+          'Purchase Quantity',
+          'Total Purchase Amount',
+        ];
+
+        List<List<String>> exportRows() => [
+              for (final row in rows)
+                [
+                  row.category,
+                  (row.saleAmount / 1000).toStringAsFixed(0),
+                  formatReportCurrency(row.saleAmount),
+                  (row.purchaseAmount / 1000).toStringAsFixed(0),
+                  formatReportCurrency(row.purchaseAmount),
+                ],
+            ];
+
+        void exportExcel() {
+          reportExportTable(
+            context: context,
+            title: 'Sale/Purchase Report By Item Category',
+            filename: 'sale-purchase-by-item-category',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
+        }
+
+        void printReport() {
+          reportPrintTable(
+            context: context,
+            title: 'Sale/Purchase Report By Item Category',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
+        }
 
         return ColoredBox(
       color: AppColors.background,
@@ -198,13 +237,15 @@ class _SalePurchaseReportByItemCategoryReportContentState
                       ),
                     ],
                   ),
-                  const ReportIconActionButton(
+                  ReportIconActionButton(
                     icon: Icons.table_chart_outlined,
                     tooltip: 'Excel',
+                    onTap: exportExcel,
                   ),
-                  const ReportIconActionButton(
+                  ReportIconActionButton(
                     icon: Icons.print_outlined,
                     tooltip: 'Print',
+                    onTap: printReport,
                   ),
                 ],
               ),

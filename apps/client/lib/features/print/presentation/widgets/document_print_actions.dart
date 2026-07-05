@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/utils/output_error_mapper.dart';
 import 'package:billing_baba/features/print/application/print_service.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/providers/print_providers.dart';
@@ -87,6 +88,17 @@ abstract final class DocumentPrintActions {
     WidgetRef ref,
     Future<void> Function(PrintService service) action,
   ) async {
+    if (!context.mounted) return;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const PopScope(
+        canPop: false,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+    );
+
     try {
       final service = await ref.read(printServiceProvider.future);
       if (!context.mounted) return;
@@ -99,8 +111,12 @@ abstract final class DocumentPrintActions {
     } on Object catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Print failed: $error')),
+        SnackBar(content: Text(OutputErrorMapper.printMessage(error))),
       );
+    } finally {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
     }
   }
 }
