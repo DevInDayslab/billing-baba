@@ -1,10 +1,13 @@
 import 'package:billing_baba/features/print/application/print_amount_words.dart';
 import 'package:billing_baba/features/print/models/printable_document.dart';
 import 'package:billing_baba/features/print/models/printable_line_item.dart';
+import 'package:billing_baba/features/print/models/printable_party.dart';
 import 'package:billing_baba/features/print/templates/commercial_document_layout_config.dart';
-import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_fonts.dart';
+import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_table_layout.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_theme.dart';
+import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_widgets.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 final _currencyFormat = NumberFormat.currency(
@@ -16,78 +19,95 @@ final _currencyFormat = NumberFormat.currency(
 final _dateFormat = DateFormat('dd MMM yyyy');
 
 abstract final class CommercialDocumentPdfSections {
-  static pw.Widget? watermark(String status) {
-    final label = switch (status) {
-      'draft' => 'DRAFT',
-      'cancelled' => 'CANCELLED',
-      _ => null,
-    };
-    if (label == null) return null;
+  static pw.Widget? watermark(String status) => InvoicePdfWidgets.watermark(status);
 
-    return pw.FullPage(
-      ignoreMargins: true,
-      child: pw.Center(
-        child: pw.Transform.rotate(
-          angle: -0.4,
-          child: pw.Text(
-            label,
-            style: InvoicePdfFonts.style(
-              fontSize: 72,
-              fontWeight: pw.FontWeight.bold,
-              color: InvoicePdfTheme.watermark,
-            ),
-          ),
-        ),
-      ),
+  /// Company header + document meta + bill-to card (first page only).
+  static pw.Widget pageHeaderSection(
+    PrintableDocument document,
+    CommercialDocumentLayoutConfig config,
+  ) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [
+        _companyAndDocumentHeader(document, config),
+        pw.SizedBox(height: InvoicePdfTheme.spacingLg),
+        partySection(document, config),
+      ],
     );
   }
 
-  static pw.Widget companySection(PrintableDocument document) {
+  static pw.Widget _companyAndDocumentHeader(
+    PrintableDocument document,
+    CommercialDocumentLayoutConfig config,
+  ) {
     final company = document.company.profile;
+    final meta = document.metadata;
+    final date = DateTime.tryParse(meta.documentDate);
+    final dueDate =
+        meta.dueDate != null ? DateTime.tryParse(meta.dueDate!) : null;
     final hasLogo = document.assets.logoBytes != null;
 
     return pw.Row(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        if (hasLogo) ...[
-          pw.Container(
-            height: 48,
-            width: 48,
-            child: pw.Image(
-              pw.MemoryImage(document.assets.logoBytes!),
-            ),
-          ),
-          pw.SizedBox(width: 12),
-        ],
         pw.Expanded(
-          child: pw.Column(
+          child: pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text(company.name, style: InvoicePdfTheme.heading(size: 14)),
-              if (company.gstin != null && company.gstin!.isNotEmpty)
-                pw.Text(
-                  'GSTIN: ${company.gstin}',
-                  style: InvoicePdfTheme.mutedBody(),
+              if (hasLogo) ...[
+                InvoicePdfWidgets.companyLogo(
+                  bytes: document.assets.logoBytes!,
                 ),
-              if (company.address != null && company.address!.isNotEmpty)
-                pw.Text(company.address!, style: InvoicePdfTheme.mutedBody()),
-              if (company.pincode != null && company.pincode!.isNotEmpty)
-                pw.Text(
-                  'PIN: ${company.pincode}',
-                  style: InvoicePdfTheme.mutedBody(),
+                pw.SizedBox(width: InvoicePdfTheme.spacingMd),
+              ],
+              pw.Expanded(
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(company.name, style: InvoicePdfTheme.companyName()),
+                    ..._companyDetailLines(company.address, company.gstin,
+                        company.phone, company.email, company.pincode,
+                        company.state),
+                  ],
                 ),
-              if (company.state != null && company.state!.isNotEmpty)
-                pw.Text(company.state!, style: InvoicePdfTheme.mutedBody()),
-              if (company.phone != null && company.phone!.isNotEmpty)
-                pw.Text(
-                  'Phone: ${company.phone}',
-                  style: InvoicePdfTheme.mutedBody(),
+              ),
+            ],
+          ),
+        ),
+        pw.SizedBox(width: InvoicePdfTheme.spacingLg),
+        pw.SizedBox(
+          width: 210,
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Text(
+                config.title,
+                style: InvoicePdfTheme.documentTitle(),
+                textAlign: pw.TextAlign.right,
+              ),
+              pw.SizedBox(height: InvoicePdfTheme.spacingSm),
+              InvoicePdfWidgets.metaLine(
+                config.documentNumberLabel,
+                meta.displayNumber,
+              ),
+              if (config.showSupplierInvoiceNumber &&
+                  meta.supplierInvoiceNumber != null &&
+                  meta.supplierInvoiceNumber!.isNotEmpty)
+                InvoicePdfWidgets.metaLine(
+                  'Supplier Inv.',
+                  meta.supplierInvoiceNumber!,
                 ),
-              if (company.email != null && company.email!.isNotEmpty)
-                pw.Text(
-                  'Email: ${company.email}',
-                  style: InvoicePdfTheme.mutedBody(),
+              InvoicePdfWidgets.metaLine(
+                'Date',
+                date != null ? _dateFormat.format(date) : meta.documentDate,
+              ),
+              if (config.showDueDate && dueDate != null)
+                InvoicePdfWidgets.metaLine(
+                  'Due Date',
+                  _dateFormat.format(dueDate),
                 ),
+              pw.SizedBox(height: InvoicePdfTheme.spacingXs),
+              InvoicePdfWidgets.statusBadge(meta.status),
             ],
           ),
         ),
@@ -95,154 +115,130 @@ abstract final class CommercialDocumentPdfSections {
     );
   }
 
-  static pw.Widget documentHeaderSection(
-    PrintableDocument document,
-    CommercialDocumentLayoutConfig config,
+  static List<pw.Widget> _companyDetailLines(
+    String? address,
+    String? gstin,
+    String? phone,
+    String? email,
+    String? pincode,
+    String? state,
   ) {
-    final meta = document.metadata;
-    final date = DateTime.tryParse(meta.documentDate);
-    final dueDate = meta.dueDate != null
-        ? DateTime.tryParse(meta.dueDate!)
-        : null;
+    final lines = <pw.Widget>[];
 
-    return pw.Container(
-      margin: const pw.EdgeInsets.only(top: 16, bottom: 12),
-      padding: const pw.EdgeInsets.symmetric(vertical: 10),
-      decoration: const pw.BoxDecoration(
-        border: pw.Border(
-          top: pw.BorderSide(color: InvoicePdfTheme.border),
-          bottom: pw.BorderSide(color: InvoicePdfTheme.border),
+    if (address != null && address.trim().isNotEmpty) {
+      lines.add(
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(top: 4),
+          child: pw.Text(address.trim(), style: InvoicePdfTheme.mutedBody()),
         ),
-      ),
-      child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(config.title, style: InvoicePdfTheme.title(size: 16)),
-              pw.SizedBox(height: 4),
-              pw.Text(
-                '${config.documentNumberLabel}: ${meta.displayNumber}',
-                style: InvoicePdfTheme.heading(size: 9),
-              ),
-              if (config.showSupplierInvoiceNumber &&
-                  meta.supplierInvoiceNumber != null &&
-                  meta.supplierInvoiceNumber!.isNotEmpty) ...[
-                pw.SizedBox(height: 2),
-                pw.Text(
-                  'Supplier Inv: ${meta.supplierInvoiceNumber}',
-                  style: InvoicePdfTheme.mutedBody(),
-                ),
-              ],
-            ],
-          ),
-          pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.end,
-            children: [
-              pw.Text(
-                'Date: ${date != null ? _dateFormat.format(date) : meta.documentDate}',
-                style: InvoicePdfTheme.body(),
-              ),
-              if (config.showDueDate && dueDate != null) ...[
-                pw.SizedBox(height: 4),
-                pw.Text(
-                  'Due: ${_dateFormat.format(dueDate)}',
-                  style: InvoicePdfTheme.body(),
-                ),
-              ],
-              pw.SizedBox(height: 4),
-              pw.Text(
-                'Status: ${_statusLabel(meta.status)}',
-                style: InvoicePdfTheme.body(),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+      );
+    }
+
+    final location = [
+      if (state != null && state.isNotEmpty) state,
+      if (pincode != null && pincode.isNotEmpty) pincode,
+    ].join(' - ');
+    if (location.isNotEmpty) {
+      lines.add(
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(top: 2),
+          child: pw.Text(location, style: InvoicePdfTheme.mutedBody()),
+        ),
+      );
+    }
+
+    if (gstin != null && gstin.isNotEmpty) {
+      lines.add(InvoicePdfWidgets.labeledPartyLine('GSTIN', gstin));
+    }
+    if (phone != null && phone.isNotEmpty) {
+      lines.add(InvoicePdfWidgets.labeledPartyLine('Phone', phone));
+    }
+    if (email != null && email.isNotEmpty) {
+      lines.add(InvoicePdfWidgets.labeledPartyLine('Email', email));
+    }
+
+    return lines;
   }
 
   static pw.Widget partySection(
     PrintableDocument document,
     CommercialDocumentLayoutConfig config,
   ) {
-    final party = document.party;
-
-    return pw.Container(
-      margin: const pw.EdgeInsets.only(bottom: 12),
-      padding: const pw.EdgeInsets.all(10),
-      decoration: InvoicePdfTheme.sectionBorder(),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(config.partyHeading, style: InvoicePdfTheme.heading()),
-          pw.SizedBox(height: 6),
-          if (party != null) ...[
-            pw.Text(party.dto.name, style: InvoicePdfTheme.body()),
-            if (party.dto.gstin != null && party.dto.gstin!.isNotEmpty)
-              pw.Text(
-                'GSTIN: ${party.dto.gstin}',
-                style: InvoicePdfTheme.mutedBody(),
-              ),
-            if (party.dto.state != null && party.dto.state!.isNotEmpty)
-              pw.Text(party.dto.state!, style: InvoicePdfTheme.mutedBody()),
-            if (party.dto.mobile != null && party.dto.mobile!.isNotEmpty)
-              pw.Text(
-                'Phone: ${party.dto.mobile}',
-                style: InvoicePdfTheme.mutedBody(),
-              ),
-            if (party.dto.email != null && party.dto.email!.isNotEmpty)
-              pw.Text(
-                'Email: ${party.dto.email}',
-                style: InvoicePdfTheme.mutedBody(),
-              ),
-          ] else
-            pw.Text(config.emptyPartyLabel, style: InvoicePdfTheme.body()),
-        ],
-      ),
+    return InvoicePdfWidgets.partyCard(
+      heading: config.partyHeading,
+      lines: _partyLines(document.party, config.emptyPartyLabel),
     );
   }
 
-  static Map<int, pw.TableColumnWidth> tableColumnWidths({required bool showGst}) {
-    return showGst
-        ? {
-            0: const pw.FixedColumnWidth(20),
-            1: const pw.FlexColumnWidth(3),
-            2: const pw.FixedColumnWidth(42),
-            3: const pw.FixedColumnWidth(32),
-            4: const pw.FixedColumnWidth(32),
-            5: const pw.FixedColumnWidth(48),
-            6: const pw.FixedColumnWidth(36),
-            7: const pw.FixedColumnWidth(36),
-            8: const pw.FixedColumnWidth(52),
-          }
-        : {
-            0: const pw.FixedColumnWidth(20),
-            1: const pw.FlexColumnWidth(3),
-            2: const pw.FixedColumnWidth(32),
-            3: const pw.FixedColumnWidth(32),
-            4: const pw.FixedColumnWidth(48),
-            5: const pw.FixedColumnWidth(36),
-            6: const pw.FixedColumnWidth(52),
-          };
+  static List<pw.Widget> _partyLines(
+    PrintableParty? party,
+    String emptyLabel,
+  ) {
+    if (party == null) {
+      return [InvoicePdfWidgets.partyLine(emptyLabel, emphasized: true)];
+    }
+
+    final dto = party.dto;
+    final lines = <pw.Widget>[
+      InvoicePdfWidgets.partyLine(dto.name, emphasized: true),
+    ];
+
+    if (dto.gstin != null && dto.gstin!.isNotEmpty) {
+      lines.add(InvoicePdfWidgets.labeledPartyLine('GSTIN', dto.gstin!));
+    }
+    if (dto.state != null && dto.state!.isNotEmpty) {
+      lines.add(InvoicePdfWidgets.labeledPartyLine('State', dto.state!));
+    }
+    if (dto.mobile != null && dto.mobile!.isNotEmpty) {
+      lines.add(InvoicePdfWidgets.labeledPartyLine('Phone', dto.mobile!));
+    }
+    if (dto.email != null && dto.email!.isNotEmpty) {
+      lines.add(InvoicePdfWidgets.labeledPartyLine('Email', dto.email!));
+    }
+
+    return lines;
+  }
+
+  static Map<int, pw.TableColumnWidth> tableColumnWidths({
+    required bool showGst,
+    PdfPageFormat pageFormat = PdfPageFormat.a4,
+  }) {
+    return InvoicePdfTableLayout.commercialColumns(
+      showGst: showGst,
+      pageFormat: pageFormat,
+    );
   }
 
   static List<pw.TableRow> itemsTableHeader({required bool showGst}) {
     return [
       pw.TableRow(
+        repeat: true,
         decoration: const pw.BoxDecoration(color: InvoicePdfTheme.headerFill),
+        verticalAlignment: pw.TableCellVerticalAlignment.middle,
         children: [
-          _headerCell('#'),
-          _headerCell('Description'),
-          if (showGst) _headerCell('HSN'),
-          _headerCell('Qty'),
-          _headerCell('Unit'),
-          _headerCell('Rate', align: pw.TextAlign.right),
-          _headerCell('Disc.', align: pw.TextAlign.right),
-          if (showGst) _headerCell('GST %', align: pw.TextAlign.right),
-          _headerCell('Amount', align: pw.TextAlign.right),
+          InvoicePdfWidgets.tableHeaderCell('#', align: pw.TextAlign.center),
+          InvoicePdfWidgets.tableHeaderCell('Description'),
+          if (showGst)
+            InvoicePdfWidgets.tableHeaderCell(
+              'HSN/SAC',
+              align: pw.TextAlign.center,
+            ),
+          InvoicePdfWidgets.tableHeaderCell('Qty', align: pw.TextAlign.center),
+          InvoicePdfWidgets.tableHeaderCell('Unit', align: pw.TextAlign.center),
+          InvoicePdfWidgets.tableHeaderCell('Rate', align: pw.TextAlign.right),
+          InvoicePdfWidgets.tableHeaderCell(
+            'Discount',
+            align: pw.TextAlign.right,
+          ),
+          if (showGst)
+            InvoicePdfWidgets.tableHeaderCell(
+              'GST %',
+              align: pw.TextAlign.right,
+            ),
+          InvoicePdfWidgets.tableHeaderCell(
+            'Amount',
+            align: pw.TextAlign.right,
+          ),
         ],
       ),
     ];
@@ -266,13 +262,17 @@ abstract final class CommercialDocumentPdfSections {
     final tax = document.taxSummary;
 
     return pw.Container(
-      margin: const pw.EdgeInsets.only(top: 12),
+      margin: const pw.EdgeInsets.only(
+        top: InvoicePdfTheme.totalsMarginTop,
+        bottom: InvoicePdfTheme.totalsMarginBottom,
+      ),
       child: pw.Row(
         children: [
           pw.Spacer(),
           pw.SizedBox(
-            width: 260,
+            width: 240,
             child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
               children: [
                 _totalRow('Subtotal', totals.subtotal),
                 _totalRow('Discount', totals.discountTotal),
@@ -281,12 +281,15 @@ abstract final class CommercialDocumentPdfSections {
                   _totalRow('SGST', tax.sgstTotal),
                   _totalRow('IGST', tax.igstTotal),
                 ],
-                pw.Divider(color: InvoicePdfTheme.border, height: 8),
-                _totalRow(
-                  'Grand Total',
-                  totals.totalAmount,
-                  bold: true,
+                pw.Padding(
+                  padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                  child: pw.Divider(
+                    color: InvoicePdfTheme.border,
+                    height: 1,
+                    thickness: 0.5,
+                  ),
                 ),
+                _grandTotalRow('Grand Total', totals.totalAmount),
               ],
             ),
           ),
@@ -297,14 +300,15 @@ abstract final class CommercialDocumentPdfSections {
 
   static pw.Widget amountInWordsSection(PrintableDocument document) {
     return pw.Container(
-      margin: const pw.EdgeInsets.only(top: 12),
-      padding: const pw.EdgeInsets.all(8),
-      decoration: InvoicePdfTheme.sectionBorder(),
+      margin: const pw.EdgeInsets.only(top: 4),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text('Amount in Words', style: InvoicePdfTheme.heading(size: 9)),
-          pw.SizedBox(height: 4),
+          pw.Text(
+            'Amount in Words',
+            style: InvoicePdfTheme.infoBoxHeading(),
+          ),
+          pw.SizedBox(height: 2),
           pw.Text(
             PrintAmountWords.fromAmount(document.totals.totalAmount),
             style: InvoicePdfTheme.body(),
@@ -321,88 +325,60 @@ abstract final class CommercialDocumentPdfSections {
     }
 
     return pw.Container(
-      margin: const pw.EdgeInsets.only(top: 12),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text('Notes', style: InvoicePdfTheme.heading(size: 9)),
-          pw.SizedBox(height: 4),
-          pw.Text(notes, style: InvoicePdfTheme.body()),
-        ],
+      margin: const pw.EdgeInsets.only(top: InvoicePdfTheme.spacingSm),
+      child: InvoicePdfWidgets.infoBox(
+        heading: 'Notes',
+        body: notes.trim(),
       ),
     );
   }
 
   static pw.Widget footerNoteSection(String note) {
     return pw.Container(
-      margin: const pw.EdgeInsets.only(top: 12),
-      padding: const pw.EdgeInsets.all(8),
-      decoration: InvoicePdfTheme.sectionBorder(),
-      child: pw.Text(note, style: InvoicePdfTheme.mutedBody(size: 8)),
+      margin: const pw.EdgeInsets.only(top: InvoicePdfTheme.spacingMd),
+      child: InvoicePdfWidgets.infoBox(
+        heading: 'Important',
+        body: note,
+      ),
     );
   }
 
   static pw.Widget signatureSection(PrintableDocument document) {
-    final hasSignature = document.assets.signatureBytes != null;
-
     return pw.Container(
-      margin: const pw.EdgeInsets.only(top: 24, bottom: 8),
+      margin: const pw.EdgeInsets.only(
+        top: InvoicePdfTheme.spacingXl,
+        bottom: InvoicePdfTheme.spacingSm,
+      ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.end,
         children: [
-          pw.Column(
-            children: [
-              if (hasSignature)
-                pw.SizedBox(
-                  height: 48,
-                  width: 120,
-                  child: pw.Image(
-                    pw.MemoryImage(document.assets.signatureBytes!),
-                  ),
-                ),
-              if (hasSignature) pw.SizedBox(height: 4),
-              pw.Container(
-                width: 160,
-                decoration: const pw.BoxDecoration(
-                  border: pw.Border(
-                    top: pw.BorderSide(color: InvoicePdfTheme.border),
-                  ),
-                ),
-                padding: const pw.EdgeInsets.only(top: 6),
-                child: pw.Text(
-                  'Authorized Signature',
-                  style: InvoicePdfTheme.mutedBody(size: 8),
-                  textAlign: pw.TextAlign.center,
-                ),
-              ),
-            ],
+          InvoicePdfWidgets.signatureBlock(
+            signatureBytes: document.assets.signatureBytes,
           ),
         ],
       ),
     );
   }
 
-  static pw.Widget footerSection(pw.Context context) {
-    return pw.Container(
-      alignment: pw.Alignment.centerRight,
-      margin: const pw.EdgeInsets.only(top: 8),
-      child: pw.Text(
-        'Page ${context.pageNumber} of ${context.pagesCount}',
-        style: InvoicePdfTheme.mutedBody(size: 8),
-      ),
-    );
-  }
+  static pw.Widget footerSection(pw.Context context) =>
+      InvoicePdfWidgets.documentFooter(context);
 
-  static pw.Widget _headerCell(
-    String text, {
-    pw.TextAlign align = pw.TextAlign.left,
-  }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      child: pw.Align(
-        alignment: _toAlignment(align),
-        child: pw.Text(text, style: InvoicePdfTheme.tableHeader()),
-      ),
+  /// Closing sections kept together when possible (totals through signature).
+  static pw.Widget closingSection(
+    PrintableDocument document,
+    CommercialDocumentLayoutConfig config,
+  ) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [
+        totalsSection(document, config),
+        if (config.showAmountInWords)
+          amountInWordsSection(document),
+        notesSection(document),
+        if (config.footerNote != null)
+          footerNoteSection(config.footerNote!),
+        if (config.showSignature) signatureSection(document),
+      ],
     );
   }
 
@@ -412,68 +388,137 @@ abstract final class CommercialDocumentPdfSections {
     required bool showGst,
   }) {
     final line = item.line;
-    final description = item.description != null && item.description!.isNotEmpty
-        ? '${item.displayName}\n${item.description}'
-        : item.displayName;
 
     return pw.TableRow(
+      verticalAlignment: pw.TableCellVerticalAlignment.middle,
       children: [
-        _cell('$index'),
-        _cell(description, maxLines: 4),
-        if (showGst) _cell(item.hsnCode ?? '-'),
-        _cell(line.quantity),
-        _cell(line.unit),
-        _cell(_format(line.unitPrice), align: pw.TextAlign.right),
-        _cell(_format(line.discountAmount), align: pw.TextAlign.right),
-        if (showGst) _cell('${line.taxRate}%', align: pw.TextAlign.right),
-        _cell(_format(line.lineTotal), align: pw.TextAlign.right),
+        InvoicePdfWidgets.tableBodyCell(
+          '$index',
+          align: pw.TextAlign.center,
+        ),
+        InvoicePdfWidgets.tableBodyCell(
+          _lineDescription(item),
+          maxLines: 2,
+          allowWrap: true,
+        ),
+        if (showGst)
+          InvoicePdfWidgets.tableBodyCell(
+            _compactCode(item.hsnCode),
+            align: pw.TextAlign.center,
+          ),
+        InvoicePdfWidgets.tableBodyCell(
+          _compactQty(line.quantity),
+          align: pw.TextAlign.center,
+        ),
+        InvoicePdfWidgets.tableBodyCell(
+          _compactUnit(line.unit),
+          align: pw.TextAlign.center,
+        ),
+        InvoicePdfWidgets.tableBodyCell(
+          _format(line.unitPrice),
+          align: pw.TextAlign.right,
+        ),
+        InvoicePdfWidgets.tableBodyCell(
+          _format(line.discountAmount),
+          align: pw.TextAlign.right,
+        ),
+        if (showGst)
+          InvoicePdfWidgets.tableBodyCell(
+            '${line.taxRate}%',
+            align: pw.TextAlign.right,
+          ),
+        InvoicePdfWidgets.tableBodyCell(
+          _format(line.lineTotal),
+          align: pw.TextAlign.right,
+        ),
       ],
     );
   }
 
-  static pw.Widget _cell(
-    String text, {
-    pw.TextAlign align = pw.TextAlign.left,
-    int maxLines = 2,
-  }) {
+  static pw.Widget _totalRow(String label, String amount) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 5),
-      child: pw.Align(
-        alignment: _toAlignment(align),
-        child: pw.Text(
-          text,
-          style: InvoicePdfTheme.tableCell(),
-          maxLines: maxLines,
-          overflow: pw.TextOverflow.clip,
-        ),
-      ),
-    );
-  }
-
-  static pw.Widget _totalRow(String label, String amount, {bool bold = false}) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      padding: const pw.EdgeInsets.symmetric(vertical: 3),
       child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.SizedBox(
-            width: 120,
+          pw.Expanded(
             child: pw.Text(
               label,
-              style: bold
-                  ? InvoicePdfTheme.heading(size: 9)
-                  : InvoicePdfTheme.body(),
+              style: InvoicePdfTheme.totalRow(),
+              textAlign: pw.TextAlign.right,
             ),
           ),
-          pw.Text(
-            _format(amount),
-            style: bold
-                ? InvoicePdfTheme.heading(size: 9)
-                : InvoicePdfTheme.body(),
+          pw.SizedBox(width: 12),
+          pw.SizedBox(
+            width: 72,
+            child: pw.Text(
+              _format(amount),
+              style: InvoicePdfTheme.totalRow(),
+              textAlign: pw.TextAlign.right,
+            ),
           ),
         ],
       ),
     );
+  }
+
+  static pw.Widget _grandTotalRow(String label, String amount) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 3),
+      child: pw.Row(
+        children: [
+          pw.Expanded(
+            child: pw.Text(
+              label,
+              style: InvoicePdfTheme.grandTotalLabel().copyWith(
+                color: PdfColors.black,
+              ),
+              textAlign: pw.TextAlign.right,
+            ),
+          ),
+          pw.SizedBox(width: 12),
+          pw.SizedBox(
+            width: 72,
+            child: pw.Text(
+              _format(amount),
+              style: InvoicePdfTheme.grandTotalValue().copyWith(
+                color: PdfColors.black,
+              ),
+              textAlign: pw.TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _lineDescription(PrintableLineItem item) {
+    final name = item.displayName.trim();
+    final desc = item.description?.trim();
+    if (desc == null || desc.isEmpty) return name;
+    if (desc == name) return name;
+    return '$name\n$desc';
+  }
+
+  static String _compactCode(String? value) {
+    if (value == null || value.trim().isEmpty) return '—';
+    final trimmed = value.trim();
+    if (trimmed.length <= 10) return trimmed;
+    return '${trimmed.substring(0, 9)}…';
+  }
+
+  static String _compactQty(String value) {
+    final parsed = double.tryParse(value);
+    if (parsed == null) return value;
+    if (parsed == parsed.roundToDouble()) {
+      return parsed.toInt().toString();
+    }
+    return parsed.toStringAsFixed(2);
+  }
+
+  static String _compactUnit(String value) {
+    final trimmed = value.trim();
+    if (trimmed.length <= 6) return trimmed;
+    return trimmed.substring(0, 5);
   }
 
   static String _format(String value) {
@@ -482,22 +527,43 @@ abstract final class CommercialDocumentPdfSections {
     return _currencyFormat.format(parsed);
   }
 
-  static String _statusLabel(String status) {
-    return switch (status) {
-      'draft' => 'Draft',
-      'finalized' => 'Finalized',
-      'cancelled' => 'Cancelled',
-      'converted' => 'Converted',
-      _ => status,
-    };
+  // Legacy aliases used by voucher template.
+  static pw.Widget companySection(PrintableDocument document) {
+    final company = document.company.profile;
+    final hasLogo = document.assets.logoBytes != null;
+
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        if (hasLogo) ...[
+          InvoicePdfWidgets.companyLogo(bytes: document.assets.logoBytes!),
+          pw.SizedBox(width: InvoicePdfTheme.spacingMd),
+        ],
+        pw.Expanded(
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(company.name, style: InvoicePdfTheme.companyName()),
+              ..._companyDetailLines(
+                company.address,
+                company.gstin,
+                company.phone,
+                company.email,
+                company.pincode,
+                company.state,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
-  static pw.Alignment _toAlignment(pw.TextAlign align) {
-    return switch (align) {
-      pw.TextAlign.right => pw.Alignment.centerRight,
-      pw.TextAlign.center => pw.Alignment.center,
-      _ => pw.Alignment.centerLeft,
-    };
+  static pw.Widget documentHeaderSection(
+    PrintableDocument document,
+    CommercialDocumentLayoutConfig config,
+  ) {
+    return _companyAndDocumentHeader(document, config);
   }
 }
 

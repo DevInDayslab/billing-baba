@@ -138,6 +138,56 @@ void main() {
       expect(String.fromCharCodes(bytes.take(4)), '%PDF');
     });
 
+    test('A4CommercialDocumentTemplate paginates 100+ line items', () async {
+      final lines = List<PrintableLineItem>.generate(120, (index) {
+        return PrintableLineItem(
+          line: SalesDocumentLineDto(
+            id: 'line-$index',
+            itemId: 'item-$index',
+            quantity: '${index + 1}',
+            unit: 'pcs',
+            unitPrice: '100',
+            discountAmount: '0',
+            taxType: 'gst',
+            taxRate: '18',
+            cgstAmount: '9',
+            sgstAmount: '9',
+            igstAmount: '0',
+            lineTotal: '118',
+            sortOrder: index,
+          ),
+        );
+      });
+
+      final document = PrintableDocument(
+        kind: PrintableDocumentKind.saleInvoice,
+        request: const PrintRequest.saleInvoice('inv-large'),
+        company: _commercialFixture().company,
+        party: _commercialFixture().party,
+        lines: lines,
+        metadata: const PrintableMetadata(
+          documentNumber: 'INV-LARGE',
+          documentSeries: 'INV',
+          documentDate: '2026-07-05',
+          status: 'draft',
+          isGstFormal: true,
+        ),
+        totals: const PrintableTotals(
+          subtotal: '12000',
+          discountTotal: '0',
+          taxAmount: '2160',
+          totalAmount: '14160',
+        ),
+        taxSummary: PrintableTaxSummary.zero,
+        assets: const PrintableAssets(),
+      );
+
+      final bytes = await A4CommercialDocumentTemplate().render(document);
+
+      expect(bytes, isNotEmpty);
+      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
+
     test('A4VoucherTemplate renders non-empty PDF bytes', () async {
       final bytes = await A4VoucherTemplate().render(_voucherFixture());
 

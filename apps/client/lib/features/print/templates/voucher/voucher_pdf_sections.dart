@@ -3,6 +3,7 @@ import 'package:billing_baba/features/print/models/printable_allocation.dart';
 import 'package:billing_baba/features/print/models/printable_document.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_sections.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_theme.dart';
+import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_widgets.dart';
 import 'package:billing_baba/features/print/templates/voucher/voucher_layout_config.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -16,8 +17,22 @@ final _currencyFormat = NumberFormat.currency(
 final _dateFormat = DateFormat('dd MMM yyyy');
 
 abstract final class VoucherPdfSections {
-  static pw.Widget? watermark(String status) =>
-      CommercialDocumentPdfSections.watermark(status);
+  static pw.Widget? watermark(String status) => InvoicePdfWidgets.watermark(status);
+
+  static pw.Widget pageHeaderSection(
+    PrintableDocument document,
+    VoucherLayoutConfig config,
+  ) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [
+        _voucherHeader(document, config),
+        pw.SizedBox(height: InvoicePdfTheme.spacingLg),
+        partySection(document, config),
+        detailsSection(document),
+      ],
+    );
+  }
 
   static pw.Widget companySection(PrintableDocument document) =>
       CommercialDocumentPdfSections.companySection(document);
@@ -25,50 +40,45 @@ abstract final class VoucherPdfSections {
   static pw.Widget voucherHeaderSection(
     PrintableDocument document,
     VoucherLayoutConfig config,
+  ) => _voucherHeader(document, config);
+
+  static pw.Widget _voucherHeader(
+    PrintableDocument document,
+    VoucherLayoutConfig config,
   ) {
     final meta = document.metadata;
     final date = DateTime.tryParse(meta.documentDate);
 
-    return pw.Container(
-      margin: const pw.EdgeInsets.only(top: 16, bottom: 12),
-      padding: const pw.EdgeInsets.symmetric(vertical: 10),
-      decoration: const pw.BoxDecoration(
-        border: pw.Border(
-          top: pw.BorderSide(color: InvoicePdfTheme.border),
-          bottom: pw.BorderSide(color: InvoicePdfTheme.border),
-        ),
-      ),
-      child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(config.title, style: InvoicePdfTheme.title(size: 16)),
-              pw.SizedBox(height: 4),
-              pw.Text(
-                '${config.voucherNumberLabel}: ${meta.displayNumber}',
-                style: InvoicePdfTheme.heading(size: 9),
-              ),
-            ],
-          ),
-          pw.Column(
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Expanded(child: companySection(document)),
+        pw.SizedBox(width: InvoicePdfTheme.spacingLg),
+        pw.SizedBox(
+          width: 210,
+          child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.end,
             children: [
               pw.Text(
-                'Date: ${date != null ? _dateFormat.format(date) : meta.documentDate}',
-                style: InvoicePdfTheme.body(),
+                config.title,
+                style: InvoicePdfTheme.documentTitle(),
+                textAlign: pw.TextAlign.right,
               ),
-              pw.SizedBox(height: 4),
-              pw.Text(
-                'Status: ${_statusLabel(meta.status)}',
-                style: InvoicePdfTheme.body(),
+              pw.SizedBox(height: InvoicePdfTheme.spacingSm),
+              InvoicePdfWidgets.metaLine(
+                config.voucherNumberLabel,
+                meta.displayNumber,
               ),
+              InvoicePdfWidgets.metaLine(
+                'Date',
+                date != null ? _dateFormat.format(date) : meta.documentDate,
+              ),
+              pw.SizedBox(height: InvoicePdfTheme.spacingXs),
+              InvoicePdfWidgets.statusBadge(meta.status),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -82,36 +92,32 @@ abstract final class VoucherPdfSections {
 
     final displayName = party?.dto.name ??
         expense?.partyName ??
-        batch?.partyName ??
-        '—';
+        batch?.partyName;
 
-    return pw.Container(
-      margin: const pw.EdgeInsets.only(bottom: 12),
-      padding: const pw.EdgeInsets.all(10),
-      decoration: InvoicePdfTheme.sectionBorder(),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(config.partyHeading, style: InvoicePdfTheme.heading()),
-          pw.SizedBox(height: 6),
-          pw.Text(displayName, style: InvoicePdfTheme.body()),
-          if (party?.dto.gstin != null && party!.dto.gstin!.isNotEmpty)
-            pw.Text(
-              'GSTIN: ${party.dto.gstin}',
-              style: InvoicePdfTheme.mutedBody(),
-            ),
-          if (party?.dto.mobile != null && party!.dto.mobile!.isNotEmpty)
-            pw.Text(
-              'Phone: ${party.dto.mobile}',
-              style: InvoicePdfTheme.mutedBody(),
-            ),
-          if (party?.dto.email != null && party!.dto.email!.isNotEmpty)
-            pw.Text(
-              'Email: ${party.dto.email}',
-              style: InvoicePdfTheme.mutedBody(),
-            ),
-        ],
-      ),
+    if (displayName == null || displayName.trim().isEmpty) {
+      return pw.SizedBox();
+    }
+
+    final lines = <pw.Widget>[
+      InvoicePdfWidgets.partyLine(displayName.trim(), emphasized: true),
+    ];
+
+    if (party?.dto.gstin != null && party!.dto.gstin!.isNotEmpty) {
+      lines.add(InvoicePdfWidgets.labeledPartyLine('GSTIN', party.dto.gstin!));
+    }
+    if (party?.dto.state != null && party!.dto.state!.isNotEmpty) {
+      lines.add(InvoicePdfWidgets.labeledPartyLine('State', party.dto.state!));
+    }
+    if (party?.dto.mobile != null && party!.dto.mobile!.isNotEmpty) {
+      lines.add(InvoicePdfWidgets.labeledPartyLine('Phone', party.dto.mobile!));
+    }
+    if (party?.dto.email != null && party!.dto.email!.isNotEmpty) {
+      lines.add(InvoicePdfWidgets.labeledPartyLine('Email', party.dto.email!));
+    }
+
+    return InvoicePdfWidgets.partyCard(
+      heading: config.partyHeading,
+      lines: lines,
     );
   }
 
@@ -125,13 +131,14 @@ abstract final class VoucherPdfSections {
     final rows = <(String, String)>[];
 
     if (payment != null) {
-      if (payment.referenceNumber != null && payment.referenceNumber!.isNotEmpty) {
+      if (payment.referenceNumber != null &&
+          payment.referenceNumber!.isNotEmpty) {
         rows.add(('Reference', payment.referenceNumber!));
       }
       rows.add(('Payment Method', payment.paymentMode));
       rows.add(('Amount', _format(payment.amount)));
       if (payment.notes != null && payment.notes!.trim().isNotEmpty) {
-        rows.add(('Notes', payment.notes!));
+        rows.add(('Notes', payment.notes!.trim()));
       }
     } else if (expense != null) {
       if (meta.expenseCategoryName != null &&
@@ -151,7 +158,7 @@ abstract final class VoucherPdfSections {
       }
       rows.add(('Amount', _format(expense.amount)));
       if (expense.notes != null && expense.notes!.trim().isNotEmpty) {
-        rows.add(('Notes', expense.notes!));
+        rows.add(('Notes', expense.notes!.trim()));
       }
     } else if (batch != null) {
       if (batch.referenceNumber != null && batch.referenceNumber!.isNotEmpty) {
@@ -162,7 +169,7 @@ abstract final class VoucherPdfSections {
       }
       rows.add(('Purchase Value', _format(batch.totalAmount)));
       if (batch.notes != null && batch.notes!.trim().isNotEmpty) {
-        rows.add(('Notes', batch.notes!));
+        rows.add(('Notes', batch.notes!.trim()));
       }
     } else if (order != null) {
       if (order.finishedGoodName.isNotEmpty) {
@@ -180,21 +187,21 @@ abstract final class VoucherPdfSections {
       }
       rows.add(('Grand Total', _format(order.grandTotal)));
       if (order.notes != null && order.notes!.trim().isNotEmpty) {
-        rows.add(('Notes', order.notes!));
+        rows.add(('Notes', order.notes!.trim()));
       }
     }
 
     if (rows.isEmpty) return pw.SizedBox();
 
     return pw.Container(
-      margin: const pw.EdgeInsets.only(bottom: 12),
-      padding: const pw.EdgeInsets.all(10),
-      decoration: InvoicePdfTheme.sectionBorder(),
+      margin: const pw.EdgeInsets.only(bottom: InvoicePdfTheme.spacingMd),
+      padding: const pw.EdgeInsets.all(InvoicePdfTheme.spacingMd),
+      decoration: InvoicePdfTheme.cardDecoration(),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text('Voucher Details', style: InvoicePdfTheme.heading()),
-          pw.SizedBox(height: 6),
+          pw.SizedBox(height: InvoicePdfTheme.spacingSm),
           for (final (label, value) in rows) ...[
             _detailRow(label, value),
             pw.SizedBox(height: 4),
@@ -208,12 +215,12 @@ abstract final class VoucherPdfSections {
     if (allocations.isEmpty) return pw.SizedBox();
 
     return pw.Container(
-      margin: const pw.EdgeInsets.only(bottom: 12),
+      margin: const pw.EdgeInsets.only(bottom: InvoicePdfTheme.spacingMd),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text('Allocation', style: InvoicePdfTheme.heading()),
-          pw.SizedBox(height: 6),
+          pw.SizedBox(height: InvoicePdfTheme.spacingSm),
           pw.Table(
             border: pw.TableBorder.all(color: InvoicePdfTheme.border, width: 0.5),
             columnWidths: const {
@@ -224,25 +231,39 @@ abstract final class VoucherPdfSections {
             },
             children: [
               pw.TableRow(
+                repeat: true,
                 decoration: const pw.BoxDecoration(
                   color: InvoicePdfTheme.headerFill,
                 ),
+                verticalAlignment: pw.TableCellVerticalAlignment.middle,
                 children: [
-                  _headerCell('Invoice No'),
-                  _headerCell('Invoice Date'),
-                  _headerCell('Allocated', align: pw.TextAlign.right),
-                  _headerCell('Balance', align: pw.TextAlign.right),
+                  InvoicePdfWidgets.tableHeaderCell('Invoice No'),
+                  InvoicePdfWidgets.tableHeaderCell('Invoice Date'),
+                  InvoicePdfWidgets.tableHeaderCell(
+                    'Allocated',
+                    align: pw.TextAlign.right,
+                  ),
+                  InvoicePdfWidgets.tableHeaderCell(
+                    'Balance',
+                    align: pw.TextAlign.right,
+                  ),
                 ],
               ),
               for (final row in allocations)
                 pw.TableRow(
+                  verticalAlignment: pw.TableCellVerticalAlignment.middle,
                   children: [
-                    _cell(row.invoiceNumber),
-                    _cell(row.invoiceDate),
-                    _cell(_format(row.allocatedAmount), align: pw.TextAlign.right),
-                    _cell(
+                    InvoicePdfWidgets.tableBodyCell(row.invoiceNumber),
+                    InvoicePdfWidgets.tableBodyCell(row.invoiceDate),
+                    InvoicePdfWidgets.tableBodyCell(
+                      _format(row.allocatedAmount),
+                      align: pw.TextAlign.right,
+                      maxLines: 1,
+                    ),
+                    InvoicePdfWidgets.tableBodyCell(
                       row.balance != null ? _format(row.balance!) : '—',
                       align: pw.TextAlign.right,
+                      maxLines: 1,
                     ),
                   ],
                 ),
@@ -258,12 +279,12 @@ abstract final class VoucherPdfSections {
     if (batch == null || batch.assets.isEmpty) return pw.SizedBox();
 
     return pw.Container(
-      margin: const pw.EdgeInsets.only(bottom: 12),
+      margin: const pw.EdgeInsets.only(bottom: InvoicePdfTheme.spacingMd),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text('Assets', style: InvoicePdfTheme.heading()),
-          pw.SizedBox(height: 6),
+          pw.SizedBox(height: InvoicePdfTheme.spacingSm),
           pw.Table(
             border: pw.TableBorder.all(color: InvoicePdfTheme.border, width: 0.5),
             columnWidths: const {
@@ -274,29 +295,43 @@ abstract final class VoucherPdfSections {
             },
             children: [
               pw.TableRow(
+                repeat: true,
                 decoration: const pw.BoxDecoration(
                   color: InvoicePdfTheme.headerFill,
                 ),
+                verticalAlignment: pw.TableCellVerticalAlignment.middle,
                 children: [
-                  _headerCell('Asset'),
-                  _headerCell('Qty'),
-                  _headerCell('Rate', align: pw.TextAlign.right),
-                  _headerCell('Amount', align: pw.TextAlign.right),
+                  InvoicePdfWidgets.tableHeaderCell('Asset'),
+                  InvoicePdfWidgets.tableHeaderCell('Qty', align: pw.TextAlign.right),
+                  InvoicePdfWidgets.tableHeaderCell('Rate', align: pw.TextAlign.right),
+                  InvoicePdfWidgets.tableHeaderCell('Amount', align: pw.TextAlign.right),
                 ],
               ),
               for (final asset in batch.assets)
                 pw.TableRow(
+                  verticalAlignment: pw.TableCellVerticalAlignment.middle,
                   children: [
-                    _cell(
+                    InvoicePdfWidgets.tableBodyCell(
                       asset.assetCategory != null &&
                               asset.assetCategory!.isNotEmpty
                           ? '${asset.assetName}\n${asset.assetCategory}'
                           : asset.assetName,
-                      maxLines: 3,
                     ),
-                    _cell(asset.qty),
-                    _cell(_format(asset.purchasePrice), align: pw.TextAlign.right),
-                    _cell(_format(asset.lineTotal), align: pw.TextAlign.right),
+                    InvoicePdfWidgets.tableBodyCell(
+                      asset.qty,
+                      align: pw.TextAlign.right,
+                      maxLines: 1,
+                    ),
+                    InvoicePdfWidgets.tableBodyCell(
+                      _format(asset.purchasePrice),
+                      align: pw.TextAlign.right,
+                      maxLines: 1,
+                    ),
+                    InvoicePdfWidgets.tableBodyCell(
+                      _format(asset.lineTotal),
+                      align: pw.TextAlign.right,
+                      maxLines: 1,
+                    ),
                   ],
                 ),
             ],
@@ -313,12 +348,12 @@ abstract final class VoucherPdfSections {
     final names = document.jobWorkMaterialNames;
 
     return pw.Container(
-      margin: const pw.EdgeInsets.only(bottom: 12),
+      margin: const pw.EdgeInsets.only(bottom: InvoicePdfTheme.spacingMd),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text('Materials', style: InvoicePdfTheme.heading()),
-          pw.SizedBox(height: 6),
+          pw.SizedBox(height: InvoicePdfTheme.spacingSm),
           pw.Table(
             border: pw.TableBorder.all(color: InvoicePdfTheme.border, width: 0.5),
             columnWidths: const {
@@ -329,23 +364,40 @@ abstract final class VoucherPdfSections {
             },
             children: [
               pw.TableRow(
+                repeat: true,
                 decoration: const pw.BoxDecoration(
                   color: InvoicePdfTheme.headerFill,
                 ),
+                verticalAlignment: pw.TableCellVerticalAlignment.middle,
                 children: [
-                  _headerCell('Item'),
-                  _headerCell('Qty'),
-                  _headerCell('Unit'),
-                  _headerCell('Amount', align: pw.TextAlign.right),
+                  InvoicePdfWidgets.tableHeaderCell('Item'),
+                  InvoicePdfWidgets.tableHeaderCell('Qty', align: pw.TextAlign.right),
+                  InvoicePdfWidgets.tableHeaderCell('Unit', align: pw.TextAlign.center),
+                  InvoicePdfWidgets.tableHeaderCell('Amount', align: pw.TextAlign.right),
                 ],
               ),
               for (final line in order.rawMaterials)
                 pw.TableRow(
+                  verticalAlignment: pw.TableCellVerticalAlignment.middle,
                   children: [
-                    _cell(names[line.itemId] ?? line.itemId),
-                    _cell(line.quantity),
-                    _cell(line.unit),
-                    _cell(_format(line.lineTotal), align: pw.TextAlign.right),
+                    InvoicePdfWidgets.tableBodyCell(
+                      names[line.itemId] ?? line.itemId,
+                    ),
+                    InvoicePdfWidgets.tableBodyCell(
+                      line.quantity,
+                      align: pw.TextAlign.right,
+                      maxLines: 1,
+                    ),
+                    InvoicePdfWidgets.tableBodyCell(
+                      line.unit,
+                      align: pw.TextAlign.center,
+                      maxLines: 1,
+                    ),
+                    InvoicePdfWidgets.tableBodyCell(
+                      _format(line.lineTotal),
+                      align: pw.TextAlign.right,
+                      maxLines: 1,
+                    ),
                   ],
                 ),
             ],
@@ -360,12 +412,12 @@ abstract final class VoucherPdfSections {
     if (order == null || order.additionalCosts.isEmpty) return pw.SizedBox();
 
     return pw.Container(
-      margin: const pw.EdgeInsets.only(bottom: 12),
+      margin: const pw.EdgeInsets.only(bottom: InvoicePdfTheme.spacingMd),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text('Additional Charges', style: InvoicePdfTheme.heading()),
-          pw.SizedBox(height: 6),
+          pw.SizedBox(height: InvoicePdfTheme.spacingSm),
           pw.Table(
             border: pw.TableBorder.all(color: InvoicePdfTheme.border, width: 0.5),
             columnWidths: const {
@@ -374,19 +426,26 @@ abstract final class VoucherPdfSections {
             },
             children: [
               pw.TableRow(
+                repeat: true,
                 decoration: const pw.BoxDecoration(
                   color: InvoicePdfTheme.headerFill,
                 ),
+                verticalAlignment: pw.TableCellVerticalAlignment.middle,
                 children: [
-                  _headerCell('Charge'),
-                  _headerCell('Amount', align: pw.TextAlign.right),
+                  InvoicePdfWidgets.tableHeaderCell('Charge'),
+                  InvoicePdfWidgets.tableHeaderCell('Amount', align: pw.TextAlign.right),
                 ],
               ),
               for (final cost in order.additionalCosts)
                 pw.TableRow(
+                  verticalAlignment: pw.TableCellVerticalAlignment.middle,
                   children: [
-                    _cell(cost.label),
-                    _cell(_format(cost.amount), align: pw.TextAlign.right),
+                    InvoicePdfWidgets.tableBodyCell(cost.label),
+                    InvoicePdfWidgets.tableBodyCell(
+                      _format(cost.amount),
+                      align: pw.TextAlign.right,
+                      maxLines: 1,
+                    ),
                   ],
                 ),
             ],
@@ -398,21 +457,37 @@ abstract final class VoucherPdfSections {
 
   static pw.Widget totalSection(PrintableDocument document) {
     return pw.Container(
-      margin: const pw.EdgeInsets.only(top: 8),
+      margin: const pw.EdgeInsets.only(
+        top: InvoicePdfTheme.totalsMarginTop,
+        bottom: InvoicePdfTheme.totalsMarginBottom,
+      ),
       child: pw.Row(
         children: [
           pw.Spacer(),
           pw.SizedBox(
-            width: 260,
-            child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Text('Total Amount', style: InvoicePdfTheme.heading(size: 10)),
-                pw.Text(
-                  _format(document.totals.totalAmount),
-                  style: InvoicePdfTheme.heading(size: 10),
+            width: 280,
+            child: pw.Container(
+              decoration: InvoicePdfTheme.totalsBoxDecoration(),
+              child: pw.Container(
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
                 ),
-              ],
+                decoration: InvoicePdfTheme.grandTotalDecoration(),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text(
+                      'Total Amount',
+                      style: InvoicePdfTheme.grandTotalLabel(),
+                    ),
+                    pw.Text(
+                      _format(document.totals.totalAmount),
+                      style: InvoicePdfTheme.grandTotalValue(),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -422,73 +497,47 @@ abstract final class VoucherPdfSections {
 
   static pw.Widget amountInWordsSection(PrintableDocument document) {
     return pw.Container(
-      margin: const pw.EdgeInsets.only(top: 12),
-      padding: const pw.EdgeInsets.all(8),
-      decoration: InvoicePdfTheme.sectionBorder(),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text('Amount in Words', style: InvoicePdfTheme.heading(size: 9)),
-          pw.SizedBox(height: 4),
-          pw.Text(
-            PrintAmountWords.fromAmount(document.totals.totalAmount),
-            style: InvoicePdfTheme.body(),
-          ),
-        ],
+      margin: const pw.EdgeInsets.only(top: InvoicePdfTheme.spacingSm),
+      child: InvoicePdfWidgets.infoBox(
+        heading: 'Amount in Words',
+        body: PrintAmountWords.fromAmount(document.totals.totalAmount),
       ),
     );
   }
 
   static pw.Widget signatureSection(PrintableDocument document) {
-    final hasSignature = document.assets.signatureBytes != null;
-
     return pw.Container(
-      margin: const pw.EdgeInsets.only(top: 24, bottom: 8),
+      margin: const pw.EdgeInsets.only(
+        top: InvoicePdfTheme.spacingXl,
+        bottom: InvoicePdfTheme.spacingSm,
+      ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.end,
         children: [
-          pw.Column(
-            children: [
-              if (hasSignature)
-                pw.SizedBox(
-                  height: 48,
-                  width: 120,
-                  child: pw.Image(
-                    pw.MemoryImage(document.assets.signatureBytes!),
-                  ),
-                ),
-              if (hasSignature) pw.SizedBox(height: 4),
-              pw.Container(
-                width: 160,
-                decoration: const pw.BoxDecoration(
-                  border: pw.Border(
-                    top: pw.BorderSide(color: InvoicePdfTheme.border),
-                  ),
-                ),
-                padding: const pw.EdgeInsets.only(top: 6),
-                child: pw.Text(
-                  'Authorized Signature',
-                  style: InvoicePdfTheme.mutedBody(size: 8),
-                  textAlign: pw.TextAlign.center,
-                ),
-              ),
-            ],
+          InvoicePdfWidgets.signatureBlock(
+            signatureBytes: document.assets.signatureBytes,
           ),
         ],
       ),
     );
   }
 
-  static pw.Widget footerSection(pw.Context context) {
-    return pw.Container(
-      alignment: pw.Alignment.centerRight,
-      margin: const pw.EdgeInsets.only(top: 8),
-      child: pw.Text(
-        'Page ${context.pageNumber} of ${context.pagesCount}',
-        style: InvoicePdfTheme.mutedBody(size: 8),
-      ),
+  static pw.Widget closingSection(
+    PrintableDocument document,
+    VoucherLayoutConfig config,
+  ) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [
+        totalSection(document),
+        if (config.showAmountInWords) amountInWordsSection(document),
+        if (config.showSignature) signatureSection(document),
+      ],
     );
   }
+
+  static pw.Widget footerSection(pw.Context context) =>
+      InvoicePdfWidgets.documentFooter(context);
 
   static pw.Widget _detailRow(String label, String value) {
     return pw.Row(
@@ -503,61 +552,9 @@ abstract final class VoucherPdfSections {
     );
   }
 
-  static pw.Widget _headerCell(
-    String text, {
-    pw.TextAlign align = pw.TextAlign.left,
-  }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      child: pw.Align(
-        alignment: _toAlignment(align),
-        child: pw.Text(text, style: InvoicePdfTheme.tableHeader()),
-      ),
-    );
-  }
-
-  static pw.Widget _cell(
-    String text, {
-    pw.TextAlign align = pw.TextAlign.left,
-    int maxLines = 2,
-  }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 5),
-      child: pw.Align(
-        alignment: _toAlignment(align),
-        child: pw.Text(
-          text,
-          style: InvoicePdfTheme.tableCell(),
-          maxLines: maxLines,
-          overflow: pw.TextOverflow.clip,
-        ),
-      ),
-    );
-  }
-
   static String _format(String value) {
     final parsed = double.tryParse(value);
     if (parsed == null) return value;
     return _currencyFormat.format(parsed);
-  }
-
-  static String _statusLabel(String status) {
-    return switch (status) {
-      'draft' => 'Draft',
-      'finalized' => 'Finalized',
-      'cancelled' => 'Cancelled',
-      'converted' => 'Converted',
-      'open' => 'Open',
-      'closed' => 'Closed',
-      _ => status,
-    };
-  }
-
-  static pw.Alignment _toAlignment(pw.TextAlign align) {
-    return switch (align) {
-      pw.TextAlign.right => pw.Alignment.centerRight,
-      pw.TextAlign.center => pw.Alignment.center,
-      _ => pw.Alignment.centerLeft,
-    };
   }
 }

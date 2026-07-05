@@ -28,7 +28,7 @@ class A4VoucherTemplate implements PrintTemplate {
       pw.MultiPage(
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 48),
+          margin: const pw.EdgeInsets.fromLTRB(40, 40, 40, 52),
           buildBackground: (context) =>
               VoucherPdfSections.watermark(document.metadata.status) ??
               pw.SizedBox(),
@@ -38,30 +38,17 @@ class A4VoucherTemplate implements PrintTemplate {
           if (context.pageNumber != 1) {
             return pw.SizedBox();
           }
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-            children: [
-              VoucherPdfSections.companySection(document),
-              VoucherPdfSections.voucherHeaderSection(document, config),
-              VoucherPdfSections.partySection(document, config),
-              VoucherPdfSections.detailsSection(document),
-            ],
-          );
+          return VoucherPdfSections.pageHeaderSection(document, config);
         },
         build: (context) => [
           if (config.showAllocationTable)
             VoucherPdfSections.allocationTable(document.allocations),
-          if (config.showAssetTable)
-            VoucherPdfSections.assetTable(document),
+          if (config.showAssetTable) VoucherPdfSections.assetTable(document),
           if (config.showJobWorkMaterials)
             VoucherPdfSections.jobWorkMaterialsTable(document),
           if (config.showJobWorkCharges)
             VoucherPdfSections.jobWorkChargesTable(document),
-          VoucherPdfSections.totalSection(document),
-          if (config.showAmountInWords)
-            VoucherPdfSections.amountInWordsSection(document),
-          if (config.showSignature)
-            VoucherPdfSections.signatureSection(document),
+          VoucherPdfSections.closingSection(document, config),
         ],
       ),
     );

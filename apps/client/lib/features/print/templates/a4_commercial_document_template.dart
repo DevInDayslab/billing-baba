@@ -33,7 +33,7 @@ class A4CommercialDocumentTemplate implements PrintTemplate {
       pw.MultiPage(
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.fromLTRB(36, 36, 36, 48),
+          margin: const pw.EdgeInsets.fromLTRB(40, 40, 40, 52),
           buildBackground: (context) =>
               CommercialDocumentPdfSections.watermark(document.metadata.status) ??
               pw.SizedBox(),
@@ -42,18 +42,34 @@ class A4CommercialDocumentTemplate implements PrintTemplate {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.stretch,
             children: [
-              if (context.pageNumber == 1) ...[
-                CommercialDocumentPdfSections.companySection(document),
-                CommercialDocumentPdfSections.documentHeaderSection(
+              if (context.pageNumber == 1)
+                CommercialDocumentPdfSections.pageHeaderSection(
                   document,
                   config,
                 ),
-                CommercialDocumentPdfSections.partySection(document, config),
-              ],
+              pw.SizedBox(height: InvoicePdfTheme.spacingMd),
               pw.Table(
-                border: pw.TableBorder.all(
-                  color: InvoicePdfTheme.border,
-                  width: 0.5,
+                border: pw.TableBorder(
+                  left: const pw.BorderSide(
+                    color: InvoicePdfTheme.border,
+                    width: 0.5,
+                  ),
+                  right: const pw.BorderSide(
+                    color: InvoicePdfTheme.border,
+                    width: 0.5,
+                  ),
+                  top: pw.BorderSide(
+                    color: InvoicePdfTheme.border,
+                    width: context.pageNumber == 1 ? 0.5 : 0,
+                  ),
+                  bottom: const pw.BorderSide(
+                    color: InvoicePdfTheme.border,
+                    width: 0.5,
+                  ),
+                  horizontalInside: const pw.BorderSide(
+                    color: InvoicePdfTheme.border,
+                    width: 0.5,
+                  ),
                 ),
                 columnWidths: columnWidths,
                 children: CommercialDocumentPdfSections.itemsTableHeader(
@@ -81,14 +97,7 @@ class A4CommercialDocumentTemplate implements PrintTemplate {
               showGst: showGst,
             ),
           ),
-          CommercialDocumentPdfSections.totalsSection(document, config),
-          if (config.showAmountInWords)
-            CommercialDocumentPdfSections.amountInWordsSection(document),
-          CommercialDocumentPdfSections.notesSection(document),
-          if (config.footerNote != null)
-            CommercialDocumentPdfSections.footerNoteSection(config.footerNote!),
-          if (config.showSignature)
-            CommercialDocumentPdfSections.signatureSection(document),
+          CommercialDocumentPdfSections.closingSection(document, config),
         ],
       ),
     );
