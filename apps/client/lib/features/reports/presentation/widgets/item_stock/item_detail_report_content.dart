@@ -84,12 +84,8 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
               for (var i = 0; i < rows.length; i++)
                 [
                   formatReportDate(rows[i].date),
-                  rows[i].type == 'Sale'
-                      ? rows[i].quantity.toStringAsFixed(0)
-                      : '-',
-                  rows[i].type != 'Sale'
-                      ? rows[i].quantity.toStringAsFixed(0)
-                      : '-',
+                  if (rows[i].type == 'Sale') rows[i].quantity.toStringAsFixed(0) else '-',
+                  if (rows[i].type != 'Sale') rows[i].quantity.toStringAsFixed(0) else '-',
                   '-',
                   runningClosing(i).toStringAsFixed(0),
                 ],

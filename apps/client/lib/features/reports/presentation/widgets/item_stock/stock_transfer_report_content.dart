@@ -109,7 +109,7 @@ class _StockTransferReportContentState
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Padding(
-                      padding: EdgeInsets.fromLTRB(
+                      padding: const EdgeInsets.fromLTRB(
                         AppSpacing.md,
                         AppSpacing.md,
                         AppSpacing.md,
@@ -117,7 +117,7 @@ class _StockTransferReportContentState
                       ),
                       child: Row(
                         children: [
-                          Text(
+                          const Text(
                             'Stock Transfer Report',
                             style: TextStyle(
                               fontSize: 16,
@@ -125,7 +125,7 @@ class _StockTransferReportContentState
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          Spacer(),
+                          const Spacer(),
                           ReportTextActionButton(
                             label: 'Excel Report',
                             icon: Icons.table_chart_outlined,

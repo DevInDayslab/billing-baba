@@ -41,12 +41,8 @@ class TrialBalanceReportContent extends ConsumerWidget {
                   formatReportCurrency(row.opening),
                   formatReportCurrency(row.debit),
                   formatReportCurrency(row.credit),
-                  row.closingDebit > 0
-                      ? formatReportCurrency(row.closingDebit)
-                      : '—',
-                  row.closingCredit > 0
-                      ? formatReportCurrency(row.closingCredit)
-                      : '—',
+                  if (row.closingDebit > 0) formatReportCurrency(row.closingDebit) else '—',
+                  if (row.closingCredit > 0) formatReportCurrency(row.closingCredit) else '—',
                 ],
             ];
 

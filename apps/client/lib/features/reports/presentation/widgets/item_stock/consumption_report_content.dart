@@ -99,7 +99,7 @@ class _ConsumptionReportContentState extends ConsumerState<ConsumptionReportCont
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Padding(
-                      padding: EdgeInsets.fromLTRB(
+                      padding: const EdgeInsets.fromLTRB(
                         AppSpacing.md,
                         AppSpacing.md,
                         AppSpacing.md,
@@ -107,7 +107,7 @@ class _ConsumptionReportContentState extends ConsumerState<ConsumptionReportCont
                       ),
                       child: Row(
                         children: [
-                          Text(
+                          const Text(
                             'Consumption Report',
                             style: TextStyle(
                               fontSize: 16,
@@ -115,7 +115,7 @@ class _ConsumptionReportContentState extends ConsumerState<ConsumptionReportCont
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          Spacer(),
+                          const Spacer(),
                           ReportTextActionButton(
                             label: 'Excel Report',
                             icon: Icons.table_chart_outlined,

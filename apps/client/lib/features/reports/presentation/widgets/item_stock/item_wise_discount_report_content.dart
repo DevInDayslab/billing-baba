@@ -106,12 +106,12 @@ class _ItemWiseDiscountReportContentState
               AppSpacing.md,
             ),
             child: ReportCard(
-              padding: EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ReportPeriodFilterBar(),
-                  SizedBox(height: AppSpacing.sm),
+                  const ReportPeriodFilterBar(),
+                  const SizedBox(height: AppSpacing.sm),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [

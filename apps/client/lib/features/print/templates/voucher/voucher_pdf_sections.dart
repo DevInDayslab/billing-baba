@@ -258,12 +258,10 @@ abstract final class VoucherPdfSections {
                     InvoicePdfWidgets.tableBodyCell(
                       _format(row.allocatedAmount),
                       align: pw.TextAlign.right,
-                      maxLines: 1,
                     ),
                     InvoicePdfWidgets.tableBodyCell(
                       row.balance != null ? _format(row.balance!) : '—',
                       align: pw.TextAlign.right,
-                      maxLines: 1,
                     ),
                   ],
                 ),
@@ -320,17 +318,14 @@ abstract final class VoucherPdfSections {
                     InvoicePdfWidgets.tableBodyCell(
                       asset.qty,
                       align: pw.TextAlign.right,
-                      maxLines: 1,
                     ),
                     InvoicePdfWidgets.tableBodyCell(
                       _format(asset.purchasePrice),
                       align: pw.TextAlign.right,
-                      maxLines: 1,
                     ),
                     InvoicePdfWidgets.tableBodyCell(
                       _format(asset.lineTotal),
                       align: pw.TextAlign.right,
-                      maxLines: 1,
                     ),
                   ],
                 ),
@@ -386,17 +381,14 @@ abstract final class VoucherPdfSections {
                     InvoicePdfWidgets.tableBodyCell(
                       line.quantity,
                       align: pw.TextAlign.right,
-                      maxLines: 1,
                     ),
                     InvoicePdfWidgets.tableBodyCell(
                       line.unit,
                       align: pw.TextAlign.center,
-                      maxLines: 1,
                     ),
                     InvoicePdfWidgets.tableBodyCell(
                       _format(line.lineTotal),
                       align: pw.TextAlign.right,
-                      maxLines: 1,
                     ),
                   ],
                 ),
@@ -444,7 +436,6 @@ abstract final class VoucherPdfSections {
                     InvoicePdfWidgets.tableBodyCell(
                       _format(cost.amount),
                       align: pw.TextAlign.right,
-                      maxLines: 1,
                     ),
                   ],
                 ),
