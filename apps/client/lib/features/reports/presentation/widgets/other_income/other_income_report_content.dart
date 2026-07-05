@@ -27,7 +27,7 @@ class _OtherIncomeReportContentState
     extends ConsumerState<OtherIncomeReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 31),
   );
 
@@ -287,7 +287,7 @@ class _OtherIncomeReportContentState
     );
   }
 
-  static const _incomeHeaders = [
+  static const List<Widget> _incomeHeaders = [
     ReportAlignedHeaderCell(label: 'DATE', width: 100),
     ReportAlignedHeaderCell(label: 'INC NO', width: 100),
     Expanded(child: ReportAlignedHeaderCell(label: 'PARTY')),
@@ -306,9 +306,9 @@ class _OtherIncomeReportContentState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ReportSyncScrollTable(
+        const ReportSyncScrollTable(
           headerChildren: _incomeHeaders,
-          rows: const [],
+          rows: [],
         ),
         Expanded(
           child: Center(
@@ -338,7 +338,7 @@ class _OtherIncomeCategoryReportContentState
     extends ConsumerState<OtherIncomeCategoryReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 31),
   );
 
@@ -520,7 +520,7 @@ class _OtherIncomeCategoryReportContentState
     );
   }
 
-  static const _categoryHeaders = [
+  static const List<Widget> _categoryHeaders = [
     Expanded(
       child: ReportAlignedHeaderCell(label: 'INCOME CATEGORY'),
     ),
@@ -537,14 +537,14 @@ class _OtherIncomeCategoryReportContentState
   ];
 
   Widget _categoryEmptyTable() {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ReportSyncScrollTable(
           headerChildren: _categoryHeaders,
-          rows: const [],
+          rows: [],
         ),
-        const Expanded(
+        Expanded(
           child: Center(
             child: Text(
               'No other income records found for the selected period.',
@@ -572,7 +572,7 @@ class _OtherIncomeItemReportContentState
     extends ConsumerState<OtherIncomeItemReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 31),
   );
 
@@ -753,7 +753,7 @@ class _OtherIncomeItemReportContentState
     );
   }
 
-  static const _itemHeaders = [
+  static const List<Widget> _itemHeaders = [
     Expanded(
       child: ReportAlignedHeaderCell(label: 'INCOME ITEM'),
     ),
@@ -766,14 +766,14 @@ class _OtherIncomeItemReportContentState
   ];
 
   Widget _itemEmptyTable() {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ReportSyncScrollTable(
           headerChildren: _itemHeaders,
-          rows: const [],
+          rows: [],
         ),
-        const Expanded(
+        Expanded(
           child: Center(
             child: Text(
               'No other income records found for the selected period.',

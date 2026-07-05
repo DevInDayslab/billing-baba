@@ -184,11 +184,11 @@ class _ItemWiseDiscountReportContentState
                     const Divider(height: 1, color: reportCardBorder),
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     ReportAlignedHeaderCell(
                                       label: '#',
                                       width: 40,
@@ -231,9 +231,9 @@ class _ItemWiseDiscountReportContentState
                                       alignment: Alignment.center,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No Items',

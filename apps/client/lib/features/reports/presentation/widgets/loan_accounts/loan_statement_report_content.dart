@@ -28,20 +28,20 @@ class _LoanStatementReportContentState
     extends ConsumerState<LoanStatementReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 31),
   );
 
   static final _dateFormat = DateFormat('dd/MM/yyyy');
   static const _selectLoanLabel = 'Select loan account';
-  static const _loanOptions = [
+  static const List<String> _loanOptions = [
     _selectLoanLabel,
     'Business Term Loan',
     'Working Capital Loan',
     'Vehicle Loan',
   ];
 
-  static const _headers = [
+  static const List<Widget> _headers = [
     ReportAlignedHeaderCell(label: 'DATE', width: 110),
     ReportAlignedHeaderCell(label: 'REF NO.', width: 100),
     Expanded(child: ReportAlignedHeaderCell(label: 'PARTICULARS')),
@@ -95,8 +95,8 @@ class _LoanStatementReportContentState
                   formatReportDate(row.date),
                   row.refNo,
                   row.description,
-                  row.debit > 0 ? formatReportCurrency(row.debit) : '-',
-                  row.credit > 0 ? formatReportCurrency(row.credit) : '-',
+                  if (row.debit > 0) formatReportCurrency(row.debit) else '-',
+                  if (row.credit > 0) formatReportCurrency(row.credit) else '-',
                   formatReportCurrency(row.balance),
                 ],
             ],
@@ -145,12 +145,8 @@ class _LoanStatementReportContentState
                                     formatReportDate(row.date),
                                     row.refNo,
                                     row.description,
-                                    row.debit > 0
-                                        ? formatReportCurrency(row.debit)
-                                        : '-',
-                                    row.credit > 0
-                                        ? formatReportCurrency(row.credit)
-                                        : '-',
+                                    if (row.debit > 0) formatReportCurrency(row.debit) else '-',
+                                    if (row.credit > 0) formatReportCurrency(row.credit) else '-',
                                     formatReportCurrency(row.balance),
                                   ],
                               ],
@@ -306,7 +302,6 @@ class _LoanStatementReportContentState
                                 )
                               : SingleChildScrollView(
                                   child: ReportSyncScrollTable(
-                                    minWidth: 960,
                                     headerChildren: _headers,
                                     rows: [
                                       for (var i = 0; i < rows.length; i++)
@@ -439,10 +434,9 @@ class _LoanStatementReportContentState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ReportSyncScrollTable(
-          minWidth: 960,
+        const ReportSyncScrollTable(
           headerChildren: _headers,
-          rows: const [],
+          rows: [],
         ),
         Expanded(
           child: Center(

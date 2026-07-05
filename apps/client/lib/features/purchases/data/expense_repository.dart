@@ -3,7 +3,7 @@ import 'package:billing_baba/features/purchases/models/dto/expense_dto.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 
 class ExpenseRepository {
-  ExpenseRepository({required ExpenseRemoteDataSource remote}) : _remote = remote;
+  ExpenseRepository({required this._remote});
 
   final ExpenseRemoteDataSource _remote;
 

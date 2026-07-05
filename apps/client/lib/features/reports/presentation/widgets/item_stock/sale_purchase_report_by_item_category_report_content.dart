@@ -243,11 +243,11 @@ class _SalePurchaseReportByItemCategoryReportContentState
                     const Divider(height: 1, color: reportCardBorder),
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     Expanded(
                                       child: ReportAlignedHeaderCell(
                                         label: 'ITEM CATEGORY',
@@ -279,9 +279,9 @@ class _SalePurchaseReportByItemCategoryReportContentState
                                       alignment: Alignment.centerRight,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No data to display.',

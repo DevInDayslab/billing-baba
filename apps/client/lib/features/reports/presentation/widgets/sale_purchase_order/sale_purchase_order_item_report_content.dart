@@ -79,11 +79,11 @@ class SalePurchaseOrderItemReportContent extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     Expanded(
                                       child: ReportAlignedHeaderCell(
                                         label: 'ITEM NAME',
@@ -100,9 +100,9 @@ class SalePurchaseOrderItemReportContent extends ConsumerWidget {
                                       alignment: Alignment.centerRight,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No order items for the selected period.',

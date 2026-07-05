@@ -129,11 +129,11 @@ class _ConsumptionReportContentState extends ConsumerState<ConsumptionReportCont
                     const Divider(height: 1, color: reportCardBorder),
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     ReportAlignedHeaderCell(
                                       label: '#',
                                       width: 40,
@@ -169,9 +169,9 @@ class _ConsumptionReportContentState extends ConsumerState<ConsumptionReportCont
                                       alignment: Alignment.center,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No consumption records found for the selected period.',

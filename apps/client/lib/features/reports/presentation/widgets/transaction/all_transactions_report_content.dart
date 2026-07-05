@@ -192,9 +192,9 @@ List<String> _transactionExportRow(ReportTransactionRow row, int index) {
     row.category,
     row.type,
     formatReportCurrencyCompact(row.total),
-    row.received > 0 ? formatReportCurrencyCompact(row.received) : '',
-    row.balance > 0 ? formatReportCurrencyCompact(row.balance) : '',
-    row.dueDate != null ? formatReportDate(row.dueDate!) : '',
+    if (row.received > 0) formatReportCurrencyCompact(row.received) else '',
+    if (row.balance > 0) formatReportCurrencyCompact(row.balance) else '',
+    if (row.dueDate != null) formatReportDate(row.dueDate!) else '',
     row.status,
   ];
 }

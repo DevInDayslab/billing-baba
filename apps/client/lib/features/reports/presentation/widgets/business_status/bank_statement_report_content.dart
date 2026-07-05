@@ -28,13 +28,13 @@ class _BankStatementReportContentState
     extends ConsumerState<BankStatementReportContent> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 31),
   );
 
   static final _dateFormat = DateFormat('dd/MM/yyyy');
   static const _selectBankLabel = 'Select bank account';
-  static const _bankOptions = [
+  static const List<String> _bankOptions = [
     _selectBankLabel,
     'HDFC Bank',
     'ICICI Bank',
@@ -72,8 +72,8 @@ class _BankStatementReportContentState
                 [
                   formatReportDate(row.date),
                   row.description,
-                  row.moneyOut > 0 ? formatReportCurrency(row.moneyOut) : '-',
-                  row.moneyIn > 0 ? formatReportCurrency(row.moneyIn) : '-',
+                  if (row.moneyOut > 0) formatReportCurrency(row.moneyOut) else '-',
+                  if (row.moneyIn > 0) formatReportCurrency(row.moneyIn) else '-',
                   formatReportCurrency(row.balance),
                 ],
             ],
@@ -120,12 +120,8 @@ class _BankStatementReportContentState
                                   [
                                     formatReportDate(row.date),
                                     row.description,
-                                    row.moneyOut > 0
-                                        ? formatReportCurrency(row.moneyOut)
-                                        : '-',
-                                    row.moneyIn > 0
-                                        ? formatReportCurrency(row.moneyIn)
-                                        : '-',
+                                    if (row.moneyOut > 0) formatReportCurrency(row.moneyOut) else '-',
+                                    if (row.moneyIn > 0) formatReportCurrency(row.moneyIn) else '-',
                                     formatReportCurrency(row.balance),
                                   ],
                               ],
@@ -270,11 +266,11 @@ class _BankStatementReportContentState
                     ),
                     Expanded(
                       child: !bankSelected
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     ReportAlignedHeaderCell(
                                       label: 'DATE',
                                       width: 110,
@@ -300,9 +296,9 @@ class _BankStatementReportContentState
                                       alignment: Alignment.centerRight,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'Select a bank account to view the statement.',
@@ -316,12 +312,12 @@ class _BankStatementReportContentState
                               ],
                             )
                           : rows.isEmpty
-                              ? Column(
+                              ? const Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
                                     ReportSyncScrollTable(
-                                      headerChildren: const [
+                                      headerChildren: [
                                         ReportAlignedHeaderCell(
                                           label: 'DATE',
                                           width: 110,
@@ -347,9 +343,9 @@ class _BankStatementReportContentState
                                           alignment: Alignment.centerRight,
                                         ),
                                       ],
-                                      rows: const [],
+                                      rows: [],
                                     ),
-                                    const Expanded(
+                                    Expanded(
                                       child: Center(
                                         child: Text(
                                           'No transactions for the selected period.',

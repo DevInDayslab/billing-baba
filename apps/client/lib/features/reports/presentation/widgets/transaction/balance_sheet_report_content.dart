@@ -172,7 +172,7 @@ List<List<String>> _balanceSheetExportRows(BalanceSheetReportData report) {
       [
         '',
         item.name,
-        item.isHeader ? '' : formatReportCurrencyCompact(item.amount),
+        if (item.isHeader) '' else formatReportCurrencyCompact(item.amount),
       ],
     [
       '',
@@ -185,7 +185,7 @@ List<List<String>> _balanceSheetExportRows(BalanceSheetReportData report) {
       [
         '',
         item.name,
-        item.isHeader ? '' : formatReportCurrencyCompact(item.amount),
+        if (item.isHeader) '' else formatReportCurrencyCompact(item.amount),
       ],
     [
       '',

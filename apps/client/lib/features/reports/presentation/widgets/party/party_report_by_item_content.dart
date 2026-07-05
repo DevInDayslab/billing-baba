@@ -234,15 +234,15 @@ class _PartyReportByItemContentState
                                   formatReportCurrency(rows[i].amount),
                                 ),
                               ),
-                              ReportAlignedCell.fixed(
+                              const ReportAlignedCell.fixed(
                                 140,
                                 alignment: Alignment.centerRight,
-                                child: const Text('—'),
+                                child: Text('—'),
                               ),
-                              ReportAlignedCell.fixed(
+                              const ReportAlignedCell.fixed(
                                 140,
                                 alignment: Alignment.centerRight,
-                                child: const Text('—'),
+                                child: Text('—'),
                               ),
                             ],
                           ),

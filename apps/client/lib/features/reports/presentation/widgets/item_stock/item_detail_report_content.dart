@@ -267,11 +267,11 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
                     const Divider(height: 1, color: reportCardBorder),
                     Expanded(
                       child: selectedItemId == null || selectedItemId.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     ReportAlignedHeaderCell(
                                       label: 'DATE',
                                       width: 120,
@@ -298,9 +298,9 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
                                       ),
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'Select an item to view the report.',
@@ -314,11 +314,11 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
                               ],
                             )
                           : rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     ReportAlignedHeaderCell(
                                       label: 'DATE',
                                       width: 120,
@@ -345,9 +345,9 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
                                       ),
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No data for the selected period.',

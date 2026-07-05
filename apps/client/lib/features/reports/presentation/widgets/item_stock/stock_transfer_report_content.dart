@@ -133,12 +133,12 @@ class _StockTransferReportContentState
                     const Divider(height: 1, color: reportCardBorder),
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
                                   minWidth: 1040,
-                                  headerChildren: const [
+                                  headerChildren: [
                                     ReportAlignedHeaderCell(
                                       label: '#',
                                       width: 40,
@@ -188,9 +188,9 @@ class _StockTransferReportContentState
                                       alignment: Alignment.center,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No stock transfer records found for the selected period.',

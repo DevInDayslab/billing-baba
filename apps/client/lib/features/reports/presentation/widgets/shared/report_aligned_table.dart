@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart' show ReportTableHeaderRow;
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -113,7 +114,6 @@ class ReportAlignedDataRow extends StatelessWidget {
     return Padding(
       padding: padding,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           for (final cell in cells) _buildCell(cell),
         ],

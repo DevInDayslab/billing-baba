@@ -263,12 +263,12 @@ class _ItemCategoryWiseProfitLossReportContentState
                     const Divider(height: 1, color: reportCardBorder),
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
                                   minWidth: 1180,
-                                  headerChildren: const [
+                                  headerChildren: [
                                     ReportAlignedHeaderCell(label: 'ITEM CATEGORY', width: 150, showFilter: false),
                                     ReportAlignedHeaderCell(label: 'SALE', width: 100, showFilter: false, alignment: Alignment.centerRight),
                                     ReportAlignedHeaderCell(label: 'CR. NOTE / SALE RETURN', width: 150, showFilter: false, alignment: Alignment.centerRight),
@@ -278,9 +278,9 @@ class _ItemCategoryWiseProfitLossReportContentState
                                     ReportAlignedHeaderCell(label: 'CLOSING STOCK', width: 120, showFilter: false, alignment: Alignment.centerRight),
                                     ReportAlignedHeaderCell(label: 'NET PROFIT (+) / LOSS (-)', width: 160, showFilter: false, alignment: Alignment.centerRight),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No profit or loss data for the selected period.',

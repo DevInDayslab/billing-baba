@@ -73,7 +73,7 @@ class _Gstr9ReportContentState extends ConsumerState<Gstr9ReportContent> {
         final exportRows = [
           for (var i = 0; i < supplyRows.length; i++)
             [
-              i < rowCodes.length ? rowCodes[i] : '${i + 1}',
+              if (i < rowCodes.length) rowCodes[i] else '${i + 1}',
               supplyRows[i].label,
               formatReportCurrency(supplyRows[i].taxableValue),
               formatReportCurrency(supplyRows[i].centralTax),
@@ -178,12 +178,12 @@ class _Gstr9ReportContentState extends ConsumerState<Gstr9ReportContent> {
                     ),
                   ),
                   const Divider(height: 1, color: reportCardBorder),
-                  _SectionBanner(title: 'Pt. I Basic Details'),
+                  const _SectionBanner(title: 'Pt. I Basic Details'),
                   _BasicDetailsTable(
                     financialYear: _financialYear,
                     borderColor: _gstr9Border,
                   ),
-                  _SectionBanner(
+                  const _SectionBanner(
                     title:
                         'Pt. II Details Of Outward And Inward Supplies '
                         'Declared During The Financial Year',
@@ -306,7 +306,7 @@ class _BasicDetailsTable extends StatelessWidget {
 class _OutwardSuppliesColumnLayout {
   static const codeWidth = 36.0;
   static const valueWidth = 90.0;
-  static const minWidth = codeWidth + (valueWidth * 5) + 200;
+  static const double minWidth = codeWidth + (valueWidth * 5) + 200;
 }
 
 class _OutwardSuppliesTable extends StatelessWidget {
@@ -406,7 +406,7 @@ class _OutwardSuppliesTable extends StatelessWidget {
                             ),
                           ),
                           for (var i = 0; i < 5; i++)
-                            SizedBox(
+                            const SizedBox(
                               width: _OutwardSuppliesColumnLayout.valueWidth,
                             ),
                         ],

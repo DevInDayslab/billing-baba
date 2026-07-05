@@ -36,7 +36,7 @@ class _ItemWiseProfitLossReportContentState
     super.initState();
     final now = DateTime.now();
     _dateRange = DateTimeRange(
-      start: DateTime(now.year, now.month, 1),
+      start: DateTime(now.year, now.month),
       end: DateTime(now.year, now.month, now.day),
     );
   }
@@ -267,12 +267,12 @@ class _ItemWiseProfitLossReportContentState
                     const Divider(height: 1, color: reportCardBorder),
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
                                   minWidth: 1320,
-                                  headerChildren: const [
+                                  headerChildren: [
                                     ReportAlignedHeaderCell(label: 'ITEM NAME', width: 140),
                                     ReportAlignedHeaderCell(label: 'SALE', width: 90, alignment: Alignment.centerRight),
                                     ReportAlignedHeaderCell(label: 'CR. NOTE / SALE RETURN', width: 150, alignment: Alignment.centerRight),
@@ -286,9 +286,9 @@ class _ItemWiseProfitLossReportContentState
                                     ReportAlignedHeaderCell(label: 'CONSUMPTION COST', width: 140, alignment: Alignment.centerRight),
                                     ReportAlignedHeaderCell(label: 'NET PROFIT/LOSS', width: 120, alignment: Alignment.centerRight),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No data for the selected period.',

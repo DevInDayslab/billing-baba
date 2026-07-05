@@ -296,11 +296,11 @@ class _StockSummaryReportByItemCategoryReportContentState
                     const Divider(height: 1, color: reportCardBorder),
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     Expanded(
                                       child: ReportAlignedHeaderCell(
                                         label: 'ITEM CATEGORY',
@@ -338,9 +338,9 @@ class _StockSummaryReportByItemCategoryReportContentState
                                       alignment: Alignment.centerRight,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No stock data found for the selected filters.',
@@ -402,15 +402,15 @@ class _StockSummaryReportByItemCategoryReportContentState
                                           ReportAlignedCell.flex(
                                             child: Text(rows[i].category),
                                           ),
-                                          ReportAlignedCell.fixed(
+                                          const ReportAlignedCell.fixed(
                                             110,
                                             alignment: Alignment.centerRight,
-                                            child: const Text('—'),
+                                            child: Text('—'),
                                           ),
-                                          ReportAlignedCell.fixed(
+                                          const ReportAlignedCell.fixed(
                                             100,
                                             alignment: Alignment.centerRight,
-                                            child: const Text('—'),
+                                            child: Text('—'),
                                           ),
                                           ReportAlignedCell.fixed(
                                             130,
@@ -468,26 +468,26 @@ class _StockSummaryReportByItemCategoryReportContentState
                                 ),
                               ),
                             ),
-                            SizedBox(
+                            const SizedBox(
                               width: 110,
                               child: Align(
                                 alignment: Alignment.centerRight,
                                 child: Text(
                                   '—',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
                             ),
-                            SizedBox(
+                            const SizedBox(
                               width: 100,
                               child: Align(
                                 alignment: Alignment.centerRight,
                                 child: Text(
                                   '—',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -521,13 +521,13 @@ class _StockSummaryReportByItemCategoryReportContentState
                                 ),
                               ),
                             ),
-                            SizedBox(
+                            const SizedBox(
                               width: 130,
                               child: Align(
                                 alignment: Alignment.centerRight,
                                 child: Text(
                                   '—',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                   ),

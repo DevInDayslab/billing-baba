@@ -56,7 +56,7 @@ class _Gstr2ReportContentState extends ConsumerState<Gstr2ReportContent> {
           formatReportDate(rows[i].date),
           formatReportCurrency(rows[i].value),
           '${rows[i].taxRate}%',
-          rows[i].cessRate > 0 ? '${rows[i].cessRate}%' : '-',
+          if (rows[i].cessRate > 0) '${rows[i].cessRate}%' else '-',
           formatReportCurrency(rows[i].taxableValue),
           formatReportCurrency(rows[i].integratedTax),
         ],

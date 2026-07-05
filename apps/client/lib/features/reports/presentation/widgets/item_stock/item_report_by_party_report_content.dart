@@ -35,7 +35,7 @@ class _ItemReportByPartyReportContentState
     super.initState();
     final now = DateTime.now();
     _dateRange = DateTimeRange(
-      start: DateTime(now.year, now.month, 1),
+      start: DateTime(now.year, now.month),
       end: DateTime(now.year, now.month, now.day),
     );
   }
@@ -217,8 +217,8 @@ class _ItemReportByPartyReportContentState
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(
                         AppSpacing.md,
                         0,
                         AppSpacing.md,
@@ -226,7 +226,7 @@ class _ItemReportByPartyReportContentState
                       ),
                       child: Row(
                         children: [
-                          const Text(
+                          Text(
                             'FILTERS',
                             style: TextStyle(
                               fontSize: 12,
@@ -235,8 +235,8 @@ class _ItemReportByPartyReportContentState
                               letterSpacing: 0.6,
                             ),
                           ),
-                          const SizedBox(width: AppSpacing.md),
-                          const Expanded(
+                          SizedBox(width: AppSpacing.md),
+                          Expanded(
                             child: ReportSearchField(
                               hintText: 'Search party...',
                             ),
@@ -247,11 +247,11 @@ class _ItemReportByPartyReportContentState
                     const Divider(height: 1, color: reportCardBorder),
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     Expanded(
                                       child: ReportAlignedHeaderCell(
                                         label: 'ITEM NAME',
@@ -278,9 +278,9 @@ class _ItemReportByPartyReportContentState
                                       alignment: Alignment.centerRight,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No data for the selected period.',

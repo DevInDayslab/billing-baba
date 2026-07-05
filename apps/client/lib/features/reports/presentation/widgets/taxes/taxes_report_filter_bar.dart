@@ -25,7 +25,7 @@ class _TaxesReportFilterBarState extends State<TaxesReportFilterBar> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   String _firm = 'ALL FIRMS';
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 3),
   );
 
@@ -147,7 +147,7 @@ class _TaxInvoiceReportFilterBarState extends State<TaxInvoiceReportFilterBar> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   String _firm = 'ALL FIRMS';
   DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7, 1),
+    start: DateTime(2026, 7),
     end: DateTime(2026, 7, 3),
   );
 

@@ -1,6 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:flutter/material.dart';
 
 export 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
@@ -8,8 +7,7 @@ export 'package:billing_baba/features/reports/presentation/widgets/shared/report
 /// @deprecated Use [ReportAlignedDataRow] inside [ReportSyncScrollTable].
 class ReportSimpleDataRow extends StatelessWidget {
   const ReportSimpleDataRow({
-    super.key,
-    required this.cells,
+    required this.cells, super.key,
     this.padding = const EdgeInsets.symmetric(
       horizontal: AppSpacing.md,
       vertical: AppSpacing.sm,
@@ -62,9 +60,7 @@ class ReportSimpleCell {
 /// @deprecated Use [ReportAlignedRowStrip].
 class ReportDataRowContainer extends StatelessWidget {
   const ReportDataRowContainer({
-    super.key,
-    required this.index,
-    required this.child,
+    required this.index, required this.child, super.key,
   });
 
   final int index;

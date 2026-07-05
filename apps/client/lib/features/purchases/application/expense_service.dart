@@ -22,8 +22,7 @@ Future<ExpenseService> expenseService(Ref ref) async {
 }
 
 class ExpenseService {
-  ExpenseService({required ExpenseRepository repository})
-    : _repository = repository;
+  ExpenseService({required this._repository});
 
   final ExpenseRepository _repository;
 

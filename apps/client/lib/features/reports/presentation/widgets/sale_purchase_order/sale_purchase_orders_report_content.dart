@@ -92,11 +92,11 @@ class SalePurchaseOrdersReportContent extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: rows.isEmpty
-                          ? Column(
+                          ? const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ReportSyncScrollTable(
-                                  headerChildren: const [
+                                  headerChildren: [
                                     ReportAlignedHeaderCell(
                                       label: 'DATE',
                                       width: 100,
@@ -138,9 +138,9 @@ class SalePurchaseOrdersReportContent extends ConsumerWidget {
                                       alignment: Alignment.centerRight,
                                     ),
                                   ],
-                                  rows: const [],
+                                  rows: [],
                                 ),
-                                const Expanded(
+                                Expanded(
                                   child: Center(
                                     child: Text(
                                       'No orders found for the selected period.',

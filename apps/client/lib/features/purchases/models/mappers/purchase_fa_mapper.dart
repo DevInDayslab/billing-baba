@@ -65,7 +65,6 @@ class PurchaseFaMapper {
       partyId: dto.partyId,
       party: dto.partyName,
       billingName: dto.partyName,
-      eWayBillNo: '',
       billNumber: dto.referenceNumber ?? '',
       billDate: DateTime(
         purchaseDate.year,

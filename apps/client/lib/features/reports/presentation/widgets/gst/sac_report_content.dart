@@ -32,7 +32,7 @@ class _SacReportContentState extends ConsumerState<SacReportContent> {
     super.initState();
     final now = DateTime.now();
     _dateRange = DateTimeRange(
-      start: DateTime(now.year, now.month, 1),
+      start: DateTime(now.year, now.month),
       end: DateTime(now.year, now.month + 1, 0),
     );
   }
