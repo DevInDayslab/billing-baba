@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
@@ -37,6 +38,7 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
   final _datePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
   final _receivedController = TextEditingController();
   final _discountController = TextEditingController();
+  String? _savedPaymentId;
 
   static final _amountFormat = NumberFormat('#,##0.00', 'en_IN');
 
@@ -72,19 +74,34 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
     }
   }
 
-  Future<void> _handleSave() async {
+  Future<void> _handleSave({bool previewAfterSave = false}) async {
     final notifier = ref.read(paymentInFormProvider.notifier);
     final payment = notifier.buildPaymentModel();
     if (payment == null) return;
 
-    final error = await notifier.savePayment();
+    final result = await notifier.savePayment();
     if (!mounted) return;
 
-    if (error != null) {
+    if (result.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(content: Text(result.error!)),
       );
       return;
+    }
+
+    final paymentId = result.paymentId;
+    if (paymentId != null) {
+      _savedPaymentId = paymentId;
+    }
+
+    if (previewAfterSave && paymentId != null) {
+      await VoucherPrintActions.previewPaymentIn(
+        context,
+        ref,
+        paymentId,
+        filename: VoucherPrintActions.filenameFor(payment.receiptNo),
+      );
+      if (!mounted) return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -93,6 +110,74 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
       ),
     );
     Navigator.of(context).pop();
+  }
+
+  Future<void> _handlePrintPreview() async {
+    final notifier = ref.read(paymentInFormProvider.notifier);
+    final payment = notifier.buildPaymentModel();
+    var paymentId = _savedPaymentId;
+
+    if (paymentId == null) {
+      if (payment == null) {
+        VoucherPrintActions.showSaveBeforePrinting(context);
+        return;
+      }
+      final result = await notifier.savePayment();
+      if (!mounted) return;
+      if (result.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.error!)),
+        );
+        return;
+      }
+      paymentId = result.paymentId;
+      if (paymentId == null) return;
+      _savedPaymentId = paymentId;
+    }
+
+    final filename = payment != null
+        ? VoucherPrintActions.filenameFor(payment.receiptNo)
+        : null;
+    await VoucherPrintActions.previewPaymentIn(
+      context,
+      ref,
+      paymentId,
+      filename: filename,
+    );
+  }
+
+  Future<void> _handleShare() async {
+    final notifier = ref.read(paymentInFormProvider.notifier);
+    final payment = notifier.buildPaymentModel();
+    var paymentId = _savedPaymentId;
+
+    if (paymentId == null) {
+      if (payment == null) {
+        VoucherPrintActions.showSaveBeforePrinting(context);
+        return;
+      }
+      final result = await notifier.savePayment();
+      if (!mounted) return;
+      if (result.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.error!)),
+        );
+        return;
+      }
+      paymentId = result.paymentId;
+      if (paymentId == null) return;
+      _savedPaymentId = paymentId;
+    }
+
+    final filename = payment != null
+        ? VoucherPrintActions.filenameFor(payment.receiptNo)
+        : VoucherPrintActions.filenameFor(paymentId);
+    await VoucherPrintActions.sharePaymentIn(
+      context,
+      ref,
+      paymentId,
+      filename: filename,
+    );
   }
 
   @override
@@ -334,14 +419,24 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  OutlinedButton.icon(
+                    onPressed: _handlePrintPreview,
+                    icon: const Icon(Icons.print_outlined, size: 16),
+                    label: const Text(
+                      'Print / Preview',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      side: const BorderSide(color: _cardBorder),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
                   ShareMenuButton(
-                    onChannelSelected: (channel) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${channel.label} coming soon'),
-                        ),
-                      );
-                    },
+                    onChannelSelected: (_) => _handleShare(),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   FilledButton(

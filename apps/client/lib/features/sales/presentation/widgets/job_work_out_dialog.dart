@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_footer.dart';
@@ -133,6 +135,8 @@ class _JobWorkOutDialogState extends ConsumerState<JobWorkOutDialog> {
             const Divider(height: 1, color: _cardBorder),
             _DialogBottomBar(
               isSaving: form.isSaving,
+              orderId: widget.orderId ?? form.orderId,
+              jobNumber: form.jobId,
               onSave: () async {
                 final error = await notifier.save();
                 if (!context.mounted) return;
@@ -192,17 +196,27 @@ class _DialogHeader extends StatelessWidget {
   }
 }
 
-class _DialogBottomBar extends StatelessWidget {
+class _DialogBottomBar extends ConsumerWidget {
   const _DialogBottomBar({
     required this.onSave,
     this.isSaving = false,
+    this.orderId,
+    this.jobNumber = '',
   });
 
   final VoidCallback onSave;
   final bool isSaving;
+  final String? orderId;
+  final String jobNumber;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filename = jobNumber.trim().isNotEmpty
+        ? VoucherPrintActions.filenameFor(jobNumber)
+        : (orderId != null
+              ? VoucherPrintActions.filenameFor(orderId!)
+              : 'job_work');
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: _sectionGap,
@@ -210,6 +224,32 @@ class _DialogBottomBar extends StatelessWidget {
       ),
       child: Row(
         children: [
+          if (orderId != null) ...[
+            OutlinedButton.icon(
+              onPressed: () => VoucherPrintActions.previewJobWorkOrder(
+                context,
+                ref,
+                orderId!,
+                filename: filename,
+              ),
+              icon: const Icon(Icons.print_outlined, size: 16),
+              label: const Text('Print / Preview', style: TextStyle(fontSize: 14)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                side: const BorderSide(color: _cardBorder),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            ShareMenuButton(
+              onChannelSelected: (_) => VoucherPrintActions.shareJobWorkOrder(
+                context,
+                ref,
+                orderId!,
+                filename: filename,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+          ],
           const Spacer(),
           FilledButton(
             onPressed: isSaving ? null : onSave,

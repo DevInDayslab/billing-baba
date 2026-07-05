@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_dialog.dart';
 import 'package:billing_baba/features/sales/providers/job_work_orders_provider.dart';
@@ -16,7 +18,7 @@ const _partyColWidth = 160.0;
 const _jobIdColWidth = 120.0;
 const _deliveryColWidth = 140.0;
 const _statusColWidth = 120.0;
-const _actionsColWidth = 80.0;
+const _actionsColWidth = 120.0;
 
 const double _minTableWidth =
     _dateColWidth +
@@ -85,7 +87,7 @@ class JobWorkOutTable extends ConsumerWidget {
   }
 }
 
-class _JobWorkOutTableContent extends StatelessWidget {
+class _JobWorkOutTableContent extends ConsumerWidget {
   const _JobWorkOutTableContent({
     required this.items,
     required this.onAdd,
@@ -101,7 +103,7 @@ class _JobWorkOutTableContent extends StatelessWidget {
   final Future<void> Function() onRefresh;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -127,6 +129,9 @@ class _JobWorkOutTableContent extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
+                _XlsChip(
+                  onTap: () => ModuleExportActions.exportJobWork(context, ref),
+                ),
                 IconButton(
                   onPressed: onRefresh,
                   icon: const Icon(Icons.refresh, size: 18),
@@ -252,7 +257,7 @@ class _TableHeaderRow extends StatelessWidget {
   }
 }
 
-class _DataRow extends StatelessWidget {
+class _DataRow extends ConsumerWidget {
   const _DataRow({
     required this.item,
     required this.onTap,
@@ -271,7 +276,7 @@ class _DataRow extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final statusLabel = switch (item.status) {
       JobWorkOutStatus.open => 'Open',
       JobWorkOutStatus.closed => 'Closed',
@@ -336,14 +341,90 @@ class _DataRow extends StatelessWidget {
                 ),
                 SizedBox(
                   width: _actionsColWidth,
-                  child: IconButton(
-                    onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline, size: 20),
-                    color: AppColors.textSecondary,
-                    tooltip: 'Delete',
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () => VoucherPrintActions.previewJobWorkOrder(
+                          context,
+                          ref,
+                          item.id,
+                          filename: VoucherPrintActions.filenameFor(
+                            item.jobId.isNotEmpty ? item.jobId : item.id,
+                          ),
+                        ),
+                        icon: const Icon(Icons.print_outlined, size: 18),
+                        color: AppColors.textSecondary,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        tooltip: 'Print / Preview',
+                      ),
+                      IconButton(
+                        onPressed: () => VoucherPrintActions.shareJobWorkOrder(
+                          context,
+                          ref,
+                          item.id,
+                          filename: VoucherPrintActions.filenameFor(
+                            item.jobId.isNotEmpty ? item.jobId : item.id,
+                          ),
+                        ),
+                        icon: const Icon(Icons.share_outlined, size: 18),
+                        color: AppColors.textSecondary,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        tooltip: 'Share',
+                      ),
+                      IconButton(
+                        onPressed: onDelete,
+                        icon: const Icon(Icons.delete_outline, size: 20),
+                        color: AppColors.textSecondary,
+                        tooltip: 'Delete',
+                      ),
+                    ],
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _XlsChip extends StatelessWidget {
+  const _XlsChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: const Text(
+            'xls',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E7D32),
             ),
           ),
         ),

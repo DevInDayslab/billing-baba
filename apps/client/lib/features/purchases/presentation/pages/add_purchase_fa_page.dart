@@ -2,6 +2,7 @@ import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/add_purchase_fa_footer.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_fa_line_items_table.dart';
@@ -313,6 +314,12 @@ class _BottomActionBar extends ConsumerWidget {
     final notifier =
         ref.read(addPurchaseFaFormProvider(batchId: batchId).notifier);
     final showLinkPayment = form.party.trim().isNotEmpty;
+    final resolvedBatchId = batchId ?? form.batchId;
+    final filename = form.billNumber.trim().isNotEmpty
+        ? VoucherPrintActions.filenameFor(form.billNumber)
+        : (resolvedBatchId != null
+              ? VoucherPrintActions.filenameFor(resolvedBatchId)
+              : 'fa_purchase');
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -340,6 +347,23 @@ class _BottomActionBar extends ConsumerWidget {
               ),
             ),
           const Spacer(),
+          if (resolvedBatchId != null) ...[
+            OutlinedButton.icon(
+              onPressed: () => VoucherPrintActions.previewFixedAssetPurchase(
+                context,
+                ref,
+                resolvedBatchId,
+                filename: filename,
+              ),
+              icon: const Icon(Icons.print_outlined, size: 16),
+              label: const Text('Print / Preview', style: TextStyle(fontSize: 13)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                side: const BorderSide(color: _cardBorder),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+          ],
           OutlinedButton(
             onPressed: () => _handleCancel(context, ref),
             style: OutlinedButton.styleFrom(
@@ -350,9 +374,16 @@ class _BottomActionBar extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           ShareMenuButton(
-            onChannelSelected: (channel) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${channel.label} coming soon')),
+            onChannelSelected: (_) {
+              if (resolvedBatchId == null) {
+                VoucherPrintActions.showSaveBeforePrinting(context);
+                return;
+              }
+              VoucherPrintActions.shareFixedAssetPurchase(
+                context,
+                ref,
+                resolvedBatchId,
+                filename: filename,
               );
             },
           ),

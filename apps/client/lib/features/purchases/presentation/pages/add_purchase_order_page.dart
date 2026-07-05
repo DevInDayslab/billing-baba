@@ -1,8 +1,10 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
+import 'package:billing_baba/features/purchases/models/purchase_order_form_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/add_purchase_order_footer.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_order_line_items_table.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_page_title_bar.dart';
@@ -306,6 +308,7 @@ class _BottomActionBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
     final notifier =
         ref.read(addPurchaseOrderFormProvider(orderId: orderId).notifier);
 
@@ -326,14 +329,25 @@ class _BottomActionBar extends ConsumerWidget {
             child: const Text('Cancel', style: TextStyle(fontSize: 13)),
           ),
           const SizedBox(width: AppSpacing.sm),
-          ShareMenuButton(
-            onChannelSelected: (channel) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${channel.label} coming soon')),
-              );
-            },
-          ),
-          const SizedBox(width: AppSpacing.sm),
+          if (form.documentId != null) ...[
+            OutlinedButton.icon(
+              onPressed: () => _handlePrintPreview(context, ref, form),
+              icon: const Icon(Icons.print_outlined, size: 16),
+              label: const Text('Print / Preview', style: TextStyle(fontSize: 13)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                side: const BorderSide(color: _cardBorder),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            IconButton(
+              onPressed: () => _handleShare(context, ref, form),
+              icon: const Icon(Icons.share_outlined, size: 20),
+              color: AppColors.textSecondary,
+              tooltip: 'Share PDF',
+            ),
+            const SizedBox(width: AppSpacing.sm),
+          ],
           FilledButton(
             onPressed: () => _handleSave(context, ref, notifier),
             style: FilledButton.styleFrom(
@@ -391,6 +405,40 @@ class _BottomActionBar extends ConsumerWidget {
 
     showTransactionSuccessToast(context);
     context.go(AppRoutes.purchaseOrder);
+  }
+
+  Future<void> _handlePrintPreview(
+    BuildContext context,
+    WidgetRef ref,
+    AddPurchaseOrderFormState form,
+  ) async {
+    final docId = form.documentId ?? orderId;
+    if (docId == null) return;
+    await DocumentPrintActions.preview(
+      context,
+      ref,
+      PrintRequest.purchaseOrder(docId),
+      filename: DocumentPrintActions.filenameFor(
+        form.orderNumber.isNotEmpty ? form.orderNumber : docId,
+      ),
+    );
+  }
+
+  Future<void> _handleShare(
+    BuildContext context,
+    WidgetRef ref,
+    AddPurchaseOrderFormState form,
+  ) async {
+    final docId = form.documentId ?? orderId;
+    if (docId == null) return;
+    await DocumentPrintActions.share(
+      context,
+      ref,
+      PrintRequest.purchaseOrder(docId),
+      filename: DocumentPrintActions.filenameFor(
+        form.orderNumber.isNotEmpty ? form.orderNumber : docId,
+      ),
+    );
   }
 }
 

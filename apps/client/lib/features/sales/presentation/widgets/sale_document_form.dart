@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/models/sale_document_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
@@ -205,13 +207,25 @@ class _EmptyState extends ConsumerWidget {
               )
             else if (documents.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.lg),
-              const Text(
-                'Saved documents',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+              Row(
+                children: [
+                  const Text(
+                    'Saved documents',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  _XlsChip(
+                    onTap: () => ModuleExportActions.exportSalesDocuments(
+                      context,
+                      ref,
+                      scope,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: AppSpacing.sm),
               ConstrainedBox(
@@ -841,15 +855,25 @@ class _BottomActionBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
+          if (form.documentId != null) ...[
+            OutlinedButton.icon(
+              onPressed: () => _handlePrintPreview(context, ref, form),
+              icon: const Icon(Icons.print_outlined, size: 16),
+              label: const Text('Print / Preview', style: TextStyle(fontSize: 13)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                side: const BorderSide(color: _cardBorder),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            IconButton(
+              onPressed: () => _handleShare(context, ref, form),
+              icon: const Icon(Icons.share_outlined, size: 20),
+              color: AppColors.textSecondary,
+              tooltip: 'Share PDF',
+            ),
+          ],
           const Spacer(),
-          ShareMenuButton(
-            onChannelSelected: (channel) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${channel.label} coming soon')),
-              );
-            },
-          ),
-          const SizedBox(width: AppSpacing.md),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -898,6 +922,62 @@ class _BottomActionBar extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  PrintRequest _printRequest(String documentId) {
+    return switch (documentType) {
+      SaleDocumentType.estimate => PrintRequest.estimate(documentId),
+      SaleDocumentType.proforma => PrintRequest.proformaInvoice(documentId),
+    };
+  }
+
+  String _filename(SaleDocumentFormState form) {
+    final number = form.refNo.trim();
+    if (number.isNotEmpty) {
+      return DocumentPrintActions.filenameFor(number);
+    }
+    final id = form.documentId;
+    return id == null ? 'document' : DocumentPrintActions.filenameFor(id);
+  }
+
+  Future<void> _handlePrintPreview(
+    BuildContext context,
+    WidgetRef ref,
+    SaleDocumentFormState form,
+  ) async {
+    final docId = form.documentId;
+    if (docId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Save the document before printing')),
+      );
+      return;
+    }
+    await DocumentPrintActions.preview(
+      context,
+      ref,
+      _printRequest(docId),
+      filename: _filename(form),
+    );
+  }
+
+  Future<void> _handleShare(
+    BuildContext context,
+    WidgetRef ref,
+    SaleDocumentFormState form,
+  ) async {
+    final docId = form.documentId;
+    if (docId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Save the document before sharing')),
+      );
+      return;
+    }
+    await DocumentPrintActions.share(
+      context,
+      ref,
+      _printRequest(docId),
+      filename: _filename(form),
     );
   }
 }
@@ -1096,6 +1176,41 @@ class _AmountFieldState extends State<_AmountField> {
         FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
       ],
       onChanged: (text) => widget.onChanged(double.tryParse(text) ?? 0),
+    );
+  }
+}
+
+class _XlsChip extends StatelessWidget {
+  const _XlsChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: const Text(
+            'xls',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E7D32),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,59 +1,30 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
+import 'package:billing_baba/features/export/data/csv_exporter.dart';
+import 'package:billing_baba/features/export/models/export_request.dart';
+import 'package:billing_baba/features/export/models/export_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 
-/// CSV export, clipboard copy, file save, and print preview for reports.
+/// CSV text generation, clipboard copy, and print preview for reports.
 abstract final class ReportExportService {
   static String toCsv({
     required List<String> headers,
     required List<List<String>> rows,
   }) {
-    final buffer = StringBuffer()
-      ..writeln(_escapeCsvRow(headers));
-    for (final row in rows) {
-      buffer.writeln(_escapeCsvRow(row));
-    }
-    return buffer.toString();
-  }
-
-  static String _escapeCsvRow(List<String> cells) {
-    return cells.map(_escapeCsvCell).join(',');
-  }
-
-  static String _escapeCsvCell(String value) {
-    if (value.contains(',') || value.contains('"') || value.contains('\n')) {
-      return '"${value.replaceAll('"', '""')}"';
-    }
-    return value;
+    final sheet = ExportSheet.fromStrings(
+      name: 'Report',
+      headers: headers,
+      rows: rows,
+    );
+    final exporter = CsvExporter();
+    final bytes = exporter.export(
+      ExportRequest.csv(sheet: sheet, filenameBase: 'report'),
+    );
+    final text = String.fromCharCodes(bytes);
+    return text.startsWith('\uFEFF') ? text.substring(1) : text;
   }
 
   static Future<void> copyCsvToClipboard(String csv) async {
     await Clipboard.setData(ClipboardData(text: csv));
-  }
-
-  /// Saves CSV to the downloads directory on desktop, or app documents elsewhere.
-  static Future<String?> saveCsvFile({
-    required String csv,
-    required String filename,
-  }) async {
-    if (kIsWeb) return null;
-
-    final directory = await _resolveSaveDirectory();
-    final safeName = filename.endsWith('.csv') ? filename : '$filename.csv';
-    final file = File('${directory.path}/$safeName');
-    await file.writeAsString(csv);
-    return file.path;
-  }
-
-  static Future<Directory> _resolveSaveDirectory() async {
-    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      final downloads = await getDownloadsDirectory();
-      if (downloads != null) return downloads;
-    }
-    return getApplicationDocumentsDirectory();
   }
 
   static Future<void> showPrintPreview({
@@ -97,32 +68,5 @@ abstract final class ReportExportService {
         );
       },
     );
-  }
-
-  static Future<void> exportAndNotify({
-    required BuildContext context,
-    required String title,
-    required List<String> headers,
-    required List<List<String>> rows,
-    String filename = 'report',
-  }) async {
-    final csv = toCsv(headers: headers, rows: rows);
-
-    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      final path = await saveCsvFile(csv: csv, filename: filename);
-      if (context.mounted && path != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved to $path')),
-        );
-      }
-      return;
-    }
-
-    await copyCsvToClipboard(csv);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('CSV copied to clipboard')),
-      );
-    }
   }
 }

@@ -433,9 +433,11 @@ class PaymentInForm extends _$PaymentInForm {
     );
   }
 
-  Future<String?> savePayment() async {
+  Future<({String? error, String? paymentId})> savePayment() async {
     final payment = buildPaymentModel();
-    if (payment == null) return 'Please fill required fields';
+    if (payment == null) {
+      return (error: 'Please fill required fields', paymentId: null);
+    }
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
 
@@ -446,7 +448,7 @@ class PaymentInForm extends _$PaymentInForm {
         amount: payment.receivedAmount,
       );
 
-      await service.createPayment(
+      final created = await service.createPayment(
         CreatePaymentRequest(
           partyId: state.partyId!,
           direction: 'received',
@@ -461,12 +463,13 @@ class PaymentInForm extends _$PaymentInForm {
 
       ref.invalidate(paymentInRecordsProvider);
       ref.invalidate(saleInvoicesProvider);
+      final paymentId = created.id;
       reset();
-      return null;
+      return (error: null, paymentId: paymentId);
     } catch (error) {
       final message = SalesErrorMapper.messageFor(error);
       state = state.copyWith(isSaving: false, saveError: message);
-      return message;
+      return (error: message, paymentId: null);
     }
   }
 }

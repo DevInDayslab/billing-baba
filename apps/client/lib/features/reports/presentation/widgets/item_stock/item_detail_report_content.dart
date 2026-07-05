@@ -7,6 +7,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
+import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -69,6 +70,44 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
             balance += row.type == 'Sale' ? -row.quantity : row.quantity;
           }
           return balance;
+        }
+
+        const exportHeaders = [
+          'Date',
+          'Sale Quantity',
+          'Purchase Quantity',
+          'Adjustment Quantity',
+          'Closing Quantity',
+        ];
+
+        List<List<String>> exportRows() => [
+              for (var i = 0; i < rows.length; i++)
+                [
+                  formatReportDate(rows[i].date),
+                  if (rows[i].type == 'Sale') rows[i].quantity.toStringAsFixed(0) else '-',
+                  if (rows[i].type != 'Sale') rows[i].quantity.toStringAsFixed(0) else '-',
+                  '-',
+                  runningClosing(i).toStringAsFixed(0),
+                ],
+            ];
+
+        void exportExcel() {
+          reportExportTable(
+            context: context,
+            title: 'Item Detail Report',
+            filename: 'item-detail-report',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
+        }
+
+        void printReport() {
+          reportPrintTable(
+            context: context,
+            title: 'Item Detail Report',
+            headers: exportHeaders,
+            rows: exportRows(),
+          );
         }
 
         return ColoredBox(
@@ -156,13 +195,15 @@ class _ItemDetailReportContentState extends ConsumerState<ItemDetailReportConten
                       ),
                     ],
                   ),
-                  const ReportIconActionButton(
+                  ReportIconActionButton(
                     icon: Icons.table_chart_outlined,
                     tooltip: 'Excel',
+                    onTap: exportExcel,
                   ),
-                  const ReportIconActionButton(
+                  ReportIconActionButton(
                     icon: Icons.print_outlined,
                     tooltip: 'Print',
+                    onTap: printReport,
                   ),
                 ],
               ),

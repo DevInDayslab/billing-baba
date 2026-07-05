@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/payment_in_status_badge.dart';
@@ -14,7 +16,7 @@ const _refColWidth = 140.0;
 const _paymentColWidth = 130.0;
 const _statusColWidth = 80.0;
 const _amountColWidth = 140.0;
-const _actionsColWidth = 48.0;
+const _actionsColWidth = 80.0;
 const _colGap = 12.0;
 
 const double _minTableWidth =
@@ -68,6 +70,13 @@ class PaymentInTable extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
+                IconButton(
+                  onPressed: () =>
+                      ModuleExportActions.exportPaymentIn(context, ref),
+                  icon: const Icon(Icons.table_chart_outlined, size: 20),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Excel Report',
+                ),
                 IconButton(
                   onPressed: notifier.refresh,
                   icon: const Icon(Icons.refresh, size: 20),
@@ -133,7 +142,7 @@ class PaymentInTable extends ConsumerWidget {
                           for (var i = 0; i < paginated.items.length; i++) ...[
                             if (i > 0)
                               const Divider(height: 1, color: _cardBorder),
-                            _buildRow(paginated.items[i]),
+                            _buildRow(context, ref, paginated.items[i]),
                           ],
                         ],
                       ),
@@ -153,7 +162,11 @@ class PaymentInTable extends ConsumerWidget {
     );
   }
 
-  Widget _buildRow(PaymentInModel record) {
+  Widget _buildRow(
+    BuildContext context,
+    WidgetRef ref,
+    PaymentInModel record,
+  ) {
     return _TableDataRow(
       children: [
         _TableCell(
@@ -206,13 +219,36 @@ class PaymentInTable extends ConsumerWidget {
         _TableCell(
           width: _actionsColWidth,
           gapAfter: 0,
-          child: IconButton(
-            onPressed: () => debugPrint('More ${record.receiptNo}'),
-            icon: const Icon(Icons.more_vert, size: 18),
-            color: AppColors.textSecondary,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            tooltip: 'More',
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () => VoucherPrintActions.previewPaymentIn(
+                  context,
+                  ref,
+                  record.id,
+                  filename: VoucherPrintActions.filenameFor(record.receiptNo),
+                ),
+                icon: const Icon(Icons.print_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Print / Preview',
+              ),
+              IconButton(
+                onPressed: () => VoucherPrintActions.sharePaymentIn(
+                  context,
+                  ref,
+                  record.id,
+                  filename: VoucherPrintActions.filenameFor(record.receiptNo),
+                ),
+                icon: const Icon(Icons.share_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Share',
+              ),
+            ],
           ),
         ),
       ],

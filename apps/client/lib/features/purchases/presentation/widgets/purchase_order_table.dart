@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/purchase_order_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_order_status_badge.dart';
@@ -106,6 +108,10 @@ class PurchaseOrderTable extends ConsumerWidget {
                     ),
                     style: const TextStyle(fontSize: 13),
                   ),
+                ),
+                _XlsChip(
+                  onTap: () =>
+                      ModuleExportActions.exportPurchaseOrders(context, ref),
                 ),
                 IconButton(
                   onPressed: notifier.refresh,
@@ -239,31 +245,31 @@ class PurchaseOrderTable extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Tooltip(
-                message: 'Share',
-                child: ShareMenuButton(
-                  overlayOffset: const Offset(0, 4),
-                  targetAnchor: Alignment.bottomRight,
-                  followerAnchor: Alignment.topRight,
-                  onChannelSelected: (channel) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${channel.label} ${order.orderNo} coming soon',
-                        ),
-                      ),
-                    );
-                  },
-                  child: const SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: Icon(
-                      Icons.share_outlined,
-                      size: 18,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
+              IconButton(
+                onPressed: () => DocumentPrintActions.preview(
+                  context,
+                  ref,
+                  PrintRequest.purchaseOrder(order.id),
+                  filename: DocumentPrintActions.filenameFor(order.orderNo),
                 ),
+                icon: const Icon(Icons.print_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Print',
+              ),
+              IconButton(
+                onPressed: () => DocumentPrintActions.share(
+                  context,
+                  ref,
+                  PrintRequest.purchaseOrder(order.id),
+                  filename: DocumentPrintActions.filenameFor(order.orderNo),
+                ),
+                icon: const Icon(Icons.share_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Share',
               ),
               IconButton(
                 onPressed: () => _showOrderActions(context, ref, order),
@@ -572,6 +578,41 @@ class _PageNumber extends StatelessWidget {
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _XlsChip extends StatelessWidget {
+  const _XlsChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: const Text(
+            'xls',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E7D32),
+            ),
           ),
         ),
       ),

@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
+import 'package:billing_baba/features/sales/models/credit_note_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/credit_note_footer.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/credit_note_line_items_table.dart';
@@ -242,14 +244,25 @@ class _BottomActionBar extends ConsumerWidget {
             child: const Text('Cancel', style: TextStyle(fontSize: 13)),
           ),
           const SizedBox(width: AppSpacing.sm),
-          ShareMenuButton(
-            onChannelSelected: (channel) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${channel.label} coming soon')),
-              );
-            },
-          ),
-          const SizedBox(width: AppSpacing.sm),
+          if (form.documentId != null) ...[
+            OutlinedButton.icon(
+              onPressed: () => _handlePrintPreview(context, ref, form),
+              icon: const Icon(Icons.print_outlined, size: 16),
+              label: const Text('Print / Preview', style: TextStyle(fontSize: 13)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                side: const BorderSide(color: _cardBorder),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            IconButton(
+              onPressed: () => _handleShare(context, ref, form),
+              icon: const Icon(Icons.share_outlined, size: 20),
+              color: AppColors.textSecondary,
+              tooltip: 'Share PDF',
+            ),
+            const SizedBox(width: AppSpacing.sm),
+          ],
           FilledButton(
             onPressed: form.isSaving
                 ? null
@@ -311,6 +324,36 @@ class _BottomActionBar extends ConsumerWidget {
       const SnackBar(content: Text('Credit note saved successfully')),
     );
     context.go(AppRoutes.saleReturnCreditNote);
+  }
+
+  Future<void> _handlePrintPreview(
+    BuildContext context,
+    WidgetRef ref,
+    CreditNoteFormState form,
+  ) async {
+    final docId = form.documentId;
+    if (docId == null) return;
+    await DocumentPrintActions.preview(
+      context,
+      ref,
+      PrintRequest.creditNote(docId),
+      filename: DocumentPrintActions.filenameFor(form.returnNo),
+    );
+  }
+
+  Future<void> _handleShare(
+    BuildContext context,
+    WidgetRef ref,
+    CreditNoteFormState form,
+  ) async {
+    final docId = form.documentId;
+    if (docId == null) return;
+    await DocumentPrintActions.share(
+      context,
+      ref,
+      PrintRequest.creditNote(docId),
+      filename: DocumentPrintActions.filenameFor(form.returnNo),
+    );
   }
 }
 

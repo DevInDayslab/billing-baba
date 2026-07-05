@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/purchase_return_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_status_badge.dart';
@@ -100,9 +102,17 @@ class PurchaseReturnTable extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
-                _XlsChip(onTap: () => debugPrint('Export xls tapped')),
+                _XlsChip(
+                  onTap: () => ModuleExportActions.exportDebitNotes(context, ref),
+                ),
                 IconButton(
-                  onPressed: () => debugPrint('Print tapped'),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Use row actions to print a debit note'),
+                      ),
+                    );
+                  },
                   icon: const Icon(Icons.print_outlined, size: 20),
                   color: AppColors.textSecondary,
                   tooltip: 'Print',
@@ -272,38 +282,30 @@ class PurchaseReturnTable extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                onPressed: () => debugPrint('Print ${item.debitNoteNo}'),
+                onPressed: () => DocumentPrintActions.preview(
+                  context,
+                  ref,
+                  PrintRequest.debitNote(item.id),
+                  filename: DocumentPrintActions.filenameFor(item.debitNoteNo),
+                ),
                 icon: const Icon(Icons.print_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 tooltip: 'Print',
               ),
-              Tooltip(
-                message: 'Share',
-                child: ShareMenuButton(
-                  overlayOffset: const Offset(0, 4),
-                  targetAnchor: Alignment.bottomRight,
-                  followerAnchor: Alignment.topRight,
-                  onChannelSelected: (channel) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${channel.label} ${item.debitNoteNo} coming soon',
-                        ),
-                      ),
-                    );
-                  },
-                  child: const SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: Icon(
-                      Icons.share_outlined,
-                      size: 18,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
+              IconButton(
+                onPressed: () => DocumentPrintActions.share(
+                  context,
+                  ref,
+                  PrintRequest.debitNote(item.id),
+                  filename: DocumentPrintActions.filenameFor(item.debitNoteNo),
                 ),
+                icon: const Icon(Icons.share_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Share',
               ),
               IconButton(
                 onPressed: () => _showReturnActions(context, ref, item),
