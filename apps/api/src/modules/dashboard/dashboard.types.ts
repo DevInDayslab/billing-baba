@@ -59,13 +59,26 @@ export type DashboardCharts = {
   };
 };
 
+export type DashboardRecentTransactionType =
+  | 'sale'
+  | 'purchase'
+  | 'payment_in'
+  | 'payment_out'
+  | 'expense'
+  | 'sale_return'
+  | 'purchase_return'
+  | 'opening';
+
 export type DashboardRecentTransaction = {
   id: string;
-  type: 'sale' | 'purchase' | 'payment' | 'expense';
+  type: DashboardRecentTransactionType;
+  reference_id: string | null;
+  reference_type: string | null;
   reference_number: string | null;
   party_name: string | null;
   amount: string;
   date: string;
+  direction?: 'received' | 'paid';
 };
 
 export type DashboardQuickReport = {

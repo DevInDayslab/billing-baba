@@ -5,6 +5,7 @@ import { parties } from '../../db/schema/crm/tables';
 import { users } from '../../db/schema/identity/tables';
 import { expenses, purchaseDocuments } from '../../db/schema/purchases/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
+import { OutstandingRepository } from '../accounting/outstanding.repository';
 import type {
   ListPartiesParams,
   PartyInsertValues,
@@ -39,7 +40,11 @@ type PartyRow = {
 };
 
 export class PartyRepository {
-  constructor(private readonly db: Database) {}
+  private readonly outstandingRepository: OutstandingRepository;
+
+  constructor(private readonly db: Database) {
+    this.outstandingRepository = new OutstandingRepository(db);
+  }
 
   async hasBusinessMembership(
     businessId: string,
@@ -69,6 +74,30 @@ export class PartyRepository {
     const conditions = [
       eq(parties.businessId, businessId),
       eq(parties.mobile, mobile),
+      eq(parties.isDeleted, false),
+    ];
+
+    if (excludePartyId) {
+      conditions.push(ne(parties.id, excludePartyId));
+    }
+
+    const [row] = await this.db
+      .select({ id: parties.id })
+      .from(parties)
+      .where(and(...conditions))
+      .limit(1);
+
+    return row?.id ?? null;
+  }
+
+  async findActiveGstinConflict(
+    businessId: string,
+    gstin: string,
+    excludePartyId?: string,
+  ): Promise<string | null> {
+    const conditions = [
+      eq(parties.businessId, businessId),
+      eq(parties.gstin, gstin),
       eq(parties.isDeleted, false),
     ];
 
@@ -160,8 +189,10 @@ export class PartyRepository {
       .limit(params.limit)
       .offset(offset);
 
+    const balanceMap = await this.loadBalanceMap(params.businessId);
+
     return {
-      rows: rows.map((row) => this.toRecord(row)),
+      rows: rows.map((row) => this.toRecord(row, balanceMap.get(row.id))),
       total,
     };
   }
@@ -199,7 +230,14 @@ export class PartyRepository {
       )
       .limit(1);
 
-    return row ? this.toRecord(row) : null;
+    if (!row) return null;
+
+    const balance = await this.outstandingRepository.getPartyBalance(
+      businessId,
+      partyId,
+    );
+
+    return this.toRecord(row, balance ?? undefined);
   }
 
   async create(values: PartyInsertValues): Promise<PartyRecord> {
@@ -246,7 +284,7 @@ export class PartyRepository {
       throw new Error('Failed to create party');
     }
 
-    return this.toRecord(row);
+    return this.toRecord(row, values.openingBalance);
   }
 
   async update(
@@ -314,7 +352,14 @@ export class PartyRepository {
         updatedAt: parties.updatedAt,
       });
 
-    return row ? this.toRecord(row) : null;
+    if (!row) return null;
+
+    const balance = await this.outstandingRepository.getPartyBalance(
+      businessId,
+      partyId,
+    );
+
+    return this.toRecord(row, balance ?? undefined);
   }
 
   async softDelete(
@@ -410,8 +455,17 @@ export class PartyRepository {
     );
   }
 
-  private toRecord(row: PartyRow): PartyRecord {
+  private async loadBalanceMap(
+    businessId: string,
+  ): Promise<Map<string, string>> {
+    const balances =
+      await this.outstandingRepository.listPartyBalances(businessId);
+    return new Map(balances.map((row) => [row.party_id, row.balance]));
+  }
+
+  private toRecord(row: PartyRow, balance?: string): PartyRecord {
     const openingBalance = row.openingBalance ?? '0';
+    const ledgerBalance = balance ?? openingBalance;
 
     return {
       id: row.id,
@@ -427,7 +481,7 @@ export class PartyRepository {
       area_id: row.areaId,
       credit_limit: row.creditLimit,
       opening_balance: openingBalance,
-      balance: openingBalance,
+      balance: ledgerBalance,
       is_active: row.isActive,
       notes: row.notes,
       created_at: row.createdAt.toISOString(),

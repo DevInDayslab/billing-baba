@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
@@ -190,17 +191,20 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                             label: 'Party *',
                             hasError:
                                 form.showValidationErrors &&
-                                form.party.trim().isEmpty,
+                                (form.partyId == null ||
+                                    form.partyId!.isEmpty),
                             child: BillingNamePartySearchField(
                               value: form.party,
+                              partyTypeFilter: PartyTypeFilter.supplier,
                               emptyPlaceholder: 'Select Party',
                               onSelected: notifier.updateParty,
                               onPartySelectedWithId: (partyId, name) =>
                                   notifier.updateParty(name, partyId: partyId),
                               hasError:
                                   form.showValidationErrors &&
-                                  form.party.trim().isEmpty,
-                              errorMessage: 'Party is required',
+                                  (form.partyId == null ||
+                                      form.partyId!.isEmpty),
+                              errorMessage: 'Please select a supplier',
                             ),
                           ),
                           const SizedBox(height: _sectionGap),

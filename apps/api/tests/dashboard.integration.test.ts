@@ -70,6 +70,44 @@ describe.skipIf(!canRun)('Dashboard API integration', () => {
       expect(body.data.recent_transactions).toBeInstanceOf(Array);
       expect(body.data.quick_reports).toBeInstanceOf(Array);
       expect(body.data.alerts).toEqual([]);
+
+      const overview = body.data.overview as {
+        total_receivable: string;
+        total_payable: string;
+      };
+      const finance = body.data.finance as {
+        cash_in: string;
+        cash_out: string;
+        expenses: string;
+      };
+      expect(Number(overview.total_receivable)).toBeGreaterThanOrEqual(0);
+      expect(Number(overview.total_payable)).toBeGreaterThanOrEqual(0);
+      expect(Number(finance.cash_in)).toBeGreaterThanOrEqual(0);
+      expect(Number(finance.cash_out)).toBeGreaterThanOrEqual(0);
+
+      const recent = body.data.recent_transactions as {
+        type: string;
+        reference_id?: string | null;
+        reference_type?: string | null;
+        date: string;
+      }[];
+      if (recent.length > 1) {
+        const first = new Date(recent[0]!.date).getTime();
+        const second = new Date(recent[1]!.date).getTime();
+        expect(first).toBeGreaterThanOrEqual(second);
+      }
+      for (const row of recent) {
+        expect([
+          'sale',
+          'purchase',
+          'payment_in',
+          'payment_out',
+          'expense',
+          'sale_return',
+          'purchase_return',
+          'opening',
+        ]).toContain(row.type);
+      }
     },
     testTimeout,
   );

@@ -77,6 +77,14 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     }
   }
 
+  Future<void> duplicateDocument(String documentId) async {
+    await loadDocument(documentId);
+    state = state.copyWith(
+      challanNo: '',
+      isFormOpen: true,
+    );
+  }
+
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
     final inventory = ref.read(inventoryItemsProvider).value ?? [];
     final itemNames = {for (final item in inventory) item.id: item.name};

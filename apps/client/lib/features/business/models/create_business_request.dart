@@ -45,6 +45,7 @@ class BusinessDetailDto {
     this.email,
     this.stateCode,
     this.address,
+    this.ownerName,
     this.isShared = false,
   });
 
@@ -58,6 +59,7 @@ class BusinessDetailDto {
       email: json['email'] as String?,
       stateCode: json['state_code'] as String?,
       address: json['address'] as String?,
+      ownerName: json['owner_name'] as String?,
       isShared: json['is_shared'] as bool? ?? false,
     );
   }
@@ -70,5 +72,6 @@ class BusinessDetailDto {
   final String? email;
   final String? stateCode;
   final String? address;
+  final String? ownerName;
   final bool isShared;
 }

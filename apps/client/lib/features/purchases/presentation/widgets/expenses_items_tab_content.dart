@@ -34,6 +34,7 @@ class ExpensesItemsTabContent extends ConsumerWidget {
     final selectedId = ref.watch(selectedExpenseItemIdProvider);
 
     return transactionsAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => Center(
         child: Padding(

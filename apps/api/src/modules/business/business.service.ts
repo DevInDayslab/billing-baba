@@ -87,4 +87,15 @@ export class BusinessService {
       throw error;
     }
   }
+
+  async deleteBusiness(businessId: string, accountId: string): Promise<void> {
+    const deleted = await this.repository.softDelete(businessId, accountId);
+    if (!deleted) {
+      throw new AppError(
+        'BUSINESS_NOT_FOUND',
+        'Business not found or you do not have access',
+        404,
+      );
+    }
+  }
 }

@@ -1,15 +1,62 @@
-import 'package:billing_baba/features/parties/application/party_service.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 
-const defaultPartyGroups = <String>[];
+import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/providers/parties_providers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final partyGroupsProvider = NotifierProvider<PartyGroups, List<String>>(
   PartyGroups.new,
 );
 
 class PartyGroups extends Notifier<List<String>> {
+  var _loadedFromStorage = false;
+
   @override
-  List<String> build() => List.of(defaultPartyGroups);
+  List<String> build() {
+    ref.listen(partiesListProvider, (previous, next) {
+      scheduleMicrotask(() => _mergeFromParties(next));
+    });
+
+    if (!_loadedFromStorage) {
+      _loadedFromStorage = true;
+      scheduleMicrotask(_loadFromStorage);
+    }
+
+    return const [];
+  }
+
+  Future<void> _loadFromStorage() async {
+    if (!ref.mounted) return;
+
+    try {
+      final service = await ref.read(partyServiceProvider.future);
+      final stored = await service.readPartyGroupNames();
+      if (!ref.mounted) return;
+
+      if (stored.isNotEmpty) {
+        state = _sortedUnique([...stored, ...state]);
+      }
+      _mergeFromParties(ref.read(partiesListProvider));
+    } on Object {
+      // Keep empty list; groups can still be added manually.
+    }
+  }
+
+  void _mergeFromParties(List<PartyModel> parties) {
+    if (!ref.mounted) return;
+
+    final merged = <String>{...state};
+    for (final party in parties) {
+      final group = party.partyGroup.trim();
+      if (group.isNotEmpty) merged.add(group);
+    }
+    final next = _sortedUnique(merged);
+    if (!_listsEqual(next, state)) {
+      state = next;
+      unawaited(_persist());
+    }
+  }
 
   bool addGroup(String name) {
     final trimmed = name.trim();
@@ -18,7 +65,8 @@ class PartyGroups extends Notifier<List<String>> {
       (group) => group.toLowerCase() == trimmed.toLowerCase(),
     );
     if (exists) return false;
-    state = [...state, trimmed];
+    state = _sortedUnique([...state, trimmed]);
+    unawaited(_persist());
     return true;
   }
 
@@ -35,6 +83,7 @@ class PartyGroups extends Notifier<List<String>> {
       for (final group in state) group == oldName ? trimmed : group,
     ];
     ref.read(partyListProvider.notifier).renamePartyGroup(oldName, trimmed);
+    unawaited(_persist());
     return true;
   }
 
@@ -42,6 +91,35 @@ class PartyGroups extends Notifier<List<String>> {
     if (!state.contains(name)) return false;
     state = state.where((group) => group != name).toList();
     ref.read(partyListProvider.notifier).clearPartyGroup(name);
+    unawaited(_persist());
+    return true;
+  }
+
+  Future<void> _persist() async {
+    if (!ref.mounted) return;
+    try {
+      final service = await ref.read(partyServiceProvider.future);
+      await service.savePartyGroupNames(state);
+    } on Object {
+      // Ignore persistence errors; groups remain in memory.
+    }
+  }
+
+  List<String> _sortedUnique(Iterable<String> names) {
+    final unique = <String>{};
+    for (final name in names) {
+      final trimmed = name.trim();
+      if (trimmed.isNotEmpty) unique.add(trimmed);
+    }
+    return unique.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+  }
+
+  bool _listsEqual(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
     return true;
   }
 }

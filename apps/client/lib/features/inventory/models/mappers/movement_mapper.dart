@@ -2,30 +2,102 @@ import 'package:billing_baba/features/inventory/models/dto/movement_dto.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 
 abstract final class MovementMapper {
+  static final _uuidPattern = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+    caseSensitive: false,
+  );
+
   static ProductTransaction toProductTransaction(MovementDto dto) {
     final qty = double.tryParse(dto.quantityDelta) ?? 0;
-    final inboundTypes = {'purchase', 'sales_return', 'opening'};
+    final isInbound = _isInboundMovement(dto.movementType, qty);
+    final documentLabel = _documentLabel(dto.movementType);
+    final referenceNo = _formatReferenceNo(dto.referenceId, dto.referenceType);
+
     return ProductTransaction(
       id: dto.id,
       itemId: dto.itemId,
-      typeLabel: _formatMovementType(dto.movementType),
-      invoiceRefNo: dto.referenceId ?? '-',
+      typeLabel: documentLabel,
+      documentLabel: documentLabel,
+      transactionType: _transactionTypeLabel(dto.movementType),
+      invoiceRefNo: referenceNo,
+      referenceNo: referenceNo,
       partyName: '-',
       date: DateTime.tryParse(dto.createdAt) ?? DateTime.now(),
       quantity: qty.abs(),
       pricePerUnit: double.tryParse(dto.costPerUnit ?? '') ?? 0,
-      status: dto.referenceType ?? 'Completed',
-      isInbound: inboundTypes.contains(dto.movementType),
+      status: 'Completed',
+      isInbound: isInbound,
+      godownName: dto.godownName,
     );
   }
 
-  static String _formatMovementType(String type) {
-    return type
+  static bool _isInboundMovement(String movementType, double quantityDelta) {
+    return switch (movementType) {
+      'purchase' || 'sales_return' || 'opening' => true,
+      'sale' || 'purchase_return' || 'challan' => false,
+      'adjustment' => quantityDelta >= 0,
+      _ => quantityDelta >= 0,
+    };
+  }
+
+  static String _documentLabel(String movementType) {
+    return switch (movementType) {
+      'opening' => 'Opening Stock',
+      'purchase' => 'Purchase Bill',
+      'sale' => 'Sale Invoice',
+      'sales_return' => 'Sales Return',
+      'purchase_return' => 'Purchase Return',
+      'challan' => 'Delivery Challan',
+      'adjustment' => 'Stock Adjustment',
+      'transfer' => 'Transfer',
+      'damage' => 'Damage',
+      'manual_adjustment' => 'Manual Adjustment',
+      'sales_document' => 'Sale Invoice',
+      'purchase_document' => 'Purchase Bill',
+      _ => _humanizeToken(movementType),
+    };
+  }
+
+  static String _transactionTypeLabel(String movementType) {
+    return switch (movementType) {
+      'opening' => 'Opening',
+      'purchase' => 'Purchase',
+      'sale' => 'Sale',
+      'sales_return' => 'Return',
+      'purchase_return' => 'Return',
+      'challan' => 'Challan',
+      'adjustment' => 'Adjustment',
+      'transfer' => 'Transfer',
+      'damage' => 'Damage',
+      'manual_adjustment' => 'Adjustment',
+      'sales_document' => 'Sale',
+      'purchase_document' => 'Purchase',
+      _ => _humanizeToken(movementType),
+    };
+  }
+
+  static String _formatReferenceNo(String? referenceId, String? referenceType) {
+    if (referenceId == null || referenceId.trim().isEmpty) {
+      return '-';
+    }
+
+    if (_uuidPattern.hasMatch(referenceId.trim())) {
+      return '-';
+    }
+
+    if (referenceType != null && _uuidPattern.hasMatch(referenceType.trim())) {
+      return referenceId;
+    }
+
+    return referenceId;
+  }
+
+  static String _humanizeToken(String value) {
+    return value
         .split('_')
+        .where((part) => part.isNotEmpty)
         .map(
-          (part) => part.isEmpty
-              ? part
-              : '${part[0].toUpperCase()}${part.substring(1)}',
+          (part) => '${part[0].toUpperCase()}${part.substring(1)}',
         )
         .join(' ');
   }

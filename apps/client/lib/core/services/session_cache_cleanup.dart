@@ -39,6 +39,7 @@ class SessionCacheCleanup {
         key.startsWith('${StorageKeys.partyLocalExtensions}_') ||
         key.startsWith('${StorageKeys.pendingPartyOperations}_') ||
         key.startsWith('${StorageKeys.partyListFilter}_') ||
-        key.startsWith('${StorageKeys.selectedPartyId}_');
+        key.startsWith('${StorageKeys.selectedPartyId}_') ||
+        key.startsWith('${StorageKeys.partyGroupNames}_');
   }
 }

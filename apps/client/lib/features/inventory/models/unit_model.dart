@@ -63,3 +63,26 @@ class InventoryUnit {
     );
   }
 }
+
+/// Picks a sensible default unit for service items when the user cannot choose one.
+InventoryUnit? resolveDefaultServiceUnit(List<InventoryUnit> units) {
+  if (units.isEmpty) return null;
+
+  final byShortName = {
+    for (final unit in units) unit.shortName.toLowerCase(): unit,
+  };
+
+  for (final shortName in ['svc', 'pcs']) {
+    final unit = byShortName[shortName];
+    if (unit != null) return unit;
+  }
+
+  for (final unit in units) {
+    final fullName = unit.fullName.toLowerCase();
+    if (fullName.contains('service') || fullName == 'piece') {
+      return unit;
+    }
+  }
+
+  return units.first;
+}

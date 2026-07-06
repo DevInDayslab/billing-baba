@@ -22,9 +22,10 @@ const _sectionGap = 16.0;
 const _addressFieldLines = 4;
 
 class AddSalePage extends ConsumerWidget {
-  const AddSalePage({this.invoiceId, super.key});
+  const AddSalePage({this.invoiceId, this.readOnly = false, super.key});
 
   final String? invoiceId;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,27 +64,50 @@ class AddSalePage extends ConsumerWidget {
                       _sectionGap,
                       0,
                     ),
-                    child: _PageHeader(invoiceId: invoiceId),
+                    child: _PageHeader(
+                      invoiceId: invoiceId,
+                      readOnly: readOnly,
+                    ),
                   ),
                   const SizedBox(height: _sectionGap),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: _sectionGap,
                     ),
-                    child: _FormFields(invoiceId: invoiceId),
+                    child: IgnorePointer(
+                      ignoring: readOnly,
+                      child: Opacity(
+                        opacity: readOnly ? 0.85 : 1,
+                        child: _FormFields(invoiceId: invoiceId),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: _sectionGap),
-                  SaleLineItemsTable(
-                    invoiceId: invoiceId,
-                    embedded: true,
+                  IgnorePointer(
+                    ignoring: readOnly,
+                    child: Opacity(
+                      opacity: readOnly ? 0.85 : 1,
+                      child: SaleLineItemsTable(
+                        invoiceId: invoiceId,
+                        embedded: true,
+                      ),
+                    ),
                   ),
                   const Divider(height: 1, color: _cardBorder),
                   Padding(
                     padding: const EdgeInsets.all(_sectionGap),
-                    child: AddSaleFooter(invoiceId: invoiceId),
+                    child: IgnorePointer(
+                      ignoring: readOnly,
+                      child: Opacity(
+                        opacity: readOnly ? 0.85 : 1,
+                        child: AddSaleFooter(invoiceId: invoiceId),
+                      ),
+                    ),
                   ),
-                  const Divider(height: 1, color: _cardBorder),
-                  _BottomActionBar(invoiceId: invoiceId),
+                  if (!readOnly) ...[
+                    const Divider(height: 1, color: _cardBorder),
+                    _BottomActionBar(invoiceId: invoiceId),
+                  ],
                 ],
               ),
             ),
@@ -95,9 +119,10 @@ class AddSalePage extends ConsumerWidget {
 }
 
 class _PageHeader extends ConsumerWidget {
-  const _PageHeader({this.invoiceId});
+  const _PageHeader({this.invoiceId, this.readOnly = false});
 
   final String? invoiceId;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -109,7 +134,9 @@ class _PageHeader extends ConsumerWidget {
     return Row(
       children: [
         Text(
-          invoiceId == null ? 'Sale' : 'Edit Sale',
+          readOnly
+              ? 'View Sale'
+              : (invoiceId == null ? 'Sale' : 'Edit Sale'),
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -117,34 +144,45 @@ class _PageHeader extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.md),
-        _SaleTypeToggle(
-          saleType: form.saleType,
-          onChanged: notifier.toggleSaleType,
-        ),
+        if (!readOnly)
+          _SaleTypeToggle(
+            saleType: form.saleType,
+            onChanged: notifier.toggleSaleType,
+          ),
         const Spacer(),
-        OutlinedButton.icon(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Import Challan coming soon')),
-            );
-          },
-          icon: const Icon(Icons.upload_file_outlined, size: 16),
-          label: const Text('Import Challan', style: TextStyle(fontSize: 13)),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            backgroundColor: const Color(0xFFE8F0FE),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            side: const BorderSide(color: Color(0xFF90CAF9)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
+        if (!readOnly)
+          Tooltip(
+            message: 'Coming soon',
+            child: OutlinedButton.icon(
+              onPressed: null,
+              icon: const Icon(Icons.upload_file_outlined, size: 16),
+              label: const Text(
+                'Import Challan',
+                style: TextStyle(fontSize: 13),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                backgroundColor: const Color(0xFFE8F0FE),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                side: const BorderSide(color: Color(0xFF90CAF9)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        _GodownSelector(
-          value: form.godown,
-          onSelected: notifier.updateGodown,
-        ),
+        if (!readOnly) const SizedBox(width: AppSpacing.md),
+        if (!readOnly)
+          _GodownSelector(
+            value: form.godown,
+            onSelected: notifier.updateGodown,
+          ),
+        if (readOnly) ...[
+          OutlinedButton(
+            onPressed: () => context.pop(),
+            child: const Text('Back'),
+          ),
+        ],
       ],
     );
   }
@@ -482,6 +520,7 @@ class _BottomActionBar extends ConsumerWidget {
     final notifier = ref.read(
       addSaleFormProvider(invoiceId: invoiceId).notifier,
     );
+    final isSaving = form.isSaving;
     final isCash = form.saleType == SaleType.cash;
 
     return Padding(
@@ -491,9 +530,11 @@ class _BottomActionBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          if (!isCash) ...[
+          if (!isCash)
             OutlinedButton.icon(
-              onPressed: () => _handlePrintPreview(context, ref),
+              onPressed: isSaving
+                  ? null
+                  : () => _handlePrintPreview(context, ref),
               icon: const Icon(Icons.print_outlined, size: 16),
               label: const Text(
                 'Print / Preview',
@@ -507,21 +548,29 @@ class _BottomActionBar extends ConsumerWidget {
                 side: const BorderSide(color: _cardBorder),
               ),
             ),
-            const Spacer(),
-            OutlinedButton(
-              onPressed: () => _handleCancel(context, ref),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                side: const BorderSide(color: _cardBorder),
+          const Spacer(),
+          OutlinedButton(
+            onPressed: isSaving ? null : () => _handleCancel(context, ref),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
               ),
-              child: const Text('Cancel', style: TextStyle(fontSize: 13)),
+              side: const BorderSide(color: _cardBorder),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            child: const Text('Cancel', style: TextStyle(fontSize: 13)),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          if (isCash)
+            _SaveSplitButton(
+              isSaving: isSaving,
+              onSave: () => _handleSave(context, ref, notifier),
+              onSaveAndPrint: () => _handleSaveAndPrint(context, ref),
+              onSaveAndShare: () => _handleSaveAndShare(context, ref),
+            )
+          else
             FilledButton(
-              onPressed: () => _handleSave(context, ref, notifier),
+              onPressed: isSaving ? null : () => _handleSave(context, ref, notifier),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -530,16 +579,24 @@ class _BottomActionBar extends ConsumerWidget {
                   vertical: 8,
                 ),
               ),
-              child: const Text('Save', style: TextStyle(fontSize: 13)),
+              child: isSaving
+                  ? const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Text('Saving...', style: TextStyle(fontSize: 13)),
+                      ],
+                    )
+                  : const Text('Save', style: TextStyle(fontSize: 13)),
             ),
-          ] else ...[
-            const Spacer(),
-            _SaveSplitButton(
-              onSave: () => _handleSave(context, ref, notifier),
-              onSaveAndPrint: () => _handleSaveAndPrint(context, ref),
-              onSaveAndShare: () => _handleSaveAndShare(context, ref),
-            ),
-          ],
         ],
       ),
     );
@@ -604,6 +661,9 @@ class _BottomActionBar extends ConsumerWidget {
     final notifier = ref.read(
       addSaleFormProvider(invoiceId: invoiceId).notifier,
     );
+    final form = ref.read(addSaleFormProvider(invoiceId: invoiceId));
+    if (form.isSaving) return;
+
     final error = await notifier.saveInvoice();
     if (!context.mounted) return;
     if (error != null) {
@@ -612,21 +672,29 @@ class _BottomActionBar extends ConsumerWidget {
       );
       return;
     }
-    final form = ref.read(addSaleFormProvider(invoiceId: invoiceId));
-    final docId = form.documentId;
-    if (docId == null) return;
+    _showSaveSuccessSnackBar(context, invoiceId);
+    final saved = ref.read(addSaleFormProvider(invoiceId: invoiceId));
+    final docId = saved.documentId;
+    if (docId == null) {
+      context.pop();
+      return;
+    }
     await SaleInvoicePrintActions.print(
       context,
       ref,
       docId,
-      filename: _filename(form),
+      filename: _filename(saved),
     );
+    if (context.mounted) context.pop();
   }
 
   Future<void> _handleSaveAndShare(BuildContext context, WidgetRef ref) async {
     final notifier = ref.read(
       addSaleFormProvider(invoiceId: invoiceId).notifier,
     );
+    final form = ref.read(addSaleFormProvider(invoiceId: invoiceId));
+    if (form.isSaving) return;
+
     final error = await notifier.saveInvoice();
     if (!context.mounted) return;
     if (error != null) {
@@ -635,14 +703,28 @@ class _BottomActionBar extends ConsumerWidget {
       );
       return;
     }
-    final form = ref.read(addSaleFormProvider(invoiceId: invoiceId));
-    final docId = form.documentId;
-    if (docId == null) return;
+    _showSaveSuccessSnackBar(context, invoiceId);
+    final saved = ref.read(addSaleFormProvider(invoiceId: invoiceId));
+    final docId = saved.documentId;
+    if (docId == null) {
+      context.pop();
+      return;
+    }
     await SaleInvoicePrintActions.share(
       context,
       ref,
       docId,
-      filename: _filename(form),
+      filename: _filename(saved),
+    );
+    if (context.mounted) context.pop();
+  }
+
+  void _showSaveSuccessSnackBar(BuildContext context, String? editingId) {
+    final message = editingId == null
+        ? 'Sale created successfully.'
+        : 'Sale updated successfully.';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
@@ -651,6 +733,9 @@ class _BottomActionBar extends ConsumerWidget {
     WidgetRef ref,
     AddSaleForm notifier,
   ) async {
+    final form = ref.read(addSaleFormProvider(invoiceId: invoiceId));
+    if (form.isSaving) return;
+
     final error = await notifier.saveInvoice();
     if (!context.mounted) return;
 
@@ -661,10 +746,8 @@ class _BottomActionBar extends ConsumerWidget {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Invoice saved successfully')),
-    );
-    context.go(AppRoutes.saleInvoices);
+    _showSaveSuccessSnackBar(context, invoiceId);
+    context.pop();
   }
 }
 
@@ -797,11 +880,13 @@ class _PickerField extends StatelessWidget {
 /// Vyapar-style Save button with a dropdown for Save & Print / Share.
 class _SaveSplitButton extends StatelessWidget {
   const _SaveSplitButton({
+    required this.isSaving,
     required this.onSave,
     required this.onSaveAndPrint,
     required this.onSaveAndShare,
   });
 
+  final bool isSaving;
   final VoidCallback onSave;
   final VoidCallback onSaveAndPrint;
   final VoidCallback onSaveAndShare;
@@ -813,7 +898,7 @@ class _SaveSplitButton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           FilledButton(
-            onPressed: onSave,
+            onPressed: isSaving ? null : onSave,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -825,11 +910,29 @@ class _SaveSplitButton extends StatelessWidget {
                 ),
               ),
             ),
-            child: const Text('Save', style: TextStyle(fontSize: 13)),
+            child: isSaving
+                ? const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text('Saving...', style: TextStyle(fontSize: 13)),
+                    ],
+                  )
+                : const Text('Save', style: TextStyle(fontSize: 13)),
           ),
           Container(width: 1, color: Colors.white38),
           PopupMenuButton<String>(
+            enabled: !isSaving,
             onSelected: (value) {
+              if (isSaving) return;
               if (value == 'save') {
                 onSave();
               } else if (value == 'Save & Print') {

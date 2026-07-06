@@ -101,12 +101,13 @@ class _SaleInvoiceFilterBarState extends ConsumerState<SaleInvoiceFilterBar> {
                 showSearchField: true,
                 onSelected: filtersNotifier.setUser,
               ),
-              SaleFilterDropdown(
-                label: filters.selectedGodown,
-                options: const ['All Godown', 'Main Location'],
-                selected: filters.selectedGodown,
-                onSelected: filtersNotifier.setGodown,
-              ),
+              // Phase 1: single warehouse — godown filter hidden.
+              // SaleFilterDropdown(
+              //   label: filters.selectedGodown,
+              //   options: const ['All Godown', 'Main Location'],
+              //   selected: filters.selectedGodown,
+              //   onSelected: filtersNotifier.setGodown,
+              // ),
               SaleFilterDropdown(
                 label: filters.selectedStatus,
                 options: const [

@@ -10,6 +10,10 @@ export async function registerSwaggerUiPlugin(
       docExpansion: 'list',
       deepLinking: true,
       persistAuthorization: true,
+      displayRequestDuration: true,
+      filter: true,
+      tryItOutEnabled: true,
+      syntaxHighlight: { activate: true, theme: 'monokai' },
     },
     staticCSP: true,
   });

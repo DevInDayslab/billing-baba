@@ -72,6 +72,14 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     }
   }
 
+  Future<void> duplicateDocument(String documentId) async {
+    await loadDocument(documentId);
+    state = state.copyWith(
+      orderNo: '',
+      isFormOpen: true,
+    );
+  }
+
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
     final inventory = ref.read(inventoryItemsProvider).value ?? [];
     final itemNames = {for (final item in inventory) item.id: item.name};

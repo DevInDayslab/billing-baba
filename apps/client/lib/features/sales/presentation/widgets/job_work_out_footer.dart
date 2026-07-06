@@ -47,12 +47,20 @@ class JobWorkOutFooter extends ConsumerWidget {
         ),
         const SizedBox(width: 16),
         SizedBox(
-          width: 220,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 24),
-              Row(
+          width: 240,
+          child: Card(
+            elevation: 0,
+            color: const Color(0xFFFAFAFA),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(color: Color(0xFFE0E0E0)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.md,
+              ),
+              child: Row(
                 children: [
                   const Text(
                     'Grand Total',
@@ -72,7 +80,7 @@ class JobWorkOutFooter extends ConsumerWidget {
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ],
@@ -84,12 +92,9 @@ class JobWorkOutFooter extends ConsumerWidget {
     JobWorkOutFormNotifier notifier,
     int currentCount,
   ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add image',
-      defaultName: 'image_${currentCount + 1}.png',
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Image attachments coming soon.')),
     );
-    if (attachment != null) notifier.addImage(attachment);
   }
 
   Future<void> _promptAddDocument(
@@ -97,11 +102,8 @@ class JobWorkOutFooter extends ConsumerWidget {
     JobWorkOutFormNotifier notifier,
     int currentCount,
   ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add document',
-      defaultName: 'document_${currentCount + 1}.pdf',
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Document attachments coming soon.')),
     );
-    if (attachment != null) notifier.addDocument(attachment);
   }
 }

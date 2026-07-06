@@ -73,6 +73,9 @@ class _SaleOrderPageState extends ConsumerState<SaleOrderPage>
             AnimatedBuilder(
               animation: _tabController,
               builder: (context, _) {
+                if (_tabController.index == 0) {
+                  return const SaleOrderContent();
+                }
                 return DecoratedBox(
                   decoration: BoxDecoration(
                     color: AppColors.surface,
@@ -86,9 +89,7 @@ class _SaleOrderPageState extends ConsumerState<SaleOrderPage>
                       ),
                     ],
                   ),
-                  child: _tabController.index == 0
-                      ? const SaleOrderContent()
-                      : _buildOnlineOrdersTab(),
+                  child: _buildOnlineOrdersTab(),
                 );
               },
             ),

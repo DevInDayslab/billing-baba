@@ -13,6 +13,9 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_empty_stat
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_document_actions.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_documents_filter_bar.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_documents_table.dart';
 import 'package:billing_baba/features/sales/providers/delivery_challan_form_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:flutter/material.dart';
@@ -32,12 +35,36 @@ class DeliveryChallanContent extends ConsumerWidget {
     final form = ref.watch(deliveryChallanFormProvider);
 
     if (form.isFormOpen) {
-      return const _DeliveryChallanFormCard();
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.lgBorder,
+          border: Border.all(color: _cardBorder),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const _DeliveryChallanFormCard(),
+      );
     }
 
-    return _DeliveryChallanListState(
-      onAddPressed: () =>
-          ref.read(deliveryChallanFormProvider.notifier).openForm(),
+    final formNotifier = ref.read(deliveryChallanFormProvider.notifier);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SalesDocumentsFilterBar(
+          scope: deliveryChallanListScope(),
+          onAdd: formNotifier.openForm,
+          addButtonLabel: 'Add Delivery Challan',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SalesDocumentsTable(config: deliveryChallanTableConfig()),
+      ],
     );
   }
 }

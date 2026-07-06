@@ -260,3 +260,18 @@ class PaymentListQuery {
     'order': order,
   };
 }
+
+class ConvertSalesDocumentRequest {
+  const ConvertSalesDocumentRequest({
+    required this.targetType,
+    this.applyGst = false,
+  });
+
+  final String targetType;
+  final bool applyGst;
+
+  Map<String, dynamic> toJson() => {
+    'target_type': targetType,
+    'apply_gst': applyGst,
+  };
+}

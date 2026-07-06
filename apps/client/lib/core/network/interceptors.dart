@@ -11,6 +11,11 @@ Interceptor buildJsonBodyInterceptor() {
         if (contentType != null && options.data == null) {
           options.data = <String, dynamic>{};
         }
+      } else if ((method == 'DELETE' || method == 'GET') &&
+          options.data == null) {
+        // Fastify rejects application/json with an empty body on bodyless requests.
+        options.headers.remove(Headers.contentTypeHeader);
+        options.contentType = null;
       }
       handler.next(options);
     },

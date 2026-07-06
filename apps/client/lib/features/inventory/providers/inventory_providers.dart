@@ -167,8 +167,9 @@ final productTransactionsProvider =
           .where(
             (txn) =>
                 query.isEmpty ||
-                txn.typeLabel.toLowerCase().contains(query) ||
-                txn.invoiceRefNo.toLowerCase().contains(query) ||
+                txn.documentLabel.toLowerCase().contains(query) ||
+                txn.transactionType.toLowerCase().contains(query) ||
+                txn.referenceNo.toLowerCase().contains(query) ||
                 txn.partyName.toLowerCase().contains(query) ||
                 txn.status.toLowerCase().contains(query),
           )

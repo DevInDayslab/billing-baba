@@ -91,24 +91,35 @@ class DashboardTrendPointModel {
   final double amount;
 }
 
-enum DashboardTransactionType { sale, purchase, payment, expense }
+enum DashboardTransactionType {
+  sale,
+  purchase,
+  paymentIn,
+  paymentOut,
+  expense,
+  saleReturn,
+  purchaseReturn,
+  opening,
+}
 
 class DashboardRecentTransactionModel {
   const DashboardRecentTransactionModel({
     required this.id,
     required this.type,
-    required this.referenceNumber,
-    required this.partyName,
-    required this.amount,
-    required this.date,
+    required this.referenceNumber, required this.partyName, required this.amount, required this.date, this.referenceId,
+    this.referenceType,
+    this.direction,
   });
 
   final String id;
   final DashboardTransactionType type;
+  final String? referenceId;
+  final String? referenceType;
   final String referenceNumber;
   final String partyName;
   final double amount;
   final DateTime date;
+  final String? direction;
 }
 
 class DashboardQuickReportModel {

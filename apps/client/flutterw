@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Wrapper that applies macOS Xcode build settings before invoking Flutter.
+set -euo pipefail
+cd "$(dirname "$0")"
+# shellcheck source=macos/xcode.env
+source macos/xcode.env
+exec flutter "$@"

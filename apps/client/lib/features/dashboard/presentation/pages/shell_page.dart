@@ -442,20 +442,23 @@ class _SidebarExpandableNavTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive ? _sidebarActiveBg : Colors.transparent,
             borderRadius: AppRadius.smBorder,
-            border: isActive
+            border: isActive && !collapsed
                 ? Border(left: BorderSide(color: accentColor, width: 3))
                 : null,
           ),
           padding: EdgeInsets.symmetric(
-            horizontal: collapsed ? AppSpacing.sm : AppSpacing.md,
+            horizontal: collapsed ? 4 : AppSpacing.md,
             vertical: AppSpacing.sm + 2,
           ),
           child: Row(
+            mainAxisAlignment: collapsed
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.start,
             children: [
               Icon(
                 item.icon,
                 color: isActive ? _sidebarTextActive : _sidebarText,
-                size: 22,
+                size: collapsed ? 20 : 22,
               ),
               if (!collapsed) ...[
                 const SizedBox(width: AppSpacing.sm + 4),
@@ -579,20 +582,23 @@ class _SidebarNavTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive ? _sidebarActiveBg : Colors.transparent,
             borderRadius: AppRadius.smBorder,
-            border: isActive
+            border: isActive && !collapsed
                 ? Border(left: BorderSide(color: accentColor, width: 3))
                 : null,
           ),
           padding: EdgeInsets.symmetric(
-            horizontal: collapsed ? AppSpacing.sm : AppSpacing.md,
+            horizontal: collapsed ? 4 : AppSpacing.md,
             vertical: AppSpacing.sm + 2,
           ),
           child: Row(
+            mainAxisAlignment: collapsed
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.start,
             children: [
               Icon(
                 item.icon,
                 color: isActive ? _sidebarTextActive : _sidebarText,
-                size: 22,
+                size: collapsed ? 20 : 22,
               ),
               if (!collapsed) ...[
                 const SizedBox(width: AppSpacing.sm + 4),

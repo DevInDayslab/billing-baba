@@ -140,6 +140,9 @@ class PartyCache {
   String _selectedKey(String businessId) =>
       '${StorageKeys.selectedPartyId}_$businessId';
 
+  String _groupNamesKey(String businessId) =>
+      '${StorageKeys.partyGroupNames}_$businessId';
+
   Future<void> saveParties(
     String businessId,
     List<Map<String, dynamic>> parties,
@@ -273,5 +276,24 @@ class PartyCache {
 
   Future<void> clearPendingOperations(String businessId) async {
     await _storage.write(_pendingKey(businessId), '[]');
+  }
+
+  Future<void> savePartyGroupNames(
+    String businessId,
+    List<String> names,
+  ) async {
+    await _storage.write(_groupNamesKey(businessId), jsonEncode(names));
+  }
+
+  List<String> readPartyGroupNames(String businessId) {
+    final raw = _storage.read(_groupNamesKey(businessId));
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return [];
+      return decoded.map((item) => item.toString()).toList();
+    } on Object catch (_) {
+      return [];
+    }
   }
 }

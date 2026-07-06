@@ -72,7 +72,7 @@ final class BusinessListProvider
   BusinessList create() => BusinessList();
 }
 
-String _$businessListHash() => r'aa244ef354744a5364658b8d5ba5b994337192d6';
+String _$businessListHash() => r'ab5d7758a52d954a3df07f244d946f7a5de83a9b';
 
 abstract class _$BusinessList extends $AsyncNotifier<List<BusinessModel>> {
   FutureOr<List<BusinessModel>> build();
@@ -158,7 +158,7 @@ final class BusinessProfileProvider
   BusinessProfile create() => BusinessProfile();
 }
 
-String _$businessProfileHash() => r'd61ac744e118bcaa82571f7aae81d0081e0f0b2c';
+String _$businessProfileHash() => r'f32dbe02119a598899594b7b8a2dccc3d3d8ad27';
 
 abstract class _$BusinessProfile extends $AsyncNotifier<BusinessProfileModel> {
   FutureOr<BusinessProfileModel> build();

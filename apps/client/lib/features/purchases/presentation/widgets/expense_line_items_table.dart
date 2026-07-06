@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/purchases/models/expense_form_model.dart';
 import 'package:billing_baba/features/purchases/providers/add_expense_form_provider.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
@@ -255,12 +256,18 @@ class _LineItemRow extends ConsumerWidget {
             constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
             tooltip: 'Remove row',
           ),
-          _CompactTextField(
-            initialValue: item.itemName,
-            hint: 'Item name',
+          ItemNameAutocompleteField(
+            value: item.itemName,
             onChanged: (value) => notifier.updateLineItem(
               index,
               item.copyWith(itemName: value),
+            ),
+            onItemSelected: (catalogItem) => notifier.updateLineItem(
+              index,
+              item.copyWith(
+                itemName: catalogItem.name,
+                pricePerUnit: catalogItem.purchasePrice,
+              ),
             ),
           ),
           _CompactTextField(

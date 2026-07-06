@@ -155,6 +155,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
+            path: '${AppRoutes.viewSale}/:invoiceId',
+            name: 'viewSale',
+            builder: (context, state) => AddSalePage(
+              invoiceId: state.pathParameters['invoiceId'],
+              readOnly: true,
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.saleEstimateQuotation,
             builder: (context, state) => const EstimateQuotationPage(),
           ),

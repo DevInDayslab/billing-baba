@@ -100,12 +100,20 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   void toggleSaleType(SaleType type) {
+    final payments = [...state.payments];
+    if (payments.isEmpty) {
+      payments.add(const SalePaymentEntry(type: 'Cash'));
+    }
+
     state = state.copyWith(
       saleType: type,
       dueDate: type == SaleType.cash ? null : state.dueDate,
       receivedEnabled: type == SaleType.credit && state.receivedEnabled,
       loyaltyPointsEnabled:
           type == SaleType.credit && state.loyaltyPointsEnabled,
+      payments: type == SaleType.cash
+          ? [payments.first.copyWith(type: 'Cash', amount: state.grandTotal)]
+          : payments,
       isDirty: true,
     );
   }
@@ -323,6 +331,8 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   Future<String?> saveInvoice({bool finalize = true}) async {
+    if (state.isSaving) return null;
+
     if (!validate(finalize: finalize)) {
       if (state.partyId == null || state.partyId!.isEmpty) {
         return 'Party is required';

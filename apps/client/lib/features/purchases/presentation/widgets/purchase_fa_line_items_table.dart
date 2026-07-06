@@ -3,6 +3,7 @@ import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.
 import 'package:billing_baba/features/purchases/models/purchase_fa_form_model.dart';
 import 'package:billing_baba/features/purchases/providers/add_purchase_fa_form_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
@@ -468,12 +469,18 @@ class _LineItemRow extends ConsumerWidget {
               tooltip: 'Delete row',
             ),
           ),
-          _CompactTextField(
-            initialValue: item.assetName,
-            hintText: 'Asset name',
+          ItemNameAutocompleteField(
+            value: item.assetName,
             onChanged: (value) => notifier.updateLineItem(
               index,
               item.copyWith(assetName: value),
+            ),
+            onItemSelected: (catalogItem) => notifier.updateLineItem(
+              index,
+              item.copyWith(
+                assetName: catalogItem.name,
+                pricePerUnit: catalogItem.purchasePrice,
+              ),
             ),
           ),
           _CompactTextField(

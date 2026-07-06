@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/text_input_dialog.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
@@ -133,30 +134,11 @@ class _AttachmentList extends StatelessWidget {
     BuildContext context,
     SaleFormAttachment attachment,
   ) async {
-    final controller = TextEditingController(text: attachment.displayName);
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Rename attachment'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'File name'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final value = controller.text.trim();
-              if (value.isNotEmpty) Navigator.pop(context, value);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+    final newName = await showTextInputDialog(
+      context,
+      title: 'Rename attachment',
+      hint: 'File name',
+      initialValue: attachment.displayName,
     );
     if (newName != null && newName.isNotEmpty) {
       onRename(attachment.id, newName);
@@ -367,32 +349,15 @@ Future<SaleFormAttachment?> promptSaleFormAttachment(
   required String title,
   required String defaultName,
 }) async {
-  final controller = TextEditingController(text: defaultName);
-  final name = await showDialog<String>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        decoration: const InputDecoration(
-          labelText: 'File name',
-          hintText: 'e.g. product_photo.png',
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () {
-            final value = controller.text.trim();
-            if (value.isNotEmpty) Navigator.pop(context, value);
-          },
-          child: const Text('Add'),
-        ),
-      ],
+  final name = await showTextInputDialog(
+    context,
+    title: title,
+    hint: 'e.g. product_photo.png',
+    initialValue: defaultName,
+    confirmLabel: 'Add',
+    decoration: const InputDecoration(
+      labelText: 'File name',
+      hintText: 'e.g. product_photo.png',
     ),
   );
   if (name == null || name.isEmpty) return null;

@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
@@ -193,13 +194,14 @@ class _RawMaterialRow extends ConsumerWidget {
             ),
             Expanded(
               flex: 3,
-              child: _CompactTextField(
-                initialValue: item.itemName,
-                hintText: 'Item Name',
+              child: ItemNameAutocompleteField(
+                value: item.itemName,
                 onChanged: (value) => notifier.updateRawMaterial(
                   index,
                   item.copyWith(itemName: value),
                 ),
+                onItemSelected: (selected) =>
+                    notifier.selectRawMaterialItem(index, selected),
               ),
             ),
             const SizedBox(width: 8),

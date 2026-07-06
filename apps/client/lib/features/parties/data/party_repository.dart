@@ -69,6 +69,12 @@ class PartyRepository {
   }
 
   Future<void> deleteParty(String id) async {
-    await _dio.delete<void>(ApiEndpoints.party(id));
+    await _dio.delete<void>(
+      ApiEndpoints.party(id),
+      options: Options(
+        validateStatus: (status) =>
+            status != null && status >= 200 && status < 300,
+      ),
+    );
   }
 }

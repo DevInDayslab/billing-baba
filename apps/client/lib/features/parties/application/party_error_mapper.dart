@@ -25,27 +25,41 @@ class PartyBusinessNotSelectedException implements Exception {
   String toString() => 'Business not selected';
 }
 
+class PartyHasDependenciesException extends PartyException {
+  const PartyHasDependenciesException()
+    : super(
+        'This party is linked to invoices or other documents and cannot be deleted.',
+      );
+}
+
 abstract final class PartyErrorMapper {
   static Never mapAndThrow(DioException error) {
     final validation = ApiErrorParser.parseValidation(error);
     if (validation != null) {
       final mobileError = validation.fieldErrors['mobile'];
       if (mobileError != null) {
-        throw const PartyException(
-          'Party already exists with this mobile number',
+        throw PartyException(
+          mobileError.contains('already')
+              ? mobileError
+              : 'Party already exists with this mobile number',
         );
+      }
+      final gstinError = validation.fieldErrors['gstin'];
+      if (gstinError != null && gstinError.contains('already')) {
+        throw PartyException(gstinError);
       }
       throw PartyException(validation.message);
     }
 
     final data = error.response?.data;
     if (data is Map<String, dynamic>) {
-      final code = data['code']?.toString();
+      final envelope = data['error'];
+      final code = envelope is Map<String, dynamic>
+          ? envelope['code']?.toString()
+          : data['code']?.toString();
       switch (code) {
         case 'PARTY_HAS_DEPENDENCIES':
-          throw const PartyException(
-            'Unable to delete party because it has linked documents.',
-          );
+          throw const PartyHasDependenciesException();
         case 'BUSINESS_NOT_SELECTED':
           throw const PartyBusinessNotSelectedException();
         case 'NOT_FOUND':

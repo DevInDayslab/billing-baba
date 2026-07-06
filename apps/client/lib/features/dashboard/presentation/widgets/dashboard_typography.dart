@@ -3,39 +3,44 @@ import 'package:flutter/material.dart';
 
 /// Shared typography and spacing for dashboard cards.
 abstract final class DashboardTypography {
-  static const pageTitle = TextStyle(
-    fontSize: 24,
+  static const TextStyle pageTitle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.headlineMediumSize,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
   );
 
-  static const cardTitle = TextStyle(
-    fontSize: 16,
+  static const TextStyle cardTitle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.titleMediumSize,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
   );
 
-  static const mainValue = TextStyle(
-    fontSize: 36,
+  static const TextStyle mainValue = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.displayMediumSize,
     fontWeight: FontWeight.bold,
     color: AppColors.textPrimary,
     height: 1.1,
   );
 
-  static const supportingLabel = TextStyle(
-    fontSize: 14,
+  static const TextStyle supportingLabel = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.labelLargeSize,
     fontWeight: FontWeight.w500,
     color: AppColors.textSecondary,
   );
 
-  static const metadata = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.normal,
+  static const TextStyle metadata = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.labelMediumSize,
     color: AppColors.textSecondary,
   );
 
-  static const link = TextStyle(
-    fontSize: 13,
+  static const TextStyle link = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.bodySmallSize,
     fontWeight: FontWeight.w500,
     color: AppColors.primary,
   );

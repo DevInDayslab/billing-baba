@@ -13,13 +13,17 @@ import {
 import { salesDocuments } from '../../db/schema/sales/tables';
 import {
   PURCHASE_BILL_TYPE,
+  PURCHASE_RETURN_TYPE,
   REVENUE_SALES_TYPES,
+  SALES_RETURN_TYPE,
 } from '../../shared/reporting/constants';
 import {
   countLowAndNegativeStock,
   getTotalStockValue,
   listStockItemAggregates,
 } from '../../shared/reporting/inventory-summary';
+import { validLedgerEntrySql } from '../../shared/reporting/party-ledger';
+import { resolveDashboardPeriod } from './dashboard-period';
 import { OutstandingRepository } from '../accounting/outstanding.repository';
 import type { ResolvedDashboardPeriod } from './dashboard-period';
 import type {
@@ -129,9 +133,19 @@ export class DashboardRepository {
     };
   }
 
+  async getTodayFinanceSummary(
+    businessId: string,
+  ): Promise<DashboardFinanceSummary> {
+    const todayRange = resolveDashboardPeriod({ period: 'today' });
+    return this.getFinanceSummary(businessId, todayRange, {
+      includeExpensesInCashOut: true,
+    });
+  }
+
   async getFinanceSummary(
     businessId: string,
     range: ResolvedDashboardPeriod,
+    options: { includeExpensesInCashOut?: boolean } = {},
   ): Promise<DashboardFinanceSummary> {
     const [cashIn] = await this.db
       .select({
@@ -177,10 +191,17 @@ export class DashboardRepository {
         ),
       );
 
+    const cashInAmount = Number(cashIn?.amount ?? 0);
+    const cashOutPayments = Number(cashOut?.amount ?? 0);
+    const expenseAmount = Number(expenseTotal?.amount ?? 0);
+    const cashOutTotal = options.includeExpensesInCashOut
+      ? cashOutPayments + expenseAmount
+      : cashOutPayments;
+
     return {
-      cash_in: cashIn?.amount ?? '0',
-      cash_out: cashOut?.amount ?? '0',
-      expenses: expenseTotal?.amount ?? '0',
+      cash_in: String(cashInAmount),
+      cash_out: String(cashOutTotal),
+      expenses: String(expenseAmount),
     };
   }
 
@@ -278,123 +299,102 @@ export class DashboardRepository {
     businessId: string,
     limit = 10,
   ): Promise<DashboardRecentTransaction[]> {
-    const salesRows = await this.db
+    const rows = await this.db
       .select({
-        id: salesDocuments.id,
-        type: sql<'sale'>`'sale'`,
-        referenceNumber: salesDocuments.documentNumber,
+        id: ledgerEntries.id,
+        entryType: ledgerEntries.entryType,
+        referenceId: ledgerEntries.referenceId,
+        referenceType: ledgerEntries.referenceType,
+        debit: ledgerEntries.debit,
+        credit: ledgerEntries.credit,
+        createdAt: ledgerEntries.createdAt,
         partyName: parties.name,
-        amount: salesDocuments.totalAmount,
-        date: salesDocuments.documentDate,
+        referenceNumber: sql<string | null>`COALESCE(
+          ${salesDocuments.documentNumber},
+          ${purchaseDocuments.documentNumber},
+          ${payments.referenceNumber},
+          ${expenses.description}
+        )`,
+        paymentDirection: payments.direction,
+        salesDocumentType: salesDocuments.documentType,
+        purchaseDocumentType: purchaseDocuments.documentType,
       })
-      .from(salesDocuments)
-      .leftJoin(parties, eq(salesDocuments.partyId, parties.id))
-      .where(
+      .from(ledgerEntries)
+      .leftJoin(parties, eq(ledgerEntries.partyId, parties.id))
+      .leftJoin(
+        salesDocuments,
         and(
-          eq(salesDocuments.businessId, businessId),
-          eq(salesDocuments.isDeleted, false),
-          eq(salesDocuments.status, 'finalized'),
-          inArray(salesDocuments.documentType, [...REVENUE_SALES_TYPES]),
+          eq(ledgerEntries.referenceType, 'sales_documents'),
+          eq(ledgerEntries.referenceId, salesDocuments.id),
         ),
       )
-      .orderBy(desc(salesDocuments.documentDate))
-      .limit(limit);
-
-    const purchaseRows = await this.db
-      .select({
-        id: purchaseDocuments.id,
-        type: sql<'purchase'>`'purchase'`,
-        referenceNumber: purchaseDocuments.documentNumber,
-        partyName: parties.name,
-        amount: purchaseDocuments.totalAmount,
-        date: purchaseDocuments.documentDate,
-      })
-      .from(purchaseDocuments)
-      .innerJoin(parties, eq(purchaseDocuments.partyId, parties.id))
-      .where(
+      .leftJoin(
+        purchaseDocuments,
         and(
-          eq(purchaseDocuments.businessId, businessId),
-          eq(purchaseDocuments.isDeleted, false),
-          eq(purchaseDocuments.status, 'finalized'),
-          eq(purchaseDocuments.documentType, PURCHASE_BILL_TYPE),
+          eq(ledgerEntries.referenceType, 'purchase_documents'),
+          eq(ledgerEntries.referenceId, purchaseDocuments.id),
         ),
       )
-      .orderBy(desc(purchaseDocuments.documentDate))
-      .limit(limit);
-
-    const paymentRows = await this.db
-      .select({
-        id: payments.id,
-        type: sql<'payment'>`'payment'`,
-        referenceNumber: payments.referenceNumber,
-        partyName: parties.name,
-        amount: payments.amount,
-        date: payments.paymentDate,
-      })
-      .from(payments)
-      .innerJoin(parties, eq(payments.partyId, parties.id))
-      .where(
-        and(eq(payments.businessId, businessId), eq(payments.isDeleted, false)),
+      .leftJoin(
+        payments,
+        and(
+          eq(ledgerEntries.referenceType, 'payments'),
+          eq(ledgerEntries.referenceId, payments.id),
+        ),
       )
-      .orderBy(desc(payments.paymentDate))
-      .limit(limit);
-
-    const expenseRows = await this.db
-      .select({
-        id: expenses.id,
-        type: sql<'expense'>`'expense'`,
-        referenceNumber: expenses.description,
-        partyName: parties.name,
-        amount: expenses.amount,
-        date: expenses.expenseDate,
-      })
-      .from(expenses)
-      .leftJoin(parties, eq(expenses.partyId, parties.id))
-      .where(
-        and(eq(expenses.businessId, businessId), eq(expenses.isDeleted, false)),
+      .leftJoin(
+        expenses,
+        and(
+          eq(ledgerEntries.referenceType, 'expenses'),
+          eq(ledgerEntries.referenceId, expenses.id),
+        ),
       )
-      .orderBy(desc(expenses.expenseDate))
+      .where(
+        and(
+          eq(ledgerEntries.businessId, businessId),
+          validLedgerEntrySql,
+        ),
+      )
+      .orderBy(desc(ledgerEntries.createdAt))
       .limit(limit);
 
-    const merged: DashboardRecentTransaction[] = [
-      ...salesRows.map((row) => ({
-        id: row.id,
-        type: row.type,
-        reference_number: row.referenceNumber,
-        party_name: row.partyName,
-        amount: row.amount,
-        date: row.date.toISOString(),
-      })),
-      ...purchaseRows.map((row) => ({
-        id: row.id,
-        type: row.type,
-        reference_number: row.referenceNumber,
-        party_name: row.partyName,
-        amount: row.amount,
-        date: row.date.toISOString(),
-      })),
-      ...paymentRows.map((row) => ({
-        id: row.id,
-        type: row.type,
-        reference_number: row.referenceNumber,
-        party_name: row.partyName,
-        amount: row.amount,
-        date: row.date.toISOString(),
-      })),
-      ...expenseRows.map((row) => ({
-        id: row.id,
-        type: row.type,
-        reference_number: row.referenceNumber,
-        party_name: row.partyName,
-        amount: row.amount,
-        date: new Date(row.date).toISOString(),
-      })),
-    ];
+    return rows.map((row) => {
+      const amount =
+        Number(row.debit) > 0 ? row.debit : (row.credit ?? '0');
 
-    merged.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
+      let type: DashboardRecentTransaction['type'] = 'sale';
+      if (row.entryType === 'sale') {
+        type = 'sale';
+      } else if (row.entryType === 'purchase') {
+        type = 'purchase';
+      } else if (row.entryType === 'payment') {
+        type =
+          row.paymentDirection === 'paid' ? 'payment_out' : 'payment_in';
+      } else if (row.entryType === 'expense') {
+        type = 'expense';
+      } else if (row.entryType === 'opening') {
+        type = 'opening';
+      } else if (row.entryType === 'return') {
+        if (row.salesDocumentType === SALES_RETURN_TYPE) {
+          type = 'sale_return';
+        } else if (row.purchaseDocumentType === PURCHASE_RETURN_TYPE) {
+          type = 'purchase_return';
+        } else {
+          type = 'sale_return';
+        }
+      }
 
-    return merged.slice(0, limit);
+      return {
+        id: row.referenceId ?? row.id,
+        type,
+        reference_id: row.referenceId,
+        reference_type: row.referenceType,
+        reference_number: row.referenceNumber,
+        party_name: row.partyName,
+        amount,
+        date: row.createdAt.toISOString(),
+        direction: row.paymentDirection ?? undefined,
+      };
+    });
   }
 }

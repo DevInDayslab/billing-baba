@@ -16,7 +16,15 @@ SaleItemOption saleItemOptionFromInventory(InventoryItem item) {
     mfgCost: item.purchasePrice ?? 0,
     stock: item.availableForSale ?? item.quantity ?? 0,
     unit: item.baseUnitShortName,
+    sku: item.hsnCode,
+    barcode: item.barcode,
   );
+}
+
+String saleItemDefaultUnit(SaleItemOption item) {
+  final unit = item.unit?.trim();
+  if (unit == null || unit.isEmpty || unit == 'NONE') return 'PCS';
+  return unit;
 }
 
 /// Item name field with autocomplete overlay on focus.
@@ -95,11 +103,9 @@ class ItemNameAutocompleteFieldState
         .map(saleItemOptionFromInventory)
         .toList();
 
-    final query = _controller.text.trim().toLowerCase();
+    final query = _controller.text.trim();
     if (query.isEmpty) return options;
-    return options
-        .where((item) => item.name.toLowerCase().contains(query))
-        .toList();
+    return options.where((item) => item.matchesSearchQuery(query)).toList();
   }
 
   void _showOverlay() {

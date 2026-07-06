@@ -11,6 +11,9 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_field_deco
 import 'package:billing_baba/features/sales/presentation/widgets/sale_form_attachments_section.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_page_title_bar.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_document_actions.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_documents_filter_bar.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_documents_table.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/providers/sale_document_form_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
@@ -48,6 +51,15 @@ class SaleDocumentForm extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(saleDocumentFormProvider(documentType));
+    final scope = switch (documentType) {
+      SaleDocumentType.estimate => estimateListScope(),
+      SaleDocumentType.proforma => proformaListScope(),
+    };
+    final tableConfig = switch (documentType) {
+      SaleDocumentType.estimate => estimateTableConfig(),
+      SaleDocumentType.proforma => proformaTableConfig(),
+    };
+    final formNotifier = ref.read(saleDocumentFormProvider(documentType).notifier);
 
     return ColoredBox(
       color: AppColors.background,
@@ -58,33 +70,34 @@ class SaleDocumentForm extends ConsumerWidget {
           children: [
             SalePageTitleBar(currentRoute: route, onSettingsTap: () {}),
             const SizedBox(height: AppSpacing.md),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppRadius.lgBorder,
-                border: Border.all(color: _cardBorder),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: form.isFormOpen
-                  ? _FormContent(
-                      documentType: documentType,
-                      pageTitle: pageTitle,
-                    )
-                  : _EmptyState(
-                      documentType: documentType,
-                      accentColor: accentColor,
-                      circleColor: illustrationCircleColor,
-                      squareColor: illustrationSquareColor,
-                      description: emptyStateDescription,
-                      createButtonLabel: createButtonLabel,
+            if (form.isFormOpen)
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: AppRadius.lgBorder,
+                  border: Border.all(color: _cardBorder),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0A000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
                     ),
-            ),
+                  ],
+                ),
+                child: _FormContent(
+                  documentType: documentType,
+                  pageTitle: pageTitle,
+                ),
+              )
+            else ...[
+              SalesDocumentsFilterBar(
+                scope: scope,
+                onAdd: formNotifier.openForm,
+                addButtonLabel: createButtonLabel,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SalesDocumentsTable(config: tableConfig),
+            ],
           ],
         ),
       ),

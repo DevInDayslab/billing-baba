@@ -46,7 +46,7 @@ final class EditBusinessProfileFormProvider
 }
 
 String _$editBusinessProfileFormHash() =>
-    r'c8d7df0f60f0c845b25de7469bc792b6a5e7e662';
+    r'2030d52044eba7f0a44b970252ab0efccdd062fa';
 
 abstract class _$EditBusinessProfileForm
     extends $Notifier<EditBusinessProfileFormState> {

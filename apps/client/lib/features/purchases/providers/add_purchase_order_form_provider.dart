@@ -44,7 +44,10 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
     try {
       final service = await ref.read(purchaseServiceProvider.future);
       final loaded = await service.loadPurchaseOrderForm(documentId);
-      state = _mapBillFormToOrderForm(loaded).copyWith(isLoading: false);
+      final items = await _resolveItemNames(loaded.items);
+      state = _mapBillFormToOrderForm(
+        loaded.copyWith(items: items),
+      ).copyWith(isLoading: false);
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
@@ -70,6 +73,21 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
       items: bill.items,
       payments: bill.payments,
     );
+  }
+
+  Future<List<PurchaseLineItem>> _resolveItemNames(
+    List<PurchaseLineItem> items,
+  ) async {
+    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final itemNames = {for (final item in inventory) item.id: item.name};
+
+    return [
+      for (final line in items)
+        if (line.itemId != null && line.itemName.isEmpty)
+          line.copyWith(itemName: itemNames[line.itemId] ?? '')
+        else
+          line,
+    ];
   }
 
   Map<String, String> _itemNameToId() {
@@ -244,9 +262,7 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
   }
 
   bool validate({bool finalize = false}) {
-    final hasParty =
-        (state.partyId != null && state.partyId!.isNotEmpty) ||
-        state.party.trim().isNotEmpty;
+    final hasParty = state.partyId != null && state.partyId!.isNotEmpty;
     final isValid = state.hasValidLineItems && (!finalize || hasParty);
     if (!isValid) {
       state = state.copyWith(showValidationErrors: true);
@@ -256,9 +272,8 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
 
   Future<String?> saveOrder({bool finalize = true}) async {
     if (!validate(finalize: finalize)) {
-      if ((state.partyId == null || state.partyId!.isEmpty) &&
-          state.party.trim().isEmpty) {
-        return 'Supplier is required';
+      if (state.partyId == null || state.partyId!.isEmpty) {
+        return 'Please select a supplier';
       }
       return 'Add at least one item with name and quantity';
     }

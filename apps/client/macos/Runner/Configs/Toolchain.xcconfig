@@ -1,0 +1,5 @@
+// Xcode 26's Swift build service can select the cryptex-mounted Metal toolchain
+// (TOOLCHAIN_DIR=.../Metal.xctoolchain). That toolchain does not include
+// usr/lib/swift/macosx, so the linker emits "search path not found" warnings
+// for every Swift CocoaPod target. Pin the default Xcode toolchain instead.
+TOOLCHAINS = com.apple.dt.toolchain.XcodeDefault

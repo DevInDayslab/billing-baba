@@ -301,7 +301,13 @@ class AddExpenseForm extends _$AddExpenseForm {
   }
 
   Future<String?> saveExpense() async {
-    if (!validate()) return 'Please fill required fields';
+    if (!validate()) {
+      if (state.gstEnabled &&
+          (state.partyId == null || state.partyId!.isEmpty)) {
+        return 'Please select a supplier';
+      }
+      return 'Please fill required fields';
+    }
 
     final categoryId = state.categoryId;
     if (categoryId.isEmpty) {

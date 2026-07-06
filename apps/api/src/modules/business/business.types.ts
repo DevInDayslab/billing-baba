@@ -7,6 +7,7 @@ export type BusinessListItem = {
   email: string | null;
   state_code: string;
   address: string | null;
+  owner_name: string | null;
   is_shared: boolean;
 };
 

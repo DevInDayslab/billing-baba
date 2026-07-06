@@ -74,7 +74,7 @@ export class DashboardService {
       this.repository.getOverview(businessId),
       this.repository.getSalesSummary(businessId, range),
       this.repository.getPurchaseSummary(businessId, range),
-      this.repository.getFinanceSummary(businessId, range),
+      this.repository.getTodayFinanceSummary(businessId),
       this.repository.getInventorySummary(businessId),
       this.repository.getSalesTrend(businessId, range),
       this.repository.getPurchasesTrend(businessId, range),

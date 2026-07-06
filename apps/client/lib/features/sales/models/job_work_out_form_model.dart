@@ -71,6 +71,7 @@ class JobWorkOutFormState {
     this.invoiceDate,
     this.deliveryDate,
     this.finishedGoodName = '',
+    this.finishedGoodItemId,
     this.finishedGoodQty = 1,
     this.finishedGoodUnit = 'PCS',
     this.rawMaterials = const [],
@@ -91,6 +92,7 @@ class JobWorkOutFormState {
   final DateTime? invoiceDate;
   final DateTime? deliveryDate;
   final String finishedGoodName;
+  final String? finishedGoodItemId;
   final double finishedGoodQty;
   final String finishedGoodUnit;
   final List<JobWorkOutRawMaterialItem> rawMaterials;
@@ -130,6 +132,7 @@ class JobWorkOutFormState {
     DateTime? invoiceDate,
     DateTime? deliveryDate,
     String? finishedGoodName,
+    String? finishedGoodItemId,
     double? finishedGoodQty,
     String? finishedGoodUnit,
     List<JobWorkOutRawMaterialItem>? rawMaterials,
@@ -151,6 +154,7 @@ class JobWorkOutFormState {
       invoiceDate: invoiceDate ?? this.invoiceDate,
       deliveryDate: deliveryDate ?? this.deliveryDate,
       finishedGoodName: finishedGoodName ?? this.finishedGoodName,
+      finishedGoodItemId: finishedGoodItemId ?? this.finishedGoodItemId,
       finishedGoodQty: finishedGoodQty ?? this.finishedGoodQty,
       finishedGoodUnit: finishedGoodUnit ?? this.finishedGoodUnit,
       rawMaterials: rawMaterials ?? this.rawMaterials,

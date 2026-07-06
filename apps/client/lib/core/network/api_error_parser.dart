@@ -49,4 +49,39 @@ abstract final class ApiErrorParser {
     if (nested is Map<String, dynamic>) return nested;
     return null;
   }
+
+  /// Maps API/business errors to user-facing copy.
+  static String userFacingMessage(DioException error) {
+    final code = errorCode(error);
+    final message = errorMessage(error);
+
+    switch (code) {
+      case 'BUSINESS_NOT_SELECTED':
+        return 'No company is selected in your session. Open a company from the Company List, then try again.';
+      case 'UNAUTHORIZED':
+      case 'INVALID_TOKEN':
+      case 'TOKEN_EXPIRED':
+        return message ?? 'Your session expired. Please sign in again.';
+      case 'VALIDATION_ERROR':
+        return message ?? 'Some fields are invalid. Please review and try again.';
+      default:
+        break;
+    }
+
+    if (message != null && message.isNotEmpty) return message;
+
+    if (error.type == DioExceptionType.connectionError ||
+        error.type == DioExceptionType.connectionTimeout) {
+      return 'Unable to connect to Billing Baba server.';
+    }
+
+    return 'Unable to save business profile. Please try again.';
+  }
+
+  /// First validation detail message when present.
+  static String? firstValidationDetail(DioException error) {
+    final validation = parseValidation(error);
+    if (validation == null || validation.fieldErrors.isEmpty) return null;
+    return validation.fieldErrors.values.first;
+  }
 }

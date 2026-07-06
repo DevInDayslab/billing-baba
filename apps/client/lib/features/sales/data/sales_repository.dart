@@ -29,6 +29,9 @@ class SalesRepository {
 
   Future<void> deleteDocument(String id) => _remote.deleteDocument(id);
 
+  Future<SalesDocumentDto> cancelDocument(String id) =>
+      _remote.cancelDocument(id);
+
   Future<SalesDocumentDto> finalizeDocument(
     String id, {
     String? godownId,
@@ -58,4 +61,9 @@ class SalesRepository {
     String paymentId,
     PaymentAllocationRequest request,
   ) => _remote.addPaymentAllocation(paymentId, request);
+
+  Future<SalesDocumentDto> convertDocument(
+    String id,
+    ConvertSalesDocumentRequest request,
+  ) => _remote.convertDocument(id, request);
 }

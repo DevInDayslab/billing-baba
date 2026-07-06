@@ -78,7 +78,15 @@ class _PartyDetailsPageState extends ConsumerState<PartyDetailsPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _restorePreferences());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_initializePage());
+    });
+  }
+
+  Future<void> _initializePage() async {
+    await ref.read(partyListProvider.notifier).refresh();
+    if (!mounted) return;
+    await _restorePreferences();
   }
 
   Future<void> _restorePreferences() async {

@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
@@ -158,9 +159,12 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                 label: 'Party *',
                 child: BillingNamePartySearchField(
                   value: form.party,
+                  partyTypeFilter: PartyTypeFilter.supplier,
                   hasError: form.partyHasError,
-                  errorMessage: 'Party is required',
+                  errorMessage: 'Please select a supplier',
                   onSelected: notifier.updateParty,
+                  onPartySelectedWithId: (partyId, name) =>
+                      notifier.updateParty(name, partyId: partyId),
                 ),
               ),
             ),

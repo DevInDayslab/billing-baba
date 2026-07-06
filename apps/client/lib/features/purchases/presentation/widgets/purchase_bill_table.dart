@@ -6,6 +6,7 @@ import 'package:billing_baba/features/purchases/application/purchase_error_mappe
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_status_badge.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -110,6 +111,7 @@ class PurchaseBillTable extends ConsumerWidget {
           ),
           const Divider(height: 1, color: _cardBorder),
           billsAsync.when(
+            skipLoadingOnReload: true,
             loading: () => const Padding(
               padding: EdgeInsets.all(AppSpacing.xl),
               child: Center(child: CircularProgressIndicator()),
@@ -258,83 +260,79 @@ class PurchaseBillTable extends ConsumerWidget {
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 tooltip: 'Share',
               ),
-              IconButton(
-                onPressed: () => _showBillActions(context, ref, bill),
-                icon: const Icon(Icons.more_vert, size: 18),
-                color: AppColors.textSecondary,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                tooltip: 'More',
+              SalesActionMenuButton(
+                items: [
+                  if (bill.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Edit draft',
+                      onSelected: () async {
+                        await context.push('${AppRoutes.editPurchase}/${bill.id}');
+                      },
+                    ),
+                  if (bill.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Finalize',
+                      onSelected: () async {
+                        final error = await ref
+                            .read(purchaseBillsProvider.notifier)
+                            .finalizeBill(bill.id);
+                        if (!context.mounted) return;
+                        if (error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(error)),
+                          );
+                        }
+                      },
+                    ),
+                  if (bill.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Delete draft',
+                      onSelected: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete draft?'),
+                            content: Text('Delete draft ${bill.invoiceNo}?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed != true || !context.mounted) return;
+                        final error = await ref
+                            .read(purchaseBillsProvider.notifier)
+                            .deleteDraft(bill.id);
+                        if (!context.mounted) return;
+                        if (error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(error)),
+                          );
+                        }
+                      },
+                    ),
+                  if (!bill.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Open',
+                      onSelected: () async {
+                        await context.push('${AppRoutes.editPurchase}/${bill.id}');
+                      },
+                    ),
+                ],
               ),
             ],
           ),
         ),
       ],
     );
-  }
-
-  Future<void> _showBillActions(
-    BuildContext context,
-    WidgetRef ref,
-    PurchaseBillModel bill,
-  ) async {
-    final action = await showMenu<String>(
-      context: context,
-      position: const RelativeRect.fromLTRB(200, 400, 200, 0),
-      items: [
-        if (bill.isDraft)
-          const PopupMenuItem(value: 'edit', child: Text('Edit draft')),
-        if (bill.isDraft)
-          const PopupMenuItem(value: 'finalize', child: Text('Finalize')),
-        if (bill.isDraft)
-          const PopupMenuItem(value: 'delete', child: Text('Delete draft')),
-        if (!bill.isDraft)
-          const PopupMenuItem(value: 'open', child: Text('Open')),
-      ],
-    );
-
-    if (action == null || !context.mounted) return;
-    final notifier = ref.read(purchaseBillsProvider.notifier);
-
-    switch (action) {
-      case 'edit':
-      case 'open':
-        await context.push('${AppRoutes.editPurchase}/${bill.id}');
-      case 'finalize':
-        final error = await notifier.finalizeBill(bill.id);
-        if (!context.mounted) return;
-        if (error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error)),
-          );
-        }
-      case 'delete':
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Delete draft?'),
-            content: Text('Delete draft ${bill.invoiceNo}?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
-        );
-        if (confirmed != true || !context.mounted) return;
-        final error = await notifier.deleteDraft(bill.id);
-        if (!context.mounted) return;
-        if (error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error)),
-          );
-        }
-    }
   }
 }
 

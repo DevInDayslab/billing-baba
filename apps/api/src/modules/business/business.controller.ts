@@ -104,5 +104,20 @@ export function createBusinessController() {
         throw error;
       }
     },
+
+    delete: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ): Promise<FastifyReply> => {
+      const accountId = request.accountId;
+      if (!accountId) {
+        throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
+      }
+
+      const businessId = (request.params as { id: string }).id;
+      const service = new BusinessService();
+      await service.deleteBusiness(businessId, accountId);
+      return reply.status(204).send();
+    },
   };
 }

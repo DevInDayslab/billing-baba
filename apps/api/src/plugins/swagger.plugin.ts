@@ -1,5 +1,6 @@
 import swagger from '@fastify/swagger';
 import type { FastifyInstance } from 'fastify';
+import type { OpenAPIV3 } from 'openapi-types';
 import type { AppConfig } from '../config/app_config';
 import { buildOpenApiDocument } from '../openapi/document';
 
@@ -9,7 +10,12 @@ export async function registerSwaggerPlugin(
 ): Promise<void> {
   const document = buildOpenApiDocument(config);
 
+  // Static mode serves only our curated spec — prevents duplicate paths from
+  // Fastify route introspection (/path vs /path/) and untagged "default" entries.
   await app.register(swagger, {
-    openapi: document as Record<string, unknown>,
+    mode: 'static',
+    specification: {
+      document: document as unknown as OpenAPIV3.Document,
+    },
   });
 }

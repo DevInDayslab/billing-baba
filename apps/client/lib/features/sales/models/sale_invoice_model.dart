@@ -8,6 +8,18 @@ enum SaleInvoiceStatus {
   cancelled,
 }
 
+class SaleInvoiceSummaryData {
+  const SaleInvoiceSummaryData({
+    required this.totalSalesAmount,
+    required this.receivedAmount,
+    required this.balanceAmount,
+  });
+
+  final double totalSalesAmount;
+  final double receivedAmount;
+  final double balanceAmount;
+}
+
 class SaleInvoiceModel {
   const SaleInvoiceModel({
     required this.id,
@@ -84,10 +96,12 @@ class PaginatedSaleInvoices {
     required this.currentPage,
     required this.totalPages,
     required this.totalItems,
+    this.summary,
   });
 
   final List<SaleInvoiceModel> items;
   final int currentPage;
   final int totalPages;
   final int totalItems;
+  final SaleInvoiceSummaryData? summary;
 }
