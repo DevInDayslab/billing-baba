@@ -3,9 +3,13 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
+import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_ledger_summary_cards.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_ledger_transactions_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -57,7 +61,7 @@ class PartyDetailPanel extends ConsumerWidget {
   }
 }
 
-class _PartyDetailContent extends ConsumerWidget {
+class _PartyDetailContent extends ConsumerStatefulWidget {
   const _PartyDetailContent({
     required this.party,
     this.onBack,
@@ -67,7 +71,18 @@ class _PartyDetailContent extends ConsumerWidget {
   final VoidCallback? onBack;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PartyDetailContent> createState() =>
+      _PartyDetailContentState();
+}
+
+class _PartyDetailContentState extends ConsumerState<_PartyDetailContent> {
+  PartyLedgerFilter _filter = PartyLedgerFilter.all;
+
+  @override
+  Widget build(BuildContext context) {
+    final ledgerKey = (partyId: widget.party.id, filter: _filter);
+    final ledgerAsync = ref.watch(partyLedgerProvider(ledgerKey));
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final useFlexibleSummary = constraints.maxHeight < 520;
@@ -80,37 +95,60 @@ class _PartyDetailContent extends ConsumerWidget {
                 flex: 2,
                 child: SingleChildScrollView(
                   child: _PartySummaryHeader(
-                    party: party,
-                    onBack: onBack,
+                    party: widget.party,
+                    ledgerAsync: ledgerAsync,
+                    onBack: widget.onBack,
                   ),
                 ),
               )
             else
               SingleChildScrollView(
                 child: _PartySummaryHeader(
-                  party: party,
-                  onBack: onBack,
+                  party: widget.party,
+                  ledgerAsync: ledgerAsync,
+                  onBack: widget.onBack,
                 ),
               ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md,
                 AppSpacing.md,
                 AppSpacing.md,
                 AppSpacing.sm,
               ),
-              child: Text(
-                'TRANSACTIONS',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'TRANSACTIONS',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  PartyLedgerFilterBar(
+                    selected: _filter,
+                    onSelected: (filter) => setState(() => _filter = filter),
+                  ),
+                ],
               ),
             ),
-            const Expanded(
+            const PartyLedgerTableHeader(),
+            Expanded(
               flex: 3,
-              child: _TransactionsEmptyState(),
+              child: ledgerAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, _) => _PartyDetailError(
+                  message: PartyErrorMapper.messageFor(error),
+                  onRetry: () =>
+                      ref.invalidate(partyLedgerProvider(ledgerKey)),
+                ),
+                data: (ledger) => PartyLedgerTransactionsTable(
+                  transactions: ledger.transactions,
+                ),
+              ),
             ),
           ],
         );
@@ -122,10 +160,12 @@ class _PartyDetailContent extends ConsumerWidget {
 class _PartySummaryHeader extends ConsumerWidget {
   const _PartySummaryHeader({
     required this.party,
+    required this.ledgerAsync,
     this.onBack,
   });
 
   final PartyModel party;
+  final AsyncValue<PartyLedgerModel> ledgerAsync;
   final VoidCallback? onBack;
 
   @override
@@ -181,7 +221,14 @@ class _PartySummaryHeader extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          _SummaryCards(party: party),
+          ledgerAsync.when(
+            loading: () => _SummaryCards(party: party),
+            error: (_, _) => _SummaryCards(party: party),
+            data: (ledger) => PartyLedgerSummaryCards(
+              summary: ledger.summary,
+              party: party,
+            ),
+          ),
           const SizedBox(height: AppSpacing.md),
           _PartyDetailsTable(rows: detailRows),
         ],
@@ -565,44 +612,6 @@ class _PartyDetailsTable extends StatelessWidget {
             ],
           ),
       ],
-    );
-  }
-}
-
-class _TransactionsEmptyState extends StatelessWidget {
-  const _TransactionsEmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 56,
-              color: Colors.grey.shade400,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const Text(
-              'No transactions yet',
-              style: ListPanelStyles.emptyStateStyle,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Sales, purchases and payments involving this party will appear here.',
-              style: ListPanelStyles.emptyStateStyle.copyWith(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
+import 'package:billing_baba/features/dashboard/presentation/utils/dashboard_transaction_navigation.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_empty_state.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_metric_card.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_typography.dart';
@@ -133,12 +134,10 @@ class _TransactionRow extends StatelessWidget {
   final NumberFormat currencyFormat;
   final DateFormat dateFormat;
 
-  bool get _isIncoming =>
-      tx.type == DashboardTransactionType.sale ||
-      tx.type == DashboardTransactionType.payment;
+  bool get _isIncoming => dashboardTransactionIsIncoming(tx.type);
 
   String get _detailLine {
-    final typeLabel = _typeLabel(tx.type);
+    final typeLabel = dashboardTransactionTypeLabel(tx.type);
     if (tx.referenceNumber.isNotEmpty) {
       return '$typeLabel • ${tx.referenceNumber}';
     }
@@ -154,7 +153,7 @@ class _TransactionRow extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => context.go(AppRoutes.reports),
+        onTap: () => navigateToDashboardTransaction(context, tx),
         borderRadius: AppRadius.smBorder,
         hoverColor: AppColors.background,
         splashColor: AppColors.background,
@@ -170,7 +169,9 @@ class _TransactionRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      tx.partyName.isEmpty ? _typeLabel(tx.type) : tx.partyName,
+                      tx.partyName.isEmpty
+                          ? dashboardTransactionTypeLabel(tx.type)
+                          : tx.partyName,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -211,13 +212,6 @@ class _TransactionRow extends StatelessWidget {
       ),
     );
   }
-
-  static String _typeLabel(DashboardTransactionType type) => switch (type) {
-    DashboardTransactionType.sale => 'Sale Invoice',
-    DashboardTransactionType.purchase => 'Purchase',
-    DashboardTransactionType.payment => 'Payment In',
-    DashboardTransactionType.expense => 'Expense',
-  };
 }
 
 class _TypeBadge extends StatelessWidget {
@@ -227,20 +221,11 @@ class _TypeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isIncoming =
-        type == DashboardTransactionType.sale ||
-        type == DashboardTransactionType.payment;
+    final isIncoming = dashboardTransactionIsIncoming(type);
 
     final color = isIncoming
         ? DashboardColors.incoming
         : DashboardColors.outgoing;
-
-    final label = switch (type) {
-      DashboardTransactionType.sale => 'S',
-      DashboardTransactionType.purchase => 'P',
-      DashboardTransactionType.payment => 'In',
-      DashboardTransactionType.expense => 'E',
-    };
 
     return Container(
       width: 32,
@@ -251,7 +236,7 @@ class _TypeBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Text(
-        label,
+        dashboardTransactionBadgeLabel(type),
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,

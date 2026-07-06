@@ -41,6 +41,10 @@ import {
   listStockItemAggregates,
   getTotalStockValue,
 } from '../../../shared/reporting/inventory-summary';
+import {
+  buildPartyLedgerReport,
+  fetchPartyLedgerEntries,
+} from '../../../shared/reporting/party-ledger';
 import type { ResolvedReportPeriod } from '../../../shared/reporting/report-period';
 import type {
   AllTransactionsPayload,
@@ -490,81 +494,54 @@ export class Phase1ReportsRepository {
     query: PartyStatementQuery,
   ): Promise<PartyStatementPayload> {
     const range = resolveRange(query);
+    const fromKey = range.from.toISOString().slice(0, 10);
+    const toKey = range.to.toISOString().slice(0, 10);
 
-    const entries = await this.db
-      .select({
-        id: ledgerEntries.id,
-        date: ledgerEntries.entryDate,
-        type: ledgerEntries.entryType,
-        description: ledgerEntries.description,
-        debit: ledgerEntries.debit,
-        credit: ledgerEntries.credit,
-        balance: ledgerEntries.balanceAfter,
-        referenceType: ledgerEntries.referenceType,
-      })
-      .from(ledgerEntries)
-      .where(
-        and(
-          eq(ledgerEntries.businessId, businessId),
-          eq(ledgerEntries.partyId, query.party_id),
-          gte(ledgerEntries.entryDate, range.from.toISOString().slice(0, 10)),
-          lte(ledgerEntries.entryDate, range.to.toISOString().slice(0, 10)),
-        ),
-      )
-      .orderBy(asc(ledgerEntries.entryDate), asc(ledgerEntries.createdAt));
+    const report = await buildPartyLedgerReport(this.db, businessId, query.party_id);
 
-    let totalSale = 0;
-    let totalPurchase = 0;
-    let totalMoneyIn = 0;
-    let totalMoneyOut = 0;
-
-    const mapped = entries.map((entry) => {
-      const debit = Number(entry.debit ?? 0);
-      const credit = Number(entry.credit ?? 0);
-      const type = entry.type;
-
-      if (type === 'sale') {
-        totalSale += debit;
-      } else if (type === 'purchase') {
-        totalPurchase += debit;
-      } else if (type === 'payment') {
-        if (credit > 0) {
-          totalMoneyIn += credit;
-        } else {
-          totalMoneyOut += debit;
-        }
-      } else if (type === 'expense') {
-        totalMoneyOut += debit;
-      }
-
-      return {
-        id: entry.id,
-        date: entry.date,
-        type,
-        ref_no: entry.referenceType ?? '-',
-        description: entry.description,
-        debit: entry.debit ?? '0',
-        credit: entry.credit ?? '0',
-        balance: entry.balance ?? '0',
-      };
+    const periodEntries = await fetchPartyLedgerEntries(this.db, {
+      businessId,
+      partyId: query.party_id,
+      from: fromKey,
+      to: toKey,
+      order: 'asc',
     });
 
-    const balances = await this.outstandingRepository.listPartyBalances(
-      businessId,
-    );
-    const partyBalance = Number(
-      balances.find((row) => row.party_id === query.party_id)?.balance ?? 0,
-    );
+    const mapped = periodEntries.map((entry) => ({
+      id: entry.id,
+      date: entry.date,
+      type: entry.entryType,
+      ref_no: entry.referenceNumber ?? '-',
+      description: entry.description,
+      debit: entry.debit,
+      credit: entry.credit,
+      balance: String(report.runningBalances.get(entry.id) ?? report.openingBalance),
+    }));
 
     return {
       period: toPeriodMeta(range),
       party_id: query.party_id,
       summary: {
-        total_sale: String(totalSale),
-        total_purchase: String(totalPurchase),
-        total_money_in: String(totalMoneyIn),
-        total_money_out: String(totalMoneyOut),
-        total_receivable: String(Math.max(0, partyBalance)),
+        total_sale: String(report.summary.totalSales),
+        total_purchase: String(report.summary.totalPurchases),
+        total_money_in: String(
+          periodEntries
+            .filter((e) => e.entryType === 'payment' && Number(e.credit) > 0)
+            .reduce((sum, e) => sum + Number(e.credit), 0),
+        ),
+        total_money_out: String(
+          periodEntries
+            .filter(
+              (e) =>
+                (e.entryType === 'payment' && Number(e.debit) > 0) ||
+                e.entryType === 'expense',
+            )
+            .reduce(
+              (sum, e) => sum + Number(e.debit) + Number(e.credit),
+              0,
+            ),
+        ),
+        total_receivable: String(report.summary.receiveAmount),
       },
       entries: mapped,
     };
