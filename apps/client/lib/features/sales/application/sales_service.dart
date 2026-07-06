@@ -452,6 +452,24 @@ class SalesService {
     }
   }
 
+  Future<SalesDocumentDto> convertDocument(
+    String documentId, {
+    required String targetType,
+    bool applyGst = false,
+  }) async {
+    try {
+      return await _repository.convertDocument(
+        documentId,
+        ConvertSalesDocumentRequest(
+          targetType: targetType,
+          applyGst: applyGst,
+        ),
+      );
+    } on DioException catch (error) {
+      throw mapSalesError(error);
+    }
+  }
+
   Future<SalesDocumentDto> finalizeDraft(
     String documentId, {
     String? godownId,

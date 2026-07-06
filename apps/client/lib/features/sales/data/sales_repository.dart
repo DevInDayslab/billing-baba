@@ -61,4 +61,9 @@ class SalesRepository {
     String paymentId,
     PaymentAllocationRequest request,
   ) => _remote.addPaymentAllocation(paymentId, request);
+
+  Future<SalesDocumentDto> convertDocument(
+    String id,
+    ConvertSalesDocumentRequest request,
+  ) => _remote.convertDocument(id, request);
 }

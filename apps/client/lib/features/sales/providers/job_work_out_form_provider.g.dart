@@ -42,7 +42,7 @@ final class JobWorkOutFormNotifierProvider
 }
 
 String _$jobWorkOutFormNotifierHash() =>
-    r'57981f66a32c1b48cc58a9f93e13617b7bc50170';
+    r'566692daafc4fba8ec9682ac8206c5d6e84d9a56';
 
 abstract class _$JobWorkOutFormNotifier extends $Notifier<JobWorkOutFormState> {
   JobWorkOutFormState build();

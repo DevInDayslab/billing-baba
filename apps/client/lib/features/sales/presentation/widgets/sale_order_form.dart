@@ -14,6 +14,10 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_se
 import 'package:billing_baba/features/sales/presentation/widgets/sale_order_footer.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_order_line_items_table.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_document_actions.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_documents_filter_bar.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_documents_table.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_order_summary_cards.dart';
 import 'package:billing_baba/features/sales/providers/sale_order_form_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:flutter/material.dart';
@@ -33,11 +37,48 @@ class SaleOrderContent extends ConsumerWidget {
     final form = ref.watch(saleOrderFormProvider);
 
     if (form.isFormOpen) {
-      return const _SaleOrderFormCard();
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.lgBorder,
+          border: Border.all(color: _cardBorder),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const _SaleOrderFormCard(),
+      );
     }
 
-    return _SaleOrderListState(
-      onAddPressed: () => ref.read(saleOrderFormProvider.notifier).openForm(),
+    final summaryAsync = ref.watch(salesOrderStatusSummaryProvider);
+    final formNotifier = ref.read(saleOrderFormProvider.notifier);
+    final summary = summaryAsync.whenOrNull(data: (data) => data);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SalesDocumentsFilterBar(
+          scope: saleOrderListScope(),
+          onAdd: formNotifier.openForm,
+          addButtonLabel: 'Add Sale Order',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        if (summary != null) ...[
+          SalesOrderSummaryCards(summary: summary),
+          const SizedBox(height: AppSpacing.md),
+        ] else if (summaryAsync.isLoading)
+          const SizedBox(
+            height: 88,
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else
+          const SizedBox(height: AppSpacing.md),
+        SalesDocumentsTable(config: saleOrderTableConfig()),
+      ],
     );
   }
 }

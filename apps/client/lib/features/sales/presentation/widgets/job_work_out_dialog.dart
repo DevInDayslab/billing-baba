@@ -3,6 +3,7 @@ import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_footer.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_raw_material_table.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
@@ -366,7 +367,7 @@ class _JobWorkOutFormFields extends StatelessWidget {
   }
 }
 
-class _FinishedGoodSection extends StatelessWidget {
+class _FinishedGoodSection extends ConsumerWidget {
   const _FinishedGoodSection({
     required this.form,
     required this.notifier,
@@ -376,7 +377,7 @@ class _FinishedGoodSection extends StatelessWidget {
   final JobWorkOutFormNotifier notifier;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -396,11 +397,10 @@ class _FinishedGoodSection extends StatelessWidget {
               flex: 3,
               child: _RequiredLabeledField(
                 label: 'Finished Good',
-                child: _SaleTextField(
-                  initialValue: form.finishedGoodName,
-                  hintText: 'Item name',
-                  hasError: form.finishedGoodHasError,
+                child: ItemNameAutocompleteField(
+                  value: form.finishedGoodName,
                   onChanged: notifier.updateFinishedGoodName,
+                  onItemSelected: notifier.selectFinishedGood,
                 ),
               ),
             ),

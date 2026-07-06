@@ -72,6 +72,8 @@ class SaleItemOption {
     required this.mfgCost,
     required this.stock,
     this.unit,
+    this.sku,
+    this.barcode,
   });
 
   final String id;
@@ -81,6 +83,25 @@ class SaleItemOption {
   final double mfgCost;
   final double stock;
   final String? unit;
+  final String? sku;
+  final String? barcode;
+
+  bool matchesSearchQuery(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    if (name.toLowerCase().contains(q)) return true;
+    final skuValue = sku?.trim().toLowerCase();
+    if (skuValue != null && skuValue.isNotEmpty && skuValue.contains(q)) {
+      return true;
+    }
+    final barcodeValue = barcode?.trim().toLowerCase();
+    if (barcodeValue != null &&
+        barcodeValue.isNotEmpty &&
+        barcodeValue.contains(q)) {
+      return true;
+    }
+    return false;
+  }
 }
 
 abstract final class SaleItemCatalog {

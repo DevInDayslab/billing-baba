@@ -6,6 +6,7 @@ import 'package:billing_baba/features/print/presentation/widgets/sale_invoice_pr
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_status_badge.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -104,6 +105,7 @@ class SaleInvoiceTable extends ConsumerWidget {
           ),
           const Divider(height: 1, color: _cardBorder),
           invoicesAsync.when(
+            skipLoadingOnReload: true,
             loading: () => const Padding(
               padding: EdgeInsets.all(AppSpacing.xl),
               child: Center(child: CircularProgressIndicator()),
@@ -257,13 +259,38 @@ class SaleInvoiceTable extends ConsumerWidget {
               ),
               // Phase 1: sharing not supported.
               // IconButton(share ...),
-              IconButton(
-                onPressed: () => _showInvoiceActions(context, ref, invoice),
-                icon: const Icon(Icons.more_vert, size: 18),
-                color: AppColors.textSecondary,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                tooltip: 'Actions',
+              SalesActionMenuButton(
+                items: [
+                  SalesActionMenuItem(
+                    label: 'View',
+                    onSelected: () =>
+                        context.push('${AppRoutes.viewSale}/${invoice.id}'),
+                  ),
+                  SalesActionMenuItem(
+                    label: 'Edit',
+                    onSelected: () async {
+                      if (invoice.isDraft) {
+                        await context.push(
+                          '${AppRoutes.editSale}/${invoice.id}',
+                        );
+                      } else if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Only draft sales can be edited'),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  SalesActionMenuItem(
+                    label: 'Delete',
+                    onSelected: () => _confirmDeleteInvoice(
+                      context,
+                      ref,
+                      invoice,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -272,86 +299,44 @@ class SaleInvoiceTable extends ConsumerWidget {
     );
   }
 
-  Future<void> _showInvoiceActions(
+  static Future<void> _confirmDeleteInvoice(
     BuildContext context,
     WidgetRef ref,
     SaleInvoiceModel invoice,
   ) async {
-    final box = context.findRenderObject() as RenderBox?;
-    final overlayBox =
-        Overlay.of(context).context.findRenderObject() as RenderBox?;
-    final position = box != null && overlayBox != null
-        ? RelativeRect.fromRect(
-            Rect.fromPoints(
-              box.localToGlobal(Offset.zero, ancestor: overlayBox),
-              box.localToGlobal(
-                box.size.bottomRight(Offset.zero),
-                ancestor: overlayBox,
-              ),
-            ),
-            Offset.zero & overlayBox.size,
-          )
-        : const RelativeRect.fromLTRB(200, 400, 200, 0);
-
-    final action = await showMenu<String>(
+    final confirmed = await showDialog<bool>(
       context: context,
-      position: position,
-      items: const [
-        PopupMenuItem(value: 'view', child: Text('View')),
-        PopupMenuItem(value: 'edit', child: Text('Edit')),
-        PopupMenuItem(value: 'delete', child: Text('Delete')),
-      ],
-    );
-
-    if (action == null || !context.mounted) return;
-    final notifier = ref.read(saleInvoicesProvider.notifier);
-
-    switch (action) {
-      case 'view':
-        await context.push('${AppRoutes.viewSale}/${invoice.id}');
-      case 'edit':
-        if (invoice.isDraft) {
-          await context.push('${AppRoutes.editSale}/${invoice.id}');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Only draft sales can be edited'),
-            ),
-          );
-        }
-      case 'delete':
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Delete sale?'),
-            content: const Text(
-              'This sale will be permanently deleted.\n'
-              'This action cannot be undone.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Delete'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Delete sale?'),
+        content: const Text(
+          'This sale will be permanently deleted.\n'
+          'This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
           ),
-        );
-        if (confirmed != true || !context.mounted) return;
-        final error = await notifier.deleteSale(invoice);
-        if (!context.mounted) return;
-        if (error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error)),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Sale deleted successfully.')),
-          );
-        }
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final error = await ref.read(saleInvoicesProvider.notifier).deleteSale(
+      invoice,
+    );
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sale deleted successfully.')),
+      );
     }
   }
 }

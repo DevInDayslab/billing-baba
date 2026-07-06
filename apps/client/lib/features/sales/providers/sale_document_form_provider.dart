@@ -59,13 +59,25 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
       final service = await ref.read(salesServiceProvider.future);
       final loaded = await service.loadSaleDocumentForm(documentId);
       final items = await _resolveItemNames(loaded.items);
-      state = loaded.copyWith(items: items, isLoading: false);
+      state = loaded.copyWith(
+        items: items,
+        isLoading: false,
+        isFormOpen: true,
+      );
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
         saveError: SalesErrorMapper.messageFor(error),
       );
     }
+  }
+
+  Future<void> duplicateDocument(String documentId) async {
+    await loadDocument(documentId);
+    state = state.copyWith(
+      refNo: '',
+      isFormOpen: true,
+    );
   }
 
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
