@@ -1,0 +1,99 @@
+# Internal alpha/demo desktop builds for Billing Baba.
+# Produces an unsigned Windows Release zip — no signing, notarization, or publishing.
+#
+# Triggers:
+#   - Manual run (workflow_dispatch)
+#   - Push to the `demo` branch
+#
+# Configuration is injected at build time via a generated `.env` asset and
+# `--dart-define` (see AppConfig.apiBaseUrl). Values are hardcoded here
+# intentionally for internal demo builds — not stored in GitHub Secrets.
+
+name: Build Demo
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - demo
+
+# Always build from the `demo` branch so manual runs and CI use the same source.
+env:
+  FLUTTER_WORKING_DIRECTORY: apps/client
+
+jobs:
+  build-windows:
+    name: Windows Release
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        working-directory: ${{ env.FLUTTER_WORKING_DIRECTORY }}
+
+    steps:
+      - name: Checkout demo branch
+        uses: actions/checkout@v4
+        with:
+          ref: demo
+
+      # Demo/production config — bundled as a Flutter asset and read by flutter_dotenv.
+      - name: Inject demo environment configuration
+        shell: pwsh
+        run: |
+          @(
+            'APP_ENV=production',
+            'DEBUG=false',
+            'ENABLE_DEV_LOGIN=false',
+            'API_BASE_URL=https://billing-baba-production-6b5e.up.railway.app',
+            'MSG91_WIDGET_ID=366468674b74383638333530',
+            'MSG91_WIDGET_AUTH_TOKEN=506896TywM6h0I69d61233P1'
+          ) | Set-Content -Path .env -Encoding utf8
+
+      - name: Set up Flutter (stable, with SDK + pub cache)
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Print Flutter version
+        run: flutter --version
+
+      - name: Clean and fetch dependencies
+        run: |
+          flutter clean
+          flutter pub get
+
+      - name: Build Windows release
+        run: >
+          flutter build windows --release
+          --dart-define=API_BASE_URL=https://billing-baba-production-6b5e.up.railway.app
+
+      - name: Verify build output and package artifact
+        shell: pwsh
+        run: |
+          $releaseDir = "build/windows/x64/runner/Release"
+          $exePath = Join-Path $releaseDir "billing_baba.exe"
+
+          Write-Host "Build output directory: $(Resolve-Path $releaseDir)"
+
+          if (-not (Test-Path $exePath)) {
+            Write-Error "Build output missing: expected executable at '$exePath'"
+            exit 1
+          }
+
+          Write-Host "Verified executable: $exePath"
+
+          # Zip the full Release folder (exe, DLLs, data/, and runtime deps) — not just the .exe.
+          $zipPath = Join-Path $PWD "BillingBaba-Windows.zip"
+          if (Test-Path $zipPath) {
+            Remove-Item $zipPath -Force
+          }
+          Compress-Archive -Path "$releaseDir/*" -DestinationPath $zipPath -Force
+          Write-Host "Created artifact: $zipPath"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BillingBaba-Windows
+          path: ${{ env.FLUTTER_WORKING_DIRECTORY }}/BillingBaba-Windows.zip
+          retention-days: 30
