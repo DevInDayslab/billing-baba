@@ -55,9 +55,9 @@ abstract final class Validators {
 
   static String? pincode(String? value) {
     if (value == null || value.trim().isEmpty) return null;
-    final digits = value.replaceAll(RegExp(r'\D'), '');
+    final digits = normalizePincode(value) ?? '';
     if (digits.length != 6) {
-      return 'Pincode must be 6 digits';
+      return 'Pincode must be exactly 6 digits.';
     }
     return null;
   }
@@ -65,10 +65,32 @@ abstract final class Validators {
   /// Kept for optional phone fields elsewhere in the app.
   static String? phone(String? value) {
     if (value == null || value.isEmpty) return null;
-    final digits = value.replaceAll(RegExp(r'\D'), '');
-    if (digits.length != 10) {
-      return 'Enter a valid 10 digit phone number';
+    final normalized = normalizeIndianPhone(value);
+    if (normalized == null || normalized.length != 10) {
+      return 'Phone number must contain exactly 10 digits.';
     }
     return null;
+  }
+
+  /// Returns a 10-digit Indian mobile number when possible.
+  static String? normalizeIndianPhone(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return null;
+    if (digits.length == 10) return digits;
+    if (digits.length == 12 && digits.startsWith('91')) {
+      return digits.substring(2);
+    }
+    if (digits.length > 10) {
+      return digits.substring(digits.length - 10);
+    }
+    return digits;
+  }
+
+  static String? normalizePincode(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    return digits.isEmpty ? null : digits;
   }
 }

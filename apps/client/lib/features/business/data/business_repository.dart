@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/network/api_endpoints.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/business/models/create_business_request.dart';
+import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
 import 'package:dio/dio.dart';
 
 class BusinessRepository {
@@ -25,10 +26,19 @@ class BusinessRepository {
   Future<BusinessProfileModel> updateBusinessProfile(
     UpdateBusinessProfileRequest request,
   ) async {
+    BusinessProfileDebugLog.log(
+      'PUT ${ApiEndpoints.businessProfile} body=${request.toJson()}',
+    );
+
     final response = await _dio.put<Map<String, dynamic>>(
       ApiEndpoints.businessProfile,
       data: request.toJson(),
     );
+
+    BusinessProfileDebugLog.log(
+      'PUT ${ApiEndpoints.businessProfile} status=${response.statusCode}',
+    );
+
     final data = response.data?['data'];
     if (data is! Map<String, dynamic>) {
       throw DioException(
@@ -71,5 +81,9 @@ class BusinessRepository {
       );
     }
     return BusinessDetailDto.fromJson(data);
+  }
+
+  Future<void> deleteBusiness(String businessId) async {
+    await _dio.delete<void>(ApiEndpoints.business(businessId));
   }
 }

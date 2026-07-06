@@ -151,4 +151,29 @@ class BusinessCache {
     await saveBusinessProfile(profile);
     await saveLastOpenedBusinessId(profile.id);
   }
+
+  Future<void> removeBusiness(String businessId) async {
+    final businesses = await readBusinesses();
+    if (businesses.isEmpty) return;
+
+    final updated = businesses
+        .where((business) => business['id'] != businessId)
+        .toList();
+
+    final accountId = readCachedBusinessesAccountId();
+    if (accountId == null || accountId.isEmpty) {
+      await _storage.write(
+        StorageKeys.cachedBusinesses,
+        jsonEncode(updated),
+      );
+      return;
+    }
+
+    await saveBusinesses(updated, accountId: accountId);
+  }
+
+  Future<void> clearSelectedBusiness() async {
+    await _storage.write(StorageKeys.lastOpenedBusinessId, '');
+    await _storage.write(StorageKeys.cachedBusinessProfile, '');
+  }
 }

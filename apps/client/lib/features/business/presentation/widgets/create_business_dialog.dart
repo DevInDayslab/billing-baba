@@ -6,6 +6,7 @@ import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/create_business_controller.dart';
 import 'package:billing_baba/features/business/models/create_business_input.dart';
+import 'package:billing_baba/features/business/presentation/widgets/business_form_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -330,12 +331,12 @@ class _CreateBusinessFormContent extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
-          const _SectionHeader(
+          const BusinessFormSectionHeader(
             title: 'Business Details',
             icon: Icons.business_outlined,
           ),
           const SizedBox(height: AppSpacing.md),
-          _IconField(
+          BusinessFormField(
             icon: Icons.store_outlined,
             label: 'Business Name *',
             controller: businessNameController,
@@ -345,7 +346,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
                 Validators.required(value, fieldName: 'Business name'),
           ),
           const SizedBox(height: AppSpacing.md),
-          _IconField(
+          BusinessFormField(
             icon: Icons.receipt_long_outlined,
             label: 'GSTIN',
             controller: gstinController,
@@ -359,12 +360,12 @@ class _CreateBusinessFormContent extends StatelessWidget {
             validator: Validators.gstin,
           ),
           const SizedBox(height: AppSpacing.xl),
-          const _SectionHeader(
+          const BusinessFormSectionHeader(
             title: 'Owner Details',
             icon: Icons.person_outline,
           ),
           const SizedBox(height: AppSpacing.md),
-          _IconField(
+          BusinessFormField(
             icon: Icons.badge_outlined,
             label: 'Owner Name *',
             controller: ownerNameController,
@@ -374,7 +375,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
                 Validators.required(value, fieldName: 'Owner name'),
           ),
           const SizedBox(height: AppSpacing.md),
-          _IconField(
+          BusinessFormField(
             icon: Icons.phone_outlined,
             label: 'Phone *',
             controller: phoneController,
@@ -387,7 +388,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
             validator: Validators.requiredPhone,
           ),
           const SizedBox(height: AppSpacing.md),
-          _IconField(
+          BusinessFormField(
             icon: Icons.email_outlined,
             label: 'Email',
             controller: emailController,
@@ -396,12 +397,12 @@ class _CreateBusinessFormContent extends StatelessWidget {
             validator: Validators.email,
           ),
           const SizedBox(height: AppSpacing.xl),
-          const _SectionHeader(
+          const BusinessFormSectionHeader(
             title: 'Business Information',
             icon: Icons.info_outline,
           ),
           const SizedBox(height: AppSpacing.md),
-          _IconDropdown(
+          BusinessFormDropdown(
             icon: Icons.category_outlined,
             label: 'Business Type *',
             value: businessType,
@@ -414,7 +415,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _IconDropdown(
+          BusinessFormDropdown(
             icon: Icons.map_outlined,
             label: 'State *',
             value: state,
@@ -425,7 +426,7 @@ class _CreateBusinessFormContent extends StatelessWidget {
                 Validators.requiredSelection(value, fieldName: 'State'),
           ),
           const SizedBox(height: AppSpacing.md),
-          _IconDropdown(
+          BusinessFormDropdown(
             icon: Icons.currency_rupee,
             label: 'Currency *',
             value: currency,
@@ -436,12 +437,12 @@ class _CreateBusinessFormContent extends StatelessWidget {
                 Validators.requiredSelection(value, fieldName: 'Currency'),
           ),
           const SizedBox(height: AppSpacing.xl),
-          const _SectionHeader(
+          const BusinessFormSectionHeader(
             title: 'Address',
             icon: Icons.location_on_outlined,
           ),
           const SizedBox(height: AppSpacing.md),
-          _IconField(
+          BusinessFormField(
             icon: Icons.home_outlined,
             label: 'Address',
             controller: addressController,
@@ -488,12 +489,20 @@ class _CreateBusinessFormContent extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: onCancel,
                   style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
                     minimumSize: const Size(0, 48),
+                    side: BorderSide(color: Colors.grey.shade300),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Cancel'),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -503,6 +512,11 @@ class _CreateBusinessFormContent extends StatelessWidget {
                   onPressed: formState.isSubmitting ? null : onSubmit,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: AppColors.primary.withValues(
+                      alpha: 0.5,
+                    ),
+                    disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
                     minimumSize: const Size(0, 48),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -532,7 +546,10 @@ class _CreateBusinessFormContent extends StatelessWidget {
                         )
                       : const Text(
                           'Create Business',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                 ),
               ),
@@ -542,142 +559,4 @@ class _CreateBusinessFormContent extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.icon});
-
-  final String title;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: AppColors.primary),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _IconField extends StatelessWidget {
-  const _IconField({
-    required this.icon,
-    required this.label,
-    required this.controller,
-    this.hint,
-    this.validator,
-    this.keyboardType,
-    this.textCapitalization = TextCapitalization.none,
-    this.inputFormatters,
-    this.maxLines = 1,
-    this.serverError,
-  });
-
-  final IconData icon;
-  final String label;
-  final TextEditingController controller;
-  final String? hint;
-  final String? Function(String?)? validator;
-  final TextInputType? keyboardType;
-  final TextCapitalization textCapitalization;
-  final List<TextInputFormatter>? inputFormatters;
-  final int maxLines;
-  final String? serverError;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      validator: (value) => serverError ?? validator?.call(value),
-      keyboardType: keyboardType,
-      textCapitalization: textCapitalization,
-      inputFormatters: inputFormatters,
-      maxLines: maxLines,
-      decoration: _fieldDecoration(
-        label: label,
-        hint: hint,
-        icon: icon,
-        errorText: serverError,
-      ),
-    );
-  }
-}
-
-class _IconDropdown extends StatelessWidget {
-  const _IconDropdown({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-    this.validator,
-    this.serverError,
-  });
-
-  final IconData icon;
-  final String label;
-  final String? value;
-  final List<String> items;
-  final ValueChanged<String?> onChanged;
-  final String? Function(String?)? validator;
-  final String? serverError;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      validator: (v) => serverError ?? validator?.call(v),
-      decoration: _fieldDecoration(
-        label: label,
-        icon: icon,
-        errorText: serverError,
-      ),
-      items: items
-          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-          .toList(),
-      onChanged: onChanged,
-    );
-  }
-}
-
-InputDecoration _fieldDecoration({
-  required String label,
-  required IconData icon,
-  String? hint,
-  String? errorText,
-}) {
-  return InputDecoration(
-    labelText: label,
-    hintText: hint,
-    errorText: errorText,
-    prefixIcon: Icon(icon, size: 20, color: AppColors.textSecondary),
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: Colors.grey.shade300),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: AppColors.primary, width: 2),
-    ),
-    errorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: AppColors.error),
-    ),
-    filled: true,
-    fillColor: const Color(0xFFF8F9FF),
-    contentPadding: const EdgeInsets.symmetric(
-      horizontal: AppSpacing.md,
-      vertical: AppSpacing.md,
-    ),
-  );
 }
