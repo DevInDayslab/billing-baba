@@ -11,6 +11,7 @@ import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.da
 import 'package:billing_baba/features/inventory/presentation/pages/items_page.dart';
 import 'package:billing_baba/features/parties/presentation/pages/party_details_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/pages/plans_pricing_page.dart';
+import 'package:billing_baba/features/pos/presentation/pages/pos_page.dart';
 import 'package:billing_baba/features/purchases/presentation/pages/add_debit_note_page.dart';
 import 'package:billing_baba/features/purchases/presentation/pages/add_expense_page.dart';
 import 'package:billing_baba/features/purchases/presentation/pages/add_purchase_fa_page.dart';
@@ -137,6 +138,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.sale,
             redirect: (context, state) => AppRoutes.saleInvoices,
+          ),
+          GoRoute(
+            path: AppRoutes.pos,
+            builder: (context, state) => const PosPage(),
           ),
           GoRoute(
             path: AppRoutes.saleInvoices,

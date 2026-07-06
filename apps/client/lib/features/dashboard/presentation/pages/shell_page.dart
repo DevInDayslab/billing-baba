@@ -4,6 +4,7 @@ import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/app_top_bar.dart';
+import 'package:billing_baba/features/pos/providers/pos_session_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:flutter/material.dart';
@@ -94,6 +95,11 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       routePrefix: AppRoutes.sale,
       subItems: _saleSubItems,
     ),
+    const _NavItem(
+      route: AppRoutes.pos,
+      icon: Icons.point_of_sale_outlined,
+      label: 'POS',
+    ),
     _NavItem(
       icon: Icons.shopping_cart_outlined,
       label: 'Purchase & Expense',
@@ -147,7 +153,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
               color: AppColors.background,
               child: Column(
                 children: [
-                  AppTopBar(pageTitle: _pageTitleFor(currentLocation)),
+                  if (currentLocation != AppRoutes.pos ||
+                      !ref.watch(posSessionProvider))
+                    AppTopBar(pageTitle: _pageTitleFor(currentLocation)),
                   Expanded(child: widget.child),
                 ],
               ),
@@ -374,6 +382,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     if (location == AppRoutes.home) return 'Dashboard';
     if (location.startsWith(AppRoutes.parties)) return 'Parties';
     if (location.startsWith(AppRoutes.items)) return 'Items';
+    if (location == AppRoutes.pos) return 'POS';
     if (location.startsWith(AppRoutes.sale)) return 'Sale';
     if (location.startsWith(AppRoutes.purchase)) return 'Purchase & Expense';
     if (location.startsWith(AppRoutes.reports)) return 'Reports';

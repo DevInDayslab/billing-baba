@@ -12,6 +12,7 @@ abstract final class AppRoutes {
   static const itemsUnits = '/items/units';
   static const itemsGodowns = '/items/godowns';
   static const itemsStockTransfer = '/items/stock-transfer';
+  static const pos = '/pos';
   static const sale = '/sale';
   static const saleInvoices = '/sale/invoices';
   static const saleEstimateQuotation = '/sale/estimate-quotation';

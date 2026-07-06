@@ -1,0 +1,34 @@
+import 'package:billing_baba/features/pos/models/pos_item.dart';
+import 'package:billing_baba/features/pos/providers/pos_repository_provider.dart';
+import 'package:billing_baba/features/pos/repositories/pos_repository.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'pos_items_provider.g.dart';
+
+@riverpod
+class PosItemSearchQuery extends _$PosItemSearchQuery {
+  @override
+  String build() => '';
+
+  void setQuery(String query) => state = query;
+}
+
+@riverpod
+Future<List<PosItem>> posItems(Ref ref) async {
+  final repository = ref.watch(posRepositoryProvider);
+  return repository.getItems();
+}
+
+@riverpod
+Future<List<PosItem>> posItemSearch(Ref ref, String query) async {
+  final repository = ref.watch(posRepositoryProvider);
+  if (query.isEmpty) return repository.getItems();
+  return repository.searchItems(query);
+}
+
+@riverpod
+Future<List<PosCustomer>> posCustomerSearch(Ref ref, String query) async {
+  final repository = ref.watch(posRepositoryProvider);
+  if (query.isEmpty) return [];
+  return repository.searchCustomers(query);
+}
