@@ -21,10 +21,15 @@ import {
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-/** Server-only constants for the development login flow. */
-const DEV_LOGIN_PHONE = '919999999999';
-const DEV_ACCOUNT_NAME = 'Development User';
-const DEV_BUSINESS_NAME = 'Dev Company';
+import {
+  DEV_ACCOUNT_NAME,
+  DEV_BUSINESS_ADDRESS,
+  DEV_BUSINESS_GSTIN,
+  DEV_BUSINESS_NAME,
+  DEV_BUSINESS_PHONE,
+  DEV_BUSINESS_STATE_CODE,
+  DEV_LOGIN_PHONE,
+} from '../../shared/dev-demo.constants';
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -257,9 +262,16 @@ export class AuthService {
         accountId: account.id,
         businessName: DEV_BUSINESS_NAME,
         ownerName: DEV_ACCOUNT_NAME,
-        phone: DEV_LOGIN_PHONE,
+        phone: DEV_BUSINESS_PHONE,
       });
       memberships = [membership];
+    } else if (memberships.length > 1) {
+      const preferred = memberships.find(
+        (membership) => membership.businessName === DEV_BUSINESS_NAME,
+      );
+      if (preferred) {
+        memberships = [preferred];
+      }
     }
 
     for (const membership of memberships) {

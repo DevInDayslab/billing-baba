@@ -1,38 +1,18 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/application/inventory_service.dart';
-import 'package:billing_baba/features/inventory/models/godown_model.dart';
-import 'package:billing_baba/features/inventory/models/item_image_model.dart';
-import 'package:billing_baba/features/inventory/models/item_location_model.dart';
+import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/adjust_stock_dialog.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/edit_item_location_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_primary_button.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_brands_provider.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-
-const _typeColWidth = 160.0;
-const _invoiceColWidth = 110.0;
-const _nameColWidth = 120.0;
-const _dateColWidth = 140.0;
-const _quantityColWidth = 90.0;
-const _priceColWidth = 100.0;
-const _statusColWidth = 80.0;
-
-const double _minTableWidth =
-    _typeColWidth +
-    _invoiceColWidth +
-    _nameColWidth +
-    _dateColWidth +
-    _quantityColWidth +
-    _priceColWidth +
-    _statusColWidth +
-    24;
 
 class ProductDetailPanel extends ConsumerWidget {
   const ProductDetailPanel({required this.item, super.key});
@@ -44,189 +24,104 @@ class ProductDetailPanel extends ConsumerWidget {
     final detailAsync = ref.watch(productDetailProvider(item.id));
     final displayItem = detailAsync.value ?? item;
     final transactionsAsync = ref.watch(productTransactionsProvider(item.id));
-    final stockLevelsAsync = ref.watch(itemStockLevelsProvider(item.id));
-    final imagesAsync = ref.watch(itemImagesProvider(item.id));
-    final locationsAsync = ref.watch(itemLocationsProvider(item.id));
-    final priceHistoryAsync = ref.watch(priceHistoryProvider(item.id));
-    final tierPricesAsync = ref.watch(itemTierPricesProvider(item.id));
-    final brands = ref.watch(inventoryBrandsProvider).value ?? [];
-    final godowns = ref.watch(inventoryGodownsProvider).value ?? [];
-    final brandName = brands
-        .where((b) => b.id == displayItem.brandId)
-        .map((b) => b.name)
+    final stockLevels = ref.watch(itemStockLevelsProvider(item.id)).value ?? [];
+    final categories = ref.watch(categoriesProvider);
+    final categoryName = categories
+        .where((category) => category.id == displayItem.categoryId)
+        .map((category) => category.name)
         .firstOrNull;
+    final unitLabel = displayItem.baseUnitShortName ?? 'pcs';
+    final stockAfterById = transactionsAsync.maybeWhen(
+      data: _stockAfterByTransactionId,
+      orElse: () => const <String, double>{},
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _StockSummaryBar(
-          item: displayItem,
-          brandName: brandName,
-          onAdjustStock: () => showAdjustStockDialog(context, item: displayItem),
+        Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  displayItem.name,
+                  style: InventoryStyles.panelTitleStyle,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              InventorySecondaryButton(
+                label: 'Adjust Stock',
+                onPressed: () =>
+                    showAdjustStockDialog(context, item: displayItem),
+              ),
+            ],
+          ),
+        ),
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              0,
+              AppSpacing.md,
+              AppSpacing.md,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _ProductSummaryCard(
+                  item: displayItem,
+                  categoryName: categoryName,
+                  unitLabel: unitLabel,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _StockSummaryCard(
+                  item: displayItem,
+                  stockLevels: stockLevels,
+                  unitLabel: unitLabel,
+                ),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.sm,
+            AppSpacing.md,
+            AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              const Text('TRANSACTIONS', style: InventoryStyles.listHeaderStyle),
+              const Spacer(),
+              SizedBox(
+                width: 220,
+                child: InventorySearchField(
+                  hint: 'Search',
+                  onChanged: (query) => ref
+                      .read(productTransactionSearchQueryProvider.notifier)
+                      .query = query,
+                ),
+              ),
+            ],
+          ),
         ),
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            children: [
-              _DetailSection(
-                title: 'STOCK BY GODOWN',
-                child: _DetailAsyncContent(
-                  asyncValue: stockLevelsAsync,
-                  emptyMessage: 'No stock data',
-                  onRetry: () => ref.invalidate(itemStockLevelsProvider(item.id)),
-                  dataBuilder: (levels) => Column(
-                    children: levels
-                        .map(
-                          (level) => ListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(level.godownName),
-                            trailing: Text(level.quantity),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-              ),
-              _DetailSection(
-                title: 'TIER PRICES',
-                child: _DetailAsyncContent(
-                  asyncValue: tierPricesAsync,
-                  emptyMessage: 'No tier prices',
-                  onRetry: () => ref.invalidate(itemTierPricesProvider(item.id)),
-                  dataBuilder: (tiers) {
-                    final currency = NumberFormat.currency(
-                      locale: 'en_IN',
-                      symbol: '₹',
-                    );
-                    return Column(
-                      children: tiers
-                          .map(
-                            (tier) => ListTile(
-                              dense: true,
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(tier.pricingTier),
-                              trailing: Text(currency.format(tier.price)),
-                            ),
-                          )
-                          .toList(),
-                    );
-                  },
-                ),
-              ),
-              _DetailSection(
-                title: 'IMAGES',
-                child: _DetailAsyncContent(
-                  asyncValue: imagesAsync,
-                  emptyMessage: 'No images',
-                  onRetry: () => ref.invalidate(itemImagesProvider(item.id)),
-                  treatEmptyAsData: true,
-                  dataBuilder: (images) =>
-                      _ImagesSection(itemId: item.id, images: images),
-                ),
-              ),
-              _DetailSection(
-                title: 'LOCATIONS',
-                trailing: TextButton(
-                  onPressed: () => showEditItemLocationDialog(
-                    context,
-                    itemId: item.id,
-                  ),
-                  child: const Text('Add'),
-                ),
-                child: _DetailAsyncContent(
-                  asyncValue: locationsAsync,
-                  emptyMessage: 'No locations',
-                  onRetry: () => ref.invalidate(itemLocationsProvider(item.id)),
-                  dataBuilder: (locations) => _LocationsSection(
-                    itemId: item.id,
-                    locations: locations,
-                    godowns: godowns,
-                  ),
-                ),
-              ),
-              _DetailSection(
-                title: 'PRICE HISTORY',
-                child: _DetailAsyncContent(
-                  asyncValue: priceHistoryAsync,
-                  emptyMessage: 'No price history',
-                  onRetry: () => ref.invalidate(priceHistoryProvider(item.id)),
-                  dataBuilder: (records) {
-                    final currency = NumberFormat.currency(
-                      locale: 'en_IN',
-                      symbol: '₹',
-                    );
-                    return Column(
-                      children: records
-                          .take(10)
-                          .map(
-                            (record) => ListTile(
-                              dense: true,
-                              contentPadding: EdgeInsets.zero,
-                              title: Text(currency.format(record.price)),
-                              subtitle: Text(
-                                DateFormat('dd/MM/yyyy').format(record.createdAt),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  Text(
-                    'TRANSACTIONS',
-                    style: InventoryStyles.listHeaderStyle.copyWith(
-                      fontSize: 12,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: 220,
-                    child: InventorySearchField(
-                      hint: 'Search',
-                      onChanged: (query) => ref
-                          .read(productTransactionSearchQueryProvider.notifier)
-                          .query = query,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              SizedBox(
-                height: 280,
-                child: transactionsAsync.when(
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  error: (error, _) => const Center(
-                    child: Text(
-                      'Unable to load transactions',
-                      style: InventoryStyles.emptyStateStyle,
-                    ),
-                  ),
-                  data: (transactions) => transactions.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'No transactions found',
-                            style: InventoryStyles.emptyStateStyle,
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: transactions.length,
-                          itemBuilder: (context, index) {
-                            return _TransactionTableRow(
-                              transaction: transactions[index],
-                            );
-                          },
-                        ),
-                ),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              0,
+              AppSpacing.md,
+              AppSpacing.md,
+            ),
+            child: _TransactionsTable(
+              transactionsAsync: transactionsAsync,
+              unitLabel: unitLabel,
+              stockAfterById: stockAfterById,
+            ),
           ),
         ),
       ],
@@ -234,261 +129,208 @@ class ProductDetailPanel extends ConsumerWidget {
   }
 }
 
-class _DetailSection extends StatelessWidget {
-  const _DetailSection({
-    required this.title,
-    required this.child,
-    this.trailing,
-  });
-
-  final String title;
-  final Widget child;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Text(title, style: InventoryStyles.listHeaderStyle),
-              if (trailing != null) ...[
-                const Spacer(),
-                trailing!,
-              ],
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _DetailAsyncContent<T> extends StatelessWidget {
-  const _DetailAsyncContent({
-    required this.asyncValue,
-    required this.emptyMessage,
-    required this.onRetry,
-    required this.dataBuilder,
-    this.treatEmptyAsData = false,
-  });
-
-  final AsyncValue<T> asyncValue;
-  final String emptyMessage;
-  final VoidCallback onRetry;
-  final Widget Function(T data) dataBuilder;
-  final bool treatEmptyAsData;
-
-  @override
-  Widget build(BuildContext context) {
-    return asyncValue.when(
-      loading: () => const Text('Loading...', style: InventoryStyles.emptyStateStyle),
-      error: (_, _) => Row(
-        children: [
-          const Expanded(
-            child: Text(
-              'Unable to load data',
-              style: InventoryStyles.emptyStateStyle,
-            ),
-          ),
-          TextButton(onPressed: onRetry, child: const Text('Retry')),
-        ],
-      ),
-      data: (data) {
-        if (!treatEmptyAsData && data is List && data.isEmpty) {
-          return Text(emptyMessage, style: InventoryStyles.emptyStateStyle);
-        }
-        return dataBuilder(data);
-      },
-    );
-  }
-}
-
-class _LocationsSection extends ConsumerWidget {
-  const _LocationsSection({
-    required this.itemId,
-    required this.locations,
-    required this.godowns,
-  });
-
-  final String itemId;
-  final List<ItemLocationModel> locations;
-  final List<GodownModel> godowns;
-
-  String _godownName(String godownId) {
-    return godowns
-            .where((godown) => godown.id == godownId)
-            .map((godown) => godown.name)
-            .firstOrNull ??
-        godownId;
-  }
-
-  Future<void> _deleteLocation(
-    BuildContext context,
-    WidgetRef ref,
-    ItemLocationModel location,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete location?'),
-        content: const Text('Remove this storage location?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    final service = await ref.read(inventoryServiceProvider.future);
-    await service.deleteItemLocation(location.id);
-    ref.invalidate(itemLocationsProvider(itemId));
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      children: locations
-          .map(
-            (location) => ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                [
-                  location.rack,
-                  location.shelf,
-                ].whereType<String>().where((v) => v.isNotEmpty).join(' / ').isEmpty
-                    ? '—'
-                    : [
-                        location.rack,
-                        location.shelf,
-                      ].whereType<String>().where((v) => v.isNotEmpty).join(' / '),
-              ),
-              subtitle: Text(_godownName(location.godownId)),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    onPressed: () => showEditItemLocationDialog(
-                      context,
-                      itemId: itemId,
-                      editLocation: location,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 18),
-                    onPressed: () => _deleteLocation(context, ref, location),
-                  ),
-                ],
-              ),
-            ),
-          )
-          .toList(),
-    );
-  }
-}
-
-class _ImagesSection extends ConsumerStatefulWidget {
-  const _ImagesSection({required this.itemId, required this.images});
-
-  final String itemId;
-  final List<ItemImageModel> images;
-
-  @override
-  ConsumerState<_ImagesSection> createState() => _ImagesSectionState();
-}
-
-class _ImagesSectionState extends ConsumerState<_ImagesSection> {
-  final _urlController = TextEditingController();
-
-  @override
-  void dispose() {
-    _urlController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _addImage() async {
-    final url = _urlController.text.trim();
-    if (url.isEmpty) return;
-
-    final service = await ref.read(inventoryServiceProvider.future);
-    await service.addItemImage(widget.itemId, imageUrl: url, isPrimary: widget.images.isEmpty);
-    _urlController.clear();
-    ref.invalidate(itemImagesProvider(widget.itemId));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (widget.images.isEmpty)
-          const Text('No images', style: InventoryStyles.emptyStateStyle)
-        else
-          ...widget.images.map(
-            (image) => ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: Text(image.imageUrl, overflow: TextOverflow.ellipsis),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete_outline, size: 18),
-                onPressed: () async {
-                  final service = await ref.read(inventoryServiceProvider.future);
-                  await service.deleteItemImage(widget.itemId, image.id);
-                  ref.invalidate(itemImagesProvider(widget.itemId));
-                },
-              ),
-            ),
-          ),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _urlController,
-                decoration: const InputDecoration(
-                  hintText: 'Image URL',
-                  isDense: true,
-                ),
-              ),
-            ),
-            TextButton(onPressed: _addImage, child: const Text('Add')),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _StockSummaryBar extends StatelessWidget {
-  const _StockSummaryBar({
+class _ProductSummaryCard extends StatelessWidget {
+  const _ProductSummaryCard({
     required this.item,
-    this.brandName,
-    this.onAdjustStock,
+    required this.categoryName,
+    required this.unitLabel,
   });
 
   final InventoryItem item;
-  final String? brandName;
-  final VoidCallback? onAdjustStock;
+  final String? categoryName;
+  final String unitLabel;
 
   @override
   Widget build(BuildContext context) {
+    final currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
+    final currentStock = _formatQuantity(item.quantity, unitLabel);
+
+    return _SectionCard(
+      title: 'Product Summary',
+      child: _DetailTable(
+        rows: [
+          _DetailRow(label: 'Product Name', value: item.name),
+          const _DetailRow(label: 'SKU', value: '-'),
+          _DetailRow(label: 'Barcode', value: _displayOrDash(item.barcode)),
+          _DetailRow(label: 'Category', value: _displayOrDash(categoryName)),
+          _DetailRow(label: 'Unit', value: unitLabel),
+          _DetailRow(
+            label: 'Purchase Price',
+            value: item.purchasePrice != null
+                ? currency.format(item.purchasePrice)
+                : '-',
+          ),
+          _DetailRow(
+            label: 'Selling Price',
+            value: item.salePrice != null ? currency.format(item.salePrice) : '-',
+          ),
+          const _DetailRow(label: 'GST Rate', value: '-'),
+          _DetailRow(label: 'Status', value: _stockStatus(item)),
+          _DetailRow(label: 'Current Stock', value: currentStock),
+        ],
+      ),
+    );
+  }
+}
+
+class _StockSummaryCard extends StatelessWidget {
+  const _StockSummaryCard({
+    required this.item,
+    required this.stockLevels,
+    required this.unitLabel,
+  });
+
+  final InventoryItem item;
+  final List<StockLevelDto> stockLevels;
+  final String unitLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
     final available = item.availableForSale ?? item.quantity;
-    final reserved = item.reservedQuantity;
+    final reserved = item.reservedQuantity ?? 0;
+    final warehouse = stockLevels
+        .map((level) => level.godownName)
+        .where((name) => name.isNotEmpty)
+        .join(', ');
+    final stockValue = item.stockValue ??
+        stockLevels.fold<double>(
+          0,
+          (sum, level) =>
+              sum +
+              ((_parseDecimal(level.quantity) ?? 0) *
+                  (_parseDecimal(level.averageCost) ?? 0)),
+        );
+
+    return _SectionCard(
+      title: 'Stock Summary',
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: [
+          _SummaryMetric(
+            label: 'Available Stock',
+            value: _formatQuantity(available, unitLabel),
+          ),
+          _SummaryMetric(
+            label: 'Reserved Stock',
+            value: _formatQuantity(reserved, unitLabel),
+          ),
+          _SummaryMetric(
+            label: 'Warehouse',
+            value: warehouse.isEmpty ? 'Main Warehouse' : warehouse,
+          ),
+          _SummaryMetric(
+            label: 'Stock Value',
+            value: currency.format(stockValue),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TransactionsTable extends StatelessWidget {
+  const _TransactionsTable({
+    required this.transactionsAsync,
+    required this.unitLabel,
+    required this.stockAfterById,
+  });
+
+  final AsyncValue<List<ProductTransaction>> transactionsAsync;
+  final String unitLabel;
+  final Map<String, double> stockAfterById;
+
+  static const _columns = [
+    InventoryListColumn(label: 'DATE', flex: 2),
+    InventoryListColumn(label: 'DOCUMENT', flex: 2),
+    InventoryListColumn(label: 'REFERENCE NO.', flex: 2),
+    InventoryListColumn(label: 'PARTY', flex: 2),
+    InventoryListColumn(label: 'TYPE'),
+    InventoryListColumn(label: 'QUANTITY', flex: 2),
+    InventoryListColumn(label: 'RATE', flex: 2),
+    InventoryListColumn(label: 'STOCK AFTER', flex: 2),
+    InventoryListColumn(label: 'AMOUNT', flex: 2),
+    InventoryListColumn(label: 'STATUS', flex: 2),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: inventoryCardBorder),
+        borderRadius: AppRadius.mdBorder,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const InventoryListHeader(columns: _columns),
+          Expanded(
+            child: transactionsAsync.when(
+              loading: () => const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              error: (_, _) => const _TransactionsEmptyState(),
+              data: (transactions) {
+                if (transactions.isEmpty) {
+                  return const _TransactionsEmptyState();
+                }
+
+                return ListView.builder(
+                  itemCount: transactions.length,
+                  itemBuilder: (context, index) {
+                    final transaction = transactions[index];
+                    return _TransactionRow(
+                      transaction: transaction,
+                      unitLabel: unitLabel,
+                      stockAfter: stockAfterById[transaction.id],
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TransactionRow extends StatelessWidget {
+  const _TransactionRow({
+    required this.transaction,
+    required this.unitLabel,
+    required this.stockAfter,
+  });
+
+  final ProductTransaction transaction;
+  final String unitLabel;
+  final double? stockAfter;
+
+  static final _dateFormat = DateFormat('dd MMM yyyy');
+  static final _currencyFormat = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹',
+    decimalDigits: 0,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final quantityColor = transaction.isInbound
+        ? inventoryPositiveColor
+        : inventoryNegativeColor;
+    final signedPrefix = transaction.isInbound ? '+' : '-';
+    final quantityText =
+        '$signedPrefix${_formatQuantityValue(transaction.quantity)} $unitLabel';
+    final rateText = transaction.pricePerUnit > 0
+        ? _currencyFormat.format(transaction.pricePerUnit)
+        : '-';
+    final amountText = transaction.amount > 0
+        ? _currencyFormat.format(transaction.amount)
+        : '-';
+    final stockAfterText = stockAfter != null
+        ? _formatQuantity(stockAfter, unitLabel)
+        : '-';
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -498,271 +340,275 @@ class _StockSummaryBar extends StatelessWidget {
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: inventoryCardBorder)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: InventoryListRowLayout(
+        flexValues: const [2, 2, 2, 2, 1, 2, 2, 2, 2, 2],
         children: [
-          Row(
-            children: [
-              Text(
-                'Available for Sale: ',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              Text(
-                available?.toStringAsFixed(
-                      available == available.roundToDouble() ? 0 : 1,
-                    ) ??
-                    '-',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xl),
-              Text(
-                'RESERVED QUANTITY: ',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                  letterSpacing: 0.3,
-                ),
-              ),
-              Text(
-                reserved?.toStringAsFixed(
-                      reserved == reserved.roundToDouble() ? 0 : 1,
-                    ) ??
-                    '-',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const Spacer(),
-              if (onAdjustStock != null)
-                TextButton(
-                  onPressed: onAdjustStock,
-                  child: const Text('Adjust Stock'),
-                ),
-            ],
+          Text(
+            _dateFormat.format(transaction.date),
+            style: _cellStyle,
+            overflow: TextOverflow.ellipsis,
           ),
-          if (brandName != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Brand: $brandName',
-              style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+          Text(
+            transaction.documentLabel,
+            style: _cellStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            transaction.referenceNo,
+            style: _cellStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            transaction.partyName,
+            style: _cellStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            transaction.transactionType,
+            style: _cellStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            quantityText,
+            style: _cellStyle.copyWith(
+              color: quantityColor,
+              fontWeight: FontWeight.w600,
             ),
-          ],
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(rateText, style: _cellStyle, overflow: TextOverflow.ellipsis),
+          Text(
+            stockAfterText,
+            style: _cellStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(amountText, style: _cellStyle, overflow: TextOverflow.ellipsis),
+          Text(
+            transaction.status,
+            style: _cellStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
   }
+
+  static const _cellStyle = TextStyle(
+    fontSize: 13,
+    color: AppColors.textPrimary,
+  );
 }
 
-class _TransactionTableHeader extends StatelessWidget {
-  const _TransactionTableHeader();
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 10,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: inventoryCardBorder),
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF5F5F5),
-        border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-      ),
-      child: const Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(width: 12),
-          _HeaderCell(width: _typeColWidth, label: 'TYPE'),
-          _HeaderCell(width: _invoiceColWidth, label: 'INVOICE/REF. NO'),
-          _HeaderCell(width: _nameColWidth, label: 'NAME'),
-          _HeaderCell(
-            width: _dateColWidth,
-            label: 'DATE',
-            showSort: true,
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
           ),
-          _HeaderCell(width: _quantityColWidth, label: 'QUANTITY'),
-          _HeaderCell(width: _priceColWidth, label: 'PRICE/ UNIT'),
-          _HeaderCell(width: _statusColWidth, label: 'STATUS'),
+          const SizedBox(height: AppSpacing.md),
+          child,
         ],
       ),
     );
   }
 }
 
-class _HeaderCell extends StatelessWidget {
-  const _HeaderCell({
-    required this.width,
-    required this.label,
-    this.showSort = false,
-  });
+class _DetailRow {
+  const _DetailRow({required this.label, required this.value});
 
-  final double width;
   final String label;
-  final bool showSort;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: Row(
-        children: [
-          Flexible(
-            child: Text(
-              label,
-              style: InventoryStyles.listHeaderStyle,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Icon(
-            Icons.filter_list,
-            size: 14,
-            color: Colors.grey.shade500,
-          ),
-          if (showSort) ...[
-            const SizedBox(width: 2),
-            Icon(
-              Icons.arrow_downward,
-              size: 12,
-              color: Colors.grey.shade600,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+  final String value;
 }
 
-class _TransactionTableRow extends StatelessWidget {
-  const _TransactionTableRow({required this.transaction});
+class _DetailTable extends StatelessWidget {
+  const _DetailTable({required this.rows});
 
-  final ProductTransaction transaction;
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy hh:mm a');
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 0,
-  );
+  final List<_DetailRow> rows;
 
   @override
   Widget build(BuildContext context) {
-    final dotColor = transaction.isInbound
-        ? inventoryPositiveColor
-        : inventoryNegativeColor;
-
-    final quantityText = transaction.unit != null
-        ? '${_formatQuantity(transaction.quantity)} ${transaction.unit}'
-        : _formatQuantity(transaction.quantity);
-
-    final priceText = transaction.pricePerUnit > 0
-        ? _currencyFormat.format(transaction.pricePerUnit)
-        : '-';
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {},
-        hoverColor: const Color(0xFFF5F5F5),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: 10,
-          ),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-          ),
-          child: Row(
+    return Table(
+      columnWidths: const {
+        0: FixedColumnWidth(140),
+        1: FlexColumnWidth(),
+      },
+      children: [
+        for (final row in rows)
+          TableRow(
             children: [
-              Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsets.only(right: 4),
-                decoration: BoxDecoration(
-                  color: dotColor,
-                  shape: BoxShape.circle,
+              Padding(
+                padding: const EdgeInsets.only(
+                  right: AppSpacing.sm,
+                  bottom: AppSpacing.sm,
+                ),
+                child: Text(
+                  row.label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
-              _DataCell(
-                width: _typeColWidth,
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                 child: Text(
-                  transaction.typeLabel,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              _DataCell(
-                width: _invoiceColWidth,
-                child: Text(
-                  transaction.invoiceRefNo,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              _DataCell(
-                width: _nameColWidth,
-                child: Text(
-                  transaction.partyName,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              _DataCell(
-                width: _dateColWidth,
-                child: Text(
-                  _dateFormat.format(transaction.date),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              _DataCell(
-                width: _quantityColWidth,
-                child: Text(quantityText),
-              ),
-              _DataCell(
-                width: _priceColWidth,
-                child: Text(priceText),
-              ),
-              _DataCell(
-                width: _statusColWidth,
-                child: Text(
-                  transaction.status,
-                  overflow: TextOverflow.ellipsis,
+                  row.value,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ],
           ),
+      ],
+    );
+  }
+}
+
+class _SummaryMetric extends StatelessWidget {
+  const _SummaryMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 160,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: listPanelCardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TransactionsEmptyState extends StatelessWidget {
+  const _TransactionsEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.inventory_2_outlined,
+              size: 56,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const Text(
+              'No inventory transactions yet.',
+              style: ListPanelStyles.emptyStateStyle,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Stock movements related to this product will appear here.',
+              style: ListPanelStyles.emptyStateStyle.copyWith(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );
   }
-
-  String _formatQuantity(double value) {
-    return value == value.roundToDouble()
-        ? value.toInt().toString()
-        : value.toString();
-  }
 }
 
-class _DataCell extends StatelessWidget {
-  const _DataCell({required this.width, required this.child});
+Map<String, double> _stockAfterByTransactionId(
+  List<ProductTransaction> transactions,
+) {
+  final chronological = [...transactions]
+    ..sort((a, b) => a.date.compareTo(b.date));
+  final result = <String, double>{};
+  var running = 0.0;
 
-  final double width;
-  final Widget child;
-
-  static const _dataStyle = TextStyle(
-    fontSize: 13,
-    color: AppColors.textPrimary,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: DefaultTextStyle(style: _dataStyle, child: child),
-    );
+  for (final transaction in chronological) {
+    running += transaction.signedQuantity;
+    result[transaction.id] = running;
   }
+
+  return result;
+}
+
+String _displayOrDash(String? value) {
+  if (value == null || value.trim().isEmpty) return '-';
+  return value;
+}
+
+String _stockStatus(InventoryItem item) {
+  final quantity = item.quantity;
+  if (quantity == null || quantity <= 0) return 'Out of Stock';
+  final reorder = item.reorderLevel;
+  if (reorder != null && quantity <= reorder) return 'Low Stock';
+  return 'In Stock';
+}
+
+double? _parseDecimal(String? value) {
+  if (value == null || value.trim().isEmpty) return null;
+  return double.tryParse(value);
+}
+
+String _formatQuantity(double? value, String unit) {
+  if (value == null) return '-';
+  return '${_formatQuantityValue(value)} $unit';
+}
+
+String _formatQuantityValue(double value) {
+  if (value == value.roundToDouble()) {
+    return value.toInt().toString();
+  }
+  return value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
 }

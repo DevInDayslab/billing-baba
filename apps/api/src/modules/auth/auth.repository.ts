@@ -7,6 +7,13 @@ import {
   users,
 } from '../../db/schema/identity/tables';
 import { categories, godowns } from '../../db/schema/inventory/tables';
+import {
+  DEV_BUSINESS_ADDRESS,
+  DEV_BUSINESS_GSTIN,
+  DEV_BUSINESS_NAME,
+  DEV_BUSINESS_PHONE,
+  DEV_BUSINESS_STATE_CODE,
+} from '../../shared/dev-demo.constants';
 import type { AccountRecord, BusinessMembership } from './auth.types';
 
 export class AuthRepository {
@@ -93,8 +100,20 @@ export class AuthRepository {
         .insert(businesses)
         .values({
           name: input.businessName,
-          stateCode: '27',
+          stateCode: DEV_BUSINESS_STATE_CODE,
           valuationMethod: 'average',
+          gstin:
+            input.businessName === DEV_BUSINESS_NAME
+              ? DEV_BUSINESS_GSTIN
+              : null,
+          phone:
+            input.businessName === DEV_BUSINESS_NAME
+              ? DEV_BUSINESS_PHONE
+              : input.phone,
+          address:
+            input.businessName === DEV_BUSINESS_NAME
+              ? DEV_BUSINESS_ADDRESS
+              : null,
         })
         .returning({
           id: businesses.id,

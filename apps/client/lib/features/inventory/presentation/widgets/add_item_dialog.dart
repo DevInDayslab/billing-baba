@@ -8,6 +8,7 @@ import 'package:billing_baba/features/inventory/models/add_item_form_model.dart'
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_brand_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_category_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_godown_dialog.dart';
@@ -98,8 +99,22 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         unawaited(_hydrateEditItem(widget.editItem!));
       } else {
         ref.read(addItemFormProvider.notifier).setInitialType(widget.initialType);
+        _ensureDefaultServiceUnit();
       }
     });
+  }
+
+  void _ensureDefaultServiceUnit() {
+    final form = ref.read(addItemFormProvider);
+    if (form.itemType != ItemType.service || form.baseUnitId != null) return;
+
+    final units = ref.read(inventoryUnitsProvider).value ?? [];
+    final defaultUnit = resolveDefaultServiceUnit(units);
+    if (defaultUnit == null) return;
+
+    ref
+        .read(addItemFormProvider.notifier)
+        .setUnits(baseUnitId: defaultUnit.id);
   }
 
   Future<void> _hydrateEditItem(InventoryItem item) async {
@@ -181,6 +196,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     ref.read(addItemFormProvider.notifier).setItemType(type);
     ref.read(addItemFormProvider.notifier).setActiveTab(0);
     ref.read(inventoryItemsTabIndexProvider.notifier).selectForItemType(type);
+    if (type == ItemType.service) {
+      _ensureDefaultServiceUnit();
+    }
 
     // Dispose after rebuild so TabBar/AnimatedBuilder stop using the old controller.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -337,6 +355,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(inventoryUnitsProvider, (previous, next) {
+      next.whenData((_) => _ensureDefaultServiceUnit());
+    });
+
     ref.listen<int>(inventoryItemsTabIndexProvider, (previous, next) {
       if (next > inventoryServicesTabIndex) return;
       final targetType = next == inventoryProductsTabIndex
