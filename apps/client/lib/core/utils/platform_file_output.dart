@@ -27,7 +27,10 @@ abstract final class PlatformFileOutput {
     );
   }
 
-  /// Write to temp directory and open the native share sheet.
+  /// Mobile: write to temp and open the native share sheet.
+  ///
+  /// Desktop sandboxes block sharing temp files, so we use the save dialog
+  /// instead (user-selected path entitlement).
   static Future<void> shareFromTemp({
     required String filename,
     required Uint8List bytes,
@@ -35,8 +38,15 @@ abstract final class PlatformFileOutput {
   }) async {
     if (kIsWeb) return;
 
+    final safeName = _basename(filename);
+
+    if (isDesktop) {
+      await saveViaDialog(filename: safeName, bytes: bytes);
+      return;
+    }
+
     final directory = await getTemporaryDirectory();
-    final output = File('${directory.path}/$filename');
+    final output = File('${directory.path}/$safeName');
     await output.writeAsBytes(bytes, flush: true);
 
     await SharePlus.instance.share(
@@ -45,4 +55,7 @@ abstract final class PlatformFileOutput {
       ),
     );
   }
+
+  static String _basename(String filename) =>
+      filename.split(RegExp(r'[/\\]')).last;
 }

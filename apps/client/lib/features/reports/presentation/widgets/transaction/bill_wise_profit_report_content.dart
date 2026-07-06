@@ -5,6 +5,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_preview_dialog.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
@@ -33,10 +34,14 @@ class BillWiseProfitReportContent extends ConsumerWidget {
       onRetry: () => ref.read(billWiseProfitReportProvider.notifier).refresh(),
       data: (report) {
         final rows = report.rows;
-        final totalSale =
-            rows.fold<double>(0, (sum, row) => sum + row.saleAmount);
-        final totalProfit =
-            rows.fold<double>(0, (sum, row) => sum + row.profit);
+        final totalSale = rows.fold<double>(
+          0,
+          (sum, row) => sum + row.saleAmount,
+        );
+        final totalProfit = rows.fold<double>(
+          0,
+          (sum, row) => sum + row.profit,
+        );
 
         void exportCsv() {
           reportExportTable(
@@ -54,6 +59,7 @@ class BillWiseProfitReportContent extends ConsumerWidget {
           reportPrintTable(
             context: context,
             title: 'Bill Wise Profit',
+            filename: 'bill-wise-profit',
             headers: _exportHeaders,
             rows: [
               for (final row in rows) _billWiseProfitExportRow(row),
@@ -135,15 +141,17 @@ class BillWiseProfitReportContent extends ConsumerWidget {
                                     vertical: 10,
                                   ),
                                   border: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(AppRadius.sm),
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.sm,
+                                    ),
                                     borderSide: const BorderSide(
                                       color: reportCardBorder,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(AppRadius.sm),
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.sm,
+                                    ),
                                     borderSide: const BorderSide(
                                       color: reportCardBorder,
                                     ),
@@ -312,10 +320,17 @@ class _BillWiseProfitRow extends StatelessWidget {
               onPressed: () => reportPrintRow(
                 context: context,
                 title: 'Bill ${row.invoiceNo}',
+                filename: 'bill-${row.invoiceNo}',
                 headers: BillWiseProfitReportContent._exportHeaders,
                 row: _billWiseProfitExportRow(row),
+                meta: ReportPreviewMeta(
+                  party: row.partyName,
+                  invoiceDate: formatReportDate(row.date),
+                  invoiceNumber: row.invoiceNo,
+                ),
               ),
               icon: const Icon(Icons.visibility_outlined, size: 18),
+              tooltip: 'Preview',
               color: AppColors.textSecondary,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
