@@ -75,9 +75,27 @@ export class SalesDocumentService extends SalesServiceBase {
       order: query.order,
     });
 
+    const summary = await this.repository.aggregateListSummary({
+      businessId,
+      documentType: query.document_type,
+      status: query.status,
+      partyId: query.party_id,
+      posSessionId: query.pos_session_id,
+      from: query.from ? new Date(query.from) : undefined,
+      to: query.to ? new Date(query.to) : undefined,
+      q: query.q,
+      sort: query.sort,
+      order: query.order,
+    });
+
     return {
       data: result.rows,
       meta: { page: query.page, limit: query.limit, total: result.total },
+      summary: {
+        total_amount: summary.total_amount ?? '0',
+        received_amount: summary.received_amount ?? '0',
+        balance_amount: summary.balance_amount ?? '0',
+      },
     };
   }
 

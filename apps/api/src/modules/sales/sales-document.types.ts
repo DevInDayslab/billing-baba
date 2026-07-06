@@ -42,6 +42,8 @@ export type SalesDocumentRecord = {
   discount_total: string;
   tax_amount: string;
   total_amount: string;
+  paid_amount: string;
+  payment_mode: string | null;
   document_date: string;
   converted_from_id: string | null;
   pos_session_id: string | null;
@@ -51,10 +53,14 @@ export type SalesDocumentRecord = {
   lines?: SalesDocumentLineRecord[];
 };
 
-export type ListSalesDocumentsParams = {
+export type SalesDocumentsListSummary = {
+  total_amount: string;
+  received_amount: string;
+  balance_amount: string;
+};
+
+export type ListSalesDocumentsFilterParams = {
   businessId: string;
-  page: number;
-  limit: number;
   documentType?: SalesDocumentType;
   status?: DocumentStatus;
   partyId?: string;
@@ -64,6 +70,11 @@ export type ListSalesDocumentsParams = {
   q?: string;
   sort: 'document_date' | 'created_at' | 'document_number';
   order: 'asc' | 'desc';
+};
+
+export type ListSalesDocumentsParams = ListSalesDocumentsFilterParams & {
+  page: number;
+  limit: number;
 };
 
 export type SalesDocumentInsertValues = {

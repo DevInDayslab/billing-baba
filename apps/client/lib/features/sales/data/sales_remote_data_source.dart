@@ -56,6 +56,15 @@ class SalesRemoteDataSource {
     await _dio.delete<void>(ApiEndpoints.salesDocument(id));
   }
 
+  Future<SalesDocumentDto> cancelDocument(String id) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.salesDocumentCancel(id),
+    );
+    return SalesDocumentDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
   Future<SalesDocumentDto> finalizeDocument(
     String id, {
     String? godownId,

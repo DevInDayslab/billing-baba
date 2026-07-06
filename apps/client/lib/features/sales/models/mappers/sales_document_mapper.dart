@@ -9,10 +9,15 @@ class SalesDocumentMapper {
     String partyName = '',
   }) {
     final amount = double.tryParse(dto.totalAmount) ?? 0;
+    final paid = double.tryParse(dto.paidAmount) ?? 0;
     final documentStatus =
         SalesDocumentStatus.fromApiValue(dto.status) ??
         SalesDocumentStatus.draft;
-    final status = _mapPaymentStatus(documentStatus, amount, 0);
+    final balance = documentStatus == SalesDocumentStatus.cancelled
+        ? 0.0
+        : (amount - paid).clamp(0.0, double.infinity);
+    final status = _mapPaymentStatus(documentStatus, amount, paid);
+    final paymentType = _mapPaymentType(documentStatus, amount, paid, dto.paymentMode);
 
     return SaleInvoiceModel(
       id: dto.id,
@@ -22,11 +27,11 @@ class SalesDocumentMapper {
       partyId: dto.partyId,
       documentSeries: dto.documentSeries,
       transactionType: _mapDocumentTypeLabel(dto.documentType),
-      paymentType: 'Credit',
+      paymentType: paymentType,
       status: status,
       documentStatus: documentStatus,
       amount: amount,
-      balance: documentStatus == SalesDocumentStatus.cancelled ? 0 : amount,
+      balance: balance,
     );
   }
 
@@ -67,6 +72,23 @@ class SalesDocumentMapper {
     'sales_return' => 'Credit Note',
     _ => type,
   };
+
+  static String _mapPaymentType(
+    SalesDocumentStatus documentStatus,
+    double amount,
+    double paid,
+    String? paymentMode,
+  ) {
+    if (documentStatus == SalesDocumentStatus.draft) {
+      return 'Credit';
+    }
+    if (amount > 0 && paid >= amount) {
+      return paymentMode != null
+          ? SalesPaymentModes.toUi(paymentMode)
+          : 'Cash';
+    }
+    return 'Credit';
+  }
 
   static SaleInvoiceStatus _mapPaymentStatus(
     SalesDocumentStatus documentStatus,

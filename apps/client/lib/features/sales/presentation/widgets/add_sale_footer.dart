@@ -318,12 +318,9 @@ class AddSaleFooter extends ConsumerWidget {
     AddSaleForm notifier,
     int currentCount,
   ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add image',
-      defaultName: 'image_${currentCount + 1}.png',
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Image attachments coming soon.')),
     );
-    if (attachment != null) notifier.addImage(attachment);
   }
 
   Future<void> _promptAddDocument(
@@ -331,12 +328,9 @@ class AddSaleFooter extends ConsumerWidget {
     AddSaleForm notifier,
     int currentCount,
   ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add document',
-      defaultName: 'document_${currentCount + 1}.pdf',
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Document attachments coming soon.')),
     );
-    if (attachment != null) notifier.addDocument(attachment);
   }
 }
 

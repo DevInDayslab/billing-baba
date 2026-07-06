@@ -64,9 +64,8 @@ class SalesDocumentDto {
     required this.discountTotal,
     required this.taxAmount,
     required this.totalAmount,
-    required this.documentDate,
-    required this.createdAt,
-    required this.updatedAt,
+    required this.documentDate, required this.createdAt, required this.updatedAt, this.paidAmount = '0',
+    this.paymentMode,
     this.documentNumber,
     this.partyId,
     this.partyStateCode,
@@ -91,6 +90,8 @@ class SalesDocumentDto {
       discountTotal: json['discount_total'] as String? ?? '0',
       taxAmount: json['tax_amount'] as String? ?? '0',
       totalAmount: json['total_amount'] as String? ?? '0',
+      paidAmount: json['paid_amount'] as String? ?? '0',
+      paymentMode: json['payment_mode'] as String?,
       documentDate: json['document_date'] as String,
       convertedFromId: json['converted_from_id'] as String?,
       posSessionId: json['pos_session_id'] as String?,
@@ -118,6 +119,8 @@ class SalesDocumentDto {
   final String discountTotal;
   final String taxAmount;
   final String totalAmount;
+  final String paidAmount;
+  final String? paymentMode;
   final String documentDate;
   final String? convertedFromId;
   final String? posSessionId;
@@ -127,15 +130,37 @@ class SalesDocumentDto {
   final List<SalesDocumentLineDto> lines;
 }
 
+class SalesDocumentsListSummaryDto {
+  const SalesDocumentsListSummaryDto({
+    required this.totalAmount,
+    required this.receivedAmount,
+    required this.balanceAmount,
+  });
+
+  factory SalesDocumentsListSummaryDto.fromJson(Map<String, dynamic> json) {
+    return SalesDocumentsListSummaryDto(
+      totalAmount: json['total_amount'] as String? ?? '0',
+      receivedAmount: json['received_amount'] as String? ?? '0',
+      balanceAmount: json['balance_amount'] as String? ?? '0',
+    );
+  }
+
+  final String totalAmount;
+  final String receivedAmount;
+  final String balanceAmount;
+}
+
 class PaginatedSalesDocumentsDto {
   const PaginatedSalesDocumentsDto({
     required this.documents,
     required this.meta,
+    this.summary,
   });
 
   factory PaginatedSalesDocumentsDto.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
     final meta = json['meta'];
+    final summary = json['summary'];
     return PaginatedSalesDocumentsDto(
       documents: data is List
           ? data
@@ -146,11 +171,15 @@ class PaginatedSalesDocumentsDto {
       meta: meta is Map<String, dynamic>
           ? PaginationMetaDto.fromJson(meta)
           : const PaginationMetaDto(page: 1, limit: 20, total: 0),
+      summary: summary is Map<String, dynamic>
+          ? SalesDocumentsListSummaryDto.fromJson(summary)
+          : null,
     );
   }
 
   final List<SalesDocumentDto> documents;
   final PaginationMetaDto meta;
+  final SalesDocumentsListSummaryDto? summary;
 }
 
 class PaymentAllocationDto {

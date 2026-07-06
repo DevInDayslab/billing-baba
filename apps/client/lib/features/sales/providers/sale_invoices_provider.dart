@@ -80,18 +80,6 @@ class SaleInvoiceFiltersState {
   }
 }
 
-class SaleInvoiceSummaryData {
-  const SaleInvoiceSummaryData({
-    required this.totalSalesAmount,
-    required this.receivedAmount,
-    required this.balanceAmount,
-  });
-
-  final double totalSalesAmount;
-  final double receivedAmount;
-  final double balanceAmount;
-}
-
 SaleInvoiceStatus? _paymentStatusFromFilterLabel(String label) => switch (label) {
   'Paid' => SaleInvoiceStatus.paid,
   'Unpaid' => SaleInvoiceStatus.unpaid,
@@ -182,7 +170,7 @@ List<SaleInvoiceModel> _applyClientFilters(
   }).toList();
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class SaleInvoiceSearchQuery extends _$SaleInvoiceSearchQuery {
   @override
   String build() => '';
@@ -213,6 +201,7 @@ class SaleInvoices extends _$SaleInvoices {
       currentPage: page.currentPage,
       totalPages: page.totalPages,
       totalItems: page.totalItems,
+      summary: page.summary,
     );
   }
 
@@ -231,6 +220,7 @@ class SaleInvoices extends _$SaleInvoices {
           currentPage: current.currentPage,
           totalPages: current.totalPages,
           totalItems: current.totalItems - 1,
+          summary: current.summary,
         ),
       );
     }
@@ -242,6 +232,21 @@ class SaleInvoices extends _$SaleInvoices {
       return null;
     } catch (error) {
       state = previous;
+      return SalesErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<String?> deleteSale(SaleInvoiceModel invoice) async {
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      if (invoice.isDraft) {
+        await service.deleteDraft(invoice.id);
+      } else {
+        await service.cancelSale(invoice.id);
+      }
+      await refresh();
+      return null;
+    } catch (error) {
       return SalesErrorMapper.messageFor(error);
     }
   }
@@ -258,7 +263,7 @@ class SaleInvoices extends _$SaleInvoices {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class SaleInvoiceFilters extends _$SaleInvoiceFilters {
   @override
   SaleInvoiceFiltersState build() => const SaleInvoiceFiltersState();
@@ -323,20 +328,14 @@ PaginatedSaleInvoices paginatedSaleInvoices(Ref ref) {
 @riverpod
 SaleInvoiceSummaryData saleInvoiceSummary(Ref ref) {
   final page = ref.watch(paginatedSaleInvoicesProvider);
-  final invoices = page.items;
-  final totalSalesAmount = invoices.fold<double>(
-    0,
-    (sum, invoice) => sum + invoice.amount,
-  );
-  final balanceAmount = invoices.fold<double>(
-    0,
-    (sum, invoice) => sum + invoice.balance,
-  );
-  final receivedAmount = totalSalesAmount - balanceAmount;
+  final summary = page.summary;
+  if (summary != null) {
+    return summary;
+  }
 
-  return SaleInvoiceSummaryData(
-    totalSalesAmount: totalSalesAmount,
-    receivedAmount: receivedAmount,
-    balanceAmount: balanceAmount,
+  return const SaleInvoiceSummaryData(
+    totalSalesAmount: 0,
+    receivedAmount: 0,
+    balanceAmount: 0,
   );
 }

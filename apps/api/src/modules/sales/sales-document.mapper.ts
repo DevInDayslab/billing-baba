@@ -61,8 +61,13 @@ export function toSalesDocumentLineRecord(row: LineRow): SalesDocumentLineRecord
   };
 }
 
+type DocumentRowWithPayments = DocumentRow & {
+  paidAmount?: string | number | null;
+  paymentMode?: string | null;
+};
+
 export function toSalesDocumentRecord(
-  row: DocumentRow,
+  row: DocumentRowWithPayments,
   lines?: LineRow[],
 ): SalesDocumentRecord {
   return {
@@ -78,6 +83,9 @@ export function toSalesDocumentRecord(
     discount_total: row.discountTotal,
     tax_amount: row.taxAmount,
     total_amount: row.totalAmount,
+    paid_amount:
+      row.paidAmount == null ? '0' : String(row.paidAmount),
+    payment_mode: row.paymentMode ?? null,
     document_date: row.documentDate.toISOString(),
     converted_from_id: row.convertedFromId,
     pos_session_id: row.posSessionId,

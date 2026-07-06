@@ -20,7 +20,7 @@ final class SaleInvoiceSearchQueryProvider
         argument: null,
         retry: null,
         name: r'saleInvoiceSearchQueryProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -42,7 +42,7 @@ final class SaleInvoiceSearchQueryProvider
 }
 
 String _$saleInvoiceSearchQueryHash() =>
-    r'ca4ff02a32054f65615a16379a22a50515d59618';
+    r'a88d11bec2bd8164740e368cf5c469eae2616184';
 
 abstract class _$SaleInvoiceSearchQuery extends $Notifier<String> {
   String build();
@@ -86,7 +86,7 @@ final class SaleInvoicesProvider
   SaleInvoices create() => SaleInvoices();
 }
 
-String _$saleInvoicesHash() => r'a0acccc91fa334c5cd881f1e2e2bdda4444c8d79';
+String _$saleInvoicesHash() => r'fd8716e5ee3f0be43f77a8a4785de79bb3995072';
 
 abstract class _$SaleInvoices extends $AsyncNotifier<PaginatedSaleInvoices> {
   FutureOr<PaginatedSaleInvoices> build();
@@ -122,7 +122,7 @@ final class SaleInvoiceFiltersProvider
         argument: null,
         retry: null,
         name: r'saleInvoiceFiltersProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -144,7 +144,7 @@ final class SaleInvoiceFiltersProvider
 }
 
 String _$saleInvoiceFiltersHash() =>
-    r'9e9f06887527924ae2cb21ce771c548821a9a317';
+    r'1ed104620744df8ce6375d44c61377ce0408ff3b';
 
 abstract class _$SaleInvoiceFilters extends $Notifier<SaleInvoiceFiltersState> {
   SaleInvoiceFiltersState build();
@@ -259,4 +259,4 @@ final class SaleInvoiceSummaryProvider
 }
 
 String _$saleInvoiceSummaryHash() =>
-    r'9ad9169106a0e956bff1ef4682200b4307626854';
+    r'ca4f98acdb224f07dce152de1f59360d896e362b';

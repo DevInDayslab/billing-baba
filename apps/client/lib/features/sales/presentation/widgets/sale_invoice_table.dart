@@ -22,6 +22,7 @@ const _statusColWidth = 100.0;
 const _amountColWidth = 100.0;
 const _balanceColWidth = 90.0;
 const _actionsColWidth = 120.0;
+const _colGap = 12.0;
 
 const double _minTableWidth =
     _dateColWidth +
@@ -32,6 +33,7 @@ const double _minTableWidth =
     _amountColWidth +
     _balanceColWidth +
     _actionsColWidth +
+    _colGap * 7 +
     160; // party name minimum
 
 class SaleInvoiceTable extends ConsumerWidget {
@@ -85,18 +87,12 @@ class SaleInvoiceTable extends ConsumerWidget {
                   onTap: () =>
                       ModuleExportActions.exportSaleInvoices(context, ref),
                 ),
-                IconButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Use row actions to print an invoice'),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.print_outlined, size: 20),
-                  color: AppColors.textSecondary,
-                  tooltip: 'Print',
-                ),
+                // Phase 1: header print hidden — use row print actions instead.
+                // IconButton(
+                //   onPressed: () { ... },
+                //   icon: const Icon(Icons.print_outlined, size: 20),
+                //   ...
+                // ),
                 IconButton(
                   onPressed: notifier.refresh,
                   icon: const Icon(Icons.refresh, size: 20),
@@ -240,6 +236,7 @@ class SaleInvoiceTable extends ConsumerWidget {
         ),
         _TableCell(
           width: _actionsColWidth,
+          gapAfter: 0,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -258,28 +255,15 @@ class SaleInvoiceTable extends ConsumerWidget {
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 tooltip: 'Print',
               ),
-              IconButton(
-                onPressed: () => SaleInvoicePrintActions.share(
-                  context,
-                  ref,
-                  invoice.id,
-                  filename: SaleInvoicePrintActions.filenameFor(
-                    invoice.invoiceNo,
-                  ),
-                ),
-                icon: const Icon(Icons.share_outlined, size: 18),
-                color: AppColors.textSecondary,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                tooltip: 'Share',
-              ),
+              // Phase 1: sharing not supported.
+              // IconButton(share ...),
               IconButton(
                 onPressed: () => _showInvoiceActions(context, ref, invoice),
                 icon: const Icon(Icons.more_vert, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                tooltip: 'More',
+                tooltip: 'Actions',
               ),
             ],
           ),
@@ -293,16 +277,29 @@ class SaleInvoiceTable extends ConsumerWidget {
     WidgetRef ref,
     SaleInvoiceModel invoice,
   ) async {
+    final box = context.findRenderObject() as RenderBox?;
+    final overlayBox =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
+    final position = box != null && overlayBox != null
+        ? RelativeRect.fromRect(
+            Rect.fromPoints(
+              box.localToGlobal(Offset.zero, ancestor: overlayBox),
+              box.localToGlobal(
+                box.size.bottomRight(Offset.zero),
+                ancestor: overlayBox,
+              ),
+            ),
+            Offset.zero & overlayBox.size,
+          )
+        : const RelativeRect.fromLTRB(200, 400, 200, 0);
+
     final action = await showMenu<String>(
       context: context,
-      position: const RelativeRect.fromLTRB(200, 400, 200, 0),
-      items: [
-        if (invoice.isDraft)
-          const PopupMenuItem(value: 'edit', child: Text('Edit draft')),
-        if (invoice.isDraft)
-          const PopupMenuItem(value: 'finalize', child: Text('Finalize')),
-        if (invoice.isDraft)
-          const PopupMenuItem(value: 'delete', child: Text('Delete draft')),
+      position: position,
+      items: const [
+        PopupMenuItem(value: 'view', child: Text('View')),
+        PopupMenuItem(value: 'edit', child: Text('Edit')),
+        PopupMenuItem(value: 'delete', child: Text('Delete')),
       ],
     );
 
@@ -310,22 +307,27 @@ class SaleInvoiceTable extends ConsumerWidget {
     final notifier = ref.read(saleInvoicesProvider.notifier);
 
     switch (action) {
+      case 'view':
+        await context.push('${AppRoutes.viewSale}/${invoice.id}');
       case 'edit':
-        await context.push('${AppRoutes.editSale}/${invoice.id}');
-      case 'finalize':
-        final error = await notifier.finalizeInvoice(invoice.id);
-        if (!context.mounted) return;
-        if (error != null) {
+        if (invoice.isDraft) {
+          await context.push('${AppRoutes.editSale}/${invoice.id}');
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error)),
+            const SnackBar(
+              content: Text('Only draft sales can be edited'),
+            ),
           );
         }
       case 'delete':
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Delete draft?'),
-            content: Text('Delete draft ${invoice.invoiceNo}?'),
+            title: const Text('Delete sale?'),
+            content: const Text(
+              'This sale will be permanently deleted.\n'
+              'This action cannot be undone.',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
@@ -339,11 +341,15 @@ class SaleInvoiceTable extends ConsumerWidget {
           ),
         );
         if (confirmed != true || !context.mounted) return;
-        final error = await notifier.deleteDraft(invoice.id);
+        final error = await notifier.deleteSale(invoice);
         if (!context.mounted) return;
         if (error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(error)),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Sale deleted successfully.')),
           );
         }
     }
@@ -404,6 +410,7 @@ class _TableHeaderRow extends StatelessWidget {
           ),
           _TableCell(
             width: _actionsColWidth,
+            gapAfter: 0,
             child: Text('Actions', style: _headerStyle),
           ),
         ],
@@ -442,21 +449,33 @@ class _TableCell extends StatelessWidget {
     required this.child,
     this.width,
     this.alignment = Alignment.centerLeft,
+    this.gapAfter = _colGap,
   });
 
   final Widget child;
   final double? width;
   final Alignment alignment;
+  final double gapAfter;
 
   @override
   Widget build(BuildContext context) {
-    final content = Align(alignment: alignment, child: child);
+    final content = Align(
+      alignment: alignment,
+      widthFactor: 1,
+      child: child,
+    );
 
     if (width != null) {
-      return SizedBox(width: width, child: content);
+      return Padding(
+        padding: EdgeInsets.only(right: gapAfter),
+        child: SizedBox(
+          width: width,
+          child: ClipRect(child: content),
+        ),
+      );
     }
 
-    return content;
+    return ClipRect(child: content);
   }
 }
 

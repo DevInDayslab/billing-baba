@@ -29,6 +29,9 @@ class SalesRepository {
 
   Future<void> deleteDocument(String id) => _remote.deleteDocument(id);
 
+  Future<SalesDocumentDto> cancelDocument(String id) =>
+      _remote.cancelDocument(id);
+
   Future<SalesDocumentDto> finalizeDocument(
     String id, {
     String? godownId,

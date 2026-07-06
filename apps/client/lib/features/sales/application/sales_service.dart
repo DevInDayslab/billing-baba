@@ -70,11 +70,24 @@ class SalesService {
           ? 1
           : (total / query.limit).ceil();
 
+      final summaryDto = response.summary;
+      final summary = summaryDto == null
+          ? null
+          : SaleInvoiceSummaryData(
+              totalSalesAmount:
+                  double.tryParse(summaryDto.totalAmount) ?? 0,
+              receivedAmount:
+                  double.tryParse(summaryDto.receivedAmount) ?? 0,
+              balanceAmount:
+                  double.tryParse(summaryDto.balanceAmount) ?? 0,
+            );
+
       return PaginatedSaleInvoices(
         items: items,
         currentPage: query.page,
         totalPages: totalPages,
         totalItems: total,
+        summary: summary,
       );
     } on DioException catch (error) {
       throw mapSalesError(error);
@@ -387,10 +400,37 @@ class SalesService {
         form.copyWith(partyId: partyId, godownId: godownId),
         itemNameToId: itemNameToId,
       );
-      return _repository.finalizeDocument(
+      final finalized = await _repository.finalizeDocument(
         draft.id,
         godownId: godownId ?? form.godownId,
       );
+
+      final receivedAmount = form.saleType == SaleType.cash
+          ? form.grandTotal
+          : (form.receivedEnabled ? form.receivedAmount : 0);
+
+      if (receivedAmount > 0) {
+        final paymentMode = form.saleType == SaleType.cash
+            ? SalesPaymentModes.toApi(form.paymentType)
+            : SalesPaymentModes.toApi(form.paymentType);
+        await _repository.createPayment(
+          CreatePaymentRequest(
+            partyId: partyId,
+            direction: 'received',
+            amount: receivedAmount.toStringAsFixed(4),
+            paymentMode: paymentMode,
+            paymentDate: form.invoiceDate?.toUtc().toIso8601String(),
+            allocations: [
+              PaymentAllocationRequest(
+                salesDocumentId: finalized.id,
+                allocatedAmount: receivedAmount.toStringAsFixed(4),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return finalized;
     } on DioException catch (error) {
       throw mapSalesError(error);
     }
@@ -399,6 +439,14 @@ class SalesService {
   Future<void> deleteDraft(String documentId) async {
     try {
       await _repository.deleteDocument(documentId);
+    } on DioException catch (error) {
+      throw mapSalesError(error);
+    }
+  }
+
+  Future<void> cancelSale(String documentId) async {
+    try {
+      await _repository.cancelDocument(documentId);
     } on DioException catch (error) {
       throw mapSalesError(error);
     }

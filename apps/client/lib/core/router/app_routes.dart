@@ -24,6 +24,7 @@ abstract final class AppRoutes {
   static const addCreditNote = '/sale/add-credit-note';
   static const addSale = '/sale/add';
   static const editSale = '/sale/edit';
+  static const viewSale = '/sale/view';
   static const purchase = '/purchase';
   static const purchaseBills = '/purchase/bills';
   static const purchasePaymentOut = '/purchase/payment-out';
