@@ -87,9 +87,7 @@ class AddPurchaseOrderFormState {
       (grandTotal - paymentAmount).clamp(0, double.infinity);
 
   bool get partyHasError =>
-      showValidationErrors &&
-      (partyId == null || partyId!.isEmpty) &&
-      party.trim().isEmpty;
+      showValidationErrors && (partyId == null || partyId!.isEmpty);
 
   bool get hasValidLineItems => items.any(
     (item) => item.itemName.trim().isNotEmpty && item.qty > 0,
@@ -97,9 +95,7 @@ class AddPurchaseOrderFormState {
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
-  bool get isValid =>
-      ((partyId != null && partyId!.isNotEmpty) || party.trim().isNotEmpty) &&
-      hasValidLineItems;
+  bool get isValid => (partyId != null && partyId!.isNotEmpty) && hasValidLineItems;
 
   AddPurchaseOrderFormState copyWith({
     String? documentId,

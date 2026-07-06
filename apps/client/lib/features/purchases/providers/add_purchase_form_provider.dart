@@ -250,9 +250,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
 
   bool validate({bool finalize = false}) {
     final hasLines = state.hasValidLineItems;
-    final hasParty =
-        (state.partyId != null && state.partyId!.isNotEmpty) ||
-        state.party.trim().isNotEmpty;
+    final hasParty = state.partyId != null && state.partyId!.isNotEmpty;
 
     final isValid = hasLines && (!finalize || hasParty);
     if (!isValid) {
@@ -263,6 +261,11 @@ class AddPurchaseForm extends _$AddPurchaseForm {
 
   Future<String?> saveDraft() async {
     if (!validate()) return 'Add at least one item with name and quantity';
+
+    if (state.partyId == null || state.partyId!.isEmpty) {
+      state = state.copyWith(showValidationErrors: true);
+      return 'Please select a supplier';
+    }
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
@@ -291,9 +294,8 @@ class AddPurchaseForm extends _$AddPurchaseForm {
 
   Future<String?> saveBill({bool finalize = true}) async {
     if (!validate(finalize: finalize)) {
-      if ((state.partyId == null || state.partyId!.isEmpty) &&
-          state.party.trim().isEmpty) {
-        return 'Supplier is required';
+      if (state.partyId == null || state.partyId!.isEmpty) {
+        return 'Please select a supplier';
       }
       return 'Add at least one item with name and quantity';
     }

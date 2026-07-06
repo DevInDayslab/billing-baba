@@ -131,7 +131,10 @@ class AddExpenseFormState {
 
   bool get categoryHasError => showValidationErrors && category.trim().isEmpty;
 
-  bool get partyHasError => showValidationErrors && gstEnabled && party.isEmpty;
+  bool get partyHasError =>
+      showValidationErrors &&
+      gstEnabled &&
+      (partyId == null || partyId!.isEmpty);
 
   bool get lineItemsHasError =>
       showValidationErrors &&
@@ -163,7 +166,7 @@ class AddExpenseFormState {
 
   bool get isValid =>
       category.trim().isNotEmpty &&
-      (!gstEnabled || party.trim().isNotEmpty) &&
+      (!gstEnabled || (partyId != null && partyId!.isNotEmpty)) &&
       items.any((item) => item.itemName.trim().isNotEmpty && item.qty > 0);
 
   AddExpenseFormState copyWith({

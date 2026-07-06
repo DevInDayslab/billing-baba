@@ -7,21 +7,22 @@ import 'package:billing_baba/features/purchases/application/purchase_error_mappe
 import 'package:billing_baba/features/purchases/models/purchase_return_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_status_badge.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_return_provider.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_table_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-const _cardBorder = Color(0xFFE0E0E0);
-
-const _indexColWidth = 36.0;
-const _dateColWidth = 120.0;
-const _refColWidth = 72.0;
-const _typeColWidth = 100.0;
-const _amountColWidth = 100.0;
-const _statusColWidth = 90.0;
-const _dueDateColWidth = 100.0;
-const _actionsColWidth = 120.0;
+const _indexColWidth = 40.0;
+const _dateColWidth = 132.0;
+const _refColWidth = 80.0;
+const _typeColWidth = 96.0;
+const _amountColWidth = 112.0;
+const _dueDateColWidth = 108.0;
+const _statusColWidth = 100.0;
+const _actionsColWidth = 132.0;
+const _partyCategoryMinWidth = 280.0;
 
 const double _minTableWidth =
     _indexColWidth +
@@ -34,7 +35,8 @@ const double _minTableWidth =
     _dueDateColWidth +
     _statusColWidth +
     _actionsColWidth +
-    200;
+    _partyCategoryMinWidth +
+    salesTableColGap * 11;
 
 class PurchaseReturnTable extends ConsumerWidget {
   const PurchaseReturnTable({super.key});
@@ -59,7 +61,7 @@ class PurchaseReturnTable extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: salesCardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -102,8 +104,9 @@ class PurchaseReturnTable extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
-                _XlsChip(
-                  onTap: () => ModuleExportActions.exportDebitNotes(context, ref),
+                SalesXlsChip(
+                  onTap: () =>
+                      ModuleExportActions.exportDebitNotes(context, ref),
                 ),
                 IconButton(
                   onPressed: () {
@@ -126,59 +129,37 @@ class PurchaseReturnTable extends ConsumerWidget {
               ],
             ),
           ),
-          const Divider(height: 1, color: _cardBorder),
+          const Divider(height: 1, color: salesCardBorder),
           returnsAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(child: CircularProgressIndicator()),
+            skipLoadingOnReload: true,
+            loading: () => const SalesLoadingState(),
+            error: (error, _) => SalesErrorState(
+              message: PurchaseErrorMapper.messageFor(error),
+              onRetry: notifier.refresh,
             ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                children: [
-                  Text(
-                    PurchaseErrorMapper.messageFor(error),
-                    style: const TextStyle(color: AppColors.error),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton(
-                    onPressed: notifier.refresh,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-            data: (_) => LayoutBuilder(
-              builder: (context, constraints) {
-                final tableWidth = constraints.maxWidth.clamp(
-                  _minTableWidth,
-                  double.infinity,
-                );
+            data: (_) {
+              if (paginated.items.isEmpty) {
+                return const SalesEmptyListState(message: 'No debit notes found');
+              }
 
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: tableWidth,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const _TableHeaderRow(),
-                        if (paginated.items.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.all(AppSpacing.xl),
-                            child: Center(
-                              child: Text(
-                                'No debit notes found',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                          )
-                        else
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final tableWidth = constraints.maxWidth.clamp(
+                    _minTableWidth,
+                    double.infinity,
+                  );
+
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: tableWidth,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const _TableHeaderRow(),
                           for (var i = 0; i < paginated.items.length; i++) ...[
                             if (i > 0)
-                              const Divider(height: 1, color: _cardBorder),
+                              const Divider(height: 1, color: salesCardBorder),
                             _buildRow(
                               context,
                               ref,
@@ -189,20 +170,21 @@ class PurchaseReturnTable extends ConsumerWidget {
                                   1,
                             ),
                           ],
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              );
+            },
           ),
-          const Divider(height: 1, color: _cardBorder),
+          const Divider(height: 1, color: salesCardBorder),
           _SummaryFooter(
             totalAmount: summary.totalAmount,
             balance: summary.balance,
           ),
           if (paginated.totalPages > 1) ...[
-            const Divider(height: 1, color: _cardBorder),
+            const Divider(height: 1, color: salesCardBorder),
             _PaginationRow(
               currentPage: paginated.currentPage,
               totalPages: paginated.totalPages,
@@ -219,65 +201,101 @@ class PurchaseReturnTable extends ConsumerWidget {
     PurchaseReturnModel item,
     int rowNumber,
   ) {
-    return _TableDataRow(
+    return SalesTableDataRow(
       children: [
-        _TableCell(
+        SalesTableCell(
           width: _indexColWidth,
           child: Text('$rowNumber'),
         ),
-        _TableCell(
+        SalesTableCell(
           width: _dateColWidth,
-          child: Text(_dateFormat.format(item.date)),
+          child: Text(
+            _dateFormat.format(item.date),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
         ),
-        _TableCell(
+        SalesTableCell(
           width: _refColWidth,
-          child: Text(item.debitNoteNo),
+          child: Text(
+            item.debitNoteNo,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
         ),
         Expanded(
-          child: _TableCell(
+          flex: 3,
+          child: _FlexTableCell(
             child: Text(
               item.partyName,
               overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ),
         Expanded(
-          child: _TableCell(
+          flex: 2,
+          child: _FlexTableCell(
             child: Text(
               item.categoryName,
               overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ),
-        _TableCell(
+        SalesTableCell(
           width: _typeColWidth,
-          child: Text(item.type),
+          child: Text(
+            item.type,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
         ),
-        _TableCell(
+        SalesTableCell(
           width: _amountColWidth,
           alignment: Alignment.centerRight,
-          child: Text(_currencyFormat.format(item.total)),
+          child: Text(
+            _currencyFormat.format(item.total),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            textAlign: TextAlign.right,
+          ),
         ),
-        _TableCell(
+        SalesTableCell(
           width: _amountColWidth,
           alignment: Alignment.centerRight,
-          child: Text(_currencyFormat.format(item.receivedPaid)),
+          child: Text(
+            _currencyFormat.format(item.receivedPaid),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            textAlign: TextAlign.right,
+          ),
         ),
-        _TableCell(
+        SalesTableCell(
           width: _amountColWidth,
           alignment: Alignment.centerRight,
-          child: Text(_currencyFormat.format(item.balance)),
+          child: Text(
+            _currencyFormat.format(item.balance),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            textAlign: TextAlign.right,
+          ),
         ),
-        _TableCell(
+        SalesTableCell(
           width: _dueDateColWidth,
-          child: Text(_dueDateFormat.format(item.dueDate)),
+          child: Text(
+            _dueDateFormat.format(item.dueDate),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
         ),
-        _TableCell(
+        SalesTableCell(
           width: _statusColWidth,
           child: PurchaseBillStatusBadge(status: item.status),
         ),
-        _TableCell(
+        SalesTableCell(
           width: _actionsColWidth,
+          gapAfter: 0,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -307,13 +325,77 @@ class PurchaseReturnTable extends ConsumerWidget {
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 tooltip: 'Share',
               ),
-              IconButton(
-                onPressed: () => _showReturnActions(context, ref, item),
-                icon: const Icon(Icons.more_vert, size: 18),
-                color: AppColors.textSecondary,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                tooltip: 'More',
+              SalesActionMenuButton(
+                items: [
+                  if (item.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Edit draft',
+                      onSelected: () async {
+                        await context.push(
+                          '${AppRoutes.editDebitNote}/${item.id}',
+                        );
+                      },
+                    ),
+                  if (item.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Finalize',
+                      onSelected: () async {
+                        final error = await ref
+                            .read(purchaseReturnsProvider.notifier)
+                            .finalizeReturn(item.id);
+                        if (!context.mounted) return;
+                        if (error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(error)),
+                          );
+                        }
+                      },
+                    ),
+                  if (item.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Delete draft',
+                      onSelected: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete draft?'),
+                            content: Text('Delete draft ${item.debitNoteNo}?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed != true || !context.mounted) return;
+                        final error = await ref
+                            .read(purchaseReturnsProvider.notifier)
+                            .deleteDraft(item.id);
+                        if (!context.mounted) return;
+                        if (error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(error)),
+                          );
+                        }
+                      },
+                    ),
+                  if (!item.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Open',
+                      onSelected: () async {
+                        await context.push(
+                          '${AppRoutes.editDebitNote}/${item.id}',
+                        );
+                      },
+                    ),
+                ],
               ),
             ],
           ),
@@ -321,69 +403,26 @@ class PurchaseReturnTable extends ConsumerWidget {
       ],
     );
   }
+}
 
-  Future<void> _showReturnActions(
-    BuildContext context,
-    WidgetRef ref,
-    PurchaseReturnModel item,
-  ) async {
-    final action = await showMenu<String>(
-      context: context,
-      position: const RelativeRect.fromLTRB(200, 400, 200, 0),
-      items: [
-        if (item.isDraft)
-          const PopupMenuItem(value: 'edit', child: Text('Edit draft')),
-        if (item.isDraft)
-          const PopupMenuItem(value: 'finalize', child: Text('Finalize')),
-        if (item.isDraft)
-          const PopupMenuItem(value: 'delete', child: Text('Delete draft')),
-        if (!item.isDraft)
-          const PopupMenuItem(value: 'open', child: Text('Open')),
-      ],
+/// Flexible column cell with right gap and clip so text cannot bleed into neighbors.
+class _FlexTableCell extends StatelessWidget {
+  const _FlexTableCell({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: salesTableColGap),
+      child: ClipRect(
+        child: Align(
+          alignment: Alignment.centerLeft,
+          widthFactor: 1,
+          child: child,
+        ),
+      ),
     );
-
-    if (action == null || !context.mounted) return;
-    final notifier = ref.read(purchaseReturnsProvider.notifier);
-
-    switch (action) {
-      case 'edit':
-      case 'open':
-        await context.push('${AppRoutes.editDebitNote}/${item.id}');
-      case 'finalize':
-        final error = await notifier.finalizeReturn(item.id);
-        if (!context.mounted) return;
-        if (error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error)),
-          );
-        }
-      case 'delete':
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Delete draft?'),
-            content: Text('Delete draft ${item.debitNoteNo}?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
-        );
-        if (confirmed != true || !context.mounted) return;
-        final error = await notifier.deleteDraft(item.id);
-        if (!context.mounted) return;
-        if (error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error)),
-          );
-        }
-    }
   }
 }
 
@@ -483,63 +522,8 @@ class _PaginationRow extends ConsumerWidget {
   }
 }
 
-class _TableDataRow extends StatelessWidget {
-  const _TableDataRow({required this.children});
-
-  final List<Widget> children;
-
-  static const _dataStyle = TextStyle(
-    fontSize: 13,
-    color: AppColors.textPrimary,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: _dataStyle,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        child: Row(children: children),
-      ),
-    );
-  }
-}
-
-class _TableCell extends StatelessWidget {
-  const _TableCell({
-    required this.child,
-    this.width,
-    this.alignment = Alignment.centerLeft,
-  });
-
-  final Widget child;
-  final double? width;
-  final Alignment alignment;
-
-  @override
-  Widget build(BuildContext context) {
-    final content = Align(alignment: alignment, child: child);
-
-    if (width != null) {
-      return SizedBox(width: width, child: content);
-    }
-
-    return content;
-  }
-}
-
 class _TableHeaderRow extends StatelessWidget {
   const _TableHeaderRow();
-
-  static const _headerStyle = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textSecondary,
-    letterSpacing: 0.5,
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -551,88 +535,56 @@ class _TableHeaderRow extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          _TableCell(
-            width: _indexColWidth,
-            child: Text('#', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _dateColWidth,
-            child: Text('DATE', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _refColWidth,
-            child: Text('REF NO.', style: _headerStyle),
-          ),
+          SalesTableHeaderCell(label: '#', width: _indexColWidth),
+          SalesTableHeaderCell(label: 'DATE', width: _dateColWidth),
+          SalesTableHeaderCell(label: 'REF NO.', width: _refColWidth),
           Expanded(
-            child: _TableCell(child: Text('PARTY NAME', style: _headerStyle)),
-          ),
-          Expanded(
-            child: _TableCell(
-              child: Text('CATEGORY NAME', style: _headerStyle),
+            flex: 3,
+            child: _FlexTableCell(
+              child: Text('PARTY NAME', style: _TableHeaderRow._headerStyle),
             ),
           ),
-          _TableCell(
-            width: _typeColWidth,
-            child: Text('TYPE', style: _headerStyle),
+          Expanded(
+            flex: 2,
+            child: _FlexTableCell(
+              child: Text(
+                'CATEGORY NAME',
+                style: _TableHeaderRow._headerStyle,
+              ),
+            ),
           ),
-          _TableCell(
+          SalesTableHeaderCell(label: 'TYPE', width: _typeColWidth),
+          SalesTableHeaderCell(
+            label: 'TOTAL',
             width: _amountColWidth,
             alignment: Alignment.centerRight,
-            child: Text('TOTAL', style: _headerStyle),
           ),
-          _TableCell(
+          SalesTableHeaderCell(
+            label: 'RECEIVED/PAID',
             width: _amountColWidth,
             alignment: Alignment.centerRight,
-            child: Text('RECEIVED/PAID', style: _headerStyle),
           ),
-          _TableCell(
+          SalesTableHeaderCell(
+            label: 'BALANCE',
             width: _amountColWidth,
             alignment: Alignment.centerRight,
-            child: Text('BALANCE', style: _headerStyle),
           ),
-          _TableCell(
-            width: _dueDateColWidth,
-            child: Text('DUE DATE', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _statusColWidth,
-            child: Text('STATUS', style: _headerStyle),
-          ),
-          _TableCell(
+          SalesTableHeaderCell(label: 'DUE DATE', width: _dueDateColWidth),
+          SalesTableHeaderCell(label: 'STATUS', width: _statusColWidth),
+          SalesTableHeaderCell(
+            label: 'PRINT / SHARE',
             width: _actionsColWidth,
-            child: Text('PRINT / SHARE', style: _headerStyle),
+            gapAfter: 0,
           ),
         ],
       ),
     );
   }
-}
 
-class _XlsChip extends StatelessWidget {
-  const _XlsChip({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.sm),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFF4CAF50)),
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-        ),
-        child: const Text(
-          'Excel Report',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF4CAF50),
-          ),
-        ),
-      ),
-    );
-  }
+  static const _headerStyle = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+    letterSpacing: 0.3,
+  );
 }

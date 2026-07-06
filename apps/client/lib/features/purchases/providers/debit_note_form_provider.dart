@@ -260,9 +260,7 @@ class DebitNoteForm extends _$DebitNoteForm {
   }
 
   bool validate({bool finalize = false}) {
-    final hasParty =
-        (state.partyId != null && state.partyId!.isNotEmpty) ||
-        state.party.trim().isNotEmpty;
+    final hasParty = state.partyId != null && state.partyId!.isNotEmpty;
     final isValid = state.hasValidLineItems && (!finalize || hasParty);
     if (!isValid) {
       state = state.copyWith(showValidationErrors: true);
@@ -272,7 +270,10 @@ class DebitNoteForm extends _$DebitNoteForm {
 
   Future<String?> saveDebitNote({bool finalize = true}) async {
     if (!validate(finalize: finalize)) {
-      return 'Supplier and line items are required';
+      if (state.partyId == null || state.partyId!.isEmpty) {
+        return 'Please select a supplier';
+      }
+      return 'Add at least one item with name and quantity';
     }
 
     try {

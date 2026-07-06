@@ -2,6 +2,7 @@ import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
@@ -15,6 +16,7 @@ class PartySearchField extends ConsumerStatefulWidget {
     required this.onSelected,
     this.onPartySelectedWithId,
     this.onPartyCreated,
+    this.partyTypeFilter = PartyTypeFilter.all,
     this.hasError = false,
     this.emptyPlaceholder = 'Select party',
     this.errorMessage = 'Billing name is required',
@@ -25,6 +27,7 @@ class PartySearchField extends ConsumerStatefulWidget {
   final ValueChanged<String> onSelected;
   final void Function(String partyId, String partyName)? onPartySelectedWithId;
   final ValueChanged<AddPartyResult>? onPartyCreated;
+  final PartyTypeFilter partyTypeFilter;
   final bool hasError;
   final String emptyPlaceholder;
   final String errorMessage;
@@ -72,10 +75,14 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
   }
 
   List<String> get _filteredParties {
-    final parties = ref.watch(partyNamesProvider);
-    if (_searchQuery.isEmpty) return parties;
+    final parties = ref.watch(partiesListProvider);
+    final names = parties
+        .where((party) => widget.partyTypeFilter.matches(party.partyType))
+        .map((party) => party.name)
+        .toList();
+    if (_searchQuery.isEmpty) return names;
     final query = _searchQuery.toLowerCase();
-    return parties
+    return names
         .where((party) => party.toLowerCase().contains(query))
         .toList();
   }

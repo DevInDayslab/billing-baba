@@ -228,7 +228,7 @@ class AddPurchaseFaForm extends _$AddPurchaseFaForm {
     if (!validate()) {
       if ((state.partyId == null || state.partyId!.isEmpty) &&
           state.party.trim().isEmpty) {
-        return 'Supplier is required';
+        return 'Please select a supplier';
       }
       return 'Add at least one asset with name and quantity';
     }

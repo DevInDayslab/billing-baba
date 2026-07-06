@@ -101,6 +101,7 @@ class PaymentOutTable extends ConsumerWidget {
           ),
           const Divider(height: 1, color: _cardBorder),
           paymentsAsync.when(
+            skipLoadingOnReload: true,
             loading: () => const Padding(
               padding: EdgeInsets.all(AppSpacing.xl),
               child: Center(child: CircularProgressIndicator()),

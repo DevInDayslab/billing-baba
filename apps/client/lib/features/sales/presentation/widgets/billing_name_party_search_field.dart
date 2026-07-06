@@ -6,6 +6,7 @@ class BillingNamePartySearchField extends PartySearchField {
     required super.onSelected,
     super.onPartySelectedWithId,
     super.onPartyCreated,
+    super.partyTypeFilter,
     super.hasError,
     super.emptyPlaceholder,
     super.errorMessage,

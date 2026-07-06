@@ -311,7 +311,9 @@ class PurchaseService {
                 partyId: input.partyId!,
                 isGstFormal: input.isGstFormal,
                 documentDate: input.documentDate?.toUtc().toIso8601String(),
-                dueDate: input.dueDate?.toUtc().toIso8601String(),
+                dueDate: input.dueDate != null
+                    ? PurchaseConstants.formatApiDate(input.dueDate!)
+                    : null,
                 supplierInvoiceNumber: input.supplierInvoiceNumber,
                 convertedFromId: input.convertedFromId,
                 notes: input.notes?.trim().isEmpty ?? true ? null : input.notes,
@@ -338,7 +340,7 @@ class PurchaseService {
     String? godownId,
   }) async {
     if (input.partyId == null || input.partyId!.isEmpty) {
-      throw const PurchaseException('Supplier is required');
+      throw const PurchaseException('Please select a supplier');
     }
 
     final draft = await saveDocumentDraft(input, itemNameToId: itemNameToId);
@@ -474,7 +476,9 @@ class PurchaseService {
       UpdatePurchaseDocumentRequest(
         partyId: input.partyId,
         documentDate: input.documentDate?.toUtc().toIso8601String(),
-        dueDate: input.dueDate?.toUtc().toIso8601String(),
+        dueDate: input.dueDate != null
+            ? PurchaseConstants.formatApiDate(input.dueDate!)
+            : null,
         supplierInvoiceNumber: input.supplierInvoiceNumber,
         notes: input.notes?.trim().isEmpty ?? true ? null : input.notes,
       ),
