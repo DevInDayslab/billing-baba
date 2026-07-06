@@ -11,7 +11,7 @@ class SaleLineItem {
     this.serverLineId,
     this.itemId,
     this.itemName = '',
-    this.qty = 0,
+    this.qty = 1,
     this.unit = 'NONE',
     this.pricePerUnit = 0,
     this.discountPercent = 0,
@@ -86,6 +86,11 @@ class AddSaleFormState {
     this.phone = '',
     this.billingAddress = '',
     this.shippingAddress = '',
+    this.gstin = '',
+    this.email = '',
+    this.businessName = '',
+    this.creditLimit = '',
+    this.outstanding = '',
     this.invoiceNumber = '',
     this.invoiceNumberMode = InvoiceNumberMode.auto,
     this.invoiceDate,
@@ -119,6 +124,11 @@ class AddSaleFormState {
   final String phone;
   final String billingAddress;
   final String shippingAddress;
+  final String gstin;
+  final String email;
+  final String businessName;
+  final String creditLimit;
+  final String outstanding;
   final String invoiceNumber;
   final InvoiceNumberMode invoiceNumberMode;
   final DateTime? invoiceDate;
@@ -201,7 +211,9 @@ class AddSaleFormState {
       saleType == SaleType.credit || billingName.trim().isNotEmpty;
 
   bool get partyHasError =>
-      showValidationErrors && partyRequired && (partyId == null || partyId!.isEmpty);
+      showValidationErrors &&
+      partyRequired &&
+      (partyId == null || partyId!.isEmpty);
 
   AddSaleFormState copyWith({
     String? documentId,
@@ -210,6 +222,11 @@ class AddSaleFormState {
     String? phone,
     String? billingAddress,
     String? shippingAddress,
+    String? gstin,
+    String? email,
+    String? businessName,
+    String? creditLimit,
+    String? outstanding,
     String? invoiceNumber,
     InvoiceNumberMode? invoiceNumberMode,
     DateTime? invoiceDate,
@@ -244,6 +261,11 @@ class AddSaleFormState {
       phone: phone ?? this.phone,
       billingAddress: billingAddress ?? this.billingAddress,
       shippingAddress: shippingAddress ?? this.shippingAddress,
+      gstin: gstin ?? this.gstin,
+      email: email ?? this.email,
+      businessName: businessName ?? this.businessName,
+      creditLimit: creditLimit ?? this.creditLimit,
+      outstanding: outstanding ?? this.outstanding,
       invoiceNumber: invoiceNumber ?? this.invoiceNumber,
       invoiceNumberMode: invoiceNumberMode ?? this.invoiceNumberMode,
       invoiceDate: invoiceDate ?? this.invoiceDate,

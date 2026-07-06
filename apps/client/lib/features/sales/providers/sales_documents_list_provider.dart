@@ -208,6 +208,7 @@ class SalesDocumentsList extends _$SalesDocumentsList {
       currentPage: page.currentPage,
       totalPages: page.totalPages,
       totalItems: page.totalItems,
+      summary: page.summary,
     );
   }
 

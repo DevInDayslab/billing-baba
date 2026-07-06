@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
@@ -251,6 +252,7 @@ class CreditNoteForm extends _$CreditNoteForm {
         itemNameToId: _itemNameToId(),
       );
       ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
+      refreshAfterSaleReturn(ref);
       resetForm();
       return null;
     } catch (error) {
@@ -271,6 +273,7 @@ class CreditNoteForm extends _$CreditNoteForm {
         itemNameToId: _itemNameToId(),
       );
       ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
+      refreshAfterSaleReturn(ref);
       resetForm();
       return null;
     } catch (error) {

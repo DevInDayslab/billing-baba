@@ -1,12 +1,13 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/compact_number_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/providers/add_sale_form_provider.dart';
+import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -37,7 +38,12 @@ class SaleLineItemsTable extends ConsumerWidget {
         const Divider(height: 1, color: _cardBorder),
         for (var i = 0; i < form.items.length; i++) ...[
           if (i > 0) const Divider(height: 1, color: _cardBorder),
-          _LineItemRow(index: i, item: form.items[i], invoiceId: invoiceId),
+          _LineItemRow(
+            key: ValueKey(form.items[i].id),
+            index: i,
+            item: form.items[i],
+            invoiceId: invoiceId,
+          ),
         ],
         if (form.lineItemsHasError)
           const Padding(
@@ -123,11 +129,12 @@ class _LineItemsHeader extends StatelessWidget {
   );
 }
 
-class _LineItemRow extends ConsumerWidget {
+class _LineItemRow extends ConsumerStatefulWidget {
   const _LineItemRow({
     required this.index,
     required this.item,
     this.invoiceId,
+    super.key,
   });
 
   final int index;
@@ -135,9 +142,27 @@ class _LineItemRow extends ConsumerWidget {
   final String? invoiceId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_LineItemRow> createState() => _LineItemRowState();
+}
+
+class _LineItemRowState extends ConsumerState<_LineItemRow> {
+  final _qtyFieldKey = GlobalKey<CompactNumberFieldState>();
+  final _qtyFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _qtyFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _focusQuantityField() {
+    _qtyFieldKey.currentState?.requestFocusAndSelectAll();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final notifier = ref.read(
-      addSaleFormProvider(invoiceId: invoiceId).notifier,
+      addSaleFormProvider(invoiceId: widget.invoiceId).notifier,
     );
 
     return SizedBox(
@@ -149,7 +174,7 @@ class _LineItemRow extends ConsumerWidget {
             SizedBox(
               width: 28,
               child: Text(
-                '${index + 1}',
+                '${widget.index + 1}',
                 style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,
@@ -164,7 +189,7 @@ class _LineItemRow extends ConsumerWidget {
                     width: 24,
                     height: 28,
                     child: IconButton(
-                      onPressed: () => notifier.removeLineItem(index),
+                      onPressed: () => notifier.removeLineItem(widget.index),
                       icon: const Icon(
                         Icons.delete_outline,
                         size: 16,
@@ -178,20 +203,16 @@ class _LineItemRow extends ConsumerWidget {
                   const SizedBox(width: 4),
                   Expanded(
                     child: ItemNameAutocompleteField(
-                      value: item.itemName,
+                      value: widget.item.itemName,
                       onChanged: (value) => notifier.updateLineItem(
-                        index,
-                        item.copyWith(itemName: value),
+                        widget.index,
+                        widget.item.copyWith(itemName: value),
                       ),
                       onItemSelected: (catalogItem) => notifier.updateLineItem(
-                        index,
-                        item.copyWith(
-                          itemId: catalogItem.id,
-                          itemName: catalogItem.name,
-                          pricePerUnit: catalogItem.salePrice,
-                          unit: catalogItem.unit ?? item.unit,
-                        ),
+                        widget.index,
+                        applyCatalogItemToLine(widget.item, catalogItem),
                       ),
+                      onAfterItemSelected: _focusQuantityField,
                     ),
                   ),
                 ],
@@ -200,12 +221,14 @@ class _LineItemRow extends ConsumerWidget {
             const SizedBox(width: 4),
             SizedBox(
               width: 64,
-              child: _CompactNumberField(
-                initialValue: item.qty.toString(),
-                hintText: '0',
+              child: CompactNumberField(
+                key: _qtyFieldKey,
+                value: widget.item.qty,
+                hintText: '1',
+                focusNode: _qtyFocusNode,
                 onChanged: (value) => notifier.updateLineItem(
-                  index,
-                  item.copyWith(qty: double.tryParse(value) ?? 0),
+                  widget.index,
+                  widget.item.copyWith(qty: value),
                 ),
               ),
             ),
@@ -213,38 +236,40 @@ class _LineItemRow extends ConsumerWidget {
             SizedBox(
               width: 72,
               child: SaleGenericSelectDropdown(
-                value: item.unit,
+                value: widget.item.unit,
                 options: SaleDropdownOptions.units,
                 hintText: 'UNIT',
                 highlight: SaleDropdownHighlight.red,
                 compact: true,
                 onSelected: (value) => notifier.updateLineItem(
-                  index,
-                  item.copyWith(unit: value),
+                  widget.index,
+                  widget.item.copyWith(unit: value),
                 ),
               ),
             ),
             const SizedBox(width: 4),
             SizedBox(
               width: 88,
-              child: _CompactNumberField(
-                initialValue: item.pricePerUnit.toString(),
+              child: CompactNumberField(
+                key: ValueKey('price_${widget.item.id}'),
+                value: widget.item.pricePerUnit,
                 hintText: '0',
                 onChanged: (value) => notifier.updateLineItem(
-                  index,
-                  item.copyWith(pricePerUnit: double.tryParse(value) ?? 0),
+                  widget.index,
+                  widget.item.copyWith(pricePerUnit: value),
                 ),
               ),
             ),
             const SizedBox(width: 4),
             SizedBox(
               width: 64,
-              child: _CompactNumberField(
-                initialValue: item.discountPercent.toString(),
+              child: CompactNumberField(
+                key: ValueKey('disc_${widget.item.id}'),
+                value: widget.item.discountPercent,
                 hintText: '0',
                 onChanged: (value) => notifier.updateLineItem(
-                  index,
-                  item.copyWith(discountPercent: double.tryParse(value) ?? 0),
+                  widget.index,
+                  widget.item.copyWith(discountPercent: value),
                 ),
               ),
             ),
@@ -252,14 +277,14 @@ class _LineItemRow extends ConsumerWidget {
             SizedBox(
               width: 72,
               child: SaleGenericSelectDropdown(
-                value: taxLabelForPercent(item.taxPercent),
+                value: taxLabelForPercent(widget.item.taxPercent),
                 options: SaleDropdownOptions.taxSlabs,
                 hintText: 'TAX',
                 highlight: SaleDropdownHighlight.red,
                 compact: true,
                 onSelected: (value) => notifier.updateLineItem(
-                  index,
-                  item.copyWith(taxPercent: saleTaxSlabs[value] ?? 0),
+                  widget.index,
+                  widget.item.copyWith(taxPercent: saleTaxSlabs[value] ?? 0),
                 ),
               ),
             ),
@@ -267,7 +292,7 @@ class _LineItemRow extends ConsumerWidget {
             SizedBox(
               width: 88,
               child: Text(
-                SaleLineItemsTable._amountFormat.format(item.amount),
+                SaleLineItemsTable._amountFormat.format(widget.item.amount),
                 textAlign: TextAlign.right,
                 style: const TextStyle(
                   fontSize: 13,
@@ -278,63 +303,6 @@ class _LineItemRow extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _CompactNumberField extends StatefulWidget {
-  const _CompactNumberField({
-    required this.initialValue,
-    required this.onChanged,
-    this.hintText,
-  });
-
-  final String initialValue;
-  final ValueChanged<String> onChanged;
-  final String? hintText;
-
-  @override
-  State<_CompactNumberField> createState() => _CompactNumberFieldState();
-}
-
-class _CompactNumberFieldState extends State<_CompactNumberField> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
-  }
-
-  @override
-  void didUpdateWidget(_CompactNumberField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.initialValue != oldWidget.initialValue &&
-        widget.initialValue != _controller.text) {
-      _controller.text = widget.initialValue;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      style: saleFieldTextStyle.copyWith(fontSize: 13),
-      decoration: buildSaleFieldDecoration(
-        hint: widget.hintText,
-        compact: true,
-      ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-      ],
-      onChanged: widget.onChanged,
     );
   }
 }

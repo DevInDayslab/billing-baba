@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/data/party_cache.dart';
@@ -599,6 +600,7 @@ class PartyList extends _$PartyList {
       ref.read(selectedPartyIdProvider.notifier).selected = created.id;
       await service.rememberSelectedParty(created.id);
       ref.read(partyDetailProvider(created.id).notifier).setParty(created);
+      refreshAfterPartyMutation(ref);
       return created;
     } on PartyOfflineException {
       await refresh();
@@ -620,6 +622,7 @@ class PartyList extends _$PartyList {
       );
       _upsertInState(updated);
       ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
+      refreshAfterPartyMutation(ref);
       return updated;
     } on PartyOfflineException {
       await refresh();

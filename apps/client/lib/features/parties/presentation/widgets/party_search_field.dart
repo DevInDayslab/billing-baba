@@ -2,6 +2,7 @@ import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
@@ -14,6 +15,7 @@ class PartySearchField extends ConsumerStatefulWidget {
   const PartySearchField({
     required this.value,
     required this.onSelected,
+    this.onPartySelected,
     this.onPartySelectedWithId,
     this.onPartyCreated,
     this.partyTypeFilter = PartyTypeFilter.all,
@@ -25,6 +27,7 @@ class PartySearchField extends ConsumerStatefulWidget {
 
   final String value;
   final ValueChanged<String> onSelected;
+  final ValueChanged<PartyModel>? onPartySelected;
   final void Function(String partyId, String partyName)? onPartySelectedWithId;
   final ValueChanged<AddPartyResult>? onPartyCreated;
   final PartyTypeFilter partyTypeFilter;
@@ -63,28 +66,39 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     _overlayEntry = null;
   }
 
-  void _selectParty(String party) {
+  void _selectParty(PartyModel party) {
     _removeOverlay();
-    widget.onSelected(party);
-
-    final parties = ref.read(partiesListProvider);
-    final match = parties.where((item) => item.name == party).firstOrNull;
-    if (match != null) {
-      widget.onPartySelectedWithId?.call(match.id, match.name);
-    }
+    widget.onSelected(party.name);
+    widget.onPartySelected?.call(party);
+    widget.onPartySelectedWithId?.call(party.id, party.name);
   }
 
-  List<String> get _filteredParties {
+  List<PartyModel> get _filteredParties {
     final parties = ref.watch(partiesListProvider);
-    final names = parties
+    final filtered = parties
         .where((party) => widget.partyTypeFilter.matches(party.partyType))
-        .map((party) => party.name)
         .toList();
-    if (_searchQuery.isEmpty) return names;
-    final query = _searchQuery.toLowerCase();
-    return names
-        .where((party) => party.toLowerCase().contains(query))
-        .toList();
+
+    if (_searchQuery.isEmpty) return filtered;
+
+    final query = _searchQuery.trim().toLowerCase();
+    return filtered.where((party) => _partyMatchesQuery(party, query)).toList();
+  }
+
+  bool _partyMatchesQuery(PartyModel party, String query) {
+    bool contains(String? value) {
+      final normalized = value?.trim().toLowerCase();
+      return normalized != null &&
+          normalized.isNotEmpty &&
+          normalized.contains(query);
+    }
+
+    if (party.name.toLowerCase().contains(query)) return true;
+    if (contains(party.additionalField1)) return true;
+    if (contains(party.phone)) return true;
+    if (contains(party.gstin)) return true;
+    if (contains(party.email)) return true;
+    return false;
   }
 
   Future<void> _openAddPartyDialog() async {
@@ -113,9 +127,11 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     if (!mounted) return;
     widget.onSelected(result.partyName);
     final parties = ref.read(partiesListProvider);
-    final match =
-        parties.where((party) => party.name == result.partyName).firstOrNull;
+    final match = parties
+        .where((party) => party.name == result.partyName)
+        .firstOrNull;
     if (match != null) {
+      widget.onPartySelected?.call(match);
       widget.onPartySelectedWithId?.call(match.id, match.name);
     }
     widget.onPartyCreated?.call(result);
@@ -198,9 +214,15 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
                   final party = filtered[index];
+                  final subtitle = [
+                    if (party.phone.isNotEmpty) party.phone,
+                    if (party.gstin.isNotEmpty) party.gstin,
+                  ].join(' · ');
+
                   return ListTile(
                     dense: true,
-                    title: Text(party),
+                    title: Text(party.name),
+                    subtitle: subtitle.isEmpty ? null : Text(subtitle),
                     onTap: () => _selectParty(party),
                   );
                 },

@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
@@ -62,6 +63,7 @@ class InventoryItems extends _$InventoryItems {
       final item = await service.createItemFromForm(form, units);
       final current = state.value ?? [];
       state = AsyncData([...current, item]);
+      refreshAfterItemMutation(ref);
       return item;
     } on ApiValidationException {
       rethrow;

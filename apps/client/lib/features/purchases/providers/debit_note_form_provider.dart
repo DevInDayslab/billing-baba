@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
@@ -303,6 +304,7 @@ class DebitNoteForm extends _$DebitNoteForm {
       }
 
       ref.invalidate(purchaseReturnsProvider);
+      refreshAfterPurchaseReturn(ref);
       resetForm();
       return null;
     } catch (error) {

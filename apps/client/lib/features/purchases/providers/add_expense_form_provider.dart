@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/purchases/application/expense_service.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/expense_form_model.dart';
@@ -365,6 +366,7 @@ class AddExpenseForm extends _$AddExpenseForm {
 
       ref.invalidate(expenseTransactionsProvider);
       ref.invalidate(expenseCategoriesProvider);
+      refreshAfterExpense(ref);
       ref.invalidateSelf();
       return null;
     } catch (error) {

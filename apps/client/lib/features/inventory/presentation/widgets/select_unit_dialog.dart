@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/add_unit_dialog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:collection/collection.dart';
@@ -58,9 +61,30 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
     _secondaryUnitId = widget.initialSecondaryUnitId;
   }
 
+  Future<void> _createUnit() async {
+    final created = await showAddUnitDialog(context);
+    if (!mounted || created == null) return;
+    setState(() => _baseUnitId = created.id);
+  }
+
+  void _onBaseUnitSelected(List<InventoryUnit> units, String label) {
+    if (label == _newUnitOption) {
+      unawaited(_createUnit());
+      return;
+    }
+    setState(() {
+      _baseUnitId = _unitIdFromLabel(units, label);
+    });
+  }
+
+  static const _newUnitOption = 'New Unit';
+
+  bool get _canSave => _baseUnitId != null;
+
   @override
   Widget build(BuildContext context) {
     final units = ref.watch(unitsProvider);
+    final hasUnits = units.isNotEmpty;
 
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: _dialogMaxWidth),
@@ -98,48 +122,77 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _UnitField(
-                      label: 'BASE UNIT',
-                      labelColor: AppColors.primary,
-                      value: _unitLabel(units, _baseUnitId),
-                      options: _unitOptions(units),
-                      onSelected: (label) {
-                        setState(() {
-                          _baseUnitId = _unitIdFromLabel(units, label);
-                        });
-                      },
+              if (!hasUnits) ...[
+                const Text(
+                  'No units available.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: _createUnit,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text(
+                      'New Unit',
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: _UnitField(
-                      label: 'SECONDARY UNIT',
-                      labelColor: AppColors.textSecondary,
-                      value: _unitLabel(units, _secondaryUnitId),
-                      options: _unitOptions(units),
-                      onSelected: (label) {
-                        setState(() {
-                          _secondaryUnitId = _unitIdFromLabel(units, label);
-                        });
-                      },
+                ),
+              ] else ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _UnitField(
+                        label: 'BASE UNIT',
+                        labelColor: AppColors.primary,
+                        value: _unitLabel(units, _baseUnitId),
+                        options: [
+                          _newUnitOption,
+                          ...units.map((unit) => unit.shortName),
+                        ],
+                        onSelected: (label) =>
+                            _onBaseUnitSelected(units, label),
+                        onAdd: _createUnit,
+                        addTooltip: 'New unit',
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: _UnitField(
+                        label: 'SECONDARY UNIT',
+                        labelColor: AppColors.textSecondary,
+                        value: _unitLabel(units, _secondaryUnitId),
+                        options: [
+                          'None',
+                          ...units.map((unit) => unit.shortName),
+                        ],
+                        onSelected: (label) {
+                          setState(() {
+                            _secondaryUnitId = _unitIdFromLabel(units, label);
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: AppSpacing.lg),
               Align(
                 alignment: Alignment.centerRight,
                 child: FilledButton(
-                  onPressed: () => Navigator.of(context).pop(
-                    UnitSelection(
-                      baseUnitId: _baseUnitId,
-                      secondaryUnitId: _secondaryUnitId,
-                    ),
-                  ),
+                  onPressed: _canSave
+                      ? () => Navigator.of(context).pop(
+                          UnitSelection(
+                            baseUnitId: _baseUnitId,
+                            secondaryUnitId: _secondaryUnitId,
+                          ),
+                        )
+                      : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     padding: const EdgeInsets.symmetric(
@@ -164,10 +217,6 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
         ),
       ),
     );
-  }
-
-  List<String> _unitOptions(List<InventoryUnit> units) {
-    return ['None', ...units.map((unit) => unit.shortName)];
   }
 
   String _unitLabel(List<InventoryUnit> units, String? unitId) {
@@ -195,6 +244,8 @@ class _UnitField extends StatelessWidget {
     required this.value,
     required this.options,
     required this.onSelected,
+    this.onAdd,
+    this.addTooltip,
   });
 
   final String label;
@@ -202,6 +253,8 @@ class _UnitField extends StatelessWidget {
   final String value;
   final List<String> options;
   final ValueChanged<String> onSelected;
+  final VoidCallback? onAdd;
+  final String? addTooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -218,10 +271,24 @@ class _UnitField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        SaleGenericSelectDropdown(
-          value: value,
-          options: options,
-          onSelected: onSelected,
+        Row(
+          children: [
+            Expanded(
+              child: SaleGenericSelectDropdown(
+                value: value,
+                options: options,
+                onSelected: onSelected,
+              ),
+            ),
+            if (onAdd != null)
+              IconButton(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add, size: 18, color: AppColors.primary),
+                tooltip: addTooltip,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
+          ],
         ),
       ],
     );
