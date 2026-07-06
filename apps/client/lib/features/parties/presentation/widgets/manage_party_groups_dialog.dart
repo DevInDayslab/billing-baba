@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/text_input_dialog.dart';
 import 'package:billing_baba/features/parties/providers/party_groups_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
@@ -22,35 +23,15 @@ class ManagePartyGroupsDialog extends ConsumerStatefulWidget {
 class _ManagePartyGroupsDialogState
     extends ConsumerState<ManagePartyGroupsDialog> {
   Future<void> _addGroup() async {
-    final controller = TextEditingController();
-    final name = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('New Party Group'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: saleFieldTextStyle,
-          decoration: buildSaleFieldDecoration(hint: 'Group name'),
-          textCapitalization: TextCapitalization.words,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final trimmed = controller.text.trim();
-              if (trimmed.isEmpty) return;
-              Navigator.of(dialogContext).pop(trimmed);
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
+    final name = await showTextInputDialog(
+      context,
+      title: 'New Party Group',
+      hint: 'Group name',
+      confirmLabel: 'Add',
+      textCapitalization: TextCapitalization.words,
+      decoration: buildSaleFieldDecoration(hint: 'Group name'),
+      textStyle: saleFieldTextStyle,
     );
-    controller.dispose();
     if (name == null || !mounted) return;
 
     final added = ref.read(partyGroupsProvider.notifier).addGroup(name);
@@ -62,35 +43,15 @@ class _ManagePartyGroupsDialogState
   }
 
   Future<void> _renameGroup(String currentName) async {
-    final controller = TextEditingController(text: currentName);
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Rename Party Group'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: saleFieldTextStyle,
-          decoration: buildSaleFieldDecoration(hint: 'Group name'),
-          textCapitalization: TextCapitalization.words,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final trimmed = controller.text.trim();
-              if (trimmed.isEmpty) return;
-              Navigator.of(dialogContext).pop(trimmed);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+    final newName = await showTextInputDialog(
+      context,
+      title: 'Rename Party Group',
+      hint: 'Group name',
+      initialValue: currentName,
+      textCapitalization: TextCapitalization.words,
+      decoration: buildSaleFieldDecoration(hint: 'Group name'),
+      textStyle: saleFieldTextStyle,
     );
-    controller.dispose();
     if (newName == null || !mounted) return;
 
     final renamed = ref

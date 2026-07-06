@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/text_input_dialog.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/presentation/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
@@ -81,7 +82,8 @@ class SaleInvoiceTable extends ConsumerWidget {
                   tooltip: 'Search',
                 ),
                 _XlsChip(
-                  onTap: () => ModuleExportActions.exportSaleInvoices(context, ref),
+                  onTap: () =>
+                      ModuleExportActions.exportSaleInvoices(context, ref),
                 ),
                 IconButton(
                   onPressed: () {
@@ -179,28 +181,11 @@ class SaleInvoiceTable extends ConsumerWidget {
 
   Future<void> _showSearchDialog(BuildContext context, WidgetRef ref) async {
     final current = ref.read(saleInvoiceSearchQueryProvider);
-    final controller = TextEditingController(text: current);
-    final query = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Search invoices'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Invoice no, party...'),
-          onSubmitted: (value) => Navigator.of(context).pop(value),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(''),
-            child: const Text('Clear'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('Search'),
-          ),
-        ],
-      ),
+    final query = await showTextSearchDialog(
+      context,
+      title: 'Search invoices',
+      hint: 'Invoice no, party...',
+      initialValue: current,
     );
 
     if (query == null) return;

@@ -1,8 +1,12 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/core/widgets/text_input_dialog.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/parties/providers/party_groups_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
@@ -16,6 +20,8 @@ export 'package:billing_baba/features/parties/models/add_party_result.dart';
 const _dialogMaxWidth = 900.0;
 const _cardBorder = Color(0xFFE0E0E0);
 const _gstLeftColumnWidth = 220.0;
+const _defaultDecimal = '0.00';
+const _defaultState = 'Andhra Pradesh';
 const _successSnackBarColor = Color(0xFF2E7D32);
 
 /// Shows the Add Party modal from sale forms and party pickers.
@@ -51,8 +57,8 @@ Widget _buildPartyDialogShell({
 
   return Dialog(
     backgroundColor: Colors.transparent,
-    insetPadding: const EdgeInsets.symmetric(
-      horizontal: AppSpacing.lg,
+    insetPadding: EdgeInsets.symmetric(
+      horizontal: size.width < 640 ? AppSpacing.sm : AppSpacing.lg,
       vertical: AppSpacing.md,
     ),
     child: ConstrainedBox(
@@ -84,6 +90,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     'Overseas',
   ];
 
+  static const _partyTypes = ['customer', 'supplier', 'both'];
+  static const _partyTypeLabels = {
+    'customer': 'Customer',
+    'supplier': 'Supplier',
+    'both': 'Both',
+  };
+
   late final TabController _tabController;
   final _partyNameController = TextEditingController();
   final _gstinController = TextEditingController();
@@ -104,19 +117,16 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   final _additionalField2Controller = TextEditingController();
   final _openingBalanceAsOfDatePickerKey =
       GlobalKey<SaleSingleDatePickerAnchorState>();
-  final _loyaltyPointsAsOfDatePickerKey =
-      GlobalKey<SaleSingleDatePickerAnchorState>();
 
   DateTime _openingBalanceAsOfDate = DateTime.now();
-  DateTime _loyaltyPointsAsOfDate = DateTime.now();
   bool _useCustomCreditLimit = false;
   bool _additionalField1Enabled = false;
   bool _additionalField2Enabled = false;
 
   String _gstType = 'Unregistered/Consumer';
-  String _state = 'Andhra Pradesh';
-  String _billingDetailState = 'Andhra Pradesh';
-  String _shippingDetailState = 'Andhra Pradesh';
+  String _state = _defaultState;
+  String _billingDetailState = _defaultState;
+  String _shippingDetailState = _defaultState;
   String _partyGroup = '';
   String _billingCountry = 'India';
   String _shippingCountry = 'India';
@@ -124,17 +134,24 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   bool _showDetailedBillingAddress = false;
   bool _showDetailedShippingAddress = false;
   bool _partyNameError = false;
+  String? _phoneError;
+  String? _emailError;
+  String? _gstinError;
+  String? _openingBalanceError;
+  String? _creditLimitError;
+  String? _loyaltyBalanceError;
+  String _partyType = 'customer';
 
   String _savedBillingAddressLine = '';
   String _savedBillingCity = '';
   String _savedBillingPincode = '';
-  String _savedBillingState = 'Andhra Pradesh';
+  String _savedBillingState = _defaultState;
   String _savedBillingCountry = 'India';
 
   String _savedShippingAddressLine = '';
   String _savedShippingCity = '';
   String _savedShippingPincode = '';
-  String _savedShippingState = 'Andhra Pradesh';
+  String _savedShippingState = _defaultState;
   String _savedShippingCountry = 'India';
 
   bool get _isEditMode => widget.partyToEdit != null;
@@ -143,14 +160,57 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _openingBalanceController.text = _defaultDecimal;
+    _loyaltyPointsOpeningBalanceController.text = _defaultDecimal;
     final party = widget.partyToEdit;
     if (party != null) {
       _populateFromParty(party);
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _applyCreateDefaults());
     }
+  }
+
+  void _applyCreateDefaults() {
+    if (!mounted || _isEditMode) return;
+
+    final businessState =
+        ref.read(businessProfileProvider).asData?.value.state?.trim();
+    final resolvedState =
+        businessState != null &&
+            businessState.isNotEmpty &&
+            SaleDropdownOptions.indianStates.contains(businessState)
+        ? businessState
+        : _defaultState;
+
+    final groups = ref.read(partyGroupsProvider);
+    final generalGroup = groups
+        .where((group) => group.toLowerCase() == 'general')
+        .firstOrNull;
+
+    setState(() {
+      _state = resolvedState;
+      _billingDetailState = resolvedState;
+      _shippingDetailState = resolvedState;
+      _savedBillingState = resolvedState;
+      _savedShippingState = resolvedState;
+      if (generalGroup != null) _partyGroup = generalGroup;
+    });
+  }
+
+  String _resolvedBusinessState() {
+    final businessState =
+        ref.read(businessProfileProvider).asData?.value.state?.trim();
+    if (businessState != null &&
+        businessState.isNotEmpty &&
+        SaleDropdownOptions.indianStates.contains(businessState)) {
+      return businessState;
+    }
+    return _defaultState;
   }
 
   void _populateFromParty(PartyModel party) {
     _partyNameController.text = party.name;
+    _partyType = party.partyType;
     _gstinController.text = party.gstin;
     if (party.phone != '+91 00000 00000') {
       _phoneController.text = party.phone;
@@ -161,15 +221,16 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _gstType = party.gstType.isNotEmpty
         ? party.gstType
         : 'Unregistered/Consumer';
-    _state = party.state.isNotEmpty ? party.state : 'Andhra Pradesh';
+    _state = party.state.isNotEmpty ? party.state : _resolvedBusinessState();
     _partyGroup = party.partyGroup;
 
+    final resolvedState = party.state.isNotEmpty
+        ? party.state
+        : _resolvedBusinessState();
     _savedBillingAddressLine = party.addressLine;
     _savedBillingCity = party.city;
     _savedBillingPincode = party.pincode;
-    _savedBillingState = party.state.isNotEmpty
-        ? party.state
-        : 'Andhra Pradesh';
+    _savedBillingState = resolvedState;
     _savedBillingCountry = party.country.isNotEmpty ? party.country : 'India';
     _billingAddressLineController.text = party.addressLine;
     _billingCityController.text = party.city;
@@ -182,7 +243,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _savedShippingPincode = party.shippingPincode;
     _savedShippingState = party.state.isNotEmpty
         ? party.state
-        : 'Andhra Pradesh';
+        : _resolvedBusinessState();
     _savedShippingCountry = party.shippingCountry.isNotEmpty
         ? party.shippingCountry
         : 'India';
@@ -196,23 +257,23 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         party.shippingAddress.isNotEmpty ||
         party.shippingAddressLine.isNotEmpty;
 
-    if (party.balance != 0) {
-      _openingBalanceController.text = party.balance % 1 == 0
-          ? party.balance.toStringAsFixed(0)
-          : party.balance.toStringAsFixed(2);
-    }
-    if (party.openingBalanceAsOfDate != null) {
-      _openingBalanceAsOfDate = party.openingBalanceAsOfDate!;
-    }
+    _openingBalanceController.text = PartyModel.formatDecimalInput(
+      party.openingBalance,
+    );
+    _openingBalanceAsOfDate =
+        party.openingBalanceAsOfDate ?? DateTime.now();
 
     _loyaltyPointsOpeningBalanceController.text =
-        party.loyaltyPointsOpeningBalance;
-    if (party.loyaltyPointsAsOfDate != null) {
-      _loyaltyPointsAsOfDate = party.loyaltyPointsAsOfDate!;
-    }
+        party.loyaltyPointsOpeningBalance.trim().isEmpty
+        ? _defaultDecimal
+        : party.loyaltyPointsOpeningBalance.trim();
 
     _useCustomCreditLimit = party.hasCustomCreditLimit;
-    _creditLimitController.text = party.creditLimit;
+    _creditLimitController.text = party.hasCustomCreditLimit
+        ? PartyModel.formatDecimalInput(
+            double.tryParse(party.creditLimit.replaceAll(',', '')) ?? 0,
+          )
+        : '';
 
     _additionalField1Enabled = party.additionalField1.isNotEmpty;
     _additionalField1Controller.text = party.additionalField1;
@@ -246,6 +307,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   AddPartyResult _buildResult() {
     return AddPartyResult(
       partyName: _partyNameController.text.trim(),
+      partyType: _partyType,
       gstin: _gstinController.text.trim(),
       phone: _phoneController.text.trim(),
       gstType: _gstType,
@@ -264,14 +326,15 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       shippingCity: _savedShippingCity,
       shippingPincode: _savedShippingPincode,
       shippingCountry: _savedShippingCountry,
-      openingBalance: _openingBalanceController.text.trim(),
+      openingBalance: _normalizedDecimal(_openingBalanceController.text),
       openingBalanceAsOfDate: _openingBalanceAsOfDate,
-      loyaltyPointsOpeningBalance: _loyaltyPointsOpeningBalanceController.text
-          .trim(),
-      loyaltyPointsAsOfDate: _loyaltyPointsAsOfDate,
+      loyaltyPointsOpeningBalance: _normalizedDecimal(
+        _loyaltyPointsOpeningBalanceController.text,
+      ),
+      loyaltyPointsAsOfDate: _openingBalanceAsOfDate,
       hasCustomCreditLimit: _useCustomCreditLimit,
       creditLimit: _useCustomCreditLimit
-          ? _creditLimitController.text.trim()
+          ? _normalizedDecimal(_creditLimitController.text)
           : '',
       additionalField1Enabled: _additionalField1Enabled,
       additionalField1: _additionalField1Enabled
@@ -286,6 +349,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
   DateTime _dateOnly(DateTime date) =>
       DateTime(date.year, date.month, date.day);
+
+  String _normalizedDecimal(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? _defaultDecimal : trimmed;
+  }
 
   String _composeAddress({
     required String addressLine,
@@ -382,9 +450,90 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   bool _validate() {
-    final isValid = _partyNameController.text.trim().isNotEmpty;
-    setState(() => _partyNameError = !isValid);
-    return isValid;
+    final nameValid = _partyNameController.text.trim().isNotEmpty;
+    final phoneError = Validators.phone(_phoneController.text);
+    final emailError = Validators.email(_emailController.text);
+    final gstinError = Validators.gstin(_gstinController.text);
+    final openingBalanceError = Validators.nonNegativeDecimalAmount(
+      _openingBalanceController.text,
+    );
+    final creditLimitError = _useCustomCreditLimit
+        ? Validators.nonNegativeDecimalAmount(_creditLimitController.text)
+        : null;
+    final loyaltyBalanceError = Validators.nonNegativeDecimalAmount(
+      _loyaltyPointsOpeningBalanceController.text,
+    );
+
+    final mobileDuplicateError = _checkDuplicateMobile();
+    final gstinDuplicateError = _checkDuplicateGstin();
+
+    setState(() {
+      _partyNameError = !nameValid;
+      _phoneError = phoneError ?? mobileDuplicateError;
+      _emailError = emailError;
+      _gstinError = gstinError ?? gstinDuplicateError;
+      _openingBalanceError = openingBalanceError;
+      _creditLimitError = creditLimitError;
+      _loyaltyBalanceError = loyaltyBalanceError;
+    });
+
+    return nameValid &&
+        _phoneError == null &&
+        _emailError == null &&
+        _gstinError == null &&
+        _openingBalanceError == null &&
+        _creditLimitError == null &&
+        _loyaltyBalanceError == null;
+  }
+
+  String? _checkDuplicateMobile() {
+    final normalized = PartyModel.normalizePhone(_phoneController.text);
+    if (normalized.isEmpty) return null;
+
+    final parties = ref.read(partiesListProvider);
+    final currentId = widget.partyToEdit?.id;
+    final conflict = parties.any((party) {
+      if (party.id == currentId) return false;
+      final partyMobile = PartyModel.normalizePhone(party.phone);
+      return partyMobile.isNotEmpty && partyMobile == normalized;
+    });
+
+    return conflict
+        ? 'This mobile number is already registered to another party'
+        : null;
+  }
+
+  String? _checkDuplicateGstin() {
+    final gstin = _gstinController.text.trim().toUpperCase();
+    if (gstin.isEmpty) return null;
+
+    final parties = ref.read(partiesListProvider);
+    final currentId = widget.partyToEdit?.id;
+    final conflict = parties.any((party) {
+      if (party.id == currentId) return false;
+      return party.gstin.trim().toUpperCase() == gstin;
+    });
+
+    return conflict ? 'This GSTIN is already registered to another party' : null;
+  }
+
+  void _applyApiValidationErrors(ApiValidationException exception) {
+    setState(() {
+      _phoneError =
+          exception.fieldErrors['mobile'] ??
+          (exception.fieldErrors.containsKey('mobile')
+              ? exception.message
+              : _phoneError);
+      _gstinError = exception.fieldErrors['gstin'] ?? _gstinError;
+      _emailError = exception.fieldErrors['email'] ?? _emailError;
+      if (exception.fieldErrors['name'] != null) {
+        _partyNameError = true;
+      }
+      _openingBalanceError =
+          exception.fieldErrors['opening_balance'] ?? _openingBalanceError;
+      _creditLimitError =
+          exception.fieldErrors['credit_limit'] ?? _creditLimitError;
+    });
   }
 
   void _showSaveSnackBar({
@@ -455,6 +604,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       }
       ref.invalidate(partyListProvider);
     } on ApiValidationException catch (e) {
+      _applyApiValidationErrors(e);
       _showSaveSnackBar(
         message: e.message,
         backgroundColor: AppColors.error,
@@ -480,21 +630,21 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _shippingAddressLineController.clear();
     _shippingCityController.clear();
     _shippingPincodeController.clear();
-    _openingBalanceController.clear();
-    _loyaltyPointsOpeningBalanceController.clear();
+    _openingBalanceController.text = _defaultDecimal;
+    _loyaltyPointsOpeningBalanceController.text = _defaultDecimal;
     _creditLimitController.clear();
     _additionalField1Controller.clear();
     _additionalField2Controller.clear();
     setState(() {
+      final defaultState = _resolvedBusinessState();
       _gstType = 'Unregistered/Consumer';
-      _state = 'Andhra Pradesh';
-      _billingDetailState = 'Andhra Pradesh';
-      _shippingDetailState = 'Andhra Pradesh';
+      _state = defaultState;
+      _billingDetailState = defaultState;
+      _shippingDetailState = defaultState;
       _partyGroup = '';
       _billingCountry = 'India';
       _shippingCountry = 'India';
       _openingBalanceAsOfDate = DateTime.now();
-      _loyaltyPointsAsOfDate = DateTime.now();
       _useCustomCreditLimit = false;
       _additionalField1Enabled = false;
       _additionalField2Enabled = false;
@@ -504,16 +654,24 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       _savedBillingAddressLine = '';
       _savedBillingCity = '';
       _savedBillingPincode = '';
-      _savedBillingState = 'Andhra Pradesh';
+      _savedBillingState = defaultState;
       _savedBillingCountry = 'India';
       _savedShippingAddressLine = '';
       _savedShippingCity = '';
       _savedShippingPincode = '';
-      _savedShippingState = 'Andhra Pradesh';
+      _savedShippingState = defaultState;
       _savedShippingCountry = 'India';
       _partyNameError = false;
+      _phoneError = null;
+      _emailError = null;
+      _gstinError = null;
+      _openingBalanceError = null;
+      _creditLimitError = null;
+      _loyaltyBalanceError = null;
+      _partyType = 'customer';
       _tabController.index = 0;
     });
+    _applyCreateDefaults();
   }
 
   @override
@@ -614,6 +772,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     final gstinField = _buildInlineTextField(
       controller: _gstinController,
       hint: 'GSTIN',
+      hasError: _gstinError != null,
+      errorText: _gstinError,
+      onChanged: (_) {
+        if (_gstinError != null) setState(() => _gstinError = null);
+      },
       suffixIcon: IconButton(
         onPressed: () {},
         icon: const Icon(Icons.info_outline, size: 18),
@@ -626,17 +789,37 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       controller: _phoneController,
       hint: 'Phone Number',
       keyboardType: TextInputType.phone,
+      hasError: _phoneError != null,
+      errorText: _phoneError,
+      onChanged: (_) {
+        if (_phoneError != null) setState(() => _phoneError = null);
+      },
+    );
+
+    final partyTypeField = SaleGenericSelectDropdown(
+      value: _partyTypeLabels[_partyType] ?? 'Customer',
+      options: _partyTypes.map((type) => _partyTypeLabels[type]!).toList(),
+      hintText: 'Party Type',
+      onSelected: (label) {
+        final type = _partyTypeLabels.entries
+            .where((entry) => entry.value == label)
+            .map((entry) => entry.key)
+            .firstOrNull;
+        if (type != null) setState(() => _partyType = type);
+      },
     );
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 640;
+        final isNarrow = constraints.maxWidth < 800;
 
         if (isNarrow) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               partyNameField,
+              const SizedBox(height: AppSpacing.md),
+              partyTypeField,
               const SizedBox(height: AppSpacing.md),
               gstinField,
               const SizedBox(height: AppSpacing.md),
@@ -654,6 +837,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(child: partyNameField),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(child: partyTypeField),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(child: gstinField),
                 const SizedBox(width: AppSpacing.md),
@@ -686,12 +871,25 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     );
 
-    final groupControls = Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final groupControls = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(child: dropdown),
-        const SizedBox(width: AppSpacing.xs),
-        addGroupButton,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: dropdown),
+            const SizedBox(width: AppSpacing.xs),
+            addGroupButton,
+          ],
+        ),
+        if (partyGroups.isEmpty)
+          const Padding(
+            padding: EdgeInsets.only(top: 4, left: 2),
+            child: Text(
+              'No groups yet. Tap + to create one.',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+          ),
       ],
     );
 
@@ -709,43 +907,15 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   Future<void> _showAddPartyGroupDialog() async {
-    final controller = TextEditingController();
-
-    final groupName = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('New Party Group'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          style: saleFieldTextStyle,
-          decoration: buildSaleFieldDecoration(hint: 'Group name'),
-          textCapitalization: TextCapitalization.words,
-          onSubmitted: (value) {
-            final trimmed = value.trim();
-            if (trimmed.isNotEmpty) {
-              Navigator.of(dialogContext).pop(trimmed);
-            }
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final trimmed = controller.text.trim();
-              if (trimmed.isEmpty) return;
-              Navigator.of(dialogContext).pop(trimmed);
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
+    final groupName = await showTextInputDialog(
+      context,
+      title: 'New Party Group',
+      hint: 'Group name',
+      confirmLabel: 'Add',
+      textCapitalization: TextCapitalization.words,
+      decoration: buildSaleFieldDecoration(hint: 'Group name'),
+      textStyle: saleFieldTextStyle,
     );
-
-    controller.dispose();
 
     if (groupName == null || !mounted) return;
 
@@ -796,6 +966,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return TabBar(
       controller: _tabController,
       onTap: (_) => setState(() {}),
+      isScrollable: true,
+      tabAlignment: TabAlignment.start,
       labelColor: AppColors.primary,
       unselectedLabelColor: AppColors.textSecondary,
       indicatorColor: AppColors.primary,
@@ -865,11 +1037,34 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             const SizedBox(height: AppSpacing.md),
             _LabeledField(
               label: 'Email ID',
-              child: TextField(
-                controller: _emailController,
-                style: saleFieldTextStyle,
-                decoration: buildSaleFieldDecoration(),
-                keyboardType: TextInputType.emailAddress,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: _emailController,
+                    style: saleFieldTextStyle,
+                    decoration: buildSaleFieldDecoration(
+                      hasError: _emailError != null,
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (_) {
+                      if (_emailError != null) {
+                        setState(() => _emailError = null);
+                      }
+                    },
+                  ),
+                  if (_emailError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4, left: 2),
+                      child: Text(
+                        _emailError!,
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
@@ -1236,19 +1431,52 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         _buildBalanceWithDateRow(
           amountLabel: 'Opening Balance',
           amountController: _openingBalanceController,
+          amountError: _openingBalanceError,
+          onAmountChanged: () {
+            if (_openingBalanceError != null) {
+              setState(() => _openingBalanceError = null);
+            }
+          },
           selectedDate: _openingBalanceAsOfDate,
           datePickerKey: _openingBalanceAsOfDatePickerKey,
           onDateSelected: (date) =>
               setState(() => _openingBalanceAsOfDate = _dateOnly(date)),
         ),
         const SizedBox(height: AppSpacing.lg),
-        _buildBalanceWithDateRow(
-          amountLabel: 'Loyalty Points Opening Balance',
-          amountController: _loyaltyPointsOpeningBalanceController,
-          selectedDate: _loyaltyPointsAsOfDate,
-          datePickerKey: _loyaltyPointsAsOfDatePickerKey,
-          onDateSelected: (date) =>
-              setState(() => _loyaltyPointsAsOfDate = _dateOnly(date)),
+        _LabeledField(
+          label: 'Loyalty Points Opening Balance',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _loyaltyPointsOpeningBalanceController,
+                style: saleFieldTextStyle,
+                decoration: buildSaleFieldDecoration(
+                  hint: _defaultDecimal,
+                  hasError: _loyaltyBalanceError != null,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                onChanged: (_) {
+                  if (_loyaltyBalanceError != null) {
+                    setState(() => _loyaltyBalanceError = null);
+                  }
+                },
+              ),
+              if (_loyaltyBalanceError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, left: 2),
+                  child: Text(
+                    _loyaltyBalanceError!,
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
         const SizedBox(height: AppSpacing.xl),
         _buildCreditLimitSection(),
@@ -1262,6 +1490,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     required DateTime selectedDate,
     required GlobalKey<SaleSingleDatePickerAnchorState> datePickerKey,
     required ValueChanged<DateTime> onDateSelected,
+    String? amountError,
+    VoidCallback? onAmountChanged,
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1296,11 +1526,33 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
         final amountField = _LabeledField(
           label: amountLabel,
-          child: TextField(
-            controller: amountController,
-            style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(hint: '0.00'),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: amountController,
+                style: saleFieldTextStyle,
+                decoration: buildSaleFieldDecoration(
+                  hint: _defaultDecimal,
+                  hasError: amountError != null,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                onChanged: (_) => onAmountChanged?.call(),
+              ),
+              if (amountError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, left: 2),
+                  child: Text(
+                    amountError,
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+            ],
           ),
         );
 
@@ -1333,28 +1585,45 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       children: [
         const Text('Credit Limit', style: saleFieldLabelStyle),
         const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
-            _buildCreditLimitToggleBar(),
-            if (_useCustomCreditLimit) ...[
-              const SizedBox(width: AppSpacing.md),
-              SizedBox(
-                width: 140,
-                child: TextField(
+        _buildCreditLimitToggleBar(),
+        if (_useCustomCreditLimit) ...[
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: 200,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
                   controller: _creditLimitController,
                   style: saleFieldTextStyle,
                   decoration: buildSaleFieldDecoration(
-                    hint: '0.00',
-                    compact: true,
-                  ),
+                    hint: _defaultDecimal,
+                    hasError: _creditLimitError != null,
+                  ).copyWith(prefixText: '₹ '),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  onChanged: (_) {
+                    if (_creditLimitError != null) {
+                      setState(() => _creditLimitError = null);
+                    }
+                  },
                 ),
-              ),
-            ],
-          ],
-        ),
+                if (_creditLimitError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, left: 2),
+                    child: Text(
+                      _creditLimitError!,
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -1385,7 +1654,12 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             borderRadius: const BorderRadius.horizontal(
               right: Radius.circular(4),
             ),
-            onTap: () => setState(() => _useCustomCreditLimit = true),
+            onTap: () => setState(() {
+              _useCustomCreditLimit = true;
+              if (_creditLimitController.text.trim().isEmpty) {
+                _creditLimitController.text = _defaultDecimal;
+              }
+            }),
           ),
         ],
       ),
@@ -1488,31 +1762,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   Widget _buildFooter() {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          if (!_isEditMode) ...[
-            OutlinedButton(
-              onPressed: () => _save(saveAndNew: true),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primary),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              child: const Text(
-                'Save & New',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-          ],
-          FilledButton(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < 480;
+
+          final saveButton = FilledButton(
             onPressed: () => _save(saveAndNew: false),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -1525,8 +1779,51 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               'Save',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-          ),
-        ],
+          );
+
+          final saveAndNewButton = OutlinedButton(
+            onPressed: () => _save(saveAndNew: true),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: AppColors.primary),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            child: const Text(
+              'Save & New',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          );
+
+          if (isNarrow) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (!_isEditMode) ...[
+                  saveAndNewButton,
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+                saveButton,
+              ],
+            );
+          }
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (!_isEditMode) ...[
+                saveAndNewButton,
+                const SizedBox(width: AppSpacing.sm),
+              ],
+              saveButton,
+            ],
+          );
+        },
       ),
     );
   }

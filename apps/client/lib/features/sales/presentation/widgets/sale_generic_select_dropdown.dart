@@ -94,9 +94,21 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
               Size(menuWidth, widget.maxMenuHeight),
             ),
           ),
-          menuChildren: [
-            for (final option in widget.options) _buildMenuItem(option),
-          ],
+          menuChildren: widget.options.isEmpty
+              ? [
+                  MenuItemButton(
+                    child: Text(
+                      'No options available',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ),
+                ]
+              : [
+                  for (final option in widget.options) _buildMenuItem(option),
+                ],
           builder: (context, controller, child) {
             return SaleFieldTrigger(
               onTap: () {

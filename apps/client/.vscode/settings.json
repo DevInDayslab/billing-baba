@@ -1,0 +1,5 @@
+{
+  "terminal.integrated.env.osx": {
+    "FLUTTER_XCODE_TOOLCHAINS": "com.apple.dt.toolchain.XcodeDefault"
+  }
+}

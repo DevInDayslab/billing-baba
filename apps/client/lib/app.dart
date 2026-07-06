@@ -14,9 +14,12 @@ class BillingBabaApp extends ConsumerWidget {
     return MaterialApp.router(
       title: AppConfig.appName,
       theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.light,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return AppThemeScope(child: child ?? const SizedBox.shrink());
+      },
     );
   }
 }

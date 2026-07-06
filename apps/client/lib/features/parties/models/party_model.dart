@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/parties/data/party_cache.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/create_party_request.dart';
@@ -208,14 +209,33 @@ class PartyModel {
     return trimmed.isEmpty ? '—' : trimmed;
   }
 
-  static String displayCurrency(double? value) {
-    if (value == null || value == 0) return '—';
-    return NumberFormat.currency(
-      locale: 'en_IN',
-      symbol: '₹',
-      decimalDigits: 2,
-    ).format(value);
+  static final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹',
+    decimalDigits: 2,
+  );
+
+  /// Always formats monetary values (including zero) as currency.
+  static String formatCurrency(double value) =>
+      _currencyFormat.format(value);
+
+  static String displayCurrency(double? value) =>
+      formatCurrency(value ?? 0);
+
+  static String displayOutstanding(double balance) =>
+      formatCurrency(balance.abs());
+
+  static String displayCreditLimit({
+    required bool hasCustomCreditLimit,
+    required String creditLimit,
+  }) {
+    if (!hasCustomCreditLimit) return 'No Limit';
+    final parsed = double.tryParse(creditLimit.replaceAll(',', '')) ?? 0;
+    return formatCurrency(parsed);
   }
+
+  /// Two-decimal string for numeric form fields.
+  static String formatDecimalInput(double value) => value.toStringAsFixed(2);
 
   static String displayDate(DateTime? value) {
     if (value == null) return '—';
@@ -312,21 +332,29 @@ class PartyModel {
     return digits;
   }
 
+  static String? _optionalNormalizedPhone(String phone) {
+    final normalized = normalizePhone(phone);
+    return normalized.isEmpty ? null : normalized;
+  }
+
+  static String? _optionalNormalizedGstin(String gstin) {
+    final trimmed = gstin.trim();
+    if (trimmed.isEmpty) return null;
+    return trimmed.toUpperCase();
+  }
+
   static CreatePartyRequest createRequestFromResult(AddPartyResult result) {
     return CreatePartyRequest(
       name: result.partyName.trim(),
-      mobile: normalizePhone(result.phone).isEmpty
-          ? null
-          : normalizePhone(result.phone),
+      mobile: _optionalNormalizedPhone(result.phone),
       email: result.email.trim().isEmpty ? null : result.email.trim(),
-      gstin: result.gstin.trim().isEmpty ? null : result.gstin.trim(),
+      gstin: _optionalNormalizedGstin(result.gstin),
+      partyType: result.partyType,
       state: result.state.trim().isEmpty ? null : result.state.trim(),
-      creditLimit: result.hasCustomCreditLimit && result.creditLimit.isNotEmpty
-          ? result.creditLimit.trim()
+      creditLimit: result.hasCustomCreditLimit
+          ? Validators.normalizeDecimalString(result.creditLimit)
           : null,
-      openingBalance: result.openingBalance.trim().isEmpty
-          ? null
-          : result.openingBalance.trim(),
+      openingBalance: Validators.normalizeDecimalString(result.openingBalance),
     );
   }
 
@@ -336,18 +364,16 @@ class PartyModel {
   }) {
     return UpdatePartyRequest(
       name: result.partyName.trim(),
-      mobile: normalizePhone(result.phone).isEmpty
-          ? null
-          : normalizePhone(result.phone),
+      mobile: _optionalNormalizedPhone(result.phone),
       email: result.email.trim().isEmpty ? null : result.email.trim(),
-      gstin: result.gstin.trim().isEmpty ? null : result.gstin.trim(),
+      gstin: _optionalNormalizedGstin(result.gstin),
+      partyType: result.partyType,
       state: result.state.trim().isEmpty ? null : result.state.trim(),
-      creditLimit: result.hasCustomCreditLimit && result.creditLimit.isNotEmpty
-          ? result.creditLimit.trim()
+      creditLimit: result.hasCustomCreditLimit
+          ? Validators.normalizeDecimalString(result.creditLimit) ?? '0'
           : '0',
-      openingBalance: result.openingBalance.trim().isEmpty
-          ? '0'
-          : result.openingBalance.trim(),
+      openingBalance:
+          Validators.normalizeDecimalString(result.openingBalance) ?? '0',
       isActive: isActive,
     );
   }

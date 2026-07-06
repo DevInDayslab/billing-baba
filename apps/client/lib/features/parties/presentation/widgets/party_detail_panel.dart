@@ -8,7 +8,6 @@ import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 const _successSnackBarColor = Color(0xFF2E7D32);
 
@@ -289,7 +288,9 @@ class _PartySummaryHeader extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text('Delete party?'),
         content: Text(
-          'Are you sure you want to delete "${party.name}"? This action cannot be undone.',
+          'Are you sure you want to delete "${party.name}"?\n\n'
+          'If this party is linked to invoices or purchases, it will be '
+          'deactivated instead. Transaction history will be preserved.',
         ),
         actions: [
           TextButton(
@@ -325,6 +326,9 @@ class _PartySummaryHeader extends ConsumerWidget {
           behavior: SnackBarBehavior.floating,
         ),
       );
+    } on PartyHasDependenciesException {
+      if (!context.mounted) return;
+      await _offerDeactivateParty(context, ref, messenger);
     } on PartyOfflineException {
       if (!context.mounted) return;
       messenger?.showSnackBar(
@@ -340,6 +344,92 @@ class _PartySummaryHeader extends ConsumerWidget {
       messenger?.showSnackBar(
         SnackBar(
           content: Text(e.message),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on Object catch (_) {
+      if (!context.mounted) return;
+      messenger?.showSnackBar(
+        const SnackBar(
+          content: Text('Failed to delete party. Please try again.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _offerDeactivateParty(
+    BuildContext context,
+    WidgetRef ref,
+    ScaffoldMessengerState? messenger,
+  ) async {
+    final deactivate = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Deactivate party instead?'),
+        content: Text(
+          '"${party.name}" is linked to invoices or other documents and '
+          'cannot be permanently deleted.\n\n'
+          'Deactivate it to hide it from active lists. You can view inactive '
+          'parties using the list filter.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Deactivate'),
+          ),
+        ],
+      ),
+    );
+
+    if (deactivate != true || !context.mounted) return;
+
+    try {
+      await ref.read(partyListProvider.notifier).deactivateParty(party.id);
+      if (!context.mounted) return;
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Party "${party.name}" deactivated',
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: _successSnackBarColor,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on PartyOfflineException {
+      if (!context.mounted) return;
+      messenger?.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Deactivation saved offline. It will sync when you are back online.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on PartyException catch (e) {
+      if (!context.mounted) return;
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on Object catch (_) {
+      if (!context.mounted) return;
+      messenger?.showSnackBar(
+        const SnackBar(
+          content: Text('Failed to deactivate party. Please try again.'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -365,21 +455,14 @@ class _SummaryCards extends StatelessWidget {
         ),
         _SummaryCard(
           label: 'Outstanding',
-          value: party.balance == 0
-              ? '—'
-              : NumberFormat.currency(
-                  locale: 'en_IN',
-                  symbol: '₹',
-                  decimalDigits: 2,
-                ).format(party.balance.abs()),
+          value: PartyModel.displayOutstanding(party.balance),
         ),
         _SummaryCard(
           label: 'Credit Limit',
-          value: party.hasCustomCreditLimit
-              ? PartyModel.displayCurrency(
-                  double.tryParse(party.creditLimit),
-                )
-              : '—',
+          value: PartyModel.displayCreditLimit(
+            hasCustomCreditLimit: party.hasCustomCreditLimit,
+            creditLimit: party.creditLimit,
+          ),
         ),
         _SummaryCard(
           label: 'Status',
@@ -504,8 +587,17 @@ class _TransactionsEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             const Text(
-              'No transactions available.',
+              'No transactions yet',
               style: ListPanelStyles.emptyStateStyle,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Sales, purchases and payments involving this party will appear here.',
+              style: ListPanelStyles.emptyStateStyle.copyWith(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
           ],

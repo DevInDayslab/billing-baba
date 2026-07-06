@@ -13,8 +13,9 @@ const listPanelPopupMenuShape = RoundedRectangleBorder(
 
 const listPanelPopupMenuConstraints = BoxConstraints(minWidth: 180);
 
-const listPanelPopupMenuItemStyle = TextStyle(
-  fontSize: 14,
+const TextStyle listPanelPopupMenuItemStyle = TextStyle(
+  fontFamily: AppTypography.fontFamily,
+  fontSize: AppTypography.bodyMediumSize,
   color: AppColors.textPrimary,
 );
 
@@ -85,22 +86,25 @@ class ListPanelPopupMenuButton<T> extends StatelessWidget {
 }
 
 abstract final class ListPanelStyles {
-  static const listHeaderStyle = TextStyle(
-    fontSize: 11,
+  static const TextStyle listHeaderStyle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.labelSmallSize,
     fontWeight: FontWeight.w600,
     color: AppColors.textSecondary,
     letterSpacing: 0.5,
   );
 
-  static const panelTitleStyle = TextStyle(
-    fontSize: 16,
+  static const TextStyle panelTitleStyle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.titleMediumSize,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     letterSpacing: 0.3,
   );
 
-  static const emptyStateStyle = TextStyle(
-    fontSize: 14,
+  static const TextStyle emptyStateStyle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.bodyMediumSize,
     color: AppColors.textSecondary,
   );
 }

@@ -85,6 +85,30 @@ export class PartyRepository {
     return row?.id ?? null;
   }
 
+  async findActiveGstinConflict(
+    businessId: string,
+    gstin: string,
+    excludePartyId?: string,
+  ): Promise<string | null> {
+    const conditions = [
+      eq(parties.businessId, businessId),
+      eq(parties.gstin, gstin),
+      eq(parties.isDeleted, false),
+    ];
+
+    if (excludePartyId) {
+      conditions.push(ne(parties.id, excludePartyId));
+    }
+
+    const [row] = await this.db
+      .select({ id: parties.id })
+      .from(parties)
+      .where(and(...conditions))
+      .limit(1);
+
+    return row?.id ?? null;
+  }
+
   async list(params: ListPartiesParams): Promise<{
     rows: PartyRecord[];
     total: number;

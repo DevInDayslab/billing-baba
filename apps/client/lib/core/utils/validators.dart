@@ -37,10 +37,20 @@ abstract final class Validators {
     return null;
   }
 
+  static final _gstinPattern = RegExp(
+    r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$',
+  );
+
+  static final _decimalAmountPattern = RegExp(r'^-?\d+(\.\d{1,4})?$');
+
   static String? gstin(String? value) {
     if (value == null || value.trim().isEmpty) return null;
-    if (value.trim().length != 15) {
+    final normalized = value.trim().toUpperCase();
+    if (normalized.length != 15) {
       return 'GSTIN must be exactly 15 characters';
+    }
+    if (!_gstinPattern.hasMatch(normalized)) {
+      return 'Invalid GSTIN format';
     }
     return null;
   }
@@ -92,5 +102,34 @@ abstract final class Validators {
     if (value == null || value.trim().isEmpty) return null;
     final digits = value.replaceAll(RegExp(r'\D'), '');
     return digits.isEmpty ? null : digits;
+  }
+
+  /// Validates optional monetary amounts (commas stripped).
+  static String? decimalAmount(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final normalized = normalizeDecimalString(value);
+    if (normalized == null || !_decimalAmountPattern.hasMatch(normalized)) {
+      return 'Enter a valid amount (up to 4 decimal places)';
+    }
+    return null;
+  }
+
+  /// Validates monetary amounts that must be zero or positive.
+  static String? nonNegativeDecimalAmount(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final formatError = decimalAmount(value);
+    if (formatError != null) return formatError;
+    final parsed = double.tryParse(normalizeDecimalString(value)!);
+    if (parsed != null && parsed < 0) {
+      return 'Amount cannot be negative';
+    }
+    return null;
+  }
+
+  /// Strips commas and whitespace from a decimal string for API submission.
+  static String? normalizeDecimalString(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final normalized = value.replaceAll(',', '').trim();
+    return normalized.isEmpty ? null : normalized;
   }
 }
