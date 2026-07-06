@@ -5,10 +5,26 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 abstract final class AppConfig {
   static const appName = 'Billing Baba';
 
-  static const apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:3000',
-  );
+  static const _defaultApiBaseUrl =
+      'https://billing-baba-production-6b5e.up.railway.app';
+
+  /// Resolved at runtime: `--dart-define=API_BASE_URL` overrides `.env`.
+  static String get apiBaseUrl {
+    const fromDefine = String.fromEnvironment('API_BASE_URL');
+    if (fromDefine.isNotEmpty) return fromDefine;
+    final fromEnv = dotenv.env['API_BASE_URL']?.trim();
+    if (fromEnv != null && fromEnv.isNotEmpty) return fromEnv;
+    return _defaultApiBaseUrl;
+  }
+
+  /// Where [apiBaseUrl] was resolved from (for startup diagnostics).
+  static String get apiBaseUrlSource {
+    const fromDefine = String.fromEnvironment('API_BASE_URL');
+    if (fromDefine.isNotEmpty) return 'dart-define';
+    final fromEnv = dotenv.env['API_BASE_URL']?.trim();
+    if (fromEnv != null && fromEnv.isNotEmpty) return '.env';
+    return 'default';
+  }
 
   /// When true, shows the local-only developer login button on the login screen.
   static bool get enableDevLogin =>
@@ -22,4 +38,16 @@ abstract final class AppConfig {
 
   /// Default OTP for local development when MSG91 is not configured.
   static String get devOtp => dotenv.env['DEV_OTP']?.trim() ?? '123456';
+
+  /// Prints resolved config once at startup when debug logging is enabled.
+  static void logStartupConfig() {
+    if (!authDebugLogging) return;
+    debugPrint(
+      '[CONFIG] API_BASE_URL=${apiBaseUrl} (source: $apiBaseUrlSource)',
+    );
+    debugPrint('[CONFIG] ENABLE_DEV_LOGIN=$enableDevLogin');
+    debugPrint('[CONFIG] APP_ENV=${dotenv.env['APP_ENV'] ?? '(unset)'}');
+    debugPrint('[CONFIG] DEBUG=${dotenv.env['DEBUG'] ?? '(unset)'}');
+    debugPrint('[CONFIG] DEV_OTP=${'*' * devOtp.length}');
+  }
 }

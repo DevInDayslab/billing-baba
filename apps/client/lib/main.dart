@@ -1,4 +1,5 @@
 import 'package:billing_baba/app.dart';
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:flutter/foundation.dart';
@@ -12,6 +13,8 @@ Future<void> main() async {
   GoogleFonts.config.allowRuntimeFetching = false;
 
   await dotenv.load();
+
+  AppConfig.logStartupConfig();
 
   final widgetId =
       dotenv.env['MSG91_WIDGET_ID'] ?? dotenv.env['MSG91_MOBILE_WIDGET_ID'];
