@@ -15,7 +15,11 @@ function createRequestId(): string {
 function createLoggerOptions(
   config: AppConfig,
 ): FastifyServerOptions['logger'] {
-  if (config.environment === 'development') {
+  // pino-pretty uses a worker thread that crashes under Bun on Windows.
+  const usePrettyTransport =
+    config.environment === 'development' && !('Bun' in globalThis);
+
+  if (usePrettyTransport) {
     return {
       level: config.logLevel,
       transport: {

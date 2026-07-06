@@ -58,7 +58,7 @@ class InventoryItems extends _$InventoryItems {
   Future<InventoryItem?> addItemFromForm(AddItemFormState form) async {
     try {
       final service = await ref.read(inventoryServiceProvider.future);
-      final units = ref.read(inventoryUnitsProvider).value ?? [];
+      final units = await ref.read(inventoryUnitsProvider.future);
       final item = await service.createItemFromForm(form, units);
       final current = state.value ?? [];
       state = AsyncData([...current, item]);
@@ -78,7 +78,7 @@ class InventoryItems extends _$InventoryItems {
   ) async {
     try {
       final service = await ref.read(inventoryServiceProvider.future);
-      final units = ref.read(inventoryUnitsProvider).value ?? [];
+      final units = await ref.read(inventoryUnitsProvider.future);
       final item = await service.updateItemFromForm(itemId, form, units);
       final current = state.value ?? [];
       state = AsyncData([
