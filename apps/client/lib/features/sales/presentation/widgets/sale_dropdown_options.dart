@@ -72,6 +72,8 @@ class SaleItemOption {
     required this.mfgCost,
     required this.stock,
     this.unit,
+    this.hsn,
+    this.itemCode,
     this.sku,
     this.barcode,
   });
@@ -83,23 +85,27 @@ class SaleItemOption {
   final double mfgCost;
   final double stock;
   final String? unit;
+  final String? hsn;
+  final String? itemCode;
   final String? sku;
   final String? barcode;
 
   bool matchesSearchQuery(String query) {
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return true;
+
+    bool contains(String? value) {
+      final normalized = value?.trim().toLowerCase();
+      return normalized != null &&
+          normalized.isNotEmpty &&
+          normalized.contains(q);
+    }
+
     if (name.toLowerCase().contains(q)) return true;
-    final skuValue = sku?.trim().toLowerCase();
-    if (skuValue != null && skuValue.isNotEmpty && skuValue.contains(q)) {
-      return true;
-    }
-    final barcodeValue = barcode?.trim().toLowerCase();
-    if (barcodeValue != null &&
-        barcodeValue.isNotEmpty &&
-        barcodeValue.contains(q)) {
-      return true;
-    }
+    if (contains(hsn)) return true;
+    if (contains(itemCode)) return true;
+    if (contains(sku)) return true;
+    if (contains(barcode)) return true;
     return false;
   }
 }

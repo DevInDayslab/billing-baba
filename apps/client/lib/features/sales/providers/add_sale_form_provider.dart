@@ -1,9 +1,13 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -75,10 +79,59 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   void updateBillingName(String value) {
-    state = state.copyWith(billingName: value, isDirty: true, clearSaveError: true);
+    state = state.copyWith(
+      billingName: value,
+      isDirty: true,
+      clearSaveError: true,
+    );
+    if (value.trim().isEmpty) {
+      clearPartyLink();
+    }
+  }
+
+  void updatePhone(String value) {
+    state = state.copyWith(phone: value, isDirty: true);
+    _tryMatchPartyByPhone(value);
+  }
+
+  void _tryMatchPartyByPhone(String phone) {
+    final digits = phone.replaceAll(RegExp(r'\D'), '');
+    if (digits.length < 10) return;
+
+    final parties = ref.read(partiesListProvider);
+    final match = parties.where((party) {
+      final partyDigits = party.phone.replaceAll(RegExp(r'\D'), '');
+      return partyDigits == digits ||
+          (partyDigits.length >= 10 &&
+              digits.length >= 10 &&
+              partyDigits.endsWith(digits.substring(digits.length - 10)));
+    }).firstOrNull;
+
+    if (match != null) {
+      applyPartyDetails(match);
+    }
+  }
+
+  void updateGstin(String value) {
+    state = state.copyWith(gstin: value, isDirty: true);
+  }
+
+  void updateEmail(String value) {
+    state = state.copyWith(email: value, isDirty: true);
+  }
+
+  void updateBusinessName(String value) {
+    state = state.copyWith(businessName: value, isDirty: true);
   }
 
   void updateParty({required String partyId, required String partyName}) {
+    final parties = ref.read(partiesListProvider);
+    final party = parties.where((item) => item.id == partyId).firstOrNull;
+    if (party != null) {
+      applyPartyDetails(party);
+      return;
+    }
+
     state = state.copyWith(
       partyId: partyId,
       billingName: partyName,
@@ -87,8 +140,42 @@ class AddSaleForm extends _$AddSaleForm {
     );
   }
 
-  void updatePhone(String value) {
-    state = state.copyWith(phone: value, isDirty: true);
+  void applyPartyDetails(PartyModel party) {
+    state = state.copyWith(
+      partyId: party.id,
+      billingName: party.name,
+      phone: party.phone,
+      billingAddress: party.billingAddress.isNotEmpty
+          ? party.billingAddress
+          : party.addressLine,
+      shippingAddress: party.shippingAddress.isNotEmpty
+          ? party.shippingAddress
+          : party.shippingAddressLine,
+      stateOfSupply: party.state.isNotEmpty ? party.state : state.stateOfSupply,
+      gstin: party.gstin,
+      email: party.email,
+      businessName: party.additionalField1.isNotEmpty
+          ? party.additionalField1
+          : party.name,
+      creditLimit: PartyModel.displayCreditLimit(
+        hasCustomCreditLimit: party.hasCustomCreditLimit,
+        creditLimit: party.creditLimit,
+      ),
+      outstanding: PartyModel.displayOutstanding(party.balance),
+      isDirty: true,
+      clearSaveError: true,
+    );
+  }
+
+  void clearPartyLink() {
+    state = state.copyWith(
+      gstin: '',
+      email: '',
+      businessName: '',
+      creditLimit: '',
+      outstanding: '',
+      isDirty: true,
+    );
   }
 
   void updateAddresses({String? billing, String? shipping}) {
@@ -322,6 +409,7 @@ class AddSaleForm extends _$AddSaleForm {
         isDirty: false,
       );
       ref.invalidate(saleInvoicesProvider);
+      refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
       final message = SalesErrorMapper.messageFor(error);
@@ -369,6 +457,7 @@ class AddSaleForm extends _$AddSaleForm {
       }
 
       ref.invalidate(saleInvoicesProvider);
+      refreshAfterSaleMutation(ref);
       ref.invalidateSelf();
       return null;
     } catch (error) {

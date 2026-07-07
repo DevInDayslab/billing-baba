@@ -5,7 +5,6 @@ import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 class AuthService {
   AuthService({
@@ -104,6 +103,10 @@ class AuthService {
     required String msg91AccessToken,
     required String phone,
   }) async {
+    AuthDebugLogger.log(
+      'AuthService.loginWithMsg91Token entered '
+      'phone=${AuthDebugLogger.maskPhone(phone)}',
+    );
     final session = await _repository.login(
       msg91AccessToken: msg91AccessToken,
       phone: phone,
@@ -115,8 +118,9 @@ class AuthService {
   }
 
   Future<AuthSession> devLogin() async {
+    AuthDebugLogger.log('AuthService.devLogin entered');
     final session = await _repository.devLogin();
-    debugPrint('[DEV_LOGIN] Response received');
+    AuthDebugLogger.log('AuthService.devLogin response received');
     AuthDebugLogger.backendLoginSuccess();
     AuthDebugLogger.jwtIssued(session.accessToken);
     await persistSession(session);

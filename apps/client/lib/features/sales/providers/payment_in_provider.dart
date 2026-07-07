@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
@@ -463,6 +464,7 @@ class PaymentInForm extends _$PaymentInForm {
 
       ref.invalidate(paymentInRecordsProvider);
       ref.invalidate(saleInvoicesProvider);
+      refreshAfterPaymentIn(ref);
       final paymentId = created.id;
       reset();
       return (error: null, paymentId: paymentId);

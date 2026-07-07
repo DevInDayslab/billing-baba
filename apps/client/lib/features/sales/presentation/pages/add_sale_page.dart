@@ -134,9 +134,7 @@ class _PageHeader extends ConsumerWidget {
     return Row(
       children: [
         Text(
-          readOnly
-              ? 'View Sale'
-              : (invoiceId == null ? 'Sale' : 'Edit Sale'),
+          readOnly ? 'View Sale' : (invoiceId == null ? 'Sale' : 'Edit Sale'),
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -163,7 +161,10 @@ class _PageHeader extends ConsumerWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 backgroundColor: const Color(0xFFE8F0FE),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 side: const BorderSide(color: Color(0xFF90CAF9)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
@@ -210,7 +211,9 @@ class _GodownSelector extends ConsumerWidget {
       options: options,
       onSelected: (name) {
         final godowns = ref.read(inventoryGodownsProvider).value ?? [];
-        final match = godowns.where((godown) => godown.name == name).firstOrNull;
+        final match = godowns
+            .where((godown) => godown.name == name)
+            .firstOrNull;
         onSelected(name, godownId: match?.id);
       },
     );
@@ -335,6 +338,7 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                       hasError: form.partyHasError,
                       emptyPlaceholder: 'Billing Name (Optional)',
                       onSelected: notifier.updateBillingName,
+                      onPartySelected: notifier.applyPartyDetails,
                       onPartySelectedWithId: (partyId, name) =>
                           notifier.updateParty(
                             partyId: partyId,
@@ -350,6 +354,20 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                             billing: party.billingAddress,
                           );
                         }
+                        if (party.shippingAddress.isNotEmpty) {
+                          notifier.updateAddresses(
+                            shipping: party.shippingAddress,
+                          );
+                        }
+                        if (party.gstin.isNotEmpty) {
+                          notifier.updateGstin(party.gstin);
+                        }
+                        if (party.email.isNotEmpty) {
+                          notifier.updateEmail(party.email);
+                        }
+                        if (party.state.isNotEmpty) {
+                          notifier.updateStateOfSupply(party.state);
+                        }
                       },
                     ),
                   ),
@@ -362,6 +380,76 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                         hintText: 'Phone number',
                         keyboardType: TextInputType.phone,
                         onChanged: notifier.updatePhone,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: _sectionGap),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _LabeledField(
+                      label: 'Business Name',
+                      child: _SaleTextField(
+                        initialValue: form.businessName,
+                        hintText: 'Business name',
+                        onChanged: notifier.updateBusinessName,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: _sectionGap),
+                  Expanded(
+                    child: _LabeledField(
+                      label: 'Email',
+                      child: _SaleTextField(
+                        initialValue: form.email,
+                        hintText: 'Email address',
+                        keyboardType: TextInputType.emailAddress,
+                        onChanged: notifier.updateEmail,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: _sectionGap),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _LabeledField(
+                      label: 'GSTIN',
+                      child: _SaleTextField(
+                        initialValue: form.gstin,
+                        hintText: 'GSTIN',
+                        onChanged: notifier.updateGstin,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: _sectionGap),
+                  Expanded(
+                    child: _LabeledField(
+                      label: 'Credit Limit',
+                      child: _SaleTextField(
+                        initialValue: form.creditLimit,
+                        hintText: 'Credit limit',
+                        readOnly: true,
+                        filled: true,
+                        onChanged: (_) {},
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: _sectionGap),
+                  Expanded(
+                    child: _LabeledField(
+                      label: 'Outstanding',
+                      child: _SaleTextField(
+                        initialValue: form.outstanding,
+                        hintText: 'Outstanding balance',
+                        readOnly: true,
+                        filled: true,
+                        onChanged: (_) {},
                       ),
                     ),
                   ),
@@ -570,7 +658,9 @@ class _BottomActionBar extends ConsumerWidget {
             )
           else
             FilledButton(
-              onPressed: isSaving ? null : () => _handleSave(context, ref, notifier),
+              onPressed: isSaving
+                  ? null
+                  : () => _handleSave(context, ref, notifier),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,

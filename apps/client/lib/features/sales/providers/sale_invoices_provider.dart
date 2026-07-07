@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
@@ -9,6 +10,39 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'sale_invoices_provider.g.dart';
 
 const saleInvoicesPageSize = 10;
+
+bool _hasClientOnlyFilters(SaleInvoiceFiltersState filters) {
+  return filters.selectedUser != 'All Users' ||
+      filters.selectedGodown != 'All Godown' ||
+      _paymentStatusFromFilterLabel(filters.selectedStatus) != null;
+}
+
+SaleInvoiceSummaryData _computeSummaryFromItems(List<SaleInvoiceModel> items) {
+  final finalized = items.where(
+    (invoice) =>
+        !invoice.isDraft && invoice.status != SaleInvoiceStatus.cancelled,
+  );
+
+  final totalSales = finalized.fold<double>(
+    0,
+    (sum, invoice) => sum + invoice.amount,
+  );
+  final balance = finalized.fold<double>(
+    0,
+    (sum, invoice) => sum + invoice.balance,
+  );
+  final received = finalized.fold<double>(
+    0,
+    (sum, invoice) =>
+        sum + (invoice.amount - invoice.balance).clamp(0, double.infinity),
+  );
+
+  return SaleInvoiceSummaryData(
+    totalSalesAmount: totalSales,
+    receivedAmount: received,
+    balanceAmount: balance,
+  );
+}
 
 enum TimeRangeOption {
   allTime,
@@ -80,14 +114,15 @@ class SaleInvoiceFiltersState {
   }
 }
 
-SaleInvoiceStatus? _paymentStatusFromFilterLabel(String label) => switch (label) {
-  'Paid' => SaleInvoiceStatus.paid,
-  'Unpaid' => SaleInvoiceStatus.unpaid,
-  'Partial' => SaleInvoiceStatus.partiallyPaid,
-  'Overdue' => SaleInvoiceStatus.overdue,
-  'Cancelled' => SaleInvoiceStatus.cancelled,
-  _ => null,
-};
+SaleInvoiceStatus? _paymentStatusFromFilterLabel(String label) =>
+    switch (label) {
+      'Paid' => SaleInvoiceStatus.paid,
+      'Unpaid' => SaleInvoiceStatus.unpaid,
+      'Partial' => SaleInvoiceStatus.partiallyPaid,
+      'Overdue' => SaleInvoiceStatus.overdue,
+      'Cancelled' => SaleInvoiceStatus.cancelled,
+      _ => null,
+    };
 
 String? _documentStatusFromFilterLabel(String label) => switch (label) {
   'Cancelled' => 'cancelled',
@@ -211,27 +246,13 @@ class SaleInvoices extends _$SaleInvoices {
   }
 
   Future<String?> deleteDraft(String documentId) async {
-    final previous = state;
-    final current = state.value;
-    if (current != null) {
-      state = AsyncData(
-        PaginatedSaleInvoices(
-          items: current.items.where((item) => item.id != documentId).toList(),
-          currentPage: current.currentPage,
-          totalPages: current.totalPages,
-          totalItems: current.totalItems - 1,
-          summary: current.summary,
-        ),
-      );
-    }
-
     try {
       final service = await ref.read(salesServiceProvider.future);
       await service.deleteDraft(documentId);
       await refresh();
+      refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
-      state = previous;
       return SalesErrorMapper.messageFor(error);
     }
   }
@@ -245,6 +266,7 @@ class SaleInvoices extends _$SaleInvoices {
         await service.cancelSale(invoice.id);
       }
       await refresh();
+      refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
@@ -256,6 +278,7 @@ class SaleInvoices extends _$SaleInvoices {
       final service = await ref.read(salesServiceProvider.future);
       await service.finalizeDraft(documentId);
       await refresh();
+      refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
@@ -327,15 +350,26 @@ PaginatedSaleInvoices paginatedSaleInvoices(Ref ref) {
 
 @riverpod
 SaleInvoiceSummaryData saleInvoiceSummary(Ref ref) {
-  final page = ref.watch(paginatedSaleInvoicesProvider);
+  final invoicesAsync = ref.watch(saleInvoicesProvider);
+  final filters = ref.watch(saleInvoiceFiltersProvider);
+
+  final page = invoicesAsync.value;
+  if (page == null) {
+    return const SaleInvoiceSummaryData(
+      totalSalesAmount: 0,
+      receivedAmount: 0,
+      balanceAmount: 0,
+    );
+  }
+
+  if (_hasClientOnlyFilters(filters)) {
+    return _computeSummaryFromItems(page.items);
+  }
+
   final summary = page.summary;
   if (summary != null) {
     return summary;
   }
 
-  return const SaleInvoiceSummaryData(
-    totalSalesAmount: 0,
-    receivedAmount: 0,
-    balanceAmount: 0,
-  );
+  return _computeSummaryFromItems(page.items);
 }
