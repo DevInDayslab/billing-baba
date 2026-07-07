@@ -1,15 +1,13 @@
-import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
-import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_actions.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_status_badge.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
@@ -22,6 +20,7 @@ const _amountColWidth = 100.0;
 const _balanceColWidth = 100.0;
 const _dueDateColWidth = 100.0;
 const _actionsColWidth = 120.0;
+const _colGap = 12.0;
 
 const double _minTableWidth =
     _dateColWidth +
@@ -32,6 +31,7 @@ const double _minTableWidth =
     _balanceColWidth +
     _dueDateColWidth +
     _actionsColWidth +
+    _colGap * 8 +
     160;
 
 class PurchaseBillTable extends ConsumerWidget {
@@ -47,7 +47,6 @@ class PurchaseBillTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final billsAsync = ref.watch(purchaseBillsProvider);
     final paginated = ref.watch(paginatedPurchaseBillsProvider);
     final notifier = ref.read(purchaseBillsProvider.notifier);
 
@@ -110,67 +109,44 @@ class PurchaseBillTable extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          billsAsync.when(
-            skipLoadingOnReload: true,
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                children: [
-                  Text(
-                    PurchaseErrorMapper.messageFor(error),
-                    style: const TextStyle(color: AppColors.error),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton(
-                    onPressed: notifier.refresh,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-            data: (_) => LayoutBuilder(
-              builder: (context, constraints) {
-                final tableWidth = constraints.maxWidth.clamp(
-                  _minTableWidth,
-                  double.infinity,
-                );
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final tableWidth = constraints.maxWidth.clamp(
+                _minTableWidth,
+                double.infinity,
+              );
 
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: tableWidth,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const _TableHeaderRow(),
-                        if (paginated.items.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.all(AppSpacing.xl),
-                            child: Center(
-                              child: Text(
-                                'No purchase bills found',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: tableWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _TableHeaderRow(),
+                      if (paginated.items.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.all(AppSpacing.xl),
+                          child: Center(
+                            child: Text(
+                              'No purchase bills found',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
                               ),
                             ),
-                          )
-                        else
-                          for (var i = 0; i < paginated.items.length; i++) ...[
-                            if (i > 0)
-                              const Divider(height: 1, color: _cardBorder),
-                            _buildRow(context, ref, paginated.items[i]),
-                          ],
-                      ],
-                    ),
+                          ),
+                        )
+                      else
+                        for (var i = 0; i < paginated.items.length; i++) ...[
+                          if (i > 0)
+                            const Divider(height: 1, color: _cardBorder),
+                          _buildRow(context, ref, paginated.items[i]),
+                        ],
+                    ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
           if (paginated.totalPages > 1) ...[
             const Divider(height: 1, color: _cardBorder),
@@ -231,6 +207,7 @@ class PurchaseBillTable extends ConsumerWidget {
         ),
         _TableCell(
           width: _actionsColWidth,
+          gapAfter: 0,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -262,69 +239,15 @@ class PurchaseBillTable extends ConsumerWidget {
               ),
               SalesActionMenuButton(
                 items: [
-                  if (bill.isDraft)
+                  for (final action in purchaseBillMenuActionsFor(bill))
                     SalesActionMenuItem(
-                      label: 'Edit draft',
-                      onSelected: () async {
-                        await context.push('${AppRoutes.editPurchase}/${bill.id}');
-                      },
-                    ),
-                  if (bill.isDraft)
-                    SalesActionMenuItem(
-                      label: 'Finalize',
-                      onSelected: () async {
-                        final error = await ref
-                            .read(purchaseBillsProvider.notifier)
-                            .finalizeBill(bill.id);
-                        if (!context.mounted) return;
-                        if (error != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(error)),
-                          );
-                        }
-                      },
-                    ),
-                  if (bill.isDraft)
-                    SalesActionMenuItem(
-                      label: 'Delete draft',
-                      onSelected: () async {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete draft?'),
-                            content: Text('Delete draft ${bill.invoiceNo}?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: const Text('Cancel'),
-                              ),
-                              FilledButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (confirmed != true || !context.mounted) return;
-                        final error = await ref
-                            .read(purchaseBillsProvider.notifier)
-                            .deleteDraft(bill.id);
-                        if (!context.mounted) return;
-                        if (error != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(error)),
-                          );
-                        }
-                      },
-                    ),
-                  if (!bill.isDraft)
-                    SalesActionMenuItem(
-                      label: 'Open',
-                      onSelected: () async {
-                        await context.push('${AppRoutes.editPurchase}/${bill.id}');
-                      },
+                      label: purchaseBillMenuActionLabel(action),
+                      onSelected: () => handlePurchaseBillMenuAction(
+                        context: context,
+                        ref: ref,
+                        action: action,
+                        bill: bill,
+                      ),
                     ),
                 ],
               ),
@@ -340,10 +263,9 @@ class _TableHeaderRow extends StatelessWidget {
   const _TableHeaderRow();
 
   static const _headerStyle = TextStyle(
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: FontWeight.w600,
     color: AppColors.textSecondary,
-    letterSpacing: 0.5,
   );
 
   @override
@@ -358,40 +280,41 @@ class _TableHeaderRow extends StatelessWidget {
         children: [
           _TableCell(
             width: _dateColWidth,
-            child: Text('DATE', style: _headerStyle),
+            child: Text('Date', style: _headerStyle),
           ),
           _TableCell(
             width: _invoiceColWidth,
-            child: Text('INVOICE NO.', style: _headerStyle),
+            child: Text('Invoice no', style: _headerStyle),
           ),
           Expanded(
-            child: _TableCell(child: Text('PARTY NAME', style: _headerStyle)),
+            child: _TableCell(child: Text('Party Name', style: _headerStyle)),
           ),
           _TableCell(
             width: _paymentColWidth,
-            child: Text('PAYMENT TYPE', style: _headerStyle),
+            child: Text('Payment Type', style: _headerStyle),
           ),
           _TableCell(
             width: _amountColWidth,
             alignment: Alignment.centerRight,
-            child: Text('AMOUNT', style: _headerStyle),
+            child: Text('Amount', style: _headerStyle),
           ),
           _TableCell(
             width: _balanceColWidth,
             alignment: Alignment.centerRight,
-            child: Text('BALANCE DUE', style: _headerStyle),
+            child: Text('Balance Due', style: _headerStyle),
           ),
           _TableCell(
             width: _dueDateColWidth,
-            child: Text('DUE DATE', style: _headerStyle),
+            child: Text('Due Date', style: _headerStyle),
           ),
           _TableCell(
             width: _statusColWidth,
-            child: Text('STATUS', style: _headerStyle),
+            child: Text('Status', style: _headerStyle),
           ),
           _TableCell(
             width: _actionsColWidth,
-            child: Text('ACTIONS', style: _headerStyle),
+            gapAfter: 0,
+            child: Text('Actions', style: _headerStyle),
           ),
         ],
       ),
@@ -429,21 +352,33 @@ class _TableCell extends StatelessWidget {
     required this.child,
     this.width,
     this.alignment = Alignment.centerLeft,
+    this.gapAfter = _colGap,
   });
 
   final Widget child;
   final double? width;
   final Alignment alignment;
+  final double gapAfter;
 
   @override
   Widget build(BuildContext context) {
-    final content = Align(alignment: alignment, child: child);
+    final content = Align(
+      alignment: alignment,
+      widthFactor: 1,
+      child: child,
+    );
 
     if (width != null) {
-      return SizedBox(width: width, child: content);
+      return Padding(
+        padding: EdgeInsets.only(right: gapAfter),
+        child: SizedBox(
+          width: width,
+          child: ClipRect(child: content),
+        ),
+      );
     }
 
-    return content;
+    return ClipRect(child: content);
   }
 }
 

@@ -67,7 +67,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     _removeOverlay();
     widget.onSelected(party);
 
-    final parties = ref.read(partiesListProvider);
+    final parties = ref.read(partyPickerListProvider).value ?? [];
     final match = parties.where((item) => item.name == party).firstOrNull;
     if (match != null) {
       widget.onPartySelectedWithId?.call(match.id, match.name);
@@ -75,7 +75,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
   }
 
   List<String> get _filteredParties {
-    final parties = ref.watch(partiesListProvider);
+    final parties = ref.watch(partyPickerListProvider).value ?? [];
     final names = parties
         .where((party) => widget.partyTypeFilter.matches(party.partyType))
         .map((party) => party.name)
@@ -94,6 +94,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
 
     try {
       await ref.read(partyListProvider.notifier).createParty(result);
+      ref.invalidate(partyPickerListProvider);
     } on PartyOfflineException {
       if (!mounted) return;
     } on ApiValidationException catch (e) {
@@ -112,7 +113,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
 
     if (!mounted) return;
     widget.onSelected(result.partyName);
-    final parties = ref.read(partiesListProvider);
+    final parties = ref.read(partyPickerListProvider).value ?? [];
     final match =
         parties.where((party) => party.name == result.partyName).firstOrNull;
     if (match != null) {
@@ -158,7 +159,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
   }
 
   Widget _buildOverlayContent() {
-    final partiesAsync = ref.watch(partyListProvider);
+    final partiesAsync = ref.watch(partyPickerListProvider);
     final filtered = _filteredParties;
 
     return Column(

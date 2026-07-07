@@ -6,9 +6,23 @@ import 'package:billing_baba/features/purchases/models/requests/purchase_request
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'expenses_provider.g.dart';
+
+/// One-shot success message shown on the expenses list after save.
+final expenseSaveSuccessMessageProvider =
+    NotifierProvider<ExpenseSaveSuccessMessage, String?>(
+      ExpenseSaveSuccessMessage.new,
+    );
+
+class ExpenseSaveSuccessMessage extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setMessage(String? value) => state = value;
+}
 
 class ExpenseFiltersState {
   const ExpenseFiltersState({

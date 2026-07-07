@@ -8,6 +8,8 @@ import 'package:billing_baba/features/purchases/providers/expenses_provider.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+const _successSnackBarColor = Color(0xFF2E7D32);
+
 class ExpensesPage extends ConsumerStatefulWidget {
   const ExpensesPage({super.key});
 
@@ -24,6 +26,24 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_onTabChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(expenseCategoriesProvider.notifier).refresh();
+      ref.read(expenseTransactionsProvider.notifier).refresh();
+      _showPendingSuccessMessage();
+    });
+  }
+
+  void _showPendingSuccessMessage() {
+    final message = ref.read(expenseSaveSuccessMessageProvider);
+    if (message == null || !mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: _successSnackBarColor,
+      ),
+    );
+    ref.read(expenseSaveSuccessMessageProvider.notifier).setMessage(null);
   }
 
   void _onTabChanged() {
@@ -42,6 +62,14 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<String?>(expenseSaveSuccessMessageProvider, (
+      previous,
+      next,
+    ) {
+      if (next == null) return;
+      _showPendingSuccessMessage();
+    });
+
     ref.listen<int>(expenseTabIndexProvider, (previous, next) {
       if (_tabController.index != next && mounted) {
         _tabController.animateTo(next);

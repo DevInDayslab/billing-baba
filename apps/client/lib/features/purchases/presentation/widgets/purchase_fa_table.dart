@@ -1,10 +1,9 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
-import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
-import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/purchase_fa_model.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/purchase_fa_actions.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_fa_status_badge.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_fa_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
@@ -14,33 +13,35 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
+const _addPurchaseFaBlue = Color(0xFF1565C0);
 
-const _partyColWidth = 160.0;
-const _noColWidth = 90.0;
-const _dateColWidth = 110.0;
-const _dueDateColWidth = 100.0;
-const _amountColWidth = 120.0;
-const _balanceColWidth = 110.0;
+const _dateColWidth = 140.0;
+const _invoiceColWidth = 100.0;
 const _paymentColWidth = 110.0;
+const _amountColWidth = 100.0;
+const _balanceColWidth = 110.0;
+const _dueDateColWidth = 100.0;
 const _statusColWidth = 90.0;
-const _actionsColWidth = 100.0;
+const _actionsColWidth = 130.0;
+const _colGap = 12.0;
 
 const double _minTableWidth =
-    _partyColWidth +
-    _noColWidth +
     _dateColWidth +
-    _dueDateColWidth +
+    _invoiceColWidth +
+    _paymentColWidth +
     _amountColWidth +
     _balanceColWidth +
-    _paymentColWidth +
+    _dueDateColWidth +
     _statusColWidth +
     _actionsColWidth +
-    32;
+    _colGap * 8 +
+    160;
 
 class PurchaseFaTable extends ConsumerWidget {
   const PurchaseFaTable({super.key});
 
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
+  static final _dateFormat = DateFormat('dd/MM/yyyy, hh:mm a');
+  static final _dueDateFormat = DateFormat('dd/MM/yyyy');
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
@@ -49,9 +50,7 @@ class PurchaseFaTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final faAsync = ref.watch(purchaseFaProvider);
     final paginated = ref.watch(paginatedPurchaseFaRecordsProvider);
-    final notifier = ref.read(purchaseFaProvider.notifier);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -78,7 +77,7 @@ class PurchaseFaTable extends ConsumerWidget {
                     letterSpacing: 0.5,
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: AppSpacing.md),
                 SizedBox(
                   width: 200,
                   height: 36,
@@ -111,81 +110,65 @@ class PurchaseFaTable extends ConsumerWidget {
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
-                _XlsChip(
-                  onTap: () =>
-                      ModuleExportActions.exportFixedAssets(context, ref),
-                ),
-                IconButton(
-                  onPressed: notifier.refresh,
-                  icon: const Icon(Icons.refresh, size: 20),
-                  color: AppColors.textSecondary,
-                  tooltip: 'Refresh',
+                const Spacer(),
+                FilledButton.icon(
+                  onPressed: () => context.push(AppRoutes.addPurchaseFa),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _addPurchaseFaBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                  ),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text(
+                    'Add Purchase FA',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
               ],
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          faAsync.when(
-            skipLoadingOnReload: true,
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                children: [
-                  Text(
-                    PurchaseErrorMapper.messageFor(error),
-                    style: const TextStyle(color: AppColors.error),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton(
-                    onPressed: notifier.refresh,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-            data: (_) => LayoutBuilder(
-              builder: (context, constraints) {
-                final tableWidth = constraints.maxWidth.clamp(
-                  _minTableWidth,
-                  double.infinity,
-                );
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final tableWidth = constraints.maxWidth.clamp(
+                _minTableWidth,
+                double.infinity,
+              );
 
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: tableWidth,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const _TableHeaderRow(),
-                        if (paginated.items.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.all(AppSpacing.xl),
-                            child: Center(
-                              child: Text(
-                                'No fixed asset purchases found',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: tableWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _TableHeaderRow(),
+                      if (paginated.items.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.all(AppSpacing.xl),
+                          child: Center(
+                            child: Text(
+                              'No fixed asset purchases found',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
                               ),
                             ),
-                          )
-                        else
-                          for (var i = 0; i < paginated.items.length; i++) ...[
-                            if (i > 0)
-                              const Divider(height: 1, color: _cardBorder),
-                            _buildRow(context, ref, paginated.items[i]),
-                          ],
-                      ],
-                    ),
+                          ),
+                        )
+                      else
+                        for (var i = 0; i < paginated.items.length; i++) ...[
+                          if (i > 0)
+                            const Divider(height: 1, color: _cardBorder),
+                          _buildRow(context, ref, paginated.items[i]),
+                        ],
+                    ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
           if (paginated.totalPages > 1) ...[
             const Divider(height: 1, color: _cardBorder),
@@ -207,23 +190,33 @@ class PurchaseFaTable extends ConsumerWidget {
     return _TableDataRow(
       children: [
         _TableCell(
-          width: _partyColWidth,
+          width: _dateColWidth,
           child: Text(
-            record.partyName,
+            _dateFormat.format(record.date),
             overflow: TextOverflow.ellipsis,
           ),
         ),
         _TableCell(
-          width: _noColWidth,
-          child: Text(record.invoiceNo),
+          width: _invoiceColWidth,
+          child: Text(
+            record.invoiceNo,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Expanded(
+          child: _TableCell(
+            child: Text(
+              record.partyName,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ),
         _TableCell(
-          width: _dateColWidth,
-          child: Text(_dateFormat.format(record.date)),
-        ),
-        _TableCell(
-          width: _dueDateColWidth,
-          child: Text(_dateFormat.format(record.dueDate)),
+          width: _paymentColWidth,
+          child: Text(
+            record.paymentType,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
         _TableCell(
           width: _amountColWidth,
@@ -236,8 +229,8 @@ class PurchaseFaTable extends ConsumerWidget {
           child: Text(_currencyFormat.format(record.balanceDue)),
         ),
         _TableCell(
-          width: _paymentColWidth,
-          child: Text(record.paymentType),
+          width: _dueDateColWidth,
+          child: Text(_dueDateFormat.format(record.dueDate)),
         ),
         _TableCell(
           width: _statusColWidth,
@@ -245,6 +238,8 @@ class PurchaseFaTable extends ConsumerWidget {
         ),
         _TableCell(
           width: _actionsColWidth,
+          gapAfter: 0,
+          alignment: Alignment.centerRight,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -259,7 +254,7 @@ class PurchaseFaTable extends ConsumerWidget {
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                tooltip: 'Print / Preview',
+                tooltip: 'Print',
               ),
               Tooltip(
                 message: 'Share',
@@ -267,7 +262,8 @@ class PurchaseFaTable extends ConsumerWidget {
                   overlayOffset: const Offset(0, 4),
                   targetAnchor: Alignment.bottomRight,
                   followerAnchor: Alignment.topRight,
-                  onChannelSelected: (_) => VoucherPrintActions.shareFixedAssetPurchase(
+                  onChannelSelected: (_) =>
+                      VoucherPrintActions.shareFixedAssetPurchase(
                     context,
                     ref,
                     record.batchId,
@@ -286,48 +282,16 @@ class PurchaseFaTable extends ConsumerWidget {
               ),
               SalesActionMenuButton(
                 items: [
-                  SalesActionMenuItem(
-                    label: 'Open',
-                    onSelected: () async {
-                      await context.push(
-                        '${AppRoutes.editPurchaseFa}/${record.batchId}',
-                      );
-                    },
-                  ),
-                  SalesActionMenuItem(
-                    label: 'Delete',
-                    onSelected: () async {
-                      final confirmed = await showDialog<bool>(
+                  for (final action in purchaseFaMenuActionsFor(record))
+                    SalesActionMenuItem(
+                      label: purchaseFaMenuActionLabel(action),
+                      onSelected: () => handlePurchaseFaMenuAction(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Delete purchase?'),
-                          content: Text('Delete ${record.invoiceNo}?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () =>
-                                  Navigator.of(context).pop(false),
-                              child: const Text('Cancel'),
-                            ),
-                            FilledButton(
-                              onPressed: () =>
-                                  Navigator.of(context).pop(true),
-                              child: const Text('Delete'),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (confirmed != true || !context.mounted) return;
-                      final error = await ref
-                          .read(purchaseFaProvider.notifier)
-                          .deleteBatch(record.batchId);
-                      if (!context.mounted) return;
-                      if (error != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(error)),
-                        );
-                      }
-                    },
-                  ),
+                        ref: ref,
+                        action: action,
+                        record: record,
+                      ),
+                    ),
                 ],
               ),
             ],
@@ -342,10 +306,9 @@ class _TableHeaderRow extends StatelessWidget {
   const _TableHeaderRow();
 
   static const _headerStyle = TextStyle(
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: FontWeight.w600,
     color: AppColors.textSecondary,
-    letterSpacing: 0.5,
   );
 
   @override
@@ -359,42 +322,43 @@ class _TableHeaderRow extends StatelessWidget {
       child: const Row(
         children: [
           _TableCell(
-            width: _partyColWidth,
-            child: Text('PARTY', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _noColWidth,
-            child: Text('NO.', style: _headerStyle),
-          ),
-          _TableCell(
             width: _dateColWidth,
-            child: Text('DATE', style: _headerStyle),
+            child: Text('Date', style: _headerStyle),
           ),
           _TableCell(
-            width: _dueDateColWidth,
-            child: Text('DUE DATE', style: _headerStyle),
+            width: _invoiceColWidth,
+            child: Text('Invoice no', style: _headerStyle),
+          ),
+          Expanded(
+            child: _TableCell(child: Text('Party Name', style: _headerStyle)),
+          ),
+          _TableCell(
+            width: _paymentColWidth,
+            child: Text('Payment Type', style: _headerStyle),
           ),
           _TableCell(
             width: _amountColWidth,
             alignment: Alignment.centerRight,
-            child: Text('TOTAL AMOUNT', style: _headerStyle),
+            child: Text('Amount', style: _headerStyle),
           ),
           _TableCell(
             width: _balanceColWidth,
             alignment: Alignment.centerRight,
-            child: Text('BALANCE', style: _headerStyle),
+            child: Text('Balance Due', style: _headerStyle),
           ),
           _TableCell(
-            width: _paymentColWidth,
-            child: Text('PAYMENT', style: _headerStyle),
+            width: _dueDateColWidth,
+            child: Text('Due Date', style: _headerStyle),
           ),
           _TableCell(
             width: _statusColWidth,
-            child: Text('STATUS', style: _headerStyle),
+            child: Text('Status', style: _headerStyle),
           ),
           _TableCell(
             width: _actionsColWidth,
-            child: Text('ACTION', style: _headerStyle),
+            gapAfter: 0,
+            alignment: Alignment.centerRight,
+            child: Text('Actions', style: _headerStyle),
           ),
         ],
       ),
@@ -407,14 +371,22 @@ class _TableDataRow extends StatelessWidget {
 
   final List<Widget> children;
 
+  static const _dataStyle = TextStyle(
+    fontSize: 13,
+    color: AppColors.textPrimary,
+  );
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
+    return DefaultTextStyle(
+      style: _dataStyle,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(children: children),
       ),
-      child: Row(children: children),
     );
   }
 }
@@ -424,19 +396,33 @@ class _TableCell extends StatelessWidget {
     required this.child,
     this.width,
     this.alignment = Alignment.centerLeft,
+    this.gapAfter = _colGap,
   });
 
   final Widget child;
   final double? width;
   final Alignment alignment;
+  final double gapAfter;
 
   @override
   Widget build(BuildContext context) {
-    final content = Align(alignment: alignment, child: child);
+    final content = Align(
+      alignment: alignment,
+      widthFactor: 1,
+      child: child,
+    );
+
     if (width != null) {
-      return SizedBox(width: width, child: content);
+      return Padding(
+        padding: EdgeInsets.only(right: gapAfter),
+        child: SizedBox(
+          width: width,
+          child: ClipRect(child: content),
+        ),
+      );
     }
-    return Expanded(child: content);
+
+    return ClipRect(child: content);
   }
 }
 
@@ -483,41 +469,6 @@ class _PaginationRow extends ConsumerWidget {
             color: AppColors.textSecondary,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _XlsChip extends StatelessWidget {
-  const _XlsChip({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: 4,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8F5E9),
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-          ),
-          child: const Text(
-            'xls',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2E7D32),
-            ),
-          ),
-        ),
       ),
     );
   }

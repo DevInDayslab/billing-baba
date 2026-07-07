@@ -92,6 +92,8 @@ abstract final class ApiEndpoints {
       '${purchaseDocument(id)}/cancel';
   static String purchaseDocumentConvert(String id) =>
       '${purchaseDocument(id)}/convert';
+  static String purchaseDocumentPaymentHistory(String id) =>
+      '${purchaseDocument(id)}/payment-history';
 
   static const expenses = '$purchases/expenses';
   static String expense(String id) => '$expenses/$id';

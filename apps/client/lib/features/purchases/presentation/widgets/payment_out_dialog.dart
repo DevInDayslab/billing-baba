@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
-import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
-import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
@@ -19,20 +17,35 @@ const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 
 /// Shows the Payment-Out modal from the Payment-Out page.
-Future<void> showPaymentOutDialog(BuildContext context) {
-  return showDialog<void>(
+/// Returns `true` when a payment was saved successfully.
+Future<bool> showPaymentOutDialog(
+  BuildContext context, {
+  String? initialPartyId,
+  String? initialPartyName,
+}) {
+  return showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (context) => const Dialog(
+    builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: PaymentOutDialog(),
+      child: PaymentOutDialog(
+        initialPartyId: initialPartyId,
+        initialPartyName: initialPartyName,
+      ),
     ),
-  );
+  ).then((saved) => saved ?? false);
 }
 
 class PaymentOutDialog extends ConsumerStatefulWidget {
-  const PaymentOutDialog({super.key});
+  const PaymentOutDialog({
+    super.key,
+    this.initialPartyId,
+    this.initialPartyName,
+  });
+
+  final String? initialPartyId;
+  final String? initialPartyName;
 
   @override
   ConsumerState<PaymentOutDialog> createState() => _PaymentOutDialogState();
@@ -50,7 +63,14 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(paymentOutFormProvider.notifier).reset();
+      final notifier = ref.read(paymentOutFormProvider.notifier);
+      notifier.reset();
+      if (widget.initialPartyId != null && widget.initialPartyId!.isNotEmpty) {
+        notifier.updateParty(
+          widget.initialPartyName ?? '',
+          partyId: widget.initialPartyId,
+        );
+      }
     });
   }
 
@@ -78,10 +98,23 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
     }
   }
 
+  void _syncAmountFieldsFromControllers() {
+    final notifier = ref.read(paymentOutFormProvider.notifier);
+    final paid = double.tryParse(_paidController.text.trim()) ?? 0;
+    final discount = double.tryParse(_discountController.text.trim()) ?? 0;
+    notifier.updatePaidAmount(paid);
+    notifier.updateDiscount(discount);
+  }
+
   Future<void> _handleSave({bool saveAndNew = false}) async {
     final notifier = ref.read(paymentOutFormProvider.notifier);
-    final receiptNo = ref.read(paymentOutFormProvider).receiptNo;
-    final result = await notifier.savePayment();
+    if (ref.read(paymentOutFormProvider).isSaving) return;
+
+    _syncAmountFieldsFromControllers();
+
+    final result = await notifier.savePayment(
+      showSuccessMessage: !saveAndNew,
+    );
     if (!mounted) return;
     if (result.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -94,27 +127,27 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
       _savedPaymentId = result.paymentId;
     }
 
-    showTransactionSuccessToast(
-      context,
-      message: 'Payment $receiptNo saved successfully',
-    );
-
     if (saveAndNew) {
       notifier.reset();
       _paidController.clear();
       _discountController.clear();
       _savedPaymentId = null;
     } else {
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(true);
     }
   }
 
   Future<void> _handlePrintPreview() async {
+    if (ref.read(paymentOutFormProvider).isSaving) return;
+
     var paymentId = _savedPaymentId;
     final receiptNo = ref.read(paymentOutFormProvider).receiptNo;
 
     if (paymentId == null) {
-      final result = await ref.read(paymentOutFormProvider.notifier).savePayment();
+      _syncAmountFieldsFromControllers();
+      final result = await ref.read(paymentOutFormProvider.notifier).savePayment(
+        showSuccessMessage: false,
+      );
       if (!mounted) return;
       if (result.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -136,11 +169,16 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
   }
 
   Future<void> _handleShare() async {
+    if (ref.read(paymentOutFormProvider).isSaving) return;
+
     var paymentId = _savedPaymentId;
     final receiptNo = ref.read(paymentOutFormProvider).receiptNo;
 
     if (paymentId == null) {
-      final result = await ref.read(paymentOutFormProvider.notifier).savePayment();
+      _syncAmountFieldsFromControllers();
+      final result = await ref.read(paymentOutFormProvider.notifier).savePayment(
+        showSuccessMessage: false,
+      );
       if (!mounted) return;
       if (result.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -165,48 +203,68 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
   Widget build(BuildContext context) {
     final form = ref.watch(paymentOutFormProvider);
     final notifier = ref.read(paymentOutFormProvider.notifier);
+    final isSaving = form.isSaving;
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 900),
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: AppRadius.lgBorder,
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _DialogHeader(onClose: () => Navigator.of(context).pop()),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(_sectionGap),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _FloatingLabelField(
-                            label: 'Party *',
-                            hasError:
-                                form.showValidationErrors &&
-                                (form.partyId == null ||
-                                    form.partyId!.isEmpty),
-                            child: BillingNamePartySearchField(
-                              value: form.party,
-                              partyTypeFilter: PartyTypeFilter.supplier,
-                              emptyPlaceholder: 'Select Party',
-                              onSelected: notifier.updateParty,
-                              onPartySelectedWithId: (partyId, name) =>
-                                  notifier.updateParty(name, partyId: partyId),
-                              hasError:
-                                  form.showValidationErrors &&
-                                  (form.partyId == null ||
-                                      form.partyId!.isEmpty),
-                              errorMessage: 'Please select a supplier',
-                            ),
-                          ),
+    return Stack(
+      children: [
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Material(
+            color: AppColors.surface,
+            borderRadius: AppRadius.lgBorder,
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _DialogHeader(
+                  onClose: isSaving ? null : () => Navigator.of(context).pop(),
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(_sectionGap),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _FloatingLabelField(
+                                label: 'Party *',
+                                hasError:
+                                    form.showValidationErrors &&
+                                    (form.partyId == null ||
+                                        form.partyId!.isEmpty),
+                                child: BillingNamePartySearchField(
+                                  value: form.party,
+                                  emptyPlaceholder: 'Select Party',
+                                  onSelected: notifier.updateParty,
+                                  onPartySelectedWithId: (partyId, name) =>
+                                      notifier.updateParty(
+                                        name,
+                                        partyId: partyId,
+                                      ),
+                                  hasError:
+                                      form.showValidationErrors &&
+                                      (form.partyId == null ||
+                                          form.partyId!.isEmpty),
+                                  errorMessage: 'Please select a party',
+                                ),
+                              ),
+                              if (form.partyId != null &&
+                                  form.partyId!.isNotEmpty) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                _AmountRow(
+                                  label: 'Balance Due',
+                                  value: form.isLoadingBalance
+                                      ? 'Loading...'
+                                      : _amountFormat.format(form.balanceDue),
+                                  valueColor: form.balanceDue > 0
+                                      ? const Color(0xFFE65100)
+                                      : AppColors.textSecondary,
+                                ),
+                              ],
                           const SizedBox(height: _sectionGap),
                           _LabeledField(
                             label: 'Payment Type',
@@ -341,7 +399,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                   compact: true,
                                   hasError:
                                       form.showValidationErrors &&
-                                      form.paidAmount <= 0,
+                                      form.total <= 0,
                                 ),
                                 onChanged: (value) {
                                   final amount = double.tryParse(value) ?? 0;
@@ -399,26 +457,47 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   _PaymentOutActionsMenu(
+                    enabled: !isSaving,
                     onPrint: _handlePrintPreview,
                     onSaveAndNew: () => _handleSave(saveAndNew: true),
                     onChannelSelected: (_) => _handleShare(),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   FilledButton(
-                    onPressed: _handleSave,
+                    onPressed: isSaving ? null : () => _handleSave(),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.lg,
                       ),
                     ),
-                    child: const Text('Save'),
+                    child: isSaving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Save'),
                   ),
                 ],
               ),
             ),
-          ],
+              ],
+            ),
+          ),
         ),
-      ),
+        if (isSaving)
+          Positioned.fill(
+            child: ColoredBox(
+              color: Colors.black.withValues(alpha: 0.12),
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -428,11 +507,13 @@ enum _PaymentOutMenuAction { share, print, saveAndNew }
 /// Vyapar-style actions menu: Share (submenu), Print, Save & New.
 class _PaymentOutActionsMenu extends StatelessWidget {
   const _PaymentOutActionsMenu({
+    required this.enabled,
     required this.onPrint,
     required this.onSaveAndNew,
     required this.onChannelSelected,
   });
 
+  final bool enabled;
   final VoidCallback onPrint;
   final VoidCallback onSaveAndNew;
   final ValueChanged<ShareChannel> onChannelSelected;
@@ -458,6 +539,7 @@ class _PaymentOutActionsMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<_PaymentOutMenuAction>(
+      enabled: enabled,
       offset: const Offset(0, 40),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(6),
@@ -503,19 +585,22 @@ class _PaymentOutActionsMenu extends StatelessWidget {
           child: Text('Save & New', style: TextStyle(fontSize: 13)),
         ),
       ],
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: _cardBorder),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Share', style: TextStyle(fontSize: 13)),
-            SizedBox(width: 4),
-            Icon(Icons.keyboard_arrow_down, size: 16),
-          ],
+      child: Opacity(
+        opacity: enabled ? 1 : 0.5,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: _cardBorder),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Share', style: TextStyle(fontSize: 13)),
+              SizedBox(width: 4),
+              Icon(Icons.keyboard_arrow_down, size: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -525,7 +610,7 @@ class _PaymentOutActionsMenu extends StatelessWidget {
 class _DialogHeader extends StatelessWidget {
   const _DialogHeader({required this.onClose});
 
-  final VoidCallback onClose;
+  final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context) {

@@ -6,11 +6,25 @@ import 'package:billing_baba/features/purchases/providers/purchase_bills_provide
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'payment_out_provider.g.dart';
 
 const paymentOutPageSize = 10;
+
+/// One-shot success message shown on the payment out list after save.
+final paymentOutSaveSuccessMessageProvider =
+    NotifierProvider<PaymentOutSaveSuccessMessage, String?>(
+      PaymentOutSaveSuccessMessage.new,
+    );
+
+class PaymentOutSaveSuccessMessage extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setMessage(String? value) => state = value;
+}
 
 abstract final class PaymentOutDropdownOptions {
   static const paymentTypes = [
@@ -162,9 +176,52 @@ class PaymentOutRecords extends _$PaymentOutRecords {
     );
   }
 
-  Future<void> refresh() async {
-    state = const AsyncLoading();
+  Future<void> refresh({bool silent = false}) async {
+    if (!silent) {
+      state = const AsyncLoading();
+    }
     state = await AsyncValue.guard(_fetchPage);
+  }
+
+  Future<void> refreshAllRelated({bool silent = false}) async {
+    ref.read(paymentOutFiltersProvider.notifier).ensureFirstPage();
+    await refresh(silent: silent);
+    await ref.read(purchaseBillsProvider.notifier).refresh();
+  }
+
+  /// Inserts a freshly saved payment at the top of page 1 until the API refresh
+  /// completes, so the list updates immediately after save.
+  void optimisticPrepend(PaymentOutModel record) {
+    final filters = ref.read(paymentOutFiltersProvider);
+    if (filters.currentPage != 1) return;
+    if (_applyClientFilters([record], filters).isEmpty) return;
+
+    final value = state.asData?.value;
+    if (value == null) {
+      state = AsyncData(
+        PaginatedPaymentOut(
+          items: [record],
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 1,
+        ),
+      );
+      return;
+    }
+
+    final items = [
+      record,
+      ...value.items.where((PaymentOutModel item) => item.id != record.id),
+    ].take(paymentOutPageSize).toList();
+
+    state = AsyncData(
+      PaginatedPaymentOut(
+        items: items,
+        currentPage: value.currentPage,
+        totalPages: value.totalPages,
+        totalItems: value.totalItems + 1,
+      ),
+    );
   }
 }
 
@@ -208,6 +265,12 @@ class PaymentOutFilters extends _$PaymentOutFilters {
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
     ref.invalidate(paymentOutRecordsProvider);
+  }
+
+  void ensureFirstPage() {
+    if (state.currentPage != 1) {
+      state = state.copyWith(currentPage: 1);
+    }
   }
 }
 
@@ -260,6 +323,7 @@ class PaymentOutFormState {
     this.showValidationErrors = false,
     this.saveError,
     this.isSaving = false,
+    this.isLoadingBalance = false,
   });
 
   final String? partyId;
@@ -276,14 +340,15 @@ class PaymentOutFormState {
   final bool showValidationErrors;
   final String? saveError;
   final bool isSaving;
+  final bool isLoadingBalance;
 
-  double get total => (paidAmount - discount).clamp(0, double.infinity);
+  double get total => (paidAmount - discount).clamp(0, double.infinity).toDouble();
 
   bool get isValid =>
       party.trim().isNotEmpty &&
       partyId != null &&
       partyId!.isNotEmpty &&
-      paidAmount > 0;
+      total > 0;
 
   PaymentOutFormState copyWith({
     String? partyId,
@@ -301,6 +366,7 @@ class PaymentOutFormState {
     String? saveError,
     bool clearSaveError = false,
     bool? isSaving,
+    bool? isLoadingBalance,
   }) {
     return PaymentOutFormState(
       partyId: partyId ?? this.partyId,
@@ -317,6 +383,7 @@ class PaymentOutFormState {
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
       isSaving: isSaving ?? this.isSaving,
+      isLoadingBalance: isLoadingBalance ?? this.isLoadingBalance,
     );
   }
 }
@@ -343,16 +410,18 @@ class PaymentOutForm extends _$PaymentOutForm {
     state = state.copyWith(
       party: name,
       partyId: partyId,
+      balanceDue: 0,
       clearSaveError: true,
+      isLoadingBalance: partyId != null && partyId.isNotEmpty,
     );
 
     if (partyId != null && partyId.isNotEmpty) {
       try {
         final service = await ref.read(purchaseServiceProvider.future);
         final balanceDue = await service.fetchPartyBalanceDue(partyId);
-        state = state.copyWith(balanceDue: balanceDue);
+        state = state.copyWith(balanceDue: balanceDue, isLoadingBalance: false);
       } catch (_) {
-        // Balance lookup is best-effort for the dialog.
+        state = state.copyWith(isLoadingBalance: false);
       }
     }
   }
@@ -385,7 +454,9 @@ class PaymentOutForm extends _$PaymentOutForm {
     state = state.copyWith(showDescriptionField: !state.showDescriptionField);
   }
 
-  Future<({String? error, String? paymentId})> savePayment() async {
+  Future<({String? error, String? paymentId})> savePayment({
+    bool showSuccessMessage = true,
+  }) async {
     if (!state.isValid) {
       state = state.copyWith(showValidationErrors: true);
       return (error: 'Please fill required fields', paymentId: null);
@@ -405,28 +476,41 @@ class PaymentOutForm extends _$PaymentOutForm {
         time.minute,
       );
 
+      final paymentAmount = state.total;
+
       final allocations = await service.buildFifoAllocations(
         partyId: state.partyId!,
-        amount: state.paidAmount,
+        amount: paymentAmount,
       );
+
+      final receiptNo = state.receiptNo;
 
       final created = await service.createPayment(
         CreatePaymentRequest(
           partyId: state.partyId!,
           direction: 'paid',
-          amount: state.paidAmount.toStringAsFixed(4),
+          amount: paymentAmount.toStringAsFixed(4),
           paymentMode: PurchasePaymentModes.toApi(state.paymentType),
           paymentDate: paymentDate.toUtc().toIso8601String(),
-          referenceNumber: state.receiptNo,
+          referenceNumber: receiptNo,
           notes: state.description.trim().isEmpty ? null : state.description,
           allocations: allocations,
         ),
       );
 
-      ref.invalidate(paymentOutRecordsProvider);
-      ref.invalidate(purchaseBillsProvider);
+      ref.read(paymentOutRecordsProvider.notifier).optimisticPrepend(created);
+      await ref
+          .read(paymentOutRecordsProvider.notifier)
+          .refreshAllRelated(silent: true);
+
       final paymentId = created.id;
+      state = state.copyWith(isSaving: false);
       reset();
+      if (showSuccessMessage) {
+        ref.read(paymentOutSaveSuccessMessageProvider.notifier).setMessage(
+          'Payment $receiptNo saved successfully',
+        );
+      }
       return (error: null, paymentId: paymentId);
     } catch (error) {
       final message = PurchaseErrorMapper.messageFor(error);

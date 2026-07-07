@@ -33,7 +33,7 @@ final class PurchaseReturnsProvider
   PurchaseReturns create() => PurchaseReturns();
 }
 
-String _$purchaseReturnsHash() => r'bbf2d9e5be05cc4495e736f6bdc4abf5dc1f0900';
+String _$purchaseReturnsHash() => r'22a4eab4a72139d6cd4fb8c1887624cfaf98a004';
 
 abstract class _$PurchaseReturns
     extends $AsyncNotifier<PaginatedPurchaseReturns> {

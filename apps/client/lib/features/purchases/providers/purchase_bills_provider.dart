@@ -6,6 +6,7 @@ import 'package:billing_baba/features/purchases/models/requests/purchase_request
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'purchase_bills_provider.g.dart';
@@ -241,6 +242,47 @@ class PurchaseBills extends _$PurchaseBills {
       return PurchaseErrorMapper.messageFor(error);
     }
   }
+
+  Future<String?> cancelBill(String documentId) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      await service.cancelDocument(documentId);
+      await refresh();
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<({String? error, String? returnId})> convertToReturn(
+    String billId,
+  ) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final document = await service.convertBillToReturn(billId);
+      await refresh();
+      return (error: null, returnId: document.id);
+    } catch (error) {
+      return (
+        error: PurchaseErrorMapper.messageFor(error),
+        returnId: null,
+      );
+    }
+  }
+
+  Future<({String? error, String? newId})> duplicateBill(String billId) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final newId = await service.duplicatePurchaseBill(billId);
+      await refresh();
+      return (error: null, newId: newId);
+    } catch (error) {
+      return (
+        error: PurchaseErrorMapper.messageFor(error),
+        newId: null,
+      );
+    }
+  }
 }
 
 @riverpod
@@ -332,4 +374,17 @@ PurchaseBillSummaryData purchaseBillSummary(Ref ref) {
     overdueAmount: overdueAmount,
     totalAmount: totalAmount,
   );
+}
+
+/// One-shot success message shown on the purchase bills list after save.
+final purchaseBillSaveSuccessMessageProvider =
+    NotifierProvider<PurchaseBillSaveSuccessMessage, String?>(
+      PurchaseBillSaveSuccessMessage.new,
+    );
+
+class PurchaseBillSaveSuccessMessage extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setMessage(String? value) => state = value;
 }

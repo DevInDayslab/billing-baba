@@ -21,8 +21,8 @@ class PurchaseBillStatusBadge extends StatelessWidget {
       ),
       PurchaseBillStatus.partiallyPaid => (
         'Partial',
-        const Color(0xFFE3F2FD),
-        const Color(0xFF1565C0),
+        const Color(0xFFFFF8E1),
+        const Color(0xFFF57C00),
       ),
       PurchaseBillStatus.overdue => (
         'Overdue',

@@ -87,6 +87,20 @@ class PurchaseRemoteDataSource {
     );
   }
 
+  Future<List<PurchaseBillPaymentHistoryEntry>> getPaymentHistory(
+    String documentId,
+  ) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.purchaseDocumentPaymentHistory(documentId),
+    );
+    final data = response.data?['data'];
+    if (data is! List) return const [];
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(PurchaseBillPaymentHistoryEntry.fromJson)
+        .toList();
+  }
+
   Future<PurchaseDocumentLineDto> addLine(
     String documentId,
     CreatePurchaseLineRequest request,

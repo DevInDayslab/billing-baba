@@ -44,6 +44,10 @@ class PurchaseRepository {
     ConvertPurchaseDocumentRequest request,
   ) => _remote.convertDocument(id, request);
 
+  Future<List<PurchaseBillPaymentHistoryEntry>> getPaymentHistory(
+    String documentId,
+  ) => _remote.getPaymentHistory(documentId);
+
   Future<PurchaseDocumentLineDto> addLine(
     String documentId,
     CreatePurchaseLineRequest request,

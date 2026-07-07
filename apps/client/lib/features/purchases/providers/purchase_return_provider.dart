@@ -7,11 +7,25 @@ import 'package:billing_baba/features/purchases/models/requests/purchase_request
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'purchase_return_provider.g.dart';
 
 const purchaseReturnPageSize = 10;
+
+/// One-shot success message shown on the purchase return list after save.
+final purchaseReturnSaveSuccessMessageProvider =
+    NotifierProvider<PurchaseReturnSaveSuccessMessage, String?>(
+      PurchaseReturnSaveSuccessMessage.new,
+    );
+
+class PurchaseReturnSaveSuccessMessage extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setMessage(String? value) => state = value;
+}
 
 class PurchaseReturnFiltersState {
   const PurchaseReturnFiltersState({
@@ -221,6 +235,31 @@ class PurchaseReturns extends _$PurchaseReturns {
       return null;
     } catch (error) {
       return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<String?> cancelReturn(String documentId) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      await service.cancelDocument(documentId);
+      await refresh();
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<({String? error, String? newId})> duplicateReturn(String returnId) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final newId = await service.duplicatePurchaseReturn(returnId);
+      await refresh();
+      return (error: null, newId: newId);
+    } catch (error) {
+      return (
+        error: PurchaseErrorMapper.messageFor(error),
+        newId: null,
+      );
     }
   }
 }

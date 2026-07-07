@@ -1,17 +1,15 @@
-import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
-import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/purchase_return_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_status_badge.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/purchase_return_actions.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_return_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_table_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _indexColWidth = 40.0;
@@ -51,7 +49,6 @@ class PurchaseReturnTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final returnsAsync = ref.watch(purchaseReturnsProvider);
     final paginated = ref.watch(paginatedPurchaseReturnsProvider);
     final summary = ref.watch(purchaseReturnSummaryProvider);
     final filtersNotifier = ref.read(purchaseReturnFiltersProvider.notifier);
@@ -130,54 +127,43 @@ class PurchaseReturnTable extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1, color: salesCardBorder),
-          returnsAsync.when(
-            skipLoadingOnReload: true,
-            loading: () => const SalesLoadingState(),
-            error: (error, _) => SalesErrorState(
-              message: PurchaseErrorMapper.messageFor(error),
-              onRetry: notifier.refresh,
-            ),
-            data: (_) {
-              if (paginated.items.isEmpty) {
-                return const SalesEmptyListState(message: 'No debit notes found');
-              }
+          if (paginated.items.isEmpty)
+            const SalesEmptyListState(message: 'No debit notes found')
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final tableWidth = constraints.maxWidth.clamp(
+                  _minTableWidth,
+                  double.infinity,
+                );
 
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final tableWidth = constraints.maxWidth.clamp(
-                    _minTableWidth,
-                    double.infinity,
-                  );
-
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width: tableWidth,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const _TableHeaderRow(),
-                          for (var i = 0; i < paginated.items.length; i++) ...[
-                            if (i > 0)
-                              const Divider(height: 1, color: salesCardBorder),
-                            _buildRow(
-                              context,
-                              ref,
-                              paginated.items[i],
-                              (paginated.currentPage - 1) *
-                                      purchaseReturnPageSize +
-                                  i +
-                                  1,
-                            ),
-                          ],
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: tableWidth,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const _TableHeaderRow(),
+                        for (var i = 0; i < paginated.items.length; i++) ...[
+                          if (i > 0)
+                            const Divider(height: 1, color: salesCardBorder),
+                          _buildRow(
+                            context,
+                            ref,
+                            paginated.items[i],
+                            (paginated.currentPage - 1) *
+                                    purchaseReturnPageSize +
+                                i +
+                                1,
+                          ),
                         ],
-                      ),
+                      ],
                     ),
-                  );
-                },
-              );
-            },
-          ),
+                  ),
+                );
+              },
+            ),
           const Divider(height: 1, color: salesCardBorder),
           _SummaryFooter(
             totalAmount: summary.totalAmount,
@@ -296,6 +282,7 @@ class PurchaseReturnTable extends ConsumerWidget {
         SalesTableCell(
           width: _actionsColWidth,
           gapAfter: 0,
+          alignment: Alignment.centerRight,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -327,73 +314,15 @@ class PurchaseReturnTable extends ConsumerWidget {
               ),
               SalesActionMenuButton(
                 items: [
-                  if (item.isDraft)
+                  for (final action in purchaseReturnMenuActionsFor(item))
                     SalesActionMenuItem(
-                      label: 'Edit draft',
-                      onSelected: () async {
-                        await context.push(
-                          '${AppRoutes.editDebitNote}/${item.id}',
-                        );
-                      },
-                    ),
-                  if (item.isDraft)
-                    SalesActionMenuItem(
-                      label: 'Finalize',
-                      onSelected: () async {
-                        final error = await ref
-                            .read(purchaseReturnsProvider.notifier)
-                            .finalizeReturn(item.id);
-                        if (!context.mounted) return;
-                        if (error != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(error)),
-                          );
-                        }
-                      },
-                    ),
-                  if (item.isDraft)
-                    SalesActionMenuItem(
-                      label: 'Delete draft',
-                      onSelected: () async {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete draft?'),
-                            content: Text('Delete draft ${item.debitNoteNo}?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: const Text('Cancel'),
-                              ),
-                              FilledButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (confirmed != true || !context.mounted) return;
-                        final error = await ref
-                            .read(purchaseReturnsProvider.notifier)
-                            .deleteDraft(item.id);
-                        if (!context.mounted) return;
-                        if (error != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(error)),
-                          );
-                        }
-                      },
-                    ),
-                  if (!item.isDraft)
-                    SalesActionMenuItem(
-                      label: 'Open',
-                      onSelected: () async {
-                        await context.push(
-                          '${AppRoutes.editDebitNote}/${item.id}',
-                        );
-                      },
+                      label: purchaseReturnMenuActionLabel(action),
+                      onSelected: () => handlePurchaseReturnMenuAction(
+                        context: context,
+                        ref: ref,
+                        action: action,
+                        item: item,
+                      ),
                     ),
                 ],
               ),
@@ -572,9 +501,10 @@ class _TableHeaderRow extends StatelessWidget {
           SalesTableHeaderCell(label: 'DUE DATE', width: _dueDateColWidth),
           SalesTableHeaderCell(label: 'STATUS', width: _statusColWidth),
           SalesTableHeaderCell(
-            label: 'PRINT / SHARE',
+            label: 'Actions',
             width: _actionsColWidth,
             gapAfter: 0,
+            alignment: Alignment.centerRight,
           ),
         ],
       ),

@@ -1,7 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
-import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/payment_out_status_badge.dart';
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
@@ -42,7 +41,6 @@ class PaymentOutTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final paymentsAsync = ref.watch(paymentOutRecordsProvider);
     final paginated = ref.watch(paginatedPaymentOutRecordsProvider);
     final notifier = ref.read(paymentOutRecordsProvider.notifier);
 
@@ -100,60 +98,35 @@ class PaymentOutTable extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          paymentsAsync.when(
-            skipLoadingOnReload: true,
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                children: [
-                  Text(
-                    PurchaseErrorMapper.messageFor(error),
-                    style: const TextStyle(color: AppColors.error),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton(
-                    onPressed: notifier.refresh,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-            data: (_) {
-              if (paginated.items.isEmpty) {
-                return const _EmptyState();
-              }
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final tableWidth = constraints.maxWidth.clamp(
-                    _minTableWidth,
-                    double.infinity,
-                  );
+          if (paginated.items.isEmpty)
+            const _EmptyState()
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final tableWidth = constraints.maxWidth.clamp(
+                  _minTableWidth,
+                  double.infinity,
+                );
 
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width: tableWidth,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const _TableHeaderRow(),
-                          for (var i = 0; i < paginated.items.length; i++) ...[
-                            if (i > 0)
-                              const Divider(height: 1, color: _cardBorder),
-                            _buildRow(context, ref, paginated.items[i]),
-                          ],
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: tableWidth,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const _TableHeaderRow(),
+                        for (var i = 0; i < paginated.items.length; i++) ...[
+                          if (i > 0)
+                            const Divider(height: 1, color: _cardBorder),
+                          _buildRow(context, ref, paginated.items[i]),
                         ],
-                      ),
+                      ],
                     ),
-                  );
-                },
-              );
-            },
-          ),
+                  ),
+                );
+              },
+            ),
           if (paginated.totalPages > 1) ...[
             const Divider(height: 1, color: _cardBorder),
             _PaginationRow(

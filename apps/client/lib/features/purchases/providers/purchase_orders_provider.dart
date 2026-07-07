@@ -7,11 +7,25 @@ import 'package:billing_baba/features/purchases/providers/purchase_bills_provide
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'purchase_orders_provider.g.dart';
 
 const purchaseOrdersPageSize = 10;
+
+/// One-shot success message shown on the purchase order list after save.
+final purchaseOrderSaveSuccessMessageProvider =
+    NotifierProvider<PurchaseOrderSaveSuccessMessage, String?>(
+      PurchaseOrderSaveSuccessMessage.new,
+    );
+
+class PurchaseOrderSaveSuccessMessage extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setMessage(String? value) => state = value;
+}
 
 class PurchaseOrderFiltersState {
   const PurchaseOrderFiltersState({
@@ -200,9 +214,53 @@ class PurchaseOrders extends _$PurchaseOrders {
       await service.convertPurchaseOrder(orderId);
       await refresh();
       ref.invalidate(purchaseBillsProvider);
+      await ref.read(purchaseBillsProvider.notifier).refresh();
       return null;
     } catch (error) {
       return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<({String? error, String? billId})> convertToBillWithId(
+    String orderId,
+  ) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final document = await service.convertPurchaseOrder(orderId);
+      await refresh();
+      ref.invalidate(purchaseBillsProvider);
+      await ref.read(purchaseBillsProvider.notifier).refresh();
+      return (error: null, billId: document.id);
+    } catch (error) {
+      return (
+        error: PurchaseErrorMapper.messageFor(error),
+        billId: null,
+      );
+    }
+  }
+
+  Future<String?> cancelOrder(String documentId) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      await service.cancelDocument(documentId);
+      await refresh();
+      return null;
+    } catch (error) {
+      return PurchaseErrorMapper.messageFor(error);
+    }
+  }
+
+  Future<({String? error, String? newId})> duplicateOrder(String orderId) async {
+    try {
+      final service = await ref.read(purchaseServiceProvider.future);
+      final newId = await service.duplicatePurchaseOrder(orderId);
+      await refresh();
+      return (error: null, newId: newId);
+    } catch (error) {
+      return (
+        error: PurchaseErrorMapper.messageFor(error),
+        newId: null,
+      );
     }
   }
 }
@@ -279,5 +337,51 @@ PaginatedPurchaseOrders paginatedPurchaseOrders(Ref ref) {
       totalPages: 1,
       totalItems: 0,
     ),
+  );
+}
+
+class PurchaseOrderSummaryData {
+  const PurchaseOrderSummaryData({
+    required this.openAmount,
+    required this.partiallyReceivedAmount,
+    required this.completedAmount,
+    required this.totalAmount,
+  });
+
+  final double openAmount;
+  final double partiallyReceivedAmount;
+  final double completedAmount;
+  final double totalAmount;
+}
+
+@riverpod
+PurchaseOrderSummaryData purchaseOrderSummary(Ref ref) {
+  final page = ref.watch(paginatedPurchaseOrdersProvider);
+  final orders = page.items;
+
+  var openAmount = 0.0;
+  var partiallyReceivedAmount = 0.0;
+  var completedAmount = 0.0;
+  var totalAmount = 0.0;
+
+  for (final order in orders) {
+    totalAmount += order.amount;
+    switch (order.status) {
+      case PurchaseOrderStatus.open:
+        openAmount += order.amount;
+      case PurchaseOrderStatus.partiallyReceived:
+        partiallyReceivedAmount += order.amount;
+      case PurchaseOrderStatus.orderCompleted:
+        completedAmount += order.amount;
+      case PurchaseOrderStatus.cancelled:
+        break;
+    }
+  }
+
+  return PurchaseOrderSummaryData(
+    openAmount: openAmount,
+    partiallyReceivedAmount: partiallyReceivedAmount,
+    completedAmount: completedAmount,
+    totalAmount: totalAmount,
   );
 }

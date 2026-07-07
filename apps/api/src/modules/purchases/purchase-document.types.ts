@@ -39,6 +39,8 @@ export type PurchaseDocumentRecord = {
   discount_total: string;
   tax_amount: string;
   total_amount: string;
+  paid_amount: string;
+  payment_mode: string | null;
   document_date: string;
   converted_from_id: string | null;
   supplier_invoice_number: string | null;

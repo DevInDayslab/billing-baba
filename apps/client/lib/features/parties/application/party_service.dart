@@ -258,6 +258,26 @@ class PartyService {
     }
   }
 
+  /// Upgrades customer-only parties so they can be used on purchase documents.
+  Future<void> ensureSupplierRole(String partyId) async {
+    final businessId = _requireBusinessId();
+    final party = await getParty(partyId);
+    if (party.partyType == 'supplier' || party.partyType == 'both') {
+      return;
+    }
+
+    try {
+      await _syncPendingOperations();
+      final updated = await _repository.updateParty(
+        partyId,
+        const UpdatePartyRequest(partyType: 'both'),
+      );
+      await _cache.upsertParty(businessId, updated.toJson());
+    } on DioException catch (e) {
+      PartyErrorMapper.mapAndThrow(e);
+    }
+  }
+
   Future<void> deleteParty(String partyId) async {
     final businessId = _requireBusinessId();
 

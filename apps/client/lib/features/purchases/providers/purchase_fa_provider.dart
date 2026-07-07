@@ -5,17 +5,32 @@ import 'package:billing_baba/features/purchases/models/purchase_fa_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_fa_requests.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'purchase_fa_provider.g.dart';
 
 const purchaseFaPageSize = 10;
 
+/// One-shot success message shown on the purchase FA list after save.
+final purchaseFaSaveSuccessMessageProvider =
+    NotifierProvider<PurchaseFaSaveSuccessMessage, String?>(
+      PurchaseFaSaveSuccessMessage.new,
+    );
+
+class PurchaseFaSaveSuccessMessage extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setMessage(String? value) => state = value;
+}
+
 class PurchaseFaFiltersState {
   const PurchaseFaFiltersState({
     this.timeRangeOption = TimeRangeOption.thisMonth,
     this.customDateRange,
     this.selectedFirm = 'All Firms',
+    this.selectedGodown = 'All Godown',
     this.selectedUser = 'All Users',
     this.selectedStatus = 'All Status',
     this.currentPage = 1,
@@ -24,6 +39,7 @@ class PurchaseFaFiltersState {
   final TimeRangeOption timeRangeOption;
   final DateTimeRange? customDateRange;
   final String selectedFirm;
+  final String selectedGodown;
   final String selectedUser;
   final String selectedStatus;
   final int currentPage;
@@ -35,6 +51,7 @@ class PurchaseFaFiltersState {
     DateTimeRange? customDateRange,
     bool clearCustomDateRange = false,
     String? selectedFirm,
+    String? selectedGodown,
     String? selectedUser,
     String? selectedStatus,
     int? currentPage,
@@ -45,6 +62,7 @@ class PurchaseFaFiltersState {
           ? null
           : (customDateRange ?? this.customDateRange),
       selectedFirm: selectedFirm ?? this.selectedFirm,
+      selectedGodown: selectedGodown ?? this.selectedGodown,
       selectedUser: selectedUser ?? this.selectedUser,
       selectedStatus: selectedStatus ?? this.selectedStatus,
       currentPage: currentPage ?? this.currentPage,
@@ -158,6 +176,10 @@ List<PurchaseFaModel> _applyClientFilters(
         record.firm != filters.selectedFirm) {
       return false;
     }
+    if (filters.selectedGodown != 'All Godown' &&
+        record.godown != filters.selectedGodown) {
+      return false;
+    }
     return true;
   }).toList();
 }
@@ -233,6 +255,20 @@ class PurchaseFa extends _$PurchaseFa {
       return PurchaseErrorMapper.messageFor(error);
     }
   }
+
+  Future<({String? error, String? newId})> duplicateRecord(String batchId) async {
+    try {
+      final service = await ref.read(purchaseFaServiceProvider.future);
+      final newId = await service.duplicateBatch(batchId);
+      await refresh();
+      return (error: null, newId: newId);
+    } catch (error) {
+      return (
+        error: PurchaseErrorMapper.messageFor(error),
+        newId: null,
+      );
+    }
+  }
 }
 
 @riverpod
@@ -267,6 +303,11 @@ class PurchaseFaFilters extends _$PurchaseFaFilters {
     ref.invalidate(purchaseFaProvider);
   }
 
+  void setGodown(String godown) {
+    state = state.copyWith(selectedGodown: godown, currentPage: 1);
+    ref.invalidate(purchaseFaProvider);
+  }
+
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
     ref.invalidate(purchaseFaProvider);
@@ -294,5 +335,48 @@ PaginatedPurchaseFaRecords paginatedPurchaseFaRecords(Ref ref) {
       totalPages: 1,
       totalItems: 0,
     ),
+  );
+}
+
+class PurchaseFaSummaryData {
+  const PurchaseFaSummaryData({
+    required this.paidAmount,
+    required this.unpaidAmount,
+    required this.overdueAmount,
+    required this.totalAmount,
+  });
+
+  final double paidAmount;
+  final double unpaidAmount;
+  final double overdueAmount;
+  final double totalAmount;
+}
+
+@riverpod
+PurchaseFaSummaryData purchaseFaSummary(Ref ref) {
+  final page = ref.watch(paginatedPurchaseFaRecordsProvider);
+  final records = page.items;
+
+  var paidAmount = 0.0;
+  var unpaidAmount = 0.0;
+  var overdueAmount = 0.0;
+  var totalAmount = 0.0;
+
+  for (final record in records) {
+    totalAmount += record.amount;
+    paidAmount += record.paidAmount;
+    if (record.status == PurchaseFaStatus.overdue) {
+      overdueAmount += record.balanceDue;
+    } else if (record.status == PurchaseFaStatus.unpaid ||
+        record.status == PurchaseFaStatus.partiallyPaid) {
+      unpaidAmount += record.balanceDue;
+    }
+  }
+
+  return PurchaseFaSummaryData(
+    paidAmount: paidAmount,
+    unpaidAmount: unpaidAmount,
+    overdueAmount: overdueAmount,
+    totalAmount: totalAmount,
   );
 }

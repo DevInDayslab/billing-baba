@@ -1,6 +1,8 @@
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
+import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
@@ -259,13 +261,23 @@ class AddPurchaseForm extends _$AddPurchaseForm {
     return isValid;
   }
 
+  Future<String?> _preparePartyForPurchase() async {
+    final partyId = state.partyId;
+    if (partyId == null || partyId.isEmpty) {
+      state = state.copyWith(showValidationErrors: true);
+      return 'Please select a party';
+    }
+
+    final partyService = await ref.read(partyServiceProvider.future);
+    await partyService.ensureSupplierRole(partyId);
+    return null;
+  }
+
   Future<String?> saveDraft() async {
     if (!validate()) return 'Add at least one item with name and quantity';
 
-    if (state.partyId == null || state.partyId!.isEmpty) {
-      state = state.copyWith(showValidationErrors: true);
-      return 'Please select a supplier';
-    }
+    final partyError = await _preparePartyForPurchase();
+    if (partyError != null) return partyError;
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
@@ -295,10 +307,13 @@ class AddPurchaseForm extends _$AddPurchaseForm {
   Future<String?> saveBill({bool finalize = true}) async {
     if (!validate(finalize: finalize)) {
       if (state.partyId == null || state.partyId!.isEmpty) {
-        return 'Please select a supplier';
+        return 'Please select a party';
       }
       return 'Add at least one item with name and quantity';
     }
+
+    final partyError = await _preparePartyForPurchase();
+    if (partyError != null) return partyError;
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
@@ -308,20 +323,46 @@ class AddPurchaseForm extends _$AddPurchaseForm {
         documentType: PurchaseDocumentType.purchaseBill,
       );
 
+      final PurchaseDocumentDto document;
       if (finalize) {
-        await service.finalizeDocumentDraft(
+        document = await service.finalizeDocumentDraft(
           input.copyWith(partyId: state.partyId),
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
         );
       } else {
-        await service.saveDocumentDraft(
+        document = await service.saveDocumentDraft(
           input.copyWith(partyId: state.partyId),
           itemNameToId: _itemNameToId(),
         );
       }
 
+      if (finalize &&
+          state.partyId != null &&
+          state.partyId!.isNotEmpty &&
+          state.paymentAmount > 0) {
+        final billDate = state.billDate ?? DateTime.now();
+        final billTime = state.billTime ?? TimeOfDay.now();
+        final paymentDate = DateTime(
+          billDate.year,
+          billDate.month,
+          billDate.day,
+          billTime.hour,
+          billTime.minute,
+        );
+        final payAmount =
+            state.paymentAmount.clamp(0, state.grandTotal).toDouble();
+        await service.recordPurchaseBillPayment(
+          partyId: state.partyId!,
+          purchaseDocumentId: document.id,
+          amount: payAmount,
+          paymentModeUi: state.paymentType,
+          paymentDate: paymentDate,
+        );
+      }
+
       ref.invalidate(purchaseBillsProvider);
+      await ref.read(purchaseBillsProvider.notifier).refresh();
       ref.invalidateSelf();
       return null;
     } catch (error) {

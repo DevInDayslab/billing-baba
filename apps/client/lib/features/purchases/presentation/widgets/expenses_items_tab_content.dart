@@ -34,7 +34,6 @@ class ExpensesItemsTabContent extends ConsumerWidget {
     final selectedId = ref.watch(selectedExpenseItemIdProvider);
 
     return transactionsAsync.when(
-      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) => Center(
         child: Padding(
@@ -304,7 +303,13 @@ class _ItemTransactionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push(
+          '${AppRoutes.editExpense}/${transaction.id}',
+        ),
+        child: Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: 12,
@@ -358,6 +363,8 @@ class _ItemTransactionRow extends StatelessWidget {
           ),
           if (transaction.status != null) ExpenseStatusBadge(status: transaction.status!) else const SizedBox.shrink(),
         ],
+      ),
+        ),
       ),
     );
   }

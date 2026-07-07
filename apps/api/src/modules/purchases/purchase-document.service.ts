@@ -23,6 +23,8 @@ import type {
   PurchaseDocumentRecord,
   PurchaseDocumentType,
 } from './purchase-document.types';
+import { PaymentRepository } from '../accounting/payment.repository';
+import { DEFAULT_SERIES_BY_TYPE } from './purchase.constants';
 import { finalizePurchaseDocument } from './purchase-finalize.service';
 import { PurchasesServiceBase } from './purchases.base-service';
 
@@ -467,7 +469,8 @@ export class PurchaseDocumentService extends PurchasesServiceBase {
       const newDoc = await repo.create({
         businessId,
         documentType: input.target_type,
-        documentSeries: source.document_series,
+        documentSeries:
+          DEFAULT_SERIES_BY_TYPE[input.target_type] ?? source.document_series,
         partyId: source.party_id,
         isGstFormal: source.is_gst_formal,
         partyStateCode: source.party_state_code,
@@ -505,7 +508,11 @@ export class PurchaseDocumentService extends PurchasesServiceBase {
         await this.recalculateDocumentTotals(businessId, newDoc.id, repo);
       }
 
-      if (source.status === 'finalized') {
+      if (
+        source.status === 'finalized' &&
+        source.document_type === 'purchase_order' &&
+        input.target_type === 'purchase_bill'
+      ) {
         await repo.markConverted(businessId, documentId, userId ?? null);
       }
 
@@ -513,6 +520,27 @@ export class PurchaseDocumentService extends PurchasesServiceBase {
     });
 
     return this.getDocument(businessId, accountId, newDocId);
+  }
+
+  async getPaymentHistory(
+    businessId: string,
+    accountId: string,
+    documentId: string,
+  ) {
+    await this.assertBusinessAccess(businessId, accountId);
+
+    const document = await this.repository.findById(businessId, documentId);
+    if (!document) {
+      throw new AppError('NOT_FOUND', 'Purchase document not found', 404);
+    }
+
+    const paymentRepository = new PaymentRepository(this.db);
+    const rows = await paymentRepository.listPaymentHistoryForPurchaseDocument(
+      businessId,
+      documentId,
+    );
+
+    return { data: rows };
   }
 
   private async assertDraftDocument(

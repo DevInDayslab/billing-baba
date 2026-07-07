@@ -86,7 +86,7 @@ final class PurchaseFaProvider
   PurchaseFa create() => PurchaseFa();
 }
 
-String _$purchaseFaHash() => r'a97f53d5e1bcc9b6fc6fcff23beb5882d059342b';
+String _$purchaseFaHash() => r'ca9f078072664dacf224b89ae5e3ce78b10d114a';
 
 abstract class _$PurchaseFa extends $AsyncNotifier<PaginatedPurchaseFaRecords> {
   FutureOr<PaginatedPurchaseFaRecords> build();
@@ -146,7 +146,7 @@ final class PurchaseFaFiltersProvider
   }
 }
 
-String _$purchaseFaFiltersHash() => r'e37fb808a1c95e5b6e3a96dbcc38d20f5cf5fed9';
+String _$purchaseFaFiltersHash() => r'80a898e9e20370e47f5d9ba893bb573506734451';
 
 abstract class _$PurchaseFaFilters extends $Notifier<PurchaseFaFiltersState> {
   PurchaseFaFiltersState build();
@@ -215,3 +215,50 @@ final class PaginatedPurchaseFaRecordsProvider
 
 String _$paginatedPurchaseFaRecordsHash() =>
     r'1ef19aff6dc55a0dba456a128b1bdb54d5b904b6';
+
+@ProviderFor(purchaseFaSummary)
+final purchaseFaSummaryProvider = PurchaseFaSummaryProvider._();
+
+final class PurchaseFaSummaryProvider
+    extends
+        $FunctionalProvider<
+          PurchaseFaSummaryData,
+          PurchaseFaSummaryData,
+          PurchaseFaSummaryData
+        >
+    with $Provider<PurchaseFaSummaryData> {
+  PurchaseFaSummaryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'purchaseFaSummaryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$purchaseFaSummaryHash();
+
+  @$internal
+  @override
+  $ProviderElement<PurchaseFaSummaryData> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  PurchaseFaSummaryData create(Ref ref) {
+    return purchaseFaSummary(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PurchaseFaSummaryData value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PurchaseFaSummaryData>(value),
+    );
+  }
+}
+
+String _$purchaseFaSummaryHash() => r'c6da5118a3a812fab7f7b3d80648d4f8fef3d3af';
