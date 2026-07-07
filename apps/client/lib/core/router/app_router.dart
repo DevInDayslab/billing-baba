@@ -33,6 +33,7 @@ import 'package:billing_baba/features/sales/presentation/pages/proforma_invoice_
 import 'package:billing_baba/features/sales/presentation/pages/sale_invoices_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_return_page.dart';
+import 'package:billing_baba/features/utilities/presentation/pages/import_items_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -310,6 +311,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.reportsGst,
             redirect: (context, state) => AppRoutes.reports,
+          ),
+          GoRoute(
+            path: AppRoutes.utilities,
+            redirect: (_, _) => AppRoutes.utilitiesImportItems,
+          ),
+          GoRoute(
+            path: AppRoutes.utilitiesImportItems,
+            builder: (context, state) => const ImportItemsPage(),
           ),
           GoRoute(
             path: AppRoutes.settings,

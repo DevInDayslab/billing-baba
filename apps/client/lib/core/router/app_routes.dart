@@ -49,6 +49,8 @@ abstract final class AppRoutes {
   static const reportsStock = '/reports/stock';
   static const reportsParty = '/reports/party';
   static const reportsGst = '/reports/gst';
+  static const utilities = '/utilities';
+  static const utilitiesImportItems = '/utilities/import-items';
   static const settings = '/settings';
   static const settingsUsers = '/settings/users';
   static const settingsTaxes = '/settings/taxes';

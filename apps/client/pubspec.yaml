@@ -60,8 +60,8 @@ dependencies:
 
   # Export
   csv: ^6.0.0
-  excel: ^4.0.6
   file_picker: ^12.0.0-beta.7
+  justkawal_excel_updated: ^5.0.0
 
 dev_dependencies:
   flutter_test:

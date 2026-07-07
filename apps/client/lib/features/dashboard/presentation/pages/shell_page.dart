@@ -6,6 +6,7 @@ import 'package:billing_baba/features/business/presentation/widgets/business_ava
 import 'package:billing_baba/features/dashboard/presentation/widgets/app_top_bar.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
+import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -33,6 +34,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   bool _expandInitialized = false;
   bool _isPartiesExpanded = false;
   bool _partiesExpandInitialized = false;
+  bool _isUtilitiesExpanded = false;
+  bool _utilitiesExpandInitialized = false;
 
   @override
   void didChangeDependencies() {
@@ -54,6 +57,13 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         _isPartiesExpanded = true;
       }
     }
+    if (!_utilitiesExpandInitialized) {
+      _utilitiesExpandInitialized = true;
+      final location = GoRouterState.of(context).uri.path;
+      if (location.startsWith(AppRoutes.utilities)) {
+        _isUtilitiesExpanded = true;
+      }
+    }
   }
 
   static const List<_NavSubItem> _partiesSubItems = [
@@ -65,6 +75,10 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       .toList();
 
   static final List<_NavSubItem> _purchaseSubItems = PurchaseSubRoutes.items
+      .map((item) => _NavSubItem(route: item.route, label: item.label))
+      .toList();
+
+  static final List<_NavSubItem> _utilitiesSubItems = UtilitiesSubRoutes.items
       .map((item) => _NavSubItem(route: item.route, label: item.label))
       .toList();
 
@@ -105,6 +119,13 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       route: AppRoutes.reports,
       icon: Icons.bar_chart_outlined,
       label: 'Reports',
+    ),
+    _NavItem(
+      icon: Icons.build_outlined,
+      label: 'Utilities',
+      isExpandable: true,
+      routePrefix: AppRoutes.utilities,
+      subItems: _utilitiesSubItems,
     ),
     const _NavItem(
       route: AppRoutes.settings,
@@ -242,19 +263,24 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       final isSale = item.routePrefix == AppRoutes.sale;
       final isPurchase = item.routePrefix == AppRoutes.purchase;
       final isParties = item.route == AppRoutes.parties;
+      final isUtilities = item.routePrefix == AppRoutes.utilities;
       final routePrefix = item.routePrefix ?? item.route!;
 
       final isParentActive = isSale
           ? currentLocation.startsWith(AppRoutes.sale)
           : isPurchase
           ? currentLocation.startsWith(AppRoutes.purchase)
-          : isParties && currentLocation.startsWith(AppRoutes.parties);
+          : isParties
+          ? currentLocation.startsWith(AppRoutes.parties)
+          : isUtilities && currentLocation.startsWith(AppRoutes.utilities);
 
       final isExpanded = isSale
           ? _isSaleExpanded
           : isPurchase
           ? _isPurchaseExpanded
-          : isParties && _isPartiesExpanded;
+          : isParties
+          ? _isPartiesExpanded
+          : isUtilities && _isUtilitiesExpanded;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -272,6 +298,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                 _isPurchaseExpanded = !_isPurchaseExpanded;
               } else if (isParties) {
                 _isPartiesExpanded = !_isPartiesExpanded;
+              } else if (isUtilities) {
+                _isUtilitiesExpanded = !_isUtilitiesExpanded;
               }
             }),
           ),
@@ -377,6 +405,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     if (location.startsWith(AppRoutes.sale)) return 'Sale';
     if (location.startsWith(AppRoutes.purchase)) return 'Purchase & Expense';
     if (location.startsWith(AppRoutes.reports)) return 'Reports';
+    if (location.startsWith(AppRoutes.utilities)) {
+      return UtilitiesSubRoutes.labelForRoute(location);
+    }
     if (location.startsWith(AppRoutes.settings)) return 'Settings';
     return 'Billing Baba';
   }
