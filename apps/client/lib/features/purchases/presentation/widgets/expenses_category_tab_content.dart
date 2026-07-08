@@ -4,9 +4,10 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_l
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
-import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/expense_status_badge.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_cell.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,52 +29,34 @@ class ExpensesCategoryTabContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final categoriesAsync = ref.watch(expenseCategoriesProvider);
+    final allCategories = ref.watch(expenseCategoriesProvider).requireValue;
     final categories = ref.watch(filteredExpenseCategoriesProvider);
     final selectedId = ref.watch(selectedExpenseCategoryIdProvider);
 
-    return categoriesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) {
-        final message = PurchaseErrorMapper.messageFor(error);
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-        );
-      },
-      data: (allCategories) {
-        final selectedCategory = selectedId == null
-            ? null
-            : allCategories
-                  .where((category) => category.id == selectedId)
-                  .firstOrNull;
+    final selectedCategory = selectedId == null
+        ? null
+        : allCategories
+              .where((category) => category.id == selectedId)
+              .firstOrNull;
 
-        return InventorySplitLayout(
-          listWidth: 340,
-          listPanel: _CategoryListPanel(
-            categories: categories,
-            selectedId: selectedId,
-            onSearchChanged: (query) => ref
-                .read(expenseCategorySearchQueryProvider.notifier)
-                .query = query,
-            onCategorySelected: (id) => ref
-                .read(selectedExpenseCategoryIdProvider.notifier)
-                .selected = id,
-            onAddExpense: () => context.push(AppRoutes.addExpense),
-          ),
-          detailPanel: selectedCategory != null
-              ? _CategoryDetailPanel(category: selectedCategory)
-              : const InventoryDetailPlaceholder(
-                  message: 'Select a category to view transactions',
-                ),
-        );
-      },
+    return InventorySplitLayout(
+      listWidth: 340,
+      listPanel: _CategoryListPanel(
+        categories: categories,
+        selectedId: selectedId,
+        onSearchChanged: (query) => ref
+            .read(expenseCategorySearchQueryProvider.notifier)
+            .query = query,
+        onCategorySelected: (id) => ref
+            .read(selectedExpenseCategoryIdProvider.notifier)
+            .selected = id,
+        onAddExpense: () => context.push(AppRoutes.addExpense),
+      ),
+      detailPanel: selectedCategory != null
+          ? _CategoryDetailPanel(category: selectedCategory)
+          : const InventoryDetailPlaceholder(
+              message: 'Select a category to view transactions',
+            ),
     );
   }
 }
@@ -259,6 +242,8 @@ class _CategoryDetailPanel extends ConsumerWidget {
     final transactions = ref.watch(
       categoryExpenseTransactionsProvider(category.id),
     );
+    final filters = ref.watch(expenseFiltersProvider);
+    final searchQuery = ref.watch(expenseTransactionSearchQueryProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -313,53 +298,35 @@ class _CategoryDetailPanel extends ConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: InventorySearchField(
-            hint: 'Search',
-            onChanged: (query) => ref
-                .read(expenseTransactionSearchQueryProvider.notifier)
-                .query = query,
+          child: Row(
+            children: [
+              Expanded(
+                child: InventorySearchField(
+                  hint: 'Search',
+                  onChanged: (query) => ref
+                      .read(expenseTransactionSearchQueryProvider.notifier)
+                      .query = query,
+                ),
+              ),
+              if (filters.hasTransactionFilters ||
+                  searchQuery.trim().isNotEmpty) ...[
+                const SizedBox(width: AppSpacing.sm),
+                TextButton(
+                  onPressed: ref
+                      .read(expenseFiltersProvider.notifier)
+                      .clearAllFilters,
+                  child: const Text('Clear Filters'),
+                ),
+              ],
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: category.variant == ExpenseCategoryVariant.loyaltyRedeemed
-              ? const InventoryListHeader(
-                  columns: [
-                    InventoryListColumn(label: 'DATE', showFilter: true),
-                    InventoryListColumn(
-                      label: 'TRANSACTION NO.',
-                      flex: 2,
-                      showFilter: true,
-                    ),
-                    InventoryListColumn(label: 'PARTY', showFilter: true),
-                    InventoryListColumn(
-                      label: 'LOYALTY REDEEMED IN POINTS',
-                      flex: 2,
-                      showFilter: true,
-                    ),
-                    InventoryListColumn(
-                      label: 'LOYALTY VALUE REDEEMED',
-                      flex: 2,
-                      showFilter: true,
-                    ),
-                  ],
-                )
-              : const InventoryListHeader(
-                  columns: [
-                    InventoryListColumn(label: 'DATE', showFilter: true),
-                    InventoryListColumn(label: 'EXP NO.', showFilter: true),
-                    InventoryListColumn(label: 'PARTY', showFilter: true),
-                    InventoryListColumn(
-                      label: 'PAYMENT TYPE',
-                      showFilter: true,
-                    ),
-                    InventoryListColumn(label: 'AMOUNT', showFilter: true),
-                    InventoryListColumn(label: 'BALANCE', showFilter: true),
-                    InventoryListColumn(label: 'DUE DATE', showFilter: true),
-                    InventoryListColumn(label: 'STATUS', showFilter: true),
-                  ],
-                ),
+              ? const ExpenseLoyaltyTransactionFilterHeader()
+              : const ExpenseStandardTransactionFilterHeader(),
         ),
         Expanded(
           child: Padding(
@@ -501,6 +468,248 @@ class _StandardTransactionRow extends StatelessWidget {
         ],
       ),
         ),
+      ),
+    );
+  }
+}
+
+PurchaseColumnFilterActions _expenseTransactionFilterActions(
+  ExpenseFilters notifier,
+) {
+  return PurchaseColumnFilterActions(
+    onDateRange: notifier.setColumnDateRange,
+    onDueDateRange: notifier.setDueDateRange,
+    onDocumentNo: notifier.setDocumentNo,
+    onParty: notifier.setParty,
+    onPaymentType: notifier.setPaymentType,
+    onAmountRange: notifier.setAmountRange,
+    onBalanceRange: notifier.setBalanceRange,
+    onStatus: notifier.setStatus,
+  );
+}
+
+class ExpenseStandardTransactionFilterHeader extends ConsumerWidget {
+  const ExpenseStandardTransactionFilterHeader({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filters = ref.watch(expenseFiltersProvider);
+    final columns = filters.columnFilters;
+    final notifier = ref.read(expenseFiltersProvider.notifier);
+    final partyOptions = ref.watch(expenseTransactionPartyOptionsProvider);
+    final actions = _expenseTransactionFilterActions(notifier);
+    const headerStyle = InventoryStyles.listHeaderStyle;
+
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 10,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF5F5F5),
+        border: Border(bottom: BorderSide(color: inventoryCardBorder)),
+      ),
+      child: InventoryListRowLayout(
+        flexValues: const [1, 1, 1, 1, 1, 1, 1, 1],
+        trailing: const SizedBox.shrink(),
+        children: [
+          purchaseColumnFilterCell(
+            label: 'DATE',
+            kind: PurchaseColumnFilterKind.date,
+            headerStyle: headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.date,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: expenseTransactionStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+          purchaseColumnFilterCell(
+            label: 'EXP NO.',
+            kind: PurchaseColumnFilterKind.documentNo,
+            headerStyle: headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.documentNo,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: expenseTransactionStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            documentNoHint: 'Search exp no',
+          ),
+          purchaseColumnFilterCell(
+            label: 'PARTY',
+            kind: PurchaseColumnFilterKind.partyName,
+            headerStyle: headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.partyName,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: expenseTransactionStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+          purchaseColumnFilterCell(
+            label: 'PAYMENT TYPE',
+            kind: PurchaseColumnFilterKind.paymentType,
+            headerStyle: headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.paymentType,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: expenseTransactionStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+          purchaseColumnFilterCell(
+            label: 'AMOUNT',
+            kind: PurchaseColumnFilterKind.amount,
+            headerStyle: headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.amount,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: expenseTransactionStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+          purchaseColumnFilterCell(
+            label: 'BALANCE',
+            kind: PurchaseColumnFilterKind.balanceDue,
+            headerStyle: headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.balanceDue,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: expenseTransactionStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+          purchaseColumnFilterCell(
+            label: 'DUE DATE',
+            kind: PurchaseColumnFilterKind.dueDate,
+            headerStyle: headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.dueDate,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: expenseTransactionStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+          purchaseColumnFilterCell(
+            label: 'STATUS',
+            kind: PurchaseColumnFilterKind.status,
+            headerStyle: headerStyle,
+            isActive: purchaseColumnStatusFilterIsActive(filters.selectedStatus),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: expenseTransactionStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ExpenseLoyaltyTransactionFilterHeader extends ConsumerWidget {
+  const ExpenseLoyaltyTransactionFilterHeader({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filters = ref.watch(expenseFiltersProvider);
+    final columns = filters.columnFilters;
+    final notifier = ref.read(expenseFiltersProvider.notifier);
+    final partyOptions = ref.watch(expenseTransactionPartyOptionsProvider);
+    final actions = _expenseTransactionFilterActions(notifier);
+    const headerStyle = InventoryStyles.listHeaderStyle;
+
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 10,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF5F5F5),
+        border: Border(bottom: BorderSide(color: inventoryCardBorder)),
+      ),
+      child: InventoryListRowLayout(
+        flexValues: const [1, 2, 1, 2, 2],
+        trailing: const SizedBox.shrink(),
+        children: [
+          purchaseColumnFilterCell(
+            label: 'DATE',
+            kind: PurchaseColumnFilterKind.date,
+            headerStyle: headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.date,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: expenseTransactionStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+          purchaseColumnFilterCell(
+            label: 'TRANSACTION NO.',
+            kind: PurchaseColumnFilterKind.documentNo,
+            headerStyle: headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.documentNo,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: expenseTransactionStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            documentNoHint: 'Search transaction no',
+          ),
+          purchaseColumnFilterCell(
+            label: 'PARTY',
+            kind: PurchaseColumnFilterKind.partyName,
+            headerStyle: headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.partyName,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: expenseTransactionStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+          const Text(
+            'LOYALTY REDEEMED IN POINTS',
+            style: headerStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const Text(
+            'LOYALTY VALUE REDEEMED',
+            style: headerStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

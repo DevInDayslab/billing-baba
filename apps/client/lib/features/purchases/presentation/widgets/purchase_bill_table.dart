@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_column_filter_menu.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_actions.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_status_badge.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
@@ -48,6 +49,8 @@ class PurchaseBillTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final paginated = ref.watch(paginatedPurchaseBillsProvider);
+    final filters = ref.watch(purchaseBillFiltersProvider);
+    final searchQuery = ref.watch(purchaseBillSearchQueryProvider);
     final notifier = ref.read(purchaseBillsProvider.notifier);
 
     return DecoratedBox(
@@ -66,38 +69,17 @@ class PurchaseBillTable extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                SizedBox(
-                  width: 200,
-                  height: 36,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search',
-                      hintStyle: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                      ),
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: AppColors.textSecondary,
-                        size: 18,
-                      ),
-                      filled: true,
-                      fillColor: AppColors.background,
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.xs,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: AppRadius.smBorder,
-                        borderSide: BorderSide.none,
-                      ),
-                      isDense: true,
-                    ),
-                    onChanged: (value) => ref
-                        .read(purchaseBillSearchQueryProvider.notifier)
-                        .setQuery(value),
-                    style: const TextStyle(fontSize: 13),
+                const _PurchaseBillSearchField(),
+                if (filters.hasActiveFilters ||
+                    searchQuery.trim().isNotEmpty) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  TextButton(
+                    onPressed: ref
+                        .read(purchaseBillFiltersProvider.notifier)
+                        .clearAllFilters,
+                    child: const Text('Clear Filters'),
                   ),
-                ),
+                ],
                 const Spacer(),
                 IconButton(
                   onPressed: notifier.refresh,
@@ -259,7 +241,76 @@ class PurchaseBillTable extends ConsumerWidget {
   }
 }
 
-class _TableHeaderRow extends StatelessWidget {
+class _PurchaseBillSearchField extends ConsumerStatefulWidget {
+  const _PurchaseBillSearchField();
+
+  @override
+  ConsumerState<_PurchaseBillSearchField> createState() =>
+      _PurchaseBillSearchFieldState();
+}
+
+class _PurchaseBillSearchFieldState
+    extends ConsumerState<_PurchaseBillSearchField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: ref.read(purchaseBillSearchQueryProvider),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(purchaseBillSearchQueryProvider, (previous, next) {
+      if (next != _controller.text) {
+        _controller.text = next;
+      }
+    });
+
+    return SizedBox(
+      width: 200,
+      height: 36,
+      child: TextField(
+        controller: _controller,
+        decoration: InputDecoration(
+          hintText: 'Search',
+          hintStyle: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 13,
+          ),
+          prefixIcon: const Icon(
+            Icons.search,
+            color: AppColors.textSecondary,
+            size: 18,
+          ),
+          filled: true,
+          fillColor: AppColors.background,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.xs,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: AppRadius.smBorder,
+            borderSide: BorderSide.none,
+          ),
+          isDense: true,
+        ),
+        onChanged: (value) =>
+            ref.read(purchaseBillSearchQueryProvider.notifier).setQuery(value),
+        style: const TextStyle(fontSize: 13),
+      ),
+    );
+  }
+}
+
+class _TableHeaderRow extends ConsumerWidget {
   const _TableHeaderRow();
 
   static const _headerStyle = TextStyle(
@@ -269,49 +320,75 @@ class _TableHeaderRow extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       color: AppColors.background,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      child: const Row(
+      child: Row(
         children: [
-          _TableCell(
+          PurchaseBillColumnFilterCell(
             width: _dateColWidth,
-            child: Text('Date', style: _headerStyle),
+            label: 'Date',
+            kind: PurchaseBillColumnFilterKind.date,
+            headerStyle: _TableHeaderRow._headerStyle,
+            gapAfter: _colGap,
           ),
-          _TableCell(
+          PurchaseBillColumnFilterCell(
             width: _invoiceColWidth,
-            child: Text('Invoice no', style: _headerStyle),
+            label: 'Invoice no',
+            kind: PurchaseBillColumnFilterKind.invoiceNo,
+            headerStyle: _TableHeaderRow._headerStyle,
+            gapAfter: _colGap,
           ),
           Expanded(
-            child: _TableCell(child: Text('Party Name', style: _headerStyle)),
+            child: PurchaseBillColumnFilterCell(
+              label: 'Party Name',
+              kind: PurchaseBillColumnFilterKind.partyName,
+              headerStyle: _TableHeaderRow._headerStyle,
+              gapAfter: _colGap,
+            ),
           ),
-          _TableCell(
+          PurchaseBillColumnFilterCell(
             width: _paymentColWidth,
-            child: Text('Payment Type', style: _headerStyle),
+            label: 'Payment Type',
+            kind: PurchaseBillColumnFilterKind.paymentType,
+            headerStyle: _TableHeaderRow._headerStyle,
+            gapAfter: _colGap,
           ),
-          _TableCell(
+          PurchaseBillColumnFilterCell(
             width: _amountColWidth,
+            label: 'Amount',
+            kind: PurchaseBillColumnFilterKind.amount,
+            headerStyle: _TableHeaderRow._headerStyle,
             alignment: Alignment.centerRight,
-            child: Text('Amount', style: _headerStyle),
+            gapAfter: _colGap,
           ),
-          _TableCell(
+          PurchaseBillColumnFilterCell(
             width: _balanceColWidth,
+            label: 'Balance Due',
+            kind: PurchaseBillColumnFilterKind.balanceDue,
+            headerStyle: _TableHeaderRow._headerStyle,
             alignment: Alignment.centerRight,
-            child: Text('Balance Due', style: _headerStyle),
+            gapAfter: _colGap,
           ),
-          _TableCell(
+          PurchaseBillColumnFilterCell(
             width: _dueDateColWidth,
-            child: Text('Due Date', style: _headerStyle),
+            label: 'Due Date',
+            kind: PurchaseBillColumnFilterKind.dueDate,
+            headerStyle: _TableHeaderRow._headerStyle,
+            gapAfter: _colGap,
           ),
-          _TableCell(
+          PurchaseBillColumnFilterCell(
             width: _statusColWidth,
-            child: Text('Status', style: _headerStyle),
+            label: 'Status',
+            kind: PurchaseBillColumnFilterKind.status,
+            headerStyle: _TableHeaderRow._headerStyle,
+            gapAfter: _colGap,
           ),
-          _TableCell(
+          const _TableCell(
             width: _actionsColWidth,
             gapAfter: 0,
             child: Text('Actions', style: _headerStyle),

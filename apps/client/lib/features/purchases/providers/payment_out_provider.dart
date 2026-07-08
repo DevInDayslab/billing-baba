@@ -1,7 +1,10 @@
+import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_list_filter_utils.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
@@ -48,16 +51,28 @@ class PaymentOutFiltersState {
     this.customDateRange,
     this.selectedFirm = 'All Firms',
     this.selectedUser = 'All Users',
+    this.selectedStatus = 'All Status',
     this.currentPage = 1,
+    this.columnFilters = const PurchaseColumnFilterFields(),
   });
 
   final TimeRangeOption timeRangeOption;
   final DateTimeRange? customDateRange;
   final String selectedFirm;
   final String selectedUser;
+  final String selectedStatus;
   final int currentPage;
+  final PurchaseColumnFilterFields columnFilters;
 
   String get timeRangeLabel => timeRangeOption.label;
+
+  bool get hasActiveFilters =>
+      timeRangeOption != TimeRangeOption.thisMonth ||
+      customDateRange != null ||
+      selectedFirm != 'All Firms' ||
+      selectedUser != 'All Users' ||
+      selectedStatus != 'All Status' ||
+      columnFilters.hasColumnFilters;
 
   PaymentOutFiltersState copyWith({
     TimeRangeOption? timeRangeOption,
@@ -65,7 +80,9 @@ class PaymentOutFiltersState {
     bool clearCustomDateRange = false,
     String? selectedFirm,
     String? selectedUser,
+    String? selectedStatus,
     int? currentPage,
+    PurchaseColumnFilterFields? columnFilters,
   }) {
     return PaymentOutFiltersState(
       timeRangeOption: timeRangeOption ?? this.timeRangeOption,
@@ -74,7 +91,9 @@ class PaymentOutFiltersState {
           : (customDateRange ?? this.customDateRange),
       selectedFirm: selectedFirm ?? this.selectedFirm,
       selectedUser: selectedUser ?? this.selectedUser,
+      selectedStatus: selectedStatus ?? this.selectedStatus,
       currentPage: currentPage ?? this.currentPage,
+      columnFilters: columnFilters ?? this.columnFilters,
     );
   }
 }
@@ -88,6 +107,14 @@ class PaymentOutSummaryData {
   final double totalAmount;
   final double paidAmount;
 }
+
+PaymentOutStatus? _paymentOutStatusFromFilterLabel(String label) =>
+    switch (label) {
+      'Paid' => PaymentOutStatus.paid,
+      'Pending' => PaymentOutStatus.pending,
+      'Cancelled' => PaymentOutStatus.cancelled,
+      _ => null,
+    };
 
 DateTime _startOfDay(DateTime date) =>
     DateTime(date.year, date.month, date.day);
@@ -130,19 +157,77 @@ PaymentListQuery _buildPaymentListQuery(PaymentOutFiltersState filters) {
   );
 
   return PaymentListQuery(
-    page: filters.currentPage,
-    limit: paymentOutPageSize,
+    page: 1,
+    limit: PaginatedFetch.defaultPageSize,
     direction: 'paid',
     from: dateRange?.start.toUtc().toIso8601String(),
     to: dateRange?.end.toUtc().toIso8601String(),
   );
 }
 
-List<PaymentOutModel> _applyClientFilters(
+List<PaymentOutModel> _applyFilters(
   List<PaymentOutModel> records,
   PaymentOutFiltersState filters,
+  String globalSearch,
 ) {
+  final statusFilter = _paymentOutStatusFromFilterLabel(filters.selectedStatus);
+  final columns = filters.columnFilters;
+  final globalQuery = globalSearch.trim().toLowerCase();
+
   return records.where((record) {
+    if (globalQuery.isNotEmpty &&
+        !purchaseFilterMatchesGlobalSearch(globalQuery, [
+          record.receiptNo,
+          record.partyName,
+          record.paymentType,
+        ])) {
+      return false;
+    }
+
+    if (columns.columnDateRange != null &&
+        !purchaseFilterIsWithinDateRange(
+          record.date,
+          columns.columnDateRange!,
+        )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesText(columns.documentNoFilter, record.receiptNo)) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesParty(columns.selectedParty, record.partyName)) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesNumericRange(
+      record.totalAmount,
+      min: columns.totalAmountMin,
+      max: columns.totalAmountMax,
+    )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesNumericRange(
+      record.paidAmount,
+      min: columns.paidAmountMin,
+      max: columns.paidAmountMax,
+    )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesOption(
+      columns.selectedPaymentType,
+      'All Payment Types',
+      record.paymentType,
+    )) {
+      return false;
+    }
+
+    if (statusFilter != null && record.status != statusFilter) {
+      return false;
+    }
+
     if (filters.selectedFirm != 'All Firms' &&
         record.firm != filters.selectedFirm) {
       return false;
@@ -151,28 +236,94 @@ List<PaymentOutModel> _applyClientFilters(
         record.user != filters.selectedUser) {
       return false;
     }
+
     return true;
   }).toList();
+}
+
+PaginatedPaymentOut _paginateFilteredRecords(
+  List<PaymentOutModel> filtered,
+  int currentPage,
+) {
+  final slice = purchaseFilterPaginate(
+    filtered,
+    currentPage,
+    paymentOutPageSize,
+  );
+  return PaginatedPaymentOut(
+    items: slice.items,
+    currentPage: slice.currentPage,
+    totalPages: slice.totalPages,
+    totalItems: slice.totalItems,
+  );
+}
+
+PaginatedPaymentOut _allRecordsPage(List<PaymentOutModel> allRecords) {
+  return PaginatedPaymentOut(
+    items: allRecords,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: allRecords.length,
+  );
+}
+
+List<PaymentOutModel> _allRecordsFromAsync(
+  AsyncValue<PaginatedPaymentOut> recordsAsync,
+) {
+  return recordsAsync.when(
+    data: (page) => page.items,
+    loading: () => const [],
+    error: (_, _) => const [],
+  );
+}
+
+@Riverpod(keepAlive: true)
+class PaymentOutSearchQuery extends _$PaymentOutSearchQuery {
+  @override
+  String build() => '';
+
+  void setQuery(String value) {
+    state = value;
+    final filters = ref.read(paymentOutFiltersProvider);
+    if (filters.currentPage != 1) {
+      ref.read(paymentOutFiltersProvider.notifier).setPage(1);
+    }
+  }
 }
 
 @Riverpod(keepAlive: true)
 class PaymentOutRecords extends _$PaymentOutRecords {
   @override
   Future<PaginatedPaymentOut> build() async {
-    ref.watch(paymentOutFiltersProvider);
-    return _fetchPage();
+    ref.watch(
+      paymentOutFiltersProvider.select(
+        (filters) => (filters.timeRangeOption, filters.customDateRange),
+      ),
+    );
+    final allRecords = await _fetchAllRecords();
+    return _allRecordsPage(allRecords);
   }
 
-  Future<PaginatedPaymentOut> _fetchPage() async {
+  Future<List<PaymentOutModel>> _fetchAllRecords() async {
     final filters = ref.read(paymentOutFiltersProvider);
     final service = await ref.read(purchaseServiceProvider.future);
-    final page = await service.fetchPaymentsPage(_buildPaymentListQuery(filters));
 
-    return PaginatedPaymentOut(
-      items: _applyClientFilters(page.items, filters),
-      currentPage: page.currentPage,
-      totalPages: page.totalPages,
-      totalItems: page.totalItems,
+    return PaginatedFetch.fetchAll(
+      fetchPage: (page) async {
+        final baseQuery = _buildPaymentListQuery(filters);
+        final query = PaymentListQuery(
+          page: page,
+          limit: baseQuery.limit,
+          direction: baseQuery.direction,
+          from: baseQuery.from,
+          to: baseQuery.to,
+        );
+        final pageResult = await service.fetchPaymentsPage(query);
+        return (
+          items: pageResult.items,
+          totalPages: pageResult.totalPages,
+        );
+      },
     );
   }
 
@@ -180,7 +331,10 @@ class PaymentOutRecords extends _$PaymentOutRecords {
     if (!silent) {
       state = const AsyncLoading();
     }
-    state = await AsyncValue.guard(_fetchPage);
+    state = await AsyncValue.guard(() async {
+      final allRecords = await _fetchAllRecords();
+      return _allRecordsPage(allRecords);
+    });
   }
 
   Future<void> refreshAllRelated({bool silent = false}) async {
@@ -193,8 +347,9 @@ class PaymentOutRecords extends _$PaymentOutRecords {
   /// completes, so the list updates immediately after save.
   void optimisticPrepend(PaymentOutModel record) {
     final filters = ref.read(paymentOutFiltersProvider);
+    final search = ref.read(paymentOutSearchQueryProvider);
     if (filters.currentPage != 1) return;
-    if (_applyClientFilters([record], filters).isEmpty) return;
+    if (_applyFilters([record], filters, search).isEmpty) return;
 
     final value = state.asData?.value;
     if (value == null) {
@@ -212,7 +367,7 @@ class PaymentOutRecords extends _$PaymentOutRecords {
     final items = [
       record,
       ...value.items.where((PaymentOutModel item) => item.id != record.id),
-    ].take(paymentOutPageSize).toList();
+    ].take(PaginatedFetch.defaultPageSize).toList();
 
     state = AsyncData(
       PaginatedPaymentOut(
@@ -254,17 +409,69 @@ class PaymentOutFilters extends _$PaymentOutFilters {
 
   void setFirm(String firm) {
     state = state.copyWith(selectedFirm: firm, currentPage: 1);
-    ref.invalidate(paymentOutRecordsProvider);
   }
 
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
-    ref.invalidate(paymentOutRecordsProvider);
+  }
+
+  void setStatus(String status) {
+    state = state.copyWith(selectedStatus: status, currentPage: 1);
+  }
+
+  void setColumnDateRange(DateTimeRange range) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(columnDateRange: range),
+      currentPage: 1,
+    );
+  }
+
+  void setDocumentNoFilter(String value) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(documentNoFilter: value),
+      currentPage: 1,
+    );
+  }
+
+  void setParty(String party) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(selectedParty: party),
+      currentPage: 1,
+    );
+  }
+
+  void setPaymentType(String paymentType) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(
+        selectedPaymentType: paymentType,
+      ),
+      currentPage: 1,
+    );
+  }
+
+  void setTotalAmountRange({double? min, double? max}) {
+    state = state.copyWith(
+      columnFilters: min == null && max == null
+          ? state.columnFilters.copyWith(clearTotalAmountRange: true)
+          : state.columnFilters.copyWith(
+              totalAmountMin: min,
+              totalAmountMax: max,
+            ),
+      currentPage: 1,
+    );
+  }
+
+  void setPaidAmountRange({double? min, double? max}) {
+    state = state.copyWith(
+      columnFilters: min == null && max == null
+          ? state.columnFilters.copyWith(clearPaidAmountRange: true)
+          : state.columnFilters.copyWith(paidAmountMin: min, paidAmountMax: max),
+      currentPage: 1,
+    );
   }
 
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
-    ref.invalidate(paymentOutRecordsProvider);
   }
 
   void ensureFirstPage() {
@@ -272,26 +479,40 @@ class PaymentOutFilters extends _$PaymentOutFilters {
       state = state.copyWith(currentPage: 1);
     }
   }
+
+  void clearAllFilters() {
+    state = const PaymentOutFiltersState();
+    ref.read(paymentOutSearchQueryProvider.notifier).setQuery('');
+    ref.invalidate(paymentOutRecordsProvider);
+  }
+}
+
+@riverpod
+List<PaymentOutModel> filteredPaymentOutRecords(Ref ref) {
+  final allRecords = _allRecordsFromAsync(ref.watch(paymentOutRecordsProvider));
+  final filters = ref.watch(paymentOutFiltersProvider);
+  final search = ref.watch(paymentOutSearchQueryProvider);
+  return _applyFilters(allRecords, filters, search);
 }
 
 @riverpod
 PaginatedPaymentOut paginatedPaymentOutRecords(Ref ref) {
-  final recordsAsync = ref.watch(paymentOutRecordsProvider);
-  return recordsAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedPaymentOut(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
+  final filtered = ref.watch(filteredPaymentOutRecordsProvider);
+  final filters = ref.watch(paymentOutFiltersProvider);
+  return _paginateFilteredRecords(filtered, filters.currentPage);
+}
+
+@riverpod
+List<String> paymentOutPartyOptions(Ref ref) {
+  final allRecords = _allRecordsFromAsync(ref.watch(paymentOutRecordsProvider));
+  return purchasePartyOptionsFromNames(
+    allRecords.map((record) => record.partyName),
   );
 }
 
 @riverpod
 PaymentOutSummaryData paymentOutSummary(Ref ref) {
-  final page = ref.watch(paginatedPaymentOutRecordsProvider);
-  final records = page.items;
+  final records = ref.watch(filteredPaymentOutRecordsProvider);
   final totalAmount = records.fold<double>(
     0,
     (sum, record) => sum + record.totalAmount,

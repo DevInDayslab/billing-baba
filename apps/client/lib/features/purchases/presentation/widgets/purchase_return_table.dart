@@ -5,6 +5,8 @@ import 'package:billing_baba/features/print/presentation/widgets/document_print_
 import 'package:billing_baba/features/purchases/models/purchase_return_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_status_badge.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_return_actions.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_cell.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_return_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_table_shared.dart';
@@ -51,6 +53,7 @@ class PurchaseReturnTable extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final paginated = ref.watch(paginatedPurchaseReturnsProvider);
     final summary = ref.watch(purchaseReturnSummaryProvider);
+    final filters = ref.watch(purchaseReturnFiltersProvider);
     final filtersNotifier = ref.read(purchaseReturnFiltersProvider.notifier);
     final notifier = ref.read(purchaseReturnsProvider.notifier);
 
@@ -100,6 +103,13 @@ class PurchaseReturnTable extends ConsumerWidget {
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
+                if (filters.hasActiveFilters) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  TextButton(
+                    onPressed: filtersNotifier.clearAllFilters,
+                    child: const Text('Clear Filters'),
+                  ),
+                ],
                 const Spacer(),
                 SalesXlsChip(
                   onTap: () =>
@@ -451,56 +461,216 @@ class _PaginationRow extends ConsumerWidget {
   }
 }
 
-class _TableHeaderRow extends StatelessWidget {
+class _TableHeaderRow extends ConsumerWidget {
   const _TableHeaderRow();
 
+  static const _headerStyle = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+    letterSpacing: 0.3,
+  );
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filters = ref.watch(purchaseReturnFiltersProvider);
+    final filtersNotifier = ref.read(purchaseReturnFiltersProvider.notifier);
+    final partyOptions = ref.watch(purchaseReturnPartyOptionsProvider);
+    final categoryOptions = ref.watch(purchaseReturnCategoryOptionsProvider);
+    final typeOptions = ref.watch(purchaseReturnTypeOptionsProvider);
+    final columns = filters.columnFilters;
+
+    final actions = PurchaseColumnFilterActions(
+      onDocumentNo: filtersNotifier.setDocumentNoFilter,
+      onParty: filtersNotifier.setParty,
+      onPaymentType: (_) {},
+      onAmountRange: filtersNotifier.setAmountRange,
+      onBalanceRange: filtersNotifier.setBalanceRange,
+      onStatus: filtersNotifier.setStatus,
+      onCategory: filtersNotifier.setCategory,
+      onType: filtersNotifier.setType,
+      onReceivedPaidRange: filtersNotifier.setReceivedPaidRange,
+      onDateRange: filtersNotifier.setColumnDateRange,
+      onDueDateRange: filtersNotifier.setDueDateRange,
+    );
+
     return Container(
       color: AppColors.background,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      child: const Row(
+      child: Row(
         children: [
-          SalesTableHeaderCell(label: '#', width: _indexColWidth),
-          SalesTableHeaderCell(label: 'DATE', width: _dateColWidth),
-          SalesTableHeaderCell(label: 'REF NO.', width: _refColWidth),
+          const SalesTableHeaderCell(label: '#', width: _indexColWidth),
+          purchaseColumnFilterCell(
+            label: 'DATE',
+            kind: PurchaseColumnFilterKind.date,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.date,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseBillStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            width: _dateColWidth,
+            gapAfter: salesTableColGap,
+          ),
+          purchaseColumnFilterCell(
+            label: 'REF NO.',
+            kind: PurchaseColumnFilterKind.documentNo,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.documentNo,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseBillStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            width: _refColWidth,
+            gapAfter: salesTableColGap,
+            documentNoHint: 'Search ref no',
+          ),
           Expanded(
             flex: 3,
-            child: _FlexTableCell(
-              child: Text('PARTY NAME', style: _TableHeaderRow._headerStyle),
+            child: purchaseColumnFilterCell(
+              label: 'PARTY NAME',
+              kind: PurchaseColumnFilterKind.partyName,
+              headerStyle: _headerStyle,
+              isActive: purchaseColumnFilterIsActive(
+                PurchaseColumnFilterKind.partyName,
+                columns,
+              ),
+              columns: columns,
+              actions: actions,
+              partyOptions: partyOptions,
+              statusOptions: purchaseBillStatusOptions,
+              selectedStatus: filters.selectedStatus,
+              gapAfter: salesTableColGap,
             ),
           ),
           Expanded(
             flex: 2,
-            child: _FlexTableCell(
-              child: Text(
-                'CATEGORY NAME',
-                style: _TableHeaderRow._headerStyle,
+            child: purchaseColumnFilterCell(
+              label: 'CATEGORY NAME',
+              kind: PurchaseColumnFilterKind.categoryName,
+              headerStyle: _headerStyle,
+              isActive: purchaseColumnFilterIsActive(
+                PurchaseColumnFilterKind.categoryName,
+                columns,
               ),
+              columns: columns,
+              actions: actions,
+              partyOptions: partyOptions,
+              statusOptions: purchaseBillStatusOptions,
+              selectedStatus: filters.selectedStatus,
+              categoryOptions: categoryOptions,
+              gapAfter: salesTableColGap,
             ),
           ),
-          SalesTableHeaderCell(label: 'TYPE', width: _typeColWidth),
-          SalesTableHeaderCell(
+          purchaseColumnFilterCell(
+            label: 'TYPE',
+            kind: PurchaseColumnFilterKind.typeName,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.typeName,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseBillStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            typeOptions: typeOptions,
+            width: _typeColWidth,
+            gapAfter: salesTableColGap,
+          ),
+          purchaseColumnFilterCell(
             label: 'TOTAL',
+            kind: PurchaseColumnFilterKind.amount,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.amount,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseBillStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _amountColWidth,
             alignment: Alignment.centerRight,
+            gapAfter: salesTableColGap,
           ),
-          SalesTableHeaderCell(
+          purchaseColumnFilterCell(
             label: 'RECEIVED/PAID',
+            kind: PurchaseColumnFilterKind.receivedPaid,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.receivedPaid,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseBillStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _amountColWidth,
             alignment: Alignment.centerRight,
+            gapAfter: salesTableColGap,
           ),
-          SalesTableHeaderCell(
+          purchaseColumnFilterCell(
             label: 'BALANCE',
+            kind: PurchaseColumnFilterKind.balanceDue,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.balanceDue,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseBillStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _amountColWidth,
             alignment: Alignment.centerRight,
+            gapAfter: salesTableColGap,
           ),
-          SalesTableHeaderCell(label: 'DUE DATE', width: _dueDateColWidth),
-          SalesTableHeaderCell(label: 'STATUS', width: _statusColWidth),
-          SalesTableHeaderCell(
+          purchaseColumnFilterCell(
+            label: 'DUE DATE',
+            kind: PurchaseColumnFilterKind.dueDate,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.dueDate,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseBillStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            width: _dueDateColWidth,
+            gapAfter: salesTableColGap,
+          ),
+          purchaseColumnFilterCell(
+            label: 'STATUS',
+            kind: PurchaseColumnFilterKind.status,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnStatusFilterIsActive(filters.selectedStatus),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseBillStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            width: _statusColWidth,
+            gapAfter: salesTableColGap,
+          ),
+          const SalesTableHeaderCell(
             label: 'Actions',
             width: _actionsColWidth,
             gapAfter: 0,
@@ -510,11 +680,4 @@ class _TableHeaderRow extends StatelessWidget {
       ),
     );
   }
-
-  static const _headerStyle = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textSecondary,
-    letterSpacing: 0.3,
-  );
 }

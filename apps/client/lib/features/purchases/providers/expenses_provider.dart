@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/purchases/application/expense_service.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_list_filter_utils.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/models/mappers/expense_mapper.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
@@ -24,38 +25,150 @@ class ExpenseSaveSuccessMessage extends Notifier<String?> {
   void setMessage(String? value) => state = value;
 }
 
+const expenseTransactionStatusOptions = [
+  'All Status',
+  'Paid',
+  'Pending',
+  'Partial',
+];
+
 class ExpenseFiltersState {
   const ExpenseFiltersState({
     this.timeRangeOption = TimeRangeOption.thisMonth,
     this.customDateRange,
     this.selectedFirm = 'All Firms',
     this.selectedUser = 'All Users',
+    this.selectedStatus = 'All Status',
     this.currentPage = 1,
+    this.columnFilters = const PurchaseColumnFilterFields(),
   });
 
   final TimeRangeOption timeRangeOption;
   final DateTimeRange? customDateRange;
   final String selectedFirm;
   final String selectedUser;
+  final String selectedStatus;
   final int currentPage;
+  final PurchaseColumnFilterFields columnFilters;
 
   String get timeRangeLabel => timeRangeOption.label;
+
+  bool get hasTransactionFilters =>
+      columnFilters.hasColumnFilters || selectedStatus != 'All Status';
 
   ExpenseFiltersState copyWith({
     TimeRangeOption? timeRangeOption,
     DateTimeRange? customDateRange,
     String? selectedFirm,
     String? selectedUser,
+    String? selectedStatus,
     int? currentPage,
+    PurchaseColumnFilterFields? columnFilters,
   }) {
     return ExpenseFiltersState(
       timeRangeOption: timeRangeOption ?? this.timeRangeOption,
       customDateRange: customDateRange ?? this.customDateRange,
       selectedFirm: selectedFirm ?? this.selectedFirm,
       selectedUser: selectedUser ?? this.selectedUser,
+      selectedStatus: selectedStatus ?? this.selectedStatus,
       currentPage: currentPage ?? this.currentPage,
+      columnFilters: columnFilters ?? this.columnFilters,
     );
   }
+}
+
+String _expenseStatusLabel(ExpenseStatus? status) => switch (status) {
+  ExpenseStatus.paid => 'Paid',
+  ExpenseStatus.partial => 'Partial',
+  ExpenseStatus.pending => 'Pending',
+  null => '',
+};
+
+List<ExpenseTransactionModel> _applyExpenseTransactionFilters(
+  List<ExpenseTransactionModel> items,
+  ExpenseFiltersState filters,
+  String globalSearch,
+) {
+  final columns = filters.columnFilters;
+
+  return items.where((transaction) {
+    if (!purchaseFilterMatchesGlobalSearch(globalSearch, [
+      transaction.party,
+      transaction.transactionNo,
+      transaction.paymentType ?? '',
+    ])) {
+      return false;
+    }
+
+    if (columns.columnDateRange != null &&
+        !purchaseFilterIsWithinDateRange(
+          transaction.date,
+          columns.columnDateRange!,
+        )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesText(
+      columns.documentNoFilter,
+      transaction.transactionNo,
+    )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesParty(columns.selectedParty, transaction.party)) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesOption(
+      columns.selectedPaymentType,
+      'All Payment Types',
+      transaction.paymentType ?? '',
+    )) {
+      return false;
+    }
+
+    if (columns.amountMin != null || columns.amountMax != null) {
+      final amount = transaction.amount;
+      if (amount == null ||
+          !purchaseFilterMatchesNumericRange(
+            amount,
+            min: columns.amountMin,
+            max: columns.amountMax,
+          )) {
+        return false;
+      }
+    }
+
+    if (columns.balanceMin != null || columns.balanceMax != null) {
+      final balance = transaction.balance;
+      if (balance == null ||
+          !purchaseFilterMatchesNumericRange(
+            balance,
+            min: columns.balanceMin,
+            max: columns.balanceMax,
+          )) {
+        return false;
+      }
+    }
+
+    if (columns.dueDateRange != null) {
+      final dueDate = transaction.dueDate;
+      if (dueDate == null ||
+          !purchaseFilterIsWithinDateRange(dueDate, columns.dueDateRange!)) {
+        return false;
+      }
+    }
+
+    if (!purchaseFilterMatchesOption(
+      filters.selectedStatus,
+      'All Status',
+      _expenseStatusLabel(transaction.status),
+    )) {
+      return false;
+    }
+
+    return true;
+  }).toList();
 }
 
 DateTime _startOfDay(DateTime date) =>
@@ -209,6 +322,18 @@ class ExpenseTransactions extends _$ExpenseTransactions {
   }
 }
 
+typedef ExpensePageData = ({
+  List<ExpenseCategoryModel> categories,
+  List<ExpenseTransactionModel> transactions,
+});
+
+@riverpod
+Future<ExpensePageData> expensesPageData(Ref ref) async {
+  final categories = await ref.watch(expenseCategoriesProvider.future);
+  final transactions = await ref.watch(expenseTransactionsProvider.future);
+  return (categories: categories, transactions: transactions);
+}
+
 @riverpod
 List<ExpenseItemModel> expenseItems(Ref ref) {
   final transactionsAsync = ref.watch(expenseTransactionsProvider);
@@ -311,6 +436,67 @@ class ExpenseFilters extends _$ExpenseFilters {
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
   }
+
+  void setColumnDateRange(DateTimeRange range) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(columnDateRange: range),
+    );
+  }
+
+  void setDocumentNo(String value) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(documentNoFilter: value),
+    );
+  }
+
+  void setParty(String party) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(selectedParty: party),
+    );
+  }
+
+  void setPaymentType(String paymentType) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(
+        selectedPaymentType: paymentType,
+      ),
+    );
+  }
+
+  void setAmountRange({double? min, double? max}) {
+    state = state.copyWith(
+      columnFilters: min == null && max == null
+          ? state.columnFilters.copyWith(clearAmountRange: true)
+          : state.columnFilters.copyWith(amountMin: min, amountMax: max),
+    );
+  }
+
+  void setBalanceRange({double? min, double? max}) {
+    state = state.copyWith(
+      columnFilters: min == null && max == null
+          ? state.columnFilters.copyWith(clearBalanceRange: true)
+          : state.columnFilters.copyWith(balanceMin: min, balanceMax: max),
+    );
+  }
+
+  void setDueDateRange(DateTimeRange range) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(dueDateRange: range),
+    );
+  }
+
+  void setStatus(String status) {
+    state = state.copyWith(selectedStatus: status);
+  }
+
+  void clearAllFilters() {
+    state = state.copyWith(
+      selectedStatus: 'All Status',
+      columnFilters: const PurchaseColumnFilterFields(),
+    );
+    ref.read(expenseTransactionSearchQueryProvider.notifier).query = '';
+    ref.read(expenseItemTransactionSearchQueryProvider.notifier).query = '';
+  }
 }
 
 @riverpod
@@ -339,17 +525,13 @@ List<ExpenseTransactionModel> categoryExpenseTransactions(
     data: (items) => items,
     orElse: () => const <ExpenseTransactionModel>[],
   );
-  final query = ref
-      .watch(expenseTransactionSearchQueryProvider)
-      .trim()
-      .toLowerCase();
+  final filters = ref.watch(expenseFiltersProvider);
+  final query = ref.watch(expenseTransactionSearchQueryProvider);
 
-  return transactions.where((t) {
-    if (t.categoryId != categoryId) return false;
-    if (query.isEmpty) return true;
-    return t.party.toLowerCase().contains(query) ||
-        t.transactionNo.toLowerCase().contains(query);
-  }).toList();
+  final scoped = transactions
+      .where((transaction) => transaction.categoryId == categoryId)
+      .toList();
+  return _applyExpenseTransactionFilters(scoped, filters, query);
 }
 
 @riverpod
@@ -374,18 +556,24 @@ List<ExpenseTransactionModel> itemExpenseTransactions(
     data: (items) => items,
     orElse: () => const <ExpenseTransactionModel>[],
   );
-  final query = ref
-      .watch(expenseItemTransactionSearchQueryProvider)
-      .trim()
-      .toLowerCase();
+  final filters = ref.watch(expenseFiltersProvider);
+  final query = ref.watch(expenseItemTransactionSearchQueryProvider);
 
-  return transactions.where((t) {
-    if (t.itemId != itemId) return false;
-    if (query.isEmpty) return true;
-    return t.party.toLowerCase().contains(query) ||
-        t.transactionNo.toLowerCase().contains(query) ||
-        (t.paymentType?.toLowerCase().contains(query) ?? false);
-  }).toList();
+  final scoped = transactions
+      .where((transaction) => transaction.itemId == itemId)
+      .toList();
+  return _applyExpenseTransactionFilters(scoped, filters, query);
+}
+
+@riverpod
+List<String> expenseTransactionPartyOptions(Ref ref) {
+  final transactionsAsync = ref.watch(expenseTransactionsProvider);
+  final transactions = transactionsAsync.maybeWhen(
+    data: (items) => items,
+    orElse: () => const <ExpenseTransactionModel>[],
+  );
+  final parties = transactions.map((t) => t.party).toSet().toList()..sort();
+  return ['All Parties', ...parties];
 }
 
 @riverpod

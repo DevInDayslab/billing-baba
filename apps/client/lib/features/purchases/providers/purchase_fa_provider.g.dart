@@ -20,7 +20,7 @@ final class PurchaseFaSearchQueryProvider
         argument: null,
         retry: null,
         name: r'purchaseFaSearchQueryProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -42,7 +42,7 @@ final class PurchaseFaSearchQueryProvider
 }
 
 String _$purchaseFaSearchQueryHash() =>
-    r'21db573d4df21078e544ba09e484a1fa0cd02715';
+    r'd44b4f0add5a1cbdd1290996e1adb40edf98c016';
 
 abstract class _$PurchaseFaSearchQuery extends $Notifier<String> {
   String build();
@@ -86,7 +86,7 @@ final class PurchaseFaProvider
   PurchaseFa create() => PurchaseFa();
 }
 
-String _$purchaseFaHash() => r'ca9f078072664dacf224b89ae5e3ce78b10d114a';
+String _$purchaseFaHash() => r'fdea263540fa0e118f9c2682718e8c43016c8b36';
 
 abstract class _$PurchaseFa extends $AsyncNotifier<PaginatedPurchaseFaRecords> {
   FutureOr<PaginatedPurchaseFaRecords> build();
@@ -146,7 +146,7 @@ final class PurchaseFaFiltersProvider
   }
 }
 
-String _$purchaseFaFiltersHash() => r'80a898e9e20370e47f5d9ba893bb573506734451';
+String _$purchaseFaFiltersHash() => r'b937ebe042cae8e7f7604d915789d264c0d81769';
 
 abstract class _$PurchaseFaFilters extends $Notifier<PurchaseFaFiltersState> {
   PurchaseFaFiltersState build();
@@ -166,6 +166,54 @@ abstract class _$PurchaseFaFilters extends $Notifier<PurchaseFaFiltersState> {
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(filteredPurchaseFaRecords)
+final filteredPurchaseFaRecordsProvider = FilteredPurchaseFaRecordsProvider._();
+
+final class FilteredPurchaseFaRecordsProvider
+    extends
+        $FunctionalProvider<
+          List<PurchaseFaModel>,
+          List<PurchaseFaModel>,
+          List<PurchaseFaModel>
+        >
+    with $Provider<List<PurchaseFaModel>> {
+  FilteredPurchaseFaRecordsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'filteredPurchaseFaRecordsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredPurchaseFaRecordsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<PurchaseFaModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<PurchaseFaModel> create(Ref ref) {
+    return filteredPurchaseFaRecords(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<PurchaseFaModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<PurchaseFaModel>>(value),
+    );
+  }
+}
+
+String _$filteredPurchaseFaRecordsHash() =>
+    r'0842f71678278be9d6a5d1e3d7afb3f60786d556';
 
 @ProviderFor(paginatedPurchaseFaRecords)
 final paginatedPurchaseFaRecordsProvider =
@@ -214,7 +262,49 @@ final class PaginatedPurchaseFaRecordsProvider
 }
 
 String _$paginatedPurchaseFaRecordsHash() =>
-    r'1ef19aff6dc55a0dba456a128b1bdb54d5b904b6';
+    r'eaf2421168f3a152471c695c47fea60912e6cc0c';
+
+@ProviderFor(purchaseFaPartyOptions)
+final purchaseFaPartyOptionsProvider = PurchaseFaPartyOptionsProvider._();
+
+final class PurchaseFaPartyOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  PurchaseFaPartyOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'purchaseFaPartyOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$purchaseFaPartyOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return purchaseFaPartyOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$purchaseFaPartyOptionsHash() =>
+    r'48483168095a1db4fad2dccf8859751846f49035';
 
 @ProviderFor(purchaseFaSummary)
 final purchaseFaSummaryProvider = PurchaseFaSummaryProvider._();
@@ -261,4 +351,4 @@ final class PurchaseFaSummaryProvider
   }
 }
 
-String _$purchaseFaSummaryHash() => r'c6da5118a3a812fab7f7b3d80648d4f8fef3d3af';
+String _$purchaseFaSummaryHash() => r'08f1a9159fdb01cb673515cf20126f56ea311261';

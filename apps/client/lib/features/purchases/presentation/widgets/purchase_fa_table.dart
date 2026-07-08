@@ -5,6 +5,8 @@ import 'package:billing_baba/features/print/presentation/widgets/voucher_print_a
 import 'package:billing_baba/features/purchases/models/purchase_fa_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_fa_actions.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_fa_status_badge.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_cell.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_fa_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
@@ -51,6 +53,8 @@ class PurchaseFaTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final paginated = ref.watch(paginatedPurchaseFaRecordsProvider);
+    final filters = ref.watch(purchaseFaFiltersProvider);
+    final searchQuery = ref.watch(purchaseFaSearchQueryProvider);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -110,6 +114,15 @@ class PurchaseFaTable extends ConsumerWidget {
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
+                if (filters.hasActiveFilters || searchQuery.trim().isNotEmpty) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  TextButton(
+                    onPressed: ref
+                        .read(purchaseFaFiltersProvider.notifier)
+                        .clearAllFilters,
+                    child: const Text('Clear Filters'),
+                  ),
+                ],
                 const Spacer(),
                 FilledButton.icon(
                   onPressed: () => context.push(AppRoutes.addPurchaseFa),
@@ -302,7 +315,7 @@ class PurchaseFaTable extends ConsumerWidget {
   }
 }
 
-class _TableHeaderRow extends StatelessWidget {
+class _TableHeaderRow extends ConsumerWidget {
   const _TableHeaderRow();
 
   static const _headerStyle = TextStyle(
@@ -312,53 +325,159 @@ class _TableHeaderRow extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filters = ref.watch(purchaseFaFiltersProvider);
+    final filtersNotifier = ref.read(purchaseFaFiltersProvider.notifier);
+    final partyOptions = ref.watch(purchaseFaPartyOptionsProvider);
+    final columns = filters.columnFilters;
+
+    final actions = PurchaseColumnFilterActions(
+      onDocumentNo: filtersNotifier.setDocumentNoFilter,
+      onParty: filtersNotifier.setParty,
+      onPaymentType: filtersNotifier.setPaymentType,
+      onAmountRange: filtersNotifier.setAmountRange,
+      onBalanceRange: filtersNotifier.setBalanceRange,
+      onStatus: filtersNotifier.setStatus,
+      onDateRange: filtersNotifier.setColumnDateRange,
+      onDueDateRange: filtersNotifier.setDueDateRange,
+    );
+
     return Container(
       color: AppColors.background,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      child: const Row(
+      child: Row(
         children: [
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Date',
+            kind: PurchaseColumnFilterKind.date,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.date,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseFaStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _dateColWidth,
-            child: Text('Date', style: _headerStyle),
           ),
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Invoice no',
+            kind: PurchaseColumnFilterKind.documentNo,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.documentNo,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseFaStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _invoiceColWidth,
-            child: Text('Invoice no', style: _headerStyle),
+            documentNoHint: 'Search invoice no',
           ),
           Expanded(
-            child: _TableCell(child: Text('Party Name', style: _headerStyle)),
+            child: purchaseColumnFilterCell(
+              label: 'Party Name',
+              kind: PurchaseColumnFilterKind.partyName,
+              headerStyle: _headerStyle,
+              isActive: purchaseColumnFilterIsActive(
+                PurchaseColumnFilterKind.partyName,
+                columns,
+              ),
+              columns: columns,
+              actions: actions,
+              partyOptions: partyOptions,
+              statusOptions: purchaseFaStatusOptions,
+              selectedStatus: filters.selectedStatus,
+            ),
           ),
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Payment Type',
+            kind: PurchaseColumnFilterKind.paymentType,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.paymentType,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseFaStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _paymentColWidth,
-            child: Text('Payment Type', style: _headerStyle),
           ),
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Amount',
+            kind: PurchaseColumnFilterKind.amount,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.amount,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseFaStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _amountColWidth,
             alignment: Alignment.centerRight,
-            child: Text('Amount', style: _headerStyle),
           ),
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Balance Due',
+            kind: PurchaseColumnFilterKind.balanceDue,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.balanceDue,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseFaStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _balanceColWidth,
             alignment: Alignment.centerRight,
-            child: Text('Balance Due', style: _headerStyle),
           ),
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Due Date',
+            kind: PurchaseColumnFilterKind.dueDate,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.dueDate,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseFaStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _dueDateColWidth,
-            child: Text('Due Date', style: _headerStyle),
           ),
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Status',
+            kind: PurchaseColumnFilterKind.status,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnStatusFilterIsActive(
+              filters.selectedStatus,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseFaStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _statusColWidth,
-            child: Text('Status', style: _headerStyle),
           ),
           _TableCell(
             width: _actionsColWidth,
             gapAfter: 0,
             alignment: Alignment.centerRight,
-            child: Text('Actions', style: _headerStyle),
+            child: const Text('Actions', style: _headerStyle),
           ),
         ],
       ),

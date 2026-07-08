@@ -1,8 +1,10 @@
-import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_fa_service.dart';
+import 'package:billing_baba/features/purchases/application/purchase_list_filter_utils.dart';
 import 'package:billing_baba/features/purchases/models/purchase_fa_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_fa_requests.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +36,7 @@ class PurchaseFaFiltersState {
     this.selectedUser = 'All Users',
     this.selectedStatus = 'All Status',
     this.currentPage = 1,
+    this.columnFilters = const PurchaseColumnFilterFields(),
   });
 
   final TimeRangeOption timeRangeOption;
@@ -43,8 +46,18 @@ class PurchaseFaFiltersState {
   final String selectedUser;
   final String selectedStatus;
   final int currentPage;
+  final PurchaseColumnFilterFields columnFilters;
 
   String get timeRangeLabel => timeRangeOption.label;
+
+  bool get hasActiveFilters =>
+      timeRangeOption != TimeRangeOption.thisMonth ||
+      customDateRange != null ||
+      selectedFirm != 'All Firms' ||
+      selectedGodown != 'All Godown' ||
+      selectedUser != 'All Users' ||
+      selectedStatus != 'All Status' ||
+      columnFilters.hasColumnFilters;
 
   PurchaseFaFiltersState copyWith({
     TimeRangeOption? timeRangeOption,
@@ -55,6 +68,7 @@ class PurchaseFaFiltersState {
     String? selectedUser,
     String? selectedStatus,
     int? currentPage,
+    PurchaseColumnFilterFields? columnFilters,
   }) {
     return PurchaseFaFiltersState(
       timeRangeOption: timeRangeOption ?? this.timeRangeOption,
@@ -66,6 +80,7 @@ class PurchaseFaFiltersState {
       selectedUser: selectedUser ?? this.selectedUser,
       selectedStatus: selectedStatus ?? this.selectedStatus,
       currentPage: currentPage ?? this.currentPage,
+      columnFilters: columnFilters ?? this.columnFilters,
     );
   }
 }
@@ -84,16 +99,6 @@ class PaginatedPurchaseFaRecords {
   final int totalItems;
 }
 
-String? _statusFromFilterLabel(String label) => switch (label) {
-  'Paid' => 'paid',
-  'Unpaid' => 'unpaid',
-  'Partially Paid' => 'partially_paid',
-  'Partial' => 'partially_paid',
-  'Overdue' => 'overdue',
-  'Cancelled' => 'cancelled',
-  _ => null,
-};
-
 PurchaseFaStatus? _paymentStatusFromFilterLabel(String label) =>
     switch (label) {
       'Paid' => PurchaseFaStatus.paid,
@@ -104,6 +109,11 @@ PurchaseFaStatus? _paymentStatusFromFilterLabel(String label) =>
       'Cancelled' => PurchaseFaStatus.cancelled,
       _ => null,
     };
+
+String? _documentStatusFromFilterLabel(String label) => switch (label) {
+  'Cancelled' => 'cancelled',
+  _ => null,
+};
 
 DateTime _startOfDay(DateTime date) =>
     DateTime(date.year, date.month, date.day);
@@ -139,35 +149,93 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-PurchaseFaListQuery _buildListQuery(
-  PurchaseFaFiltersState filters,
-  String searchQuery,
-) {
+PurchaseFaListQuery _buildListQuery(PurchaseFaFiltersState filters) {
   final dateRange = _resolveTimeRange(
     filters.timeRangeOption,
     filters.customDateRange,
   );
 
   return PurchaseFaListQuery(
-    page: filters.currentPage,
-    limit: purchaseFaPageSize,
-    status: _statusFromFilterLabel(filters.selectedStatus),
+    page: 1,
+    limit: PaginatedFetch.defaultPageSize,
+    status: _documentStatusFromFilterLabel(filters.selectedStatus),
     from: dateRange?.start.toUtc().toIso8601String().split('T').first,
     to: dateRange?.end.toUtc().toIso8601String().split('T').first,
-    q: searchQuery.trim().isEmpty ? null : searchQuery.trim(),
   );
 }
 
-List<PurchaseFaModel> _applyClientFilters(
+List<PurchaseFaModel> _applyFilters(
   List<PurchaseFaModel> records,
   PurchaseFaFiltersState filters,
+  String globalSearch,
 ) {
   final paymentStatus = _paymentStatusFromFilterLabel(filters.selectedStatus);
+  final columns = filters.columnFilters;
 
   return records.where((record) {
+    if (!purchaseFilterMatchesGlobalSearch(globalSearch, [
+      record.invoiceNo,
+      record.partyName,
+      record.paymentType,
+    ])) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesText(
+      columns.documentNoFilter,
+      record.invoiceNo,
+    )) {
+      return false;
+    }
+
+    if (columns.columnDateRange != null &&
+        !purchaseFilterIsWithinDateRange(
+          record.date,
+          columns.columnDateRange!,
+        )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesParty(columns.selectedParty, record.partyName)) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesOption(
+      columns.selectedPaymentType,
+      'All Payment Types',
+      record.paymentType,
+    )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesNumericRange(
+      record.amount,
+      min: columns.amountMin,
+      max: columns.amountMax,
+    )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesNumericRange(
+      record.balanceDue,
+      min: columns.balanceMin,
+      max: columns.balanceMax,
+    )) {
+      return false;
+    }
+
+    if (columns.dueDateRange != null &&
+        !purchaseFilterIsWithinDateRange(
+          record.dueDate,
+          columns.dueDateRange!,
+        )) {
+      return false;
+    }
+
     if (paymentStatus != null && record.status != paymentStatus) {
       return false;
     }
+
     if (filters.selectedUser != 'All Users' &&
         record.user != filters.selectedUser) {
       return false;
@@ -180,23 +248,58 @@ List<PurchaseFaModel> _applyClientFilters(
         record.godown != filters.selectedGodown) {
       return false;
     }
+
     return true;
   }).toList();
 }
 
-@riverpod
-class PurchaseFaSearchQuery extends _$PurchaseFaSearchQuery {
-  Debouncer? _debouncer;
+PaginatedPurchaseFaRecords _paginateFilteredRecords(
+  List<PurchaseFaModel> filtered,
+  int currentPage,
+) {
+  final slice = purchaseFilterPaginate(
+    filtered,
+    currentPage,
+    purchaseFaPageSize,
+  );
+  return PaginatedPurchaseFaRecords(
+    items: slice.items,
+    currentPage: slice.currentPage,
+    totalPages: slice.totalPages,
+    totalItems: slice.totalItems,
+  );
+}
 
+PaginatedPurchaseFaRecords _allRecordsPage(List<PurchaseFaModel> allRecords) {
+  return PaginatedPurchaseFaRecords(
+    items: allRecords,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: allRecords.length,
+  );
+}
+
+List<PurchaseFaModel> _allRecordsFromAsync(
+  AsyncValue<PaginatedPurchaseFaRecords> recordsAsync,
+) {
+  return recordsAsync.when(
+    data: (page) => page.items,
+    loading: () => const [],
+    error: (_, _) => const [],
+  );
+}
+
+@Riverpod(keepAlive: true)
+class PurchaseFaSearchQuery extends _$PurchaseFaSearchQuery {
   @override
-  String build() {
-    ref.onDispose(() => _debouncer?.dispose());
-    return '';
-  }
+  String build() => '';
 
   void setQuery(String value) {
-    _debouncer ??= Debouncer();
-    _debouncer!.run(() => state = value);
+    state = value;
+    final filters = ref.read(purchaseFaFiltersProvider);
+    if (filters.currentPage != 1) {
+      ref.read(purchaseFaFiltersProvider.notifier).setPage(1);
+    }
   }
 }
 
@@ -204,31 +307,49 @@ class PurchaseFaSearchQuery extends _$PurchaseFaSearchQuery {
 class PurchaseFa extends _$PurchaseFa {
   @override
   Future<PaginatedPurchaseFaRecords> build() async {
-    ref.watch(purchaseFaFiltersProvider);
-    ref.watch(purchaseFaSearchQueryProvider);
-    return _fetchPage();
+    ref.watch(
+      purchaseFaFiltersProvider.select(
+        (filters) => (filters.timeRangeOption, filters.customDateRange),
+      ),
+    );
+    ref.watch(
+      purchaseFaFiltersProvider.select(
+        (filters) => _documentStatusFromFilterLabel(filters.selectedStatus),
+      ),
+    );
+    final allRecords = await _fetchAllRecords();
+    return _allRecordsPage(allRecords);
   }
 
-  Future<PaginatedPurchaseFaRecords> _fetchPage() async {
+  Future<List<PurchaseFaModel>> _fetchAllRecords() async {
     final filters = ref.read(purchaseFaFiltersProvider);
-    final search = ref.read(purchaseFaSearchQueryProvider);
     final service = await ref.read(purchaseFaServiceProvider.future);
-    final page = await service.fetchBatchesPage(
-      _buildListQuery(filters, search),
-    );
 
-    final filteredItems = _applyClientFilters(page.items, filters);
-    return PaginatedPurchaseFaRecords(
-      items: filteredItems,
-      currentPage: page.currentPage,
-      totalPages: page.totalPages,
-      totalItems: page.totalItems,
+    return PaginatedFetch.fetchAll(
+      fetchPage: (page) async {
+        final baseQuery = _buildListQuery(filters);
+        final query = PurchaseFaListQuery(
+          page: page,
+          limit: baseQuery.limit,
+          status: baseQuery.status,
+          from: baseQuery.from,
+          to: baseQuery.to,
+        );
+        final pageResult = await service.fetchBatchesPage(query);
+        return (
+          items: pageResult.items,
+          totalPages: pageResult.totalPages,
+        );
+      },
     );
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchPage);
+    state = await AsyncValue.guard(() async {
+      final allRecords = await _fetchAllRecords();
+      return _allRecordsPage(allRecords);
+    });
   }
 
   Future<String?> deleteBatch(String batchId) async {
@@ -300,41 +421,109 @@ class PurchaseFaFilters extends _$PurchaseFaFilters {
 
   void setFirm(String firm) {
     state = state.copyWith(selectedFirm: firm, currentPage: 1);
-    ref.invalidate(purchaseFaProvider);
   }
 
   void setGodown(String godown) {
     state = state.copyWith(selectedGodown: godown, currentPage: 1);
-    ref.invalidate(purchaseFaProvider);
   }
 
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
-    ref.invalidate(purchaseFaProvider);
   }
 
   void setStatus(String status) {
     state = state.copyWith(selectedStatus: status, currentPage: 1);
-    ref.invalidate(purchaseFaProvider);
+    if (_documentStatusFromFilterLabel(status) != null) {
+      ref.invalidate(purchaseFaProvider);
+    }
+  }
+
+  void setColumnDateRange(DateTimeRange range) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(columnDateRange: range),
+      currentPage: 1,
+    );
+  }
+
+  void setDocumentNoFilter(String value) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(documentNoFilter: value),
+      currentPage: 1,
+    );
+  }
+
+  void setParty(String party) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(selectedParty: party),
+      currentPage: 1,
+    );
+  }
+
+  void setPaymentType(String paymentType) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(
+        selectedPaymentType: paymentType,
+      ),
+      currentPage: 1,
+    );
+  }
+
+  void setAmountRange({double? min, double? max}) {
+    state = state.copyWith(
+      columnFilters: min == null && max == null
+          ? state.columnFilters.copyWith(clearAmountRange: true)
+          : state.columnFilters.copyWith(amountMin: min, amountMax: max),
+      currentPage: 1,
+    );
+  }
+
+  void setBalanceRange({double? min, double? max}) {
+    state = state.copyWith(
+      columnFilters: min == null && max == null
+          ? state.columnFilters.copyWith(clearBalanceRange: true)
+          : state.columnFilters.copyWith(balanceMin: min, balanceMax: max),
+      currentPage: 1,
+    );
+  }
+
+  void setDueDateRange(DateTimeRange range) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(dueDateRange: range),
+      currentPage: 1,
+    );
   }
 
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
+  }
+
+  void clearAllFilters() {
+    state = const PurchaseFaFiltersState();
+    ref.read(purchaseFaSearchQueryProvider.notifier).setQuery('');
     ref.invalidate(purchaseFaProvider);
   }
 }
 
 @riverpod
+List<PurchaseFaModel> filteredPurchaseFaRecords(Ref ref) {
+  final allRecords = _allRecordsFromAsync(ref.watch(purchaseFaProvider));
+  final filters = ref.watch(purchaseFaFiltersProvider);
+  final search = ref.watch(purchaseFaSearchQueryProvider);
+  return _applyFilters(allRecords, filters, search);
+}
+
+@riverpod
 PaginatedPurchaseFaRecords paginatedPurchaseFaRecords(Ref ref) {
-  final faAsync = ref.watch(purchaseFaProvider);
-  return faAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedPurchaseFaRecords(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
+  final filtered = ref.watch(filteredPurchaseFaRecordsProvider);
+  final filters = ref.watch(purchaseFaFiltersProvider);
+  return _paginateFilteredRecords(filtered, filters.currentPage);
+}
+
+@riverpod
+List<String> purchaseFaPartyOptions(Ref ref) {
+  final allRecords = _allRecordsFromAsync(ref.watch(purchaseFaProvider));
+  return purchasePartyOptionsFromNames(
+    allRecords.map((record) => record.partyName),
   );
 }
 
@@ -354,8 +543,7 @@ class PurchaseFaSummaryData {
 
 @riverpod
 PurchaseFaSummaryData purchaseFaSummary(Ref ref) {
-  final page = ref.watch(paginatedPurchaseFaRecordsProvider);
-  final records = page.items;
+  final records = ref.watch(filteredPurchaseFaRecordsProvider);
 
   var paidAmount = 0.0;
   var unpaidAmount = 0.0;

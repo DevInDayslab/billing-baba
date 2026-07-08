@@ -33,7 +33,7 @@ final class PurchaseOrdersProvider
   PurchaseOrders create() => PurchaseOrders();
 }
 
-String _$purchaseOrdersHash() => r'f443313f058f8e80bf672ccc6c9740b1d0e4cfc7';
+String _$purchaseOrdersHash() => r'68d8ce9f006e3c649d00fb765558c2c7b0cd650a';
 
 abstract class _$PurchaseOrders
     extends $AsyncNotifier<PaginatedPurchaseOrders> {
@@ -95,7 +95,7 @@ final class PurchaseOrderFiltersProvider
 }
 
 String _$purchaseOrderFiltersHash() =>
-    r'414840405a41fa6a4d62116f7c6675be705a4e6d';
+    r'2dbc925083dd5346e0252f848d4a03dda24afc11';
 
 abstract class _$PurchaseOrderFilters
     extends $Notifier<PurchaseOrderFiltersState> {
@@ -116,6 +116,54 @@ abstract class _$PurchaseOrderFilters
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(filteredPurchaseOrders)
+final filteredPurchaseOrdersProvider = FilteredPurchaseOrdersProvider._();
+
+final class FilteredPurchaseOrdersProvider
+    extends
+        $FunctionalProvider<
+          List<PurchaseOrderModel>,
+          List<PurchaseOrderModel>,
+          List<PurchaseOrderModel>
+        >
+    with $Provider<List<PurchaseOrderModel>> {
+  FilteredPurchaseOrdersProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'filteredPurchaseOrdersProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredPurchaseOrdersHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<PurchaseOrderModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<PurchaseOrderModel> create(Ref ref) {
+    return filteredPurchaseOrders(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<PurchaseOrderModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<PurchaseOrderModel>>(value),
+    );
+  }
+}
+
+String _$filteredPurchaseOrdersHash() =>
+    r'ed801ab221d40315afccbce3c488f60d7bd50bd1';
 
 @ProviderFor(paginatedPurchaseOrders)
 final paginatedPurchaseOrdersProvider = PaginatedPurchaseOrdersProvider._();
@@ -163,7 +211,91 @@ final class PaginatedPurchaseOrdersProvider
 }
 
 String _$paginatedPurchaseOrdersHash() =>
-    r'978d00624315a4c57b84e637124ff9ebf8d8764e';
+    r'add996ef8dd88694a907a281bb2e7338eaa0c907';
+
+@ProviderFor(purchaseOrderPartyOptions)
+final purchaseOrderPartyOptionsProvider = PurchaseOrderPartyOptionsProvider._();
+
+final class PurchaseOrderPartyOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  PurchaseOrderPartyOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'purchaseOrderPartyOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$purchaseOrderPartyOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return purchaseOrderPartyOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$purchaseOrderPartyOptionsHash() =>
+    r'efafbd9e8666596e1b5a842ff7f3f9691fff0c15';
+
+@ProviderFor(purchaseOrderTypeOptions)
+final purchaseOrderTypeOptionsProvider = PurchaseOrderTypeOptionsProvider._();
+
+final class PurchaseOrderTypeOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  PurchaseOrderTypeOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'purchaseOrderTypeOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$purchaseOrderTypeOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return purchaseOrderTypeOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$purchaseOrderTypeOptionsHash() =>
+    r'f004266f9340249c930824a3a85599c73ed5fe5c';
 
 @ProviderFor(purchaseOrderSummary)
 final purchaseOrderSummaryProvider = PurchaseOrderSummaryProvider._();
@@ -211,4 +343,4 @@ final class PurchaseOrderSummaryProvider
 }
 
 String _$purchaseOrderSummaryHash() =>
-    r'25b5ec192d3308fb7abab79ac64e873af11e5ef7';
+    r'4bc3aad7ea04636aa26dec7f1d9a55c785c1727d';

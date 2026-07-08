@@ -3,6 +3,8 @@ import 'package:billing_baba/features/export/presentation/widgets/module_export_
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/payment_out_status_badge.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_cell.dart';
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -42,6 +44,9 @@ class PaymentOutTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final paginated = ref.watch(paginatedPaymentOutRecordsProvider);
+    final filters = ref.watch(paymentOutFiltersProvider);
+    final searchQuery = ref.watch(paymentOutSearchQueryProvider);
+    final filtersNotifier = ref.read(paymentOutFiltersProvider.notifier);
     final notifier = ref.read(paymentOutRecordsProvider.notifier);
 
     return DecoratedBox(
@@ -68,13 +73,16 @@ class PaymentOutTable extends ConsumerWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
+                const SizedBox(width: AppSpacing.md),
+                const _PaymentOutSearchField(),
+                if (filters.hasActiveFilters || searchQuery.trim().isNotEmpty) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  TextButton(
+                    onPressed: filtersNotifier.clearAllFilters,
+                    child: const Text('Clear Filters'),
+                  ),
+                ],
                 const Spacer(),
-                IconButton(
-                  onPressed: () => debugPrint('Search tapped'),
-                  icon: const Icon(Icons.search, size: 20),
-                  color: AppColors.textSecondary,
-                  tooltip: 'Search',
-                ),
                 IconButton(
                   onPressed: () =>
                       ModuleExportActions.exportPaymentOut(context, ref),
@@ -273,7 +281,75 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _TableHeaderRow extends StatelessWidget {
+class _PaymentOutSearchField extends ConsumerStatefulWidget {
+  const _PaymentOutSearchField();
+
+  @override
+  ConsumerState<_PaymentOutSearchField> createState() =>
+      _PaymentOutSearchFieldState();
+}
+
+class _PaymentOutSearchFieldState extends ConsumerState<_PaymentOutSearchField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: ref.read(paymentOutSearchQueryProvider),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(paymentOutSearchQueryProvider, (previous, next) {
+      if (next != _controller.text) {
+        _controller.text = next;
+      }
+    });
+
+    return SizedBox(
+      width: 200,
+      height: 36,
+      child: TextField(
+        controller: _controller,
+        decoration: InputDecoration(
+          hintText: 'Search',
+          hintStyle: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 13,
+          ),
+          prefixIcon: const Icon(
+            Icons.search,
+            color: AppColors.textSecondary,
+            size: 18,
+          ),
+          filled: true,
+          fillColor: AppColors.background,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.xs,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: AppRadius.smBorder,
+            borderSide: BorderSide.none,
+          ),
+          isDense: true,
+        ),
+        onChanged: (value) =>
+            ref.read(paymentOutSearchQueryProvider.notifier).setQuery(value),
+        style: const TextStyle(fontSize: 13),
+      ),
+    );
+  }
+}
+
+class _TableHeaderRow extends ConsumerWidget {
   const _TableHeaderRow();
 
   static const _headerStyle = TextStyle(
@@ -283,45 +359,147 @@ class _TableHeaderRow extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filters = ref.watch(paymentOutFiltersProvider);
+    final filtersNotifier = ref.read(paymentOutFiltersProvider.notifier);
+    final partyOptions = ref.watch(paymentOutPartyOptionsProvider);
+    final columns = filters.columnFilters;
+
+    final actions = PurchaseColumnFilterActions(
+      onDocumentNo: filtersNotifier.setDocumentNoFilter,
+      onParty: filtersNotifier.setParty,
+      onPaymentType: filtersNotifier.setPaymentType,
+      onAmountRange: ({min, max}) {},
+      onBalanceRange: ({min, max}) {},
+      onStatus: filtersNotifier.setStatus,
+      onTotalAmountRange: filtersNotifier.setTotalAmountRange,
+      onPaidAmountRange: filtersNotifier.setPaidAmountRange,
+      onDateRange: filtersNotifier.setColumnDateRange,
+    );
+
     return Container(
       color: AppColors.background,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      child: const Row(
+      child: Row(
         children: [
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Date',
+            kind: PurchaseColumnFilterKind.date,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.date,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: paymentOutStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _dateColWidth,
-            child: Text('Date', style: _headerStyle),
+            gapAfter: _colGap,
           ),
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Ref. no.',
+            kind: PurchaseColumnFilterKind.documentNo,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.documentNo,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: paymentOutStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _refColWidth,
-            child: Text('Ref. no.', style: _headerStyle),
+            gapAfter: _colGap,
+            documentNoHint: 'Search ref no',
           ),
           Expanded(
-            child: _TableCell(child: Text('Party Name', style: _headerStyle)),
+            child: purchaseColumnFilterCell(
+              label: 'Party Name',
+              kind: PurchaseColumnFilterKind.partyName,
+              headerStyle: _headerStyle,
+              isActive: purchaseColumnFilterIsActive(
+                PurchaseColumnFilterKind.partyName,
+                columns,
+              ),
+              columns: columns,
+              actions: actions,
+              partyOptions: partyOptions,
+              statusOptions: paymentOutStatusOptions,
+              selectedStatus: filters.selectedStatus,
+              gapAfter: _colGap,
+            ),
           ),
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Total Amount',
+            kind: PurchaseColumnFilterKind.totalAmount,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.totalAmount,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: paymentOutStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _amountColWidth,
             alignment: Alignment.centerRight,
-            child: Text('Total Amount', style: _headerStyle),
+            gapAfter: _colGap,
           ),
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Paid',
+            kind: PurchaseColumnFilterKind.paidAmount,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.paidAmount,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: paymentOutStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _amountColWidth,
             alignment: Alignment.centerRight,
-            child: Text('Paid', style: _headerStyle),
+            gapAfter: _colGap,
           ),
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Payment Type',
+            kind: PurchaseColumnFilterKind.paymentType,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.paymentType,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: paymentOutStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            paymentTypeOptions: PaymentOutDropdownOptions.paymentTypes,
             width: _paymentColWidth,
-            child: Text('Payment Type', style: _headerStyle),
+            gapAfter: _colGap,
           ),
-          _TableCell(
+          purchaseColumnFilterCell(
+            label: 'Status',
+            kind: PurchaseColumnFilterKind.status,
+            headerStyle: _headerStyle,
+            isActive: purchaseColumnStatusFilterIsActive(filters.selectedStatus),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: paymentOutStatusOptions,
+            selectedStatus: filters.selectedStatus,
             width: _statusColWidth,
-            child: Text('Status', style: _headerStyle),
+            gapAfter: _colGap,
           ),
-          _TableCell(
+          const _TableCell(
             width: _actionsColWidth,
             gapAfter: 0,
             child: Text('Actions', style: _headerStyle),

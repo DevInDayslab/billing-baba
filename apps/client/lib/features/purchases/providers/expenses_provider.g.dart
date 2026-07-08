@@ -121,6 +121,45 @@ abstract class _$ExpenseTransactions
   }
 }
 
+@ProviderFor(expensesPageData)
+final expensesPageDataProvider = ExpensesPageDataProvider._();
+
+final class ExpensesPageDataProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<ExpensePageData>,
+          ExpensePageData,
+          FutureOr<ExpensePageData>
+        >
+    with $FutureModifier<ExpensePageData>, $FutureProvider<ExpensePageData> {
+  ExpensesPageDataProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'expensesPageDataProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$expensesPageDataHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<ExpensePageData> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<ExpensePageData> create(Ref ref) {
+    return expensesPageData(ref);
+  }
+}
+
+String _$expensesPageDataHash() => r'c0da514431ea0ae837f6afa4405926211aadba84';
+
 @ProviderFor(expenseItems)
 final expenseItemsProvider = ExpenseItemsProvider._();
 
@@ -575,7 +614,7 @@ final class ExpenseFiltersProvider
   }
 }
 
-String _$expenseFiltersHash() => r'd562984ba7bc824be6f954cdddbedb5faf5d7a88';
+String _$expenseFiltersHash() => r'f1c7b69e88e23ea67945a854512180c545c19a13';
 
 abstract class _$ExpenseFilters extends $Notifier<ExpenseFiltersState> {
   ExpenseFiltersState build();
@@ -711,7 +750,7 @@ final class CategoryExpenseTransactionsProvider
 }
 
 String _$categoryExpenseTransactionsHash() =>
-    r'98d64ef861b4ca2ec3ad61400a7e6ec47cf24fdb';
+    r'8437580ec66e98a62da75779f5b9e4d0cea3255c';
 
 final class CategoryExpenseTransactionsFamily extends $Family
     with $FunctionalFamilyOverride<List<ExpenseTransactionModel>, String> {
@@ -846,7 +885,7 @@ final class ItemExpenseTransactionsProvider
 }
 
 String _$itemExpenseTransactionsHash() =>
-    r'af04138b5cbfad06e3869ff3b73b5d0c575ec48f';
+    r'c95c666521bf43b7edeee570b5f154bd963ad70d';
 
 final class ItemExpenseTransactionsFamily extends $Family
     with $FunctionalFamilyOverride<List<ExpenseTransactionModel>, String> {
@@ -865,6 +904,49 @@ final class ItemExpenseTransactionsFamily extends $Family
   @override
   String toString() => r'itemExpenseTransactionsProvider';
 }
+
+@ProviderFor(expenseTransactionPartyOptions)
+final expenseTransactionPartyOptionsProvider =
+    ExpenseTransactionPartyOptionsProvider._();
+
+final class ExpenseTransactionPartyOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  ExpenseTransactionPartyOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'expenseTransactionPartyOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$expenseTransactionPartyOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return expenseTransactionPartyOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$expenseTransactionPartyOptionsHash() =>
+    r'32506a80bf60eb2feff2151bcec8bcb7beb09f96';
 
 @ProviderFor(expensesTotalAmount)
 final expensesTotalAmountProvider = ExpensesTotalAmountProvider._();

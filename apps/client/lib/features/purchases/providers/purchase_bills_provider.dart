@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
@@ -21,6 +21,15 @@ class PurchaseBillFiltersState {
     this.selectedUser = 'All Users',
     this.selectedStatus = 'All Status',
     this.currentPage = 1,
+    this.columnDateRange,
+    this.invoiceNoFilter = '',
+    this.selectedParty = 'All Parties',
+    this.selectedPaymentType = 'All Payment Types',
+    this.amountMin,
+    this.amountMax,
+    this.balanceMin,
+    this.balanceMax,
+    this.dueDateRange,
   });
 
   final TimeRangeOption timeRangeOption;
@@ -29,8 +38,33 @@ class PurchaseBillFiltersState {
   final String selectedUser;
   final String selectedStatus;
   final int currentPage;
+  final DateTimeRange? columnDateRange;
+  final String invoiceNoFilter;
+  final String selectedParty;
+  final String selectedPaymentType;
+  final double? amountMin;
+  final double? amountMax;
+  final double? balanceMin;
+  final double? balanceMax;
+  final DateTimeRange? dueDateRange;
 
   String get timeRangeLabel => timeRangeOption.label;
+
+  bool get hasActiveFilters =>
+      timeRangeOption != TimeRangeOption.thisMonth ||
+      customDateRange != null ||
+      selectedFirm != 'All Firms' ||
+      selectedUser != 'All Users' ||
+      selectedStatus != 'All Status' ||
+      columnDateRange != null ||
+      invoiceNoFilter.trim().isNotEmpty ||
+      selectedParty != 'All Parties' ||
+      selectedPaymentType != 'All Payment Types' ||
+      amountMin != null ||
+      amountMax != null ||
+      balanceMin != null ||
+      balanceMax != null ||
+      dueDateRange != null;
 
   PurchaseBillFiltersState copyWith({
     TimeRangeOption? timeRangeOption,
@@ -40,6 +74,19 @@ class PurchaseBillFiltersState {
     String? selectedUser,
     String? selectedStatus,
     int? currentPage,
+    DateTimeRange? columnDateRange,
+    bool clearColumnDateRange = false,
+    String? invoiceNoFilter,
+    String? selectedParty,
+    String? selectedPaymentType,
+    double? amountMin,
+    double? amountMax,
+    bool clearAmountRange = false,
+    double? balanceMin,
+    double? balanceMax,
+    bool clearBalanceRange = false,
+    DateTimeRange? dueDateRange,
+    bool clearDueDateRange = false,
   }) {
     return PurchaseBillFiltersState(
       timeRangeOption: timeRangeOption ?? this.timeRangeOption,
@@ -50,6 +97,19 @@ class PurchaseBillFiltersState {
       selectedUser: selectedUser ?? this.selectedUser,
       selectedStatus: selectedStatus ?? this.selectedStatus,
       currentPage: currentPage ?? this.currentPage,
+      columnDateRange: clearColumnDateRange
+          ? null
+          : (columnDateRange ?? this.columnDateRange),
+      invoiceNoFilter: invoiceNoFilter ?? this.invoiceNoFilter,
+      selectedParty: selectedParty ?? this.selectedParty,
+      selectedPaymentType: selectedPaymentType ?? this.selectedPaymentType,
+      amountMin: clearAmountRange ? null : (amountMin ?? this.amountMin),
+      amountMax: clearAmountRange ? null : (amountMax ?? this.amountMax),
+      balanceMin: clearBalanceRange ? null : (balanceMin ?? this.balanceMin),
+      balanceMax: clearBalanceRange ? null : (balanceMax ?? this.balanceMax),
+      dueDateRange: clearDueDateRange
+          ? null
+          : (dueDateRange ?? this.dueDateRange),
     );
   }
 }
@@ -118,36 +178,90 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-PurchaseDocumentListQuery _buildListQuery(
-  PurchaseBillFiltersState filters,
-  String searchQuery,
-) {
+bool _isWithinDateRange(DateTime value, DateTimeRange range) {
+  final date = _startOfDay(value);
+  final start = _startOfDay(range.start);
+  final end = _startOfDay(range.end);
+  return !date.isBefore(start) && !date.isAfter(end);
+}
+
+PurchaseDocumentListQuery _buildListQuery(PurchaseBillFiltersState filters) {
   final dateRange = _resolveTimeRange(
     filters.timeRangeOption,
     filters.customDateRange,
   );
 
   return PurchaseDocumentListQuery(
-    page: filters.currentPage,
-    limit: purchaseBillsPageSize,
+    page: 1,
+    limit: PaginatedFetch.defaultPageSize,
     documentType: PurchaseDocumentType.purchaseBill.apiValue,
     status: _documentStatusFromFilterLabel(filters.selectedStatus),
     from: dateRange?.start.toUtc().toIso8601String(),
     to: dateRange?.end.toUtc().toIso8601String(),
-    q: searchQuery.trim().isEmpty ? null : searchQuery.trim(),
   );
 }
 
-List<PurchaseBillModel> _applyClientFilters(
+List<PurchaseBillModel> _applyFilters(
   List<PurchaseBillModel> bills,
   PurchaseBillFiltersState filters,
+  String globalSearch,
 ) {
   final paymentStatus = _paymentStatusFromFilterLabel(filters.selectedStatus);
+  final globalQuery = globalSearch.trim().toLowerCase();
+  final invoiceQuery = filters.invoiceNoFilter.trim().toLowerCase();
 
   return bills.where((bill) {
+    if (globalQuery.isNotEmpty) {
+      final matchesGlobal =
+          bill.invoiceNo.toLowerCase().contains(globalQuery) ||
+          bill.partyName.toLowerCase().contains(globalQuery) ||
+          bill.paymentType.toLowerCase().contains(globalQuery);
+      if (!matchesGlobal) return false;
+    }
+
+    if (invoiceQuery.isNotEmpty &&
+        !bill.invoiceNo.toLowerCase().contains(invoiceQuery)) {
+      return false;
+    }
+
+    if (filters.columnDateRange != null &&
+        !_isWithinDateRange(bill.date, filters.columnDateRange!)) {
+      return false;
+    }
+
+    if (filters.selectedParty != 'All Parties' &&
+        bill.partyName != filters.selectedParty) {
+      return false;
+    }
+
+    if (filters.selectedPaymentType != 'All Payment Types' &&
+        bill.paymentType != filters.selectedPaymentType) {
+      return false;
+    }
+
+    if (filters.amountMin != null && bill.amount < filters.amountMin!) {
+      return false;
+    }
+    if (filters.amountMax != null && bill.amount > filters.amountMax!) {
+      return false;
+    }
+
+    if (filters.balanceMin != null && bill.balanceDue < filters.balanceMin!) {
+      return false;
+    }
+    if (filters.balanceMax != null && bill.balanceDue > filters.balanceMax!) {
+      return false;
+    }
+
+    if (filters.dueDateRange != null &&
+        !_isWithinDateRange(bill.dueDate, filters.dueDateRange!)) {
+      return false;
+    }
+
     if (paymentStatus != null && bill.status != paymentStatus) {
       return false;
     }
+
     if (filters.selectedUser != 'All Users' &&
         bill.user != filters.selectedUser) {
       return false;
@@ -156,55 +270,116 @@ List<PurchaseBillModel> _applyClientFilters(
         bill.firm != filters.selectedFirm) {
       return false;
     }
+
     return true;
   }).toList();
 }
 
-@riverpod
-class PurchaseBillSearchQuery extends _$PurchaseBillSearchQuery {
-  Debouncer? _debouncer;
-
-  @override
-  String build() {
-    ref.onDispose(() => _debouncer?.dispose());
-    return '';
+PaginatedPurchaseBills _paginateFilteredBills(
+  List<PurchaseBillModel> filtered,
+  int currentPage,
+) {
+  if (filtered.isEmpty) {
+    return const PaginatedPurchaseBills(
+      items: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+    );
   }
+
+  final totalItems = filtered.length;
+  final totalPages = (totalItems / purchaseBillsPageSize).ceil();
+  final page = currentPage.clamp(1, totalPages);
+  final start = (page - 1) * purchaseBillsPageSize;
+  final end = (start + purchaseBillsPageSize).clamp(0, totalItems);
+
+  return PaginatedPurchaseBills(
+    items: filtered.sublist(start, end),
+    currentPage: page,
+    totalPages: totalPages,
+    totalItems: totalItems,
+  );
+}
+
+@Riverpod(keepAlive: true)
+class PurchaseBillSearchQuery extends _$PurchaseBillSearchQuery {
+  @override
+  String build() => '';
 
   void setQuery(String value) {
-    _debouncer ??= Debouncer();
-    _debouncer!.run(() => state = value);
+    state = value;
+    final filters = ref.read(purchaseBillFiltersProvider);
+    if (filters.currentPage != 1) {
+      ref.read(purchaseBillFiltersProvider.notifier).setPage(1);
+    }
   }
+}
+
+PaginatedPurchaseBills _allBillsPage(List<PurchaseBillModel> allBills) {
+  return PaginatedPurchaseBills(
+    items: allBills,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: allBills.length,
+  );
+}
+
+List<PurchaseBillModel> _allBillsFromAsync(
+  AsyncValue<PaginatedPurchaseBills> billsAsync,
+) {
+  return billsAsync.when(
+    data: (page) => page.items,
+    loading: () => const [],
+    error: (_, _) => const [],
+  );
 }
 
 @Riverpod(keepAlive: true)
 class PurchaseBills extends _$PurchaseBills {
   @override
   Future<PaginatedPurchaseBills> build() async {
-    ref.watch(purchaseBillFiltersProvider);
-    ref.watch(purchaseBillSearchQueryProvider);
-    return _fetchPage();
+    ref.watch(
+      purchaseBillFiltersProvider.select(
+        (filters) => (filters.timeRangeOption, filters.customDateRange),
+      ),
+    );
+    final allBills = await _fetchAllBills();
+    return _allBillsPage(allBills);
   }
 
-  Future<PaginatedPurchaseBills> _fetchPage() async {
+  Future<List<PurchaseBillModel>> _fetchAllBills() async {
     final filters = ref.read(purchaseBillFiltersProvider);
-    final search = ref.read(purchaseBillSearchQueryProvider);
     final service = await ref.read(purchaseServiceProvider.future);
-    final page = await service.fetchBillsPage(
-      _buildListQuery(filters, search),
-    );
 
-    final filteredItems = _applyClientFilters(page.items, filters);
-    return PaginatedPurchaseBills(
-      items: filteredItems,
-      currentPage: page.currentPage,
-      totalPages: page.totalPages,
-      totalItems: page.totalItems,
+    return PaginatedFetch.fetchAll(
+      fetchPage: (page) async {
+        final baseQuery = _buildListQuery(filters);
+        final query = PurchaseDocumentListQuery(
+          page: page,
+          limit: baseQuery.limit,
+          documentType: baseQuery.documentType,
+          status: baseQuery.status,
+          from: baseQuery.from,
+          to: baseQuery.to,
+          sort: baseQuery.sort,
+          order: baseQuery.order,
+        );
+        final pageResult = await service.fetchBillsPage(query);
+        return (
+          items: pageResult.items,
+          totalPages: pageResult.totalPages,
+        );
+      },
     );
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchPage);
+    state = await AsyncValue.guard(() async {
+      final allBills = await _fetchAllBills();
+      return _allBillsPage(allBills);
+    });
   }
 
   Future<String?> deleteDraft(String documentId) async {
@@ -314,43 +489,124 @@ class PurchaseBillFilters extends _$PurchaseBillFilters {
 
   void setFirm(String firm) {
     state = state.copyWith(selectedFirm: firm, currentPage: 1);
-    ref.invalidate(purchaseBillsProvider);
   }
 
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
-    ref.invalidate(purchaseBillsProvider);
   }
 
   void setStatus(String status) {
     state = state.copyWith(selectedStatus: status, currentPage: 1);
-    ref.invalidate(purchaseBillsProvider);
+    if (_documentStatusFromFilterLabel(status) != null) {
+      ref.invalidate(purchaseBillsProvider);
+    }
+  }
+
+  void setColumnDateRange(DateTimeRange range) {
+    state = state.copyWith(columnDateRange: range, currentPage: 1);
+  }
+
+  void setInvoiceNo(String value) {
+    state = state.copyWith(invoiceNoFilter: value, currentPage: 1);
+  }
+
+  void setParty(String party) {
+    state = state.copyWith(selectedParty: party, currentPage: 1);
+  }
+
+  void setPaymentType(String paymentType) {
+    state = state.copyWith(selectedPaymentType: paymentType, currentPage: 1);
+  }
+
+  void setAmountRange({double? min, double? max}) {
+    if (min == null && max == null) {
+      state = state.copyWith(clearAmountRange: true, currentPage: 1);
+      return;
+    }
+    state = PurchaseBillFiltersState(
+      timeRangeOption: state.timeRangeOption,
+      customDateRange: state.customDateRange,
+      selectedFirm: state.selectedFirm,
+      selectedUser: state.selectedUser,
+      selectedStatus: state.selectedStatus,
+      currentPage: 1,
+      columnDateRange: state.columnDateRange,
+      invoiceNoFilter: state.invoiceNoFilter,
+      selectedParty: state.selectedParty,
+      selectedPaymentType: state.selectedPaymentType,
+      amountMin: min,
+      amountMax: max,
+      balanceMin: state.balanceMin,
+      balanceMax: state.balanceMax,
+      dueDateRange: state.dueDateRange,
+    );
+  }
+
+  void setBalanceRange({double? min, double? max}) {
+    if (min == null && max == null) {
+      state = state.copyWith(clearBalanceRange: true, currentPage: 1);
+      return;
+    }
+    state = PurchaseBillFiltersState(
+      timeRangeOption: state.timeRangeOption,
+      customDateRange: state.customDateRange,
+      selectedFirm: state.selectedFirm,
+      selectedUser: state.selectedUser,
+      selectedStatus: state.selectedStatus,
+      currentPage: 1,
+      columnDateRange: state.columnDateRange,
+      invoiceNoFilter: state.invoiceNoFilter,
+      selectedParty: state.selectedParty,
+      selectedPaymentType: state.selectedPaymentType,
+      amountMin: state.amountMin,
+      amountMax: state.amountMax,
+      balanceMin: min,
+      balanceMax: max,
+      dueDateRange: state.dueDateRange,
+    );
+  }
+
+  void setDueDateRange(DateTimeRange range) {
+    state = state.copyWith(dueDateRange: range, currentPage: 1);
   }
 
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
+  }
+
+  void clearAllFilters() {
+    state = const PurchaseBillFiltersState();
+    ref.read(purchaseBillSearchQueryProvider.notifier).setQuery('');
     ref.invalidate(purchaseBillsProvider);
   }
 }
 
 @riverpod
+List<PurchaseBillModel> filteredPurchaseBills(Ref ref) {
+  final allBills = _allBillsFromAsync(ref.watch(purchaseBillsProvider));
+  final filters = ref.watch(purchaseBillFiltersProvider);
+  final search = ref.watch(purchaseBillSearchQueryProvider);
+  return _applyFilters(allBills, filters, search);
+}
+
+@riverpod
 PaginatedPurchaseBills paginatedPurchaseBills(Ref ref) {
-  final billsAsync = ref.watch(purchaseBillsProvider);
-  return billsAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedPurchaseBills(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
-  );
+  final filtered = ref.watch(filteredPurchaseBillsProvider);
+  final filters = ref.watch(purchaseBillFiltersProvider);
+  return _paginateFilteredBills(filtered, filters.currentPage);
+}
+
+@riverpod
+List<String> purchaseBillPartyOptions(Ref ref) {
+  final allBills = _allBillsFromAsync(ref.watch(purchaseBillsProvider));
+  final parties = allBills.map((bill) => bill.partyName).toSet().toList()
+    ..sort();
+  return ['All Parties', ...parties];
 }
 
 @riverpod
 PurchaseBillSummaryData purchaseBillSummary(Ref ref) {
-  final page = ref.watch(paginatedPurchaseBillsProvider);
-  final bills = page.items;
+  final bills = ref.watch(filteredPurchaseBillsProvider);
 
   var paidAmount = 0.0;
   var unpaidAmount = 0.0;

@@ -1,5 +1,7 @@
-import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_list_filter_utils.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_return_model.dart';
@@ -39,6 +41,7 @@ class PurchaseReturnFiltersState {
     this.selectedStatus = 'All Status',
     this.searchQuery = '',
     this.currentPage = 1,
+    this.columnFilters = const PurchaseColumnFilterFields(),
   });
 
   final TimeRangeOption timeRangeOption;
@@ -51,8 +54,20 @@ class PurchaseReturnFiltersState {
   final String selectedStatus;
   final String searchQuery;
   final int currentPage;
+  final PurchaseColumnFilterFields columnFilters;
 
   String get timeRangeLabel => timeRangeOption.label;
+
+  bool get hasActiveFilters =>
+      timeRangeOption != TimeRangeOption.thisMonth ||
+      customDateRange != null ||
+      selectedFirm != 'All Firms' ||
+      selectedUser != 'All Users' ||
+      selectedGodown != 'All Godown' ||
+      selectedPayment != 'All Payment' ||
+      selectedStatus != 'All Status' ||
+      searchQuery.trim().isNotEmpty ||
+      columnFilters.hasColumnFilters;
 
   PurchaseReturnFiltersState copyWith({
     TimeRangeOption? timeRangeOption,
@@ -66,6 +81,7 @@ class PurchaseReturnFiltersState {
     String? selectedStatus,
     String? searchQuery,
     int? currentPage,
+    PurchaseColumnFilterFields? columnFilters,
   }) {
     return PurchaseReturnFiltersState(
       timeRangeOption: timeRangeOption ?? this.timeRangeOption,
@@ -80,6 +96,7 @@ class PurchaseReturnFiltersState {
       selectedStatus: selectedStatus ?? this.selectedStatus,
       searchQuery: searchQuery ?? this.searchQuery,
       currentPage: currentPage ?? this.currentPage,
+      columnFilters: columnFilters ?? this.columnFilters,
     );
   }
 }
@@ -150,26 +167,97 @@ PurchaseDocumentListQuery _buildListQuery(PurchaseReturnFiltersState filters) {
   );
 
   return PurchaseDocumentListQuery(
-    page: filters.currentPage,
-    limit: purchaseReturnPageSize,
+    page: 1,
+    limit: PaginatedFetch.defaultPageSize,
     documentType: PurchaseDocumentType.purchaseReturn.apiValue,
     status: _documentStatusFromFilterLabel(filters.selectedStatus),
     from: dateRange?.start.toUtc().toIso8601String(),
     to: dateRange?.end.toUtc().toIso8601String(),
-    q: filters.searchQuery.trim().isEmpty ? null : filters.searchQuery.trim(),
   );
 }
 
-List<PurchaseReturnModel> _applyClientFilters(
+List<PurchaseReturnModel> _applyFilters(
   List<PurchaseReturnModel> returns,
   PurchaseReturnFiltersState filters,
 ) {
   final statusFilter = _statusFromFilterLabel(filters.selectedStatus);
+  final columns = filters.columnFilters;
+  final globalQuery = filters.searchQuery.trim().toLowerCase();
 
   return returns.where((item) {
+    if (globalQuery.isNotEmpty &&
+        !purchaseFilterMatchesGlobalSearch(globalQuery, [
+          item.debitNoteNo,
+          item.partyName,
+          item.categoryName,
+          item.type,
+          item.paymentType,
+        ])) {
+      return false;
+    }
+
+    if (columns.columnDateRange != null &&
+        !purchaseFilterIsWithinDateRange(item.date, columns.columnDateRange!)) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesText(columns.documentNoFilter, item.debitNoteNo)) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesParty(columns.selectedParty, item.partyName)) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesOption(
+      columns.selectedCategory,
+      'All Categories',
+      item.categoryName,
+    )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesOption(
+      columns.selectedType,
+      'All Types',
+      item.type,
+    )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesNumericRange(
+      item.total,
+      min: columns.amountMin,
+      max: columns.amountMax,
+    )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesNumericRange(
+      item.receivedPaid,
+      min: columns.receivedPaidMin,
+      max: columns.receivedPaidMax,
+    )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesNumericRange(
+      item.balance,
+      min: columns.balanceMin,
+      max: columns.balanceMax,
+    )) {
+      return false;
+    }
+
+    if (columns.dueDateRange != null &&
+        !purchaseFilterIsWithinDateRange(item.dueDate, columns.dueDateRange!)) {
+      return false;
+    }
+
     if (statusFilter != null && item.status != statusFilter) {
       return false;
     }
+
     if (filters.selectedUser != 'All Users' &&
         item.user != filters.selectedUser) {
       return false;
@@ -186,34 +274,92 @@ List<PurchaseReturnModel> _applyClientFilters(
         item.paymentType != filters.selectedPayment) {
       return false;
     }
+
     return true;
   }).toList();
+}
+
+PaginatedPurchaseReturns _paginateFilteredReturns(
+  List<PurchaseReturnModel> filtered,
+  int currentPage,
+) {
+  final slice = purchaseFilterPaginate(
+    filtered,
+    currentPage,
+    purchaseReturnPageSize,
+  );
+  return PaginatedPurchaseReturns(
+    items: slice.items,
+    currentPage: slice.currentPage,
+    totalPages: slice.totalPages,
+    totalItems: slice.totalItems,
+  );
+}
+
+PaginatedPurchaseReturns _allReturnsPage(List<PurchaseReturnModel> allReturns) {
+  return PaginatedPurchaseReturns(
+    items: allReturns,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: allReturns.length,
+  );
+}
+
+List<PurchaseReturnModel> _allReturnsFromAsync(
+  AsyncValue<PaginatedPurchaseReturns> returnsAsync,
+) {
+  return returnsAsync.when(
+    data: (page) => page.items,
+    loading: () => const [],
+    error: (_, _) => const [],
+  );
 }
 
 @Riverpod(keepAlive: true)
 class PurchaseReturns extends _$PurchaseReturns {
   @override
   Future<PaginatedPurchaseReturns> build() async {
-    ref.watch(purchaseReturnFiltersProvider);
-    return _fetchPage();
+    ref.watch(
+      purchaseReturnFiltersProvider.select(
+        (filters) => (filters.timeRangeOption, filters.customDateRange),
+      ),
+    );
+    final allReturns = await _fetchAllReturns();
+    return _allReturnsPage(allReturns);
   }
 
-  Future<PaginatedPurchaseReturns> _fetchPage() async {
+  Future<List<PurchaseReturnModel>> _fetchAllReturns() async {
     final filters = ref.read(purchaseReturnFiltersProvider);
     final service = await ref.read(purchaseServiceProvider.future);
-    final page = await service.fetchReturnsPage(_buildListQuery(filters));
 
-    return PaginatedPurchaseReturns(
-      items: _applyClientFilters(page.items, filters),
-      currentPage: page.currentPage,
-      totalPages: page.totalPages,
-      totalItems: page.totalItems,
+    return PaginatedFetch.fetchAll(
+      fetchPage: (page) async {
+        final baseQuery = _buildListQuery(filters);
+        final query = PurchaseDocumentListQuery(
+          page: page,
+          limit: baseQuery.limit,
+          documentType: baseQuery.documentType,
+          status: baseQuery.status,
+          from: baseQuery.from,
+          to: baseQuery.to,
+          sort: baseQuery.sort,
+          order: baseQuery.order,
+        );
+        final pageResult = await service.fetchReturnsPage(query);
+        return (
+          items: pageResult.items,
+          totalPages: pageResult.totalPages,
+        );
+      },
     );
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchPage);
+    state = await AsyncValue.guard(() async {
+      final allReturns = await _fetchAllReturns();
+      return _allReturnsPage(allReturns);
+    });
   }
 
   Future<String?> deleteDraft(String documentId) async {
@@ -266,13 +412,8 @@ class PurchaseReturns extends _$PurchaseReturns {
 
 @riverpod
 class PurchaseReturnFilters extends _$PurchaseReturnFilters {
-  Debouncer? _searchDebouncer;
-
   @override
-  PurchaseReturnFiltersState build() {
-    ref.onDispose(() => _searchDebouncer?.dispose());
-    return const PurchaseReturnFiltersState();
-  }
+  PurchaseReturnFiltersState build() => const PurchaseReturnFiltersState();
 
   void setTimeRange(String label) {
     state = state.copyWith(
@@ -298,66 +439,157 @@ class PurchaseReturnFilters extends _$PurchaseReturnFilters {
 
   void setTransaction(String transaction) {
     state = state.copyWith(selectedTransaction: transaction, currentPage: 1);
-    ref.invalidate(purchaseReturnsProvider);
   }
 
   void setFirm(String firm) {
     state = state.copyWith(selectedFirm: firm, currentPage: 1);
-    ref.invalidate(purchaseReturnsProvider);
   }
 
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
-    ref.invalidate(purchaseReturnsProvider);
   }
 
   void setGodown(String godown) {
     state = state.copyWith(selectedGodown: godown, currentPage: 1);
-    ref.invalidate(purchaseReturnsProvider);
   }
 
   void setPayment(String payment) {
     state = state.copyWith(selectedPayment: payment, currentPage: 1);
-    ref.invalidate(purchaseReturnsProvider);
   }
 
   void setStatus(String status) {
     state = state.copyWith(selectedStatus: status, currentPage: 1);
-    ref.invalidate(purchaseReturnsProvider);
+    if (_documentStatusFromFilterLabel(status) != null) {
+      ref.invalidate(purchaseReturnsProvider);
+    }
   }
 
   void setSearchQuery(String query) {
-    _searchDebouncer ??= Debouncer();
-    _searchDebouncer!.run(() {
-      state = state.copyWith(searchQuery: query, currentPage: 1);
-      ref.invalidate(purchaseReturnsProvider);
-    });
+    state = state.copyWith(searchQuery: query, currentPage: 1);
+  }
+
+  void setColumnDateRange(DateTimeRange range) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(columnDateRange: range),
+      currentPage: 1,
+    );
+  }
+
+  void setDocumentNoFilter(String value) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(documentNoFilter: value),
+      currentPage: 1,
+    );
+  }
+
+  void setParty(String party) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(selectedParty: party),
+      currentPage: 1,
+    );
+  }
+
+  void setCategory(String category) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(selectedCategory: category),
+      currentPage: 1,
+    );
+  }
+
+  void setType(String type) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(selectedType: type),
+      currentPage: 1,
+    );
+  }
+
+  void setAmountRange({double? min, double? max}) {
+    state = state.copyWith(
+      columnFilters: min == null && max == null
+          ? state.columnFilters.copyWith(clearAmountRange: true)
+          : state.columnFilters.copyWith(amountMin: min, amountMax: max),
+      currentPage: 1,
+    );
+  }
+
+  void setReceivedPaidRange({double? min, double? max}) {
+    state = state.copyWith(
+      columnFilters: min == null && max == null
+          ? state.columnFilters.copyWith(clearReceivedPaidRange: true)
+          : state.columnFilters.copyWith(
+              receivedPaidMin: min,
+              receivedPaidMax: max,
+            ),
+      currentPage: 1,
+    );
+  }
+
+  void setBalanceRange({double? min, double? max}) {
+    state = state.copyWith(
+      columnFilters: min == null && max == null
+          ? state.columnFilters.copyWith(clearBalanceRange: true)
+          : state.columnFilters.copyWith(balanceMin: min, balanceMax: max),
+      currentPage: 1,
+    );
+  }
+
+  void setDueDateRange(DateTimeRange range) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(dueDateRange: range),
+      currentPage: 1,
+    );
   }
 
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
+  }
+
+  void clearAllFilters() {
+    state = const PurchaseReturnFiltersState();
     ref.invalidate(purchaseReturnsProvider);
   }
 }
 
 @riverpod
+List<PurchaseReturnModel> filteredPurchaseReturns(Ref ref) {
+  final allReturns = _allReturnsFromAsync(ref.watch(purchaseReturnsProvider));
+  final filters = ref.watch(purchaseReturnFiltersProvider);
+  return _applyFilters(allReturns, filters);
+}
+
+@riverpod
 PaginatedPurchaseReturns paginatedPurchaseReturns(Ref ref) {
-  final returnsAsync = ref.watch(purchaseReturnsProvider);
-  return returnsAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedPurchaseReturns(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
+  final filtered = ref.watch(filteredPurchaseReturnsProvider);
+  final filters = ref.watch(purchaseReturnFiltersProvider);
+  return _paginateFilteredReturns(filtered, filters.currentPage);
+}
+
+@riverpod
+List<String> purchaseReturnPartyOptions(Ref ref) {
+  final allReturns = _allReturnsFromAsync(ref.watch(purchaseReturnsProvider));
+  return purchasePartyOptionsFromNames(
+    allReturns.map((item) => item.partyName),
   );
 }
 
 @riverpod
+List<String> purchaseReturnCategoryOptions(Ref ref) {
+  final allReturns = _allReturnsFromAsync(ref.watch(purchaseReturnsProvider));
+  final categories = allReturns.map((item) => item.categoryName).toSet().toList()
+    ..sort();
+  return ['All Categories', ...categories];
+}
+
+@riverpod
+List<String> purchaseReturnTypeOptions(Ref ref) {
+  final allReturns = _allReturnsFromAsync(ref.watch(purchaseReturnsProvider));
+  final types = allReturns.map((item) => item.type).toSet().toList()..sort();
+  return ['All Types', ...types];
+}
+
+@riverpod
 PurchaseReturnSummaryData purchaseReturnSummary(Ref ref) {
-  final page = ref.watch(paginatedPurchaseReturnsProvider);
-  final returns = page.items;
+  final returns = ref.watch(filteredPurchaseReturnsProvider);
 
   var totalAmount = 0.0;
   var balance = 0.0;

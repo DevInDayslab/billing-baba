@@ -67,8 +67,7 @@ class _PurchaseBillsPageState extends ConsumerState<PurchaseBillsPage> {
             const SizedBox(height: AppSpacing.md),
             PurchaseSectionAsyncContent(
               value: billsAsync,
-              onRetry: () =>
-                  ref.read(purchaseBillsProvider.notifier).refresh(),
+              onRetry: () => ref.read(purchaseBillsProvider.notifier).refresh(),
               builder: (_) => const Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

@@ -4,9 +4,9 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_l
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
-import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/expense_status_badge.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/expenses_category_tab_content.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,46 +28,31 @@ class ExpensesItemsTabContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final transactionsAsync = ref.watch(expenseTransactionsProvider);
+    ref.watch(expenseTransactionsProvider).requireValue;
     final items = ref.watch(filteredExpenseItemsProvider);
     final allItems = ref.watch(expenseItemsProvider);
     final selectedId = ref.watch(selectedExpenseItemIdProvider);
 
-    return transactionsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Text(
-            PurchaseErrorMapper.messageFor(error),
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-        ),
-      ),
-      data: (_) {
-        final selectedItem = selectedId == null
-            ? null
-            : allItems.where((item) => item.id == selectedId).firstOrNull;
+    final selectedItem = selectedId == null
+        ? null
+        : allItems.where((item) => item.id == selectedId).firstOrNull;
 
-        return InventorySplitLayout(
-          listWidth: 340,
-          listPanel: _ItemListPanel(
-            items: items,
-            selectedId: selectedId,
-            onSearchChanged: (query) =>
-                ref.read(expenseItemSearchQueryProvider.notifier).query = query,
-            onItemSelected: (id) =>
-                ref.read(selectedExpenseItemIdProvider.notifier).selected = id,
-            onAddExpense: () => context.push(AppRoutes.addExpense),
-          ),
-          detailPanel: selectedItem != null
-              ? _ItemDetailPanel(item: selectedItem)
-              : const InventoryDetailPlaceholder(
-                  message: 'Select an item to view transactions',
-                ),
-        );
-      },
+    return InventorySplitLayout(
+      listWidth: 340,
+      listPanel: _ItemListPanel(
+        items: items,
+        selectedId: selectedId,
+        onSearchChanged: (query) =>
+            ref.read(expenseItemSearchQueryProvider.notifier).query = query,
+        onItemSelected: (id) =>
+            ref.read(selectedExpenseItemIdProvider.notifier).selected = id,
+        onAddExpense: () => context.push(AppRoutes.addExpense),
+      ),
+      detailPanel: selectedItem != null
+          ? _ItemDetailPanel(item: selectedItem)
+          : const InventoryDetailPlaceholder(
+              message: 'Select an item to view transactions',
+            ),
     );
   }
 }
@@ -248,33 +233,40 @@ class _ItemDetailPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactions = ref.watch(itemExpenseTransactionsProvider(item.id));
+    final filters = ref.watch(expenseFiltersProvider);
+    final searchQuery = ref.watch(expenseItemTransactionSearchQueryProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: InventorySearchField(
-            hint: 'Search',
-            onChanged: (query) => ref
-                .read(expenseItemTransactionSearchQueryProvider.notifier)
-                .query = query,
+          child: Row(
+            children: [
+              Expanded(
+                child: InventorySearchField(
+                  hint: 'Search',
+                  onChanged: (query) => ref
+                      .read(expenseItemTransactionSearchQueryProvider.notifier)
+                      .query = query,
+                ),
+              ),
+              if (filters.hasTransactionFilters ||
+                  searchQuery.trim().isNotEmpty) ...[
+                const SizedBox(width: AppSpacing.sm),
+                TextButton(
+                  onPressed: ref
+                      .read(expenseFiltersProvider.notifier)
+                      .clearAllFilters,
+                  child: const Text('Clear Filters'),
+                ),
+              ],
+            ],
           ),
         ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: InventoryListHeader(
-            columns: [
-              InventoryListColumn(label: 'DATE', showFilter: true),
-              InventoryListColumn(label: 'EXP NO.', showFilter: true),
-              InventoryListColumn(label: 'PARTY', showFilter: true),
-              InventoryListColumn(label: 'PAYMENT TYPE', showFilter: true),
-              InventoryListColumn(label: 'AMOUNT', showFilter: true),
-              InventoryListColumn(label: 'BALANCE', showFilter: true),
-              InventoryListColumn(label: 'DUE DATE', showFilter: true),
-              InventoryListColumn(label: 'STATUS', showFilter: true),
-            ],
-          ),
+          child: ExpenseStandardTransactionFilterHeader(),
         ),
         Expanded(
           child: Padding(

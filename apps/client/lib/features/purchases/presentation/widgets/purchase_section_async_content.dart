@@ -11,6 +11,7 @@ class PurchaseSectionAsyncContent<T> extends StatelessWidget {
     required this.builder,
     this.onRetry,
     this.minHeight = 400,
+    this.expand = false,
     super.key,
   });
 
@@ -18,17 +19,21 @@ class PurchaseSectionAsyncContent<T> extends StatelessWidget {
   final Widget Function(T data) builder;
   final VoidCallback? onRetry;
   final double minHeight;
+  final bool expand;
+
+  Widget _loadingShell(Widget child) {
+    if (expand) return child;
+    return SizedBox(height: minHeight, child: child);
+  }
 
   @override
   Widget build(BuildContext context) {
     return value.when(
-      loading: () => SizedBox(
-        height: minHeight,
-        child: const Center(child: CircularProgressIndicator()),
+      loading: () => _loadingShell(
+        const Center(child: CircularProgressIndicator()),
       ),
-      error: (error, _) => SizedBox(
-        height: minHeight,
-        child: Center(
+      error: (error, _) => _loadingShell(
+        Center(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(

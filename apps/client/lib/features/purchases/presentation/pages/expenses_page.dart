@@ -4,6 +4,7 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_s
 import 'package:billing_baba/features/purchases/presentation/widgets/expenses_category_tab_content.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/expenses_items_tab_content.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_page_title_bar.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/purchase_section_async_content.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,6 +63,8 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
 
   @override
   Widget build(BuildContext context) {
+    final expensesAsync = ref.watch(expensesPageDataProvider);
+
     ref.listen<String?>(expenseSaveSuccessMessageProvider, (
       previous,
       next,
@@ -84,39 +87,54 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const PurchasePageTitleBar(currentRoute: AppRoutes.purchaseExpenses),
-            const SizedBox(height: AppSpacing.md),
-            TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              labelColor: inventoryTabActiveColor,
-              unselectedLabelColor: AppColors.textSecondary,
-              indicatorColor: inventoryTabActiveColor,
-              indicatorWeight: 3,
-              dividerColor: inventoryCardBorder,
-              labelStyle: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.5,
-              ),
-              tabs: const [
-                Tab(text: 'CATEGORY'),
-                Tab(text: 'ITEMS'),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: const [
-                  ExpensesCategoryTabContent(),
-                  ExpensesItemsTabContent(),
-                ],
+              child: PurchaseSectionAsyncContent(
+                expand: true,
+                value: expensesAsync,
+                onRetry: () {
+                  ref.read(expenseCategoriesProvider.notifier).refresh();
+                  ref.read(expenseTransactionsProvider.notifier).refresh();
+                },
+                builder: (_) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: AppSpacing.md),
+                    TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      labelColor: inventoryTabActiveColor,
+                      unselectedLabelColor: AppColors.textSecondary,
+                      indicatorColor: inventoryTabActiveColor,
+                      indicatorWeight: 3,
+                      dividerColor: inventoryCardBorder,
+                      labelStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5,
+                      ),
+                      tabs: const [
+                        Tab(text: 'CATEGORY'),
+                        Tab(text: 'ITEMS'),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: const [
+                          ExpensesCategoryTabContent(),
+                          ExpensesItemsTabContent(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
