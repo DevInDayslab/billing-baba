@@ -41,30 +41,42 @@ class PurchaseColumnFilterActions {
   const PurchaseColumnFilterActions({
     required this.onDocumentNo,
     required this.onParty,
-    required this.onPaymentType,
-    required this.onAmountRange,
-    required this.onBalanceRange,
+    required this.onTogglePaymentType,
+    required this.onClearPaymentTypes,
+    required this.onApplyAmountFilter,
+    required this.onClearAmountFilter,
+    required this.onApplyBalanceFilter,
+    required this.onClearBalanceFilter,
     required this.onStatus,
-    this.onTotalAmountRange,
-    this.onPaidAmountRange,
+    this.onApplyTotalAmountFilter,
+    this.onClearTotalAmountFilter,
+    this.onApplyPaidAmountFilter,
+    this.onClearPaidAmountFilter,
     this.onCategory,
     this.onType,
-    this.onReceivedPaidRange,
+    this.onApplyReceivedPaidFilter,
+    this.onClearReceivedPaidFilter,
     this.onDateRange,
     this.onDueDateRange,
   });
 
   final ValueChanged<String> onDocumentNo;
   final ValueChanged<String> onParty;
-  final ValueChanged<String> onPaymentType;
-  final void Function({double? min, double? max}) onAmountRange;
-  final void Function({double? min, double? max}) onBalanceRange;
+  final ValueChanged<String> onTogglePaymentType;
+  final VoidCallback onClearPaymentTypes;
+  final ValueChanged<PurchaseNumericFilter> onApplyAmountFilter;
+  final VoidCallback onClearAmountFilter;
+  final ValueChanged<PurchaseNumericFilter> onApplyBalanceFilter;
+  final VoidCallback onClearBalanceFilter;
   final ValueChanged<String> onStatus;
-  final void Function({double? min, double? max})? onTotalAmountRange;
-  final void Function({double? min, double? max})? onPaidAmountRange;
+  final ValueChanged<PurchaseNumericFilter>? onApplyTotalAmountFilter;
+  final VoidCallback? onClearTotalAmountFilter;
+  final ValueChanged<PurchaseNumericFilter>? onApplyPaidAmountFilter;
+  final VoidCallback? onClearPaidAmountFilter;
   final ValueChanged<String>? onCategory;
   final ValueChanged<String>? onType;
-  final void Function({double? min, double? max})? onReceivedPaidRange;
+  final ValueChanged<PurchaseNumericFilter>? onApplyReceivedPaidFilter;
+  final VoidCallback? onClearReceivedPaidFilter;
   final ValueChanged<DateTimeRange>? onDateRange;
   final ValueChanged<DateTimeRange>? onDueDateRange;
 }
@@ -82,21 +94,17 @@ bool purchaseColumnFilterIsActive(
     PurchaseColumnFilterKind.partyName =>
       columns.selectedParty != 'All Parties',
     PurchaseColumnFilterKind.paymentType =>
-      columns.selectedPaymentType != 'All Payment Types',
-    PurchaseColumnFilterKind.amount =>
-      columns.amountMin != null || columns.amountMax != null,
-    PurchaseColumnFilterKind.balanceDue =>
-      columns.balanceMin != null || columns.balanceMax != null,
+      columns.selectedPaymentTypes.isNotEmpty,
+    PurchaseColumnFilterKind.amount => columns.amountFilter != null,
+    PurchaseColumnFilterKind.balanceDue => columns.balanceFilter != null,
     PurchaseColumnFilterKind.status => false,
-    PurchaseColumnFilterKind.totalAmount =>
-      columns.totalAmountMin != null || columns.totalAmountMax != null,
-    PurchaseColumnFilterKind.paidAmount =>
-      columns.paidAmountMin != null || columns.paidAmountMax != null,
+    PurchaseColumnFilterKind.totalAmount => columns.totalAmountFilter != null,
+    PurchaseColumnFilterKind.paidAmount => columns.paidAmountFilter != null,
     PurchaseColumnFilterKind.categoryName =>
       columns.selectedCategory != 'All Categories',
     PurchaseColumnFilterKind.typeName => columns.selectedType != 'All Types',
     PurchaseColumnFilterKind.receivedPaid =>
-      columns.receivedPaidMin != null || columns.receivedPaidMax != null,
+      columns.receivedPaidFilter != null,
   };
 }
 
@@ -113,17 +121,14 @@ Widget purchaseColumnFilterBuildPopup({
   required List<String> partyOptions,
   required List<String> statusOptions,
   required String selectedStatus,
+  required VoidCallback dismiss,
   required VoidCallback dismissAfterSelect,
   String documentNoHint = 'Search',
-  String paymentTypeAllLabel = 'All Payment Types',
   List<String>? paymentTypeOptions,
   List<String>? categoryOptions,
   List<String>? typeOptions,
 }) {
-  final paymentOptions = [
-    paymentTypeAllLabel,
-    ...(paymentTypeOptions ?? SaleDropdownOptions.paymentTypes),
-  ];
+  final paymentOptions = paymentTypeOptions ?? SaleDropdownOptions.paymentTypes;
 
   return switch (kind) {
     PurchaseColumnFilterKind.documentNo => PurchaseColumnTextFilterPanel(
@@ -140,44 +145,83 @@ Widget purchaseColumnFilterBuildPopup({
         dismissAfterSelect();
       },
     ),
-    PurchaseColumnFilterKind.paymentType => PurchaseColumnOptionListPanel(
-      options: paymentOptions,
-      selected: columns.selectedPaymentType,
-      onSelected: (value) {
-        actions.onPaymentType(value);
-        dismissAfterSelect();
+    PurchaseColumnFilterKind.paymentType =>
+      PurchaseColumnPaymentTypeCheckboxPanel(
+        options: paymentOptions,
+        selected: columns.selectedPaymentTypes,
+        onToggle: actions.onTogglePaymentType,
+        onClear: actions.onClearPaymentTypes,
+      ),
+    PurchaseColumnFilterKind.amount => PurchaseColumnAdvancedNumericFilterPanel(
+      valueLabel: 'Amount',
+      initialFilter: columns.amountFilter,
+      onApply: (filter) {
+        actions.onApplyAmountFilter(filter);
+        dismiss();
+      },
+      onClear: () {
+        actions.onClearAmountFilter();
+        dismiss();
       },
     ),
-    PurchaseColumnFilterKind.amount => PurchaseColumnNumericRangePanel(
-      initialMin: columns.amountMin,
-      initialMax: columns.amountMax,
-      onChanged: actions.onAmountRange,
-      onClear: actions.onAmountRange,
-    ),
-    PurchaseColumnFilterKind.balanceDue => PurchaseColumnNumericRangePanel(
-      initialMin: columns.balanceMin,
-      initialMax: columns.balanceMax,
-      onChanged: actions.onBalanceRange,
-      onClear: actions.onBalanceRange,
-    ),
-    PurchaseColumnFilterKind.totalAmount => PurchaseColumnNumericRangePanel(
-      initialMin: columns.totalAmountMin,
-      initialMax: columns.totalAmountMax,
-      onChanged: actions.onTotalAmountRange ?? actions.onAmountRange,
-      onClear: actions.onTotalAmountRange ?? actions.onAmountRange,
-    ),
-    PurchaseColumnFilterKind.paidAmount => PurchaseColumnNumericRangePanel(
-      initialMin: columns.paidAmountMin,
-      initialMax: columns.paidAmountMax,
-      onChanged: actions.onPaidAmountRange ?? actions.onAmountRange,
-      onClear: actions.onPaidAmountRange ?? actions.onAmountRange,
-    ),
-    PurchaseColumnFilterKind.receivedPaid => PurchaseColumnNumericRangePanel(
-      initialMin: columns.receivedPaidMin,
-      initialMax: columns.receivedPaidMax,
-      onChanged: actions.onReceivedPaidRange ?? actions.onAmountRange,
-      onClear: actions.onReceivedPaidRange ?? actions.onAmountRange,
-    ),
+    PurchaseColumnFilterKind.balanceDue =>
+      PurchaseColumnAdvancedNumericFilterPanel(
+        valueLabel: 'Balance Due',
+        initialFilter: columns.balanceFilter,
+        onApply: (filter) {
+          actions.onApplyBalanceFilter(filter);
+          dismiss();
+        },
+        onClear: () {
+          actions.onClearBalanceFilter();
+          dismiss();
+        },
+      ),
+    PurchaseColumnFilterKind.totalAmount =>
+      PurchaseColumnAdvancedNumericFilterPanel(
+        valueLabel: 'Total Amount',
+        initialFilter: columns.totalAmountFilter,
+        onApply: (filter) {
+          (actions.onApplyTotalAmountFilter ?? actions.onApplyAmountFilter)(
+            filter,
+          );
+          dismiss();
+        },
+        onClear: () {
+          (actions.onClearTotalAmountFilter ?? actions.onClearAmountFilter)();
+          dismiss();
+        },
+      ),
+    PurchaseColumnFilterKind.paidAmount =>
+      PurchaseColumnAdvancedNumericFilterPanel(
+        valueLabel: 'Paid',
+        initialFilter: columns.paidAmountFilter,
+        onApply: (filter) {
+          (actions.onApplyPaidAmountFilter ?? actions.onApplyAmountFilter)(
+            filter,
+          );
+          dismiss();
+        },
+        onClear: () {
+          (actions.onClearPaidAmountFilter ?? actions.onClearAmountFilter)();
+          dismiss();
+        },
+      ),
+    PurchaseColumnFilterKind.receivedPaid =>
+      PurchaseColumnAdvancedNumericFilterPanel(
+        valueLabel: 'Received/Paid',
+        initialFilter: columns.receivedPaidFilter,
+        onApply: (filter) {
+          (actions.onApplyReceivedPaidFilter ?? actions.onApplyAmountFilter)(
+            filter,
+          );
+          dismiss();
+        },
+        onClear: () {
+          (actions.onClearReceivedPaidFilter ?? actions.onClearAmountFilter)();
+          dismiss();
+        },
+      ),
     PurchaseColumnFilterKind.status => PurchaseColumnOptionListPanel(
       options: statusOptions,
       selected: selectedStatus,
@@ -220,7 +264,7 @@ PurchaseColumnFilterCell purchaseColumnFilterCell({
   required String selectedStatus,
   double? width,
   Alignment alignment = Alignment.centerLeft,
-  double gapAfter = 12,
+  double gapAfter = 0,
   String documentNoHint = 'Search',
   List<String>? paymentTypeOptions,
   List<String>? categoryOptions,
@@ -244,19 +288,21 @@ PurchaseColumnFilterCell purchaseColumnFilterCell({
       PurchaseColumnFilterKind.dueDate => actions.onDueDateRange,
       _ => null,
     },
-    buildPopupContent: (_, dismissAfterSelect) => purchaseColumnFilterBuildPopup(
-      kind: kind,
-      columns: columns,
-      actions: actions,
-      partyOptions: partyOptions,
-      statusOptions: statusOptions,
-      selectedStatus: selectedStatus,
-      dismissAfterSelect: dismissAfterSelect,
-      documentNoHint: documentNoHint,
-      paymentTypeOptions: paymentTypeOptions,
-      categoryOptions: categoryOptions,
-      typeOptions: typeOptions,
-    ),
+    buildPopupContent: (dismiss, dismissAfterSelect) =>
+        purchaseColumnFilterBuildPopup(
+          kind: kind,
+          columns: columns,
+          actions: actions,
+          partyOptions: partyOptions,
+          statusOptions: statusOptions,
+          selectedStatus: selectedStatus,
+          dismiss: dismiss,
+          dismissAfterSelect: dismissAfterSelect,
+          documentNoHint: documentNoHint,
+          paymentTypeOptions: paymentTypeOptions,
+          categoryOptions: categoryOptions,
+          typeOptions: typeOptions,
+        ),
   );
 }
 

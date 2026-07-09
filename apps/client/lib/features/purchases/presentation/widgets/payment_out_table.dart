@@ -5,31 +5,22 @@ import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/payment_out_status_badge.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_cell.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_transaction_table_layout.dart';
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-const _cardBorder = Color(0xFFE0E0E0);
 const _emptyStateRed = Color(0xFFD32F2F);
 
-const _dateColWidth = 140.0;
-const _refColWidth = 140.0;
-const _paymentColWidth = 130.0;
-const _statusColWidth = 80.0;
-const _amountColWidth = 140.0;
-const _actionsColWidth = 80.0;
-const _colGap = 12.0;
-
 const double _minTableWidth =
-    _dateColWidth +
-    _refColWidth +
-    _paymentColWidth +
-    _statusColWidth +
-    _amountColWidth * 2 +
-    _actionsColWidth +
-    _colGap * 6 +
-    160;
+    purchaseTransactionDateColWidth +
+    purchaseTransactionRefColWidth +
+    purchaseTransactionPartyColMinWidth +
+    purchaseTransactionAmountColWidth * 2 +
+    purchaseTransactionPaymentColWidth +
+    purchaseTransactionStatusColWidth +
+    purchaseTransactionActionsColWidth2;
 
 class PaymentOutTable extends ConsumerWidget {
   const PaymentOutTable({super.key});
@@ -53,7 +44,7 @@ class PaymentOutTable extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: purchaseTransactionTableCardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -105,7 +96,7 @@ class PaymentOutTable extends ConsumerWidget {
               ],
             ),
           ),
-          const Divider(height: 1, color: _cardBorder),
+          const Divider(height: 1, color: purchaseTransactionTableCardBorder),
           if (paginated.items.isEmpty)
             const _EmptyState()
           else
@@ -124,11 +115,8 @@ class PaymentOutTable extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const _TableHeaderRow(),
-                        for (var i = 0; i < paginated.items.length; i++) ...[
-                          if (i > 0)
-                            const Divider(height: 1, color: _cardBorder),
-                          _buildRow(context, ref, paginated.items[i]),
-                        ],
+                        for (final record in paginated.items)
+                          _buildRow(context, ref, record),
                       ],
                     ),
                   ),
@@ -136,7 +124,7 @@ class PaymentOutTable extends ConsumerWidget {
               },
             ),
           if (paginated.totalPages > 1) ...[
-            const Divider(height: 1, color: _cardBorder),
+            const Divider(height: 1, color: purchaseTransactionTableCardBorder),
             _PaginationRow(
               currentPage: paginated.currentPage,
               totalPages: paginated.totalPages,
@@ -152,18 +140,19 @@ class PaymentOutTable extends ConsumerWidget {
     WidgetRef ref,
     PaymentOutModel record,
   ) {
-    return _TableDataRow(
+    return PurchaseTransactionTableDataRow(
       children: [
-        _TableCell(
-          width: _dateColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionDateColWidth,
           child: Text(_dateFormat.format(record.date)),
         ),
-        _TableCell(
-          width: _refColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionRefColWidth,
           child: Text(record.receiptNo),
         ),
         Expanded(
-          child: _TableCell(
+          flex: purchaseTransactionPartyColFlex,
+          child: PurchaseTransactionTableCell(
             child: Text(
               record.partyName,
               maxLines: 1,
@@ -171,41 +160,45 @@ class PaymentOutTable extends ConsumerWidget {
             ),
           ),
         ),
-        _TableCell(
-          width: _amountColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionAmountColWidth,
           alignment: Alignment.centerRight,
           child: Text(
             _currencyFormat.format(record.totalAmount),
+            style: purchaseTransactionAmountTextStyle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        _TableCell(
-          width: _amountColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionAmountColWidth,
           alignment: Alignment.centerRight,
           child: Text(
             _currencyFormat.format(record.paidAmount),
+            style: purchaseTransactionAmountTextStyle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        _TableCell(
-          width: _paymentColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionPaymentColWidth,
           child: Text(
             record.paymentType,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        _TableCell(
-          width: _statusColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionStatusColWidth,
           child: PaymentOutStatusBadge(status: record.status),
         ),
-        _TableCell(
-          width: _actionsColWidth,
-          gapAfter: 0,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionActionsColWidth2,
+          showDivider: false,
+          alignment: Alignment.center,
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
                 onPressed: () => VoucherPrintActions.previewPaymentOut(
@@ -217,7 +210,7 @@ class PaymentOutTable extends ConsumerWidget {
                 icon: const Icon(Icons.print_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 tooltip: 'Print / Preview',
               ),
               IconButton(
@@ -230,7 +223,7 @@ class PaymentOutTable extends ConsumerWidget {
                 icon: const Icon(Icons.share_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 tooltip: 'Share',
               ),
             ],
@@ -352,12 +345,6 @@ class _PaymentOutSearchFieldState extends ConsumerState<_PaymentOutSearchField> 
 class _TableHeaderRow extends ConsumerWidget {
   const _TableHeaderRow();
 
-  static const _headerStyle = TextStyle(
-    fontSize: 13,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textSecondary,
-  );
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(paymentOutFiltersProvider);
@@ -368,27 +355,28 @@ class _TableHeaderRow extends ConsumerWidget {
     final actions = PurchaseColumnFilterActions(
       onDocumentNo: filtersNotifier.setDocumentNoFilter,
       onParty: filtersNotifier.setParty,
-      onPaymentType: filtersNotifier.setPaymentType,
-      onAmountRange: ({min, max}) {},
-      onBalanceRange: ({min, max}) {},
+      onTogglePaymentType: filtersNotifier.togglePaymentType,
+      onClearPaymentTypes: filtersNotifier.clearPaymentTypes,
+      onApplyAmountFilter: filtersNotifier.applyAmountFilter,
+      onClearAmountFilter: filtersNotifier.clearAmountFilter,
+      onApplyBalanceFilter: filtersNotifier.applyBalanceFilter,
+      onClearBalanceFilter: filtersNotifier.clearBalanceFilter,
       onStatus: filtersNotifier.setStatus,
-      onTotalAmountRange: filtersNotifier.setTotalAmountRange,
-      onPaidAmountRange: filtersNotifier.setPaidAmountRange,
+      onApplyTotalAmountFilter: filtersNotifier.applyTotalAmountFilter,
+      onClearTotalAmountFilter: filtersNotifier.clearTotalAmountFilter,
+      onApplyPaidAmountFilter: filtersNotifier.applyPaidAmountFilter,
+      onClearPaidAmountFilter: filtersNotifier.clearPaidAmountFilter,
       onDateRange: filtersNotifier.setColumnDateRange,
     );
 
-    return Container(
-      color: AppColors.background,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          purchaseColumnFilterCell(
+    return PurchaseTransactionTableHeaderRow(
+      children: [
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionDateColWidth,
+          child: purchaseColumnFilterCell(
             label: 'Date',
             kind: PurchaseColumnFilterKind.date,
-            headerStyle: _headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.date,
               columns,
@@ -398,13 +386,14 @@ class _TableHeaderRow extends ConsumerWidget {
             partyOptions: partyOptions,
             statusOptions: paymentOutStatusOptions,
             selectedStatus: filters.selectedStatus,
-            width: _dateColWidth,
-            gapAfter: _colGap,
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionRefColWidth,
+          child: purchaseColumnFilterCell(
             label: 'Ref. no.',
             kind: PurchaseColumnFilterKind.documentNo,
-            headerStyle: _headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.documentNo,
               columns,
@@ -414,15 +403,16 @@ class _TableHeaderRow extends ConsumerWidget {
             partyOptions: partyOptions,
             statusOptions: paymentOutStatusOptions,
             selectedStatus: filters.selectedStatus,
-            width: _refColWidth,
-            gapAfter: _colGap,
             documentNoHint: 'Search ref no',
           ),
-          Expanded(
+        ),
+        Expanded(
+          flex: purchaseTransactionPartyColFlex,
+          child: PurchaseTransactionTableCell(
             child: purchaseColumnFilterCell(
               label: 'Party Name',
               kind: PurchaseColumnFilterKind.partyName,
-              headerStyle: _headerStyle,
+              headerStyle: purchaseTransactionTableHeaderStyle,
               isActive: purchaseColumnFilterIsActive(
                 PurchaseColumnFilterKind.partyName,
                 columns,
@@ -432,13 +422,16 @@ class _TableHeaderRow extends ConsumerWidget {
               partyOptions: partyOptions,
               statusOptions: paymentOutStatusOptions,
               selectedStatus: filters.selectedStatus,
-              gapAfter: _colGap,
             ),
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionAmountColWidth,
+          alignment: Alignment.centerRight,
+          child: purchaseColumnFilterCell(
             label: 'Total Amount',
             kind: PurchaseColumnFilterKind.totalAmount,
-            headerStyle: _headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.totalAmount,
               columns,
@@ -448,14 +441,16 @@ class _TableHeaderRow extends ConsumerWidget {
             partyOptions: partyOptions,
             statusOptions: paymentOutStatusOptions,
             selectedStatus: filters.selectedStatus,
-            width: _amountColWidth,
             alignment: Alignment.centerRight,
-            gapAfter: _colGap,
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionAmountColWidth,
+          alignment: Alignment.centerRight,
+          child: purchaseColumnFilterCell(
             label: 'Paid',
             kind: PurchaseColumnFilterKind.paidAmount,
-            headerStyle: _headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.paidAmount,
               columns,
@@ -465,14 +460,15 @@ class _TableHeaderRow extends ConsumerWidget {
             partyOptions: partyOptions,
             statusOptions: paymentOutStatusOptions,
             selectedStatus: filters.selectedStatus,
-            width: _amountColWidth,
             alignment: Alignment.centerRight,
-            gapAfter: _colGap,
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionPaymentColWidth,
+          child: purchaseColumnFilterCell(
             label: 'Payment Type',
             kind: PurchaseColumnFilterKind.paymentType,
-            headerStyle: _headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.paymentType,
               columns,
@@ -483,90 +479,30 @@ class _TableHeaderRow extends ConsumerWidget {
             statusOptions: paymentOutStatusOptions,
             selectedStatus: filters.selectedStatus,
             paymentTypeOptions: PaymentOutDropdownOptions.paymentTypes,
-            width: _paymentColWidth,
-            gapAfter: _colGap,
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionStatusColWidth,
+          child: purchaseColumnFilterCell(
             label: 'Status',
             kind: PurchaseColumnFilterKind.status,
-            headerStyle: _headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnStatusFilterIsActive(filters.selectedStatus),
             columns: columns,
             actions: actions,
             partyOptions: partyOptions,
             statusOptions: paymentOutStatusOptions,
             selectedStatus: filters.selectedStatus,
-            width: _statusColWidth,
-            gapAfter: _colGap,
           ),
-          const _TableCell(
-            width: _actionsColWidth,
-            gapAfter: 0,
-            child: Text('Actions', style: _headerStyle),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TableDataRow extends StatelessWidget {
-  const _TableDataRow({required this.children});
-
-  final List<Widget> children;
-
-  static const _dataStyle = TextStyle(
-    fontSize: 13,
-    color: AppColors.textPrimary,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: _dataStyle,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
         ),
-        child: Row(children: children),
-      ),
-    );
-  }
-}
-
-class _TableCell extends StatelessWidget {
-  const _TableCell({
-    required this.child,
-    this.width,
-    this.alignment = Alignment.centerLeft,
-    this.gapAfter = _colGap,
-  });
-
-  final Widget child;
-  final double? width;
-  final Alignment alignment;
-  final double gapAfter;
-
-  @override
-  Widget build(BuildContext context) {
-    final content = Align(
-      alignment: alignment,
-      widthFactor: 1,
-      child: child,
-    );
-
-    if (width != null) {
-      return Padding(
-        padding: EdgeInsets.only(right: gapAfter),
-        child: SizedBox(
-          width: width,
-          child: ClipRect(child: content),
+        const PurchaseTransactionTableCell(
+          width: purchaseTransactionActionsColWidth2,
+          showDivider: false,
+          alignment: Alignment.center,
+          child: Text('Actions', style: purchaseTransactionTableHeaderStyle),
         ),
-      );
-    }
-
-    return ClipRect(child: content);
+      ],
+    );
   }
 }
 
@@ -660,7 +596,7 @@ class _PageNumber extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFFEEEEEE) : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.sm),
-          border: isActive ? null : Border.all(color: _cardBorder),
+          border: isActive ? null : Border.all(color: purchaseTransactionTableCardBorder),
         ),
         child: Text(
           '$page',

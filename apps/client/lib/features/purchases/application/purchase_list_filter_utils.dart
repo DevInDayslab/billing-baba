@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';DateTime purchaseFilterStartOfDay(DateTime date) =>
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+DateTime purchaseFilterStartOfDay(DateTime date) =>
     DateTime(date.year, date.month, date.day);
 
 bool purchaseFilterIsWithinDateRange(DateTime value, DateTimeRange range) {
@@ -34,6 +36,11 @@ bool purchaseFilterMatchesOption(String selected, String allLabel, String value)
   return value == selected;
 }
 
+bool purchaseFilterMatchesPaymentTypes(Set<String> selected, String value) {
+  if (selected.isEmpty) return true;
+  return selected.contains(value);
+}
+
 bool purchaseFilterMatchesNumericRange(
   double value, {
   double? min,
@@ -42,6 +49,40 @@ bool purchaseFilterMatchesNumericRange(
   if (min != null && value < min) return false;
   if (max != null && value > max) return false;
   return true;
+}
+
+enum PurchaseNumericFilterOperator {
+  equalTo('Equal To'),
+  lessThan('Less Than'),
+  greaterThan('Greater Than');
+
+  const PurchaseNumericFilterOperator(this.label);
+
+  final String label;
+}
+
+class PurchaseNumericFilter {
+  const PurchaseNumericFilter({
+    required this.operator,
+    required this.value,
+  });
+
+  final PurchaseNumericFilterOperator operator;
+  final double value;
+
+  bool matches(double amount) => switch (operator) {
+    PurchaseNumericFilterOperator.equalTo => amount == value,
+    PurchaseNumericFilterOperator.lessThan => amount < value,
+    PurchaseNumericFilterOperator.greaterThan => amount > value,
+  };
+}
+
+bool purchaseFilterMatchesNumericFilter(
+  double value,
+  PurchaseNumericFilter? filter,
+) {
+  if (filter == null) return true;
+  return filter.matches(value);
 }
 
 class PurchaseListPageSlice<T> {
@@ -104,84 +145,65 @@ class PurchaseColumnFilterFields {
     this.columnDateRange,
     this.documentNoFilter = '',
     this.selectedParty = 'All Parties',
-    this.selectedPaymentType = 'All Payment Types',
-    this.amountMin,
-    this.amountMax,
-    this.balanceMin,
-    this.balanceMax,
+    this.selectedPaymentTypes = const {},
+    this.amountFilter,
+    this.balanceFilter,
     this.dueDateRange,
-    this.totalAmountMin,
-    this.totalAmountMax,
-    this.paidAmountMin,
-    this.paidAmountMax,
+    this.totalAmountFilter,
+    this.paidAmountFilter,
     this.selectedCategory = 'All Categories',
     this.selectedType = 'All Types',
-    this.receivedPaidMin,
-    this.receivedPaidMax,
+    this.receivedPaidFilter,
   });
 
   final DateTimeRange? columnDateRange;
   final String documentNoFilter;
   final String selectedParty;
-  final String selectedPaymentType;
-  final double? amountMin;
-  final double? amountMax;
-  final double? balanceMin;
-  final double? balanceMax;
+  final Set<String> selectedPaymentTypes;
+  final PurchaseNumericFilter? amountFilter;
+  final PurchaseNumericFilter? balanceFilter;
   final DateTimeRange? dueDateRange;
-  final double? totalAmountMin;
-  final double? totalAmountMax;
-  final double? paidAmountMin;
-  final double? paidAmountMax;
+  final PurchaseNumericFilter? totalAmountFilter;
+  final PurchaseNumericFilter? paidAmountFilter;
   final String selectedCategory;
   final String selectedType;
-  final double? receivedPaidMin;
-  final double? receivedPaidMax;
+  final PurchaseNumericFilter? receivedPaidFilter;
 
   bool get hasColumnFilters =>
       columnDateRange != null ||
       documentNoFilter.trim().isNotEmpty ||
       selectedParty != 'All Parties' ||
-      selectedPaymentType != 'All Payment Types' ||
-      amountMin != null ||
-      amountMax != null ||
-      balanceMin != null ||
-      balanceMax != null ||
+      selectedPaymentTypes.isNotEmpty ||
+      amountFilter != null ||
+      balanceFilter != null ||
       dueDateRange != null ||
-      totalAmountMin != null ||
-      totalAmountMax != null ||
-      paidAmountMin != null ||
-      paidAmountMax != null ||
+      totalAmountFilter != null ||
+      paidAmountFilter != null ||
       selectedCategory != 'All Categories' ||
       selectedType != 'All Types' ||
-      receivedPaidMin != null ||
-      receivedPaidMax != null;
+      receivedPaidFilter != null;
 
   PurchaseColumnFilterFields copyWith({
     DateTimeRange? columnDateRange,
     bool clearColumnDateRange = false,
     String? documentNoFilter,
     String? selectedParty,
-    String? selectedPaymentType,
-    double? amountMin,
-    double? amountMax,
-    bool clearAmountRange = false,
-    double? balanceMin,
-    double? balanceMax,
-    bool clearBalanceRange = false,
+    Set<String>? selectedPaymentTypes,
+    bool clearPaymentTypes = false,
+    PurchaseNumericFilter? amountFilter,
+    bool clearAmountFilter = false,
+    PurchaseNumericFilter? balanceFilter,
+    bool clearBalanceFilter = false,
     DateTimeRange? dueDateRange,
     bool clearDueDateRange = false,
-    double? totalAmountMin,
-    double? totalAmountMax,
-    bool clearTotalAmountRange = false,
-    double? paidAmountMin,
-    double? paidAmountMax,
-    bool clearPaidAmountRange = false,
+    PurchaseNumericFilter? totalAmountFilter,
+    bool clearTotalAmountFilter = false,
+    PurchaseNumericFilter? paidAmountFilter,
+    bool clearPaidAmountFilter = false,
     String? selectedCategory,
     String? selectedType,
-    double? receivedPaidMin,
-    double? receivedPaidMax,
-    bool clearReceivedPaidRange = false,
+    PurchaseNumericFilter? receivedPaidFilter,
+    bool clearReceivedPaidFilter = false,
   }) {
     return PurchaseColumnFilterFields(
       columnDateRange: clearColumnDateRange
@@ -189,34 +211,27 @@ class PurchaseColumnFilterFields {
           : (columnDateRange ?? this.columnDateRange),
       documentNoFilter: documentNoFilter ?? this.documentNoFilter,
       selectedParty: selectedParty ?? this.selectedParty,
-      selectedPaymentType: selectedPaymentType ?? this.selectedPaymentType,
-      amountMin: clearAmountRange ? null : (amountMin ?? this.amountMin),
-      amountMax: clearAmountRange ? null : (amountMax ?? this.amountMax),
-      balanceMin: clearBalanceRange ? null : (balanceMin ?? this.balanceMin),
-      balanceMax: clearBalanceRange ? null : (balanceMax ?? this.balanceMax),
+      selectedPaymentTypes: clearPaymentTypes
+          ? const {}
+          : (selectedPaymentTypes ?? this.selectedPaymentTypes),
+      amountFilter:
+          clearAmountFilter ? null : (amountFilter ?? this.amountFilter),
+      balanceFilter:
+          clearBalanceFilter ? null : (balanceFilter ?? this.balanceFilter),
       dueDateRange: clearDueDateRange
           ? null
           : (dueDateRange ?? this.dueDateRange),
-      totalAmountMin: clearTotalAmountRange
+      totalAmountFilter: clearTotalAmountFilter
           ? null
-          : (totalAmountMin ?? this.totalAmountMin),
-      totalAmountMax: clearTotalAmountRange
+          : (totalAmountFilter ?? this.totalAmountFilter),
+      paidAmountFilter: clearPaidAmountFilter
           ? null
-          : (totalAmountMax ?? this.totalAmountMax),
-      paidAmountMin: clearPaidAmountRange
-          ? null
-          : (paidAmountMin ?? this.paidAmountMin),
-      paidAmountMax: clearPaidAmountRange
-          ? null
-          : (paidAmountMax ?? this.paidAmountMax),
+          : (paidAmountFilter ?? this.paidAmountFilter),
       selectedCategory: selectedCategory ?? this.selectedCategory,
       selectedType: selectedType ?? this.selectedType,
-      receivedPaidMin: clearReceivedPaidRange
+      receivedPaidFilter: clearReceivedPaidFilter
           ? null
-          : (receivedPaidMin ?? this.receivedPaidMin),
-      receivedPaidMax: clearReceivedPaidRange
-          ? null
-          : (receivedPaidMax ?? this.receivedPaidMax),
+          : (receivedPaidFilter ?? this.receivedPaidFilter),
     );
   }
 }

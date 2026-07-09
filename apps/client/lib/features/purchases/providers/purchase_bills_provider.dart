@@ -13,6 +13,32 @@ part 'purchase_bills_provider.g.dart';
 
 const purchaseBillsPageSize = 10;
 
+enum PurchaseBillNumericFilterOperator {
+  equalTo('Equal To'),
+  lessThan('Less Than'),
+  greaterThan('Greater Than');
+
+  const PurchaseBillNumericFilterOperator(this.label);
+
+  final String label;
+}
+
+class PurchaseBillNumericFilter {
+  const PurchaseBillNumericFilter({
+    required this.operator,
+    required this.value,
+  });
+
+  final PurchaseBillNumericFilterOperator operator;
+  final double value;
+
+  bool matches(double amount) => switch (operator) {
+    PurchaseBillNumericFilterOperator.equalTo => amount == value,
+    PurchaseBillNumericFilterOperator.lessThan => amount < value,
+    PurchaseBillNumericFilterOperator.greaterThan => amount > value,
+  };
+}
+
 class PurchaseBillFiltersState {
   const PurchaseBillFiltersState({
     this.timeRangeOption = TimeRangeOption.thisMonth,
@@ -24,11 +50,9 @@ class PurchaseBillFiltersState {
     this.columnDateRange,
     this.invoiceNoFilter = '',
     this.selectedParty = 'All Parties',
-    this.selectedPaymentType = 'All Payment Types',
-    this.amountMin,
-    this.amountMax,
-    this.balanceMin,
-    this.balanceMax,
+    this.selectedPaymentTypes = const {},
+    this.amountFilter,
+    this.balanceFilter,
     this.dueDateRange,
   });
 
@@ -41,11 +65,9 @@ class PurchaseBillFiltersState {
   final DateTimeRange? columnDateRange;
   final String invoiceNoFilter;
   final String selectedParty;
-  final String selectedPaymentType;
-  final double? amountMin;
-  final double? amountMax;
-  final double? balanceMin;
-  final double? balanceMax;
+  final Set<String> selectedPaymentTypes;
+  final PurchaseBillNumericFilter? amountFilter;
+  final PurchaseBillNumericFilter? balanceFilter;
   final DateTimeRange? dueDateRange;
 
   String get timeRangeLabel => timeRangeOption.label;
@@ -59,11 +81,9 @@ class PurchaseBillFiltersState {
       columnDateRange != null ||
       invoiceNoFilter.trim().isNotEmpty ||
       selectedParty != 'All Parties' ||
-      selectedPaymentType != 'All Payment Types' ||
-      amountMin != null ||
-      amountMax != null ||
-      balanceMin != null ||
-      balanceMax != null ||
+      selectedPaymentTypes.isNotEmpty ||
+      amountFilter != null ||
+      balanceFilter != null ||
       dueDateRange != null;
 
   PurchaseBillFiltersState copyWith({
@@ -78,13 +98,12 @@ class PurchaseBillFiltersState {
     bool clearColumnDateRange = false,
     String? invoiceNoFilter,
     String? selectedParty,
-    String? selectedPaymentType,
-    double? amountMin,
-    double? amountMax,
-    bool clearAmountRange = false,
-    double? balanceMin,
-    double? balanceMax,
-    bool clearBalanceRange = false,
+    Set<String>? selectedPaymentTypes,
+    bool clearPaymentTypes = false,
+    PurchaseBillNumericFilter? amountFilter,
+    bool clearAmountFilter = false,
+    PurchaseBillNumericFilter? balanceFilter,
+    bool clearBalanceFilter = false,
     DateTimeRange? dueDateRange,
     bool clearDueDateRange = false,
   }) {
@@ -102,11 +121,12 @@ class PurchaseBillFiltersState {
           : (columnDateRange ?? this.columnDateRange),
       invoiceNoFilter: invoiceNoFilter ?? this.invoiceNoFilter,
       selectedParty: selectedParty ?? this.selectedParty,
-      selectedPaymentType: selectedPaymentType ?? this.selectedPaymentType,
-      amountMin: clearAmountRange ? null : (amountMin ?? this.amountMin),
-      amountMax: clearAmountRange ? null : (amountMax ?? this.amountMax),
-      balanceMin: clearBalanceRange ? null : (balanceMin ?? this.balanceMin),
-      balanceMax: clearBalanceRange ? null : (balanceMax ?? this.balanceMax),
+      selectedPaymentTypes: clearPaymentTypes
+          ? const {}
+          : (selectedPaymentTypes ?? this.selectedPaymentTypes),
+      amountFilter: clearAmountFilter ? null : (amountFilter ?? this.amountFilter),
+      balanceFilter:
+          clearBalanceFilter ? null : (balanceFilter ?? this.balanceFilter),
       dueDateRange: clearDueDateRange
           ? null
           : (dueDateRange ?? this.dueDateRange),
@@ -234,22 +254,18 @@ List<PurchaseBillModel> _applyFilters(
       return false;
     }
 
-    if (filters.selectedPaymentType != 'All Payment Types' &&
-        bill.paymentType != filters.selectedPaymentType) {
+    if (filters.selectedPaymentTypes.isNotEmpty &&
+        !filters.selectedPaymentTypes.contains(bill.paymentType)) {
       return false;
     }
 
-    if (filters.amountMin != null && bill.amount < filters.amountMin!) {
-      return false;
-    }
-    if (filters.amountMax != null && bill.amount > filters.amountMax!) {
+    if (filters.amountFilter != null &&
+        !filters.amountFilter!.matches(bill.amount)) {
       return false;
     }
 
-    if (filters.balanceMin != null && bill.balanceDue < filters.balanceMin!) {
-      return false;
-    }
-    if (filters.balanceMax != null && bill.balanceDue > filters.balanceMax!) {
+    if (filters.balanceFilter != null &&
+        !filters.balanceFilter!.matches(bill.balanceDue)) {
       return false;
     }
 
@@ -514,56 +530,34 @@ class PurchaseBillFilters extends _$PurchaseBillFilters {
     state = state.copyWith(selectedParty: party, currentPage: 1);
   }
 
-  void setPaymentType(String paymentType) {
-    state = state.copyWith(selectedPaymentType: paymentType, currentPage: 1);
+  void togglePaymentType(String paymentType) {
+    final updated = Set<String>.from(state.selectedPaymentTypes);
+    if (updated.contains(paymentType)) {
+      updated.remove(paymentType);
+    } else {
+      updated.add(paymentType);
+    }
+    state = state.copyWith(selectedPaymentTypes: updated, currentPage: 1);
   }
 
-  void setAmountRange({double? min, double? max}) {
-    if (min == null && max == null) {
-      state = state.copyWith(clearAmountRange: true, currentPage: 1);
-      return;
-    }
-    state = PurchaseBillFiltersState(
-      timeRangeOption: state.timeRangeOption,
-      customDateRange: state.customDateRange,
-      selectedFirm: state.selectedFirm,
-      selectedUser: state.selectedUser,
-      selectedStatus: state.selectedStatus,
-      currentPage: 1,
-      columnDateRange: state.columnDateRange,
-      invoiceNoFilter: state.invoiceNoFilter,
-      selectedParty: state.selectedParty,
-      selectedPaymentType: state.selectedPaymentType,
-      amountMin: min,
-      amountMax: max,
-      balanceMin: state.balanceMin,
-      balanceMax: state.balanceMax,
-      dueDateRange: state.dueDateRange,
-    );
+  void clearPaymentTypes() {
+    state = state.copyWith(clearPaymentTypes: true, currentPage: 1);
   }
 
-  void setBalanceRange({double? min, double? max}) {
-    if (min == null && max == null) {
-      state = state.copyWith(clearBalanceRange: true, currentPage: 1);
-      return;
-    }
-    state = PurchaseBillFiltersState(
-      timeRangeOption: state.timeRangeOption,
-      customDateRange: state.customDateRange,
-      selectedFirm: state.selectedFirm,
-      selectedUser: state.selectedUser,
-      selectedStatus: state.selectedStatus,
-      currentPage: 1,
-      columnDateRange: state.columnDateRange,
-      invoiceNoFilter: state.invoiceNoFilter,
-      selectedParty: state.selectedParty,
-      selectedPaymentType: state.selectedPaymentType,
-      amountMin: state.amountMin,
-      amountMax: state.amountMax,
-      balanceMin: min,
-      balanceMax: max,
-      dueDateRange: state.dueDateRange,
-    );
+  void applyAmountFilter(PurchaseBillNumericFilter filter) {
+    state = state.copyWith(amountFilter: filter, currentPage: 1);
+  }
+
+  void clearAmountFilter() {
+    state = state.copyWith(clearAmountFilter: true, currentPage: 1);
+  }
+
+  void applyBalanceFilter(PurchaseBillNumericFilter filter) {
+    state = state.copyWith(balanceFilter: filter, currentPage: 1);
+  }
+
+  void clearBalanceFilter() {
+    state = state.copyWith(clearBalanceFilter: true, currentPage: 1);
   }
 
   void setDueDateRange(DateTimeRange range) {

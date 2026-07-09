@@ -191,18 +191,16 @@ List<PurchaseOrderModel> _applyFilters(
       return false;
     }
 
-    if (!purchaseFilterMatchesNumericRange(
+    if (!purchaseFilterMatchesNumericFilter(
       order.amount,
-      min: columns.amountMin,
-      max: columns.amountMax,
+      columns.amountFilter,
     )) {
       return false;
     }
 
-    if (!purchaseFilterMatchesNumericRange(
+    if (!purchaseFilterMatchesNumericFilter(
       order.balanceDue,
-      min: columns.balanceMin,
-      max: columns.balanceMax,
+      columns.balanceFilter,
     )) {
       return false;
     }
@@ -473,23 +471,37 @@ class PurchaseOrderFilters extends _$PurchaseOrderFilters {
     );
   }
 
-  void setAmountRange({double? min, double? max}) {
+  void applyAmountFilter(PurchaseNumericFilter filter) {
     state = state.copyWith(
-      columnFilters: min == null && max == null
-          ? state.columnFilters.copyWith(clearAmountRange: true)
-          : state.columnFilters.copyWith(amountMin: min, amountMax: max),
+      columnFilters: state.columnFilters.copyWith(amountFilter: filter),
       currentPage: 1,
     );
   }
 
-  void setBalanceRange({double? min, double? max}) {
+  void clearAmountFilter() {
     state = state.copyWith(
-      columnFilters: min == null && max == null
-          ? state.columnFilters.copyWith(clearBalanceRange: true)
-          : state.columnFilters.copyWith(balanceMin: min, balanceMax: max),
+      columnFilters: state.columnFilters.copyWith(clearAmountFilter: true),
       currentPage: 1,
     );
   }
+
+  void applyBalanceFilter(PurchaseNumericFilter filter) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(balanceFilter: filter),
+      currentPage: 1,
+    );
+  }
+
+  void clearBalanceFilter() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearBalanceFilter: true),
+      currentPage: 1,
+    );
+  }
+
+  void togglePaymentType(String paymentType) {}
+
+  void clearPaymentTypes() {}
 
   void setDueDateRange(DateTimeRange range) {
     state = state.copyWith(

@@ -1,11 +1,25 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/filter_icon.dart';
+import 'package:billing_baba/features/purchases/application/purchase_list_filter_utils.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 const purchaseColumnFilterPopupMinWidth = 200.0;
-const purchaseColumnFilterPopupMaxHeight = 320.0;
+const purchaseColumnFilterNumericPopupMinWidth = 280.0;
+const purchaseColumnFilterPopupMaxHeight = 360.0;
 const purchaseColumnFilterPopupOffset = Offset(0, 4);
+
+bool purchaseColumnFilterKindIsNumeric(PurchaseColumnFilterKind kind) =>
+    switch (kind) {
+      PurchaseColumnFilterKind.amount ||
+      PurchaseColumnFilterKind.balanceDue ||
+      PurchaseColumnFilterKind.totalAmount ||
+      PurchaseColumnFilterKind.paidAmount ||
+      PurchaseColumnFilterKind.receivedPaid =>
+        true,
+      _ => false,
+    };
 
 enum PurchaseColumnFilterKind {
   date,
@@ -93,8 +107,12 @@ class _PurchaseColumnFilterCellState extends State<PurchaseColumnFilterCell> {
     final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null || !renderBox.hasSize) return;
 
-    final menuWidth = renderBox.size.width < purchaseColumnFilterPopupMinWidth
-        ? purchaseColumnFilterPopupMinWidth
+    final isNumericFilter = purchaseColumnFilterKindIsNumeric(widget.kind);
+    final minWidth = isNumericFilter
+        ? purchaseColumnFilterNumericPopupMinWidth
+        : purchaseColumnFilterPopupMinWidth;
+    final menuWidth = renderBox.size.width < minWidth
+        ? minWidth
         : renderBox.size.width;
     final overlay = Overlay.of(context);
 
@@ -114,11 +132,12 @@ class _PurchaseColumnFilterCellState extends State<PurchaseColumnFilterCell> {
               targetAnchor: Alignment.bottomLeft,
               offset: purchaseColumnFilterPopupOffset,
               child: Material(
-                elevation: 4,
-                shadowColor: Colors.black26,
+                elevation: 8,
+                shadowColor: Colors.black.withValues(alpha: 0.12),
                 color: AppColors.surface,
                 borderRadius: AppRadius.mdBorder,
-                clipBehavior: Clip.antiAlias,
+                clipBehavior:
+                    isNumericFilter ? Clip.none : Clip.antiAlias,
                 child: SizedBox(
                   width: menuWidth,
                   child: ConstrainedBox(
@@ -147,17 +166,16 @@ class _PurchaseColumnFilterCellState extends State<PurchaseColumnFilterCell> {
         ? AppColors.textPrimary
         : AppColors.textSecondary.withValues(alpha: 0.7);
 
-    final trigger = Align(
-      alignment: widget.alignment,
-      child: InkWell(
-        onTap: _onFilterTap,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
+    final trigger = InkWell(
+      onTap: _onFilterTap,
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            Expanded(
+              child: Align(
+                alignment: widget.alignment,
                 child: Text(
                   widget.label,
                   style: widget.headerStyle.copyWith(
@@ -168,10 +186,9 @@ class _PurchaseColumnFilterCellState extends State<PurchaseColumnFilterCell> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: 4),
-              Icon(Icons.filter_list, size: 14, color: filterColor),
-            ],
-          ),
+            ),
+            AppFilterIcon(color: filterColor),
+          ],
         ),
       ),
     );
@@ -192,21 +209,17 @@ class _PurchaseColumnFilterCellState extends State<PurchaseColumnFilterCell> {
     }
 
     final content = ClipRect(
-      child: Align(
-        alignment: widget.alignment,
-        widthFactor: 1,
+      child: SizedBox(
+        width: double.infinity,
         child: cellChild,
       ),
     );
 
     if (widget.width != null) {
-      return Padding(
-        padding: EdgeInsets.only(right: widget.gapAfter),
-        child: SizedBox(width: widget.width, child: content),
-      );
+      return SizedBox(width: widget.width, child: content);
     }
 
-    return ClipRect(child: content);
+    return content;
   }
 }
 
@@ -404,94 +417,477 @@ class PurchaseColumnOptionListPanel extends StatelessWidget {
   }
 }
 
-class PurchaseColumnNumericRangePanel extends StatefulWidget {
-  const PurchaseColumnNumericRangePanel({
-    required this.initialMin,
-    required this.initialMax,
-    required this.onChanged,
+class PurchaseColumnPaymentTypeCheckboxPanel extends StatefulWidget {
+  const PurchaseColumnPaymentTypeCheckboxPanel({
+    required this.options,
+    required this.selected,
+    required this.onToggle,
     required this.onClear,
     super.key,
   });
 
-  final double? initialMin;
-  final double? initialMax;
-  final void Function({double? min, double? max}) onChanged;
+  final List<String> options;
+  final Set<String> selected;
+  final ValueChanged<String> onToggle;
   final VoidCallback onClear;
 
   @override
-  State<PurchaseColumnNumericRangePanel> createState() =>
-      _PurchaseColumnNumericRangePanelState();
+  State<PurchaseColumnPaymentTypeCheckboxPanel> createState() =>
+      _PurchaseColumnPaymentTypeCheckboxPanelState();
 }
 
-class _PurchaseColumnNumericRangePanelState
-    extends State<PurchaseColumnNumericRangePanel> {
-  late final TextEditingController _minController;
-  late final TextEditingController _maxController;
+class _PurchaseColumnPaymentTypeCheckboxPanelState
+    extends State<PurchaseColumnPaymentTypeCheckboxPanel> {
+  late Set<String> _selected;
 
   @override
   void initState() {
     super.initState();
-    _minController = TextEditingController(
-      text: widget.initialMin?.toStringAsFixed(0) ?? '',
+    _selected = Set<String>.from(widget.selected);
+  }
+
+  void _toggle(String option) {
+    setState(() {
+      if (_selected.contains(option)) {
+        _selected.remove(option);
+      } else {
+        _selected.add(option);
+      }
+    });
+    widget.onToggle(option);
+  }
+
+  void _clear() {
+    setState(() => _selected = {});
+    widget.onClear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Flexible(
+          child: ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            children: [
+              for (final option in widget.options)
+                CheckboxListTile(
+                  value: _selected.contains(option),
+                  onChanged: (_) => _toggle(option),
+                  activeColor: AppColors.primary,
+                  checkColor: Colors.white,
+                  title: Text(
+                    option,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.sm,
+            0,
+            AppSpacing.sm,
+            AppSpacing.xs,
+          ),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: _selected.isEmpty ? null : _clear,
+              child: const Text('Clear'),
+            ),
+          ),
+        ),
+      ],
     );
-    _maxController = TextEditingController(
-      text: widget.initialMax?.toStringAsFixed(0) ?? '',
+  }
+}
+
+class PurchaseColumnAdvancedNumericFilterPanel extends StatefulWidget {
+  const PurchaseColumnAdvancedNumericFilterPanel({
+    required this.valueLabel,
+    required this.initialFilter,
+    required this.onApply,
+    required this.onClear,
+    super.key,
+  });
+
+  final String valueLabel;
+  final PurchaseNumericFilter? initialFilter;
+  final ValueChanged<PurchaseNumericFilter> onApply;
+  final VoidCallback onClear;
+
+  @override
+  State<PurchaseColumnAdvancedNumericFilterPanel> createState() =>
+      _PurchaseColumnAdvancedNumericFilterPanelState();
+}
+
+class _PurchaseColumnAdvancedNumericFilterPanelState
+    extends State<PurchaseColumnAdvancedNumericFilterPanel> {
+  static const _fieldBorderColor = Color(0xFFE2E8F0);
+  static const _fieldFillColor = Color(0xFFF8FAFC);
+
+  late PurchaseNumericFilterOperator _operator;
+  late final TextEditingController _valueController;
+  bool _operatorExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _operator =
+        widget.initialFilter?.operator ?? PurchaseNumericFilterOperator.equalTo;
+    _valueController = TextEditingController(
+      text: widget.initialFilter?.value.toStringAsFixed(0) ?? '',
     );
   }
 
   @override
   void dispose() {
-    _minController.dispose();
-    _maxController.dispose();
+    _valueController.dispose();
     super.dispose();
   }
 
-  void _emit() {
-    widget.onChanged(
-      min: _parseAmount(_minController.text),
-      max: _parseAmount(_maxController.text),
+  InputDecoration _fieldDecoration({
+    required String label,
+    String? prefixText,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(
+        fontSize: 12,
+        color: AppColors.textSecondary,
+        fontWeight: FontWeight.w500,
+      ),
+      floatingLabelStyle: const TextStyle(
+        fontSize: 12,
+        color: AppColors.primary,
+        fontWeight: FontWeight.w500,
+      ),
+      filled: true,
+      fillColor: _fieldFillColor,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
+      prefixText: prefixText,
+      prefixStyle: prefixText != null
+          ? const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+              height: 1.2,
+            )
+          : null,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: AppRadius.smBorder,
+        borderSide: const BorderSide(color: _fieldBorderColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: AppRadius.smBorder,
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      border: OutlineInputBorder(
+        borderRadius: AppRadius.smBorder,
+        borderSide: const BorderSide(color: _fieldBorderColor),
+      ),
     );
+  }
+
+  void _handleApply() {
+    final value = _parseAmount(_valueController.text);
+    if (value == null) return;
+    widget.onApply(PurchaseNumericFilter(operator: _operator, value: value));
+  }
+
+  void _handleClear() {
+    _valueController.clear();
+    setState(() {
+      _operator = PurchaseNumericFilterOperator.equalTo;
+      _operatorExpanded = false;
+    });
+    widget.onClear();
+  }
+
+  void _selectOperator(PurchaseNumericFilterOperator operator) {
+    setState(() {
+      _operator = operator;
+      _operatorExpanded = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final canApply = _parseAmount(_valueController.text) != null;
+
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Text(
+            'Filter ${widget.valueLabel}',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Text(
+            'Select Category',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          _PurchaseColumnInlineOperatorSelector(
+            selected: _operator,
+            expanded: _operatorExpanded,
+            onToggle: () => setState(
+              () => _operatorExpanded = !_operatorExpanded,
+            ),
+            onSelected: _selectOperator,
+          ),
+          const SizedBox(height: AppSpacing.md),
           TextField(
-            controller: _minController,
+            controller: _valueController,
             autofocus: true,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(labelText: 'Min', isDense: true),
-            style: const TextStyle(fontSize: 13),
-            onChanged: (_) => _emit(),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          TextField(
-            controller: _maxController,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(labelText: 'Max', isDense: true),
-            style: const TextStyle(fontSize: 13),
-            onChanged: (_) => _emit(),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {
-                _minController.clear();
-                _maxController.clear();
-                widget.onClear();
-              },
-              child: const Text('Clear'),
+            decoration: _fieldDecoration(
+              label: widget.valueLabel,
+              prefixText: '₹ ',
             ),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Divider(height: 1, color: _fieldBorderColor),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _handleClear,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textSecondary,
+                    side: const BorderSide(color: _fieldBorderColor),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.sm,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.smBorder,
+                    ),
+                  ),
+                  child: const Text(
+                    'Clear',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: FilledButton(
+                  onPressed: canApply ? _handleApply : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    disabledBackgroundColor: AppColors.primary.withValues(
+                      alpha: 0.4,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.sm,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.smBorder,
+                    ),
+                  ),
+                  child: const Text(
+                    'Apply',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PurchaseColumnInlineOperatorSelector extends StatelessWidget {
+  const _PurchaseColumnInlineOperatorSelector({
+    required this.selected,
+    required this.expanded,
+    required this.onToggle,
+    required this.onSelected,
+  });
+
+  static const _fieldBorderColor = Color(0xFFE2E8F0);
+  static const _fieldFillColor = Color(0xFFF8FAFC);
+  static const _optionHoverColor = Color(0xFFF1F5F9);
+
+  final PurchaseNumericFilterOperator selected;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final ValueChanged<PurchaseNumericFilterOperator> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: _fieldFillColor,
+        borderRadius: AppRadius.smBorder,
+        border: Border.all(
+          color: expanded ? AppColors.primary : _fieldBorderColor,
+          width: expanded ? 1.5 : 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onToggle,
+              borderRadius: expanded
+                  ? const BorderRadius.vertical(top: Radius.circular(7))
+                  : AppRadius.smBorder,
+              hoverColor: _optionHoverColor,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.sm + 2,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        selected.label,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: expanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 180),
+                      child: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 20,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (expanded) ...[
+            const Divider(height: 1, color: _fieldBorderColor),
+            for (final option in PurchaseNumericFilterOperator.values)
+              _PurchaseColumnOperatorOptionTile(
+                label: option.label,
+                selected: option == selected,
+                isLast: option == PurchaseNumericFilterOperator.values.last,
+                onTap: () => onSelected(option),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PurchaseColumnOperatorOptionTile extends StatelessWidget {
+  const _PurchaseColumnOperatorOptionTile({
+    required this.label,
+    required this.selected,
+    required this.isLast,
+    required this.onTap,
+  });
+
+  static const _optionHoverColor = Color(0xFFF1F5F9);
+
+  final String label;
+  final bool selected;
+  final bool isLast;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        hoverColor: _optionHoverColor,
+        borderRadius: isLast
+            ? const BorderRadius.vertical(bottom: Radius.circular(7))
+            : BorderRadius.zero,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.sm + 2,
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 18,
+                child: selected
+                    ? const Icon(
+                        Icons.check_rounded,
+                        size: 16,
+                        color: AppColors.primary,
+                      )
+                    : null,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight:
+                        selected ? FontWeight.w600 : FontWeight.w400,
+                    color: selected
+                        ? AppColors.primary
+                        : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -200,26 +200,23 @@ List<PurchaseFaModel> _applyFilters(
       return false;
     }
 
-    if (!purchaseFilterMatchesOption(
-      columns.selectedPaymentType,
-      'All Payment Types',
+    if (!purchaseFilterMatchesPaymentTypes(
+      columns.selectedPaymentTypes,
       record.paymentType,
     )) {
       return false;
     }
 
-    if (!purchaseFilterMatchesNumericRange(
+    if (!purchaseFilterMatchesNumericFilter(
       record.amount,
-      min: columns.amountMin,
-      max: columns.amountMax,
+      columns.amountFilter,
     )) {
       return false;
     }
 
-    if (!purchaseFilterMatchesNumericRange(
+    if (!purchaseFilterMatchesNumericFilter(
       record.balanceDue,
-      min: columns.balanceMin,
-      max: columns.balanceMax,
+      columns.balanceFilter,
     )) {
       return false;
     }
@@ -459,29 +456,52 @@ class PurchaseFaFilters extends _$PurchaseFaFilters {
     );
   }
 
-  void setPaymentType(String paymentType) {
+  void togglePaymentType(String paymentType) {
+    final updated = Set<String>.from(state.columnFilters.selectedPaymentTypes);
+    if (updated.contains(paymentType)) {
+      updated.remove(paymentType);
+    } else {
+      updated.add(paymentType);
+    }
     state = state.copyWith(
       columnFilters: state.columnFilters.copyWith(
-        selectedPaymentType: paymentType,
+        selectedPaymentTypes: updated,
       ),
       currentPage: 1,
     );
   }
 
-  void setAmountRange({double? min, double? max}) {
+  void clearPaymentTypes() {
     state = state.copyWith(
-      columnFilters: min == null && max == null
-          ? state.columnFilters.copyWith(clearAmountRange: true)
-          : state.columnFilters.copyWith(amountMin: min, amountMax: max),
+      columnFilters: state.columnFilters.copyWith(clearPaymentTypes: true),
       currentPage: 1,
     );
   }
 
-  void setBalanceRange({double? min, double? max}) {
+  void applyAmountFilter(PurchaseNumericFilter filter) {
     state = state.copyWith(
-      columnFilters: min == null && max == null
-          ? state.columnFilters.copyWith(clearBalanceRange: true)
-          : state.columnFilters.copyWith(balanceMin: min, balanceMax: max),
+      columnFilters: state.columnFilters.copyWith(amountFilter: filter),
+      currentPage: 1,
+    );
+  }
+
+  void clearAmountFilter() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearAmountFilter: true),
+      currentPage: 1,
+    );
+  }
+
+  void applyBalanceFilter(PurchaseNumericFilter filter) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(balanceFilter: filter),
+      currentPage: 1,
+    );
+  }
+
+  void clearBalanceFilter() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearBalanceFilter: true),
       currentPage: 1,
     );
   }

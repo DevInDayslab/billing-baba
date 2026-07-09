@@ -119,34 +119,25 @@ List<ExpenseTransactionModel> _applyExpenseTransactionFilters(
       return false;
     }
 
-    if (!purchaseFilterMatchesOption(
-      columns.selectedPaymentType,
-      'All Payment Types',
+    if (!purchaseFilterMatchesPaymentTypes(
+      columns.selectedPaymentTypes,
       transaction.paymentType ?? '',
     )) {
       return false;
     }
 
-    if (columns.amountMin != null || columns.amountMax != null) {
+    if (columns.amountFilter != null) {
       final amount = transaction.amount;
       if (amount == null ||
-          !purchaseFilterMatchesNumericRange(
-            amount,
-            min: columns.amountMin,
-            max: columns.amountMax,
-          )) {
+          !purchaseFilterMatchesNumericFilter(amount, columns.amountFilter)) {
         return false;
       }
     }
 
-    if (columns.balanceMin != null || columns.balanceMax != null) {
+    if (columns.balanceFilter != null) {
       final balance = transaction.balance;
       if (balance == null ||
-          !purchaseFilterMatchesNumericRange(
-            balance,
-            min: columns.balanceMin,
-            max: columns.balanceMax,
-          )) {
+          !purchaseFilterMatchesNumericFilter(balance, columns.balanceFilter)) {
         return false;
       }
     }
@@ -221,7 +212,6 @@ ExpenseListQuery _expenseListQuery(ExpenseFiltersState filters) {
 class ExpenseCategories extends _$ExpenseCategories {
   @override
   Future<List<ExpenseCategoryModel>> build() async {
-    ref.watch(expenseFiltersProvider);
     final service = await ref.read(expenseServiceProvider.future);
     return service.fetchCategories();
   }
@@ -279,7 +269,17 @@ class ExpenseCategories extends _$ExpenseCategories {
 class ExpenseTransactions extends _$ExpenseTransactions {
   @override
   Future<List<ExpenseTransactionModel>> build() async {
-    ref.watch(expenseFiltersProvider);
+    // Only refetch when API query inputs change. Column/status filters are
+    // applied client-side in categoryExpenseTransactions / itemExpenseTransactions.
+    ref.watch(
+      expenseFiltersProvider.select(
+        (filters) => (
+          filters.timeRangeOption,
+          filters.customDateRange,
+          filters.currentPage,
+        ),
+      ),
+    );
     final filters = ref.read(expenseFiltersProvider);
     final service = await ref.read(expenseServiceProvider.future);
     return service.fetchExpenses(query: _expenseListQuery(filters));
@@ -455,27 +455,47 @@ class ExpenseFilters extends _$ExpenseFilters {
     );
   }
 
-  void setPaymentType(String paymentType) {
+  void togglePaymentType(String paymentType) {
+    final updated = Set<String>.from(state.columnFilters.selectedPaymentTypes);
+    if (updated.contains(paymentType)) {
+      updated.remove(paymentType);
+    } else {
+      updated.add(paymentType);
+    }
     state = state.copyWith(
       columnFilters: state.columnFilters.copyWith(
-        selectedPaymentType: paymentType,
+        selectedPaymentTypes: updated,
       ),
     );
   }
 
-  void setAmountRange({double? min, double? max}) {
+  void clearPaymentTypes() {
     state = state.copyWith(
-      columnFilters: min == null && max == null
-          ? state.columnFilters.copyWith(clearAmountRange: true)
-          : state.columnFilters.copyWith(amountMin: min, amountMax: max),
+      columnFilters: state.columnFilters.copyWith(clearPaymentTypes: true),
     );
   }
 
-  void setBalanceRange({double? min, double? max}) {
+  void applyAmountFilter(PurchaseNumericFilter filter) {
     state = state.copyWith(
-      columnFilters: min == null && max == null
-          ? state.columnFilters.copyWith(clearBalanceRange: true)
-          : state.columnFilters.copyWith(balanceMin: min, balanceMax: max),
+      columnFilters: state.columnFilters.copyWith(amountFilter: filter),
+    );
+  }
+
+  void clearAmountFilter() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearAmountFilter: true),
+    );
+  }
+
+  void applyBalanceFilter(PurchaseNumericFilter filter) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(balanceFilter: filter),
+    );
+  }
+
+  void clearBalanceFilter() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearBalanceFilter: true),
     );
   }
 
@@ -521,10 +541,8 @@ List<ExpenseTransactionModel> categoryExpenseTransactions(
   String categoryId,
 ) {
   final transactionsAsync = ref.watch(expenseTransactionsProvider);
-  final transactions = transactionsAsync.maybeWhen(
-    data: (items) => items,
-    orElse: () => const <ExpenseTransactionModel>[],
-  );
+  final transactions =
+      transactionsAsync.value ?? const <ExpenseTransactionModel>[];
   final filters = ref.watch(expenseFiltersProvider);
   final query = ref.watch(expenseTransactionSearchQueryProvider);
 
@@ -552,10 +570,8 @@ List<ExpenseTransactionModel> itemExpenseTransactions(
   String itemId,
 ) {
   final transactionsAsync = ref.watch(expenseTransactionsProvider);
-  final transactions = transactionsAsync.maybeWhen(
-    data: (items) => items,
-    orElse: () => const <ExpenseTransactionModel>[],
-  );
+  final transactions =
+      transactionsAsync.value ?? const <ExpenseTransactionModel>[];
   final filters = ref.watch(expenseFiltersProvider);
   final query = ref.watch(expenseItemTransactionSearchQueryProvider);
 

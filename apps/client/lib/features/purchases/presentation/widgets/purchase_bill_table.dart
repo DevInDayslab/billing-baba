@@ -6,34 +6,22 @@ import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bi
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_actions.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_bill_status_badge.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_transaction_table_layout.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-const _cardBorder = Color(0xFFE0E0E0);
-
-const _dateColWidth = 120.0;
-const _invoiceColWidth = 100.0;
-const _paymentColWidth = 110.0;
-const _statusColWidth = 90.0;
-const _amountColWidth = 100.0;
-const _balanceColWidth = 100.0;
-const _dueDateColWidth = 100.0;
-const _actionsColWidth = 120.0;
-const _colGap = 12.0;
-
 const double _minTableWidth =
-    _dateColWidth +
-    _invoiceColWidth +
-    _paymentColWidth +
-    _statusColWidth +
-    _amountColWidth +
-    _balanceColWidth +
-    _dueDateColWidth +
-    _actionsColWidth +
-    _colGap * 8 +
-    160;
+    purchaseTransactionDateColWidth +
+    purchaseTransactionInvoiceColWidth +
+    purchaseTransactionPartyColMinWidth +
+    purchaseTransactionPaymentColWidth +
+    purchaseTransactionStatusColWidth +
+    purchaseTransactionAmountColWidth +
+    purchaseTransactionBalanceColWidth +
+    purchaseTransactionDueDateColWidth +
+    purchaseTransactionActionsColWidth3;
 
 class PurchaseBillTable extends ConsumerWidget {
   const PurchaseBillTable({super.key});
@@ -46,6 +34,8 @@ class PurchaseBillTable extends ConsumerWidget {
     decimalDigits: 0,
   );
 
+  static const _amountTextStyle = purchaseTransactionAmountTextStyle;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final paginated = ref.watch(paginatedPurchaseBillsProvider);
@@ -57,7 +47,7 @@ class PurchaseBillTable extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: purchaseTransactionTableCardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -90,7 +80,7 @@ class PurchaseBillTable extends ConsumerWidget {
               ],
             ),
           ),
-          const Divider(height: 1, color: _cardBorder),
+          const Divider(height: 1, color: purchaseTransactionTableCardBorder),
           LayoutBuilder(
             builder: (context, constraints) {
               final tableWidth = constraints.maxWidth.clamp(
@@ -119,11 +109,8 @@ class PurchaseBillTable extends ConsumerWidget {
                           ),
                         )
                       else
-                        for (var i = 0; i < paginated.items.length; i++) ...[
-                          if (i > 0)
-                            const Divider(height: 1, color: _cardBorder),
-                          _buildRow(context, ref, paginated.items[i]),
-                        ],
+                        for (final bill in paginated.items)
+                          _buildRow(context, ref, bill),
                     ],
                   ),
                 ),
@@ -131,7 +118,7 @@ class PurchaseBillTable extends ConsumerWidget {
             },
           ),
           if (paginated.totalPages > 1) ...[
-            const Divider(height: 1, color: _cardBorder),
+            const Divider(height: 1, color: purchaseTransactionTableCardBorder),
             _PaginationRow(
               currentPage: paginated.currentPage,
               totalPages: paginated.totalPages,
@@ -147,51 +134,63 @@ class PurchaseBillTable extends ConsumerWidget {
     WidgetRef ref,
     PurchaseBillModel bill,
   ) {
-    return _TableDataRow(
+    return PurchaseTransactionTableDataRow(
       children: [
-        _TableCell(
-          width: _dateColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionDateColWidth,
           child: Text(_dateFormat.format(bill.date)),
         ),
-        _TableCell(
-          width: _invoiceColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionInvoiceColWidth,
           child: Text(bill.invoiceNo),
         ),
         Expanded(
-          child: _TableCell(
+          flex: purchaseTransactionPartyColFlex,
+          child: PurchaseTransactionTableCell(
             child: Text(
               bill.partyName,
               overflow: TextOverflow.ellipsis,
             ),
           ),
         ),
-        _TableCell(
-          width: _paymentColWidth,
-          child: Text(bill.paymentType),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionPaymentColWidth,
+          child: Text(
+            bill.paymentType,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
-        _TableCell(
-          width: _amountColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionAmountColWidth,
           alignment: Alignment.centerRight,
-          child: Text(_currencyFormat.format(bill.amount)),
+          child: Text(
+            _currencyFormat.format(bill.amount),
+            style: _amountTextStyle,
+          ),
         ),
-        _TableCell(
-          width: _balanceColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionBalanceColWidth,
           alignment: Alignment.centerRight,
-          child: Text(_currencyFormat.format(bill.balanceDue)),
+          child: Text(
+            _currencyFormat.format(bill.balanceDue),
+            style: _amountTextStyle,
+          ),
         ),
-        _TableCell(
-          width: _dueDateColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionDueDateColWidth,
           child: Text(_dueDateFormat.format(bill.dueDate)),
         ),
-        _TableCell(
-          width: _statusColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionStatusColWidth,
           child: PurchaseBillStatusBadge(status: bill.status),
         ),
-        _TableCell(
-          width: _actionsColWidth,
-          gapAfter: 0,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionActionsColWidth3,
+          showDivider: false,
+          alignment: Alignment.center,
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
                 onPressed: () => DocumentPrintActions.preview(
@@ -203,7 +202,7 @@ class PurchaseBillTable extends ConsumerWidget {
                 icon: const Icon(Icons.print_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 tooltip: 'Print',
               ),
               IconButton(
@@ -216,7 +215,7 @@ class PurchaseBillTable extends ConsumerWidget {
                 icon: const Icon(Icons.share_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 tooltip: 'Share',
               ),
               SalesActionMenuButton(
@@ -313,149 +312,99 @@ class _PurchaseBillSearchFieldState
 class _TableHeaderRow extends ConsumerWidget {
   const _TableHeaderRow();
 
-  static const _headerStyle = TextStyle(
-    fontSize: 13,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textSecondary,
-  );
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      color: AppColors.background,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          PurchaseBillColumnFilterCell(
-            width: _dateColWidth,
+    return PurchaseTransactionTableHeaderRow(
+      children: [
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionDateColWidth,
+          child: PurchaseBillColumnFilterCell(
             label: 'Date',
             kind: PurchaseBillColumnFilterKind.date,
-            headerStyle: _TableHeaderRow._headerStyle,
-            gapAfter: _colGap,
+            headerStyle: purchaseTransactionTableHeaderStyle,
+            gapAfter: 0,
           ),
-          PurchaseBillColumnFilterCell(
-            width: _invoiceColWidth,
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionInvoiceColWidth,
+          child: PurchaseBillColumnFilterCell(
             label: 'Invoice no',
             kind: PurchaseBillColumnFilterKind.invoiceNo,
-            headerStyle: _TableHeaderRow._headerStyle,
-            gapAfter: _colGap,
+            headerStyle: purchaseTransactionTableHeaderStyle,
+            gapAfter: 0,
           ),
-          Expanded(
+        ),
+        Expanded(
+          flex: purchaseTransactionPartyColFlex,
+          child: PurchaseTransactionTableCell(
             child: PurchaseBillColumnFilterCell(
               label: 'Party Name',
               kind: PurchaseBillColumnFilterKind.partyName,
-              headerStyle: _TableHeaderRow._headerStyle,
-              gapAfter: _colGap,
+              headerStyle: purchaseTransactionTableHeaderStyle,
+              gapAfter: 0,
             ),
           ),
-          PurchaseBillColumnFilterCell(
-            width: _paymentColWidth,
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionPaymentColWidth,
+          child: PurchaseBillColumnFilterCell(
             label: 'Payment Type',
             kind: PurchaseBillColumnFilterKind.paymentType,
-            headerStyle: _TableHeaderRow._headerStyle,
-            gapAfter: _colGap,
+            headerStyle: purchaseTransactionTableHeaderStyle,
+            gapAfter: 0,
           ),
-          PurchaseBillColumnFilterCell(
-            width: _amountColWidth,
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionAmountColWidth,
+          alignment: Alignment.centerRight,
+          child: PurchaseBillColumnFilterCell(
             label: 'Amount',
             kind: PurchaseBillColumnFilterKind.amount,
-            headerStyle: _TableHeaderRow._headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             alignment: Alignment.centerRight,
-            gapAfter: _colGap,
+            gapAfter: 0,
           ),
-          PurchaseBillColumnFilterCell(
-            width: _balanceColWidth,
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionBalanceColWidth,
+          alignment: Alignment.centerRight,
+          child: PurchaseBillColumnFilterCell(
             label: 'Balance Due',
             kind: PurchaseBillColumnFilterKind.balanceDue,
-            headerStyle: _TableHeaderRow._headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             alignment: Alignment.centerRight,
-            gapAfter: _colGap,
+            gapAfter: 0,
           ),
-          PurchaseBillColumnFilterCell(
-            width: _dueDateColWidth,
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionDueDateColWidth,
+          child: PurchaseBillColumnFilterCell(
             label: 'Due Date',
             kind: PurchaseBillColumnFilterKind.dueDate,
-            headerStyle: _TableHeaderRow._headerStyle,
-            gapAfter: _colGap,
+            headerStyle: purchaseTransactionTableHeaderStyle,
+            gapAfter: 0,
           ),
-          PurchaseBillColumnFilterCell(
-            width: _statusColWidth,
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionStatusColWidth,
+          child: PurchaseBillColumnFilterCell(
             label: 'Status',
             kind: PurchaseBillColumnFilterKind.status,
-            headerStyle: _TableHeaderRow._headerStyle,
-            gapAfter: _colGap,
-          ),
-          const _TableCell(
-            width: _actionsColWidth,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             gapAfter: 0,
-            child: Text('Actions', style: _headerStyle),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TableDataRow extends StatelessWidget {
-  const _TableDataRow({required this.children});
-
-  final List<Widget> children;
-
-  static const _dataStyle = TextStyle(
-    fontSize: 13,
-    color: AppColors.textPrimary,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: _dataStyle,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
         ),
-        child: Row(children: children),
-      ),
-    );
-  }
-}
-
-class _TableCell extends StatelessWidget {
-  const _TableCell({
-    required this.child,
-    this.width,
-    this.alignment = Alignment.centerLeft,
-    this.gapAfter = _colGap,
-  });
-
-  final Widget child;
-  final double? width;
-  final Alignment alignment;
-  final double gapAfter;
-
-  @override
-  Widget build(BuildContext context) {
-    final content = Align(
-      alignment: alignment,
-      widthFactor: 1,
-      child: child,
-    );
-
-    if (width != null) {
-      return Padding(
-        padding: EdgeInsets.only(right: gapAfter),
-        child: SizedBox(
-          width: width,
-          child: ClipRect(child: content),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionActionsColWidth3,
+          showDivider: false,
+          alignment: Alignment.center,
+          child: const Text(
+            'Actions',
+            style: purchaseTransactionTableHeaderStyle,
+          ),
         ),
-      );
-    }
-
-    return ClipRect(child: content);
+      ],
+    );
   }
 }
 
@@ -549,7 +498,7 @@ class _PageNumber extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFFEEEEEE) : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.sm),
-          border: isActive ? null : Border.all(color: _cardBorder),
+          border: isActive ? null : Border.all(color: purchaseTransactionTableCardBorder),
         ),
         child: Text(
           '$page',

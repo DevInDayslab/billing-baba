@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/filter_icon.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
@@ -8,6 +9,7 @@ import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/expense_status_badge.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_cell.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_transaction_table_layout.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -155,19 +157,25 @@ class _CategoryListHeader extends StatelessWidget {
         color: Color(0xFFF5F5F5),
         border: Border(bottom: BorderSide(color: inventoryCardBorder)),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Expanded(
             child: Row(
               children: [
-                Text('CATEGORY', style: InventoryStyles.listHeaderStyle),
-                SizedBox(width: 4),
-                Icon(Icons.arrow_drop_down, size: 16, color: Colors.grey),
+                const Text('CATEGORY', style: InventoryStyles.listHeaderStyle),
+                const SizedBox(width: 4),
+                AppFilterIcon(color: Colors.grey.shade500, size: 16),
               ],
             ),
           ),
-          Text('AMOUNT', style: InventoryStyles.listHeaderStyle),
-          SizedBox(width: 28),
+          Row(
+            children: [
+              const Text('AMOUNT', style: InventoryStyles.listHeaderStyle),
+              const SizedBox(width: 4),
+              AppFilterIcon(color: Colors.grey.shade500, size: 16),
+            ],
+          ),
+          const SizedBox(width: 28),
         ],
       ),
     );
@@ -322,12 +330,6 @@ class _CategoryDetailPanel extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: category.variant == ExpenseCategoryVariant.loyaltyRedeemed
-              ? const ExpenseLoyaltyTransactionFilterHeader()
-              : const ExpenseStandardTransactionFilterHeader(),
-        ),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -335,15 +337,36 @@ class _CategoryDetailPanel extends ConsumerWidget {
                 ? const InventoryListEmptyState(
                     message: 'No transactions in this category',
                   )
-                : ListView.builder(
-                    itemCount: transactions.length,
-                    itemBuilder: (context, index) {
-                      final transaction = transactions[index];
-                      return category.variant ==
-                              ExpenseCategoryVariant.loyaltyRedeemed
-                          ? _LoyaltyTransactionRow(transaction: transaction)
-                          : _StandardTransactionRow(transaction: transaction);
-                    },
+                : ExpenseTransactionTableViewport(
+                    minWidth: category.variant ==
+                            ExpenseCategoryVariant.loyaltyRedeemed
+                        ? expenseTransactionLoyaltyMinTableWidth
+                        : expenseTransactionStandardMinTableWidth,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        category.variant ==
+                                ExpenseCategoryVariant.loyaltyRedeemed
+                            ? const ExpenseLoyaltyTransactionFilterHeader()
+                            : const ExpenseStandardTransactionFilterHeader(),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: transactions.length,
+                            itemBuilder: (context, index) {
+                              final transaction = transactions[index];
+                              return category.variant ==
+                                      ExpenseCategoryVariant.loyaltyRedeemed
+                                  ? _LoyaltyTransactionRow(
+                                      transaction: transaction,
+                                    )
+                                  : _StandardTransactionRow(
+                                      transaction: transaction,
+                                    );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
           ),
         ),
@@ -359,44 +382,50 @@ class _LoyaltyTransactionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 12,
+    return PurchaseTransactionTableDataRow(
+      onTap: () => context.push(
+        '${AppRoutes.editExpense}/${transaction.id}',
       ),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-      ),
-      child: InventoryListRowLayout(
-        flexValues: const [1, 2, 1, 2, 2],
-        children: [
-          Text(
+      children: [
+        PurchaseTransactionTableCell(
+          width: expenseTransactionDateColWidth,
+          child: Text(
             ExpensesCategoryTabContent._dateFormat.format(transaction.date),
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionInvoiceColWidth,
+          child: Text(
             transaction.transactionNo,
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
-            transaction.party,
-            style: InventoryStyles.listCellStyle,
-            overflow: TextOverflow.ellipsis,
+        ),
+        Expanded(
+          flex: expenseTransactionPartyColFlex,
+          child: PurchaseTransactionTableCell(
+            child: Text(
+              transaction.party,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionAmountColWidth,
+          child: Text(
             '${transaction.loyaltyPoints}',
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionAmountColWidth,
+          showDivider: false,
+          child: Text(
             '${transaction.loyaltyValue?.toInt()}',
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -408,67 +437,78 @@ class _StandardTransactionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => context.push(
-          '${AppRoutes.editExpense}/${transaction.id}',
-        ),
-        child: Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 12,
+    return PurchaseTransactionTableDataRow(
+      onTap: () => context.push(
+        '${AppRoutes.editExpense}/${transaction.id}',
       ),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-      ),
-      child: InventoryListRowLayout(
-        flexValues: const [1, 1, 1, 1, 1, 1, 1, 1],
-        children: [
-          Text(
+      children: [
+        PurchaseTransactionTableCell(
+          width: expenseTransactionDateColWidth,
+          child: Text(
             ExpensesCategoryTabContent._dateFormat.format(transaction.date),
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionInvoiceColWidth,
+          child: Text(
             transaction.transactionNo,
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
-            transaction.party,
-            style: InventoryStyles.listCellStyle,
-            overflow: TextOverflow.ellipsis,
+        ),
+        Expanded(
+          flex: expenseTransactionPartyColFlex,
+          child: PurchaseTransactionTableCell(
+            child: Text(
+              transaction.party,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionPaymentColWidth,
+          child: Text(
             transaction.paymentType ?? '',
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionAmountColWidth,
+          alignment: Alignment.centerRight,
+          child: Text(
             '${transaction.amount?.toInt()}',
-            style: InventoryStyles.listCellStyle,
+            style: purchaseTransactionAmountTextStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionBalanceColWidth,
+          alignment: Alignment.centerRight,
+          child: Text(
             '${transaction.balance?.toInt()}',
-            style: InventoryStyles.listCellStyle,
+            style: purchaseTransactionAmountTextStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionDueDateColWidth,
+          child: Text(
             transaction.dueDate != null
                 ? ExpensesCategoryTabContent._dateFormat.format(
                     transaction.dueDate!,
                   )
                 : '',
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          if (transaction.status != null) ExpenseStatusBadge(status: transaction.status!) else const SizedBox.shrink(),
-        ],
-      ),
         ),
-      ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionStatusColWidth,
+          showDivider: false,
+          child: transaction.status != null
+              ? ExpenseStatusBadge(status: transaction.status!)
+              : const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 }
@@ -481,9 +521,12 @@ PurchaseColumnFilterActions _expenseTransactionFilterActions(
     onDueDateRange: notifier.setDueDateRange,
     onDocumentNo: notifier.setDocumentNo,
     onParty: notifier.setParty,
-    onPaymentType: notifier.setPaymentType,
-    onAmountRange: notifier.setAmountRange,
-    onBalanceRange: notifier.setBalanceRange,
+    onTogglePaymentType: notifier.togglePaymentType,
+    onClearPaymentTypes: notifier.clearPaymentTypes,
+    onApplyAmountFilter: notifier.applyAmountFilter,
+    onClearAmountFilter: notifier.clearAmountFilter,
+    onApplyBalanceFilter: notifier.applyBalanceFilter,
+    onClearBalanceFilter: notifier.clearBalanceFilter,
     onStatus: notifier.setStatus,
   );
 }
@@ -498,26 +541,15 @@ class ExpenseStandardTransactionFilterHeader extends ConsumerWidget {
     final notifier = ref.read(expenseFiltersProvider.notifier);
     final partyOptions = ref.watch(expenseTransactionPartyOptionsProvider);
     final actions = _expenseTransactionFilterActions(notifier);
-    const headerStyle = InventoryStyles.listHeaderStyle;
 
-    return Container(
-      clipBehavior: Clip.hardEdge,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 10,
-      ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF5F5F5),
-        border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-      ),
-      child: InventoryListRowLayout(
-        flexValues: const [1, 1, 1, 1, 1, 1, 1, 1],
-        trailing: const SizedBox.shrink(),
-        children: [
-          purchaseColumnFilterCell(
+    return PurchaseTransactionTableHeaderRow(
+      children: [
+        PurchaseTransactionTableCell(
+          width: expenseTransactionDateColWidth,
+          child: purchaseColumnFilterCell(
             label: 'DATE',
             kind: PurchaseColumnFilterKind.date,
-            headerStyle: headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.date,
               columns,
@@ -528,10 +560,13 @@ class ExpenseStandardTransactionFilterHeader extends ConsumerWidget {
             statusOptions: expenseTransactionStatusOptions,
             selectedStatus: filters.selectedStatus,
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionInvoiceColWidth,
+          child: purchaseColumnFilterCell(
             label: 'EXP NO.',
             kind: PurchaseColumnFilterKind.documentNo,
-            headerStyle: headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.documentNo,
               columns,
@@ -543,24 +578,32 @@ class ExpenseStandardTransactionFilterHeader extends ConsumerWidget {
             selectedStatus: filters.selectedStatus,
             documentNoHint: 'Search exp no',
           ),
-          purchaseColumnFilterCell(
-            label: 'PARTY',
-            kind: PurchaseColumnFilterKind.partyName,
-            headerStyle: headerStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.partyName,
-              columns,
+        ),
+        Expanded(
+          flex: expenseTransactionPartyColFlex,
+          child: PurchaseTransactionTableCell(
+            child: purchaseColumnFilterCell(
+              label: 'PARTY',
+              kind: PurchaseColumnFilterKind.partyName,
+              headerStyle: purchaseTransactionTableHeaderStyle,
+              isActive: purchaseColumnFilterIsActive(
+                PurchaseColumnFilterKind.partyName,
+                columns,
+              ),
+              columns: columns,
+              actions: actions,
+              partyOptions: partyOptions,
+              statusOptions: expenseTransactionStatusOptions,
+              selectedStatus: filters.selectedStatus,
             ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: expenseTransactionStatusOptions,
-            selectedStatus: filters.selectedStatus,
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionPaymentColWidth,
+          child: purchaseColumnFilterCell(
             label: 'PAYMENT TYPE',
             kind: PurchaseColumnFilterKind.paymentType,
-            headerStyle: headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.paymentType,
               columns,
@@ -571,10 +614,14 @@ class ExpenseStandardTransactionFilterHeader extends ConsumerWidget {
             statusOptions: expenseTransactionStatusOptions,
             selectedStatus: filters.selectedStatus,
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionAmountColWidth,
+          alignment: Alignment.centerRight,
+          child: purchaseColumnFilterCell(
             label: 'AMOUNT',
             kind: PurchaseColumnFilterKind.amount,
-            headerStyle: headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.amount,
               columns,
@@ -584,11 +631,16 @@ class ExpenseStandardTransactionFilterHeader extends ConsumerWidget {
             partyOptions: partyOptions,
             statusOptions: expenseTransactionStatusOptions,
             selectedStatus: filters.selectedStatus,
+            alignment: Alignment.centerRight,
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionBalanceColWidth,
+          alignment: Alignment.centerRight,
+          child: purchaseColumnFilterCell(
             label: 'BALANCE',
             kind: PurchaseColumnFilterKind.balanceDue,
-            headerStyle: headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.balanceDue,
               columns,
@@ -598,11 +650,15 @@ class ExpenseStandardTransactionFilterHeader extends ConsumerWidget {
             partyOptions: partyOptions,
             statusOptions: expenseTransactionStatusOptions,
             selectedStatus: filters.selectedStatus,
+            alignment: Alignment.centerRight,
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionDueDateColWidth,
+          child: purchaseColumnFilterCell(
             label: 'DUE DATE',
             kind: PurchaseColumnFilterKind.dueDate,
-            headerStyle: headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.dueDate,
               columns,
@@ -613,10 +669,14 @@ class ExpenseStandardTransactionFilterHeader extends ConsumerWidget {
             statusOptions: expenseTransactionStatusOptions,
             selectedStatus: filters.selectedStatus,
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionStatusColWidth,
+          showDivider: false,
+          child: purchaseColumnFilterCell(
             label: 'STATUS',
             kind: PurchaseColumnFilterKind.status,
-            headerStyle: headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnStatusFilterIsActive(filters.selectedStatus),
             columns: columns,
             actions: actions,
@@ -624,8 +684,8 @@ class ExpenseStandardTransactionFilterHeader extends ConsumerWidget {
             statusOptions: expenseTransactionStatusOptions,
             selectedStatus: filters.selectedStatus,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -640,26 +700,15 @@ class ExpenseLoyaltyTransactionFilterHeader extends ConsumerWidget {
     final notifier = ref.read(expenseFiltersProvider.notifier);
     final partyOptions = ref.watch(expenseTransactionPartyOptionsProvider);
     final actions = _expenseTransactionFilterActions(notifier);
-    const headerStyle = InventoryStyles.listHeaderStyle;
 
-    return Container(
-      clipBehavior: Clip.hardEdge,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 10,
-      ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF5F5F5),
-        border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-      ),
-      child: InventoryListRowLayout(
-        flexValues: const [1, 2, 1, 2, 2],
-        trailing: const SizedBox.shrink(),
-        children: [
-          purchaseColumnFilterCell(
+    return PurchaseTransactionTableHeaderRow(
+      children: [
+        PurchaseTransactionTableCell(
+          width: expenseTransactionDateColWidth,
+          child: purchaseColumnFilterCell(
             label: 'DATE',
             kind: PurchaseColumnFilterKind.date,
-            headerStyle: headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.date,
               columns,
@@ -670,10 +719,13 @@ class ExpenseLoyaltyTransactionFilterHeader extends ConsumerWidget {
             statusOptions: expenseTransactionStatusOptions,
             selectedStatus: filters.selectedStatus,
           ),
-          purchaseColumnFilterCell(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionInvoiceColWidth,
+          child: purchaseColumnFilterCell(
             label: 'TRANSACTION NO.',
             kind: PurchaseColumnFilterKind.documentNo,
-            headerStyle: headerStyle,
+            headerStyle: purchaseTransactionTableHeaderStyle,
             isActive: purchaseColumnFilterIsActive(
               PurchaseColumnFilterKind.documentNo,
               columns,
@@ -685,32 +737,44 @@ class ExpenseLoyaltyTransactionFilterHeader extends ConsumerWidget {
             selectedStatus: filters.selectedStatus,
             documentNoHint: 'Search transaction no',
           ),
-          purchaseColumnFilterCell(
-            label: 'PARTY',
-            kind: PurchaseColumnFilterKind.partyName,
-            headerStyle: headerStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.partyName,
-              columns,
+        ),
+        Expanded(
+          flex: expenseTransactionPartyColFlex,
+          child: PurchaseTransactionTableCell(
+            child: purchaseColumnFilterCell(
+              label: 'PARTY',
+              kind: PurchaseColumnFilterKind.partyName,
+              headerStyle: purchaseTransactionTableHeaderStyle,
+              isActive: purchaseColumnFilterIsActive(
+                PurchaseColumnFilterKind.partyName,
+                columns,
+              ),
+              columns: columns,
+              actions: actions,
+              partyOptions: partyOptions,
+              statusOptions: expenseTransactionStatusOptions,
+              selectedStatus: filters.selectedStatus,
             ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: expenseTransactionStatusOptions,
-            selectedStatus: filters.selectedStatus,
           ),
-          const Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionAmountColWidth,
+          child: Text(
             'LOYALTY REDEEMED IN POINTS',
-            style: headerStyle,
+            style: purchaseTransactionTableHeaderStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          const Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionAmountColWidth,
+          showDivider: false,
+          child: Text(
             'LOYALTY VALUE REDEEMED',
-            style: headerStyle,
+            style: purchaseTransactionTableHeaderStyle,
             overflow: TextOverflow.ellipsis,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
