@@ -5,6 +5,7 @@ import 'package:billing_baba/features/purchases/providers/expenses_provider.dart
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/sales/providers/payment_in_provider.dart';
+import 'package:billing_baba/features/sales/providers/sale_fa_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,6 +19,10 @@ void invalidatePartyBalances(Ref ref) {
 
 void invalidateSaleLists(Ref ref) {
   ref.invalidate(saleInvoicesProvider);
+}
+
+void invalidateSaleFaLists(Ref ref) {
+  ref.invalidate(saleFaProvider);
 }
 
 void invalidatePurchaseLists(Ref ref) {
@@ -96,6 +101,14 @@ void refreshAfterPurchaseReturn(Ref ref) {
 void refreshAfterPartyMutation(Ref ref) {
   invalidatePartyBalances(ref);
   invalidateDashboard(ref);
+}
+
+/// After sale fixed-asset create/edit/delete.
+void refreshAfterSaleFaMutation(Ref ref) {
+  invalidateSaleFaLists(ref);
+  invalidatePaymentInLists(ref);
+  invalidateDashboard(ref);
+  invalidatePartyBalances(ref);
 }
 
 /// After item create/edit affecting inventory dashboard widgets.

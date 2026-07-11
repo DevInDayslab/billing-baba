@@ -8,6 +8,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/billing_name_pa
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -79,23 +80,6 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
     _paidController.dispose();
     _discountController.dispose();
     super.dispose();
-  }
-
-  String _formatTime(TimeOfDay? time) {
-    if (time == null) return 'Select time';
-    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '${hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $period';
-  }
-
-  Future<void> _pickTime(TimeOfDay? current) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: current ?? TimeOfDay.now(),
-    );
-    if (picked != null) {
-      ref.read(paymentOutFormProvider.notifier).updateTime(picked);
-    }
   }
 
   void _syncAmountFieldsFromControllers() {
@@ -371,10 +355,10 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                           const SizedBox(height: _sectionGap),
                           _LabeledField(
                             label: 'Time',
-                            child: _PickerField(
-                              value: _formatTime(form.time),
-                              icon: Icons.access_time,
-                              onTap: () => _pickTime(form.time),
+                            child: SaleTimeDropdown(
+                              value: form.time,
+                              compact: true,
+                              onSelected: notifier.updateTime,
                             ),
                           ),
                           const SizedBox(height: _sectionGap * 2),

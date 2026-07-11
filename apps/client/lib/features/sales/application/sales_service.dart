@@ -230,6 +230,9 @@ class SalesService {
         notes: form.description,
         godownId: form.godownId,
         isGstFormal: true,
+        convertedFromId: form.attachedSaleOrderIds.isNotEmpty
+            ? form.attachedSaleOrderIds.first
+            : null,
         items: form.items,
       ),
       itemNameToId: itemNameToId,
@@ -489,6 +492,14 @@ class SalesService {
         payment,
         partyName: partyNames[payment.partyId] ?? '',
       );
+    } on DioException catch (error) {
+      throw mapSalesError(error);
+    }
+  }
+
+  Future<void> deletePayment(String paymentId) async {
+    try {
+      await _repository.deletePayment(paymentId);
     } on DioException catch (error) {
       throw mapSalesError(error);
     }

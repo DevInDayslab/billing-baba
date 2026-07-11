@@ -6,7 +6,36 @@ abstract final class SaleDropdownOptions {
 
   static const paymentTypes = ['Cash', 'Credit', 'UPI', 'Cheque'];
 
+  static const priceTaxModes = ['Without Tax', 'With Tax'];
+
+  static const paymentTerms = [
+    'Due on Receipt',
+    'Net 7',
+    'Net 15',
+    'Net 30',
+    'Net 45',
+    'Net 60',
+  ];
+
+  static const termsTitles = [
+    'Sale Invoice',
+    'Tax Invoice',
+    'Bill of Supply',
+    'Estimate Quotation',
+    'Proforma Invoice',
+    'Sale Order',
+    'Delivery Challan',
+  ];
+
   static const godowns = ['Main Location', 'Warehouse B'];
+
+  static const jobWorkAdditionalCostCharges = [
+    'Labour Cost',
+    'Packaging Charge',
+    'Transport Charge',
+    'Electricity Charge',
+    'Other',
+  ];
 
   static const indianStates = [
     'Andhra Pradesh',

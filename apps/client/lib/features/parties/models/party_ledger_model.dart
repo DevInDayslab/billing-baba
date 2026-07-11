@@ -20,6 +20,14 @@ enum PartyLedgerFilter {
     PartyLedgerFilter.payments => 'Payments',
     PartyLedgerFilter.returns => 'Returns',
   };
+
+  bool matches(PartyLedgerTransactionModel transaction) => switch (this) {
+    PartyLedgerFilter.all => true,
+    PartyLedgerFilter.sales => transaction.entryType == 'sale',
+    PartyLedgerFilter.purchases => transaction.entryType == 'purchase',
+    PartyLedgerFilter.payments => transaction.entryType == 'payment',
+    PartyLedgerFilter.returns => transaction.entryType == 'return',
+  };
 }
 
 class PartyLedgerSummaryModel {

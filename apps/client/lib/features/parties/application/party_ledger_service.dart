@@ -26,21 +26,19 @@ Future<PartyLedgerService> partyLedgerService(Ref ref) async {
   return PartyLedgerService(PartyLedgerRemoteDataSource(api.dio));
 }
 
-typedef PartyLedgerKey = ({String partyId, PartyLedgerFilter filter});
-
 @riverpod
 class PartyLedger extends _$PartyLedger {
   @override
-  Future<PartyLedgerModel> build(PartyLedgerKey key) async {
+  Future<PartyLedgerModel> build(String partyId) async {
     final service = await ref.watch(partyLedgerServiceProvider.future);
-    return service.fetchPartyLedger(key.partyId, filter: key.filter);
+    return service.fetchPartyLedger(partyId);
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final service = await ref.read(partyLedgerServiceProvider.future);
-      return service.fetchPartyLedger(key.partyId, filter: key.filter);
+      return service.fetchPartyLedger(partyId);
     });
   }
 }

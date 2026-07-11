@@ -1,51 +1,40 @@
-import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/text_input_dialog.dart';
+import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
+import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/presentation/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_select_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_status_badge.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
+const _tableHeaderBg = Color(0xFFF5F7FA);
+const _zebraRowBg = Color(0xFFFAFAFA);
 
-const _dateColWidth = 100.0;
-const _invoiceColWidth = 100.0;
-const _transactionColWidth = 110.0;
-const _paymentColWidth = 110.0;
-const _statusColWidth = 100.0;
+const _dateColWidth = 148.0;
+const _invoiceColWidth = 96.0;
+const _partyColWidth = 160.0;
+const _transactionColWidth = 108.0;
+const _paymentColWidth = 108.0;
 const _amountColWidth = 100.0;
-const _balanceColWidth = 90.0;
+const _loyaltyColWidth = 108.0;
+const _balanceColWidth = 96.0;
+const _dueDateColWidth = 108.0;
+const _statusColWidth = 88.0;
 const _actionsColWidth = 120.0;
-const _colGap = 12.0;
-
-const double _minTableWidth =
-    _dateColWidth +
-    _invoiceColWidth +
-    _transactionColWidth +
-    _paymentColWidth +
-    _statusColWidth +
-    _amountColWidth +
-    _balanceColWidth +
-    _actionsColWidth +
-    _colGap * 7 +
-    160; // party name minimum
+const _cellHorizontalPadding = AppSpacing.sm;
 
 class SaleInvoiceTable extends ConsumerWidget {
   const SaleInvoiceTable({super.key});
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 0,
-  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -78,22 +67,30 @@ class SaleInvoiceTable extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
+                ExpandableTableSearchField(
+                  hint: 'Search Data',
+                  initialQuery: ref.read(saleInvoiceSearchQueryProvider),
+                  onQueryChanged: ref
+                      .read(saleInvoiceSearchQueryProvider.notifier)
+                      .setQuery,
+                ),
                 IconButton(
-                  onPressed: () => _showSearchDialog(context, ref),
-                  icon: const Icon(Icons.search, size: 20),
+                  onPressed: () =>
+                      ModuleExportActions.exportSaleInvoices(context, ref),
+                  icon: const Icon(Icons.bar_chart_outlined, size: 20),
                   color: AppColors.textSecondary,
-                  tooltip: 'Search',
+                  tooltip: 'Report',
                 ),
                 _XlsChip(
                   onTap: () =>
                       ModuleExportActions.exportSaleInvoices(context, ref),
                 ),
-                // Phase 1: header print hidden — use row print actions instead.
-                // IconButton(
-                //   onPressed: () { ... },
-                //   icon: const Icon(Icons.print_outlined, size: 20),
-                //   ...
-                // ),
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.print_outlined, size: 20),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Print',
+                ),
                 IconButton(
                   onPressed: notifier.refresh,
                   icon: const Icon(Icons.refresh, size: 20),
@@ -126,119 +123,138 @@ class SaleInvoiceTable extends ConsumerWidget {
                 ],
               ),
             ),
-            data: (_) {
-              if (paginated.items.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.all(AppSpacing.xl),
-                  child: Center(
-                    child: Text(
-                      'No sale invoices found',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ),
-                );
-              }
-
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final tableWidth = constraints.maxWidth.clamp(
-                    _minTableWidth,
-                    double.infinity,
-                  );
-
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width: tableWidth,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const _TableHeaderRow(),
-                          for (var i = 0; i < paginated.items.length; i++) ...[
-                            if (i > 0)
-                              const Divider(height: 1, color: _cardBorder),
-                            _buildRow(context, ref, paginated.items[i]),
-                          ],
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
+            data: (_) => _SaleInvoiceTransactionsTable(
+              items: paginated.items,
+            ),
           ),
           const Divider(height: 1, color: _cardBorder),
-          _PaginationRow(
-            currentPage: paginated.currentPage,
-            totalPages: paginated.totalPages,
-          ),
+          if (paginated.totalPages > 1)
+            _PaginationRow(
+              currentPage: paginated.currentPage,
+              totalPages: paginated.totalPages,
+            ),
         ],
       ),
     );
   }
+}
 
-  Future<void> _showSearchDialog(BuildContext context, WidgetRef ref) async {
-    final current = ref.read(saleInvoiceSearchQueryProvider);
-    final query = await showTextSearchDialog(
-      context,
-      title: 'Search invoices',
-      hint: 'Invoice no, party...',
-      initialValue: current,
+class _SaleInvoiceTransactionsTable extends ConsumerStatefulWidget {
+  const _SaleInvoiceTransactionsTable({required this.items});
+
+  final List<SaleInvoiceModel> items;
+
+  @override
+  ConsumerState<_SaleInvoiceTransactionsTable> createState() =>
+      _SaleInvoiceTransactionsTableState();
+}
+
+class _SaleInvoiceTransactionsTableState
+    extends ConsumerState<_SaleInvoiceTransactionsTable> {
+  @override
+  Widget build(BuildContext context) {
+    final filters = ref.watch(saleInvoiceFiltersProvider);
+    final selectedId = ref.watch(selectedSaleInvoiceIdProvider);
+    final hasActiveFilters = needsSaleInvoiceClientSideFiltering(filters);
+
+    final rows = [
+      for (var i = 0; i < widget.items.length; i++)
+        SaleInvoiceTableRows.buildDataRow(
+          context: context,
+          ref: ref,
+          invoice: widget.items[i],
+          isOdd: i.isOdd,
+          isSelected: widget.items[i].id == selectedId,
+          onTap: () => ref
+              .read(selectedSaleInvoiceIdProvider.notifier)
+              .select(widget.items[i].id),
+        ),
+    ];
+
+    final columns = _SaleInvoiceTableColumns.build(
+      context: context,
+      ref: ref,
+      onStatusFilter: (status) =>
+          ref.read(saleInvoiceFiltersProvider.notifier).setStatus(status),
     );
 
-    if (query == null) return;
-    ref.read(saleInvoiceSearchQueryProvider.notifier).setQuery(query);
-    ref.invalidate(saleInvoicesProvider);
-  }
-
-  Widget _buildRow(
-    BuildContext context,
-    WidgetRef ref,
-    SaleInvoiceModel invoice,
-  ) {
-    return _TableDataRow(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _TableCell(
-          width: _dateColWidth,
-          child: Text(_dateFormat.format(invoice.date)),
-        ),
-        _TableCell(
-          width: _invoiceColWidth,
-          child: Text(invoice.invoiceNo),
-        ),
-        Expanded(
-          child: _TableCell(
-            child: Text(
-              invoice.partyName,
-              overflow: TextOverflow.ellipsis,
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: ResizableDataTable(
+            columns: columns,
+            rows: rows,
+            headerBackgroundColor: _tableHeaderBg,
+            rowBorderColor: _cardBorder,
           ),
         ),
-        _TableCell(
-          width: _transactionColWidth,
-          child: _TransactionTypeLabel(type: invoice.transactionType),
+        if (widget.items.isEmpty)
+          _EmptyTransactionsState(isFiltered: hasActiveFilters),
+      ],
+    );
+  }
+}
+
+class SaleInvoiceTableRows {
+  const SaleInvoiceTableRows._();
+
+  static final _dateFormat = DateFormat('dd/MM/yyyy, HH:mm');
+  static final _dueDateFormat = DateFormat('dd/MM/yyyy');
+  static final _currencyFormat = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹ ',
+    decimalDigits: 0,
+  );
+
+  static ResizableDataRow buildDataRow({
+    required BuildContext context,
+    required WidgetRef ref,
+    required SaleInvoiceModel invoice,
+    required bool isOdd,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return ResizableDataRow(
+      isSelected: isSelected,
+      onTap: onTap,
+      backgroundColor: isOdd ? _zebraRowBg : Colors.transparent,
+      cells: [
+        _DataCell(child: Text(_dateFormat.format(invoice.date))),
+        _DataCell(child: Text(invoice.invoiceNo)),
+        _DataCell(
+          child: Text(
+            invoice.partyName,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
         ),
-        _TableCell(
-          width: _paymentColWidth,
-          child: Text(invoice.paymentType),
-        ),
-        _TableCell(
-          width: _statusColWidth,
-          child: SaleInvoiceStatusBadge(status: invoice.status),
-        ),
-        _TableCell(
-          width: _amountColWidth,
+        _DataCell(child: Text(invoice.transactionType)),
+        _DataCell(child: Text(invoice.paymentType)),
+        _DataCell(
           alignment: Alignment.centerRight,
           child: Text(_currencyFormat.format(invoice.amount)),
         ),
-        _TableCell(
-          width: _balanceColWidth,
+        _DataCell(
+          alignment: Alignment.centerRight,
+          child: Text(_currencyFormat.format(invoice.loyaltyRedeemed)),
+        ),
+        _DataCell(
           alignment: Alignment.centerRight,
           child: Text(_currencyFormat.format(invoice.balance)),
         ),
-        _TableCell(
-          width: _actionsColWidth,
-          gapAfter: 0,
+        _DataCell(
+          child: Text(
+            invoice.dueDate != null
+                ? _dueDateFormat.format(invoice.dueDate!)
+                : '',
+          ),
+        ),
+        _DataCell(
+          child: SaleInvoiceStatusBadge(status: invoice.status, plain: true),
+        ),
+        _DataCell(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -257,41 +273,19 @@ class SaleInvoiceTable extends ConsumerWidget {
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 tooltip: 'Print',
               ),
-              // Phase 1: sharing not supported.
-              // IconButton(share ...),
-              SalesActionMenuButton(
-                items: [
-                  SalesActionMenuItem(
-                    label: 'View',
-                    onSelected: () =>
-                        context.push('${AppRoutes.viewSale}/${invoice.id}'),
-                  ),
-                  SalesActionMenuItem(
-                    label: 'Edit',
-                    onSelected: () async {
-                      if (invoice.isDraft) {
-                        await context.push(
-                          '${AppRoutes.editSale}/${invoice.id}',
-                        );
-                      } else if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Only draft sales can be edited'),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                  SalesActionMenuItem(
-                    label: 'Delete',
-                    onSelected: () => _confirmDeleteInvoice(
-                      context,
-                      ref,
-                      invoice,
-                    ),
-                  ),
-                ],
+              IconButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Sharing is not available yet')),
+                  );
+                },
+                icon: const Icon(Icons.share_outlined, size: 18),
+                color: AppColors.textSecondary,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Share',
               ),
+              SaleInvoiceActionsMenuButton(invoice: invoice),
             ],
           ),
         ),
@@ -299,50 +293,149 @@ class SaleInvoiceTable extends ConsumerWidget {
     );
   }
 
-  static Future<void> _confirmDeleteInvoice(
-    BuildContext context,
-    WidgetRef ref,
-    SaleInvoiceModel invoice,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete sale?'),
-        content: const Text(
-          'This sale will be permanently deleted.\n'
-          'This action cannot be undone.',
+}
+
+class _SaleInvoiceTableColumns {
+  const _SaleInvoiceTableColumns._();
+
+  static List<ResizableDataColumn> build({
+    required BuildContext context,
+    required WidgetRef ref,
+    required ValueChanged<String> onStatusFilter,
+  }) {
+    final filters = ref.watch(saleInvoiceFiltersProvider);
+    final filtersNotifier = ref.read(saleInvoiceFiltersProvider.notifier);
+    final transactionOptions =
+        ref.watch(saleInvoiceTransactionTypeFilterOptionsProvider);
+    final paymentOptions =
+        ref.watch(saleInvoicePaymentTypeFilterOptionsProvider);
+
+    return [
+      ResizableDataColumn(
+        initialWidth: _dateColWidth,
+        minWidth: 96,
+        maxWidth: 280,
+        header: SaleColumnDateFilterTrigger(
+          label: 'Date',
+          initialFilter: filters.dateColumnFilter,
+          onApply: filtersNotifier.setDateColumnFilter,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
       ),
-    );
-    if (confirmed != true || !context.mounted) return;
-    final error = await ref.read(saleInvoicesProvider.notifier).deleteSale(
-      invoice,
-    );
-    if (!context.mounted) return;
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sale deleted successfully.')),
-      );
-    }
+      ResizableDataColumn(
+        initialWidth: _invoiceColWidth,
+        header: SaleColumnTextFilterTrigger(
+          label: 'Invoice no',
+          hintText: 'Invoice number',
+          initialFilter: filters.invoiceNoColumnFilter,
+          onApply: filtersNotifier.setInvoiceNoColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _partyColWidth,
+        minWidth: 100,
+        maxWidth: 420,
+        header: SaleColumnTextFilterTrigger(
+          label: 'Party Name',
+          hintText: 'Party name',
+          initialFilter: filters.partyNameColumnFilter,
+          onApply: filtersNotifier.setPartyNameColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _transactionColWidth,
+        header: SaleColumnSelectFilterTrigger(
+          label: 'Transaction',
+          options: transactionOptions,
+          initialFilter: filters.transactionTypeColumnFilter != null
+              ? SelectColumnFilter(
+                  value: filters.transactionTypeColumnFilter!.value,
+                )
+              : null,
+          onApply: filtersNotifier.setTransactionTypeColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _paymentColWidth,
+        header: SaleColumnSelectFilterTrigger(
+          label: 'Payment Type',
+          options: paymentOptions,
+          initialFilter: filters.paymentTypeColumnFilter != null
+              ? SelectColumnFilter(
+                  value: filters.paymentTypeColumnFilter!.value,
+                )
+              : null,
+          onApply: filtersNotifier.setPaymentTypeColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _amountColWidth,
+        header: SaleColumnAmountFilterTrigger(
+          label: 'Amount',
+          alignment: Alignment.centerRight,
+          initialFilter: filters.amountColumnFilter,
+          onApply: filtersNotifier.setAmountColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _loyaltyColWidth,
+        header: SaleColumnAmountFilterTrigger(
+          label: 'Loyalty redee...',
+          alignment: Alignment.centerRight,
+          initialFilter: filters.loyaltyColumnFilter,
+          onApply: filtersNotifier.setLoyaltyColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _balanceColWidth,
+        header: SaleColumnAmountFilterTrigger(
+          label: 'Balance',
+          alignment: Alignment.centerRight,
+          initialFilter: filters.balanceColumnFilter,
+          onApply: filtersNotifier.setBalanceColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _dueDateColWidth,
+        header: SaleColumnDateFilterTrigger(
+          label: 'Due date',
+          initialFilter: filters.dueDateColumnFilter,
+          onApply: filtersNotifier.setDueDateColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _statusColWidth,
+        header: _StatusColumnFilterHeader(
+          onStatusFilter: onStatusFilter,
+          selectedStatus: filters.selectedStatus,
+        ),
+      ),
+      const ResizableDataColumn(
+        initialWidth: _actionsColWidth,
+        resizable: false,
+        header: _HeaderCell(label: 'Actions'),
+      ),
+    ];
   }
 }
 
-class _TableHeaderRow extends StatelessWidget {
-  const _TableHeaderRow();
+class _StatusColumnFilterHeader extends StatefulWidget {
+  const _StatusColumnFilterHeader({
+    required this.onStatusFilter,
+    required this.selectedStatus,
+  });
+
+  final ValueChanged<String> onStatusFilter;
+  final String selectedStatus;
+
+  @override
+  State<_StatusColumnFilterHeader> createState() =>
+      _StatusColumnFilterHeaderState();
+}
+
+class _StatusColumnFilterHeaderState extends State<_StatusColumnFilterHeader> {
+  final LayerLink _layerLink = LayerLink();
+  final GlobalKey _triggerKey = GlobalKey();
+  OverlayEntry? _overlayEntry;
 
   static const _headerStyle = TextStyle(
     fontSize: 13,
@@ -350,64 +443,225 @@ class _TableHeaderRow extends StatelessWidget {
     color: AppColors.textSecondary,
   );
 
+  static const _statusOptions = [
+    'All Status',
+    'Cancelled',
+    'Paid',
+    'Overdue',
+    'Unpaid',
+    'Partial',
+  ];
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    super.dispose();
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  void _toggleMenu() {
+    if (_overlayEntry != null) {
+      _removeOverlay();
+      return;
+    }
+    _showMenu();
+  }
+
+  void _showMenu() {
+    final renderBox =
+        _triggerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize) return;
+
+    final overlay = Overlay.of(context);
+
+    _overlayEntry = OverlayEntry(
+      builder: (overlayContext) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _removeOverlay,
+              ),
+            ),
+            CompositedTransformFollower(
+              link: _layerLink,
+              showWhenUnlinked: false,
+              targetAnchor: Alignment.bottomLeft,
+              offset: const Offset(0, 4),
+              child: Material(
+                elevation: 4,
+                shadowColor: Colors.black26,
+                color: AppColors.surface,
+                borderRadius: AppRadius.mdBorder,
+                clipBehavior: Clip.antiAlias,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 160),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final option in _statusOptions)
+                        _StatusFilterMenuItem(
+                          label: option,
+                          isSelected: option == widget.selectedStatus,
+                          onTap: () {
+                            _removeOverlay();
+                            widget.onStatusFilter(option);
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    overlay.insert(_overlayEntry!);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.background,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: const Row(
-        children: [
-          _TableCell(
-            width: _dateColWidth,
-            child: Text('Date', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _invoiceColWidth,
-            child: Text('Invoice no', style: _headerStyle),
-          ),
-          Expanded(
-            child: _TableCell(child: Text('Party Name', style: _headerStyle)),
-          ),
-          _TableCell(
-            width: _transactionColWidth,
-            child: Text('Transaction', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _paymentColWidth,
-            child: Text('Payment Type', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _statusColWidth,
-            child: Text('Status', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _amountColWidth,
-            alignment: Alignment.centerRight,
-            child: Text('Amount', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _balanceColWidth,
-            alignment: Alignment.centerRight,
-            child: Text('Balance', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _actionsColWidth,
-            gapAfter: 0,
-            child: Text('Actions', style: _headerStyle),
-          ),
-        ],
+    final isActive = widget.selectedStatus != 'All Status';
+
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: _cellHorizontalPadding,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Status',
+                style: _headerStyle,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
+            ),
+            const SizedBox(width: 2),
+            InkWell(
+              key: _triggerKey,
+              onTap: _toggleMenu,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: Icon(
+                  Icons.filter_list,
+                  size: 14,
+                  color: isActive ? AppColors.primary : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _TableDataRow extends StatelessWidget {
-  const _TableDataRow({required this.children});
+class _StatusFilterMenuItem extends StatelessWidget {
+  const _StatusFilterMenuItem({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
 
-  final List<Widget> children;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  static const _hoverColor = Color(0xFFF5F5F5);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        hoverColor: _hoverColor,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                child: isSelected
+                    ? Center(
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            color: Colors.black87,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderCell extends StatelessWidget {
+  const _HeaderCell({required this.label});
+
+  static const _headerStyle = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+  );
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: _cellHorizontalPadding,
+        vertical: AppSpacing.sm,
+      ),
+      child: Text(
+        label,
+        style: _headerStyle,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+    );
+  }
+}
+
+class _DataCell extends StatelessWidget {
+  const _DataCell({
+    required this.child,
+    this.alignment = Alignment.centerLeft,
+  });
+
+  final Widget child;
+  final Alignment alignment;
 
   static const _dataStyle = TextStyle(
     fontSize: 13,
@@ -418,81 +672,65 @@ class _TableDataRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTextStyle(
       style: _dataStyle,
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
+          horizontal: _cellHorizontalPadding,
           vertical: AppSpacing.sm,
         ),
-        child: Row(children: children),
+        child: Align(
+          alignment: alignment,
+          child: child,
+        ),
       ),
     );
   }
 }
 
-class _TableCell extends StatelessWidget {
-  const _TableCell({
-    required this.child,
-    this.width,
-    this.alignment = Alignment.centerLeft,
-    this.gapAfter = _colGap,
-  });
+class _EmptyTransactionsState extends StatelessWidget {
+  const _EmptyTransactionsState({this.isFiltered = false});
 
-  final Widget child;
-  final double? width;
-  final Alignment alignment;
-  final double gapAfter;
+  final bool isFiltered;
 
   @override
   Widget build(BuildContext context) {
-    final content = Align(
-      alignment: alignment,
-      widthFactor: 1,
-      child: child,
-    );
-
-    if (width != null) {
-      return Padding(
-        padding: EdgeInsets.only(right: gapAfter),
-        child: SizedBox(
-          width: width,
-          child: ClipRect(child: content),
-        ),
-      );
-    }
-
-    return ClipRect(child: content);
-  }
-}
-
-class _TransactionTypeLabel extends StatelessWidget {
-  const _TransactionTypeLabel({required this.type});
-
-  final String type;
-
-  @override
-  Widget build(BuildContext context) {
-    final (backgroundColor, textColor) = switch (type.toLowerCase()) {
-      'sale' => (const Color(0xFFE8F5E9), const Color(0xFF2E7D32)),
-      'purchase' => (const Color(0xFFE3F2FD), const Color(0xFF1565C0)),
-      _ => (const Color(0xFFF5F5F5), AppColors.textPrimary),
-    };
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          type,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: textColor,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.xxl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 48,
+            color: AppColors.textSecondary.withValues(alpha: 0.5),
           ),
-        ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            isFiltered
+                ? 'No matching transactions'
+                : 'No sale invoices found',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            isFiltered
+                ? 'Try adjusting your filters or clear them to see all results.'
+                : 'Create your first sale to get started.',
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

@@ -72,6 +72,9 @@ class SalesDocumentDto {
     this.convertedFromId,
     this.posSessionId,
     this.notes,
+    this.createdBy,
+    this.createdByName,
+    this.godownName,
     this.lines = const [],
   });
 
@@ -96,6 +99,9 @@ class SalesDocumentDto {
       convertedFromId: json['converted_from_id'] as String?,
       posSessionId: json['pos_session_id'] as String?,
       notes: json['notes'] as String?,
+      createdBy: json['created_by'] as String?,
+      createdByName: json['created_by_name'] as String?,
+      godownName: json['godown_name'] as String?,
       createdAt: json['created_at'] as String,
       updatedAt: json['updated_at'] as String,
       lines: lines is List
@@ -125,6 +131,9 @@ class SalesDocumentDto {
   final String? convertedFromId;
   final String? posSessionId;
   final String? notes;
+  final String? createdBy;
+  final String? createdByName;
+  final String? godownName;
   final String createdAt;
   final String updatedAt;
   final List<SalesDocumentLineDto> lines;

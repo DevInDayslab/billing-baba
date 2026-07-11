@@ -62,6 +62,15 @@ class SalesRepository {
     PaymentAllocationRequest request,
   ) => _remote.addPaymentAllocation(paymentId, request);
 
+  Future<PaymentDto> getPayment(String id) => _remote.getPayment(id);
+
+  Future<PaymentDto> updatePayment(
+    String id,
+    UpdatePaymentRequest request,
+  ) => _remote.updatePayment(id, request);
+
+  Future<void> deletePayment(String id) => _remote.deletePayment(id);
+
   Future<SalesDocumentDto> convertDocument(
     String id,
     ConvertSalesDocumentRequest request,

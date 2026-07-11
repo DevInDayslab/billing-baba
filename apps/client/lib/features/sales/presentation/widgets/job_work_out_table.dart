@@ -1,24 +1,24 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
-import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_dialog.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_status_badge.dart';
 import 'package:billing_baba/features/sales/providers/job_work_orders_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
-const _addJobWorkRed = Color(0xFFD32F2F);
-const _statusOpenColor = Color(0xFF1565C0);
-const _statusClosedColor = Color(0xFF616161);
+const _tableHeaderBg = Color(0xFFF5F7FA);
+const _convertLinkColor = Color(0xFF1565C0);
 
 const _dateColWidth = 120.0;
 const _partyColWidth = 160.0;
-const _jobIdColWidth = 120.0;
-const _deliveryColWidth = 140.0;
-const _statusColWidth = 120.0;
-const _actionsColWidth = 120.0;
+const _jobIdColWidth = 90.0;
+const _deliveryColWidth = 130.0;
+const _statusColWidth = 180.0;
+const _actionsColWidth = 220.0;
 
 const double _minTableWidth =
     _dateColWidth +
@@ -33,10 +33,14 @@ class JobWorkOutTable extends ConsumerWidget {
   const JobWorkOutTable({super.key});
 
   Future<void> _openForm(
-    BuildContext context, {
+    BuildContext context,
+    WidgetRef ref, {
     String? orderId,
   }) async {
-    await showJobWorkOutDialog(context, orderId: orderId);
+    final saved = await showJobWorkOutDialog(context, orderId: orderId);
+    if (saved == true) {
+      await ref.read(jobWorkOrdersListProvider.notifier).refresh();
+    }
   }
 
   @override
@@ -70,17 +74,7 @@ class JobWorkOutTable extends ConsumerWidget {
       ),
       data: (page) => _JobWorkOutTableContent(
         items: page.items,
-        onAdd: () => _openForm(context),
-        onEdit: (item) => _openForm(context, orderId: item.id),
-        onDelete: (id) async {
-          final error = await listNotifier.deleteOrder(id);
-          if (!context.mounted) return;
-          if (error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(error)),
-            );
-          }
-        },
+        onEdit: (item) => _openForm(context, ref, orderId: item.id),
         onRefresh: listNotifier.refresh,
       ),
     );
@@ -90,16 +84,12 @@ class JobWorkOutTable extends ConsumerWidget {
 class _JobWorkOutTableContent extends ConsumerWidget {
   const _JobWorkOutTableContent({
     required this.items,
-    required this.onAdd,
     required this.onEdit,
-    required this.onDelete,
     required this.onRefresh,
   });
 
   final List<JobWorkOrderListItem> items;
-  final VoidCallback onAdd;
   final void Function(JobWorkOrderListItem item) onEdit;
-  final Future<void> Function(String id) onDelete;
   final Future<void> Function() onRefresh;
 
   @override
@@ -137,22 +127,6 @@ class _JobWorkOutTableContent extends ConsumerWidget {
                   icon: const Icon(Icons.refresh, size: 18),
                   color: AppColors.textSecondary,
                   tooltip: 'Refresh',
-                ),
-                FilledButton.icon(
-                  onPressed: onAdd,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _addJobWorkRed,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                  ),
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text(
-                    'Job Work Out',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
                 ),
               ],
             ),
@@ -193,7 +167,6 @@ class _JobWorkOutTableContent extends ConsumerWidget {
                           _DataRow(
                             item: items[i],
                             onTap: () => onEdit(items[i]),
-                            onDelete: () => onDelete(items[i].id),
                           ),
                         ],
                       ],
@@ -220,17 +193,15 @@ class _TableHeaderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(
+    return Container(
+      color: _tableHeaderBg,
+      padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      child: Row(
+      child: const Row(
         children: [
-          SizedBox(
-            width: _dateColWidth,
-            child: Text('DATE', style: _headerStyle),
-          ),
+          SizedBox(width: _dateColWidth, child: Text('DATE', style: _headerStyle)),
           SizedBox(
             width: _partyColWidth,
             child: Text('PARTY', style: _headerStyle),
@@ -261,12 +232,10 @@ class _DataRow extends ConsumerWidget {
   const _DataRow({
     required this.item,
     required this.onTap,
-    required this.onDelete,
   });
 
   final JobWorkOrderListItem item;
   final VoidCallback onTap;
-  final VoidCallback onDelete;
 
   static final _dateFormat = DateFormat('dd/MM/yyyy');
 
@@ -277,16 +246,7 @@ class _DataRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statusLabel = switch (item.status) {
-      JobWorkOutStatus.open => 'Open',
-      JobWorkOutStatus.closed => 'Closed',
-      JobWorkOutStatus.cancelled => 'Cancelled',
-    };
-    final statusColor = switch (item.status) {
-      JobWorkOutStatus.open => _statusOpenColor,
-      JobWorkOutStatus.closed => _statusClosedColor,
-      JobWorkOutStatus.cancelled => AppColors.error,
-    };
+    final closedDate = item.closedAt;
 
     return Material(
       color: Colors.transparent,
@@ -330,13 +290,20 @@ class _DataRow extends ConsumerWidget {
                 ),
                 SizedBox(
                   width: _statusColWidth,
-                  child: Text(
-                    statusLabel,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: statusColor,
-                    ),
+                  child: Row(
+                    children: [
+                      JobWorkOutStatusBadge(status: item.status),
+                      if (closedDate != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          _dateFormat.format(closedDate),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 SizedBox(
@@ -344,48 +311,19 @@ class _DataRow extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        onPressed: () => VoucherPrintActions.previewJobWorkOrder(
-                          context,
-                          ref,
-                          item.id,
-                          filename: VoucherPrintActions.filenameFor(
-                            item.jobId.isNotEmpty ? item.jobId : item.id,
+                      if (item.convertedInvoiceNumber != null)
+                        Flexible(
+                          child: Text(
+                            'Converted to invoice No.${item.convertedInvoiceNumber}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: _convertLinkColor,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        icon: const Icon(Icons.print_outlined, size: 18),
-                        color: AppColors.textSecondary,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                        tooltip: 'Print / Preview',
-                      ),
-                      IconButton(
-                        onPressed: () => VoucherPrintActions.shareJobWorkOrder(
-                          context,
-                          ref,
-                          item.id,
-                          filename: VoucherPrintActions.filenameFor(
-                            item.jobId.isNotEmpty ? item.jobId : item.id,
-                          ),
-                        ),
-                        icon: const Icon(Icons.share_outlined, size: 18),
-                        color: AppColors.textSecondary,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 32,
-                          minHeight: 32,
-                        ),
-                        tooltip: 'Share',
-                      ),
-                      IconButton(
-                        onPressed: onDelete,
-                        icon: const Icon(Icons.delete_outline, size: 20),
-                        color: AppColors.textSecondary,
-                        tooltip: 'Delete',
-                      ),
+                      JobWorkOutActionsMenuButton(item: item),
                     ],
                   ),
                 ),

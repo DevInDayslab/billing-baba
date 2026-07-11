@@ -1,27 +1,46 @@
 import 'package:billing_baba/core/router/app_routes.dart';
-import 'package:billing_baba/features/sales/models/sale_document_model.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_document_form.dart';
+import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/estimate_quotation_filter_bar.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/estimate_quotation_summary_card.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/estimate_quotation_table.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_page_title_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-class EstimateQuotationPage extends StatelessWidget {
+class EstimateQuotationPage extends ConsumerWidget {
   const EstimateQuotationPage({super.key});
 
-  static const _accentColor = Color(0xFF7B1FA2);
-  static const _circleColor = Color(0xFFEDE7F6);
-  static const _squareColor = Color(0xFFB39DDB);
-
   @override
-  Widget build(BuildContext context) {
-    return const SaleDocumentForm(
-      documentType: SaleDocumentType.estimate,
-      route: AppRoutes.saleEstimateQuotation,
-      pageTitle: 'Estimate/Quotation',
-      accentColor: _accentColor,
-      illustrationCircleColor: _circleColor,
-      illustrationSquareColor: _squareColor,
-      emptyStateDescription:
-          'Create estimates and quotations for your clients.',
-      createButtonLabel: 'Create Estimate',
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SalePageTitleBar(
+              currentRoute: AppRoutes.saleEstimateQuotation,
+              addButtonLabel: 'Add Estimate',
+              addButtonColor: AppColors.error,
+              onAddTap: () => context.push(AppRoutes.addEstimate),
+              onSettingsTap: () => debugPrint('Settings tapped'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            const EstimateQuotationFilterBar(),
+            const SizedBox(height: AppSpacing.md),
+            const EstimateQuotationSummaryCard(),
+            const SizedBox(height: AppSpacing.md),
+            const EstimateQuotationTable(),
+          ],
+        ),
+      ),
     );
   }
 }

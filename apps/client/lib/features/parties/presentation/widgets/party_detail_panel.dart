@@ -80,8 +80,7 @@ class _PartyDetailContentState extends ConsumerState<_PartyDetailContent> {
 
   @override
   Widget build(BuildContext context) {
-    final ledgerKey = (partyId: widget.party.id, filter: _filter);
-    final ledgerAsync = ref.watch(partyLedgerProvider(ledgerKey));
+    final ledgerAsync = ref.watch(partyLedgerProvider(widget.party.id));
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -143,10 +142,13 @@ class _PartyDetailContentState extends ConsumerState<_PartyDetailContent> {
                 error: (error, _) => _PartyDetailError(
                   message: PartyErrorMapper.messageFor(error),
                   onRetry: () =>
-                      ref.invalidate(partyLedgerProvider(ledgerKey)),
+                      ref.invalidate(partyLedgerProvider(widget.party.id)),
                 ),
                 data: (ledger) => PartyLedgerTransactionsTable(
-                  transactions: ledger.transactions,
+                  transactions: ledger.transactions
+                      .where(_filter.matches)
+                      .toList(),
+                  isFiltered: _filter != PartyLedgerFilter.all,
                 ),
               ),
             ),

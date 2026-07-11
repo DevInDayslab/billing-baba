@@ -3,6 +3,10 @@ import 'package:billing_baba/features/sales/application/sales_error_mapper.dart'
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_select_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:flutter/material.dart';
@@ -23,19 +27,35 @@ abstract final class PaymentInDropdownOptions {
 
 class PaymentInFiltersState {
   const PaymentInFiltersState({
-    this.timeRangeOption = TimeRangeOption.allTime,
+    this.timeRangeOption = TimeRangeOption.thisMonth,
     this.customDateRange,
+    this.partyId,
+    this.dateColumnFilter,
+    this.refNoColumnFilter,
+    this.partyNameColumnFilter,
+    this.totalAmountColumnFilter,
+    this.receivedAmountColumnFilter,
+    this.paymentTypeColumnFilter,
+    this.selectedFirm = 'All Firms',
     this.selectedUser = 'All Users',
-    this.selectedGodown = 'All Godown',
     this.selectedStatus = 'All Status',
+    this.searchQuery = '',
     this.currentPage = 1,
   });
 
   final TimeRangeOption timeRangeOption;
   final DateTimeRange? customDateRange;
+  final String? partyId;
+  final DateColumnFilter? dateColumnFilter;
+  final TextColumnFilter? refNoColumnFilter;
+  final TextColumnFilter? partyNameColumnFilter;
+  final AmountColumnFilter? totalAmountColumnFilter;
+  final AmountColumnFilter? receivedAmountColumnFilter;
+  final SelectColumnFilter? paymentTypeColumnFilter;
+  final String selectedFirm;
   final String selectedUser;
-  final String selectedGodown;
   final String selectedStatus;
+  final String searchQuery;
   final int currentPage;
 
   String get timeRangeLabel => timeRangeOption.label;
@@ -44,9 +64,24 @@ class PaymentInFiltersState {
     TimeRangeOption? timeRangeOption,
     DateTimeRange? customDateRange,
     bool clearCustomDateRange = false,
+    String? partyId,
+    bool clearPartyId = false,
+    DateColumnFilter? dateColumnFilter,
+    bool clearDateColumnFilter = false,
+    TextColumnFilter? refNoColumnFilter,
+    bool clearRefNoColumnFilter = false,
+    TextColumnFilter? partyNameColumnFilter,
+    bool clearPartyNameColumnFilter = false,
+    AmountColumnFilter? totalAmountColumnFilter,
+    bool clearTotalAmountColumnFilter = false,
+    AmountColumnFilter? receivedAmountColumnFilter,
+    bool clearReceivedAmountColumnFilter = false,
+    SelectColumnFilter? paymentTypeColumnFilter,
+    bool clearPaymentTypeColumnFilter = false,
+    String? selectedFirm,
     String? selectedUser,
-    String? selectedGodown,
     String? selectedStatus,
+    String? searchQuery,
     int? currentPage,
   }) {
     return PaymentInFiltersState(
@@ -54,26 +89,62 @@ class PaymentInFiltersState {
       customDateRange: clearCustomDateRange
           ? null
           : (customDateRange ?? this.customDateRange),
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
+      dateColumnFilter: clearDateColumnFilter
+          ? null
+          : (dateColumnFilter ?? this.dateColumnFilter),
+      refNoColumnFilter: clearRefNoColumnFilter
+          ? null
+          : (refNoColumnFilter ?? this.refNoColumnFilter),
+      partyNameColumnFilter: clearPartyNameColumnFilter
+          ? null
+          : (partyNameColumnFilter ?? this.partyNameColumnFilter),
+      totalAmountColumnFilter: clearTotalAmountColumnFilter
+          ? null
+          : (totalAmountColumnFilter ?? this.totalAmountColumnFilter),
+      receivedAmountColumnFilter: clearReceivedAmountColumnFilter
+          ? null
+          : (receivedAmountColumnFilter ?? this.receivedAmountColumnFilter),
+      paymentTypeColumnFilter: clearPaymentTypeColumnFilter
+          ? null
+          : (paymentTypeColumnFilter ?? this.paymentTypeColumnFilter),
+      selectedFirm: selectedFirm ?? this.selectedFirm,
       selectedUser: selectedUser ?? this.selectedUser,
-      selectedGodown: selectedGodown ?? this.selectedGodown,
       selectedStatus: selectedStatus ?? this.selectedStatus,
+      searchQuery: searchQuery ?? this.searchQuery,
       currentPage: currentPage ?? this.currentPage,
     );
   }
+}
+
+bool needsPaymentInClientSideFiltering(PaymentInFiltersState filters) {
+  return filters.dateColumnFilter != null ||
+      filters.refNoColumnFilter != null ||
+      filters.partyNameColumnFilter != null ||
+      filters.totalAmountColumnFilter != null ||
+      filters.receivedAmountColumnFilter != null ||
+      filters.paymentTypeColumnFilter != null ||
+      filters.selectedStatus != 'All Status' ||
+      filters.selectedUser != 'All Users' ||
+      filters.selectedFirm != 'All Firms' ||
+      filters.searchQuery.trim().isNotEmpty;
 }
 
 class PaymentInSummaryData {
   const PaymentInSummaryData({
     required this.totalAmount,
     required this.receivedAmount,
+    this.growthPercent = 0,
   });
 
   final double totalAmount;
   final double receivedAmount;
+  final double growthPercent;
 }
 
 PaymentInStatus? _statusFromFilterLabel(String label) => switch (label) {
-  'Used' => PaymentInStatus.used,
+  'Paid' => PaymentInStatus.paid,
+  'Partial' => PaymentInStatus.partial,
   'Unused' => PaymentInStatus.unused,
   _ => null,
 };
@@ -122,6 +193,7 @@ PaymentListQuery _buildPaymentListQuery(PaymentInFiltersState filters) {
     page: filters.currentPage,
     limit: paymentInPageSize,
     direction: 'received',
+    partyId: filters.partyId,
     from: dateRange?.start.toUtc().toIso8601String(),
     to: dateRange?.end.toUtc().toIso8601String(),
   );
@@ -132,18 +204,50 @@ List<PaymentInModel> _applyClientFilters(
   PaymentInFiltersState filters,
 ) {
   final statusFilter = _statusFromFilterLabel(filters.selectedStatus);
+  final search = filters.searchQuery.trim().toLowerCase();
 
   return records.where((record) {
     if (statusFilter != null && record.status != statusFilter) {
+      return false;
+    }
+    if (filters.selectedFirm != 'All Firms' && record.firm != filters.selectedFirm) {
       return false;
     }
     if (filters.selectedUser != 'All Users' &&
         record.user != filters.selectedUser) {
       return false;
     }
-    if (filters.selectedGodown != 'All Godown' &&
-        record.godown != filters.selectedGodown) {
+    if (filters.dateColumnFilter != null &&
+        !filters.dateColumnFilter!.matches(record.date)) {
       return false;
+    }
+    if (filters.refNoColumnFilter != null &&
+        !filters.refNoColumnFilter!.matches(record.receiptNo)) {
+      return false;
+    }
+    if (filters.partyNameColumnFilter != null &&
+        !filters.partyNameColumnFilter!.matches(record.partyName)) {
+      return false;
+    }
+    if (filters.totalAmountColumnFilter != null &&
+        !filters.totalAmountColumnFilter!.matches(record.totalAmount)) {
+      return false;
+    }
+    if (filters.receivedAmountColumnFilter != null &&
+        !filters.receivedAmountColumnFilter!.matches(record.receivedAmount)) {
+      return false;
+    }
+    if (filters.paymentTypeColumnFilter != null &&
+        !filters.paymentTypeColumnFilter!.matches(record.paymentType)) {
+      return false;
+    }
+    if (search.isNotEmpty) {
+      final haystack =
+          '${record.partyName} ${record.receiptNo} ${record.paymentType}'
+              .toLowerCase();
+      if (!haystack.contains(search)) {
+        return false;
+      }
     }
     return true;
   }).toList();
@@ -173,6 +277,18 @@ class PaymentInRecords extends _$PaymentInRecords {
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(_fetchPage);
+  }
+
+  Future<String?> deletePayment(String paymentId) async {
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      await service.deletePayment(paymentId);
+      ref.invalidate(saleInvoicesProvider);
+      await refresh();
+      return null;
+    } catch (error) {
+      return SalesErrorMapper.messageFor(error);
+    }
   }
 }
 
@@ -208,8 +324,8 @@ class PaymentInFilters extends _$PaymentInFilters {
     ref.invalidate(paymentInRecordsProvider);
   }
 
-  void setGodown(String godown) {
-    state = state.copyWith(selectedGodown: godown, currentPage: 1);
+  void setFirm(String firm) {
+    state = state.copyWith(selectedFirm: firm, currentPage: 1);
     ref.invalidate(paymentInRecordsProvider);
   }
 
@@ -218,8 +334,64 @@ class PaymentInFilters extends _$PaymentInFilters {
     ref.invalidate(paymentInRecordsProvider);
   }
 
+  void setSearchQuery(String query) {
+    state = state.copyWith(searchQuery: query, currentPage: 1);
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setPartyFilter({String? partyId, String? partyName}) {
+    state = state.copyWith(
+      partyId: partyId,
+      clearPartyId: partyId == null,
+      currentPage: 1,
+    );
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setDateColumnFilter(DateColumnFilter? filter) {
+    state = filter == null
+        ? state.copyWith(clearDateColumnFilter: true, currentPage: 1)
+        : state.copyWith(dateColumnFilter: filter, currentPage: 1);
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setRefNoColumnFilter(TextColumnFilter? filter) {
+    state = filter == null
+        ? state.copyWith(clearRefNoColumnFilter: true, currentPage: 1)
+        : state.copyWith(refNoColumnFilter: filter, currentPage: 1);
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setPartyNameColumnFilter(TextColumnFilter? filter) {
+    state = filter == null
+        ? state.copyWith(clearPartyNameColumnFilter: true, currentPage: 1)
+        : state.copyWith(partyNameColumnFilter: filter, currentPage: 1);
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setTotalAmountColumnFilter(AmountColumnFilter? filter) {
+    state = filter == null
+        ? state.copyWith(clearTotalAmountColumnFilter: true, currentPage: 1)
+        : state.copyWith(totalAmountColumnFilter: filter, currentPage: 1);
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setReceivedAmountColumnFilter(AmountColumnFilter? filter) {
+    state = filter == null
+        ? state.copyWith(clearReceivedAmountColumnFilter: true, currentPage: 1)
+        : state.copyWith(receivedAmountColumnFilter: filter, currentPage: 1);
+    ref.invalidate(paymentInRecordsProvider);
+  }
+
+  void setPaymentTypeColumnFilter(SelectColumnFilter? filter) {
+    state = filter == null
+        ? state.copyWith(clearPaymentTypeColumnFilter: true, currentPage: 1)
+        : state.copyWith(paymentTypeColumnFilter: filter, currentPage: 1);
     ref.invalidate(paymentInRecordsProvider);
   }
 }
@@ -254,6 +426,7 @@ PaymentInSummaryData paymentInSummary(Ref ref) {
   return PaymentInSummaryData(
     totalAmount: totalAmount,
     receivedAmount: receivedAmount,
+    growthPercent: totalAmount > 0 ? 100 : 0,
   );
 }
 
@@ -377,6 +550,10 @@ class PaymentInForm extends _$PaymentInForm {
 
   void updatePaymentType(String value) {
     state = state.copyWith(paymentType: value, clearSaveError: true);
+  }
+
+  void updateReceiptNo(String value) {
+    state = state.copyWith(receiptNo: value, clearSaveError: true);
   }
 
   void updateDate(DateTime date) {

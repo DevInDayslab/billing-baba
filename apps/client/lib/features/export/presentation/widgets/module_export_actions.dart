@@ -6,10 +6,12 @@ import 'package:billing_baba/features/export/application/adapters/purchase_docum
 import 'package:billing_baba/features/export/application/adapters/purchase_fa_export_adapter.dart';
 import 'package:billing_baba/features/export/application/adapters/purchase_order_export_adapter.dart';
 import 'package:billing_baba/features/export/application/adapters/purchase_return_export_adapter.dart';
+import 'package:billing_baba/features/export/application/adapters/sale_fa_export_adapter.dart';
 import 'package:billing_baba/features/export/application/adapters/sale_invoice_export_adapter.dart';
 import 'package:billing_baba/features/export/application/adapters/sales_document_export_adapter.dart';
 import 'package:billing_baba/features/export/models/export_sheet.dart';
 import 'package:billing_baba/features/export/presentation/widgets/export_actions.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_report_options_dialog.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:flutter/material.dart';
@@ -17,12 +19,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Typed export actions for transaction list modules.
 abstract final class ModuleExportActions {
-  static Future<void> exportSaleInvoices(BuildContext context, WidgetRef ref) {
+  static Future<void> exportSaleInvoices(BuildContext context, WidgetRef ref) async {
+    final options = await showSaleInvoiceReportOptionsDialog(context);
+    if (options == null || !context.mounted) return;
+
     return _exportXlsx(
       context,
       ref,
       filenameBase: 'Sales',
-      loader: () => buildSaleInvoiceExportSheet(ref),
+      loader: () => buildSaleInvoiceExportSheet(ref, options: options),
     );
   }
 
@@ -119,6 +124,15 @@ abstract final class ModuleExportActions {
       ref,
       filenameBase: 'Fixed_Asset_Purchases',
       loader: () => buildPurchaseFaExportSheet(ref),
+    );
+  }
+
+  static Future<void> exportSaleFa(BuildContext context, WidgetRef ref) {
+    return _exportXlsx(
+      context,
+      ref,
+      filenameBase: 'Sale_FA',
+      loader: () => buildSaleFaExportSheet(ref),
     );
   }
 

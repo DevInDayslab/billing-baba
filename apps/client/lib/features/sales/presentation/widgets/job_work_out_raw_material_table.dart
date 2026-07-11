@@ -17,14 +17,7 @@ const _deleteColWidth = 28.0;
 const _addRowButtonColor = Color(0xFF1565C0);
 
 class JobWorkOutRawMaterialTable extends ConsumerWidget {
-  const JobWorkOutRawMaterialTable({
-    required this.finishedGoodQty,
-    required this.finishedGoodUnit,
-    super.key,
-  });
-
-  final double finishedGoodQty;
-  final String finishedGoodUnit;
+  const JobWorkOutRawMaterialTable({super.key});
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -32,90 +25,86 @@ class JobWorkOutRawMaterialTable extends ConsumerWidget {
     decimalDigits: 2,
   );
 
-  static String _formatQty(double qty) {
-    if (qty == qty.roundToDouble()) return qty.toInt().toString();
-    return qty.toString();
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(jobWorkOutFormProvider);
     final notifier = ref.read(jobWorkOutFormProvider.notifier);
-    final unitLabel = finishedGoodUnit == 'NONE' ? 'PCS' : finishedGoodUnit;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: _cardBorder),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-            child: Text(
-              'Raw material (${_formatQty(finishedGoodQty)} $unitLabel Item)',
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Raw material',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
           ),
-          const Divider(height: 1, color: _cardBorder),
-          const _TableHeaderRow(),
-          const Divider(height: 1, color: _cardBorder),
-          for (var i = 0; i < form.rawMaterials.length; i++) ...[
-            if (i > 0) const Divider(height: 1, color: _cardBorder),
-            _RawMaterialRow(index: i, item: form.rawMaterials[i]),
-          ],
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: notifier.addRawMaterialRow,
-                style: TextButton.styleFrom(
-                  foregroundColor: _addRowButtonColor,
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text(
-                  'Add Row',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(color: _cardBorder),
+            borderRadius: BorderRadius.circular(8),
           ),
-          Container(
-            color: _headerBackground,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                const Spacer(),
-                const Text(
-                  'TOTAL:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  _currencyFormat.format(form.rawMaterialsTotal),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const _TableHeaderRow(),
+              const Divider(height: 1, color: _cardBorder),
+              for (var i = 0; i < form.rawMaterials.length; i++) ...[
+                if (i > 0) const Divider(height: 1, color: _cardBorder),
+                _RawMaterialRow(index: i, item: form.rawMaterials[i]),
               ],
-            ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: notifier.addRawMaterialRow,
+                    style: TextButton.styleFrom(
+                      foregroundColor: _addRowButtonColor,
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text(
+                      'Add Row',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                color: _headerBackground,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    const Spacer(),
+                    const Text(
+                      'TOTAL:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      _currencyFormat.format(form.rawMaterialsTotal),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

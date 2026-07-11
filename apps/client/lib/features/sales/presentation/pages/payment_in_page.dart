@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/payment_in_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/payment_in_filter_bar.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/payment_in_summary_card.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/payment_in_table.dart';
@@ -7,30 +8,48 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_page_title
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+const _addPaymentInRed = Color(0xFFE53935);
+
 class PaymentInPage extends ConsumerWidget {
   const PaymentInPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SalePageTitleBar(
-              currentRoute: AppRoutes.salePaymentIn,
-              onSettingsTap: () => debugPrint('Settings tapped'),
+      backgroundColor: AppColors.surface,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding = constraints.maxWidth < 600
+              ? AppSpacing.md
+              : AppSpacing.lg;
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              AppSpacing.md,
+              horizontalPadding,
+              AppSpacing.lg,
             ),
-            const SizedBox(height: AppSpacing.md),
-            const PaymentInFilterBar(),
-            const SizedBox(height: AppSpacing.md),
-            const PaymentInSummaryCard(),
-            const SizedBox(height: AppSpacing.md),
-            const PaymentInTable(),
-          ],
-        ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SalePageTitleBar(
+                  currentRoute: AppRoutes.salePaymentIn,
+                  addButtonLabel: 'Add Payment-In',
+                  addButtonColor: _addPaymentInRed,
+                  onAddTap: () => showPaymentInDialog(context),
+                  onSettingsTap: () => debugPrint('Settings tapped'),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                const PaymentInFilterBar(),
+                const SizedBox(height: AppSpacing.md),
+                const PaymentInSummaryCard(),
+                const SizedBox(height: AppSpacing.md),
+                const PaymentInTable(),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

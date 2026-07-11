@@ -3,7 +3,9 @@ import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_order_summary_cards.dart';
+import 'package:billing_baba/features/sales/providers/estimate_quotation_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/providers/sale_return_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -247,6 +249,7 @@ class SalesDocumentsList extends _$SalesDocumentsList {
       final service = await ref.read(salesServiceProvider.future);
       await service.finalizeDraft(documentId, godownId: godownId);
       await refresh();
+      _invalidateRelatedLists(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
@@ -258,6 +261,7 @@ class SalesDocumentsList extends _$SalesDocumentsList {
       final service = await ref.read(salesServiceProvider.future);
       await service.cancelSale(documentId);
       await refresh();
+      _invalidateRelatedLists(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
@@ -277,10 +281,29 @@ class SalesDocumentsList extends _$SalesDocumentsList {
         applyGst: applyGst,
       );
       await refresh();
+      _invalidateRelatedLists(ref, targetType: targetType);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
     }
+  }
+}
+
+void _invalidateRelatedLists(
+  Ref ref, {
+  String? targetType,
+}) {
+  ref.invalidate(salesDocumentsListProvider(saleOrderListScope()));
+  ref.invalidate(salesDocumentsListProvider(deliveryChallanListScope()));
+  ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
+  ref.invalidate(saleReturnsProvider);
+  ref.invalidate(salesDocumentsListProvider(estimateListScope()));
+  ref.invalidate(salesDocumentsListProvider(proformaListScope()));
+  ref.invalidate(saleInvoicesProvider);
+  ref.invalidate(estimateQuotationsProvider);
+
+  if (targetType == 'tax_invoice') {
+    ref.invalidate(saleInvoicesProvider);
   }
 }
 

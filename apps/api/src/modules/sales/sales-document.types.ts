@@ -48,6 +48,9 @@ export type SalesDocumentRecord = {
   converted_from_id: string | null;
   pos_session_id: string | null;
   notes: string | null;
+  created_by: string | null;
+  created_by_name: string | null;
+  godown_name: string | null;
   created_at: string;
   updated_at: string;
   lines?: SalesDocumentLineRecord[];

@@ -6,6 +6,7 @@ import {
   eq,
   gte,
   ilike,
+  inArray,
   isNotNull,
   isNull,
   lte,
@@ -17,7 +18,8 @@ import {
   payments,
 } from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
-import { godowns, items } from '../../db/schema/inventory/tables';
+import { users } from '../../db/schema/identity/tables';
+import { godowns, inventoryMovements, items } from '../../db/schema/inventory/tables';
 import { documentNumberSequences } from '../../db/schema/settings/tables';
 import {
   posSessions,
@@ -190,26 +192,10 @@ export class SalesDocumentRepository {
 
     const rows = await this.db
       .select({
-        id: salesDocuments.id,
-        documentType: salesDocuments.documentType,
-        status: salesDocuments.status,
-        documentNumber: salesDocuments.documentNumber,
-        documentSeries: salesDocuments.documentSeries,
-        partyId: salesDocuments.partyId,
-        isGstFormal: salesDocuments.isGstFormal,
-        partyStateCode: salesDocuments.partyStateCode,
-        subtotal: salesDocuments.subtotal,
-        discountTotal: salesDocuments.discountTotal,
-        taxAmount: salesDocuments.taxAmount,
-        totalAmount: salesDocuments.totalAmount,
-        documentDate: salesDocuments.documentDate,
-        convertedFromId: salesDocuments.convertedFromId,
-        posSessionId: salesDocuments.posSessionId,
-        notes: salesDocuments.notes,
-        createdAt: salesDocuments.createdAt,
-        updatedAt: salesDocuments.updatedAt,
+        document: salesDocuments,
         paidAmount: sql<string>`COALESCE(${alloc.allocated}, 0)`,
         paymentMode: firstPayment.paymentMode,
+        createdByName: users.name,
       })
       .from(salesDocuments)
       .leftJoin(alloc, eq(alloc.salesDocumentId, salesDocuments.id))
@@ -217,15 +203,72 @@ export class SalesDocumentRepository {
         firstPayment,
         eq(firstPayment.salesDocumentId, salesDocuments.id),
       )
+      .leftJoin(users, eq(salesDocuments.createdBy, users.id))
       .where(whereClause)
       .orderBy(orderBy)
       .limit(params.limit)
       .offset(offset);
 
+    const documentIds = rows.map((row) => row.document.id);
+    const godownNamesByDocumentId = await this.getGodownNamesForDocuments(
+      params.businessId,
+      documentIds,
+    );
+
     return {
-      rows: rows.map((row) => toSalesDocumentRecord(row)),
+      rows: rows.map((row) =>
+        toSalesDocumentRecord(
+          {
+            ...row.document,
+            paidAmount: row.paidAmount,
+            paymentMode: row.paymentMode,
+          },
+          undefined,
+          {
+            createdByName: row.createdByName,
+            godownName: godownNamesByDocumentId.get(row.document.id) ?? null,
+          },
+        ),
+      ),
       total,
     };
+  }
+
+  private async getGodownNamesForDocuments(
+    businessId: string,
+    documentIds: string[],
+  ): Promise<Map<string, string>> {
+    if (documentIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await this.db
+      .selectDistinctOn([inventoryMovements.referenceId], {
+        referenceId: inventoryMovements.referenceId,
+        godownName: godowns.name,
+      })
+      .from(inventoryMovements)
+      .innerJoin(godowns, eq(inventoryMovements.godownId, godowns.id))
+      .where(
+        and(
+          eq(inventoryMovements.businessId, businessId),
+          eq(inventoryMovements.referenceType, 'sales_documents'),
+          inArray(inventoryMovements.referenceId, documentIds),
+        ),
+      )
+      .orderBy(
+        inventoryMovements.referenceId,
+        asc(inventoryMovements.createdAt),
+      );
+
+    const godownNames = new Map<string, string>();
+    for (const row of rows) {
+      if (row.referenceId != null) {
+        godownNames.set(row.referenceId, row.godownName);
+      }
+    }
+
+    return godownNames;
   }
 
   async findById(

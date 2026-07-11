@@ -7,6 +7,9 @@ class SalesDocumentMapper {
   static SaleInvoiceModel toInvoiceModel(
     SalesDocumentDto dto, {
     String partyName = '',
+    String firmName = 'Main Firm',
+    String fallbackUserName = 'Admin',
+    String fallbackGodownName = 'Main Location',
   }) {
     final amount = double.tryParse(dto.totalAmount) ?? 0;
     final paid = double.tryParse(dto.paidAmount) ?? 0;
@@ -32,6 +35,13 @@ class SalesDocumentMapper {
       documentStatus: documentStatus,
       amount: amount,
       balance: balance,
+      user: dto.createdByName?.trim().isNotEmpty == true
+          ? dto.createdByName!.trim()
+          : fallbackUserName,
+      godown: dto.godownName?.trim().isNotEmpty == true
+          ? dto.godownName!.trim()
+          : fallbackGodownName,
+      firm: firmName,
     );
   }
 
@@ -54,11 +64,19 @@ class SalesDocumentMapper {
       partyId: dto.partyId,
       paymentType: SalesPaymentModes.toUi(dto.paymentMode),
       totalAmount: amount,
-      receivedAmount: allocated,
-      status: allocated >= amount && amount > 0
-          ? PaymentInStatus.used
-          : PaymentInStatus.unused,
+      receivedAmount: allocated > 0 ? allocated : amount,
+      status: _mapPaymentInStatus(amount, allocated),
     );
+  }
+
+  static PaymentInStatus _mapPaymentInStatus(double amount, double allocated) {
+    if (allocated <= 0) {
+      return PaymentInStatus.unused;
+    }
+    if (allocated >= amount && amount > 0) {
+      return PaymentInStatus.paid;
+    }
+    return PaymentInStatus.partial;
   }
 
   static String _mapDocumentTypeLabel(String type) => switch (type) {

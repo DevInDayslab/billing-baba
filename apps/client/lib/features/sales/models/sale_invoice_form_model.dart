@@ -11,11 +11,21 @@ class SaleLineItem {
     this.serverLineId,
     this.itemId,
     this.itemName = '',
-    this.qty = 1,
+    this.serialNo = '',
+    this.description = '',
+    this.batchNo = '',
+    this.modelNo = '',
+    this.expDate,
+    this.mfgDate,
+    this.mrp = 0,
+    this.size = '',
+    this.qty = 0,
     this.unit = 'NONE',
     this.pricePerUnit = 0,
+    this.priceIsTaxInclusive = false,
     this.discountPercent = 0,
     this.taxPercent = 0,
+    this.isConfirmed = false,
   });
 
   factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
@@ -24,39 +34,85 @@ class SaleLineItem {
   final String? serverLineId;
   final String? itemId;
   final String itemName;
+  final String serialNo;
+  final String description;
+  final String batchNo;
+  final String modelNo;
+  final DateTime? expDate;
+  final DateTime? mfgDate;
+  final double mrp;
+  final String size;
   final double qty;
   final String unit;
   final double pricePerUnit;
+  final bool priceIsTaxInclusive;
   final double discountPercent;
   final double taxPercent;
+  final bool isConfirmed;
 
-  double get lineSubtotal => qty * pricePerUnit * (1 - discountPercent / 100);
+  double get _discountedUnitPrice =>
+      pricePerUnit * (1 - discountPercent / 100);
 
-  double get lineTax => lineSubtotal * (taxPercent / 100);
+  double get lineSubtotal {
+    final base = qty * _discountedUnitPrice;
+    if (priceIsTaxInclusive && taxPercent > 0) {
+      return base / (1 + taxPercent / 100);
+    }
+    return base;
+  }
 
-  double get amount => lineSubtotal * (1 + taxPercent / 100);
+  double get lineTax {
+    if (priceIsTaxInclusive) {
+      return lineSubtotal * (taxPercent / 100);
+    }
+    return qty * _discountedUnitPrice * (taxPercent / 100);
+  }
+
+  double get amount => lineSubtotal + lineTax;
 
   SaleLineItem copyWith({
     String? id,
     String? serverLineId,
     String? itemId,
     String? itemName,
+    String? serialNo,
+    String? description,
+    String? batchNo,
+    String? modelNo,
+    DateTime? expDate,
+    DateTime? mfgDate,
+    double? mrp,
+    String? size,
     double? qty,
     String? unit,
     double? pricePerUnit,
+    bool? priceIsTaxInclusive,
     double? discountPercent,
     double? taxPercent,
+    bool? isConfirmed,
+    bool clearExpDate = false,
+    bool clearMfgDate = false,
   }) {
     return SaleLineItem(
       id: id ?? this.id,
       serverLineId: serverLineId ?? this.serverLineId,
       itemId: itemId ?? this.itemId,
       itemName: itemName ?? this.itemName,
+      serialNo: serialNo ?? this.serialNo,
+      description: description ?? this.description,
+      batchNo: batchNo ?? this.batchNo,
+      modelNo: modelNo ?? this.modelNo,
+      expDate: clearExpDate ? null : (expDate ?? this.expDate),
+      mfgDate: clearMfgDate ? null : (mfgDate ?? this.mfgDate),
+      mrp: mrp ?? this.mrp,
+      size: size ?? this.size,
       qty: qty ?? this.qty,
       unit: unit ?? this.unit,
       pricePerUnit: pricePerUnit ?? this.pricePerUnit,
+      priceIsTaxInclusive: priceIsTaxInclusive ?? this.priceIsTaxInclusive,
       discountPercent: discountPercent ?? this.discountPercent,
       taxPercent: taxPercent ?? this.taxPercent,
+      isConfirmed: isConfirmed ?? this.isConfirmed,
     );
   }
 }
@@ -98,6 +154,9 @@ class AddSaleFormState {
     this.invoiceTime,
     this.stateOfSupply = 'Madhya Pradesh',
     this.eWayBillNo = '',
+    this.paymentTerms = 'Due on Receipt',
+    this.termsTitle = 'Sale Invoice',
+    this.termsText = 'Thanks for doing business with us!',
     this.godown = 'Main Location',
     this.godownId,
     this.items = const [],
@@ -105,7 +164,7 @@ class AddSaleFormState {
     this.description = '',
     this.attachedImages = const [],
     this.attachedDocuments = const [],
-    this.roundOff = false,
+    this.roundOff = true,
     this.loyaltyPointsUsed = 0,
     this.loyaltyPointsEnabled = false,
     this.receivedAmount = 0,
@@ -116,6 +175,7 @@ class AddSaleFormState {
     this.isLoading = false,
     this.saveError,
     this.isSaving = false,
+    this.attachedSaleOrderIds = const [],
   });
 
   final String? documentId;
@@ -136,6 +196,9 @@ class AddSaleFormState {
   final TimeOfDay? invoiceTime;
   final String stateOfSupply;
   final String eWayBillNo;
+  final String paymentTerms;
+  final String termsTitle;
+  final String termsText;
   final String godown;
   final String? godownId;
   final List<SaleLineItem> items;
@@ -154,6 +217,7 @@ class AddSaleFormState {
   final bool isLoading;
   final String? saveError;
   final bool isSaving;
+  final List<String> attachedSaleOrderIds;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -234,6 +298,9 @@ class AddSaleFormState {
     TimeOfDay? invoiceTime,
     String? stateOfSupply,
     String? eWayBillNo,
+    String? paymentTerms,
+    String? termsTitle,
+    String? termsText,
     String? godown,
     String? godownId,
     List<SaleLineItem>? items,
@@ -252,10 +319,13 @@ class AddSaleFormState {
     bool? isLoading,
     String? saveError,
     bool clearSaveError = false,
+    bool clearDocumentId = false,
     bool? isSaving,
+    List<String>? attachedSaleOrderIds,
+    bool clearAttachedSaleOrderIds = false,
   }) {
     return AddSaleFormState(
-      documentId: documentId ?? this.documentId,
+      documentId: clearDocumentId ? null : (documentId ?? this.documentId),
       partyId: partyId ?? this.partyId,
       billingName: billingName ?? this.billingName,
       phone: phone ?? this.phone,
@@ -273,6 +343,9 @@ class AddSaleFormState {
       invoiceTime: invoiceTime ?? this.invoiceTime,
       stateOfSupply: stateOfSupply ?? this.stateOfSupply,
       eWayBillNo: eWayBillNo ?? this.eWayBillNo,
+      paymentTerms: paymentTerms ?? this.paymentTerms,
+      termsTitle: termsTitle ?? this.termsTitle,
+      termsText: termsText ?? this.termsText,
       godown: godown ?? this.godown,
       godownId: godownId ?? this.godownId,
       items: items ?? this.items,
@@ -291,6 +364,9 @@ class AddSaleFormState {
       isLoading: isLoading ?? this.isLoading,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
       isSaving: isSaving ?? this.isSaving,
+      attachedSaleOrderIds: clearAttachedSaleOrderIds
+          ? const []
+          : (attachedSaleOrderIds ?? this.attachedSaleOrderIds),
     );
   }
 }
@@ -306,6 +382,8 @@ const saleTaxSlabs = <String, double>{
 };
 
 const salePaymentTypes = ['Cash', 'Credit', 'UPI', 'Cheque'];
+
+const salePriceTaxModes = ['Without Tax', 'With Tax'];
 
 const saleBillingParties = [
   'Sharma Traders',

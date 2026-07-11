@@ -275,3 +275,18 @@ class ConvertSalesDocumentRequest {
     'apply_gst': applyGst,
   };
 }
+
+class UpdatePaymentRequest {
+  const UpdatePaymentRequest({
+    this.notes,
+    this.referenceNumber,
+  });
+
+  final String? notes;
+  final String? referenceNumber;
+
+  Map<String, dynamic> toJson() => {
+    if (notes != null) 'notes': notes,
+    if (referenceNumber != null) 'reference_number': referenceNumber,
+  };
+}

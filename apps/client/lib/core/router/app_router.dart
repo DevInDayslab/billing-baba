@@ -11,6 +11,7 @@ import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.da
 import 'package:billing_baba/features/inventory/presentation/pages/items_page.dart';
 import 'package:billing_baba/features/parties/presentation/pages/party_details_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/pages/plans_pricing_page.dart';
+import 'package:billing_baba/features/pos/presentation/pages/pos_page.dart';
 import 'package:billing_baba/features/purchases/presentation/pages/add_debit_note_page.dart';
 import 'package:billing_baba/features/purchases/presentation/pages/add_expense_page.dart';
 import 'package:billing_baba/features/purchases/presentation/pages/add_purchase_fa_page.dart';
@@ -24,14 +25,19 @@ import 'package:billing_baba/features/purchases/presentation/pages/purchase_orde
 import 'package:billing_baba/features/purchases/presentation/pages/purchase_return_page.dart';
 import 'package:billing_baba/features/reports/presentation/pages/reports_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/add_credit_note_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/add_estimate_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/add_sale_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/add_delivery_challan_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/delivery_challan_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/estimate_quotation_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/job_work_out_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/payment_in_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/proforma_invoice_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_invoices_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/add_sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_order_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/add_sale_fa_page.dart';
+import 'package:billing_baba/features/sales/presentation/pages/sale_fa_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_return_page.dart';
 import 'package:billing_baba/features/utilities/presentation/pages/import_items_page.dart';
 import 'package:flutter/material.dart';
@@ -140,13 +146,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             redirect: (context, state) => AppRoutes.saleInvoices,
           ),
           GoRoute(
+            path: AppRoutes.pos,
+            builder: (context, state) => const PosPage(),
+          ),
+          GoRoute(
             path: AppRoutes.saleInvoices,
             builder: (context, state) => const SaleInvoicesPage(),
           ),
           GoRoute(
             path: AppRoutes.addSale,
             name: 'addSale',
-            builder: (context, state) => const AddSalePage(),
+            builder: (context, state) => AddSalePage(
+              attachOrderIds: state.extra is List<String>
+                  ? state.extra! as List<String>
+                  : null,
+            ),
           ),
           GoRoute(
             path: '${AppRoutes.editSale}/:invoiceId',
@@ -168,6 +182,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const EstimateQuotationPage(),
           ),
           GoRoute(
+            path: AppRoutes.addEstimate,
+            name: 'addEstimate',
+            builder: (context, state) => const AddEstimatePage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.duplicateEstimate}/:sourceId',
+            name: 'duplicateEstimate',
+            builder: (context, state) => AddEstimatePage(
+              duplicateFromId: state.pathParameters['sourceId'],
+            ),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editEstimate}/:estimateId',
+            name: 'editEstimate',
+            builder: (context, state) => AddEstimatePage(
+              estimateId: state.pathParameters['estimateId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.saleProformaInvoice,
             builder: (context, state) => const ProformaInvoicePage(),
           ),
@@ -180,8 +213,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SaleOrderPage(),
           ),
           GoRoute(
+            path: AppRoutes.addSaleOrder,
+            name: 'addSaleOrder',
+            builder: (context, state) => const AddSaleOrderPage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editSaleOrder}/:orderId',
+            name: 'editSaleOrder',
+            builder: (context, state) => AddSaleOrderPage(
+              orderId: state.pathParameters['orderId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.saleDeliveryChallan,
             builder: (context, state) => const DeliveryChallanPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addDeliveryChallan,
+            name: 'addDeliveryChallan',
+            builder: (context, state) => const AddDeliveryChallanPage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editDeliveryChallan}/:challanId',
+            name: 'editDeliveryChallan',
+            builder: (context, state) => AddDeliveryChallanPage(
+              challanId: state.pathParameters['challanId'],
+            ),
           ),
           GoRoute(
             path: AppRoutes.saleJobWorkOut,
@@ -192,9 +249,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SaleReturnPage(),
           ),
           GoRoute(
+            path: AppRoutes.saleFa,
+            builder: (context, state) => const SaleFaPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.addSaleFa,
+            name: 'addSaleFa',
+            builder: (context, state) => const AddSaleFaPage(),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editSaleFa}/:batchId',
+            name: 'editSaleFa',
+            builder: (context, state) => AddSaleFaPage(
+              batchId: state.pathParameters['batchId'],
+            ),
+          ),
+          GoRoute(
+            path: '${AppRoutes.duplicateSale}/:sourceId',
+            name: 'duplicateSale',
+            builder: (context, state) => AddSalePage(
+              duplicateFromId: state.pathParameters['sourceId'],
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.addCreditNote,
             name: 'addCreditNote',
-            builder: (context, state) => const AddCreditNotePage(),
+            builder: (context, state) => AddCreditNotePage(
+              fromInvoiceId: state.uri.queryParameters['fromInvoice'],
+            ),
+          ),
+          GoRoute(
+            path: '${AppRoutes.editCreditNote}/:creditNoteId',
+            name: 'editCreditNote',
+            builder: (context, state) => AddCreditNotePage(
+              creditNoteId: state.pathParameters['creditNoteId'],
+            ),
           ),
           GoRoute(
             path: AppRoutes.purchase,

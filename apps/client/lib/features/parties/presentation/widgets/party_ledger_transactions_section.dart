@@ -53,10 +53,12 @@ class PartyLedgerFilterBar extends StatelessWidget {
 class PartyLedgerTransactionsTable extends StatelessWidget {
   const PartyLedgerTransactionsTable({
     required this.transactions,
+    this.isFiltered = false,
     super.key,
   });
 
   final List<PartyLedgerTransactionModel> transactions;
+  final bool isFiltered;
 
   static final _dateFormat = DateFormat('d MMM yyyy');
   static final _currencyFormat = NumberFormat.currency(
@@ -68,7 +70,7 @@ class PartyLedgerTransactionsTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (transactions.isEmpty) {
-      return const _TransactionsEmptyState();
+      return _TransactionsEmptyState(isFiltered: isFiltered);
     }
 
     return ListView.separated(
@@ -282,30 +284,36 @@ class PartyLedgerTableHeader extends StatelessWidget {
 }
 
 class _TransactionsEmptyState extends StatelessWidget {
-  const _TransactionsEmptyState();
+  const _TransactionsEmptyState({this.isFiltered = false});
+
+  final bool isFiltered;
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.receipt_long_outlined,
-              size: 56,
+              size: 48,
               color: Colors.grey.shade400,
             ),
             const SizedBox(height: AppSpacing.md),
-            const Text(
-              'No transactions yet',
+            Text(
+              isFiltered
+                  ? 'No matching transactions'
+                  : 'No transactions yet',
               style: ListPanelStyles.emptyStateStyle,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Sales, purchases and payments involving this party will appear here.',
+              isFiltered
+                  ? 'Try a different filter or clear the current selection.'
+                  : 'Sales, purchases and payments involving this party will appear here.',
               style: ListPanelStyles.emptyStateStyle.copyWith(
                 fontSize: 13,
                 color: AppColors.textSecondary,

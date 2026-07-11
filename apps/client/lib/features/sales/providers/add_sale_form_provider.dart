@@ -7,6 +7,7 @@ import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -35,13 +36,11 @@ AddSaleFormState _defaultFormState({String? documentId}) {
 @riverpod
 class AddSaleForm extends _$AddSaleForm {
   @override
-  AddSaleFormState build({String? invoiceId}) {
-    if (invoiceId != null) {
-      Future.microtask(() => _loadDocument(invoiceId));
-      return _defaultFormState(documentId: invoiceId);
-    }
+  AddSaleFormState build({String sessionKey = 'default'}) {
     return _defaultFormState();
   }
+
+  Future<void> loadDocument(String documentId) => _loadDocument(documentId);
 
   Future<void> _loadDocument(String documentId) async {
     if (state.documentId == documentId && !state.isLoading) return;
@@ -58,6 +57,124 @@ class AddSaleForm extends _$AddSaleForm {
         saveError: SalesErrorMapper.messageFor(error),
       );
     }
+  }
+
+  Future<void> duplicateDocument(String sourceDocumentId) async {
+    state = state.copyWith(isLoading: true, clearSaveError: true);
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final loaded = await service.loadSaleForm(sourceDocumentId);
+      final items = await _resolveItemNames(loaded.items);
+      final now = DateTime.now();
+      state = loaded.copyWith(
+        clearDocumentId: true,
+        invoiceNumber: 'Auto',
+        invoiceNumberMode: InvoiceNumberMode.auto,
+        invoiceDate: DateTime(now.year, now.month, now.day),
+        invoiceTime: TimeOfDay.fromDateTime(now),
+        items: _cloneLineItemsForDuplicate(items),
+        attachedImages: const [],
+        attachedDocuments: const [],
+        clearAttachedSaleOrderIds: true,
+        isLoading: false,
+        isDirty: false,
+        showValidationErrors: false,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        saveError: SalesErrorMapper.messageFor(error),
+      );
+    }
+  }
+
+  Future<void> attachSaleOrders(List<String> orderIds) async {
+    if (orderIds.isEmpty) return;
+
+    state = state.copyWith(isLoading: true, clearSaveError: true);
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final loadedForms = <AddSaleFormState>[];
+      for (final orderId in orderIds) {
+        loadedForms.add(await service.loadSaleForm(orderId));
+      }
+
+      final mergedItems = <SaleLineItem>[];
+      for (final form in loadedForms) {
+        mergedItems.addAll(_cloneFilledLineItems(form.items));
+      }
+
+      final items = mergedItems.isEmpty
+          ? [SaleLineItem.empty(id: _nextLineItemId())]
+          : [
+              ...await _resolveItemNames(mergedItems),
+              SaleLineItem.empty(id: _nextLineItemId()),
+            ];
+
+      final first = loadedForms.first;
+      final now = DateTime.now();
+      state = first.copyWith(
+        clearDocumentId: true,
+        invoiceNumber: 'Auto',
+        invoiceNumberMode: InvoiceNumberMode.auto,
+        invoiceDate: DateTime(now.year, now.month, now.day),
+        invoiceTime: TimeOfDay.fromDateTime(now),
+        items: items,
+        attachedImages: const [],
+        attachedDocuments: const [],
+        attachedSaleOrderIds: orderIds,
+        isLoading: false,
+        isDirty: false,
+        showValidationErrors: false,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        saveError: SalesErrorMapper.messageFor(error),
+      );
+    }
+  }
+
+  List<SaleLineItem> _cloneLineItemsForDuplicate(List<SaleLineItem> items) {
+    final cloned = _cloneFilledLineItems(items);
+    if (cloned.isEmpty) {
+      return [SaleLineItem.empty(id: _nextLineItemId())];
+    }
+
+    return [
+      ...cloned,
+      SaleLineItem.empty(id: _nextLineItemId()),
+    ];
+  }
+
+  List<SaleLineItem> _cloneFilledLineItems(List<SaleLineItem> items) {
+    final filled = items
+        .where((line) => line.itemName.trim().isNotEmpty || line.qty > 0)
+        .toList();
+
+    return [
+      for (final line in filled)
+        SaleLineItem(
+          id: _nextLineItemId(),
+          itemId: line.itemId,
+          itemName: line.itemName,
+          serialNo: line.serialNo,
+          description: line.description,
+          batchNo: line.batchNo,
+          modelNo: line.modelNo,
+          expDate: line.expDate,
+          mfgDate: line.mfgDate,
+          mrp: line.mrp,
+          size: line.size,
+          qty: line.qty,
+          unit: line.unit,
+          pricePerUnit: line.pricePerUnit,
+          priceIsTaxInclusive: line.priceIsTaxInclusive,
+          discountPercent: line.discountPercent,
+          taxPercent: line.taxPercent,
+          isConfirmed: true,
+        ),
+    ];
   }
 
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
@@ -241,6 +358,14 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(eWayBillNo: value, isDirty: true);
   }
 
+  void updateTermsTitle(String value) {
+    state = state.copyWith(termsTitle: value, isDirty: true);
+  }
+
+  void updateTermsText(String value) {
+    state = state.copyWith(termsText: value, isDirty: true);
+  }
+
   void updateGodown(String value, {String? godownId}) {
     state = state.copyWith(
       godown: value,
@@ -268,6 +393,16 @@ class AddSaleForm extends _$AddSaleForm {
     final items = [...state.items];
     items[index] = item;
     state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
+  }
+
+  void confirmLineItem(int index) {
+    if (index < 0 || index >= state.items.length) return;
+    final items = [...state.items];
+    items[index] = items[index].copyWith(isConfirmed: true);
+    if (index == items.length - 1) {
+      items.add(SaleLineItem.empty(id: _nextLineItemId()));
+    }
+    state = state.copyWith(items: items, isDirty: true);
   }
 
   void updatePaymentType(String type) {
@@ -458,6 +593,9 @@ class AddSaleForm extends _$AddSaleForm {
 
       ref.invalidate(saleInvoicesProvider);
       refreshAfterSaleMutation(ref);
+      if (state.attachedSaleOrderIds.isNotEmpty) {
+        ref.invalidate(saleOrdersProvider);
+      }
       ref.invalidateSelf();
       return null;
     } catch (error) {
@@ -469,19 +607,19 @@ class AddSaleForm extends _$AddSaleForm {
 }
 
 @riverpod
-double addSaleSubtotal(Ref ref, {String? invoiceId}) {
-  final form = ref.watch(addSaleFormProvider(invoiceId: invoiceId));
+double addSaleSubtotal(Ref ref, {String sessionKey = 'default'}) {
+  final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
   return form.subtotal;
 }
 
 @riverpod
-double addSaleTotalTax(Ref ref, {String? invoiceId}) {
-  final form = ref.watch(addSaleFormProvider(invoiceId: invoiceId));
+double addSaleTotalTax(Ref ref, {String sessionKey = 'default'}) {
+  final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
   return form.totalTax;
 }
 
 @riverpod
-double addSaleGrandTotal(Ref ref, {String? invoiceId}) {
-  final form = ref.watch(addSaleFormProvider(invoiceId: invoiceId));
+double addSaleGrandTotal(Ref ref, {String sessionKey = 'default'}) {
+  final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
   return form.grandTotal;
 }

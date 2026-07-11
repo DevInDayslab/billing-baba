@@ -39,20 +39,17 @@ class SaleDateRangePickerAnchor extends StatefulWidget {
 class SaleDateRangePickerAnchorState extends State<SaleDateRangePickerAnchor> {
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
+  DateTime? _openedAt;
 
   void showPicker() {
-    if (_overlayEntry == null) {
-      _showOverlay();
-    }
+    if (_overlayEntry == null) _showOverlay();
   }
 
-  void closePicker() {
-    _removeOverlay();
-  }
+  void closePicker() => _removeOverlay();
 
   void toggle() {
     if (_overlayEntry != null) {
-      _removeOverlay();
+      closePicker();
     } else {
       _showOverlay();
     }
@@ -61,29 +58,41 @@ class SaleDateRangePickerAnchorState extends State<SaleDateRangePickerAnchor> {
   void _removeOverlay() {
     _overlayEntry?.remove();
     _overlayEntry = null;
+    _openedAt = null;
   }
 
   void _onRangeComplete(DateTimeRange range) {
     widget.onRangeSelected(range);
   }
 
+  void _handleDismissTap() {
+    final openedAt = _openedAt;
+    if (openedAt != null &&
+        DateTime.now().difference(openedAt) <
+            const Duration(milliseconds: 150)) {
+      return;
+    }
+    _removeOverlay();
+  }
+
   void _showOverlay() {
     final overlay = Overlay.of(context);
-    final followerOffset = _followerOffset(context);
+    _openedAt = DateTime.now();
 
     _overlayEntry = OverlayEntry(
       builder: (overlayContext) {
+        final followerOffset = _followerOffset(context);
         return Stack(
           children: [
             Positioned.fill(
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: _removeOverlay,
+                onTap: _handleDismissTap,
               ),
             ),
             CompositedTransformFollower(
               link: _layerLink,
-              showWhenUnlinked: false,
+              showWhenUnlinked: true,
               targetAnchor: Alignment.bottomLeft,
               offset: followerOffset,
               child: _SaleDateRangePickerPanel(
@@ -97,6 +106,14 @@ class SaleDateRangePickerAnchorState extends State<SaleDateRangePickerAnchor> {
     );
 
     overlay.insert(_overlayEntry!);
+
+    // Reposition only when the anchor has not been laid out yet.
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _overlayEntry?.markNeedsBuild();
+      });
+    }
   }
 
   Offset _followerOffset(BuildContext context) {
@@ -187,6 +204,8 @@ class _SaleDateRangePickerPanelState extends State<_SaleDateRangePickerPanel> {
 
   void _onDayTap(DateTime day) {
     final tapped = _dateOnly(day);
+    DateTimeRange? completedRange;
+
     setState(() {
       if (_rangeStart == null || (_rangeStart != null && _rangeEnd != null)) {
         _rangeStart = tapped;
@@ -201,10 +220,12 @@ class _SaleDateRangePickerPanelState extends State<_SaleDateRangePickerPanel> {
         _rangeEnd = tapped;
       }
 
-      widget.onRangeSelected(
-        DateTimeRange(start: _rangeStart!, end: _rangeEnd!),
-      );
+      completedRange = DateTimeRange(start: _rangeStart!, end: _rangeEnd!);
     });
+
+    if (completedRange != null) {
+      widget.onRangeSelected(completedRange!);
+    }
   }
 
   bool _isRangeStart(DateTime day) =>

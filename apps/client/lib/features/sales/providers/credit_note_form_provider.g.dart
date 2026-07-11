@@ -10,23 +10,30 @@ part of 'credit_note_form_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(CreditNoteForm)
-final creditNoteFormProvider = CreditNoteFormProvider._();
+final creditNoteFormProvider = CreditNoteFormFamily._();
 
 final class CreditNoteFormProvider
     extends $NotifierProvider<CreditNoteForm, CreditNoteFormState> {
-  CreditNoteFormProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'creditNoteFormProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  CreditNoteFormProvider._({
+    required CreditNoteFormFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'creditNoteFormProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$creditNoteFormHash();
+
+  @override
+  String toString() {
+    return r'creditNoteFormProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -39,12 +46,50 @@ final class CreditNoteFormProvider
       providerOverride: $SyncValueProvider<CreditNoteFormState>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CreditNoteFormProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
-String _$creditNoteFormHash() => r'0952e38d0ad59a92dac65dc01321bd430709573d';
+String _$creditNoteFormHash() => r'b5f34525b198038f41a13817b80ccc525380ee23';
+
+final class CreditNoteFormFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          CreditNoteForm,
+          CreditNoteFormState,
+          CreditNoteFormState,
+          CreditNoteFormState,
+          String
+        > {
+  CreditNoteFormFamily._()
+    : super(
+        retry: null,
+        name: r'creditNoteFormProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CreditNoteFormProvider call({String sessionKey = 'default'}) =>
+      CreditNoteFormProvider._(argument: sessionKey, from: this);
+
+  @override
+  String toString() => r'creditNoteFormProvider';
+}
 
 abstract class _$CreditNoteForm extends $Notifier<CreditNoteFormState> {
-  CreditNoteFormState build();
+  late final _$args = ref.$arg as String;
+  String get sessionKey => _$args;
+
+  CreditNoteFormState build({String sessionKey = 'default'});
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -57,29 +102,36 @@ abstract class _$CreditNoteForm extends $Notifier<CreditNoteFormState> {
               Object?,
               Object?
             >;
-    return element.handleCreate(ref, build);
+    return element.handleCreate(ref, () => build(sessionKey: _$args));
   }
 }
 
-@ProviderFor(creditNoteGrandTotal)
-final creditNoteGrandTotalProvider = CreditNoteGrandTotalProvider._();
+@ProviderFor(creditNoteTotalTax)
+final creditNoteTotalTaxProvider = CreditNoteTotalTaxFamily._();
 
-final class CreditNoteGrandTotalProvider
+final class CreditNoteTotalTaxProvider
     extends $FunctionalProvider<double, double, double>
     with $Provider<double> {
-  CreditNoteGrandTotalProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'creditNoteGrandTotalProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  CreditNoteTotalTaxProvider._({
+    required CreditNoteTotalTaxFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'creditNoteTotalTaxProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
-  String debugGetCreateSourceHash() => _$creditNoteGrandTotalHash();
+  String debugGetCreateSourceHash() => _$creditNoteTotalTaxHash();
+
+  @override
+  String toString() {
+    return r'creditNoteTotalTaxProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -88,7 +140,8 @@ final class CreditNoteGrandTotalProvider
 
   @override
   double create(Ref ref) {
-    return creditNoteGrandTotal(ref);
+    final argument = this.argument as String;
+    return creditNoteTotalTax(ref, sessionKey: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -98,7 +151,113 @@ final class CreditNoteGrandTotalProvider
       providerOverride: $SyncValueProvider<double>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CreditNoteTotalTaxProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$creditNoteTotalTaxHash() =>
+    r'b5229e102862bb17ff9ea522575070dfee35fa45';
+
+final class CreditNoteTotalTaxFamily extends $Family
+    with $FunctionalFamilyOverride<double, String> {
+  CreditNoteTotalTaxFamily._()
+    : super(
+        retry: null,
+        name: r'creditNoteTotalTaxProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CreditNoteTotalTaxProvider call({String sessionKey = 'default'}) =>
+      CreditNoteTotalTaxProvider._(argument: sessionKey, from: this);
+
+  @override
+  String toString() => r'creditNoteTotalTaxProvider';
+}
+
+@ProviderFor(creditNoteGrandTotal)
+final creditNoteGrandTotalProvider = CreditNoteGrandTotalFamily._();
+
+final class CreditNoteGrandTotalProvider
+    extends $FunctionalProvider<double, double, double>
+    with $Provider<double> {
+  CreditNoteGrandTotalProvider._({
+    required CreditNoteGrandTotalFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'creditNoteGrandTotalProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$creditNoteGrandTotalHash();
+
+  @override
+  String toString() {
+    return r'creditNoteGrandTotalProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<double> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  double create(Ref ref) {
+    final argument = this.argument as String;
+    return creditNoteGrandTotal(ref, sessionKey: argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(double value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<double>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CreditNoteGrandTotalProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$creditNoteGrandTotalHash() =>
-    r'f98ee409c2c30e8c22620ec38ff5ed3735bad386';
+    r'd86181c71609a0ad636913936d461b5aa91fc377';
+
+final class CreditNoteGrandTotalFamily extends $Family
+    with $FunctionalFamilyOverride<double, String> {
+  CreditNoteGrandTotalFamily._()
+    : super(
+        retry: null,
+        name: r'creditNoteGrandTotalProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CreditNoteGrandTotalProvider call({String sessionKey = 'default'}) =>
+      CreditNoteGrandTotalProvider._(argument: sessionKey, from: this);
+
+  @override
+  String toString() => r'creditNoteGrandTotalProvider';
+}

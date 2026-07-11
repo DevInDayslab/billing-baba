@@ -1,43 +1,36 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
+import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/payment_in_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/payment_in_status_badge.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_select_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
 import 'package:billing_baba/features/sales/providers/payment_in_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
+const _tableHeaderBg = Color(0xFFF5F7FA);
+const _zebraRowBg = Color(0xFFFAFAFA);
 
-const _dateColWidth = 140.0;
-const _refColWidth = 140.0;
-const _paymentColWidth = 130.0;
-const _statusColWidth = 80.0;
-const _amountColWidth = 140.0;
-const _actionsColWidth = 80.0;
-const _colGap = 12.0;
-
-const double _minTableWidth =
-    _dateColWidth +
-    _refColWidth +
-    _paymentColWidth +
-    _statusColWidth +
-    _amountColWidth * 2 +
-    _actionsColWidth +
-    _colGap * 6 +
-    160;
+const _dateColWidth = 148.0;
+const _refColWidth = 96.0;
+const _partyColWidth = 160.0;
+const _amountColWidth = 120.0;
+const _paymentColWidth = 108.0;
+const _statusColWidth = 88.0;
+const _actionsColWidth = 120.0;
+const _cellHorizontalPadding = AppSpacing.sm;
 
 class PaymentInTable extends ConsumerWidget {
   const PaymentInTable({super.key});
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy, hh:mm a');
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 0,
-  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -70,24 +63,28 @@ class PaymentInTable extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  onPressed: () =>
-                      ModuleExportActions.exportPaymentIn(context, ref),
-                  icon: const Icon(Icons.table_chart_outlined, size: 20),
-                  color: AppColors.textSecondary,
-                  tooltip: 'Excel Report',
+                ExpandableTableSearchField(
+                  hint: 'Search Data',
+                  initialQuery: ref.read(paymentInFiltersProvider).searchQuery,
+                  onQueryChanged: ref
+                      .read(paymentInFiltersProvider.notifier)
+                      .setSearchQuery,
+                ),
+                _XlsChip(
+                  onTap: () => ModuleExportActions.exportPaymentIn(context, ref),
                 ),
                 IconButton(
-                  onPressed: notifier.refresh,
-                  icon: const Icon(Icons.refresh, size: 20),
+                  onPressed: () {},
+                  icon: const Icon(Icons.print_outlined, size: 20),
                   color: AppColors.textSecondary,
-                  tooltip: 'Refresh',
+                  tooltip: 'Print',
                 ),
               ],
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
           recordsAsync.when(
+            skipLoadingOnReload: true,
             loading: () => const Padding(
               padding: EdgeInsets.all(AppSpacing.xl),
               child: Center(child: CircularProgressIndicator()),
@@ -108,117 +105,110 @@ class PaymentInTable extends ConsumerWidget {
                 ],
               ),
             ),
-            data: (_) {
-              if (paginated.items.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.all(AppSpacing.xl),
-                  child: Center(
-                    child: Text(
-                      'No payment records found',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                );
-              }
-
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final tableWidth = constraints.maxWidth.clamp(
-                    _minTableWidth,
-                    double.infinity,
-                  );
-
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width: tableWidth,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const _TableHeaderRow(),
-                          for (var i = 0; i < paginated.items.length; i++) ...[
-                            if (i > 0)
-                              const Divider(height: 1, color: _cardBorder),
-                            _buildRow(context, ref, paginated.items[i]),
-                          ],
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
+            data: (_) => _PaymentInTransactionsTable(items: paginated.items),
           ),
           const Divider(height: 1, color: _cardBorder),
-          _PaginationRow(
-            currentPage: paginated.currentPage,
-            totalPages: paginated.totalPages,
-          ),
+          if (paginated.totalPages > 1)
+            _PaginationRow(
+              currentPage: paginated.currentPage,
+              totalPages: paginated.totalPages,
+            ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildRow(
-    BuildContext context,
-    WidgetRef ref,
-    PaymentInModel record,
-  ) {
-    return _TableDataRow(
-      children: [
-        _TableCell(
-          width: _dateColWidth,
-          child: Text(_dateFormat.format(record.date)),
+class _PaymentInTransactionsTable extends ConsumerWidget {
+  const _PaymentInTransactionsTable({required this.items});
+
+  final List<PaymentInModel> items;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filters = ref.watch(paymentInFiltersProvider);
+    final hasActiveFilters = needsPaymentInClientSideFiltering(filters);
+
+    if (items.isEmpty) {
+      return _EmptyTransactionsState(isFiltered: hasActiveFilters);
+    }
+
+    final rows = [
+      for (var i = 0; i < items.length; i++)
+        PaymentInTableRows.buildDataRow(
+          context: context,
+          ref: ref,
+          record: items[i],
+          isOdd: i.isOdd,
         ),
-        _TableCell(
-          width: _refColWidth,
-          child: Text(record.receiptNo),
-        ),
-        Expanded(
-          child: _TableCell(
-            child: Text(
-              record.partyName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-        _TableCell(
-          width: _amountColWidth,
-          alignment: Alignment.centerRight,
+    ];
+
+    final columns = _PaymentInTableColumns.build(
+      context: context,
+      ref: ref,
+      onStatusFilter: (status) =>
+          ref.read(paymentInFiltersProvider.notifier).setStatus(status),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      child: ResizableDataTable(
+        columns: columns,
+        rows: rows,
+        headerBackgroundColor: _tableHeaderBg,
+        rowBorderColor: _cardBorder,
+      ),
+    );
+  }
+}
+
+class PaymentInTableRows {
+  const PaymentInTableRows._();
+
+  static final _dateFormat = DateFormat('dd/MM/yyyy, hh:mm a');
+  static final _currencyFormat = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹ ',
+    decimalDigits: 0,
+  );
+
+  static ResizableDataRow buildDataRow({
+    required BuildContext context,
+    required WidgetRef ref,
+    required PaymentInModel record,
+    required bool isOdd,
+  }) {
+    return ResizableDataRow(
+      backgroundColor: isOdd ? _zebraRowBg : Colors.transparent,
+      cells: [
+        _DataCell(child: Text(_dateFormat.format(record.date))),
+        _DataCell(child: Text(record.receiptNo)),
+        _DataCell(
           child: Text(
-            _currencyFormat.format(record.totalAmount),
-            maxLines: 1,
+            record.partyName,
             overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
-        _TableCell(
-          width: _amountColWidth,
+        _DataCell(
           alignment: Alignment.centerRight,
-          child: Text(
-            _currencyFormat.format(record.receivedAmount),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          child: Text(_currencyFormat.format(record.totalAmount)),
         ),
-        _TableCell(
-          width: _paymentColWidth,
+        _DataCell(
+          alignment: Alignment.centerRight,
+          child: Text(_currencyFormat.format(record.receivedAmount)),
+        ),
+        _DataCell(
           child: Text(
             record.paymentType,
-            maxLines: 1,
             overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
-        _TableCell(
-          width: _statusColWidth,
-          child: PaymentInStatusBadge(status: record.status),
+        _DataCell(
+          child: PaymentInStatusBadge(status: record.status, plain: true),
         ),
-        _TableCell(
-          width: _actionsColWidth,
-          gapAfter: 0,
+        _DataCell(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -248,6 +238,7 @@ class PaymentInTable extends ConsumerWidget {
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 tooltip: 'Share',
               ),
+              PaymentInActionsMenuButton(record: record),
             ],
           ),
         ),
@@ -256,8 +247,114 @@ class PaymentInTable extends ConsumerWidget {
   }
 }
 
-class _TableHeaderRow extends StatelessWidget {
-  const _TableHeaderRow();
+class _PaymentInTableColumns {
+  const _PaymentInTableColumns._();
+
+  static List<ResizableDataColumn> build({
+    required BuildContext context,
+    required WidgetRef ref,
+    required ValueChanged<String> onStatusFilter,
+  }) {
+    final filters = ref.watch(paymentInFiltersProvider);
+    final filtersNotifier = ref.read(paymentInFiltersProvider.notifier);
+    const paymentOptions = PaymentInDropdownOptions.paymentTypes;
+
+    return [
+      ResizableDataColumn(
+        initialWidth: _dateColWidth,
+        minWidth: 96,
+        maxWidth: 280,
+        header: SaleColumnDateFilterTrigger(
+          label: 'Date',
+          initialFilter: filters.dateColumnFilter,
+          onApply: filtersNotifier.setDateColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _refColWidth,
+        header: SaleColumnTextFilterTrigger(
+          label: 'Ref. no.',
+          hintText: 'Reference number',
+          initialFilter: filters.refNoColumnFilter,
+          onApply: filtersNotifier.setRefNoColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _partyColWidth,
+        minWidth: 100,
+        maxWidth: 420,
+        header: SaleColumnTextFilterTrigger(
+          label: 'Party Name',
+          hintText: 'Party name',
+          initialFilter: filters.partyNameColumnFilter,
+          onApply: filtersNotifier.setPartyNameColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _amountColWidth,
+        header: SaleColumnAmountFilterTrigger(
+          label: 'Total Amount',
+          alignment: Alignment.centerRight,
+          initialFilter: filters.totalAmountColumnFilter,
+          onApply: filtersNotifier.setTotalAmountColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _amountColWidth,
+        header: SaleColumnAmountFilterTrigger(
+          label: 'Received',
+          alignment: Alignment.centerRight,
+          initialFilter: filters.receivedAmountColumnFilter,
+          onApply: filtersNotifier.setReceivedAmountColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _paymentColWidth,
+        header: SaleColumnSelectFilterTrigger(
+          label: 'Payment Type',
+          options: paymentOptions,
+          initialFilter: filters.paymentTypeColumnFilter != null
+              ? SelectColumnFilter(
+                  value: filters.paymentTypeColumnFilter!.value,
+                )
+              : null,
+          onApply: filtersNotifier.setPaymentTypeColumnFilter,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _statusColWidth,
+        header: _StatusColumnFilterHeader(
+          onStatusFilter: onStatusFilter,
+          selectedStatus: filters.selectedStatus,
+        ),
+      ),
+      const ResizableDataColumn(
+        initialWidth: _actionsColWidth,
+        resizable: false,
+        header: _HeaderCell(label: 'Actions'),
+      ),
+    ];
+  }
+}
+
+class _StatusColumnFilterHeader extends StatefulWidget {
+  const _StatusColumnFilterHeader({
+    required this.onStatusFilter,
+    required this.selectedStatus,
+  });
+
+  final ValueChanged<String> onStatusFilter;
+  final String selectedStatus;
+
+  @override
+  State<_StatusColumnFilterHeader> createState() =>
+      _StatusColumnFilterHeaderState();
+}
+
+class _StatusColumnFilterHeaderState extends State<_StatusColumnFilterHeader> {
+  final LayerLink _layerLink = LayerLink();
+  final GlobalKey _triggerKey = GlobalKey();
+  OverlayEntry? _overlayEntry;
 
   static const _headerStyle = TextStyle(
     fontSize: 13,
@@ -265,60 +362,223 @@ class _TableHeaderRow extends StatelessWidget {
     color: AppColors.textSecondary,
   );
 
+  static const _statusOptions = [
+    'All Status',
+    'Paid',
+    'Partial',
+    'Unused',
+  ];
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    super.dispose();
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  void _toggleMenu() {
+    if (_overlayEntry != null) {
+      _removeOverlay();
+      return;
+    }
+    _showMenu();
+  }
+
+  void _showMenu() {
+    final renderBox =
+        _triggerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.hasSize) return;
+
+    final overlay = Overlay.of(context);
+
+    _overlayEntry = OverlayEntry(
+      builder: (overlayContext) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _removeOverlay,
+              ),
+            ),
+            CompositedTransformFollower(
+              link: _layerLink,
+              showWhenUnlinked: false,
+              targetAnchor: Alignment.bottomLeft,
+              offset: const Offset(0, 4),
+              child: Material(
+                elevation: 4,
+                shadowColor: Colors.black26,
+                color: AppColors.surface,
+                borderRadius: AppRadius.mdBorder,
+                clipBehavior: Clip.antiAlias,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 160),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final option in _statusOptions)
+                        _StatusFilterMenuItem(
+                          label: option,
+                          isSelected: option == widget.selectedStatus,
+                          onTap: () {
+                            _removeOverlay();
+                            widget.onStatusFilter(option);
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    overlay.insert(_overlayEntry!);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.background,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: const Row(
-        children: [
-          _TableCell(
-            width: _dateColWidth,
-            child: Text('Date', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _refColWidth,
-            child: Text('Ref. No.', style: _headerStyle),
-          ),
-          Expanded(
-            child: _TableCell(child: Text('Party Name', style: _headerStyle)),
-          ),
-          _TableCell(
-            width: _amountColWidth,
-            alignment: Alignment.centerRight,
-            child: Text('Total Amount', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _amountColWidth,
-            alignment: Alignment.centerRight,
-            child: Text('Received', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _paymentColWidth,
-            child: Text('Payment Type', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _statusColWidth,
-            child: Text('Status', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _actionsColWidth,
-            gapAfter: 0,
-            child: Text('Actions', style: _headerStyle),
-          ),
-        ],
+    final isActive = widget.selectedStatus != 'All Status';
+
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: _cellHorizontalPadding,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Status',
+                style: _headerStyle,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
+            ),
+            const SizedBox(width: 2),
+            InkWell(
+              key: _triggerKey,
+              onTap: _toggleMenu,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: Icon(
+                  Icons.filter_list,
+                  size: 14,
+                  color: isActive ? AppColors.primary : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _TableDataRow extends StatelessWidget {
-  const _TableDataRow({required this.children});
+class _StatusFilterMenuItem extends StatelessWidget {
+  const _StatusFilterMenuItem({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
 
-  final List<Widget> children;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  static const _hoverColor = Color(0xFFF5F5F5);
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        hoverColor: _hoverColor,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                child: isSelected
+                    ? Center(
+                        child: Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            color: Colors.black87,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      )
+                    : null,
+              ),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderCell extends StatelessWidget {
+  const _HeaderCell({required this.label});
+
+  static const _headerStyle = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSecondary,
+  );
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: _cellHorizontalPadding,
+        vertical: AppSpacing.sm,
+      ),
+      child: Text(
+        label,
+        style: _headerStyle,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+    );
+  }
+}
+
+class _DataCell extends StatelessWidget {
+  const _DataCell({
+    required this.child,
+    this.alignment = Alignment.centerLeft,
+  });
+
+  final Widget child;
+  final Alignment alignment;
 
   static const _dataStyle = TextStyle(
     fontSize: 13,
@@ -329,49 +589,102 @@ class _TableDataRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTextStyle(
       style: _dataStyle,
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
+          horizontal: _cellHorizontalPadding,
           vertical: AppSpacing.sm,
         ),
-        child: Row(children: children),
+        child: Align(
+          alignment: alignment,
+          child: child,
+        ),
       ),
     );
   }
 }
 
-class _TableCell extends StatelessWidget {
-  const _TableCell({
-    required this.child,
-    this.width,
-    this.alignment = Alignment.centerLeft,
-    this.gapAfter = _colGap,
-  });
+class _EmptyTransactionsState extends StatelessWidget {
+  const _EmptyTransactionsState({this.isFiltered = false});
 
-  final Widget child;
-  final double? width;
-  final Alignment alignment;
-  final double gapAfter;
+  final bool isFiltered;
 
   @override
   Widget build(BuildContext context) {
-    final content = Align(
-      alignment: alignment,
-      widthFactor: 1,
-      child: child,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.xxl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 48,
+            color: AppColors.textSecondary.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            isFiltered
+                ? 'No matching payment records'
+                : 'No payment records found',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            isFiltered
+                ? 'Try adjusting your filters or clear them to see all results.'
+                : 'Add your first payment-in to get started.',
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
+  }
+}
 
-    if (width != null) {
-      return Padding(
-        padding: EdgeInsets.only(right: gapAfter),
-        child: SizedBox(
-          width: width,
-          child: ClipRect(child: content),
+class _XlsChip extends StatelessWidget {
+  const _XlsChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: const Text(
+            'xls',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2E7D32),
+            ),
+          ),
         ),
-      );
-    }
-
-    return ClipRect(child: content);
+      ),
+    );
   }
 }
 

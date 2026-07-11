@@ -1,7 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
-const _menuHoverColor = Color(0xFFF5F5F5);
+const _menuHoverColor = Color(0xFFE3F2FD);
+const _menuBorderColor = Color(0xFFE0E0E0);
+const _menuMinWidth = 220.0;
 
 class SalesActionMenuItem {
   const SalesActionMenuItem({
@@ -54,10 +56,13 @@ class _SalesActionMenuButtonState extends State<SalesActionMenuButton> {
         shadowColor: const WidgetStatePropertyAll(Colors.black26),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+          RoundedRectangleBorder(
+            borderRadius: AppRadius.mdBorder,
+            side: const BorderSide(color: _menuBorderColor),
+          ),
         ),
         padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-        minimumSize: const WidgetStatePropertyAll(Size(200, 0)),
+        minimumSize: const WidgetStatePropertyAll(Size(_menuMinWidth, 0)),
       ),
       menuChildren: [
         for (final item in widget.items)

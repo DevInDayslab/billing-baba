@@ -26,9 +26,14 @@ class ListPanelHeader extends StatelessWidget {
               flex: columns[i].flex,
               child: Row(
                 children: [
-                  Text(
-                    columns[i].label,
-                    style: ListPanelStyles.listHeaderStyle,
+                  Flexible(
+                    child: Text(
+                      columns[i].label,
+                      style: ListPanelStyles.listHeaderStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                    ),
                   ),
                   if (columns[i].showFilter) ...[
                     const SizedBox(width: 4),

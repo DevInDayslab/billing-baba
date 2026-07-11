@@ -9,6 +9,223 @@ part of 'sale_invoices_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(saleInvoiceFirmFilterOptions)
+final saleInvoiceFirmFilterOptionsProvider =
+    SaleInvoiceFirmFilterOptionsProvider._();
+
+final class SaleInvoiceFirmFilterOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  SaleInvoiceFirmFilterOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'saleInvoiceFirmFilterOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$saleInvoiceFirmFilterOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return saleInvoiceFirmFilterOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$saleInvoiceFirmFilterOptionsHash() =>
+    r'b26dab89ae05e9b6789c21aad61b92f709638035';
+
+@ProviderFor(saleInvoiceUserFilterOptions)
+final saleInvoiceUserFilterOptionsProvider =
+    SaleInvoiceUserFilterOptionsProvider._();
+
+final class SaleInvoiceUserFilterOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  SaleInvoiceUserFilterOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'saleInvoiceUserFilterOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$saleInvoiceUserFilterOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return saleInvoiceUserFilterOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$saleInvoiceUserFilterOptionsHash() =>
+    r'29a73b4c1fa7ca72accc8c54590c8185271bbf88';
+
+@ProviderFor(saleInvoiceTransactionTypeFilterOptions)
+final saleInvoiceTransactionTypeFilterOptionsProvider =
+    SaleInvoiceTransactionTypeFilterOptionsProvider._();
+
+final class SaleInvoiceTransactionTypeFilterOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  SaleInvoiceTransactionTypeFilterOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'saleInvoiceTransactionTypeFilterOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() =>
+      _$saleInvoiceTransactionTypeFilterOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return saleInvoiceTransactionTypeFilterOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$saleInvoiceTransactionTypeFilterOptionsHash() =>
+    r'92cae03be331c0c6352b608bcfef79044e82b74d';
+
+@ProviderFor(saleInvoicePaymentTypeFilterOptions)
+final saleInvoicePaymentTypeFilterOptionsProvider =
+    SaleInvoicePaymentTypeFilterOptionsProvider._();
+
+final class SaleInvoicePaymentTypeFilterOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  SaleInvoicePaymentTypeFilterOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'saleInvoicePaymentTypeFilterOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() =>
+      _$saleInvoicePaymentTypeFilterOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return saleInvoicePaymentTypeFilterOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$saleInvoicePaymentTypeFilterOptionsHash() =>
+    r'a425f1338de67ce116ce66e1a1323d6535c2f4a8';
+
+@ProviderFor(saleInvoiceGodownFilterOptions)
+final saleInvoiceGodownFilterOptionsProvider =
+    SaleInvoiceGodownFilterOptionsProvider._();
+
+final class SaleInvoiceGodownFilterOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  SaleInvoiceGodownFilterOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'saleInvoiceGodownFilterOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$saleInvoiceGodownFilterOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return saleInvoiceGodownFilterOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$saleInvoiceGodownFilterOptionsHash() =>
+    r'8e83996a7db3573da16adb6871409b8aabaf847d';
+
 @ProviderFor(SaleInvoiceSearchQuery)
 final saleInvoiceSearchQueryProvider = SaleInvoiceSearchQueryProvider._();
 
@@ -20,7 +237,7 @@ final class SaleInvoiceSearchQueryProvider
         argument: null,
         retry: null,
         name: r'saleInvoiceSearchQueryProvider',
-        isAutoDispose: false,
+        isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -42,7 +259,7 @@ final class SaleInvoiceSearchQueryProvider
 }
 
 String _$saleInvoiceSearchQueryHash() =>
-    r'a88d11bec2bd8164740e368cf5c469eae2616184';
+    r'ca4ff02a32054f65615a16379a22a50515d59618';
 
 abstract class _$SaleInvoiceSearchQuery extends $Notifier<String> {
   String build();
@@ -55,6 +272,59 @@ abstract class _$SaleInvoiceSearchQuery extends $Notifier<String> {
             as $ClassProviderElement<
               AnyNotifier<String, String>,
               String,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(SelectedSaleInvoiceId)
+final selectedSaleInvoiceIdProvider = SelectedSaleInvoiceIdProvider._();
+
+final class SelectedSaleInvoiceIdProvider
+    extends $NotifierProvider<SelectedSaleInvoiceId, String?> {
+  SelectedSaleInvoiceIdProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'selectedSaleInvoiceIdProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$selectedSaleInvoiceIdHash();
+
+  @$internal
+  @override
+  SelectedSaleInvoiceId create() => SelectedSaleInvoiceId();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String?>(value),
+    );
+  }
+}
+
+String _$selectedSaleInvoiceIdHash() =>
+    r'11130a011d95014fa6f88c428630e186ef9a40b5';
+
+abstract class _$SelectedSaleInvoiceId extends $Notifier<String?> {
+  String? build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<String?, String?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<String?, String?>,
+              String?,
               Object?,
               Object?
             >;
@@ -86,7 +356,7 @@ final class SaleInvoicesProvider
   SaleInvoices create() => SaleInvoices();
 }
 
-String _$saleInvoicesHash() => r'adaf8db9193de58ba3169ff4bfbe4d64e6e7ccd2';
+String _$saleInvoicesHash() => r'bb8b7a45ee564cc2d8064714ab5651a435f49f06';
 
 abstract class _$SaleInvoices extends $AsyncNotifier<PaginatedSaleInvoices> {
   FutureOr<PaginatedSaleInvoices> build();
@@ -122,7 +392,7 @@ final class SaleInvoiceFiltersProvider
         argument: null,
         retry: null,
         name: r'saleInvoiceFiltersProvider',
-        isAutoDispose: false,
+        isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -144,7 +414,7 @@ final class SaleInvoiceFiltersProvider
 }
 
 String _$saleInvoiceFiltersHash() =>
-    r'1ed104620744df8ce6375d44c61377ce0408ff3b';
+    r'7fc6c8dfa7db1f9f9a7441b170ffb70cd8d125b3';
 
 abstract class _$SaleInvoiceFilters extends $Notifier<SaleInvoiceFiltersState> {
   SaleInvoiceFiltersState build();
@@ -259,4 +529,4 @@ final class SaleInvoiceSummaryProvider
 }
 
 String _$saleInvoiceSummaryHash() =>
-    r'316d882ad31d9a85cb1f3e7afda14c97f7d5bbb2';
+    r'a7150fc9e1ed54e1170ec9bb69c505752ace56da';

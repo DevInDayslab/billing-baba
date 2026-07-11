@@ -1,62 +1,140 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/models/sale_line_item_columns.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_item_serial_no_dialog.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_line_item_column_picker.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_line_items_table_layout.dart';
 import 'package:billing_baba/features/sales/providers/credit_note_form_provider.dart';
+import 'package:billing_baba/features/sales/providers/sale_line_item_column_visibility_provider.dart';
+import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-const _cardBorder = Color(0xFFE0E0E0);
-const _headerBackground = Color(0xFFF5F5F5);
-const _rowHeight = 48.0;
-const _addRowColor = Color(0xFF1565C0);
+const _addRowColor = AppColors.primary;
+const _gridBorderless = true;
 
-class CreditNoteLineItemsTable extends ConsumerWidget {
-  const CreditNoteLineItemsTable({super.key});
+/// Full Vyapar-style line items grid for the Add Credit Note page.
+class CreditNoteLineItemsTable extends ConsumerStatefulWidget {
+  const CreditNoteLineItemsTable({
+    this.sessionKey = 'default',
+    this.embedded = false,
+    super.key,
+  });
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 2,
-  );
+  final String sessionKey;
+  final bool embedded;
 
-  static final _qtyFormat = NumberFormat('#,##0', 'en_IN');
+  static final _amountFormat = NumberFormat('#,##0.00', 'en_IN');
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(creditNoteFormProvider);
-    final notifier = ref.read(creditNoteFormProvider.notifier);
+  ConsumerState<CreditNoteLineItemsTable> createState() =>
+      _CreditNoteLineItemsTableState();
+}
 
-    return Column(
+class _CreditNoteLineItemsTableState
+    extends ConsumerState<CreditNoteLineItemsTable> {
+  int _activeRowIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final form = ref.watch(
+      creditNoteFormProvider(sessionKey: widget.sessionKey),
+    );
+    final notifier = ref.read(
+      creditNoteFormProvider(sessionKey: widget.sessionKey).notifier,
+    );
+    final columnVisibility = ref.watch(saleLineItemColumnVisibilityStateProvider);
+    final columnVisibilityNotifier = ref.read(
+      saleLineItemColumnVisibilityStateProvider.notifier,
+    );
+    final items = form.items;
+
+    if (_activeRowIndex >= items.length) {
+      _activeRowIndex = items.isEmpty ? 0 : items.length - 1;
+    }
+
+    final totalQty = items.fold<double>(0, (sum, item) => sum + item.qty);
+    final totalTax = items.fold<double>(0, (sum, item) => sum + item.lineTax);
+    final totalAmount =
+        items.fold<double>(0, (sum, item) => sum + item.amount);
+
+    final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _LineItemsHeader(),
-        const Divider(height: 1, color: _cardBorder),
-        for (var i = 0; i < form.items.length; i++) ...[
-          if (i > 0) const Divider(height: 1, color: _cardBorder),
-          _LineItemRow(index: i, item: form.items[i]),
-        ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final widths = SaleLineItemTableLayout.columnWidthsFor(
+              constraints.maxWidth,
+              visibility: columnVisibility,
+            );
+
+            return DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: SaleLineItemTableLayout.gridBorderColor,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _LineItemsHeader(
+                    widths: widths,
+                    visibility: columnVisibility,
+                    onToggleColumn: columnVisibilityNotifier.toggleColumn,
+                  ),
+                  for (var i = 0; i < items.length; i++)
+                    _LineItemRow(
+                      index: i,
+                      item: items[i],
+                      sessionKey: widget.sessionKey,
+                      widths: widths,
+                      visibility: columnVisibility,
+                      isActive: i == _activeRowIndex,
+                      onActivate: () => setState(() => _activeRowIndex = i),
+                      onConfirm: () {
+                        notifier.confirmLineItem(i);
+                        setState(() => _activeRowIndex = i + 1);
+                      },
+                    ),
+                  _TotalsRow(
+                    widths: widths,
+                    visibility: columnVisibility,
+                    totalQty: totalQty,
+                    totalTax: totalTax,
+                    totalAmount: totalAmount,
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
         if (form.lineItemsHasError)
           const Padding(
             padding: EdgeInsets.fromLTRB(12, 4, 12, 0),
             child: Text(
-              'Add at least one item with a name',
+              'Add at least one item with name and quantity',
               style: TextStyle(fontSize: 11, color: saleFieldErrorColor),
             ),
           ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+          padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
           child: Align(
             alignment: Alignment.centerLeft,
-            child: TextButton(
-              onPressed: notifier.addLineItem,
-              style: TextButton.styleFrom(
+            child: OutlinedButton(
+              onPressed: () {
+                notifier.addLineItem();
+                setState(() => _activeRowIndex = items.length);
+              },
+              style: OutlinedButton.styleFrom(
                 foregroundColor: _addRowColor,
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                side: const BorderSide(color: _addRowColor),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -67,262 +145,772 @@ class CreditNoteLineItemsTable extends ConsumerWidget {
             ),
           ),
         ),
-        Container(
-          color: _headerBackground,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            children: [
-              const Spacer(),
-              const Text(
-                'TOTAL',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(width: 24),
-              SizedBox(
-                width: 64,
-                child: Text(
-                  _qtyFormat.format(
-                    form.items.fold<double>(0, (sum, item) => sum + item.qty),
-                  ),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 360),
-              SizedBox(
-                width: 88,
-                child: Text(
-                  _currencyFormat.format(form.rawGrandTotal),
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ],
     );
-  }
-}
 
-class _LineItemsHeader extends ConsumerWidget {
-  const _LineItemsHeader();
+    if (widget.embedded) return content;
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(creditNoteFormProvider.notifier);
-
-    return Container(
-      color: _headerBackground,
-      height: _rowHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(
-        children: [
-          const SizedBox(width: 28, child: Text('#', style: _headerStyle)),
-          const Expanded(flex: 3, child: Text('ITEM', style: _headerStyle)),
-          const SizedBox(width: 64, child: Text('QTY', style: _headerStyle)),
-          const SizedBox(width: 72, child: Text('UNIT', style: _headerStyle)),
-          const SizedBox(
-            width: 88,
-            child: Text('PRICE/UNIT', style: _headerStyle),
-          ),
-          const SizedBox(
-            width: 64,
-            child: Text('DISCOUNT', style: _headerStyle),
-          ),
-          const SizedBox(width: 72, child: Text('TAX', style: _headerStyle)),
-          SizedBox(
-            width: 88,
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    'AMOUNT',
-                    style: _headerStyle,
-                    textAlign: TextAlign.right,
-                  ),
-                ),
-                IconButton(
-                  onPressed: notifier.addLineItem,
-                  icon: const Icon(Icons.add, size: 18, color: _addRowColor),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  tooltip: 'Add row',
-                ),
-              ],
-            ),
-          ),
-        ],
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: SaleLineItemTableLayout.gridBorderColor),
+        borderRadius: AppRadius.lgBorder,
       ),
+      child: content,
     );
   }
-
-  static const _headerStyle = TextStyle(
-    fontSize: 10,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textSecondary,
-  );
 }
 
-class _LineItemRow extends ConsumerWidget {
-  const _LineItemRow({required this.index, required this.item});
+class _LineItemsHeader extends StatelessWidget {
+  const _LineItemsHeader({
+    required this.widths,
+    required this.visibility,
+    required this.onToggleColumn,
+  });
 
-  final int index;
-  final SaleLineItem item;
+  final SaleLineItemColumnWidths widths;
+  final SaleLineItemColumnVisibility visibility;
+  final ValueChanged<SaleLineItemColumn> onToggleColumn;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(creditNoteFormProvider.notifier);
-
-    return SizedBox(
-      height: _rowHeight,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: SaleLineItemTableLayout.headerBackground,
+        border: Border(
+          bottom: BorderSide(color: SaleLineItemTableLayout.gridBorderColor),
+        ),
+      ),
+      child: SizedBox(
+        height: SaleLineItemTableLayout.rowHeight,
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(
-              width: 28,
-              child: Text(
-                '${index + 1}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
+            SaleLineItemGridHeaderCell(
+              label: 'ITEM',
+              width: widths.index + widths.item,
             ),
-            Expanded(
-              flex: 3,
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 24,
-                    height: 28,
-                    child: IconButton(
-                      onPressed: () => notifier.removeLineItem(index),
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        size: 16,
-                        color: AppColors.error,
-                      ),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      tooltip: 'Delete row',
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.serialNo,
+              visibility: visibility,
+              width: widths.serial,
+              label: 'SERIAL NO.',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.description,
+              visibility: visibility,
+              width: widths.description,
+              label: 'DESCRIPTION',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.batch,
+              visibility: visibility,
+              width: widths.batch,
+              label: 'BATCH NO.',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.model,
+              visibility: visibility,
+              width: widths.model,
+              label: 'MODEL NO.',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.expDate,
+              visibility: visibility,
+              width: widths.expDate,
+              label: 'EXP. DATE',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.mfgDate,
+              visibility: visibility,
+              width: widths.mfgDate,
+              label: 'MFG. DATE',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.mrp,
+              visibility: visibility,
+              width: widths.mrp,
+              label: 'MRP',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.size,
+              visibility: visibility,
+              width: widths.size,
+              label: 'SIZE',
+            ),
+            SaleLineItemGridHeaderCell(label: 'QTY', width: widths.qty),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.unit,
+              visibility: visibility,
+              width: widths.unit,
+              label: 'UNIT',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.price,
+              visibility: visibility,
+              width: widths.price,
+              label: 'PRICE/UNIT',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.discount,
+              visibility: visibility,
+              width: widths.discount,
+              label: 'DISCOUNT',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.taxPercent,
+              visibility: visibility,
+              width: widths.taxPercent,
+              label: 'TAX %',
+            ),
+            SaleLineItemOptionalHeaderCell(
+              column: SaleLineItemColumn.taxAmount,
+              visibility: visibility,
+              width: widths.taxAmount,
+              label: 'TAX AMOUNT',
+            ),
+            SaleLineItemGridHeaderCell(
+              label: 'AMOUNT',
+              width: widths.amount,
+              alignRight: true,
+            ),
+            SaleLineItemGridCell(
+              width: widths.actions,
+              alignment: Alignment.center,
+              child: SaleLineItemColumnPickerButton(
+                visibility: visibility,
+                onToggle: onToggleColumn,
+                onMoreSettings: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Invoice column settings coming soon'),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: ItemNameAutocompleteField(
-                      value: item.itemName,
-                      onChanged: (value) => notifier.updateLineItem(
-                        index,
-                        item.copyWith(itemName: value),
-                      ),
-                      onItemSelected: (catalogItem) => notifier.updateLineItem(
-                        index,
-                        item.copyWith(
-                          itemName: catalogItem.name,
-                          pricePerUnit: catalogItem.salePrice,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 4),
-            SizedBox(
-              width: 64,
-              child: _CompactNumberField(
-                initialValue: item.qty == 0 ? '' : item.qty.toString(),
-                hintText: '0',
-                onChanged: (value) => notifier.updateLineItem(
-                  index,
-                  item.copyWith(qty: double.tryParse(value) ?? 0),
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            SizedBox(
-              width: 72,
-              child: SaleGenericSelectDropdown(
-                value: item.unit,
-                options: SaleDropdownOptions.units,
-                hintText: 'NONE',
-                highlight: SaleDropdownHighlight.red,
-                compact: true,
-                onSelected: (value) => notifier.updateLineItem(
-                  index,
-                  item.copyWith(unit: value),
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            SizedBox(
-              width: 88,
-              child: _CompactNumberField(
-                initialValue: item.pricePerUnit == 0
-                    ? ''
-                    : item.pricePerUnit.toString(),
-                hintText: '0',
-                onChanged: (value) => notifier.updateLineItem(
-                  index,
-                  item.copyWith(pricePerUnit: double.tryParse(value) ?? 0),
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            SizedBox(
-              width: 64,
-              child: _CompactNumberField(
-                initialValue: item.discountPercent == 0
-                    ? ''
-                    : item.discountPercent.toString(),
-                hintText: '0',
-                onChanged: (value) => notifier.updateLineItem(
-                  index,
-                  item.copyWith(discountPercent: double.tryParse(value) ?? 0),
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            SizedBox(
-              width: 72,
-              child: SaleGenericSelectDropdown(
-                value: taxLabelForPercent(item.taxPercent),
-                options: SaleDropdownOptions.taxSlabs,
-                hintText: 'NONE',
-                highlight: SaleDropdownHighlight.red,
-                compact: true,
-                onSelected: (value) => notifier.updateLineItem(
-                  index,
-                  item.copyWith(taxPercent: saleTaxSlabs[value] ?? 0),
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            SizedBox(
-              width: 88,
-              child: Text(
-                CreditNoteLineItemsTable._currencyFormat.format(item.amount),
-                textAlign: TextAlign.right,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
+                  );
+                },
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _LineItemRow extends ConsumerWidget {
+  const _LineItemRow({
+    required this.index,
+    required this.item,
+    required this.isActive,
+    required this.onActivate,
+    required this.onConfirm,
+    required this.widths,
+    required this.visibility,
+    this.sessionKey = 'default',
+  });
+
+  final int index;
+  final SaleLineItem item;
+  final bool isActive;
+  final VoidCallback onActivate;
+  final VoidCallback onConfirm;
+  final SaleLineItemColumnWidths widths;
+  final SaleLineItemColumnVisibility visibility;
+  final String sessionKey;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(
+      creditNoteFormProvider(sessionKey: sessionKey).notifier,
+    );
+
+    Future<void> pickDate({
+      required DateTime? current,
+      required void Function(DateTime) onSelected,
+    }) async {
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: current ?? DateTime.now(),
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2100),
+      );
+      if (picked != null) onSelected(picked);
+    }
+
+    return Material(
+      color: saleLineItemRowBackground(isActive: isActive, isOdd: index.isOdd),
+      child: InkWell(
+        onTap: onActivate,
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: SaleLineItemTableLayout.gridBorderColor),
+            ),
+          ),
+          child: SizedBox(
+            height: SaleLineItemTableLayout.rowHeight,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SaleLineItemGridCell(
+                  width: widths.index,
+                  alignment: Alignment.center,
+                  child: isActive
+                      ? const Icon(Icons.bolt, size: 16, color: _addRowColor)
+                      : Text(
+                          '${index + 1}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                ),
+                SaleLineItemGridCell(
+                  width: widths.item,
+                  child: Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Barcode scanner coming soon'),
+                            ),
+                          );
+                        },
+                        child: const Icon(
+                          Icons.qr_code_scanner,
+                          size: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: SaleCompactFieldBox(
+                          child: ItemNameAutocompleteField(
+                            value: item.itemName,
+                            borderless: _gridBorderless,
+                            onChanged: (value) => notifier.updateLineItem(
+                              index,
+                              item.copyWith(itemName: value),
+                            ),
+                            onItemSelected: (catalogItem) {
+                              final updated = applyCatalogItemToLine(
+                                item,
+                                catalogItem,
+                              );
+                              notifier.updateLineItem(
+                                index,
+                                updated.copyWith(mrp: catalogItem.salePrice),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.serialNo,
+                  visibility: visibility,
+                  width: widths.serial,
+                  child: _CompactTextField(
+                    initialValue: item.serialNo,
+                    hintText: 'Serial',
+                    borderless: _gridBorderless,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(serialNo: value),
+                    ),
+                    suffixIcon: IconButton(
+                      onPressed: () async {
+                        final result = await showSaleItemSerialNoDialog(
+                          context,
+                          initialSerials: item.serialNo,
+                          requiredQty: item.qty,
+                        );
+                        if (result == null) return;
+                        notifier.updateLineItem(
+                          index,
+                          item.copyWith(serialNo: result),
+                        );
+                      },
+                      icon: const Icon(Icons.list, size: 14),
+                      padding: EdgeInsets.zero,
+                      style: IconButton.styleFrom(
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      tooltip: 'Serial numbers',
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.description,
+                  visibility: visibility,
+                  width: widths.description,
+                  child: _CompactTextField(
+                    initialValue: item.description,
+                    hintText: 'Description',
+                    borderless: _gridBorderless,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(description: value),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.batch,
+                  visibility: visibility,
+                  width: widths.batch,
+                  child: _CompactTextField(
+                    initialValue: item.batchNo,
+                    hintText: 'Batch',
+                    borderless: _gridBorderless,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(batchNo: value),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.model,
+                  visibility: visibility,
+                  width: widths.model,
+                  child: _CompactTextField(
+                    initialValue: item.modelNo,
+                    hintText: 'Model',
+                    borderless: _gridBorderless,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(modelNo: value),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.expDate,
+                  visibility: visibility,
+                  width: widths.expDate,
+                  child: _CompactDateTrigger(
+                    date: item.expDate,
+                    borderless: _gridBorderless,
+                    onTap: () => pickDate(
+                      current: item.expDate,
+                      onSelected: (date) => notifier.updateLineItem(
+                        index,
+                        item.copyWith(expDate: date),
+                      ),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.mfgDate,
+                  visibility: visibility,
+                  width: widths.mfgDate,
+                  child: _CompactDateTrigger(
+                    date: item.mfgDate,
+                    borderless: _gridBorderless,
+                    onTap: () => pickDate(
+                      current: item.mfgDate,
+                      onSelected: (date) => notifier.updateLineItem(
+                        index,
+                        item.copyWith(mfgDate: date),
+                      ),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.mrp,
+                  visibility: visibility,
+                  width: widths.mrp,
+                  child: _CompactNumberField(
+                    initialValue: item.mrp == 0 ? '' : item.mrp.toString(),
+                    hintText: '0',
+                    borderless: _gridBorderless,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(mrp: double.tryParse(value) ?? 0),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.size,
+                  visibility: visibility,
+                  width: widths.size,
+                  child: _CompactTextField(
+                    initialValue: item.size,
+                    hintText: 'Size',
+                    borderless: _gridBorderless,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(size: value),
+                    ),
+                  ),
+                ),
+                SaleLineItemGridCell(
+                  width: widths.qty,
+                  child: _CompactNumberField(
+                    initialValue: item.qty == 0 ? '' : item.qty.toString(),
+                    hintText: '0',
+                    borderless: _gridBorderless,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(qty: double.tryParse(value) ?? 0),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.unit,
+                  visibility: visibility,
+                  width: widths.unit,
+                  child: SaleGenericSelectDropdown(
+                    value: item.unit,
+                    options: SaleDropdownOptions.units,
+                    hintText: 'NOS',
+                    highlight: SaleDropdownHighlight.red,
+                    compact: true,
+                    minMenuWidth: 72,
+                    borderless: _gridBorderless,
+                    onSelected: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(unit: value),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.price,
+                  visibility: visibility,
+                  width: widths.price,
+                  child: _CompactNumberField(
+                    initialValue: item.pricePerUnit == 0
+                        ? ''
+                        : item.pricePerUnit.toString(),
+                    hintText: '0',
+                    borderless: _gridBorderless,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(
+                        pricePerUnit: double.tryParse(value) ?? 0,
+                      ),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.discount,
+                  visibility: visibility,
+                  width: widths.discount,
+                  child: _CompactNumberField(
+                    initialValue: item.discountPercent == 0
+                        ? ''
+                        : item.discountPercent.toString(),
+                    hintText: '0',
+                    borderless: _gridBorderless,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(
+                        discountPercent: double.tryParse(value) ?? 0,
+                      ),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.taxPercent,
+                  visibility: visibility,
+                  width: widths.taxPercent,
+                  child: SaleGenericSelectDropdown(
+                    value: taxLabelForPercent(item.taxPercent),
+                    options: SaleDropdownOptions.taxSlabs,
+                    hintText: 'Select',
+                    highlight: SaleDropdownHighlight.red,
+                    compact: true,
+                    borderless: _gridBorderless,
+                    minMenuWidth: 88,
+                    onSelected: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(taxPercent: saleTaxSlabs[value] ?? 0),
+                    ),
+                  ),
+                ),
+                SaleLineItemOptionalCell(
+                  column: SaleLineItemColumn.taxAmount,
+                  visibility: visibility,
+                  width: widths.taxAmount,
+                  child: Text(
+                    CreditNoteLineItemsTable._amountFormat.format(item.lineTax),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: item.taxPercent > 0
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                SaleLineItemGridCell(
+                  width: widths.amount,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    CreditNoteLineItemsTable._amountFormat.format(item.amount),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                SaleLineItemGridCell(
+                  width: widths.actions,
+                  alignment: Alignment.center,
+                  child: isActive
+                      ? SaleLineItemConfirmButton(onPressed: onConfirm)
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactDateTrigger extends StatelessWidget {
+  const _CompactDateTrigger({
+    required this.date,
+    required this.onTap,
+    this.borderless = false,
+  });
+
+  final DateTime? date;
+  final VoidCallback onTap;
+  final bool borderless;
+
+  @override
+  Widget build(BuildContext context) {
+    return SaleFieldTrigger(
+      onTap: onTap,
+      compact: true,
+      borderless: borderless,
+      child: Text(
+        date != null
+            ? '${date!.day.toString().padLeft(2, '0')}/${date!.month.toString().padLeft(2, '0')}/${date!.year}'
+            : '',
+        style: saleFieldTextStyle.copyWith(fontSize: 11),
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+class _TotalsRow extends StatelessWidget {
+  const _TotalsRow({
+    required this.widths,
+    required this.visibility,
+    required this.totalQty,
+    required this.totalTax,
+    required this.totalAmount,
+  });
+
+  final SaleLineItemColumnWidths widths;
+  final SaleLineItemColumnVisibility visibility;
+  final double totalQty;
+  final double totalTax;
+  final double totalAmount;
+
+  static const _labelStyle = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textSecondary,
+  );
+
+  static const _valueStyle = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: SaleLineItemTableLayout.headerBackground,
+        border: Border(
+          top: BorderSide(color: SaleLineItemTableLayout.gridBorderColor),
+          bottom: BorderSide(color: SaleLineItemTableLayout.gridBorderColor),
+        ),
+      ),
+      child: SizedBox(
+        height: SaleLineItemTableLayout.rowHeight,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SaleLineItemGridCell(
+              width: widths.index + widths.item,
+              child: const Text('TOTAL', style: _labelStyle),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.serialNo,
+              visibility: visibility,
+              width: widths.serial,
+              child: const SizedBox(),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.description,
+              visibility: visibility,
+              width: widths.description,
+              child: const SizedBox(),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.batch,
+              visibility: visibility,
+              width: widths.batch,
+              child: const SizedBox(),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.model,
+              visibility: visibility,
+              width: widths.model,
+              child: const SizedBox(),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.expDate,
+              visibility: visibility,
+              width: widths.expDate,
+              child: const SizedBox(),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.mfgDate,
+              visibility: visibility,
+              width: widths.mfgDate,
+              child: const SizedBox(),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.mrp,
+              visibility: visibility,
+              width: widths.mrp,
+              child: const SizedBox(),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.size,
+              visibility: visibility,
+              width: widths.size,
+              child: const SizedBox(),
+            ),
+            SaleLineItemGridCell(
+              width: widths.qty,
+              child: Text(
+                totalQty == totalQty.roundToDouble()
+                    ? totalQty.toInt().toString()
+                    : totalQty.toStringAsFixed(2),
+                style: _valueStyle,
+              ),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.unit,
+              visibility: visibility,
+              width: widths.unit,
+              child: const SizedBox(),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.price,
+              visibility: visibility,
+              width: widths.price,
+              child: const SizedBox(),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.discount,
+              visibility: visibility,
+              width: widths.discount,
+              child: const SizedBox(),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.taxPercent,
+              visibility: visibility,
+              width: widths.taxPercent,
+              child: const SizedBox(),
+            ),
+            SaleLineItemOptionalCell(
+              column: SaleLineItemColumn.taxAmount,
+              visibility: visibility,
+              width: widths.taxAmount,
+              child: Text(
+                CreditNoteLineItemsTable._amountFormat.format(totalTax),
+                style: _valueStyle,
+              ),
+            ),
+            SaleLineItemGridCell(
+              width: widths.amount,
+              alignment: Alignment.centerRight,
+              child: Text(
+                CreditNoteLineItemsTable._amountFormat.format(totalAmount),
+                style: _valueStyle,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            SaleLineItemGridCell(width: widths.actions, child: const SizedBox()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactTextField extends StatefulWidget {
+  const _CompactTextField({
+    required this.initialValue,
+    required this.onChanged,
+    this.hintText,
+    this.suffixIcon,
+    this.borderless = false,
+  });
+
+  final String initialValue;
+  final ValueChanged<String> onChanged;
+  final String? hintText;
+  final Widget? suffixIcon;
+  final bool borderless;
+
+  @override
+  State<_CompactTextField> createState() => _CompactTextFieldState();
+}
+
+class _CompactTextFieldState extends State<_CompactTextField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void didUpdateWidget(_CompactTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue != oldWidget.initialValue &&
+        widget.initialValue != _controller.text) {
+      _controller.text = widget.initialValue;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SaleCompactFieldBox(
+      child: TextField(
+        controller: _controller,
+        maxLines: 1,
+        style: saleFieldTextStyle.copyWith(fontSize: 12, height: 1),
+        textAlignVertical: TextAlignVertical.center,
+        decoration: buildSaleFieldDecoration(
+          hint: widget.hintText,
+          compact: true,
+          borderless: widget.borderless,
+          suffixIcon: widget.suffixIcon,
+        ),
+        onChanged: widget.onChanged,
       ),
     );
   }
@@ -333,11 +921,13 @@ class _CompactNumberField extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.hintText,
+    this.borderless = false,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
+  final bool borderless;
 
   @override
   State<_CompactNumberField> createState() => _CompactNumberFieldState();
@@ -369,18 +959,23 @@ class _CompactNumberFieldState extends State<_CompactNumberField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      style: saleFieldTextStyle.copyWith(fontSize: 12),
-      decoration: buildSaleFieldDecoration(
-        hint: widget.hintText,
-        compact: true,
+    return SaleCompactFieldBox(
+      child: TextField(
+        controller: _controller,
+        maxLines: 1,
+        style: saleFieldTextStyle.copyWith(fontSize: 12, height: 1),
+        textAlignVertical: TextAlignVertical.center,
+        decoration: buildSaleFieldDecoration(
+          hint: widget.hintText,
+          compact: true,
+          borderless: widget.borderless,
+        ),
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+        ],
+        onChanged: widget.onChanged,
       ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-      ],
-      onChanged: widget.onChanged,
     );
   }
 }

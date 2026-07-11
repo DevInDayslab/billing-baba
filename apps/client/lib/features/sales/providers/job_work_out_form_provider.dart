@@ -16,7 +16,11 @@ JobWorkOutFormState _initialJobWorkOutFormState() {
   return JobWorkOutFormState(
     invoiceDate: today,
     deliveryDate: today,
-    rawMaterials: [JobWorkOutRawMaterialItem.empty(id: nextRawMaterialId())],
+    finishedGoodUnit: 'NONE',
+    rawMaterials: [
+      JobWorkOutRawMaterialItem.empty(id: nextRawMaterialId()),
+      JobWorkOutRawMaterialItem.empty(id: nextRawMaterialId()),
+    ],
   );
 }
 
@@ -37,6 +41,13 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
 
   void resetForm() {
     state = _initialJobWorkOutFormState();
+  }
+
+  Future<void> prepareNewForm() async {
+    resetForm();
+    final orders = await ref.read(jobWorkOrdersListProvider.future);
+    final nextJobId = (orders.totalItems + 1).toString();
+    state = state.copyWith(jobId: nextJobId);
   }
 
   Future<void> loadOrder(String orderId) async {
@@ -195,7 +206,10 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
     state = state.copyWith(
       additionalCosts: [
         ...state.additionalCosts,
-        JobWorkOutAdditionalCost(id: nextAdditionalCostId()),
+        JobWorkOutAdditionalCost(
+          id: nextAdditionalCostId(),
+          label: SaleDropdownOptions.jobWorkAdditionalCostCharges.first,
+        ),
       ],
     );
   }

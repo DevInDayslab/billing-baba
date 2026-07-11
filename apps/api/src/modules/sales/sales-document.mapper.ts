@@ -21,8 +21,14 @@ type DocumentRow = {
   convertedFromId: string | null;
   posSessionId: string | null;
   notes: string | null;
+  createdBy: string | null;
   createdAt: Date;
   updatedAt: Date;
+};
+
+type DocumentListMetadata = {
+  createdByName?: string | null;
+  godownName?: string | null;
 };
 
 type LineRow = {
@@ -69,6 +75,7 @@ type DocumentRowWithPayments = DocumentRow & {
 export function toSalesDocumentRecord(
   row: DocumentRowWithPayments,
   lines?: LineRow[],
+  metadata: DocumentListMetadata = {},
 ): SalesDocumentRecord {
   return {
     id: row.id,
@@ -90,6 +97,9 @@ export function toSalesDocumentRecord(
     converted_from_id: row.convertedFromId,
     pos_session_id: row.posSessionId,
     notes: row.notes,
+    created_by: row.createdBy,
+    created_by_name: metadata.createdByName ?? null,
+    godown_name: metadata.godownName ?? null,
     created_at: row.createdAt.toISOString(),
     updated_at: row.updatedAt.toISOString(),
     ...(lines ? { lines: lines.map(toSalesDocumentLineRecord) } : {}),

@@ -19,6 +19,11 @@ enum SaleDocumentType {
     SaleDocumentType.estimate => api.SalesConstants.estimateSeries,
     SaleDocumentType.proforma => api.SalesConstants.proformaSeries,
   };
+
+  String get defaultTermsTitle => switch (this) {
+    SaleDocumentType.estimate => 'Estimate Quotation',
+    SaleDocumentType.proforma => 'Proforma Invoice',
+  };
 }
 
 /// Form state for Estimate/Quotation and Proforma Invoice pages.
@@ -32,9 +37,11 @@ class SaleDocumentFormState {
     this.invoiceDate,
     this.invoiceTime,
     this.stateOfSupply = '',
-    this.godown = 'Main Godown',
+    this.godown = 'Main Location',
     this.godownId,
     this.items = const [],
+    this.termsTitle = 'Estimate Quotation',
+    this.termsText = 'Thanks for doing business with us!',
     this.description = '',
     this.attachedImages = const [],
     this.attachedDocuments = const [],
@@ -57,6 +64,8 @@ class SaleDocumentFormState {
   final String godown;
   final String? godownId;
   final List<SaleLineItem> items;
+  final String termsTitle;
+  final String termsText;
   final String description;
   final List<SaleFormAttachment> attachedImages;
   final List<SaleFormAttachment> attachedDocuments;
@@ -102,6 +111,7 @@ class SaleDocumentFormState {
   SaleDocumentFormState copyWith({
     bool? isFormOpen,
     String? documentId,
+    bool clearDocumentId = false,
     String? partyId,
     String? party,
     String? refNo,
@@ -111,6 +121,8 @@ class SaleDocumentFormState {
     String? godown,
     String? godownId,
     List<SaleLineItem>? items,
+    String? termsTitle,
+    String? termsText,
     String? description,
     List<SaleFormAttachment>? attachedImages,
     List<SaleFormAttachment>? attachedDocuments,
@@ -124,7 +136,7 @@ class SaleDocumentFormState {
   }) {
     return SaleDocumentFormState(
       isFormOpen: isFormOpen ?? this.isFormOpen,
-      documentId: documentId ?? this.documentId,
+      documentId: clearDocumentId ? null : (documentId ?? this.documentId),
       partyId: partyId ?? this.partyId,
       party: party ?? this.party,
       refNo: refNo ?? this.refNo,
@@ -134,6 +146,8 @@ class SaleDocumentFormState {
       godown: godown ?? this.godown,
       godownId: godownId ?? this.godownId,
       items: items ?? this.items,
+      termsTitle: termsTitle ?? this.termsTitle,
+      termsText: termsText ?? this.termsText,
       description: description ?? this.description,
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,

@@ -37,6 +37,7 @@ class ItemNameAutocompleteField extends ConsumerStatefulWidget {
     required this.onChanged,
     required this.onItemSelected,
     this.onAfterItemSelected,
+    this.borderless = false,
     super.key,
   });
 
@@ -44,6 +45,7 @@ class ItemNameAutocompleteField extends ConsumerStatefulWidget {
   final ValueChanged<String> onChanged;
   final ValueChanged<SaleItemOption> onItemSelected;
   final VoidCallback? onAfterItemSelected;
+  final bool borderless;
 
   @override
   ConsumerState<ItemNameAutocompleteField> createState() =>
@@ -383,7 +385,11 @@ class ItemNameAutocompleteFieldState
         controller: _controller,
         focusNode: _focusNode,
         style: saleFieldTextStyle.copyWith(fontSize: 13),
-        decoration: buildSaleFieldDecoration(hint: 'Item Name', compact: true),
+        decoration: buildSaleFieldDecoration(
+          hint: 'Item Name',
+          compact: true,
+          borderless: widget.borderless,
+        ),
         onChanged: (value) {
           widget.onChanged(value);
           _overlayEntry?.markNeedsBuild();

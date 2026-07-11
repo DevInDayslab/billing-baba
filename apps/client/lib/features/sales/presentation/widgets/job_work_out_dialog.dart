@@ -4,6 +4,7 @@ import 'package:billing_baba/features/print/presentation/widgets/voucher_print_a
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_additional_cost_table.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_footer.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/job_work_out_raw_material_table.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
@@ -17,7 +18,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
-const _linkColor = Color(0xFF1565C0);
 
 Future<bool?> showJobWorkOutDialog(
   BuildContext context, {
@@ -51,7 +51,7 @@ class _JobWorkOutDialogState extends ConsumerState<JobWorkOutDialog> {
       if (widget.orderId != null) {
         notifier.loadOrder(widget.orderId!);
       } else {
-        notifier.resetForm();
+        notifier.prepareNewForm();
       }
     });
   }
@@ -94,39 +94,31 @@ class _JobWorkOutDialogState extends ConsumerState<JobWorkOutDialog> {
                     const SizedBox(height: _sectionGap),
                     _FinishedGoodSection(form: form, notifier: notifier),
                     const SizedBox(height: _sectionGap),
-                    JobWorkOutRawMaterialTable(
-                      finishedGoodQty: form.finishedGoodQty,
-                      finishedGoodUnit: form.finishedGoodUnit,
-                    ),
-                    if (form.additionalCosts.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      _AdditionalCostsSection(
-                        costs: form.additionalCosts,
-                        notifier: notifier,
+                    const JobWorkOutRawMaterialTable(),
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton.icon(
+                      onPressed: notifier.addAdditionalCost,
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text(
+                        'Add Additional Cost',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ],
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton(
-                          onPressed: notifier.addAdditionalCost,
-                          style: TextButton.styleFrom(
-                            foregroundColor: _linkColor,
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text(
-                            '+ Additional Cost',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
                         ),
                       ),
                     ),
+                    if (form.additionalCosts.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      const JobWorkOutAdditionalCostTable(),
+                    ],
                     const SizedBox(height: _sectionGap),
                     const JobWorkOutFooter(),
                   ],
@@ -282,15 +274,15 @@ class _JobWorkOutFormFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          flex: 3,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _RequiredLabeledField(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: _RequiredLabeledField(
                 label: 'Party Name',
                 child: BillingNamePartySearchField(
                   value: form.party,
@@ -304,8 +296,29 @@ class _JobWorkOutFormFields extends StatelessWidget {
                       ),
                 ),
               ),
-              const SizedBox(height: _sectionGap),
-              _LabeledField(
+            ),
+            const SizedBox(width: _sectionGap),
+            Expanded(
+              flex: 2,
+              child: _LabeledField(
+                label: 'Job ID',
+                child: _SaleTextField(
+                  initialValue: form.jobId,
+                  hintText: '—',
+                  readOnly: true,
+                  onChanged: (_) {},
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: _sectionGap),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: _LabeledField(
                 label: 'Phone No.',
                 child: _SaleTextField(
                   initialValue: form.phoneNo,
@@ -314,25 +327,11 @@ class _JobWorkOutFormFields extends StatelessWidget {
                   onChanged: notifier.updatePhoneNo,
                 ),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(width: _sectionGap),
-        Expanded(
-          flex: 2,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _LabeledField(
-                label: 'Job ID',
-                child: _SaleTextField(
-                  initialValue: form.jobId,
-                  hintText: 'Job ID',
-                  onChanged: notifier.updateJobId,
-                ),
-              ),
-              const SizedBox(height: _sectionGap),
-              _LabeledField(
+            ),
+            const SizedBox(width: _sectionGap),
+            Expanded(
+              flex: 2,
+              child: _LabeledField(
                 label: 'Invoice Date',
                 child: SaleSingleDatePickerAnchor(
                   key: invoiceDatePickerKey,
@@ -345,8 +344,18 @@ class _JobWorkOutFormFields extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: _sectionGap),
-              _LabeledField(
+            ),
+          ],
+        ),
+        const SizedBox(height: _sectionGap),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Expanded(flex: 3, child: SizedBox()),
+            const SizedBox(width: _sectionGap),
+            Expanded(
+              flex: 2,
+              child: _LabeledField(
                 label: 'Delivery Date',
                 child: SaleSingleDatePickerAnchor(
                   key: deliveryDatePickerKey,
@@ -359,8 +368,8 @@ class _JobWorkOutFormFields extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
@@ -432,74 +441,13 @@ class _FinishedGoodSection extends ConsumerWidget {
                 child: SaleGenericSelectDropdown(
                   value: form.finishedGoodUnit,
                   options: SaleDropdownOptions.units,
-                  hintText: 'PCS',
+                  hintText: 'None',
                   onSelected: notifier.updateFinishedGoodUnit,
                 ),
               ),
             ),
           ],
         ),
-      ],
-    );
-  }
-}
-
-class _AdditionalCostsSection extends StatelessWidget {
-  const _AdditionalCostsSection({
-    required this.costs,
-    required this.notifier,
-  });
-
-  final List<JobWorkOutAdditionalCost> costs;
-  final JobWorkOutFormNotifier notifier;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (final cost in costs)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _SaleTextField(
-                    initialValue: cost.label,
-                    hintText: 'Cost description',
-                    onChanged: (value) => notifier.updateAdditionalCost(
-                      cost.id,
-                      cost.copyWith(label: value),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 120,
-                  child: _SaleTextField(
-                    initialValue: cost.amount == 0
-                        ? '0'
-                        : cost.amount.toString(),
-                    hintText: '0',
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                    ],
-                    onChanged: (value) => notifier.updateAdditionalCost(
-                      cost.id,
-                      cost.copyWith(amount: double.tryParse(value) ?? 0),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => notifier.removeAdditionalCost(cost.id),
-                  icon: const Icon(Icons.close, size: 18, color: Colors.red),
-                  tooltip: 'Remove',
-                ),
-              ],
-            ),
-          ),
       ],
     );
   }
@@ -568,6 +516,7 @@ class _SaleTextField extends StatefulWidget {
     this.keyboardType,
     this.inputFormatters,
     this.hasError = false,
+    this.readOnly = false,
   });
 
   final String initialValue;
@@ -576,6 +525,7 @@ class _SaleTextField extends StatefulWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final bool hasError;
+  final bool readOnly;
 
   @override
   State<_SaleTextField> createState() => _SaleTextFieldState();
@@ -610,6 +560,7 @@ class _SaleTextFieldState extends State<_SaleTextField> {
     return TextField(
       controller: _controller,
       style: saleFieldTextStyle,
+      readOnly: widget.readOnly,
       decoration: buildSaleFieldDecoration(
         hint: widget.hintText,
         hasError: widget.hasError,

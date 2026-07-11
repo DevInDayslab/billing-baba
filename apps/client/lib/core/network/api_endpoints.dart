@@ -56,6 +56,8 @@ abstract final class ApiEndpoints {
 
   static const sales = '/api/v1/sales';
   static const salesDocuments = '$sales/sales-documents';
+  static const fixedAssetSales = '$sales/fixed-asset-sales';
+  static String fixedAssetSale(String batchId) => '$fixedAssetSales/$batchId';
   static String salesDocument(String id) => '$salesDocuments/$id';
   static String salesDocumentLines(String id) => '${salesDocument(id)}/lines';
   static String salesDocumentLine(String id, String lineId) =>

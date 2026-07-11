@@ -58,7 +58,7 @@ final class PartyLedgerProvider
     extends $AsyncNotifierProvider<PartyLedger, PartyLedgerModel> {
   PartyLedgerProvider._({
     required PartyLedgerFamily super.from,
-    required PartyLedgerKey super.argument,
+    required String super.argument,
   }) : super(
          retry: null,
          name: r'partyLedgerProvider',
@@ -92,7 +92,7 @@ final class PartyLedgerProvider
   }
 }
 
-String _$partyLedgerHash() => r'2e2a46de22dac2dd3c00b3493eb75eee56166f87';
+String _$partyLedgerHash() => r'528a9936e8a3b05a0153782761d1ab3f67f34f45';
 
 final class PartyLedgerFamily extends $Family
     with
@@ -101,7 +101,7 @@ final class PartyLedgerFamily extends $Family
           AsyncValue<PartyLedgerModel>,
           PartyLedgerModel,
           FutureOr<PartyLedgerModel>,
-          PartyLedgerKey
+          String
         > {
   PartyLedgerFamily._()
     : super(
@@ -112,18 +112,18 @@ final class PartyLedgerFamily extends $Family
         isAutoDispose: true,
       );
 
-  PartyLedgerProvider call(PartyLedgerKey key) =>
-      PartyLedgerProvider._(argument: key, from: this);
+  PartyLedgerProvider call(String partyId) =>
+      PartyLedgerProvider._(argument: partyId, from: this);
 
   @override
   String toString() => r'partyLedgerProvider';
 }
 
 abstract class _$PartyLedger extends $AsyncNotifier<PartyLedgerModel> {
-  late final _$args = ref.$arg as PartyLedgerKey;
-  PartyLedgerKey get key => _$args;
+  late final _$args = ref.$arg as String;
+  String get partyId => _$args;
 
-  FutureOr<PartyLedgerModel> build(PartyLedgerKey key);
+  FutureOr<PartyLedgerModel> build(String partyId);
   @$mustCallSuper
   @override
   WhenComplete runBuild() {

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+const _summaryBannerColor = Color(0xFFFFF8E1);
+
 class JobWorkOutFooter extends ConsumerWidget {
   const JobWorkOutFooter({super.key});
 
@@ -20,65 +22,48 @@ class JobWorkOutFooter extends ConsumerWidget {
     final notifier = ref.read(jobWorkOutFormProvider.notifier);
     final grandTotal = ref.watch(jobWorkOutGrandTotalProvider);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: SaleFormAttachmentsSection(
-            description: form.description,
-            images: form.attachedImages,
-            documents: form.attachedDocuments,
-            onDescriptionChanged: notifier.updateDescription,
-            onAddImage: () => _promptAddImage(
-              context,
-              notifier,
-              form.attachedImages.length,
-            ),
-            onRemoveImage: notifier.removeImage,
-            onUpdateImage: notifier.updateImage,
-            onAddDocument: () => _promptAddDocument(
-              context,
-              notifier,
-              form.attachedDocuments.length,
-            ),
-            onRemoveDocument: notifier.removeDocument,
-            onUpdateDocument: notifier.updateDocument,
+        SaleFormAttachmentsSection(
+          description: form.description,
+          images: form.attachedImages,
+          documents: form.attachedDocuments,
+          onDescriptionChanged: notifier.updateDescription,
+          onAddImage: () => _promptAddImage(
+            context,
+            notifier,
+            form.attachedImages.length,
           ),
+          onRemoveImage: notifier.removeImage,
+          onUpdateImage: notifier.updateImage,
+          onAddDocument: () => _promptAddDocument(
+            context,
+            notifier,
+            form.attachedDocuments.length,
+          ),
+          onRemoveDocument: notifier.removeDocument,
+          onUpdateDocument: notifier.updateDocument,
         ),
-        const SizedBox(width: 16),
-        SizedBox(
-          width: 240,
-          child: Card(
-            elevation: 0,
-            color: const Color(0xFFFAFAFA),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-              side: const BorderSide(color: Color(0xFFE0E0E0)),
+        const SizedBox(height: AppSpacing.md),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.md,
-              ),
-              child: Row(
-                children: [
-                  const Text(
-                    'Grand Total',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    _currencyFormat.format(grandTotal),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+            decoration: BoxDecoration(
+              color: _summaryBannerColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              'Total Estimated Cost (Raw Material + Additional Cost) = '
+              '${_currencyFormat.format(grandTotal)}',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
               ),
             ),
           ),

@@ -8,18 +8,24 @@ class SalePageTitleBar extends StatefulWidget {
   const SalePageTitleBar({
     required this.currentRoute,
     this.onSettingsTap,
+    this.addButtonLabel,
+    this.onAddTap,
+    this.addButtonColor,
     super.key,
   });
 
   final String currentRoute;
   final VoidCallback? onSettingsTap;
+  final String? addButtonLabel;
+  final VoidCallback? onAddTap;
+  final Color? addButtonColor;
 
   @override
   State<SalePageTitleBar> createState() => _SalePageTitleBarState();
 }
 
 class _SalePageTitleBarState extends State<SalePageTitleBar> {
-  static const _hoverColor = Color(0xFFD32F2F);
+  static final _hoverColor = AppColors.primary;
   static const Color _defaultColor = Colors.black87;
 
   static const _titleStyle = TextStyle(
@@ -44,44 +50,87 @@ class _SalePageTitleBarState extends State<SalePageTitleBar> {
   Widget build(BuildContext context) {
     final currentLabel = SaleSubRoutes.labelForRoute(widget.currentRoute);
 
-    return Row(
-      children: [
-        SalePageSwitcherMenu(
-          currentRoute: widget.currentRoute,
-          child: MouseRegion(
-            onEnter: (_) => _setHovered(true),
-            onExit: (_) => _setHovered(false),
-            cursor: SystemMouseCursors.click,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    currentLabel,
-                    style: _titleStyle.copyWith(color: _contentColor),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xs),
-                    child: Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 22,
-                      color: _contentColor,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 480;
+        final showAddButton =
+            widget.addButtonLabel != null && widget.onAddTap != null;
+        final addButtonColor = widget.addButtonColor ?? AppColors.primary;
+
+        return Row(
+          children: [
+            Expanded(
+              child: SalePageSwitcherMenu(
+                currentRoute: widget.currentRoute,
+                child: MouseRegion(
+                  onEnter: (_) => _setHovered(true),
+                  onExit: (_) => _setHovered(false),
+                  cursor: SystemMouseCursors.click,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            currentLabel,
+                            style: _titleStyle.copyWith(color: _contentColor),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.xs),
+                          child: Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 22,
+                            color: _contentColor,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
-        const Spacer(),
-        IconButton(
-          onPressed: widget.onSettingsTap,
-          icon: const Icon(Icons.settings_outlined),
-          color: AppColors.textSecondary,
-          tooltip: 'Settings',
-        ),
-      ],
+            if (showAddButton) ...[
+              if (compact)
+                IconButton.filled(
+                  onPressed: widget.onAddTap,
+                  style: IconButton.styleFrom(
+                    backgroundColor: addButtonColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  icon: const Icon(Icons.add, size: 20),
+                  tooltip: widget.addButtonLabel,
+                )
+              else
+                FilledButton.icon(
+                  onPressed: widget.onAddTap,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: addButtonColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                  ),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: Text(
+                    widget.addButtonLabel!,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              const SizedBox(width: AppSpacing.xs),
+            ],
+            IconButton(
+              onPressed: widget.onSettingsTap,
+              icon: const Icon(Icons.settings_outlined),
+              color: AppColors.textSecondary,
+              tooltip: 'Settings',
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        );
+      },
     );
   }
 }

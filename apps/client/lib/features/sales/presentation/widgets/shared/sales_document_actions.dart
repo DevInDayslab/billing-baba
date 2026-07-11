@@ -191,7 +191,9 @@ Future<void> _defaultView(
   }
 
   if (config.scope.documentType == SalesDocumentType.saleOrder) {
-    await ref.read(saleOrderFormProvider.notifier).loadDocument(document.id);
+    await ref
+        .read(saleOrderFormProvider(sessionKey: 'default').notifier)
+        .loadDocument(document.id);
     return;
   }
 
@@ -232,9 +234,9 @@ Future<void> _defaultDuplicate(
   }
 
   if (config.scope.documentType == SalesDocumentType.saleOrder) {
-    await ref.read(saleOrderFormProvider.notifier).duplicateDocument(
-      document.id,
-    );
+    await ref
+        .read(saleOrderFormProvider(sessionKey: 'default').notifier)
+        .duplicateDocument(document.id);
     return;
   }
 

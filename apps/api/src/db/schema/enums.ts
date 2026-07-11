@@ -67,6 +67,14 @@ export const purchaseFaStatusEnum = pgEnum('purchase_fa_status', [
   'cancelled',
 ]);
 
+export const saleFaStatusEnum = pgEnum('sale_fa_status', [
+  'paid',
+  'unpaid',
+  'partially_paid',
+  'overdue',
+  'cancelled',
+]);
+
 export const taxTypeEnum = pgEnum('tax_type', [
   'cgst_sgst',
   'igst',

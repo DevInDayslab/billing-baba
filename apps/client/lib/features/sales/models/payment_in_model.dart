@@ -1,5 +1,6 @@
 enum PaymentInStatus {
-  used,
+  paid,
+  partial,
   unused,
 }
 
@@ -18,6 +19,7 @@ class PaymentInModel {
     this.description = '',
     this.user = 'Admin',
     this.godown = 'Main Location',
+    this.firm = 'Main Firm',
   });
 
   final String id;
@@ -33,6 +35,7 @@ class PaymentInModel {
   final String description;
   final String user;
   final String godown;
+  final String firm;
 
   double get balanceDue => totalAmount - receivedAmount - discount;
 
@@ -50,6 +53,7 @@ class PaymentInModel {
     String? description,
     String? user,
     String? godown,
+    String? firm,
   }) {
     return PaymentInModel(
       id: id ?? this.id,
@@ -65,6 +69,7 @@ class PaymentInModel {
       description: description ?? this.description,
       user: user ?? this.user,
       godown: godown ?? this.godown,
+      firm: firm ?? this.firm,
     );
   }
 }
