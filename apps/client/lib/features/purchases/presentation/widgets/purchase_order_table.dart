@@ -1,41 +1,31 @@
-import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
-import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/purchase_order_model.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/purchase_order_actions.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_order_status_badge.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_cell.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_transaction_table_layout.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_orders_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-const _cardBorder = Color(0xFFE0E0E0);
-
-const _partyColWidth = 160.0;
-const _noColWidth = 60.0;
-const _dateColWidth = 110.0;
-const _dueDateColWidth = 100.0;
-const _amountColWidth = 120.0;
-const _balanceColWidth = 110.0;
-const _typeColWidth = 130.0;
-const _statusColWidth = 130.0;
-const _actionsColWidth = 100.0;
+const _noColWidth = 110.0;
+const _typeColWidth = 106.0;
 
 const double _minTableWidth =
-    _partyColWidth +
     _noColWidth +
-    _dateColWidth +
-    _dueDateColWidth +
-    _amountColWidth +
-    _balanceColWidth +
+    purchaseTransactionDateOnlyColWidth +
+    purchaseTransactionPartyColMinWidth +
+    purchaseTransactionDueDateColWidth +
+    purchaseTransactionAmountColWidth +
+    purchaseTransactionBalanceColWidth +
     _typeColWidth +
-    _statusColWidth +
-    _actionsColWidth +
-    32;
+    purchaseTransactionStatusColWidth +
+    purchaseTransactionActionsColWidth3;
 
 class PurchaseOrderTable extends ConsumerWidget {
   const PurchaseOrderTable({super.key});
@@ -49,8 +39,8 @@ class PurchaseOrderTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ordersAsync = ref.watch(purchaseOrdersProvider);
     final paginated = ref.watch(paginatedPurchaseOrdersProvider);
+    final filters = ref.watch(purchaseOrderFiltersProvider);
     final filtersNotifier = ref.read(purchaseOrderFiltersProvider.notifier);
     final notifier = ref.read(purchaseOrdersProvider.notifier);
 
@@ -58,7 +48,7 @@ class PurchaseOrderTable extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: purchaseTransactionTableCardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -70,16 +60,6 @@ class PurchaseOrderTable extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                const Text(
-                  'TRANSACTIONS',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const Spacer(),
                 SizedBox(
                   width: 200,
                   height: 36,
@@ -110,10 +90,14 @@ class PurchaseOrderTable extends ConsumerWidget {
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
-                _XlsChip(
-                  onTap: () =>
-                      ModuleExportActions.exportPurchaseOrders(context, ref),
-                ),
+                if (filters.hasActiveFilters) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  TextButton(
+                    onPressed: filtersNotifier.clearAllFilters,
+                    child: const Text('Clear Filters'),
+                  ),
+                ],
+                const Spacer(),
                 IconButton(
                   onPressed: notifier.refresh,
                   icon: const Icon(Icons.refresh, size: 20),
@@ -123,71 +107,45 @@ class PurchaseOrderTable extends ConsumerWidget {
               ],
             ),
           ),
-          const Divider(height: 1, color: _cardBorder),
-          ordersAsync.when(
-            skipLoadingOnReload: true,
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (error, _) => Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                children: [
-                  Text(
-                    PurchaseErrorMapper.messageFor(error),
-                    style: const TextStyle(color: AppColors.error),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton(
-                    onPressed: notifier.refresh,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-            data: (_) => LayoutBuilder(
-              builder: (context, constraints) {
-                final tableWidth = constraints.maxWidth.clamp(
-                  _minTableWidth,
-                  double.infinity,
-                );
+          const Divider(height: 1, color: purchaseTransactionTableCardBorder),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final tableWidth = constraints.maxWidth.clamp(
+                _minTableWidth,
+                double.infinity,
+              );
 
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: tableWidth,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const _TableHeaderRow(),
-                        if (paginated.items.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.all(AppSpacing.xl),
-                            child: Center(
-                              child: Text(
-                                'No purchase orders found',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: tableWidth,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _TableHeaderRow(),
+                      if (paginated.items.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.all(AppSpacing.xl),
+                          child: Center(
+                            child: Text(
+                              'No purchase orders found',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
                               ),
                             ),
-                          )
-                        else
-                          for (var i = 0; i < paginated.items.length; i++) ...[
-                            if (i > 0)
-                              const Divider(height: 1, color: _cardBorder),
-                            _buildRow(context, ref, paginated.items[i]),
-                          ],
-                      ],
-                    ),
+                          ),
+                        )
+                      else
+                        for (final order in paginated.items)
+                          _buildRow(context, ref, order),
+                    ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
           if (paginated.totalPages > 1) ...[
-            const Divider(height: 1, color: _cardBorder),
+            const Divider(height: 1, color: purchaseTransactionTableCardBorder),
             _PaginationRow(
               currentPage: paginated.currentPage,
               totalPages: paginated.totalPages,
@@ -203,49 +161,63 @@ class PurchaseOrderTable extends ConsumerWidget {
     WidgetRef ref,
     PurchaseOrderModel order,
   ) {
-    return _TableDataRow(
+    return PurchaseTransactionTableDataRow(
       children: [
-        _TableCell(
-          width: _partyColWidth,
-          child: Text(
-            order.partyName,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        _TableCell(
+        PurchaseTransactionTableCell(
           width: _noColWidth,
           child: Text(order.orderNo),
         ),
-        _TableCell(
-          width: _dateColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionDateOnlyColWidth,
           child: Text(_dateFormat.format(order.date)),
         ),
-        _TableCell(
-          width: _dueDateColWidth,
+        Expanded(
+          flex: purchaseTransactionPartyColFlex,
+          child: PurchaseTransactionTableCell(
+            child: Text(
+              order.partyName,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionDueDateColWidth,
           child: Text(_dateFormat.format(order.dueDate)),
         ),
-        _TableCell(
-          width: _amountColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionAmountColWidth,
           alignment: Alignment.centerRight,
-          child: Text(_currencyFormat.format(order.amount)),
+          child: Text(
+            _currencyFormat.format(order.amount),
+            style: purchaseTransactionAmountTextStyle,
+          ),
         ),
-        _TableCell(
-          width: _balanceColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionBalanceColWidth,
           alignment: Alignment.centerRight,
-          child: Text(_currencyFormat.format(order.balanceDue)),
+          child: Text(
+            _currencyFormat.format(order.balanceDue),
+            style: purchaseTransactionAmountTextStyle,
+          ),
         ),
-        _TableCell(
+        PurchaseTransactionTableCell(
           width: _typeColWidth,
-          child: Text(order.type),
+          child: Text(
+            order.type,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
-        _TableCell(
-          width: _statusColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionStatusColWidth,
           child: PurchaseOrderStatusBadge(status: order.status),
         ),
-        _TableCell(
-          width: _actionsColWidth,
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionActionsColWidth3,
+          showDivider: false,
+          alignment: Alignment.center,
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
                 onPressed: () => DocumentPrintActions.preview(
@@ -257,7 +229,7 @@ class PurchaseOrderTable extends ConsumerWidget {
                 icon: const Icon(Icons.print_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 tooltip: 'Print',
               ),
               IconButton(
@@ -270,101 +242,20 @@ class PurchaseOrderTable extends ConsumerWidget {
                 icon: const Icon(Icons.share_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                 tooltip: 'Share',
               ),
               SalesActionMenuButton(
                 items: [
-                  if (order.isDraft)
+                  for (final action in purchaseOrderMenuActionsFor(order))
                     SalesActionMenuItem(
-                      label: 'Edit draft',
-                      onSelected: () async {
-                        await context.push(
-                          '${AppRoutes.editPurchaseOrder}/${order.id}',
-                        );
-                      },
-                    ),
-                  if (order.isDraft)
-                    SalesActionMenuItem(
-                      label: 'Finalize',
-                      onSelected: () async {
-                        final error = await ref
-                            .read(purchaseOrdersProvider.notifier)
-                            .finalizeOrder(order.id);
-                        if (!context.mounted) return;
-                        if (error != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(error)),
-                          );
-                        }
-                      },
-                    ),
-                  if (order.isDraft)
-                    SalesActionMenuItem(
-                      label: 'Delete draft',
-                      onSelected: () async {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Delete draft?'),
-                            content: Text('Delete draft ${order.orderNo}?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: const Text('Cancel'),
-                              ),
-                              FilledButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (confirmed != true || !context.mounted) return;
-                        final error = await ref
-                            .read(purchaseOrdersProvider.notifier)
-                            .deleteDraft(order.id);
-                        if (!context.mounted) return;
-                        if (error != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(error)),
-                          );
-                        }
-                      },
-                    ),
-                  if (order.canConvertToBill)
-                    SalesActionMenuItem(
-                      label: 'Convert to purchase bill',
-                      onSelected: () async {
-                        final error = await ref
-                            .read(purchaseOrdersProvider.notifier)
-                            .convertToBill(order.id);
-                        if (!context.mounted) return;
-                        if (error != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(error)),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Purchase order converted to bill',
-                              ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  if (!order.isDraft)
-                    SalesActionMenuItem(
-                      label: 'Open',
-                      onSelected: () async {
-                        await context.push(
-                          '${AppRoutes.editPurchaseOrder}/${order.id}',
-                        );
-                      },
+                      label: purchaseOrderMenuActionLabel(action),
+                      onSelected: () => handlePurchaseOrderMenuAction(
+                        context: context,
+                        ref: ref,
+                        action: action,
+                        order: order,
+                      ),
                     ),
                 ],
               ),
@@ -376,115 +267,185 @@ class PurchaseOrderTable extends ConsumerWidget {
   }
 }
 
-class _TableHeaderRow extends StatelessWidget {
+class _TableHeaderRow extends ConsumerWidget {
   const _TableHeaderRow();
 
-  static const _headerStyle = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textSecondary,
-    letterSpacing: 0.5,
-  );
-
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.background,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: const Row(
-        children: [
-          _TableCell(
-            width: _partyColWidth,
-            child: Text('PARTY', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _noColWidth,
-            child: Text('NO.', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _dateColWidth,
-            child: Text('DATE', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _dueDateColWidth,
-            child: Text('DUE DATE', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _amountColWidth,
-            alignment: Alignment.centerRight,
-            child: Text('TOTAL AMOUNT', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _balanceColWidth,
-            alignment: Alignment.centerRight,
-            child: Text('BALANCE', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _typeColWidth,
-            child: Text('TYPE', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _statusColWidth,
-            child: Text('STATUS', style: _headerStyle),
-          ),
-          _TableCell(
-            width: _actionsColWidth,
-            child: Text('ACTION', style: _headerStyle),
-          ),
-        ],
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filters = ref.watch(purchaseOrderFiltersProvider);
+    final filtersNotifier = ref.read(purchaseOrderFiltersProvider.notifier);
+    final partyOptions = ref.watch(purchaseOrderPartyOptionsProvider);
+    final typeOptions = ref.watch(purchaseOrderTypeOptionsProvider);
+    final columns = filters.columnFilters;
+
+    final actions = PurchaseColumnFilterActions(
+      onDocumentNo: filtersNotifier.setDocumentNoFilter,
+      onParty: filtersNotifier.setParty,
+      onTogglePaymentType: filtersNotifier.togglePaymentType,
+      onClearPaymentTypes: filtersNotifier.clearPaymentTypes,
+      onApplyAmountFilter: filtersNotifier.applyAmountFilter,
+      onClearAmountFilter: filtersNotifier.clearAmountFilter,
+      onApplyBalanceFilter: filtersNotifier.applyBalanceFilter,
+      onClearBalanceFilter: filtersNotifier.clearBalanceFilter,
+      onStatus: filtersNotifier.setStatus,
+      onType: filtersNotifier.setType,
+      onDateRange: filtersNotifier.setColumnDateRange,
+      onDueDateRange: filtersNotifier.setDueDateRange,
     );
-  }
-}
 
-class _TableDataRow extends StatelessWidget {
-  const _TableDataRow({required this.children});
-
-  final List<Widget> children;
-
-  static const _dataStyle = TextStyle(
-    fontSize: 13,
-    color: AppColors.textPrimary,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: _dataStyle,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+    return PurchaseTransactionTableHeaderRow(
+      children: [
+        PurchaseTransactionTableCell(
+          width: _noColWidth,
+          child: purchaseColumnFilterCell(
+            label: 'No.',
+            kind: PurchaseColumnFilterKind.documentNo,
+            headerStyle: purchaseTransactionTableHeaderStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.documentNo,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseOrderStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            documentNoHint: 'Search no.',
+          ),
         ),
-        child: Row(children: children),
-      ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionDateOnlyColWidth,
+          child: purchaseColumnFilterCell(
+            label: 'Date',
+            kind: PurchaseColumnFilterKind.date,
+            headerStyle: purchaseTransactionTableHeaderStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.date,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseOrderStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+        ),
+        Expanded(
+          flex: purchaseTransactionPartyColFlex,
+          child: PurchaseTransactionTableCell(
+            child: purchaseColumnFilterCell(
+              label: 'Party',
+              kind: PurchaseColumnFilterKind.partyName,
+              headerStyle: purchaseTransactionTableHeaderStyle,
+              isActive: purchaseColumnFilterIsActive(
+                PurchaseColumnFilterKind.partyName,
+                columns,
+              ),
+              columns: columns,
+              actions: actions,
+              partyOptions: partyOptions,
+              statusOptions: purchaseOrderStatusOptions,
+              selectedStatus: filters.selectedStatus,
+            ),
+          ),
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionDueDateColWidth,
+          child: purchaseColumnFilterCell(
+            label: 'Due Date',
+            kind: PurchaseColumnFilterKind.dueDate,
+            headerStyle: purchaseTransactionTableHeaderStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.dueDate,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseOrderStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionAmountColWidth,
+          alignment: Alignment.centerRight,
+          child: purchaseColumnFilterCell(
+            label: 'Amount',
+            kind: PurchaseColumnFilterKind.amount,
+            headerStyle: purchaseTransactionTableHeaderStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.amount,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseOrderStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            alignment: Alignment.centerRight,
+          ),
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionBalanceColWidth,
+          alignment: Alignment.centerRight,
+          child: purchaseColumnFilterCell(
+            label: 'Balance',
+            kind: PurchaseColumnFilterKind.balanceDue,
+            headerStyle: purchaseTransactionTableHeaderStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.balanceDue,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseOrderStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            alignment: Alignment.centerRight,
+          ),
+        ),
+        PurchaseTransactionTableCell(
+          width: _typeColWidth,
+          child: purchaseColumnFilterCell(
+            label: 'Type',
+            kind: PurchaseColumnFilterKind.typeName,
+            headerStyle: purchaseTransactionTableHeaderStyle,
+            isActive: purchaseColumnFilterIsActive(
+              PurchaseColumnFilterKind.typeName,
+              columns,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseOrderStatusOptions,
+            selectedStatus: filters.selectedStatus,
+            typeOptions: typeOptions,
+          ),
+        ),
+        PurchaseTransactionTableCell(
+          width: purchaseTransactionStatusColWidth,
+          child: purchaseColumnFilterCell(
+            label: 'Status',
+            kind: PurchaseColumnFilterKind.status,
+            headerStyle: purchaseTransactionTableHeaderStyle,
+            isActive: purchaseColumnStatusFilterIsActive(
+              filters.selectedStatus,
+            ),
+            columns: columns,
+            actions: actions,
+            partyOptions: partyOptions,
+            statusOptions: purchaseOrderStatusOptions,
+            selectedStatus: filters.selectedStatus,
+          ),
+        ),
+        const PurchaseTransactionTableCell(
+          width: purchaseTransactionActionsColWidth3,
+          showDivider: false,
+          alignment: Alignment.center,
+          child: Text('Actions', style: purchaseTransactionTableHeaderStyle),
+        ),
+      ],
     );
-  }
-}
-
-class _TableCell extends StatelessWidget {
-  const _TableCell({
-    required this.child,
-    this.width,
-    this.alignment = Alignment.centerLeft,
-  });
-
-  final Widget child;
-  final double? width;
-  final Alignment alignment;
-
-  @override
-  Widget build(BuildContext context) {
-    final content = Align(alignment: alignment, child: child);
-
-    if (width != null) {
-      return SizedBox(width: width, child: content);
-    }
-
-    return content;
   }
 }
 
@@ -578,7 +539,7 @@ class _PageNumber extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFFEEEEEE) : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.sm),
-          border: isActive ? null : Border.all(color: _cardBorder),
+          border: isActive ? null : Border.all(color: purchaseTransactionTableCardBorder),
         ),
         child: Text(
           '$page',
@@ -593,37 +554,3 @@ class _PageNumber extends StatelessWidget {
   }
 }
 
-class _XlsChip extends StatelessWidget {
-  const _XlsChip({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: 4,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8F5E9),
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-          ),
-          child: const Text(
-            'xls',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2E7D32),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

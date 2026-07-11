@@ -17,6 +17,7 @@ export const createPurchaseDocumentRoutes = (): FastifyPluginAsync => {
     app.post('/:id/finalize', { preHandler }, controller.finalizeDocument);
     app.post('/:id/cancel', { preHandler }, controller.cancelDocument);
     app.post('/:id/convert', { preHandler }, controller.convertDocument);
+    app.get('/:id/payment-history', { preHandler }, controller.getPaymentHistory);
 
     app.get('/:id/lines', { preHandler }, controller.listLines);
     app.post('/:id/lines', { preHandler }, controller.addLine);

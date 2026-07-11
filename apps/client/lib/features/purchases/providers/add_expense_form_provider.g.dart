@@ -58,7 +58,7 @@ final class AddExpenseFormProvider
   }
 }
 
-String _$addExpenseFormHash() => r'ad82d2b5ae8519da9e3e4d496584d2ca398d81f6';
+String _$addExpenseFormHash() => r'7252caf7d1f7210ffa002c7bed113134d859f282';
 
 final class AddExpenseFormFamily extends $Family
     with

@@ -5,6 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 export 'parties_selection_providers.dart';
 
+/// Full party list for searchable pickers — ignores Parties page filters/search.
+final partyPickerListProvider = FutureProvider<List<PartyModel>>((ref) async {
+  final service = await ref.watch(partyServiceProvider.future);
+  return service.fetchParties();
+});
+
 final partyNamesProvider = Provider<List<String>>((ref) {
   final parties = ref.watch(partyListProvider);
   return parties.maybeWhen(

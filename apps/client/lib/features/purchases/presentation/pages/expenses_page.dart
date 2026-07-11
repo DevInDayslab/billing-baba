@@ -4,9 +4,12 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_s
 import 'package:billing_baba/features/purchases/presentation/widgets/expenses_category_tab_content.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/expenses_items_tab_content.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_page_title_bar.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/purchase_section_async_content.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+const _successSnackBarColor = Color(0xFF2E7D32);
 
 class ExpensesPage extends ConsumerStatefulWidget {
   const ExpensesPage({super.key});
@@ -24,6 +27,24 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_onTabChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(expenseCategoriesProvider.notifier).refresh();
+      ref.read(expenseTransactionsProvider.notifier).refresh();
+      _showPendingSuccessMessage();
+    });
+  }
+
+  void _showPendingSuccessMessage() {
+    final message = ref.read(expenseSaveSuccessMessageProvider);
+    if (message == null || !mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: _successSnackBarColor,
+      ),
+    );
+    ref.read(expenseSaveSuccessMessageProvider.notifier).setMessage(null);
   }
 
   void _onTabChanged() {
@@ -42,6 +63,16 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
 
   @override
   Widget build(BuildContext context) {
+    final expensesAsync = ref.watch(expensesPageDataProvider);
+
+    ref.listen<String?>(expenseSaveSuccessMessageProvider, (
+      previous,
+      next,
+    ) {
+      if (next == null) return;
+      _showPendingSuccessMessage();
+    });
+
     ref.listen<int>(expenseTabIndexProvider, (previous, next) {
       if (_tabController.index != next && mounted) {
         _tabController.animateTo(next);
@@ -56,39 +87,54 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const PurchasePageTitleBar(currentRoute: AppRoutes.purchaseExpenses),
-            const SizedBox(height: AppSpacing.md),
-            TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              labelColor: inventoryTabActiveColor,
-              unselectedLabelColor: AppColors.textSecondary,
-              indicatorColor: inventoryTabActiveColor,
-              indicatorWeight: 3,
-              dividerColor: inventoryCardBorder,
-              labelStyle: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.5,
-              ),
-              tabs: const [
-                Tab(text: 'CATEGORY'),
-                Tab(text: 'ITEMS'),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: const [
-                  ExpensesCategoryTabContent(),
-                  ExpensesItemsTabContent(),
-                ],
+              child: PurchaseSectionAsyncContent(
+                expand: true,
+                value: expensesAsync,
+                onRetry: () {
+                  ref.read(expenseCategoriesProvider.notifier).refresh();
+                  ref.read(expenseTransactionsProvider.notifier).refresh();
+                },
+                builder: (_) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: AppSpacing.md),
+                    TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      labelColor: inventoryTabActiveColor,
+                      unselectedLabelColor: AppColors.textSecondary,
+                      indicatorColor: inventoryTabActiveColor,
+                      indicatorWeight: 3,
+                      dividerColor: inventoryCardBorder,
+                      labelStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5,
+                      ),
+                      tabs: const [
+                        Tab(text: 'CATEGORY'),
+                        Tab(text: 'ITEMS'),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: const [
+                          ExpensesCategoryTabContent(),
+                          ExpensesItemsTabContent(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

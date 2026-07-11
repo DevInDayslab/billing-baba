@@ -26,6 +26,11 @@ type DocumentRow = {
   updatedAt: Date;
 };
 
+type DocumentRowWithPayments = DocumentRow & {
+  paidAmount?: string | number | null;
+  paymentMode?: string | null;
+};
+
 type LineRow = {
   id: string;
   itemId: string;
@@ -63,7 +68,7 @@ export function toPurchaseDocumentLineRecord(
 }
 
 export function toPurchaseDocumentRecord(
-  row: DocumentRow,
+  row: DocumentRowWithPayments,
   lines?: LineRow[],
 ): PurchaseDocumentRecord {
   return {
@@ -79,6 +84,9 @@ export function toPurchaseDocumentRecord(
     discount_total: row.discountTotal,
     tax_amount: row.taxAmount,
     total_amount: row.totalAmount,
+    paid_amount:
+      row.paidAmount == null ? '0' : String(row.paidAmount),
+    payment_mode: row.paymentMode ?? null,
     document_date: row.documentDate.toISOString(),
     converted_from_id: row.convertedFromId,
     supplier_invoice_number: row.supplierInvoiceNumber,

@@ -33,7 +33,7 @@ final class PurchaseReturnsProvider
   PurchaseReturns create() => PurchaseReturns();
 }
 
-String _$purchaseReturnsHash() => r'bbf2d9e5be05cc4495e736f6bdc4abf5dc1f0900';
+String _$purchaseReturnsHash() => r'eca0ac5ba55fcb86867bd6cf1b2a3008bebd036e';
 
 abstract class _$PurchaseReturns
     extends $AsyncNotifier<PaginatedPurchaseReturns> {
@@ -96,7 +96,7 @@ final class PurchaseReturnFiltersProvider
 }
 
 String _$purchaseReturnFiltersHash() =>
-    r'aa104bf003c391e4a34814d4aefae2200d55ce86';
+    r'7d36f6efeee5190fe36befe0567a537e67ad8ae6';
 
 abstract class _$PurchaseReturnFilters
     extends $Notifier<PurchaseReturnFiltersState> {
@@ -121,6 +121,54 @@ abstract class _$PurchaseReturnFilters
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(filteredPurchaseReturns)
+final filteredPurchaseReturnsProvider = FilteredPurchaseReturnsProvider._();
+
+final class FilteredPurchaseReturnsProvider
+    extends
+        $FunctionalProvider<
+          List<PurchaseReturnModel>,
+          List<PurchaseReturnModel>,
+          List<PurchaseReturnModel>
+        >
+    with $Provider<List<PurchaseReturnModel>> {
+  FilteredPurchaseReturnsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'filteredPurchaseReturnsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredPurchaseReturnsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<PurchaseReturnModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<PurchaseReturnModel> create(Ref ref) {
+    return filteredPurchaseReturns(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<PurchaseReturnModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<PurchaseReturnModel>>(value),
+    );
+  }
+}
+
+String _$filteredPurchaseReturnsHash() =>
+    r'de7dcd48121f0000d20a564df06710a27f631100';
 
 @ProviderFor(paginatedPurchaseReturns)
 final paginatedPurchaseReturnsProvider = PaginatedPurchaseReturnsProvider._();
@@ -168,7 +216,135 @@ final class PaginatedPurchaseReturnsProvider
 }
 
 String _$paginatedPurchaseReturnsHash() =>
-    r'1a75dd2c68cc65fd928925520a1b080208975166';
+    r'ec04bc6405a6ce76deb3dda26abecc2c58c02dcf';
+
+@ProviderFor(purchaseReturnPartyOptions)
+final purchaseReturnPartyOptionsProvider =
+    PurchaseReturnPartyOptionsProvider._();
+
+final class PurchaseReturnPartyOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  PurchaseReturnPartyOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'purchaseReturnPartyOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$purchaseReturnPartyOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return purchaseReturnPartyOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$purchaseReturnPartyOptionsHash() =>
+    r'0d4bca43f8d22e48cb3623a8cc612e7a86396f9d';
+
+@ProviderFor(purchaseReturnCategoryOptions)
+final purchaseReturnCategoryOptionsProvider =
+    PurchaseReturnCategoryOptionsProvider._();
+
+final class PurchaseReturnCategoryOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  PurchaseReturnCategoryOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'purchaseReturnCategoryOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$purchaseReturnCategoryOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return purchaseReturnCategoryOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$purchaseReturnCategoryOptionsHash() =>
+    r'9a44373b922eaf64d2f5157f421ef638cb0efa03';
+
+@ProviderFor(purchaseReturnTypeOptions)
+final purchaseReturnTypeOptionsProvider = PurchaseReturnTypeOptionsProvider._();
+
+final class PurchaseReturnTypeOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  PurchaseReturnTypeOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'purchaseReturnTypeOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$purchaseReturnTypeOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return purchaseReturnTypeOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$purchaseReturnTypeOptionsHash() =>
+    r'3e34edc563cff96d540c44ee01f7edf695ae5480';
 
 @ProviderFor(purchaseReturnSummary)
 final purchaseReturnSummaryProvider = PurchaseReturnSummaryProvider._();
@@ -216,4 +392,4 @@ final class PurchaseReturnSummaryProvider
 }
 
 String _$purchaseReturnSummaryHash() =>
-    r'db5ea80db6e309f7ed417cf21c666e735e7b6389';
+    r'6153609be82232a27ea25347db0bef8fd297b357';

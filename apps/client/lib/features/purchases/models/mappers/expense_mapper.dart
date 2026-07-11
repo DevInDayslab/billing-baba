@@ -34,6 +34,8 @@ class ExpenseMapper {
   static ExpenseTransactionModel toTransactionModel(ExpenseDto dto) {
     final description = dto.description?.trim() ?? '';
     final paymentMode = dto.paymentMode;
+    final amount = double.tryParse(dto.amount) ?? 0;
+    final isPaid = paymentMode != null && paymentMode.isNotEmpty;
 
     return ExpenseTransactionModel(
       id: dto.id,
@@ -50,9 +52,9 @@ class ExpenseMapper {
       paymentType: paymentMode == null
           ? null
           : PurchasePaymentModes.toUi(paymentMode),
-      amount: double.tryParse(dto.amount) ?? 0,
-      balance: 0,
-      status: ExpenseStatus.paid,
+      amount: amount,
+      balance: isPaid ? 0 : amount,
+      status: isPaid ? ExpenseStatus.paid : ExpenseStatus.pending,
     );
   }
 

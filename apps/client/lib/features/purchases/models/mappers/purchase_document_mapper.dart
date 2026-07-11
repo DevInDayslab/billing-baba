@@ -15,11 +15,13 @@ class PurchaseDocumentRecord {
     required this.partyId,
     required this.partyName,
     required this.amount,
+    required this.paidAmount,
     required this.balanceDue,
     required this.documentDate,
     this.dueDate,
     this.supplierInvoiceNumber,
     this.notes,
+    this.paymentMode,
   });
 
   final String id;
@@ -30,11 +32,13 @@ class PurchaseDocumentRecord {
   final String partyId;
   final String partyName;
   final double amount;
+  final double paidAmount;
   final double balanceDue;
   final DateTime documentDate;
   final DateTime? dueDate;
   final String? supplierInvoiceNumber;
   final String? notes;
+  final String? paymentMode;
 }
 
 class PurchaseDocumentMapper {
@@ -43,6 +47,7 @@ class PurchaseDocumentMapper {
     String partyName = '',
   }) {
     final amount = double.tryParse(dto.totalAmount) ?? 0;
+    final paid = double.tryParse(dto.paidAmount) ?? 0;
     final documentStatus =
         PurchaseDocumentStatus.fromApiValue(dto.status) ??
         PurchaseDocumentStatus.draft;
@@ -52,6 +57,9 @@ class PurchaseDocumentMapper {
     final dueDate = dto.dueDate != null
         ? DateTime.tryParse(dto.dueDate!)
         : null;
+    final balanceDue = documentStatus == PurchaseDocumentStatus.cancelled
+        ? 0.0
+        : (amount - paid).clamp(0.0, double.infinity);
 
     return PurchaseDocumentRecord(
       id: dto.id,
@@ -62,14 +70,14 @@ class PurchaseDocumentMapper {
       partyId: dto.partyId,
       partyName: partyName,
       amount: amount,
-      balanceDue: documentStatus == PurchaseDocumentStatus.cancelled
-          ? 0
-          : amount,
+      paidAmount: paid,
+      balanceDue: balanceDue,
       documentDate:
           DateTime.tryParse(dto.documentDate) ?? DateTime.now(),
       dueDate: dueDate,
       supplierInvoiceNumber: dto.supplierInvoiceNumber,
       notes: dto.notes,
+      paymentMode: dto.paymentMode,
     );
   }
 
@@ -79,6 +87,12 @@ class PurchaseDocumentMapper {
   }) {
     final record = toRecord(dto, partyName: partyName);
     final status = _mapBillPaymentStatus(record);
+    final paymentType = _mapPaymentType(
+      record.documentStatus,
+      record.amount,
+      record.paidAmount,
+      record.paymentMode,
+    );
 
     return PurchaseBillModel(
       id: record.id,
@@ -86,7 +100,7 @@ class PurchaseDocumentMapper {
       date: record.documentDate,
       partyName: record.partyName,
       partyId: record.partyId,
-      paymentType: 'Credit',
+      paymentType: paymentType,
       status: status,
       documentStatus: record.documentStatus,
       amount: record.amount,
@@ -134,7 +148,7 @@ class PurchaseDocumentMapper {
       status: status,
       documentStatus: record.documentStatus,
       total: record.amount,
-      receivedPaid: record.amount - record.balanceDue,
+      receivedPaid: record.paidAmount,
       balance: record.balanceDue,
       dueDate: record.dueDate ?? record.documentDate,
     );
@@ -150,6 +164,8 @@ class PurchaseDocumentMapper {
       (sum, allocation) =>
           sum + (double.tryParse(allocation.allocatedAmount) ?? 0),
     );
+    final effectivePaid =
+        dto.allocations.isEmpty && amount > 0 ? amount : allocated;
 
     return PaymentOutModel(
       id: dto.id,
@@ -159,12 +175,29 @@ class PurchaseDocumentMapper {
       partyId: dto.partyId,
       paymentType: PurchasePaymentModes.toUi(dto.paymentMode),
       totalAmount: amount,
-      paidAmount: allocated,
-      status: allocated >= amount && amount > 0
+      paidAmount: effectivePaid,
+      status: effectivePaid >= amount && amount > 0
           ? PaymentOutStatus.paid
           : PaymentOutStatus.pending,
       description: dto.notes ?? '',
     );
+  }
+
+  static String _mapPaymentType(
+    PurchaseDocumentStatus documentStatus,
+    double amount,
+    double paid,
+    String? paymentMode,
+  ) {
+    if (documentStatus == PurchaseDocumentStatus.draft) {
+      return 'Credit';
+    }
+    if (amount > 0 && paid >= amount) {
+      return paymentMode != null
+          ? PurchasePaymentModes.toUi(paymentMode)
+          : 'Cash';
+    }
+    return 'Credit';
   }
 
   static PurchaseBillStatus _mapBillPaymentStatus(
@@ -179,17 +212,32 @@ class PurchaseDocumentMapper {
     if (record.documentStatus == PurchaseDocumentStatus.converted) {
       return PurchaseBillStatus.paid;
     }
-    if (record.balanceDue <= 0) {
+
+    final balance = record.balanceDue;
+    final paid = record.paidAmount;
+    final amount = record.amount;
+
+    if (amount <= 0 || balance <= 0 || paid >= amount) {
       return PurchaseBillStatus.paid;
     }
-    if (record.balanceDue < record.amount) {
-      return PurchaseBillStatus.partiallyPaid;
-    }
-    final due = record.dueDate ?? record.documentDate;
-    if (DateTime.now().isAfter(due) && record.balanceDue > 0) {
+
+    if (_isPastDue(record.dueDate, record.documentDate)) {
       return PurchaseBillStatus.overdue;
     }
+
+    if (paid > 0) {
+      return PurchaseBillStatus.partiallyPaid;
+    }
+
     return PurchaseBillStatus.unpaid;
+  }
+
+  static bool _isPastDue(DateTime? dueDate, DateTime documentDate) {
+    final due = dueDate ?? documentDate;
+    final dueDay = DateTime(due.year, due.month, due.day);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return today.isAfter(dueDay);
   }
 
   static PurchaseOrderStatus _mapOrderStatus(

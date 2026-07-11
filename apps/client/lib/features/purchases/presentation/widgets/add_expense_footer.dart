@@ -53,6 +53,14 @@ class AddExpenseFooter extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
+                  SizedBox(
+                    width: 100,
+                    child: _AmountField(
+                      value: form.paymentAmount,
+                      onChanged: notifier.updatePaymentAmount,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _ReferenceField(
                       initialValue: form.payments.isNotEmpty

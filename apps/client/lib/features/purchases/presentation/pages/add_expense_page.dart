@@ -1,7 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
-import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
@@ -10,6 +9,7 @@ import 'package:billing_baba/features/purchases/presentation/widgets/add_expense
 import 'package:billing_baba/features/purchases/presentation/widgets/expense_line_items_table.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_page_title_bar.dart';
 import 'package:billing_baba/features/purchases/providers/add_expense_form_provider.dart';
+import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
@@ -30,60 +30,78 @@ class AddExpensePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ColoredBox(
-      color: AppColors.background,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const PurchasePageTitleBar(currentRoute: AppRoutes.purchaseExpenses),
-            const SizedBox(height: AppSpacing.md),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppRadius.lgBorder,
-                border: Border.all(color: _cardBorder),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
+    final form = ref.watch(addExpenseFormProvider(expenseId: expenseId));
+    final isBusy = form.isSaving || form.isLoading;
+
+    return Stack(
+      children: [
+        ColoredBox(
+          color: AppColors.background,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const PurchasePageTitleBar(
+                  currentRoute: AppRoutes.purchaseExpenses,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.lgBorder,
+                    border: Border.all(color: _cardBorder),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0A000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      _sectionGap,
-                      _sectionGap,
-                      _sectionGap,
-                      0,
-                    ),
-                    child: _PageHeader(expenseId: expenseId),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          _sectionGap,
+                          _sectionGap,
+                          _sectionGap,
+                          0,
+                        ),
+                        child: _PageHeader(expenseId: expenseId),
+                      ),
+                      const SizedBox(height: _sectionGap),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: _sectionGap,
+                        ),
+                        child: _FormFields(expenseId: expenseId),
+                      ),
+                      const SizedBox(height: _sectionGap),
+                      ExpenseLineItemsTable(expenseId: expenseId),
+                      const Divider(height: 1, color: _cardBorder),
+                      Padding(
+                        padding: const EdgeInsets.all(_sectionGap),
+                        child: AddExpenseFooter(expenseId: expenseId),
+                      ),
+                      const Divider(height: 1, color: _cardBorder),
+                      _BottomActionBar(expenseId: expenseId),
+                    ],
                   ),
-                  const SizedBox(height: _sectionGap),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: _sectionGap),
-                    child: _FormFields(expenseId: expenseId),
-                  ),
-                  const SizedBox(height: _sectionGap),
-                  ExpenseLineItemsTable(expenseId: expenseId),
-                  const Divider(height: 1, color: _cardBorder),
-                  Padding(
-                    padding: const EdgeInsets.all(_sectionGap),
-                    child: AddExpenseFooter(expenseId: expenseId),
-                  ),
-                  const Divider(height: 1, color: _cardBorder),
-                  _BottomActionBar(expenseId: expenseId),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (isBusy)
+          Positioned.fill(
+            child: ColoredBox(
+              color: Colors.black.withValues(alpha: 0.12),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -318,6 +336,7 @@ class _BottomActionBar extends ConsumerWidget {
     final notifier =
         ref.read(addExpenseFormProvider(expenseId: expenseId).notifier);
     final resolvedId = expenseId ?? form.expenseId;
+    final isSaving = form.isSaving;
     final filename = form.expenseNumber.trim().isNotEmpty
         ? VoucherPrintActions.filenameFor(form.expenseNumber)
         : (resolvedId != null
@@ -350,7 +369,7 @@ class _BottomActionBar extends ConsumerWidget {
             const SizedBox(width: AppSpacing.sm),
           ],
           OutlinedButton(
-            onPressed: () => _handleCancel(context, ref),
+            onPressed: isSaving ? null : () => _handleCancel(context, ref),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               side: const BorderSide(color: _cardBorder),
@@ -374,13 +393,22 @@ class _BottomActionBar extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           FilledButton(
-            onPressed: () => _handleSave(context, ref, notifier),
+            onPressed: isSaving ? null : () => _handleSave(context, ref, notifier),
             style: FilledButton.styleFrom(
               backgroundColor: _addExpenseRed,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             ),
-            child: const Text('Save', style: TextStyle(fontSize: 13)),
+            child: isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Save', style: TextStyle(fontSize: 13)),
           ),
         ],
       ),
@@ -419,6 +447,11 @@ class _BottomActionBar extends ConsumerWidget {
     WidgetRef ref,
     AddExpenseForm notifier,
   ) async {
+    if (ref.read(addExpenseFormProvider(expenseId: expenseId)).isSaving) {
+      return;
+    }
+
+    final form = ref.read(addExpenseFormProvider(expenseId: expenseId));
     final error = await notifier.saveExpense();
     if (!context.mounted) return;
     if (error != null) {
@@ -428,7 +461,14 @@ class _BottomActionBar extends ConsumerWidget {
       return;
     }
 
-    showTransactionSuccessToast(context);
+    if (form.gstEnabled && expenseId == null) {
+      ref.read(purchaseBillSaveSuccessMessageProvider.notifier).setMessage(
+        'Purchase bill saved successfully.',
+      );
+      context.go(AppRoutes.purchaseBills);
+      return;
+    }
+
     context.go(AppRoutes.purchaseExpenses);
   }
 }

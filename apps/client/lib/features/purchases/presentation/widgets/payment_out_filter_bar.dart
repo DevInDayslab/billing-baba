@@ -121,7 +121,15 @@ class _PaymentOutFilterBarState extends ConsumerState<PaymentOutFilterBar> {
         ),
         const SizedBox(width: AppSpacing.md),
         FilledButton.icon(
-          onPressed: () => showPaymentOutDialog(context),
+          onPressed: () async {
+            final saved = await showPaymentOutDialog(context);
+            if (!context.mounted) return;
+            if (saved) {
+              await ref
+                  .read(paymentOutRecordsProvider.notifier)
+                  .refreshAllRelated();
+            }
+          },
           style: FilledButton.styleFrom(
             backgroundColor: _addPaymentBlue,
             foregroundColor: Colors.white,

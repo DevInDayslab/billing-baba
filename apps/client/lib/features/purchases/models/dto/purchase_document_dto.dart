@@ -74,6 +74,8 @@ class PurchaseDocumentDto {
     this.supplierInvoiceNumber,
     this.dueDate,
     this.notes,
+    this.paidAmount = '0',
+    this.paymentMode,
     this.lines = const [],
   });
 
@@ -97,6 +99,8 @@ class PurchaseDocumentDto {
       supplierInvoiceNumber: json['supplier_invoice_number'] as String?,
       dueDate: json['due_date'] as String?,
       notes: json['notes'] as String?,
+      paidAmount: json['paid_amount'] as String? ?? '0',
+      paymentMode: json['payment_mode'] as String?,
       createdAt: json['created_at'] as String,
       updatedAt: json['updated_at'] as String,
       lines: lines is List
@@ -125,6 +129,8 @@ class PurchaseDocumentDto {
   final String? supplierInvoiceNumber;
   final String? dueDate;
   final String? notes;
+  final String paidAmount;
+  final String? paymentMode;
   final String createdAt;
   final String updatedAt;
   final List<PurchaseDocumentLineDto> lines;
@@ -154,4 +160,46 @@ class PaginatedPurchaseDocumentsDto {
 
   final List<PurchaseDocumentDto> documents;
   final PaginationMetaDto meta;
+}
+
+class PurchaseBillPaymentHistoryEntry {
+  const PurchaseBillPaymentHistoryEntry({
+    required this.paymentId,
+    required this.paymentDate,
+    required this.paymentMode,
+    required this.paymentAmount,
+    required this.allocatedAmount,
+    this.referenceNumber,
+  });
+
+  factory PurchaseBillPaymentHistoryEntry.fromJson(Map<String, dynamic> json) {
+    return PurchaseBillPaymentHistoryEntry(
+      paymentId: json['payment_id'] as String,
+      paymentDate: DateTime.parse(json['payment_date'] as String),
+      paymentMode: json['payment_mode'] as String,
+      referenceNumber: json['reference_number'] as String?,
+      paymentAmount: double.tryParse(json['payment_amount'] as String? ?? '0') ?? 0,
+      allocatedAmount:
+          double.tryParse(json['allocated_amount'] as String? ?? '0') ?? 0,
+    );
+  }
+
+  final String paymentId;
+  final DateTime paymentDate;
+  final String paymentMode;
+  final String? referenceNumber;
+  final double paymentAmount;
+  final double allocatedAmount;
+}
+
+class PurchaseBillHistoryEvent {
+  const PurchaseBillHistoryEvent({
+    required this.timestamp,
+    required this.title,
+    this.subtitle,
+  });
+
+  final DateTime timestamp;
+  final String title;
+  final String? subtitle;
 }

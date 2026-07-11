@@ -96,7 +96,7 @@ class PurchaseFaService {
   Future<PurchaseFaModel> createBatch(AddPurchaseFaFormState form) async {
     try {
       if (form.partyId == null || form.partyId!.isEmpty) {
-        throw const PurchaseException('Supplier is required');
+        throw const PurchaseException('Party is required');
       }
 
       final batch = await _repository.createBatch(
@@ -164,4 +164,99 @@ class PurchaseFaService {
       throw mapPurchaseError(error);
     }
   }
+
+  Future<String> duplicateBatch(String batchId) async {
+    try {
+      final loaded = await loadForm(batchId);
+      final duplicateItems = loaded.items
+          .map(
+            (item) => FixedAssetLineItem(
+              id: 'dup_${DateTime.now().microsecondsSinceEpoch}_${item.id}',
+              assetName: item.assetName,
+              description: item.description,
+              qty: item.qty,
+              pricePerUnit: item.pricePerUnit,
+              priceIsTaxInclusive: item.priceIsTaxInclusive,
+              taxPercent: item.taxPercent,
+            ),
+          )
+          .toList();
+
+      final duplicate = AddPurchaseFaFormState(
+        partyId: loaded.partyId,
+        party: loaded.party,
+        billingName: loaded.billingName,
+        eWayBillNo: loaded.eWayBillNo,
+        billNumber: loaded.billNumber.trim().isEmpty
+            ? 'Auto'
+            : '${loaded.billNumber} (Copy)',
+        billDate: loaded.billDate,
+        billTime: loaded.billTime,
+        paymentTerms: loaded.paymentTerms,
+        dueDate: loaded.dueDate,
+        stateOfSupply: loaded.stateOfSupply,
+        termsTitle: loaded.termsTitle,
+        termsNotes: loaded.termsNotes,
+        items: duplicateItems,
+        payments: loaded.payments,
+        description: loaded.description,
+        roundOff: loaded.roundOff,
+      );
+
+      final created = await createBatch(duplicate);
+      return created.batchId;
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<List<PurchaseFaHistoryEvent>> fetchBatchHistory(String batchId) async {
+    try {
+      final batch = await _repository.getBatch(batchId);
+      final events = <PurchaseFaHistoryEvent>[
+        PurchaseFaHistoryEvent(
+          timestamp: DateTime.parse(batch.createdAt).toLocal(),
+          title: 'Purchase FA created',
+          subtitle: batch.referenceNumber ?? batch.id,
+        ),
+      ];
+
+      if (batch.status == 'finalized' || batch.status == 'paid') {
+        events.add(
+          PurchaseFaHistoryEvent(
+            timestamp: DateTime.parse(batch.updatedAt).toLocal(),
+            title: 'Purchase FA finalized',
+            subtitle: batch.referenceNumber,
+          ),
+        );
+      }
+
+      if (batch.status == 'cancelled') {
+        events.add(
+          PurchaseFaHistoryEvent(
+            timestamp: DateTime.parse(batch.updatedAt).toLocal(),
+            title: 'Purchase FA cancelled',
+            subtitle: batch.referenceNumber,
+          ),
+        );
+      }
+
+      events.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return events;
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+}
+
+class PurchaseFaHistoryEvent {
+  const PurchaseFaHistoryEvent({
+    required this.timestamp,
+    required this.title,
+    this.subtitle,
+  });
+
+  final DateTime timestamp;
+  final String title;
+  final String? subtitle;
 }

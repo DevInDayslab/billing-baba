@@ -41,7 +41,7 @@ final class CreditNoteFormProvider
   }
 }
 
-String _$creditNoteFormHash() => r'86c8f44947faaf8a5770b0096fcc1550a773d572';
+String _$creditNoteFormHash() => r'0952e38d0ad59a92dac65dc01321bd430709573d';
 
 abstract class _$CreditNoteForm extends $Notifier<CreditNoteFormState> {
   CreditNoteFormState build();
