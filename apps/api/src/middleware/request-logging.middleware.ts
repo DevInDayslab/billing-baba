@@ -12,6 +12,15 @@ export async function registerRequestLoggingMiddleware(
   app.addHook('onRequest', async (request, reply) => {
     request.startTime = Date.now();
     reply.header('X-Request-Id', request.id);
+
+    request.log.info(
+      {
+        method: request.method,
+        path: request.url,
+        remoteAddress: request.ip,
+      },
+      'incoming request',
+    );
   });
 
   app.addHook('onResponse', async (request, reply) => {
@@ -19,14 +28,14 @@ export async function registerRequestLoggingMiddleware(
       ? Date.now() - request.startTime
       : undefined;
 
-    request.log.info({
-      requestId: request.id,
-      method: request.method,
-      path: request.url,
-      statusCode: reply.statusCode,
-      duration,
-      // TODO: userId — populate once authentication is implemented.
-      // TODO: businessId — populate once authentication is implemented.
-    });
+    request.log.info(
+      {
+        method: request.method,
+        path: request.url,
+        statusCode: reply.statusCode,
+        ...(duration !== undefined ? { duration } : {}),
+      },
+      'request completed',
+    );
   });
 }
