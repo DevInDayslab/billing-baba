@@ -3,6 +3,7 @@ import 'package:billing_baba/features/purchases/application/purchase_error_mappe
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/models/mappers/expense_mapper.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
+import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -77,6 +78,18 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
+ExpenseListQuery _expenseListQuery(ExpenseFiltersState filters) {
+  final range = _resolveTimeRange(
+    filters.timeRangeOption,
+    filters.customDateRange,
+  );
+  return ExpenseListQuery(
+    page: filters.currentPage,
+    from: range != null ? PurchaseConstants.formatApiDate(range.start) : null,
+    to: range != null ? PurchaseConstants.formatApiDate(range.end) : null,
+  );
+}
+
 @Riverpod(keepAlive: true)
 class ExpenseCategories extends _$ExpenseCategories {
   @override
@@ -142,19 +155,7 @@ class ExpenseTransactions extends _$ExpenseTransactions {
     ref.watch(expenseFiltersProvider);
     final filters = ref.read(expenseFiltersProvider);
     final service = await ref.read(expenseServiceProvider.future);
-    return service.fetchExpenses(
-      query: ExpenseListQuery(
-        page: filters.currentPage,
-        from: _resolveTimeRange(
-          filters.timeRangeOption,
-          filters.customDateRange,
-        )?.start.toUtc().toIso8601String(),
-        to: _resolveTimeRange(
-          filters.timeRangeOption,
-          filters.customDateRange,
-        )?.end.toUtc().toIso8601String(),
-      ),
-    );
+    return service.fetchExpenses(query: _expenseListQuery(filters));
   }
 
   Future<void> refresh() async {
@@ -162,19 +163,7 @@ class ExpenseTransactions extends _$ExpenseTransactions {
     state = await AsyncValue.guard(() async {
       final filters = ref.read(expenseFiltersProvider);
       final service = await ref.read(expenseServiceProvider.future);
-      return service.fetchExpenses(
-        query: ExpenseListQuery(
-          page: filters.currentPage,
-          from: _resolveTimeRange(
-            filters.timeRangeOption,
-            filters.customDateRange,
-          )?.start.toUtc().toIso8601String(),
-          to: _resolveTimeRange(
-            filters.timeRangeOption,
-            filters.customDateRange,
-          )?.end.toUtc().toIso8601String(),
-        ),
-      );
+      return service.fetchExpenses(query: _expenseListQuery(filters));
     });
   }
 

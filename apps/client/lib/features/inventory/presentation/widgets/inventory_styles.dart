@@ -20,8 +20,9 @@ const inventoryPopupMenuOffset = Offset(0, inventoryButtonHeight);
 /// Minimum width for popup menus (applies to the menu panel, not the trigger).
 const inventoryPopupMenuConstraints = BoxConstraints(minWidth: 180);
 
-const inventoryPopupMenuItemStyle = TextStyle(
-  fontSize: 14,
+const TextStyle inventoryPopupMenuItemStyle = TextStyle(
+  fontFamily: AppTypography.fontFamily,
+  fontSize: AppTypography.bodyMediumSize,
   color: AppColors.textPrimary,
 );
 
@@ -96,27 +97,31 @@ class InventoryPopupMenuButton<T> extends StatelessWidget {
 }
 
 abstract final class InventoryStyles {
-  static const listHeaderStyle = TextStyle(
-    fontSize: 11,
+  static const TextStyle listHeaderStyle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.labelSmallSize,
     fontWeight: FontWeight.w600,
     color: AppColors.textSecondary,
     letterSpacing: 0.5,
   );
 
-  static const panelTitleStyle = TextStyle(
-    fontSize: 16,
+  static const TextStyle panelTitleStyle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.titleMediumSize,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     letterSpacing: 0.3,
   );
 
-  static const emptyStateStyle = TextStyle(
-    fontSize: 14,
+  static const TextStyle emptyStateStyle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.bodyMediumSize,
     color: AppColors.textSecondary,
   );
 
-  static const listCellStyle = TextStyle(
-    fontSize: 13,
+  static const TextStyle listCellStyle = TextStyle(
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.bodySmallSize,
     color: AppColors.textPrimary,
   );
 }

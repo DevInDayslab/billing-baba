@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   type AnyPgColumn,
   boolean,
+  date,
   integer,
   pgTable,
   text,
@@ -13,9 +14,12 @@ import { money, syncedBusinessColumns, timestamptz } from '../columns';
 import { parties } from '../crm/tables';
 import {
   documentStatusEnum,
+  paymentModeEnum,
+  saleFaStatusEnum,
   salesDocumentTypeEnum,
   taxTypeEnum,
 } from '../enums';
+import { purchaseFixedAssets } from '../purchases/tables';
 import { users } from '../identity/tables';
 import { items } from '../inventory/tables';
 
@@ -89,4 +93,56 @@ export const salesDocumentLines = pgTable(
     sortOrder: integer('sort_order').notNull().default(0),
   },
   (table) => [sql`CHECK (${table.quantity} > 0)`],
+);
+
+export const saleFaBatches = pgTable('sale_fa_batches', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  partyId: uuid('party_id')
+    .notNull()
+    .references(() => parties.id),
+  referenceNumber: text('reference_number'),
+  saleDate: date('sale_date').notNull(),
+  dueDate: date('due_date'),
+  paymentMode: paymentModeEnum('payment_mode'),
+  subtotal: money('subtotal').notNull().default('0'),
+  taxAmount: money('tax_amount').notNull().default('0'),
+  totalAmount: money('total_amount').notNull().default('0'),
+  balanceDue: money('balance_due').notNull().default('0'),
+  status: saleFaStatusEnum('status').notNull().default('unpaid'),
+  notes: text('notes'),
+  description: text('description'),
+});
+
+export const saleFixedAssets = pgTable(
+  'sale_fixed_assets',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    batchId: uuid('batch_id')
+      .notNull()
+      .references(() => saleFaBatches.id),
+    purchaseFixedAssetId: uuid('purchase_fixed_asset_id').references(
+      () => purchaseFixedAssets.id,
+    ),
+    assetName: text('asset_name').notNull(),
+    itemCode: text('item_code'),
+    assetCategory: text('asset_category'),
+    serialNumber: text('serial_number'),
+    salePrice: money('sale_price').notNull(),
+    location: text('location'),
+    description: text('description'),
+    qty: money('qty').notNull().default('1'),
+    taxRate: money('tax_rate').notNull().default('0'),
+    taxAmount: money('tax_amount').notNull().default('0'),
+    lineTotal: money('line_total').notNull(),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex('uq_sale_fixed_assets_business_serial')
+      .on(table.businessId, table.serialNumber)
+      .where(
+        sql`${table.serialNumber} IS NOT NULL AND ${table.isDeleted} = false`,
+      ),
+  ],
 );

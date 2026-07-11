@@ -42,7 +42,7 @@ final class PosItemSearchQueryProvider
 }
 
 String _$posItemSearchQueryHash() =>
-    r'c3d4e5f678901234567890abcdef0123456789012';
+    r'd606d67b9cae77931e8a087041b09e2e5425a913';
 
 abstract class _$PosItemSearchQuery extends $Notifier<String> {
   String build();
@@ -89,8 +89,9 @@ final class PosItemsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<PosItem>> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<List<PosItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<PosItem>> create(Ref ref) {
@@ -98,7 +99,7 @@ final class PosItemsProvider
   }
 }
 
-String _$posItemsHash() => r'b2c3d4e5f6789012345678abcdef9012345678901';
+String _$posItemsHash() => r'3a555c9374eb909c163bf033bd999d27848fb17c';
 
 @ProviderFor(posItemSearch)
 final posItemSearchProvider = PosItemSearchFamily._();
@@ -134,8 +135,9 @@ final class PosItemSearchProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<PosItem>> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<List<PosItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<PosItem>> create(Ref ref) {
@@ -154,7 +156,7 @@ final class PosItemSearchProvider
   }
 }
 
-String _$posItemSearchHash() => r'a1b2c3d4e5f6789012345678abcdef9012345678';
+String _$posItemSearchHash() => r'9ac8bc776c363301f1f0de8e1f44a81a52cf2caa';
 
 final class PosItemSearchFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<PosItem>>, String> {
@@ -231,8 +233,7 @@ final class PosCustomerSearchProvider
   }
 }
 
-String _$posCustomerSearchHash() =>
-    r'd4e5f678901234567890abcdef0123456789012345';
+String _$posCustomerSearchHash() => r'a3040fc3555907713725286ff82428ecee04093b';
 
 final class PosCustomerSearchFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<PosCustomer>>, String> {

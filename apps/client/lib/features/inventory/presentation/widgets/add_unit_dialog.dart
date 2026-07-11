@@ -9,11 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _dialogMaxWidth = 480.0;
 
-Future<void> showAddUnitDialog(
+Future<InventoryUnit?> showAddUnitDialog(
   BuildContext context, {
   InventoryUnit? editUnit,
 }) {
-  return showDialog<void>(
+  return showDialog<InventoryUnit>(
     context: context,
     builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
@@ -107,7 +107,7 @@ class _AddUnitDialogState extends ConsumerState<AddUnitDialog> {
       return;
     }
 
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(result.unit);
   }
 
   @override

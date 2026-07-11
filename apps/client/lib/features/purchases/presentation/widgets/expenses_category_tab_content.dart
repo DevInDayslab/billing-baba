@@ -33,6 +33,7 @@ class ExpensesCategoryTabContent extends ConsumerWidget {
     final selectedId = ref.watch(selectedExpenseCategoryIdProvider);
 
     return categoriesAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) {
         final message = PurchaseErrorMapper.messageFor(error);

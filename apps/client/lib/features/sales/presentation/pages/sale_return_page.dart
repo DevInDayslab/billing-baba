@@ -12,22 +12,35 @@ class SaleReturnPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SalePageTitleBar(
-              currentRoute: AppRoutes.saleReturnCreditNote,
-              onSettingsTap: () => debugPrint('Settings tapped'),
+      backgroundColor: AppColors.surface,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding = constraints.maxWidth < 600
+              ? AppSpacing.md
+              : AppSpacing.lg;
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              AppSpacing.md,
+              horizontalPadding,
+              AppSpacing.lg,
             ),
-            const SizedBox(height: AppSpacing.md),
-            const SaleReturnFilterBar(),
-            const SizedBox(height: AppSpacing.md),
-            const SaleReturnTable(),
-          ],
-        ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SalePageTitleBar(
+                  currentRoute: AppRoutes.saleReturnCreditNote,
+                  onSettingsTap: () {},
+                ),
+                const SizedBox(height: AppSpacing.md),
+                const SaleReturnFilterBar(),
+                const SizedBox(height: AppSpacing.md),
+                const SaleReturnTable(),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

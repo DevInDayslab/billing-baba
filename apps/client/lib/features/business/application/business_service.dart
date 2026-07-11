@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/utils/jwt_utils.dart';
 import 'package:billing_baba/features/auth/models/account_profile.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/data/business_cache.dart';
@@ -10,6 +12,7 @@ import 'package:billing_baba/features/business/data/business_repository.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/business/models/create_business_request.dart';
+import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -154,6 +157,59 @@ class BusinessService {
 
   Future<AccountProfile?> readCachedProfile() => _cache.readProfile();
 
+  Future<String?> _resolveBusinessIdForScope() async {
+    final fromCache = _cache.readLastOpenedBusinessId();
+    if (fromCache != null && fromCache.isNotEmpty) return fromCache;
+
+    final storage = await _ref.read(storageServiceProvider.future);
+    final selected = await storage.readSecure(StorageKeys.selectedBusinessId);
+    if (selected != null && selected.isNotEmpty) return selected;
+
+    final auth = _ref.read(authProvider);
+    if (auth.session?.businesses.length == 1) {
+      return auth.session!.businesses.first.id;
+    }
+
+    return null;
+  }
+
+  Future<void> ensureProfileApiBusinessScope({bool forceReselect = false}) async {
+    final storage = await _ref.read(storageServiceProvider.future);
+    final token = await storage.readSecure(StorageKeys.accessToken);
+    final jwtBusinessId = JwtUtils.businessId(token);
+    final jwtRole = JwtUtils.role(token);
+
+    BusinessProfileDebugLog.section('PROFILE API SCOPE CHECK');
+    BusinessProfileDebugLog.log(
+      'jwt business_id=${jwtBusinessId ?? '(missing)'} role=${jwtRole ?? '(missing)'}',
+    );
+    BusinessProfileDebugLog.log(
+      'authHasBusinessScope=${authHasBusinessScope(_ref.read(authProvider))}',
+    );
+
+    if (!forceReselect && jwtBusinessId != null && jwtBusinessId.isNotEmpty) {
+      return;
+    }
+
+    final businessId = await _resolveBusinessIdForScope();
+    BusinessProfileDebugLog.log(
+      'resolved business_id=${businessId ?? '(none)'} forceReselect=$forceReselect',
+    );
+
+    if (businessId == null || businessId.isEmpty) {
+      throw const BusinessProfileScopeRequired();
+    }
+
+    BusinessProfileDebugLog.log('Re-selecting business to scope JWT: $businessId');
+    await scopeJwtToBusiness(businessId);
+  }
+
+  /// Re-scopes the JWT to [businessId] without touching business list/profile providers.
+  Future<void> scopeJwtToBusiness(String businessId) async {
+    await rememberLastOpened(businessId);
+    await _ref.read(authProvider.notifier).selectBusiness(businessId);
+  }
+
   Future<BusinessProfileModel> fetchBusinessProfile({
     bool forceRefresh = false,
   }) async {
@@ -162,12 +218,15 @@ class BusinessService {
       throw const BusinessProfileScopeRequired();
     }
 
+    await ensureProfileApiBusinessScope();
+
     final selectedBusinessId = _cache.readLastOpenedBusinessId();
 
     if (!forceRefresh) {
       final cached = await _cache.readBusinessProfile();
       if (cached != null &&
           (selectedBusinessId == null || cached.id == selectedBusinessId)) {
+        BusinessProfileDebugLog.log('Returning cached business profile');
         return cached;
       }
     }
@@ -176,7 +235,14 @@ class BusinessService {
       final remote = await _repository.getBusinessProfile();
       await _cache.saveBusinessProfile(remote);
       return remote;
-    } on DioException {
+    } on DioException catch (e) {
+      if (ApiErrorParser.errorCode(e) == 'BUSINESS_NOT_SELECTED') {
+        await ensureProfileApiBusinessScope(forceReselect: true);
+        final remote = await _repository.getBusinessProfile();
+        await _cache.saveBusinessProfile(remote);
+        return remote;
+      }
+
       final cached = await _cache.readBusinessProfile();
       if (cached != null &&
           (selectedBusinessId == null || cached.id == selectedBusinessId)) {
@@ -189,9 +255,23 @@ class BusinessService {
   Future<BusinessProfileModel> updateBusinessProfile(
     UpdateBusinessProfileInput input,
   ) async {
+    final request = input.toRequest();
+    BusinessProfileDebugLog.section('UPDATE PROFILE REQUEST');
+    BusinessProfileDebugLog.log('payload: ${request.toJson()}');
+
+    await ensureProfileApiBusinessScope();
+
     try {
-      return await _repository.updateBusinessProfile(input.toRequest());
+      return await _repository.updateBusinessProfile(request);
     } on DioException catch (e) {
+      if (ApiErrorParser.errorCode(e) == 'BUSINESS_NOT_SELECTED') {
+        BusinessProfileDebugLog.log(
+          'BUSINESS_NOT_SELECTED — retrying after re-scope',
+        );
+        await ensureProfileApiBusinessScope(forceReselect: true);
+        return _repository.updateBusinessProfile(request);
+      }
+
       final validation = ApiErrorParser.parseValidation(e);
       if (validation != null) throw validation;
       rethrow;
@@ -208,10 +288,6 @@ class BusinessService {
           name: profile.name,
           gstin: profile.gstin,
         );
-    final businesses = _ref.read(businessListProvider).asData?.value;
-    if (businesses != null) {
-      _ref.read(businessListProvider.notifier).applyProfileUpdate(profile);
-    }
   }
 
   Future<void> rememberLastOpened(String businessId) =>
@@ -224,6 +300,12 @@ class BusinessService {
       syncStatus: SyncStatus.on,
       isShared: dto.isShared,
       isCurrent: selectedId != null && selectedId == dto.id,
+      gstin: dto.gstin,
+      ownerName: dto.ownerName,
+      phone: dto.phone,
+      email: dto.email,
+      address: dto.address,
+      role: dto.role,
     );
   }
 
@@ -236,8 +318,18 @@ class BusinessService {
     'email': dto.email,
     'state_code': dto.stateCode,
     'address': dto.address,
+    'owner_name': dto.ownerName,
     'is_shared': dto.isShared,
   };
+
+  Future<void> deleteBusiness(String businessId) async {
+    await _repository.deleteBusiness(businessId);
+    await _cache.removeBusiness(businessId);
+    final selectedId = _cache.readLastOpenedBusinessId();
+    if (selectedId == businessId) {
+      await _cache.clearSelectedBusiness();
+    }
+  }
 }
 
 class BusinessProfileScopeRequired implements Exception {
@@ -305,6 +397,22 @@ class BusinessList extends _$BusinessList {
           .toList(),
     );
   }
+
+  Future<void> deleteBusiness(String id) async {
+    final service = await ref.read(businessServiceProvider.future);
+    await service.deleteBusiness(id);
+    await ref.read(authProvider.notifier).refreshBusinesses();
+    ref
+      ..invalidate(businessProfileProvider)
+      ..invalidateSelf();
+  }
+
+  Future<BusinessProfileModel> fetchProfileForEdit(String businessId) async {
+    await _activateBusiness(businessId);
+    ref.invalidate(businessProfileProvider);
+    final service = await ref.read(businessServiceProvider.future);
+    return service.fetchBusinessProfile(forceRefresh: true);
+  }
 }
 
 @riverpod
@@ -334,6 +442,7 @@ class BusinessProfile extends _$BusinessProfile {
     final service = await ref.read(businessServiceProvider.future);
     final updated = await service.updateBusinessProfile(input);
     await service.persistSavedProfile(updated);
+    ref.read(businessListProvider.notifier).applyProfileUpdate(updated);
     state = AsyncData(updated);
     return updated;
   }

@@ -1,9 +1,7 @@
-import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/preview_share_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_empty_state_card.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_order_form.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_page_title_bar.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_order_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -36,64 +34,75 @@ class _SaleOrderPageState extends ConsumerState<SaleOrderPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SalePageTitleBar(
-              currentRoute: AppRoutes.saleOrder,
-              onSettingsTap: () => debugPrint('Settings tapped'),
+      backgroundColor: AppColors.surface,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding = constraints.maxWidth < 600
+              ? AppSpacing.md
+              : AppSpacing.lg;
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              AppSpacing.md,
+              horizontalPadding,
+              AppSpacing.lg,
             ),
-            const SizedBox(height: AppSpacing.md),
-            TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              labelColor: _tabActiveColor,
-              unselectedLabelColor: AppColors.textSecondary,
-              indicatorColor: _tabActiveColor,
-              indicatorWeight: 3,
-              dividerColor: const Color(0xFFE0E0E0),
-              labelStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              tabs: const [
-                Tab(text: 'Sale Orders'),
-                Tab(text: 'Online Orders'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  labelColor: _tabActiveColor,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  indicatorColor: _tabActiveColor,
+                  indicatorWeight: 3,
+                  dividerColor: _cardBorder,
+                  labelStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.4,
+                  ),
+                  tabs: const [
+                    Tab(text: 'SALE ORDERS'),
+                    Tab(text: 'ONLINE ORDERS'),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AnimatedBuilder(
+                  animation: _tabController,
+                  builder: (context, _) {
+                    if (_tabController.index == 0) {
+                      return const SaleOrderTable();
+                    }
+                    return DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: AppRadius.lgBorder,
+                        border: Border.all(color: _cardBorder),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0A000000),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: _buildOnlineOrdersTab(),
+                    );
+                  },
+                ),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
-            AnimatedBuilder(
-              animation: _tabController,
-              builder: (context, _) {
-                return DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.lgBorder,
-                    border: Border.all(color: _cardBorder),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x0A000000),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: _tabController.index == 0
-                      ? const SaleOrderContent()
-                      : _buildOnlineOrdersTab(),
-                );
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -110,9 +119,7 @@ class _SaleOrderPageState extends ConsumerState<SaleOrderPage>
       buttonLabel: 'Share Store',
       buttonColor: AppColors.error,
       buttonIcon: Icons.share_outlined,
-      onPressed: () => showPreviewShareDialog(
-        context,
-      ),
+      onPressed: () => showPreviewShareDialog(context),
     );
   }
 }

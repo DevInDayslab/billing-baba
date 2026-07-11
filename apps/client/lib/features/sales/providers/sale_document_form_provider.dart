@@ -5,6 +5,7 @@ import 'package:billing_baba/features/sales/models/sale_document_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
+import 'package:billing_baba/features/sales/providers/estimate_quotation_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -18,11 +19,12 @@ String _nextDocumentLineItemId() {
   return 'doc_line_$_documentLineItemCounter';
 }
 
-SaleDocumentFormState _initialDocumentFormState() {
+SaleDocumentFormState _initialDocumentFormState(SaleDocumentType documentType) {
   final now = DateTime.now();
   return SaleDocumentFormState(
     invoiceDate: DateTime(now.year, now.month, now.day),
     invoiceTime: TimeOfDay.fromDateTime(now),
+    termsTitle: documentType.defaultTermsTitle,
     items: [SaleLineItem.empty(id: _nextDocumentLineItemId())],
   );
 }
@@ -33,11 +35,17 @@ SalesDocumentListScope _listScopeFor(SaleDocumentType documentType) =>
       SaleDocumentType.proforma => proformaListScope(),
     };
 
+void _invalidateDocumentLists(Ref ref, SaleDocumentType documentType) {
+  if (documentType == SaleDocumentType.estimate) {
+    ref.invalidate(estimateQuotationsProvider);
+  }
+}
+
 @riverpod
 class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
   @override
   SaleDocumentFormState build(SaleDocumentType documentType) {
-    return _initialDocumentFormState();
+    return _initialDocumentFormState(documentType);
   }
 
   Map<String, String> _itemNameToId() {
@@ -46,11 +54,15 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
   }
 
   void openForm() {
-    state = _initialDocumentFormState().copyWith(isFormOpen: true);
+    state = _initialDocumentFormState(documentType).copyWith(isFormOpen: true);
   }
 
   void resetForm() {
-    state = _initialDocumentFormState();
+    state = _initialDocumentFormState(documentType);
+  }
+
+  void closeForm() {
+    state = _initialDocumentFormState(documentType);
   }
 
   Future<void> loadDocument(String documentId) async {
@@ -59,13 +71,76 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
       final service = await ref.read(salesServiceProvider.future);
       final loaded = await service.loadSaleDocumentForm(documentId);
       final items = await _resolveItemNames(loaded.items);
-      state = loaded.copyWith(items: items, isLoading: false);
+      state = loaded.copyWith(
+        items: items,
+        isLoading: false,
+        isFormOpen: true,
+      );
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
         saveError: SalesErrorMapper.messageFor(error),
       );
     }
+  }
+
+  Future<void> duplicateDocument(String sourceDocumentId) async {
+    state = state.copyWith(isLoading: true, clearSaveError: true);
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final loaded = await service.loadSaleDocumentForm(sourceDocumentId);
+      final items = await _resolveItemNames(loaded.items);
+      final now = DateTime.now();
+      state = loaded.copyWith(
+        documentId: null,
+        clearDocumentId: true,
+        invoiceDate: DateTime(now.year, now.month, now.day),
+        invoiceTime: TimeOfDay.fromDateTime(now),
+        items: _cloneLineItemsForDuplicate(items),
+        isFormOpen: true,
+        isLoading: false,
+        showValidationErrors: false,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        saveError: SalesErrorMapper.messageFor(error),
+      );
+    }
+  }
+
+  List<SaleLineItem> _cloneLineItemsForDuplicate(List<SaleLineItem> items) {
+    final filled = items
+        .where((line) => line.itemName.trim().isNotEmpty || line.qty > 0)
+        .toList();
+    if (filled.isEmpty) {
+      return [SaleLineItem.empty(id: _nextDocumentLineItemId())];
+    }
+
+    return [
+      for (final line in filled)
+        SaleLineItem(
+          id: _nextDocumentLineItemId(),
+          itemId: line.itemId,
+          itemName: line.itemName,
+          serialNo: line.serialNo,
+          description: line.description,
+          batchNo: line.batchNo,
+          modelNo: line.modelNo,
+          expDate: line.expDate,
+          mfgDate: line.mfgDate,
+          mrp: line.mrp,
+          size: line.size,
+          qty: line.qty,
+          unit: line.unit,
+          pricePerUnit: line.pricePerUnit,
+          priceIsTaxInclusive: line.priceIsTaxInclusive,
+          discountPercent: line.discountPercent,
+          taxPercent: line.taxPercent,
+          isConfirmed: true,
+        ),
+      SaleLineItem.empty(id: _nextDocumentLineItemId()),
+    ];
   }
 
   Future<List<SaleLineItem>> _resolveItemNames(List<SaleLineItem> items) async {
@@ -123,6 +198,14 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
 
   void updateDescription(String value) {
     state = state.copyWith(description: value);
+  }
+
+  void updateTermsTitle(String value) {
+    state = state.copyWith(termsTitle: value);
+  }
+
+  void updateTermsText(String value) {
+    state = state.copyWith(termsText: value);
   }
 
   void addImage(SaleFormAttachment attachment) {
@@ -195,6 +278,19 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
     state = state.copyWith(items: items, clearSaveError: true);
   }
 
+  void confirmLineItem(int index) {
+    if (index < 0 || index >= state.items.length) return;
+    final item = state.items[index];
+    if (item.itemName.trim().isEmpty || item.qty <= 0) return;
+
+    final items = [...state.items];
+    items[index] = item.copyWith(isConfirmed: true);
+    if (index == items.length - 1) {
+      items.add(SaleLineItem.empty(id: _nextDocumentLineItemId()));
+    }
+    state = state.copyWith(items: items);
+  }
+
   bool validate() {
     final isValid = state.isValid;
     if (!isValid) {
@@ -210,10 +306,21 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
       documentType: documentType.backendType,
       documentSeries: documentType.documentSeries,
       documentDate: state.invoiceDate,
-      notes: state.description,
+      notes: _buildNotes(),
       godownId: state.godownId,
       items: state.items,
     );
+  }
+
+  String? _buildNotes() {
+    final parts = <String>[];
+    if (state.termsText.trim().isNotEmpty) {
+      parts.add(state.termsText.trim());
+    }
+    if (state.description.trim().isNotEmpty) {
+      parts.add(state.description.trim());
+    }
+    return parts.isEmpty ? null : parts.join('\n\n');
   }
 
   Future<String?> saveDraft() async {
@@ -231,6 +338,7 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
         isSaving: false,
       );
       ref.invalidate(salesDocumentsListProvider(_listScopeFor(documentType)));
+      _invalidateDocumentLists(ref, documentType);
       return null;
     } catch (error) {
       final message = SalesErrorMapper.messageFor(error);
@@ -258,6 +366,7 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
         );
       }
       ref.invalidate(salesDocumentsListProvider(_listScopeFor(documentType)));
+      _invalidateDocumentLists(ref, documentType);
       resetForm();
       return null;
     } catch (error) {

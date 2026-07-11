@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/close_form_dialog.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
@@ -8,9 +9,12 @@ import 'package:billing_baba/features/sales/presentation/widgets/billing_name_pa
 import 'package:billing_baba/features/sales/presentation/widgets/sale_document_line_items_table.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_form_attachments_section.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_document_footer.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_page_title_bar.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_document_actions.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_documents_filter_bar.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_documents_table.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/providers/sale_document_form_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
@@ -33,6 +37,7 @@ class SaleDocumentForm extends ConsumerWidget {
     required this.illustrationSquareColor,
     required this.emptyStateDescription,
     required this.createButtonLabel,
+    this.onClose,
     super.key,
   });
 
@@ -44,10 +49,20 @@ class SaleDocumentForm extends ConsumerWidget {
   final Color illustrationSquareColor;
   final String emptyStateDescription;
   final String createButtonLabel;
+  final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(saleDocumentFormProvider(documentType));
+    final scope = switch (documentType) {
+      SaleDocumentType.estimate => estimateListScope(),
+      SaleDocumentType.proforma => proformaListScope(),
+    };
+    final tableConfig = switch (documentType) {
+      SaleDocumentType.estimate => estimateTableConfig(),
+      SaleDocumentType.proforma => proformaTableConfig(),
+    };
+    final formNotifier = ref.read(saleDocumentFormProvider(documentType).notifier);
 
     return ColoredBox(
       color: AppColors.background,
@@ -58,33 +73,35 @@ class SaleDocumentForm extends ConsumerWidget {
           children: [
             SalePageTitleBar(currentRoute: route, onSettingsTap: () {}),
             const SizedBox(height: AppSpacing.md),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppRadius.lgBorder,
-                border: Border.all(color: _cardBorder),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: form.isFormOpen
-                  ? _FormContent(
-                      documentType: documentType,
-                      pageTitle: pageTitle,
-                    )
-                  : _EmptyState(
-                      documentType: documentType,
-                      accentColor: accentColor,
-                      circleColor: illustrationCircleColor,
-                      squareColor: illustrationSquareColor,
-                      description: emptyStateDescription,
-                      createButtonLabel: createButtonLabel,
+            if (form.isFormOpen || onClose != null)
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: AppRadius.lgBorder,
+                  border: Border.all(color: _cardBorder),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0A000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
                     ),
-            ),
+                  ],
+                ),
+                child: _FormContent(
+                  documentType: documentType,
+                  pageTitle: pageTitle,
+                  onClose: onClose,
+                ),
+              )
+            else ...[
+              SalesDocumentsFilterBar(
+                scope: scope,
+                onAdd: formNotifier.openForm,
+                addButtonLabel: createButtonLabel,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SalesDocumentsTable(config: tableConfig),
+            ],
           ],
         ),
       ),
@@ -334,10 +351,12 @@ class _FormContent extends ConsumerWidget {
   const _FormContent({
     required this.documentType,
     required this.pageTitle,
+    this.onClose,
   });
 
   final SaleDocumentType documentType;
   final String pageTitle;
+  final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -354,6 +373,7 @@ class _FormContent extends ConsumerWidget {
           child: _FormHeader(
             documentType: documentType,
             pageTitle: pageTitle,
+            onClose: onClose,
           ),
         ),
         const SizedBox(height: _sectionGap),
@@ -366,10 +386,10 @@ class _FormContent extends ConsumerWidget {
         const Divider(height: 1, color: _cardBorder),
         Padding(
           padding: const EdgeInsets.all(_sectionGap),
-          child: _DocumentFooter(documentType: documentType),
+          child: SaleDocumentFooter(documentType: documentType),
         ),
         const Divider(height: 1, color: _cardBorder),
-        _BottomActionBar(documentType: documentType),
+        _BottomActionBar(documentType: documentType, onClose: onClose),
       ],
     );
   }
@@ -379,10 +399,23 @@ class _FormHeader extends ConsumerWidget {
   const _FormHeader({
     required this.documentType,
     required this.pageTitle,
+    this.onClose,
   });
 
   final SaleDocumentType documentType;
   final String pageTitle;
+  final VoidCallback? onClose;
+
+  Future<void> _handleClose(BuildContext context, WidgetRef ref) async {
+    final title = switch (documentType) {
+      SaleDocumentType.estimate => 'Close Estimate',
+      SaleDocumentType.proforma => 'Close Proforma Invoice',
+    };
+    final confirmed = await showCloseFormDialog(context, title: title);
+    if (!confirmed || !context.mounted) return;
+    ref.read(saleDocumentFormProvider(documentType).notifier).closeForm();
+    onClose?.call();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -406,6 +439,16 @@ class _FormHeader extends ConsumerWidget {
           value: form.godown,
           onSelected: notifier.updateGodown,
         ),
+        if (onClose != null) ...[
+          const SizedBox(width: AppSpacing.xs),
+          IconButton(
+            onPressed: () => _handleClose(context, ref),
+            icon: const Icon(Icons.close, size: 20),
+            color: AppColors.textSecondary,
+            tooltip: 'Close',
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
       ],
     );
   }
@@ -675,163 +718,14 @@ class _DocumentFormFieldsState extends ConsumerState<_DocumentFormFields> {
   }
 }
 
-class _DocumentFooter extends ConsumerWidget {
-  const _DocumentFooter({required this.documentType});
-
-  final SaleDocumentType documentType;
-
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 2,
-  );
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(saleDocumentFormProvider(documentType));
-    final notifier = ref.read(
-      saleDocumentFormProvider(documentType).notifier,
-    );
-    final totalTax = ref.watch(
-      saleDocumentTotalTaxProvider(documentType),
-    );
-    final grandTotal = ref.watch(
-      saleDocumentGrandTotalProvider(documentType),
-    );
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: SaleFormAttachmentsSection(
-            description: form.description,
-            images: form.attachedImages,
-            documents: form.attachedDocuments,
-            onDescriptionChanged: notifier.updateDescription,
-            onAddImage: () => _DocumentFooter._promptAddImage(
-              context,
-              notifier,
-              form.attachedImages.length,
-            ),
-            onRemoveImage: notifier.removeImage,
-            onUpdateImage: notifier.updateImage,
-            onAddDocument: () => _DocumentFooter._promptAddDocument(
-              context,
-              notifier,
-              form.attachedDocuments.length,
-            ),
-            onRemoveDocument: notifier.removeDocument,
-            onUpdateDocument: notifier.updateDocument,
-          ),
-        ),
-        const SizedBox(width: 16),
-        SizedBox(
-          width: 280,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Text('Tax', style: TextStyle(fontSize: 13)),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 80,
-                    child: SaleGenericSelectDropdown(
-                      value: form.taxOption,
-                      options: SaleDropdownOptions.taxSlabs,
-                      highlight: SaleDropdownHighlight.red,
-                      compact: true,
-                      onSelected: notifier.updateTaxOption,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    _currencyFormat.format(totalTax),
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Checkbox(
-                    value: form.roundOff,
-                    onChanged: (value) =>
-                        notifier.toggleRoundOff(value: value ?? false),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  const Text('Round Off', style: TextStyle(fontSize: 13)),
-                  const Spacer(),
-                  SizedBox(
-                    width: 72,
-                    child: _AmountField(
-                      value: form.roundOffAmount,
-                      readOnly: !form.roundOff,
-                      onChanged: (_) {},
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Text(
-                    'Total',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: 120,
-                    child: _AmountField(
-                      value: grandTotal,
-                      readOnly: true,
-                      onChanged: (_) {},
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  static Future<void> _promptAddImage(
-    BuildContext context,
-    SaleDocumentFormNotifier notifier,
-    int currentCount,
-  ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add image',
-      defaultName: 'image_${currentCount + 1}.png',
-    );
-    if (attachment != null) notifier.addImage(attachment);
-  }
-
-  static Future<void> _promptAddDocument(
-    BuildContext context,
-    SaleDocumentFormNotifier notifier,
-    int currentCount,
-  ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add document',
-      defaultName: 'document_${currentCount + 1}.pdf',
-    );
-    if (attachment != null) notifier.addDocument(attachment);
-  }
-}
-
 class _BottomActionBar extends ConsumerWidget {
-  const _BottomActionBar({required this.documentType});
+  const _BottomActionBar({
+    required this.documentType,
+    this.onClose,
+  });
 
   final SaleDocumentType documentType;
+  final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -912,6 +806,7 @@ class _BottomActionBar extends ConsumerWidget {
                         content: Text(documentType.saveSuccessMessage),
                       ),
                     );
+                    onClose?.call();
                   },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -1113,69 +1008,6 @@ class _PickerField extends StatelessWidget {
           Icon(icon, size: 15, color: AppColors.textSecondary),
         ],
       ),
-    );
-  }
-}
-
-class _AmountField extends StatefulWidget {
-  const _AmountField({
-    required this.value,
-    required this.onChanged,
-    this.readOnly = false,
-  });
-
-  final double value;
-  final ValueChanged<double> onChanged;
-  final bool readOnly;
-
-  @override
-  State<_AmountField> createState() => _AmountFieldState();
-}
-
-class _AmountFieldState extends State<_AmountField> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(
-      text: widget.value == 0 ? '0' : widget.value.toStringAsFixed(2),
-    );
-  }
-
-  @override
-  void didUpdateWidget(_AmountField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final newText = widget.value == 0 ? '0' : widget.value.toStringAsFixed(2);
-    if (widget.value != oldWidget.value && newText != _controller.text) {
-      _controller.text = newText;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      readOnly: widget.readOnly,
-      textAlign: TextAlign.right,
-      style: saleFieldTextStyle.copyWith(
-        fontSize: widget.readOnly ? 15 : 13,
-        fontWeight: widget.readOnly ? FontWeight.bold : FontWeight.normal,
-      ),
-      decoration: buildSaleFieldDecoration(
-        filled: widget.readOnly,
-      ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-      ],
-      onChanged: (text) => widget.onChanged(double.tryParse(text) ?? 0),
     );
   }
 }

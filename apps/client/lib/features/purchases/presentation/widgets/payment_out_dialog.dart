@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,23 +60,6 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
     _paidController.dispose();
     _discountController.dispose();
     super.dispose();
-  }
-
-  String _formatTime(TimeOfDay? time) {
-    if (time == null) return 'Select time';
-    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '${hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $period';
-  }
-
-  Future<void> _pickTime(TimeOfDay? current) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: current ?? TimeOfDay.now(),
-    );
-    if (picked != null) {
-      ref.read(paymentOutFormProvider.notifier).updateTime(picked);
-    }
   }
 
   Future<void> _handleSave({bool saveAndNew = false}) async {
@@ -190,17 +175,20 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                             label: 'Party *',
                             hasError:
                                 form.showValidationErrors &&
-                                form.party.trim().isEmpty,
+                                (form.partyId == null ||
+                                    form.partyId!.isEmpty),
                             child: BillingNamePartySearchField(
                               value: form.party,
+                              partyTypeFilter: PartyTypeFilter.supplier,
                               emptyPlaceholder: 'Select Party',
                               onSelected: notifier.updateParty,
                               onPartySelectedWithId: (partyId, name) =>
                                   notifier.updateParty(name, partyId: partyId),
                               hasError:
                                   form.showValidationErrors &&
-                                  form.party.trim().isEmpty,
-                              errorMessage: 'Party is required',
+                                  (form.partyId == null ||
+                                      form.partyId!.isEmpty),
+                              errorMessage: 'Please select a supplier',
                             ),
                           ),
                           const SizedBox(height: _sectionGap),
@@ -309,10 +297,10 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                           const SizedBox(height: _sectionGap),
                           _LabeledField(
                             label: 'Time',
-                            child: _PickerField(
-                              value: _formatTime(form.time),
-                              icon: Icons.access_time,
-                              onTap: () => _pickTime(form.time),
+                            child: SaleTimeDropdown(
+                              value: form.time,
+                              compact: true,
+                              onSelected: notifier.updateTime,
                             ),
                           ),
                           const SizedBox(height: _sectionGap * 2),

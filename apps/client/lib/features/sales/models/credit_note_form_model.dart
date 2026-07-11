@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:flutter/material.dart';
 
 class CreditNoteFormState {
   const CreditNoteFormState({
@@ -11,7 +12,10 @@ class CreditNoteFormState {
     this.originalInvoiceNo = '',
     this.originalInvoiceDate,
     this.returnDate,
+    this.returnTime,
     this.stateOfSupply = '',
+    this.godown = 'Main Godown',
+    this.godownId,
     this.items = const [],
     this.payments = const [SalePaymentEntry(type: 'Cash')],
     this.description = '',
@@ -32,7 +36,10 @@ class CreditNoteFormState {
   final String originalInvoiceNo;
   final DateTime? originalInvoiceDate;
   final DateTime? returnDate;
+  final TimeOfDay? returnTime;
   final String stateOfSupply;
+  final String godown;
+  final String? godownId;
   final List<SaleLineItem> items;
   final List<SalePaymentEntry> payments;
   final String description;
@@ -83,7 +90,10 @@ class CreditNoteFormState {
     String? originalInvoiceNo,
     DateTime? originalInvoiceDate,
     DateTime? returnDate,
+    TimeOfDay? returnTime,
     String? stateOfSupply,
+    String? godown,
+    String? godownId,
     List<SaleLineItem>? items,
     List<SalePaymentEntry>? payments,
     String? description,
@@ -105,7 +115,10 @@ class CreditNoteFormState {
       originalInvoiceNo: originalInvoiceNo ?? this.originalInvoiceNo,
       originalInvoiceDate: originalInvoiceDate ?? this.originalInvoiceDate,
       returnDate: returnDate ?? this.returnDate,
+      returnTime: returnTime ?? this.returnTime,
       stateOfSupply: stateOfSupply ?? this.stateOfSupply,
+      godown: godown ?? this.godown,
+      godownId: godownId ?? this.godownId,
       items: items ?? this.items,
       payments: payments ?? this.payments,
       description: description ?? this.description,

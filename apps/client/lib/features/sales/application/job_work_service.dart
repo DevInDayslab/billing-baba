@@ -214,4 +214,15 @@ class JobWorkService {
       throw mapSalesError(error);
     }
   }
+
+  Future<void> closeOrder(String orderId) async {
+    try {
+      await _repository.updateOrder(
+        orderId,
+        const UpdateJobWorkOrderRequest(status: 'closed'),
+      );
+    } on DioException catch (error) {
+      throw mapSalesError(error);
+    }
+  }
 }

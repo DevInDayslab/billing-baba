@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
@@ -15,6 +16,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_o
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -158,9 +160,12 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                 label: 'Party *',
                 child: BillingNamePartySearchField(
                   value: form.party,
+                  partyTypeFilter: PartyTypeFilter.supplier,
                   hasError: form.partyHasError,
-                  errorMessage: 'Party is required',
+                  errorMessage: 'Please select a supplier',
                   onSelected: notifier.updateParty,
+                  onPartySelectedWithId: (partyId, name) =>
+                      notifier.updateParty(name, partyId: partyId),
                 ),
               ),
             ),
@@ -221,11 +226,10 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
             Expanded(
               child: _LabeledField(
                 label: 'Time',
-                child: _PickerField(
-                  value: _formatTime(form.orderTime),
-                  icon: Icons.access_time,
-                  isPlaceholder: form.orderTime == null,
-                  onTap: () => _pickTime(context, form.orderTime),
+                child: SaleTimeDropdown(
+                  value: form.orderTime,
+                  hasError: form.orderTime == null,
+                  onSelected: notifier.updateOrderTime,
                 ),
               ),
             ),
@@ -279,25 +283,6 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
         ),
       ],
     );
-  }
-
-  String _formatTime(TimeOfDay? time) {
-    if (time == null) return 'Select time';
-    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '${hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $period';
-  }
-
-  Future<void> _pickTime(BuildContext context, TimeOfDay? current) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: current ?? TimeOfDay.now(),
-    );
-    if (picked != null) {
-      ref
-          .read(addPurchaseOrderFormProvider(orderId: widget.orderId).notifier)
-          .updateOrderTime(picked);
-    }
   }
 }
 

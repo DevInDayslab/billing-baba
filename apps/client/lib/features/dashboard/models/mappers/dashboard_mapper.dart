@@ -10,8 +10,13 @@ abstract final class DashboardMapper {
   static DashboardTransactionType _transactionType(String value) =>
       switch (value) {
         'purchase' => DashboardTransactionType.purchase,
-        'payment' => DashboardTransactionType.payment,
+        'payment_in' => DashboardTransactionType.paymentIn,
+        'payment_out' => DashboardTransactionType.paymentOut,
+        'payment' => DashboardTransactionType.paymentIn,
         'expense' => DashboardTransactionType.expense,
+        'sale_return' => DashboardTransactionType.saleReturn,
+        'purchase_return' => DashboardTransactionType.purchaseReturn,
+        'opening' => DashboardTransactionType.opening,
         _ => DashboardTransactionType.sale,
       };
 
@@ -73,10 +78,13 @@ abstract final class DashboardMapper {
             (row) => DashboardRecentTransactionModel(
               id: row.id,
               type: _transactionType(row.type),
+              referenceId: row.referenceId,
+              referenceType: row.referenceType,
               referenceNumber: row.referenceNumber ?? '',
               partyName: row.partyName ?? '',
               amount: _money(row.amount),
               date: _date(row.date),
+              direction: row.direction,
             ),
           )
           .toList(),

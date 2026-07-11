@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/utils/validators.dart';
+
 class BusinessProfileModel {
   const BusinessProfileModel({
     required this.id,
@@ -147,13 +149,14 @@ class UpdateBusinessProfileInput {
 
   UpdateBusinessProfileRequest toRequest() => UpdateBusinessProfileRequest(
     name: name,
-    phone: phone,
-    email: email,
-    gstin: gstin,
-    businessType: businessType,
-    businessCategory: businessCategory,
-    state: state,
-    pincode: pincode,
-    address: address,
+    phone: Validators.normalizeIndianPhone(phone),
+    email: email?.trim().isEmpty ?? true ? null : email?.trim(),
+    gstin: gstin?.trim().isEmpty ?? true ? null : gstin?.trim(),
+    businessType: businessType?.trim().isEmpty ?? true ? null : businessType?.trim(),
+    businessCategory:
+        businessCategory?.trim().isEmpty ?? true ? null : businessCategory?.trim(),
+    state: state?.trim().isEmpty ?? true ? null : state?.trim(),
+    pincode: Validators.normalizePincode(pincode),
+    address: address?.trim().isEmpty ?? true ? null : address?.trim(),
   );
 }

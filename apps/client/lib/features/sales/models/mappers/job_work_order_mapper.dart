@@ -12,6 +12,11 @@ class JobWorkOrderMapper {
     JobWorkOrderDto dto, {
     String partyName = '',
   }) {
+    final status = _mapStatus(dto.status);
+    final closedAt = status == JobWorkOutStatus.closed
+        ? DateTime.tryParse(dto.updatedAt)
+        : null;
+
     return JobWorkOrderListItem(
       id: dto.id,
       party: partyName,
@@ -20,9 +25,20 @@ class JobWorkOrderMapper {
       deliveryDate: dto.deliveryDate != null
           ? DateTime.tryParse(dto.deliveryDate!)
           : null,
-      status: _mapStatus(dto.status),
+      status: status,
       grandTotal: double.tryParse(dto.grandTotal) ?? 0,
+      closedAt: closedAt,
+      convertedInvoiceNumber: _parseConvertedInvoiceNumber(dto.notes),
     );
+  }
+
+  static String? _parseConvertedInvoiceNumber(String? notes) {
+    if (notes == null || notes.isEmpty) return null;
+    final match = RegExp(
+      r'converted[_\s-]*to[_\s-]*invoice[_\s#:]*(\d+)',
+      caseSensitive: false,
+    ).firstMatch(notes);
+    return match?.group(1);
   }
 
   static JobWorkOutFormState toFormState(

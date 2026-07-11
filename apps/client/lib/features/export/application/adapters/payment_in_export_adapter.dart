@@ -56,7 +56,12 @@ ExportSheet _paymentInSheet(List<PaymentInModel> items) {
           record.receiptNo,
           record.partyName,
           record.paymentType,
-          if (record.status == PaymentInStatus.used) 'Used' else 'Unused',
+          if (record.status == PaymentInStatus.paid)
+            'Paid'
+          else if (record.status == PaymentInStatus.partial)
+            'Partial'
+          else
+            'Unused',
           record.totalAmount,
           record.receivedAmount,
         ]),
@@ -69,18 +74,18 @@ List<PaymentInModel> _applyClientFilters(
   PaymentInFiltersState filters,
 ) {
   final statusFilter = switch (filters.selectedStatus) {
-    'Used' => PaymentInStatus.used,
+    'Paid' => PaymentInStatus.paid,
+    'Partial' => PaymentInStatus.partial,
     'Unused' => PaymentInStatus.unused,
     _ => null,
   };
 
   return records.where((record) {
     if (statusFilter != null && record.status != statusFilter) return false;
-    if (filters.selectedUser != 'All Users' && record.user != filters.selectedUser) {
+    if (filters.selectedFirm != 'All Firms' && record.firm != filters.selectedFirm) {
       return false;
     }
-    if (filters.selectedGodown != 'All Godown' &&
-        record.godown != filters.selectedGodown) {
+    if (filters.selectedUser != 'All Users' && record.user != filters.selectedUser) {
       return false;
     }
     return true;

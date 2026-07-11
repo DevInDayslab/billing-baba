@@ -6,7 +6,36 @@ abstract final class SaleDropdownOptions {
 
   static const paymentTypes = ['Cash', 'Credit', 'UPI', 'Cheque'];
 
+  static const priceTaxModes = ['Without Tax', 'With Tax'];
+
+  static const paymentTerms = [
+    'Due on Receipt',
+    'Net 7',
+    'Net 15',
+    'Net 30',
+    'Net 45',
+    'Net 60',
+  ];
+
+  static const termsTitles = [
+    'Sale Invoice',
+    'Tax Invoice',
+    'Bill of Supply',
+    'Estimate Quotation',
+    'Proforma Invoice',
+    'Sale Order',
+    'Delivery Challan',
+  ];
+
   static const godowns = ['Main Location', 'Warehouse B'];
+
+  static const jobWorkAdditionalCostCharges = [
+    'Labour Cost',
+    'Packaging Charge',
+    'Transport Charge',
+    'Electricity Charge',
+    'Other',
+  ];
 
   static const indianStates = [
     'Andhra Pradesh',
@@ -72,6 +101,10 @@ class SaleItemOption {
     required this.mfgCost,
     required this.stock,
     this.unit,
+    this.hsn,
+    this.itemCode,
+    this.sku,
+    this.barcode,
   });
 
   final String id;
@@ -81,6 +114,29 @@ class SaleItemOption {
   final double mfgCost;
   final double stock;
   final String? unit;
+  final String? hsn;
+  final String? itemCode;
+  final String? sku;
+  final String? barcode;
+
+  bool matchesSearchQuery(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+
+    bool contains(String? value) {
+      final normalized = value?.trim().toLowerCase();
+      return normalized != null &&
+          normalized.isNotEmpty &&
+          normalized.contains(q);
+    }
+
+    if (name.toLowerCase().contains(q)) return true;
+    if (contains(hsn)) return true;
+    if (contains(itemCode)) return true;
+    if (contains(sku)) return true;
+    if (contains(barcode)) return true;
+    return false;
+  }
 }
 
 abstract final class SaleItemCatalog {

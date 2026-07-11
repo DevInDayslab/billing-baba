@@ -18,6 +18,7 @@ class SaleGenericSelectDropdown extends StatefulWidget {
     this.minMenuWidth,
     this.hasError = false,
     this.compact = false,
+    this.borderless = false,
     super.key,
   });
 
@@ -30,6 +31,7 @@ class SaleGenericSelectDropdown extends StatefulWidget {
   final double? minMenuWidth;
   final bool hasError;
   final bool compact;
+  final bool borderless;
 
   @override
   State<SaleGenericSelectDropdown> createState() =>
@@ -79,6 +81,8 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
 
         return MenuAnchor(
           controller: _menuController,
+          useRootOverlay: true,
+          consumeOutsideTap: true,
           alignmentOffset: Offset(0, widget.compact ? 2 : 4),
           style: MenuStyle(
             backgroundColor: const WidgetStatePropertyAll(AppColors.surface),
@@ -94,9 +98,21 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
               Size(menuWidth, widget.maxMenuHeight),
             ),
           ),
-          menuChildren: [
-            for (final option in widget.options) _buildMenuItem(option),
-          ],
+          menuChildren: widget.options.isEmpty
+              ? [
+                  MenuItemButton(
+                    child: Text(
+                      'No options available',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ),
+                ]
+              : [
+                  for (final option in widget.options) _buildMenuItem(option),
+                ],
           builder: (context, controller, child) {
             return SaleFieldTrigger(
               onTap: () {
@@ -108,13 +124,15 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
               },
               hasError: widget.hasError,
               compact: widget.compact,
+              borderless: widget.borderless,
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       displayText,
                       style: TextStyle(
-                        fontSize: widget.compact ? 13 : 14,
+                        fontSize: widget.compact ? 12 : 14,
+                        height: 1,
                         color: isPlaceholder
                             ? Colors.grey.shade400
                             : AppColors.textPrimary,

@@ -1,27 +1,28 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/models/delivery_challan_form_model.dart';
-import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/delivery_challan_footer.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/delivery_challan_line_items_table.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/godown_label_selector.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_empty_state_card.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_document_actions.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_documents_filter_bar.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_documents_table.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/features/sales/providers/delivery_challan_form_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
-const _addCtaOrange = Color(0xFFFF9800);
 
 /// Delivery Challan list / empty state / add form card.
 class DeliveryChallanContent extends ConsumerWidget {
@@ -32,257 +33,50 @@ class DeliveryChallanContent extends ConsumerWidget {
     final form = ref.watch(deliveryChallanFormProvider);
 
     if (form.isFormOpen) {
-      return const _DeliveryChallanFormCard();
-    }
-
-    return _DeliveryChallanListState(
-      onAddPressed: () =>
-          ref.read(deliveryChallanFormProvider.notifier).openForm(),
-    );
-  }
-}
-
-class _DeliveryChallanListState extends ConsumerWidget {
-  const _DeliveryChallanListState({required this.onAddPressed});
-
-  final VoidCallback onAddPressed;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scope = deliveryChallanListScope();
-    final documentsAsync = ref.watch(salesDocumentsListProvider(scope));
-    final documents = documentsAsync.maybeWhen(
-      data: (page) => page.items,
-      orElse: () => const <SaleInvoiceModel>[],
-    );
-    final listNotifier = ref.read(salesDocumentsListProvider(scope).notifier);
-
-    if (documentsAsync.isLoading && documents.isEmpty) {
-      return const SizedBox(
-        height: 480,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (documentsAsync.hasError && documents.isEmpty) {
-      return SizedBox(
-        height: 480,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                documentsAsync.error.toString(),
-                style: const TextStyle(color: AppColors.error),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              OutlinedButton(
-                onPressed: listNotifier.refresh,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (documents.isEmpty) {
-      return _EmptyState(onAddPressed: onAddPressed);
-    }
-
-    return _SavedChallansList(challans: documents);
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onAddPressed});
-
-  final VoidCallback onAddPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 480,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SaleGeometricIllustration(
-              circleColor: Color(0xFFE8F5E9),
-              shapeColor: Color(0xFF81C784),
-              shapeIcon: Icons.local_shipping_outlined,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-              child: Text(
-                'Make & share delivery challan with your customers & '
-                'convert it to sale whenever you want.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            FilledButton(
-              onPressed: onAddPressed,
-              style: FilledButton.styleFrom(
-                backgroundColor: _addCtaOrange,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 14,
-                ),
-                shape: const StadiumBorder(),
-              ),
-              child: const Text(
-                'Add Your First Delivery Challan',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              ),
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: AppRadius.lgBorder,
+          border: Border.all(color: _cardBorder),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
           ],
         ),
-      ),
+        child: const _DeliveryChallanFormCard(),
+      );
+    }
+
+    final formNotifier = ref.read(deliveryChallanFormProvider.notifier);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SalesDocumentsFilterBar(
+          scope: deliveryChallanListScope(),
+          onAdd: formNotifier.openForm,
+          addButtonLabel: 'Add Delivery Challan',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SalesDocumentsTable(config: deliveryChallanTableConfig()),
+      ],
     );
   }
 }
 
-class _SavedChallansList extends ConsumerWidget {
-  const _SavedChallansList({required this.challans});
+/// Standalone delivery challan create / edit form (dedicated page or inline).
+class DeliveryChallanForm extends ConsumerWidget {
+  const DeliveryChallanForm({
+    required this.onClose,
+    this.isSaving = false,
+    super.key,
+  });
 
-  final List<SaleInvoiceModel> challans;
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 2,
-  );
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(deliveryChallanFormProvider.notifier);
-
-    return Padding(
-      padding: const EdgeInsets.all(_sectionGap),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Align(
-            alignment: Alignment.centerRight,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _XlsChip(
-                  onTap: () => ModuleExportActions.exportSalesDocuments(
-                    context,
-                    ref,
-                    deliveryChallanListScope(),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                FilledButton(
-                  onPressed: notifier.openForm,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _addCtaOrange,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Add Delivery Challan'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          for (final challan in challans)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _cardBorder),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () => notifier.loadDocument(challan.id),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  challan.partyName.isEmpty
-                                      ? 'Untitled'
-                                      : challan.partyName,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Challan #${challan.invoiceNo} · '
-                                  '${_dateFormat.format(challan.date)}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            _currencyFormat.format(challan.amount),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          if (challan.isDraft)
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 18),
-                              color: AppColors.textSecondary,
-                              tooltip: 'Delete',
-                              onPressed: () async {
-                                final error = await ref
-                                    .read(
-                                      salesDocumentsListProvider(
-                                        deliveryChallanListScope(),
-                                      ).notifier,
-                                    )
-                                    .deleteDraft(challan.id);
-                                if (!context.mounted) return;
-                                if (error != null) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(error)),
-                                  );
-                                }
-                              },
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DeliveryChallanFormCard extends ConsumerWidget {
-  const _DeliveryChallanFormCard();
+  final VoidCallback onClose;
+  final bool isSaving;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -296,27 +90,7 @@ class _DeliveryChallanFormCard extends ConsumerWidget {
             _sectionGap,
             0,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Delivery Challan',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Create Delivery Challan',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary.withValues(alpha: 0.9),
-                ),
-              ),
-            ],
-          ),
+          child: _FormHeader(onClose: onClose),
         ),
         const SizedBox(height: _sectionGap),
         const Padding(
@@ -324,15 +98,95 @@ class _DeliveryChallanFormCard extends ConsumerWidget {
           child: _DeliveryChallanFormFields(),
         ),
         const SizedBox(height: _sectionGap),
-        const DeliveryChallanLineItemsTable(),
+        const DeliveryChallanLineItemsTable(embedded: true),
         const Divider(height: 1, color: _cardBorder),
         const Padding(
           padding: EdgeInsets.all(_sectionGap),
           child: DeliveryChallanFooter(),
         ),
         const Divider(height: 1, color: _cardBorder),
-        const _DeliveryChallanBottomActionBar(),
+        _DeliveryChallanBottomActionBar(onClose: onClose),
       ],
+    );
+  }
+}
+
+class _DeliveryChallanFormCard extends ConsumerWidget {
+  const _DeliveryChallanFormCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(deliveryChallanFormProvider.notifier);
+    return DeliveryChallanForm(onClose: notifier.closeForm);
+  }
+}
+
+class _FormHeader extends ConsumerWidget {
+  const _FormHeader({required this.onClose});
+
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(deliveryChallanFormProvider);
+    final notifier = ref.read(deliveryChallanFormProvider.notifier);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Text(
+          'Delivery Challan',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const Spacer(),
+        _GodownSelector(
+          value: form.godown,
+          onSelected: notifier.updateGodown,
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        IconButton(
+          onPressed: onClose,
+          icon: const Icon(Icons.close, size: 20),
+          color: AppColors.textSecondary,
+          tooltip: 'Close',
+          visualDensity: VisualDensity.compact,
+        ),
+      ],
+    );
+  }
+}
+
+class _GodownSelector extends ConsumerWidget {
+  const _GodownSelector({
+    required this.value,
+    required this.onSelected,
+  });
+
+  final String value;
+  final void Function(String name, {String? godownId}) onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final godownsAsync = ref.watch(inventoryGodownsProvider);
+    final options = godownsAsync.maybeWhen(
+      data: (godowns) => godowns.map((godown) => godown.name).toList(),
+      orElse: () => SaleDropdownOptions.godowns,
+    );
+
+    return GodownLabelSelector(
+      value: value,
+      options: options,
+      onSelected: (name) {
+        final godowns = ref.read(inventoryGodownsProvider).value ?? [];
+        final match = godowns
+            .where((godown) => godown.name == name)
+            .firstOrNull;
+        onSelected(name, godownId: match?.id);
+      },
     );
   }
 }
@@ -361,11 +215,11 @@ class _DeliveryChallanFormFieldsState
         Expanded(
           flex: 3,
           child: _RequiredLabeledField(
-            label: 'Search by Name/Phone',
+            label: 'Party',
             child: BillingNamePartySearchField(
               value: form.party,
               hasError: form.partyHasError,
-              emptyPlaceholder: 'Search by Name/Phone',
+              emptyPlaceholder: 'Search Party Name',
               errorMessage: 'Party is required',
               onSelected: notifier.updateParty,
               onPartySelectedWithId: (partyId, name) =>
@@ -379,33 +233,6 @@ class _DeliveryChallanFormFieldsState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _LabeledField(
-                label: 'Godown',
-                child: Builder(
-                  builder: (context) {
-                    final godownsAsync = ref.watch(inventoryGodownsProvider);
-                    final options = godownsAsync.maybeWhen(
-                      data: (godowns) =>
-                          godowns.map((godown) => godown.name).toList(),
-                      orElse: () => SaleDropdownOptions.godowns,
-                    );
-                    return SaleGenericSelectDropdown(
-                      value: form.godown,
-                      options: options,
-                      hintText: 'Main Godown',
-                      onSelected: (name) {
-                        final godowns =
-                            ref.read(inventoryGodownsProvider).value ?? [];
-                        final match = godowns
-                            .where((godown) => godown.name == name)
-                            .firstOrNull;
-                        notifier.updateGodown(name, godownId: match?.id);
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: _sectionGap),
               _LabeledField(
                 label: 'Challan No.',
                 child: _SaleTextField(
@@ -431,10 +258,9 @@ class _DeliveryChallanFormFieldsState
               const SizedBox(height: _sectionGap),
               _LabeledField(
                 label: 'Time',
-                child: _PickerField(
-                  value: _formatTime(form.invoiceTime),
-                  icon: Icons.access_time,
-                  onTap: () => _pickTime(context, form.invoiceTime),
+                child: SaleTimeDropdown(
+                  value: form.invoiceTime,
+                  onSelected: notifier.updateInvoiceTime,
                 ),
               ),
               const SizedBox(height: _sectionGap),
@@ -457,6 +283,7 @@ class _DeliveryChallanFormFieldsState
                 child: SaleGenericSelectDropdown(
                   value: form.stateOfSupply,
                   options: SaleDropdownOptions.indianStates,
+                  hintText: 'Select',
                   maxMenuHeight: 280,
                   onSelected: notifier.updateStateOfSupply,
                 ),
@@ -467,27 +294,12 @@ class _DeliveryChallanFormFieldsState
       ],
     );
   }
-
-  String _formatTime(TimeOfDay? time) {
-    if (time == null) return 'Select time';
-    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '${hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $period';
-  }
-
-  Future<void> _pickTime(BuildContext context, TimeOfDay? current) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: current ?? TimeOfDay.now(),
-    );
-    if (picked != null) {
-      ref.read(deliveryChallanFormProvider.notifier).updateInvoiceTime(picked);
-    }
-  }
 }
 
 class _DeliveryChallanBottomActionBar extends ConsumerWidget {
-  const _DeliveryChallanBottomActionBar();
+  const _DeliveryChallanBottomActionBar({required this.onClose});
+
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -501,34 +313,26 @@ class _DeliveryChallanBottomActionBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          OutlinedButton(
-            onPressed: notifier.closeForm,
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              side: const BorderSide(color: _cardBorder),
-            ),
-            child: const Text('Cancel', style: TextStyle(fontSize: 13)),
-          ),
-          const Spacer(),
-          if (form.documentId != null) ...[
+          if (form.documentId != null)
             OutlinedButton.icon(
               onPressed: () => _handlePrintPreview(context, ref, form),
               icon: const Icon(Icons.print_outlined, size: 16),
-              label: const Text('Print / Preview', style: TextStyle(fontSize: 13)),
+              label: const Text(
+                'Print / Preview',
+                style: TextStyle(fontSize: 13),
+              ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 side: const BorderSide(color: _cardBorder),
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            IconButton(
-              onPressed: () => _handleShare(context, ref, form),
-              icon: const Icon(Icons.share_outlined, size: 20),
-              color: AppColors.textSecondary,
-              tooltip: 'Share PDF',
-            ),
-            const SizedBox(width: AppSpacing.sm),
-          ],
+          const Spacer(),
+          ShareMenuButton(
+            onChannelSelected: form.isSaving
+                ? null
+                : (_) => _handleSaveAndShare(context, ref, notifier),
+          ),
+          const SizedBox(width: AppSpacing.sm),
           FilledButton(
             onPressed: form.isSaving
                 ? null
@@ -542,19 +346,50 @@ class _DeliveryChallanBottomActionBar extends ConsumerWidget {
                       return;
                     }
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Delivery challan saved')),
+                      const SnackBar(
+                        content: Text('Delivery challan saved'),
+                      ),
                     );
+                    notifier.resetForm();
+                    onClose();
                   },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             ),
-            child: const Text('Save', style: TextStyle(fontSize: 13)),
+            child: form.isSaving
+                ? const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text('Saving...', style: TextStyle(fontSize: 13)),
+                    ],
+                  )
+                : const Text('Save', style: TextStyle(fontSize: 13)),
           ),
         ],
       ),
     );
+  }
+
+  String _filename(DeliveryChallanFormState form) {
+    final number = form.challanNo.trim();
+    if (number.isNotEmpty) {
+      return DocumentPrintActions.filenameFor(number);
+    }
+    final id = form.documentId;
+    return id == null
+        ? 'delivery-challan'
+        : DocumentPrintActions.filenameFor(id);
   }
 
   Future<void> _handlePrintPreview(
@@ -568,23 +403,41 @@ class _DeliveryChallanBottomActionBar extends ConsumerWidget {
       context,
       ref,
       PrintRequest.deliveryChallan(docId),
-      filename: DocumentPrintActions.filenameFor(form.challanNo),
+      filename: _filename(form),
     );
   }
 
-  Future<void> _handleShare(
+  Future<void> _handleSaveAndShare(
     BuildContext context,
     WidgetRef ref,
-    DeliveryChallanFormState form,
+    DeliveryChallanFormNotifier notifier,
   ) async {
-    final docId = form.documentId;
-    if (docId == null) return;
-    await DocumentPrintActions.share(
-      context,
-      ref,
-      PrintRequest.deliveryChallan(docId),
-      filename: DocumentPrintActions.filenameFor(form.challanNo),
-    );
+    final form = ref.read(deliveryChallanFormProvider);
+    if (form.isSaving) return;
+
+    final error = await notifier.save();
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
+
+    final saved = ref.read(deliveryChallanFormProvider);
+    final docId = saved.documentId;
+    if (docId != null) {
+      await DocumentPrintActions.share(
+        context,
+        ref,
+        PrintRequest.deliveryChallan(docId),
+        filename: _filename(saved),
+      );
+    }
+    if (context.mounted) {
+      notifier.resetForm();
+      onClose();
+    }
   }
 }
 
@@ -601,20 +454,17 @@ class _RequiredLabeledField extends StatelessWidget {
       children: [
         RichText(
           text: TextSpan(
-            text: label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-            children: const [
-              TextSpan(
+            style: saleFieldLabelStyle.copyWith(color: AppColors.primary),
+            children: [
+              TextSpan(text: label),
+              const TextSpan(
                 text: ' *',
                 style: TextStyle(color: saleFieldErrorColor),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         child,
       ],
     );
@@ -632,11 +482,8 @@ class _LabeledField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 6),
+        Text(label, style: saleFieldLabelStyle),
+        const SizedBox(height: 4),
         child,
       ],
     );
@@ -713,41 +560,6 @@ class _PickerField extends StatelessWidget {
           Expanded(child: Text(value, style: saleFieldTextStyle)),
           Icon(icon, size: 15, color: AppColors.textSecondary),
         ],
-      ),
-    );
-  }
-}
-
-class _XlsChip extends StatelessWidget {
-  const _XlsChip({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: 4,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8F5E9),
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-          ),
-          child: const Text(
-            'xls',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2E7D32),
-            ),
-          ),
-        ),
       ),
     );
   }

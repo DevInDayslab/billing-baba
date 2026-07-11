@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
@@ -425,6 +426,7 @@ class PaymentOutForm extends _$PaymentOutForm {
 
       ref.invalidate(paymentOutRecordsProvider);
       ref.invalidate(purchaseBillsProvider);
+      refreshAfterPaymentOut(ref);
       final paymentId = created.id;
       reset();
       return (error: null, paymentId: paymentId);

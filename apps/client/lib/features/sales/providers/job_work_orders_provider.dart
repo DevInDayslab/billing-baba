@@ -26,6 +26,17 @@ class JobWorkOrdersList extends _$JobWorkOrdersList {
     state = await AsyncValue.guard(_fetchPage);
   }
 
+  Future<String?> closeOrder(String orderId) async {
+    try {
+      final service = await ref.read(jobWorkServiceProvider.future);
+      await service.closeOrder(orderId);
+      await refresh();
+      return null;
+    } catch (error) {
+      return SalesErrorMapper.messageFor(error);
+    }
+  }
+
   Future<String?> deleteOrder(String orderId) async {
     final previous = state;
     final current = state.value;

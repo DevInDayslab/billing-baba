@@ -56,6 +56,15 @@ class SalesRemoteDataSource {
     await _dio.delete<void>(ApiEndpoints.salesDocument(id));
   }
 
+  Future<SalesDocumentDto> cancelDocument(String id) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.salesDocumentCancel(id),
+    );
+    return SalesDocumentDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
   Future<SalesDocumentDto> finalizeDocument(
     String id, {
     String? godownId,
@@ -127,6 +136,45 @@ class SalesRemoteDataSource {
       data: request.toJson(),
     );
     return PaymentDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<PaymentDto> getPayment(String id) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.payment(id),
+    );
+    return PaymentDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<PaymentDto> updatePayment(
+    String id,
+    UpdatePaymentRequest request,
+  ) async {
+    final response = await _dio.patch<Map<String, dynamic>>(
+      ApiEndpoints.payment(id),
+      data: request.toJson(),
+    );
+    return PaymentDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<void> deletePayment(String id) async {
+    await _dio.delete<void>(ApiEndpoints.payment(id));
+  }
+
+  Future<SalesDocumentDto> convertDocument(
+    String id,
+    ConvertSalesDocumentRequest request,
+  ) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.salesDocumentConvert(id),
+      data: request.toJson(),
+    );
+    return SalesDocumentDto.fromJson(
       (response.data?['data'] as Map<String, dynamic>?) ?? {},
     );
   }

@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:flutter/material.dart';
 
 class SaleOrderFormState {
   const SaleOrderFormState({
@@ -9,6 +10,7 @@ class SaleOrderFormState {
     this.party = '',
     this.orderNo = '',
     this.orderDate,
+    this.orderTime,
     this.dueDate,
     this.stateOfSupply = '',
     this.items = const [],
@@ -17,9 +19,14 @@ class SaleOrderFormState {
     this.description = '',
     this.attachedImages = const [],
     this.attachedDocuments = const [],
-    this.roundOff = false,
+    this.termsTitle = 'Sale Order',
+    this.termsText = 'Thanks for doing business with us!',
+    this.roundOff = true,
     this.showValidationErrors = false,
     this.isSaving = false,
+    this.isLoading = false,
+    this.godown = 'Main Location',
+    this.phoneNo = '',
     this.saveError,
   });
 
@@ -29,6 +36,7 @@ class SaleOrderFormState {
   final String party;
   final String orderNo;
   final DateTime? orderDate;
+  final TimeOfDay? orderTime;
   final DateTime? dueDate;
   final String stateOfSupply;
   final List<SaleLineItem> items;
@@ -37,9 +45,14 @@ class SaleOrderFormState {
   final String description;
   final List<SaleFormAttachment> attachedImages;
   final List<SaleFormAttachment> attachedDocuments;
+  final String termsTitle;
+  final String termsText;
   final bool roundOff;
   final bool showValidationErrors;
   final bool isSaving;
+  final bool isLoading;
+  final String godown;
+  final String phoneNo;
   final String? saveError;
 
   double get subtotal =>
@@ -83,6 +96,7 @@ class SaleOrderFormState {
     String? party,
     String? orderNo,
     DateTime? orderDate,
+    TimeOfDay? orderTime,
     DateTime? dueDate,
     String? stateOfSupply,
     List<SaleLineItem>? items,
@@ -91,9 +105,14 @@ class SaleOrderFormState {
     String? description,
     List<SaleFormAttachment>? attachedImages,
     List<SaleFormAttachment>? attachedDocuments,
+    String? termsTitle,
+    String? termsText,
     bool? roundOff,
     bool? showValidationErrors,
     bool? isSaving,
+    bool? isLoading,
+    String? godown,
+    String? phoneNo,
     String? saveError,
     bool clearSaveError = false,
   }) {
@@ -104,6 +123,7 @@ class SaleOrderFormState {
       party: party ?? this.party,
       orderNo: orderNo ?? this.orderNo,
       orderDate: orderDate ?? this.orderDate,
+      orderTime: orderTime ?? this.orderTime,
       dueDate: dueDate ?? this.dueDate,
       stateOfSupply: stateOfSupply ?? this.stateOfSupply,
       items: items ?? this.items,
@@ -112,9 +132,14 @@ class SaleOrderFormState {
       description: description ?? this.description,
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
+      termsTitle: termsTitle ?? this.termsTitle,
+      termsText: termsText ?? this.termsText,
       roundOff: roundOff ?? this.roundOff,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isSaving: isSaving ?? this.isSaving,
+      isLoading: isLoading ?? this.isLoading,
+      godown: godown ?? this.godown,
+      phoneNo: phoneNo ?? this.phoneNo,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }

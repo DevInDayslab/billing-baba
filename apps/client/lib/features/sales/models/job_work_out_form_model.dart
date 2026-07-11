@@ -71,8 +71,9 @@ class JobWorkOutFormState {
     this.invoiceDate,
     this.deliveryDate,
     this.finishedGoodName = '',
+    this.finishedGoodItemId,
     this.finishedGoodQty = 1,
-    this.finishedGoodUnit = 'PCS',
+    this.finishedGoodUnit = 'NONE',
     this.rawMaterials = const [],
     this.additionalCosts = const [],
     this.description = '',
@@ -91,6 +92,7 @@ class JobWorkOutFormState {
   final DateTime? invoiceDate;
   final DateTime? deliveryDate;
   final String finishedGoodName;
+  final String? finishedGoodItemId;
   final double finishedGoodQty;
   final String finishedGoodUnit;
   final List<JobWorkOutRawMaterialItem> rawMaterials;
@@ -130,6 +132,7 @@ class JobWorkOutFormState {
     DateTime? invoiceDate,
     DateTime? deliveryDate,
     String? finishedGoodName,
+    String? finishedGoodItemId,
     double? finishedGoodQty,
     String? finishedGoodUnit,
     List<JobWorkOutRawMaterialItem>? rawMaterials,
@@ -151,6 +154,7 @@ class JobWorkOutFormState {
       invoiceDate: invoiceDate ?? this.invoiceDate,
       deliveryDate: deliveryDate ?? this.deliveryDate,
       finishedGoodName: finishedGoodName ?? this.finishedGoodName,
+      finishedGoodItemId: finishedGoodItemId ?? this.finishedGoodItemId,
       finishedGoodQty: finishedGoodQty ?? this.finishedGoodQty,
       finishedGoodUnit: finishedGoodUnit ?? this.finishedGoodUnit,
       rawMaterials: rawMaterials ?? this.rawMaterials,
@@ -176,6 +180,8 @@ class JobWorkOrderListItem {
     required this.deliveryDate,
     required this.status,
     required this.grandTotal,
+    this.closedAt,
+    this.convertedInvoiceNumber,
   });
 
   final String id;
@@ -185,6 +191,8 @@ class JobWorkOrderListItem {
   final DateTime? deliveryDate;
   final JobWorkOutStatus status;
   final double grandTotal;
+  final DateTime? closedAt;
+  final String? convertedInvoiceNumber;
 }
 
 int _rawMaterialCounter = 0;

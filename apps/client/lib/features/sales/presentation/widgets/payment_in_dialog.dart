@@ -5,6 +5,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/billing_name_pa
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/features/sales/providers/payment_in_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -38,7 +39,9 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
   final _datePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
   final _receivedController = TextEditingController();
   final _discountController = TextEditingController();
+  final _receiptNoController = TextEditingController();
   String? _savedPaymentId;
+  bool _showUpiBanner = true;
 
   static final _amountFormat = NumberFormat('#,##0.00', 'en_IN');
 
@@ -54,24 +57,8 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
   void dispose() {
     _receivedController.dispose();
     _discountController.dispose();
+    _receiptNoController.dispose();
     super.dispose();
-  }
-
-  String _formatTime(TimeOfDay? time) {
-    if (time == null) return 'Select time';
-    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '${hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')} $period';
-  }
-
-  Future<void> _pickTime(TimeOfDay? current) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: current ?? TimeOfDay.now(),
-    );
-    if (picked != null) {
-      ref.read(paymentInFormProvider.notifier).updateTime(picked);
-    }
   }
 
   Future<void> _handleSave({bool previewAfterSave = false}) async {
@@ -112,40 +99,6 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
     Navigator.of(context).pop();
   }
 
-  Future<void> _handlePrintPreview() async {
-    final notifier = ref.read(paymentInFormProvider.notifier);
-    final payment = notifier.buildPaymentModel();
-    var paymentId = _savedPaymentId;
-
-    if (paymentId == null) {
-      if (payment == null) {
-        VoucherPrintActions.showSaveBeforePrinting(context);
-        return;
-      }
-      final result = await notifier.savePayment();
-      if (!mounted) return;
-      if (result.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.error!)),
-        );
-        return;
-      }
-      paymentId = result.paymentId;
-      if (paymentId == null) return;
-      _savedPaymentId = paymentId;
-    }
-
-    final filename = payment != null
-        ? VoucherPrintActions.filenameFor(payment.receiptNo)
-        : null;
-    await VoucherPrintActions.previewPaymentIn(
-      context,
-      ref,
-      paymentId,
-      filename: filename,
-    );
-  }
-
   Future<void> _handleShare() async {
     final notifier = ref.read(paymentInFormProvider.notifier);
     final payment = notifier.buildPaymentModel();
@@ -184,6 +137,11 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
   Widget build(BuildContext context) {
     final form = ref.watch(paymentInFormProvider);
     final notifier = ref.read(paymentInFormProvider.notifier);
+    final totalAmount = form.receivedAmount + form.discount;
+
+    if (_receiptNoController.text != form.receiptNo) {
+      _receiptNoController.text = form.receiptNo;
+    }
 
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 900),
@@ -196,6 +154,7 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _DialogHeader(onClose: () => Navigator.of(context).pop()),
+            if (_showUpiBanner) _UpiBanner(onDismiss: () => setState(() => _showUpiBanner = false)),
             Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(_sectionGap),
@@ -305,11 +264,11 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                         children: [
                           _LabeledField(
                             label: 'Receipt No',
-                            child: Text(
-                              form.receiptNo,
-                              style: saleFieldTextStyle.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
+                            child: TextField(
+                              controller: _receiptNoController,
+                              style: saleFieldTextStyle,
+                              decoration: buildSaleFieldDecoration(compact: true),
+                              onChanged: notifier.updateReceiptNo,
                             ),
                           ),
                           const SizedBox(height: _sectionGap),
@@ -330,18 +289,13 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                           const SizedBox(height: _sectionGap),
                           _LabeledField(
                             label: 'Time',
-                            child: _PickerField(
-                              value: _formatTime(form.time),
-                              icon: Icons.access_time,
-                              onTap: () => _pickTime(form.time),
+                            child: SaleTimeDropdown(
+                              value: form.time,
+                              compact: true,
+                              onSelected: notifier.updateTime,
                             ),
                           ),
                           const SizedBox(height: _sectionGap * 2),
-                          _AmountRow(
-                            label: 'Balance Due',
-                            value: _amountFormat.format(form.balanceDue),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
                           _AmountRow(
                             label: 'Received',
                             child: SizedBox(
@@ -402,8 +356,9 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           _AmountRow(
-                            label: 'Remaining Balance',
-                            value: _amountFormat.format(form.remainingBalance),
+                            label: 'Total',
+                            value: _amountFormat.format(totalAmount),
+                            valueColor: AppColors.primary,
                             isBold: true,
                           ),
                         ],
@@ -419,40 +374,89 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: _handlePrintPreview,
-                    icon: const Icon(Icons.print_outlined, size: 16),
-                    label: const Text(
-                      'Print / Preview',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      side: const BorderSide(color: _cardBorder),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
                   ShareMenuButton(
                     onChannelSelected: (_) => _handleShare(),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   FilledButton(
-                    onPressed: _handleSave,
+                    onPressed: form.isSaving ? null : _handleSave,
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.lg,
                       ),
                     ),
-                    child: const Text('Save'),
+                    child: form.isSaving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Save'),
                   ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _UpiBanner extends StatelessWidget {
+  const _UpiBanner({required this.onDismiss});
+
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(_sectionGap, _sectionGap, _sectionGap, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE3F2FD),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFBBDEFB)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Accept UPI, debit cards, credit cards, and net banking payments '
+              'to boost revenue and reconcile incoming payments with invoices directly.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.blue.shade900,
+                height: 1.4,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          FilledButton(
+            onPressed: () {},
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text(
+              'Accept Payments Online',
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+          IconButton(
+            onPressed: onDismiss,
+            icon: const Icon(Icons.close, size: 16),
+            color: AppColors.textSecondary,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+          ),
+        ],
       ),
     );
   }
@@ -601,12 +605,14 @@ class _AmountRow extends StatelessWidget {
     this.value,
     this.child,
     this.isBold = false,
+    this.valueColor,
   });
 
   final String label;
   final String? value;
   final Widget? child;
   final bool isBold;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -615,12 +621,16 @@ class _AmountRow extends StatelessWidget {
       fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
       color: AppColors.textPrimary,
     );
+    final valueStyle = textStyle.copyWith(
+      color: valueColor ?? AppColors.textPrimary,
+      fontWeight: isBold ? FontWeight.w700 : textStyle.fontWeight,
+    );
 
     return Row(
       children: [
         Text(label, style: textStyle),
         const Spacer(),
-        if (child != null) child! else Text(value ?? '', style: textStyle),
+        if (child != null) child! else Text(value ?? '', style: valueStyle),
       ],
     );
   }

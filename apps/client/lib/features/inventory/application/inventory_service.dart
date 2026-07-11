@@ -633,7 +633,10 @@ class InventoryService {
     AddItemFormState form,
     List<InventoryUnit> units,
   ) async {
-    final baseUnit = _resolveUnit(form.baseUnitId, units);
+    final baseUnit = _resolveUnit(form.baseUnitId, units) ??
+        (form.itemType == ItemType.service
+            ? resolveDefaultServiceUnit(units)
+            : null);
     if (baseUnit == null) {
       throw const InventoryException('Please select a base unit.');
     }
@@ -661,7 +664,10 @@ class InventoryService {
     AddItemFormState form,
     List<InventoryUnit> units,
   ) async {
-    final baseUnit = _resolveUnit(form.baseUnitId, units);
+    final baseUnit = _resolveUnit(form.baseUnitId, units) ??
+        (form.itemType == ItemType.service
+            ? resolveDefaultServiceUnit(units)
+            : null);
     if (baseUnit == null) {
       throw const InventoryException('Please select a base unit.');
     }

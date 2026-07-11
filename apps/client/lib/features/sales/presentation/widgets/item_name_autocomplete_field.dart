@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
@@ -16,7 +17,17 @@ SaleItemOption saleItemOptionFromInventory(InventoryItem item) {
     mfgCost: item.purchasePrice ?? 0,
     stock: item.availableForSale ?? item.quantity ?? 0,
     unit: item.baseUnitShortName,
+    hsn: item.hsnCode,
+    itemCode: item.barcode,
+    sku: item.barcode,
+    barcode: item.barcode,
   );
+}
+
+String saleItemDefaultUnit(SaleItemOption item) {
+  final unit = item.unit?.trim();
+  if (unit == null || unit.isEmpty || unit == 'NONE') return 'PCS';
+  return unit;
 }
 
 /// Item name field with autocomplete overlay on focus.
@@ -25,12 +36,16 @@ class ItemNameAutocompleteField extends ConsumerStatefulWidget {
     required this.value,
     required this.onChanged,
     required this.onItemSelected,
+    this.onAfterItemSelected,
+    this.borderless = false,
     super.key,
   });
 
   final String value;
   final ValueChanged<String> onChanged;
   final ValueChanged<SaleItemOption> onItemSelected;
+  final VoidCallback? onAfterItemSelected;
+  final bool borderless;
 
   @override
   ConsumerState<ItemNameAutocompleteField> createState() =>
@@ -77,6 +92,22 @@ class ItemNameAutocompleteFieldState
 
   void closeMenu() => _removeOverlay();
 
+  Future<void> _openAddItemDialog() async {
+    _removeOverlay();
+    final created = await showAddItemDialog(context);
+    if (!mounted || created == null) return;
+
+    await ref.read(inventoryItemsProvider.notifier).refresh();
+    if (!mounted) return;
+
+    final catalogItem = saleItemOptionFromInventory(created);
+    _controller.text = catalogItem.name;
+    widget.onChanged(catalogItem.name);
+    widget.onItemSelected(catalogItem);
+    widget.onAfterItemSelected?.call();
+    _focusNode.unfocus();
+  }
+
   void _onFocusChange() {
     if (_focusNode.hasFocus) {
       _showOverlay();
@@ -95,11 +126,9 @@ class ItemNameAutocompleteFieldState
         .map(saleItemOptionFromInventory)
         .toList();
 
-    final query = _controller.text.trim().toLowerCase();
+    final query = _controller.text.trim();
     if (query.isEmpty) return options;
-    return options
-        .where((item) => item.name.toLowerCase().contains(query))
-        .toList();
+    return options.where((item) => item.matchesSearchQuery(query)).toList();
   }
 
   void _showOverlay() {
@@ -140,14 +169,7 @@ class ItemNameAutocompleteFieldState
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       InkWell(
-                        onTap: () {
-                          _removeOverlay();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Add Item coming soon'),
-                            ),
-                          );
-                        },
+                        onTap: _openAddItemDialog,
                         child: const Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: 12,
@@ -254,7 +276,8 @@ class ItemNameAutocompleteFieldState
                                   itemCount: items.length,
                                   itemBuilder: (context, index) {
                                     final item = items[index];
-                                    final isSelected = item.name == widget.value;
+                                    final isSelected =
+                                        item.name == widget.value;
                                     return InkWell(
                                       onTap: () {
                                         _controller.text = item.name;
@@ -315,7 +338,9 @@ class ItemNameAutocompleteFieldState
                                             ),
                                             Expanded(
                                               child: Text(
-                                                _priceFormat.format(item.mfgCost),
+                                                _priceFormat.format(
+                                                  item.mfgCost,
+                                                ),
                                                 textAlign: TextAlign.right,
                                                 style: const TextStyle(
                                                   fontSize: 12,
@@ -360,7 +385,11 @@ class ItemNameAutocompleteFieldState
         controller: _controller,
         focusNode: _focusNode,
         style: saleFieldTextStyle.copyWith(fontSize: 13),
-        decoration: buildSaleFieldDecoration(hint: 'Item Name', compact: true),
+        decoration: buildSaleFieldDecoration(
+          hint: 'Item Name',
+          compact: true,
+          borderless: widget.borderless,
+        ),
         onChanged: (value) {
           widget.onChanged(value);
           _overlayEntry?.markNeedsBuild();

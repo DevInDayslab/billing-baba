@@ -3,6 +3,8 @@ import 'package:billing_baba/features/sales/application/job_work_service.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/job_work_out_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/providers/job_work_orders_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -14,7 +16,11 @@ JobWorkOutFormState _initialJobWorkOutFormState() {
   return JobWorkOutFormState(
     invoiceDate: today,
     deliveryDate: today,
-    rawMaterials: [JobWorkOutRawMaterialItem.empty(id: nextRawMaterialId())],
+    finishedGoodUnit: 'NONE',
+    rawMaterials: [
+      JobWorkOutRawMaterialItem.empty(id: nextRawMaterialId()),
+      JobWorkOutRawMaterialItem.empty(id: nextRawMaterialId()),
+    ],
   );
 }
 
@@ -35,6 +41,13 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
 
   void resetForm() {
     state = _initialJobWorkOutFormState();
+  }
+
+  Future<void> prepareNewForm() async {
+    resetForm();
+    final orders = await ref.read(jobWorkOrdersListProvider.future);
+    final nextJobId = (orders.totalItems + 1).toString();
+    state = state.copyWith(jobId: nextJobId);
   }
 
   Future<void> loadOrder(String orderId) async {
@@ -79,7 +92,31 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
   }
 
   void updateFinishedGoodName(String value) {
-    state = state.copyWith(finishedGoodName: value, clearSaveError: true);
+    state = state.copyWith(
+      finishedGoodName: value,
+      clearSaveError: true,
+    );
+  }
+
+  void selectFinishedGood(SaleItemOption item) {
+    state = state.copyWith(
+      finishedGoodItemId: item.id,
+      finishedGoodName: item.name,
+      finishedGoodUnit: saleItemDefaultUnit(item),
+      clearSaveError: true,
+    );
+  }
+
+  void selectRawMaterialItem(int index, SaleItemOption item) {
+    if (index < 0 || index >= state.rawMaterials.length) return;
+    final materials = [...state.rawMaterials];
+    materials[index] = materials[index].copyWith(
+      itemId: item.id,
+      itemName: item.name,
+      unit: saleItemDefaultUnit(item),
+      purchasePrice: item.purchasePrice,
+    );
+    state = state.copyWith(rawMaterials: materials, clearSaveError: true);
   }
 
   void updateFinishedGoodQty(double value) {
@@ -169,7 +206,10 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
     state = state.copyWith(
       additionalCosts: [
         ...state.additionalCosts,
-        JobWorkOutAdditionalCost(id: nextAdditionalCostId()),
+        JobWorkOutAdditionalCost(
+          id: nextAdditionalCostId(),
+          label: SaleDropdownOptions.jobWorkAdditionalCostCharges.first,
+        ),
       ],
     );
   }

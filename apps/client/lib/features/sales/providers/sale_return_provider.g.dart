@@ -9,6 +9,55 @@ part of 'sale_return_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(SaleReturns)
+final saleReturnsProvider = SaleReturnsProvider._();
+
+final class SaleReturnsProvider
+    extends $AsyncNotifierProvider<SaleReturns, PaginatedSaleInvoices> {
+  SaleReturnsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'saleReturnsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$saleReturnsHash();
+
+  @$internal
+  @override
+  SaleReturns create() => SaleReturns();
+}
+
+String _$saleReturnsHash() => r'819a0fc62d97be4cb2e5bd6dd9675103ce0cd00c';
+
+abstract class _$SaleReturns extends $AsyncNotifier<PaginatedSaleInvoices> {
+  FutureOr<PaginatedSaleInvoices> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<PaginatedSaleInvoices>, PaginatedSaleInvoices>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<PaginatedSaleInvoices>,
+                PaginatedSaleInvoices
+              >,
+              AsyncValue<PaginatedSaleInvoices>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(SaleReturnFilters)
 final saleReturnFiltersProvider = SaleReturnFiltersProvider._();
 
@@ -41,7 +90,7 @@ final class SaleReturnFiltersProvider
   }
 }
 
-String _$saleReturnFiltersHash() => r'6b9cb82d2dbfd3469fee50afe97bd2694e5c6ffd';
+String _$saleReturnFiltersHash() => r'971e3f5529109a5a0d2d9eb80ff2f16af567aeed';
 
 abstract class _$SaleReturnFilters extends $Notifier<SaleReturnFiltersState> {
   SaleReturnFiltersState build();
@@ -68,11 +117,11 @@ final paginatedSaleReturnsProvider = PaginatedSaleReturnsProvider._();
 final class PaginatedSaleReturnsProvider
     extends
         $FunctionalProvider<
-          PaginatedSaleReturns,
-          PaginatedSaleReturns,
-          PaginatedSaleReturns
+          PaginatedSaleInvoices,
+          PaginatedSaleInvoices,
+          PaginatedSaleInvoices
         >
-    with $Provider<PaginatedSaleReturns> {
+    with $Provider<PaginatedSaleInvoices> {
   PaginatedSaleReturnsProvider._()
     : super(
         from: null,
@@ -89,26 +138,73 @@ final class PaginatedSaleReturnsProvider
 
   @$internal
   @override
-  $ProviderElement<PaginatedSaleReturns> $createElement(
+  $ProviderElement<PaginatedSaleInvoices> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  PaginatedSaleReturns create(Ref ref) {
+  PaginatedSaleInvoices create(Ref ref) {
     return paginatedSaleReturns(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(PaginatedSaleReturns value) {
+  Override overrideWithValue(PaginatedSaleInvoices value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<PaginatedSaleReturns>(value),
+      providerOverride: $SyncValueProvider<PaginatedSaleInvoices>(value),
     );
   }
 }
 
 String _$paginatedSaleReturnsHash() =>
-    r'964a319d436df5e89f36d1e151fbdb0a74065ce5';
+    r'012402879865f2bd5caf6614e3c1f67e3cb65cbf';
+
+@ProviderFor(saleReturnSummary)
+final saleReturnSummaryProvider = SaleReturnSummaryProvider._();
+
+final class SaleReturnSummaryProvider
+    extends
+        $FunctionalProvider<
+          SaleReturnSummaryData,
+          SaleReturnSummaryData,
+          SaleReturnSummaryData
+        >
+    with $Provider<SaleReturnSummaryData> {
+  SaleReturnSummaryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'saleReturnSummaryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$saleReturnSummaryHash();
+
+  @$internal
+  @override
+  $ProviderElement<SaleReturnSummaryData> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SaleReturnSummaryData create(Ref ref) {
+    return saleReturnSummary(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SaleReturnSummaryData value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SaleReturnSummaryData>(value),
+    );
+  }
+}
+
+String _$saleReturnSummaryHash() => r'56bca3a4d79e78c4bf19fa8962de787c49c50fc1';
 
 @ProviderFor(saleReturnRefresh)
 final saleReturnRefreshProvider = SaleReturnRefreshProvider._();
@@ -141,7 +237,7 @@ final class SaleReturnRefreshProvider
   }
 }
 
-String _$saleReturnRefreshHash() => r'b578e965464e0c9ecaedad67062105933a588f0e';
+String _$saleReturnRefreshHash() => r'471fe4190fb970cf072b7bcbd1392a4a01015540';
 
 @ProviderFor(deleteSaleReturnDraft)
 final deleteSaleReturnDraftProvider = DeleteSaleReturnDraftFamily._();
@@ -193,7 +289,7 @@ final class DeleteSaleReturnDraftProvider
 }
 
 String _$deleteSaleReturnDraftHash() =>
-    r'cf7b10dd6225bc5131a7e3511b1feea4cd4c7989';
+    r'2d7f9647a02e61abefd32b63ef8576538e81602b';
 
 final class DeleteSaleReturnDraftFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<String?>, String> {
@@ -263,7 +359,7 @@ final class FinalizeSaleReturnProvider
 }
 
 String _$finalizeSaleReturnHash() =>
-    r'7fca07442084d43e15cf241376d5d992d638d7ab';
+    r'ec9a5b9ed85b9e4b8851b71d35c13c1e3d657234';
 
 final class FinalizeSaleReturnFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<String?>, String> {

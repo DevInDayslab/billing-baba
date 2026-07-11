@@ -11,7 +11,6 @@ import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 class PartyListPanel extends ConsumerStatefulWidget {
@@ -165,9 +164,27 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
                   );
                 }
 
-                return _buildList(
-                  parties: parties,
-                  selectedId: selectedId,
+                return Column(
+                  children: [
+                    Expanded(
+                      child: _buildList(
+                        parties: parties,
+                        selectedId: selectedId,
+                      ),
+                    ),
+                    if (parties.length > 20)
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        child: Text(
+                          'Showing ${parties.length} parties',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                  ],
                 );
               },
             ),
@@ -276,13 +293,15 @@ class _PartyListHeader extends StatelessWidget {
             child: Text('PARTY NAME', style: ListPanelStyles.listHeaderStyle),
           ),
           const SizedBox(
-            width: 96,
+            width: 88,
             child: Text(
-              'AMOUNT',
+              'OUTSTANDING',
               textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
               style: ListPanelStyles.listHeaderStyle,
             ),
           ),
+          const SizedBox(width: AppSpacing.xs),
           PopupMenuButton<PartyListFilter>(
             tooltip: 'Filter parties',
             icon: Icon(
@@ -326,12 +345,6 @@ class _PartyListTile extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  static final _currencyFormat = NumberFormat.currency(
-    locale: 'en_IN',
-    symbol: '₹',
-    decimalDigits: 0,
-  );
-
   @override
   Widget build(BuildContext context) {
     final amountColor = party.hasReceivable
@@ -339,9 +352,7 @@ class _PartyListTile extends StatelessWidget {
         : party.hasPayable
         ? listPanelNegativeColor
         : AppColors.textSecondary;
-    final amountText = party.balance == 0
-        ? '—'
-        : _currencyFormat.format(party.balance.abs());
+    final amountText = PartyModel.displayOutstanding(party.balance);
 
     return Material(
       color: isSelected ? listPanelSelectedRowColor : Colors.transparent,
@@ -370,15 +381,28 @@ class _PartyListTile extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        party.name,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: party.isActive
-                              ? AppColors.textPrimary
-                              : AppColors.textSecondary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            party.name,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: party.isActive
+                                  ? AppColors.textPrimary
+                                  : AppColors.textSecondary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (party.partyType != 'customer')
+                            Text(
+                              party.partyTypeLabel,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],

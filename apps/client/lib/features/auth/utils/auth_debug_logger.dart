@@ -51,6 +51,10 @@ abstract final class AuthDebugLogger {
     log('JWT issued: ${_mask(accessToken, visibleEnd: 8)}');
   }
 
+  static String maskToken(String token) {
+    return _mask(token, visibleEnd: 8);
+  }
+
   static String maskPhone(String phone) {
     final digits = phone.replaceAll(RegExp(r'\D'), '');
     if (digits.length < 4) return '****';

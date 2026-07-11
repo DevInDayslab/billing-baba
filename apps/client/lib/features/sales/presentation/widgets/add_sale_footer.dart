@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
@@ -10,13 +11,32 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-const _linkColor = Color(0xFF1565C0);
-const _mutedLinkColor = Color(0xFF616161);
+const _cardBorder = Color(0xFFE0E0E0);
 
-class AddSaleFooter extends ConsumerWidget {
-  const AddSaleFooter({this.invoiceId, super.key});
+class AddSaleFooter extends ConsumerStatefulWidget {
+  const AddSaleFooter({this.sessionKey = 'default', super.key});
 
-  final String? invoiceId;
+  final String sessionKey;
+
+  @override
+  ConsumerState<AddSaleFooter> createState() => _AddSaleFooterState();
+}
+
+class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
+  var _showDescription = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final form = ref.read(
+        addSaleFormProvider(sessionKey: widget.sessionKey),
+      );
+      if (form.description.isNotEmpty && mounted) {
+        setState(() => _showDescription = true);
+      }
+    });
+  }
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -25,14 +45,18 @@ class AddSaleFooter extends ConsumerWidget {
   );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addSaleFormProvider(invoiceId: invoiceId));
-    final notifier = ref.read(
-      addSaleFormProvider(invoiceId: invoiceId).notifier,
+  Widget build(BuildContext context) {
+    final form = ref.watch(
+      addSaleFormProvider(sessionKey: widget.sessionKey),
     );
-    final totalTax = ref.watch(addSaleTotalTaxProvider(invoiceId: invoiceId));
+    final notifier = ref.read(
+      addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
+    );
+    final totalTax = ref.watch(
+      addSaleTotalTaxProvider(sessionKey: widget.sessionKey),
+    );
     final grandTotal = ref.watch(
-      addSaleGrandTotalProvider(invoiceId: invoiceId),
+      addSaleGrandTotalProvider(sessionKey: widget.sessionKey),
     );
     final isCredit = form.saleType == SaleType.credit;
 
@@ -40,70 +64,122 @@ class AddSaleFooter extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
+          flex: 2,
+          child: _TermsSection(
+            title: form.termsTitle,
+            notes: form.termsText,
+            onTitleChanged: notifier.updateTermsTitle,
+            onNotesChanged: notifier.updateTermsText,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 2,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              _AttachmentActionButton(
+                icon: Icons.description_outlined,
+                label: 'ADD DESCRIPTION',
+                onPressed: () => setState(() => _showDescription = true),
+              ),
+              if (_showDescription) ...[
+                const SizedBox(height: 8),
+                _DescriptionField(
+                  initialValue: form.description,
+                  onChanged: notifier.updateDescription,
+                ),
+              ],
+              const SizedBox(height: 8),
               Row(
                 children: [
-                  SizedBox(
-                    width: 120,
-                    child: SaleGenericSelectDropdown(
-                      value: form.paymentType,
-                      options: SaleDropdownOptions.paymentTypes,
-                      highlight: SaleDropdownHighlight.blue,
-                      compact: true,
-                      onSelected: notifier.updatePaymentType,
+                  Expanded(
+                    child: _AttachmentActionButton(
+                      icon: Icons.camera_alt_outlined,
+                      label: 'ADD IMAGE',
+                      onPressed: () => _promptAddImage(
+                        context,
+                        notifier,
+                        form.attachedImages.length,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  SizedBox(
-                    width: 100,
-                    child: _AmountField(
-                      value: form.paymentAmount,
-                      onChanged: notifier.updatePaymentAmount,
+                  Expanded(
+                    child: _AttachmentActionButton(
+                      icon: Icons.attach_file_outlined,
+                      label: 'ADD DOCUMENT',
+                      filled: true,
+                      onPressed: () => _promptAddDocument(
+                        context,
+                        notifier,
+                        form.attachedDocuments.length,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              _ActionLink(
-                label: '+ Add Payment type',
-                onTap: notifier.addPaymentType,
-                isPrimary: true,
-              ),
-              const SizedBox(height: 12),
-              SaleFormAttachmentsSection(
-                description: form.description,
-                images: form.attachedImages,
-                documents: form.attachedDocuments,
-                onDescriptionChanged: notifier.updateDescription,
-                onAddImage: () => _promptAddImage(
-                  context,
-                  notifier,
-                  form.attachedImages.length,
+              if (form.attachedImages.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _AttachmentChips(
+                  attachments: form.attachedImages,
+                  onRemove: notifier.removeImage,
+                  onRename: notifier.updateImage,
                 ),
-                onRemoveImage: notifier.removeImage,
-                onUpdateImage: notifier.updateImage,
-                onAddDocument: () => _promptAddDocument(
-                  context,
-                  notifier,
-                  form.attachedDocuments.length,
+              ],
+              if (form.attachedDocuments.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _AttachmentChips(
+                  attachments: form.attachedDocuments,
+                  onRemove: notifier.removeDocument,
+                  onRename: notifier.updateDocument,
                 ),
-                onRemoveDocument: notifier.removeDocument,
-                onUpdateDocument: notifier.updateDocument,
-              ),
+              ],
             ],
           ),
         ),
         const SizedBox(width: 16),
         SizedBox(
-          width: 280,
+          width: 260,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _SummaryRow(
-                label: 'Tax',
-                value: _currencyFormat.format(totalTax),
+              Row(
+                children: [
+                  const Text(
+                    'Tax',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 72,
+                    child: SaleGenericSelectDropdown(
+                      value: totalTax > 0
+                          ? taxLabelForPercent(
+                              form.items.isNotEmpty
+                                  ? form.items.first.taxPercent
+                                  : 0,
+                            )
+                          : 'NONE',
+                      options: SaleDropdownOptions.taxSlabs,
+                      highlight: SaleDropdownHighlight.red,
+                      compact: true,
+                      onSelected: (_) {},
+                    ),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    width: 72,
+                    child: _AmountField(
+                      value: totalTax,
+                      readOnly: true,
+                      onChanged: (_) {},
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               Row(
@@ -115,7 +191,13 @@ class AddSaleFooter extends ConsumerWidget {
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     visualDensity: VisualDensity.compact,
                   ),
-                  const Text('Round Off', style: TextStyle(fontSize: 13)),
+                  const Text(
+                    'Round Off',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                   const Spacer(),
                   SizedBox(
                     width: 72,
@@ -128,182 +210,79 @@ class AddSaleFooter extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Text(
-                    'Total',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: _cardBorder),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Total',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    _currencyFormat.format(grandTotal),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                    const Spacer(),
+                    SizedBox(
+                      width: 100,
+                      child: _AmountField(
+                        value: grandTotal,
+                        readOnly: true,
+                        onChanged: (_) {},
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               if (isCredit) ...[
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Loyalty Point Used',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 56,
-                      child: _AmountField(
-                        value: form.loyaltyPointsUsed,
-                        onChanged: (value) {
-                          if (!form.loyaltyPointsEnabled) {
-                            notifier.toggleLoyaltyPoints(enabled: true);
-                          }
-                          notifier.updateLoyaltyPointsUsed(value);
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '= ${_currencyFormat.format(form.loyaltyPointsValue)}',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Text(
-                      'Remaining Amount',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      _currencyFormat.format(form.remainingAmount),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: form.receivedEnabled,
-                      onChanged: (value) =>
-                          notifier.toggleReceived(enabled: value ?? false),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    const Text('Received', style: TextStyle(fontSize: 13)),
-                    const Spacer(),
-                    if (form.receivedEnabled)
-                      SizedBox(
-                        width: 100,
-                        child: _AmountField(
-                          value: form.receivedAmount,
-                          onChanged: notifier.updateReceivedAmount,
-                        ),
-                      )
-                    else
-                      Text(
-                        _currencyFormat.format(0),
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Text(
-                      'Balance',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      _currencyFormat.format(form.balanceAmount),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Text(
-                      'Point Awarded',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${form.pointsAwarded}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                _CreditSummarySection(
+                  form: form,
+                  notifier: notifier,
+                  currencyFormat: _currencyFormat,
                 ),
               ] else ...[
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    const Text(
-                      'Received',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                    SizedBox(
+                      width: 120,
+                      child: SaleGenericSelectDropdown(
+                        value: form.paymentType,
+                        options: SaleDropdownOptions.paymentTypes,
+                        highlight: SaleDropdownHighlight.blue,
+                        compact: true,
+                        onSelected: notifier.updatePaymentType,
                       ),
                     ),
-                    const Spacer(),
-                    Text(
-                      _currencyFormat.format(form.displayReceivedAmount),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _AmountField(
+                        value: form.paymentAmount,
+                        onChanged: notifier.updatePaymentAmount,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Text(
-                      'Balance',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                const SizedBox(height: 4),
+                InkWell(
+                  onTap: notifier.addPaymentType,
+                  borderRadius: BorderRadius.circular(4),
+                  child: const Text(
+                    '+ Add Payment type',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
                     ),
-                    const Spacer(),
-                    Text(
-                      _currencyFormat.format(form.balanceAmount),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ],
@@ -340,19 +319,350 @@ class AddSaleFooter extends ConsumerWidget {
   }
 }
 
-class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({required this.label, required this.value});
+class _TermsSection extends StatelessWidget {
+  const _TermsSection({
+    required this.title,
+    required this.notes,
+    required this.onTitleChanged,
+    required this.onNotesChanged,
+  });
 
-  final String label;
-  final String value;
+  final String title;
+  final String notes;
+  final ValueChanged<String> onTitleChanged;
+  final ValueChanged<String> onNotesChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: _cardBorder),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Terms & Conditions',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SaleGenericSelectDropdown(
+              value: title,
+              options: SaleDropdownOptions.termsTitles,
+              hintText: 'Title',
+              onSelected: onTitleChanged,
+            ),
+            const SizedBox(height: 8),
+            _NotesField(
+              initialValue: notes,
+              onChanged: onNotesChanged,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NotesField extends StatefulWidget {
+  const _NotesField({
+    required this.initialValue,
+    required this.onChanged,
+  });
+
+  final String initialValue;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_NotesField> createState() => _NotesFieldState();
+}
+
+class _NotesFieldState extends State<_NotesField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void didUpdateWidget(_NotesField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue != oldWidget.initialValue &&
+        widget.initialValue != _controller.text) {
+      _controller.text = widget.initialValue;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      style: saleFieldTextStyle.copyWith(fontSize: 13),
+      decoration: buildSaleFieldDecoration(
+        hint: 'Thanks for doing business with us!',
+      ),
+      minLines: 3,
+      maxLines: 4,
+      onChanged: widget.onChanged,
+    );
+  }
+}
+
+class _AttachmentActionButton extends StatelessWidget {
+  const _AttachmentActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.filled = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 16),
+        label: Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          backgroundColor: filled ? const Color(0xFFF5F8FA) : null,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          side: const BorderSide(color: _cardBorder),
+          alignment: Alignment.center,
+        ),
+      ),
+    );
+  }
+}
+
+class _DescriptionField extends StatefulWidget {
+  const _DescriptionField({
+    required this.initialValue,
+    required this.onChanged,
+  });
+
+  final String initialValue;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_DescriptionField> createState() => _DescriptionFieldState();
+}
+
+class _DescriptionFieldState extends State<_DescriptionField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void didUpdateWidget(_DescriptionField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue != oldWidget.initialValue &&
+        widget.initialValue != _controller.text) {
+      _controller.text = widget.initialValue;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      style: saleFieldTextStyle.copyWith(fontSize: 13),
+      decoration: buildSaleFieldDecoration(
+        hint: 'Write your description here',
+      ),
+      minLines: 3,
+      maxLines: 4,
+      onChanged: widget.onChanged,
+    );
+  }
+}
+
+class _AttachmentChips extends StatelessWidget {
+  const _AttachmentChips({
+    required this.attachments,
+    required this.onRemove,
+    required this.onRename,
+  });
+
+  final List<SaleFormAttachment> attachments;
+  final ValueChanged<String> onRemove;
+  final void Function(String id, String name) onRename;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13)),
-        const Spacer(),
-        Text(value, style: const TextStyle(fontSize: 13)),
+        for (final attachment in attachments)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Material(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        attachment.displayName,
+                        style: const TextStyle(fontSize: 12),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => onRemove(attachment.id),
+                      child: const Icon(
+                        Icons.close,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _CreditSummarySection extends StatelessWidget {
+  const _CreditSummarySection({
+    required this.form,
+    required this.notifier,
+    required this.currencyFormat,
+  });
+
+  final AddSaleFormState form;
+  final AddSaleForm notifier;
+  final NumberFormat currencyFormat;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Loyalty Point Used',
+                style: TextStyle(fontSize: 13),
+              ),
+            ),
+            SizedBox(
+              width: 56,
+              child: _AmountField(
+                value: form.loyaltyPointsUsed,
+                onChanged: (value) {
+                  if (!form.loyaltyPointsEnabled) {
+                    notifier.toggleLoyaltyPoints(enabled: true);
+                  }
+                  notifier.updateLoyaltyPointsUsed(value);
+                },
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '= ${currencyFormat.format(form.loyaltyPointsValue)}',
+              style: const TextStyle(fontSize: 13),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Text(
+              'Remaining Amount',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+            const Spacer(),
+            Text(
+              currencyFormat.format(form.remainingAmount),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Checkbox(
+              value: form.receivedEnabled,
+              onChanged: (value) =>
+                  notifier.toggleReceived(enabled: value ?? false),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+            const Text('Received', style: TextStyle(fontSize: 13)),
+            const Spacer(),
+            if (form.receivedEnabled)
+              SizedBox(
+                width: 100,
+                child: _AmountField(
+                  value: form.receivedAmount,
+                  onChanged: notifier.updateReceivedAmount,
+                ),
+              )
+            else
+              Text(
+                currencyFormat.format(0),
+                style: const TextStyle(fontSize: 13),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Text(
+              'Balance',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+            const Spacer(),
+            Text(
+              currencyFormat.format(form.balanceAmount),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -411,35 +721,6 @@ class _AmountFieldState extends State<_AmountField> {
         FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
       ],
       onChanged: (text) => widget.onChanged(double.tryParse(text) ?? 0),
-    );
-  }
-}
-
-class _ActionLink extends StatelessWidget {
-  const _ActionLink({
-    required this.label,
-    required this.onTap,
-    this.isPrimary = false,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-  final bool isPrimary;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isPrimary ? _linkColor : _mutedLinkColor;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(4),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 13,
-          color: color,
-          fontWeight: isPrimary ? FontWeight.w500 : FontWeight.w400,
-        ),
-      ),
     );
   }
 }

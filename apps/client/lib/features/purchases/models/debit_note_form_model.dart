@@ -63,7 +63,8 @@ class DebitNoteFormState {
     return roundOff ? grand.roundToDouble() : grand;
   }
 
-  bool get partyHasError => showValidationErrors && party.trim().isEmpty;
+  bool get partyHasError =>
+      showValidationErrors && (partyId == null || partyId!.isEmpty);
 
   bool get hasValidLineItems =>
       items.any((item) => item.itemName.trim().isNotEmpty);
@@ -71,8 +72,7 @@ class DebitNoteFormState {
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
   bool get isValid =>
-      ((partyId != null && partyId!.isNotEmpty) || party.trim().isNotEmpty) &&
-      hasValidLineItems;
+      (partyId != null && partyId!.isNotEmpty) && hasValidLineItems;
 
   DebitNoteFormState copyWith({
     String? documentId,

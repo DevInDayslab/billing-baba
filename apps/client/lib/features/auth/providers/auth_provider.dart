@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
@@ -9,6 +10,7 @@ import 'package:billing_baba/features/auth/models/otp_phase.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
 import 'package:billing_baba/features/auth/services/auth_service.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
+import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:billing_baba/features/auth/utils/auth_flow_logger.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -311,28 +313,50 @@ class Auth extends _$Auth {
   }
 
   String _formatBackendLoginFailureMessage(String specificMessage) {
-    return '$specificMessage\n\nYour OTP has already been verified.\n\nPlease retry when the server becomes available.';
+    if (state.msg91AccessToken != null && state.msg91AccessToken!.isNotEmpty) {
+      return '$specificMessage\n\nYour OTP is already verified — tap Retry to complete sign-in.';
+    }
+    return specificMessage;
+  }
+
+  String _debugErrorSuffix(Object error) {
+    if (!AppConfig.authDebugLogging) return '';
+    return '\n\n[debug] $error';
   }
 
   Future<void> _attemptBackendLogin(int generation) async {
     if (generation != _verifyGeneration || state.backendLoginCompleted) {
+      AuthDebugLogger.log(
+        '_attemptBackendLogin skipped: generation=$generation '
+        'current=$_verifyGeneration completed=${state.backendLoginCompleted}',
+      );
       return;
     }
+
+    AuthDebugLogger.log(
+      '_attemptBackendLogin entered phone=${AuthDebugLogger.maskPhone(state.phone)} '
+      'apiBaseUrl=${AppConfig.apiBaseUrl}',
+    );
 
     _setOtpPhase(OtpPhase.backendLogin);
     state = state.copyWith(clearError: true, clearResendTimer: true);
 
     final token = state.msg91AccessToken;
     if (token == null || token.isEmpty) {
+      AuthDebugLogger.log('_attemptBackendLogin aborted: missing MSG91 token');
       _onBackendLoginFailed(generation, 'Something went wrong.');
       return;
     }
 
     try {
+      AuthDebugLogger.log('_attemptBackendLogin: running health check');
       final healthy = await ref.read(authRepositoryProvider).checkHealth();
       if (generation != _verifyGeneration) return;
 
       if (!healthy) {
+        AuthDebugLogger.log(
+          '_attemptBackendLogin aborted: health check failed — login POST not sent',
+        );
         _onBackendLoginFailed(
           generation,
           'Billing Baba server is currently unavailable.',
@@ -340,6 +364,7 @@ class Auth extends _$Auth {
         return;
       }
 
+      AuthDebugLogger.log('_attemptBackendLogin: calling loginWithMsg91Token');
       final service = await _service();
       final session = await service.loginWithMsg91Token(
         msg91AccessToken: token,
@@ -348,17 +373,32 @@ class Auth extends _$Auth {
 
       if (generation != _verifyGeneration) return;
 
+      AuthDebugLogger.log('_attemptBackendLogin: login succeeded');
       _completeOtpLogin(session);
-    } on DioException catch (e) {
+    } on DioException catch (e, st) {
       if (generation != _verifyGeneration || state.backendLoginCompleted) {
         return;
       }
-      _onBackendLoginFailed(generation, _backendLoginErrorMessage(e));
-    } on Object catch (e) {
+      AuthDebugLogger.log('_attemptBackendLogin DioException: $e');
+      if (AppConfig.authDebugLogging) {
+        debugPrint('[AUTH] _attemptBackendLogin stackTrace:\n$st');
+      }
+      _onBackendLoginFailed(
+        generation,
+        '${_backendLoginErrorMessage(e)}${_debugErrorSuffix(e)}',
+      );
+    } on Object catch (e, st) {
       if (generation != _verifyGeneration || state.backendLoginCompleted) {
         return;
       }
-      _onBackendLoginFailed(generation, _backendLoginErrorMessage(e));
+      AuthDebugLogger.log('_attemptBackendLogin exception: $e');
+      if (AppConfig.authDebugLogging) {
+        debugPrint('[AUTH] _attemptBackendLogin stackTrace:\n$st');
+      }
+      _onBackendLoginFailed(
+        generation,
+        '${_backendLoginErrorMessage(e)}${_debugErrorSuffix(e)}',
+      );
     } finally {
       if (!state.backendLoginCompleted &&
           state.otpPhase != OtpPhase.backendLogin) {
@@ -414,6 +454,10 @@ class Auth extends _$Auth {
   Future<void> sendOtp(String phone) async {
     if (_sendInFlight || !state.canSendOtp) return;
 
+    AuthDebugLogger.log(
+      'sendOtp: login button pressed phone=${AuthDebugLogger.maskPhone(phone)}',
+    );
+
     _sendInFlight = true;
     _setOtpPhase(OtpPhase.sendingOtp);
     state = state.copyWith(
@@ -452,8 +496,17 @@ class Auth extends _$Auth {
 
   Future<void> verifyOtp(String otp) async {
     if (_verifyInFlight || state.backendLoginCompleted || !state.canVerifyOtp) {
+      AuthDebugLogger.log(
+        'verifyOtp skipped: inFlight=$_verifyInFlight '
+        'completed=${state.backendLoginCompleted} canVerify=${state.canVerifyOtp}',
+      );
       return;
     }
+
+    AuthDebugLogger.log(
+      'verifyOtp: OTP collected length=${otp.length} '
+      'phone=${AuthDebugLogger.maskPhone(state.phone)}',
+    );
 
     final reqId = state.reqId;
     if (reqId.isEmpty) {
@@ -469,6 +522,7 @@ class Auth extends _$Auth {
     state = state.copyWith(clearError: true);
 
     try {
+      AuthDebugLogger.log('verifyOtp: calling MSG91 SDK');
       final msg91Token = await _otp.verifyOtp(reqId: reqId, otp: otp);
 
       if (generation != _verifyGeneration ||
@@ -478,13 +532,26 @@ class Auth extends _$Auth {
       }
 
       if (_otp.isMockMode && msg91Token == OtpService.mockAccessToken) {
+        AuthDebugLogger.log(
+          'verifyOtp: mock mode — completing local login without backend POST',
+        );
         await _completeMockOtpLogin();
         return;
       }
 
+      AuthDebugLogger.log(
+        'verifyOtp: MSG91 token received '
+        '${AuthDebugLogger.maskToken(msg91Token)}',
+      );
       state = state.copyWith(msg91AccessToken: msg91Token);
       await _attemptBackendLogin(generation);
-    } on OtpException catch (e) {
+    } on OtpException catch (e, st) {
+      AuthDebugLogger.log(
+        'verifyOtp OtpException: ${e.message} code=${e.code}',
+      );
+      if (AppConfig.authDebugLogging) {
+        debugPrint('[AUTH] verifyOtp stackTrace:\n$st');
+      }
       if (state.backendLoginCompleted || generation != _verifyGeneration) {
         return;
       }
@@ -501,14 +568,20 @@ class Auth extends _$Auth {
       state = state.copyWith(
         error: e.isNetwork
             ? 'Please check your internet connection.'
-            : e.message,
+            : '${e.message}${_debugErrorSuffix(e)}',
       );
-    } on Object catch (e) {
+    } on Object catch (e, st) {
+      AuthDebugLogger.log('verifyOtp exception: $e');
+      if (AppConfig.authDebugLogging) {
+        debugPrint('[AUTH] verifyOtp stackTrace:\n$st');
+      }
       if (state.backendLoginCompleted || generation != _verifyGeneration) {
         return;
       }
       _setOtpPhase(OtpPhase.otpSent);
-      state = state.copyWith(error: _messageFromError(e));
+      state = state.copyWith(
+        error: '${_messageFromError(e)}${_debugErrorSuffix(e)}',
+      );
     } finally {
       if (!state.backendLoginCompleted &&
           state.otpPhase != OtpPhase.backendLogin) {
@@ -533,23 +606,37 @@ class Auth extends _$Auth {
     if (_devLoginInFlight || state.backendLoginCompleted) return;
 
     _devLoginInFlight = true;
-    debugPrint('[DEV_LOGIN] Request started');
+    AuthDebugLogger.log(
+      'devLogin: button pressed apiBaseUrl=${AppConfig.apiBaseUrl}',
+    );
     state = state.copyWith(clearError: true);
     _setOtpPhase(OtpPhase.backendLogin);
 
     try {
       final service = await _service();
       final session = await service.devLogin();
-      debugPrint('[DEV_LOGIN] Login successful');
+      AuthDebugLogger.log('devLogin: login successful');
       _completeOtpLogin(session);
-    } on DioException catch (e) {
-      debugPrint('[DEV_LOGIN] Failed: ${e.response?.statusCode ?? 'network'}');
+    } on DioException catch (e, st) {
+      AuthDebugLogger.log(
+        'devLogin failed: ${e.type} status=${e.response?.statusCode}',
+      );
+      if (AppConfig.authDebugLogging) {
+        debugPrint('[AUTH] devLogin stackTrace:\n$st');
+      }
       _setOtpPhase(OtpPhase.idle);
-      state = state.copyWith(error: _devLoginErrorMessage(e));
-    } on Object catch (e) {
-      debugPrint('[DEV_LOGIN] Failed: unknown');
+      state = state.copyWith(
+        error: '${_devLoginErrorMessage(e)}${_debugErrorSuffix(e)}',
+      );
+    } on Object catch (e, st) {
+      AuthDebugLogger.log('devLogin failed: $e');
+      if (AppConfig.authDebugLogging) {
+        debugPrint('[AUTH] devLogin stackTrace:\n$st');
+      }
       _setOtpPhase(OtpPhase.idle);
-      state = state.copyWith(error: _devLoginErrorMessage(e));
+      state = state.copyWith(
+        error: '${_devLoginErrorMessage(e)}${_debugErrorSuffix(e)}',
+      );
     } finally {
       _devLoginInFlight = false;
     }
@@ -777,6 +864,7 @@ class Auth extends _$Auth {
   String _devLoginErrorMessage(Object error) {
     if (error is DioException) {
       final statusCode = error.response?.statusCode;
+      final responseBody = error.response?.data;
       switch (statusCode) {
         case 404:
           return 'Developer Login is disabled.';
@@ -790,8 +878,12 @@ class Auth extends _$Auth {
           error.type == DioExceptionType.connectionError) {
         return 'Please check your internet connection.';
       }
+      if (responseBody != null) {
+        return 'Developer Login failed ($statusCode): $responseBody';
+      }
+      return 'Developer Login failed: ${error.message ?? error.type}';
     }
-    return 'Unable to sign in using Developer Login.';
+    return 'Unable to sign in using Developer Login: $error';
   }
 
   String _mapApiErrorMessage(String? code, String message) {

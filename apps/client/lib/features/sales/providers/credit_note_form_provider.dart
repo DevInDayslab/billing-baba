@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
@@ -7,6 +8,7 @@ import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart'
 import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'credit_note_form_provider.g.dart';
@@ -23,6 +25,7 @@ CreditNoteFormState _initialCreditNoteFormState() {
   final today = DateTime(now.year, now.month, now.day);
   return CreditNoteFormState(
     returnDate: today,
+    returnTime: TimeOfDay.fromDateTime(now),
     items: [SaleLineItem.empty(id: _nextCreditNoteLineItemId())],
   );
 }
@@ -30,7 +33,8 @@ CreditNoteFormState _initialCreditNoteFormState() {
 @riverpod
 class CreditNoteForm extends _$CreditNoteForm {
   @override
-  CreditNoteFormState build() => _initialCreditNoteFormState();
+  CreditNoteFormState build({String sessionKey = 'default'}) =>
+      _initialCreditNoteFormState();
 
   Map<String, String> _itemNameToId() {
     final items = ref.read(inventoryItemsProvider).value ?? [];
@@ -55,6 +59,32 @@ class CreditNoteForm extends _$CreditNoteForm {
         stateOfSupply: loaded.stateOfSupply,
         items: items,
         description: loaded.description,
+      );
+    } catch (error) {
+      state = state.copyWith(saveError: SalesErrorMapper.messageFor(error));
+    }
+  }
+
+  Future<void> loadFromInvoice(String invoiceId) async {
+    try {
+      final service = await ref.read(salesServiceProvider.future);
+      final loaded = await service.loadSaleForm(invoiceId);
+      final items = await _resolveItemNames(loaded.items);
+      final now = DateTime.now();
+      state = CreditNoteFormState(
+        partyId: loaded.partyId,
+        party: loaded.billingName,
+        phone: loaded.phone,
+        originalInvoiceNo: loaded.invoiceNumber,
+        originalInvoiceDate: loaded.invoiceDate,
+        returnDate: DateTime(now.year, now.month, now.day),
+        returnTime: TimeOfDay.fromDateTime(now),
+        stateOfSupply: loaded.stateOfSupply,
+        godown: loaded.godown,
+        godownId: loaded.godownId,
+        items: items,
+        description: loaded.description,
+        isDirty: true,
       );
     } catch (error) {
       state = state.copyWith(saveError: SalesErrorMapper.messageFor(error));
@@ -106,8 +136,20 @@ class CreditNoteForm extends _$CreditNoteForm {
     state = state.copyWith(returnDate: date, isDirty: true);
   }
 
+  void updateReturnTime(TimeOfDay time) {
+    state = state.copyWith(returnTime: time, isDirty: true);
+  }
+
   void updateStateOfSupply(String value) {
     state = state.copyWith(stateOfSupply: value, isDirty: true);
+  }
+
+  void updateGodown(String value, {String? godownId}) {
+    state = state.copyWith(
+      godown: value,
+      godownId: godownId,
+      isDirty: true,
+    );
   }
 
   void toggleRoundOff({required bool value}) {
@@ -222,6 +264,16 @@ class CreditNoteForm extends _$CreditNoteForm {
     state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
   }
 
+  void confirmLineItem(int index) {
+    if (index < 0 || index >= state.items.length) return;
+    final items = [...state.items];
+    items[index] = items[index].copyWith(isConfirmed: true);
+    if (index == items.length - 1) {
+      items.add(SaleLineItem.empty(id: _nextCreditNoteLineItemId()));
+    }
+    state = state.copyWith(items: items, isDirty: true);
+  }
+
   bool validate() {
     final isValid = state.isValid;
     if (!isValid) {
@@ -238,6 +290,7 @@ class CreditNoteForm extends _$CreditNoteForm {
     documentDate: state.returnDate,
     notes: state.description,
     items: state.items,
+    godownId: state.godownId,
   );
 
   Future<String?> save() async {
@@ -246,32 +299,18 @@ class CreditNoteForm extends _$CreditNoteForm {
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
       final service = await ref.read(salesServiceProvider.future);
-      await service.saveDocumentDraft(
+      final document = await service.finalizeDocumentDraft(
         _draftInput(),
         itemNameToId: _itemNameToId(),
+        godownId: state.godownId,
       );
       ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
-      resetForm();
-      return null;
-    } catch (error) {
-      final message = SalesErrorMapper.messageFor(error);
-      state = state.copyWith(isSaving: false, saveError: message);
-      return message;
-    }
-  }
-
-  Future<String?> finalize() async {
-    if (!validate()) return 'Please fill required fields';
-
-    state = state.copyWith(isSaving: true, clearSaveError: true);
-    try {
-      final service = await ref.read(salesServiceProvider.future);
-      await service.finalizeDocumentDraft(
-        _draftInput(),
-        itemNameToId: _itemNameToId(),
+      refreshAfterSaleReturn(ref);
+      state = state.copyWith(
+        documentId: document.id,
+        isSaving: false,
+        isDirty: false,
       );
-      ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
-      resetForm();
       return null;
     } catch (error) {
       final message = SalesErrorMapper.messageFor(error);
@@ -282,7 +321,13 @@ class CreditNoteForm extends _$CreditNoteForm {
 }
 
 @riverpod
-double creditNoteGrandTotal(Ref ref) {
-  final form = ref.watch(creditNoteFormProvider);
+double creditNoteTotalTax(Ref ref, {String sessionKey = 'default'}) {
+  final form = ref.watch(creditNoteFormProvider(sessionKey: sessionKey));
+  return form.items.fold<double>(0, (sum, item) => sum + item.lineTax);
+}
+
+@riverpod
+double creditNoteGrandTotal(Ref ref, {String sessionKey = 'default'}) {
+  final form = ref.watch(creditNoteFormProvider(sessionKey: sessionKey));
   return form.total;
 }

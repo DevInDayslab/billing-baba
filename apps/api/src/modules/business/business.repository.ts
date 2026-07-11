@@ -49,6 +49,10 @@ export class BusinessRepository {
         ),
       );
 
+    const ownerNames = await this.loadOwnerNamesByBusinessIds(
+      rows.map((row) => row.id),
+    );
+
     return rows.map((row) => ({
       id: row.id,
       name: row.name,
@@ -58,8 +62,78 @@ export class BusinessRepository {
       email: row.email,
       state_code: row.stateCode,
       address: row.address,
+      owner_name: ownerNames.get(row.id) ?? null,
       is_shared: row.role !== 'owner',
     }));
+  }
+
+  private async loadOwnerNamesByBusinessIds(
+    businessIds: string[],
+  ): Promise<Map<string, string>> {
+    if (businessIds.length === 0) return new Map();
+
+    const owners = await this.db
+      .select({
+        businessId: users.businessId,
+        name: users.name,
+      })
+      .from(users)
+      .where(
+        and(
+          eq(users.role, 'owner'),
+          eq(users.isDeleted, false),
+        ),
+      );
+
+    const map = new Map<string, string>();
+    for (const owner of owners) {
+      if (businessIds.includes(owner.businessId)) {
+        map.set(owner.businessId, owner.name);
+      }
+    }
+    return map;
+  }
+
+  async softDelete(
+    businessId: string,
+    accountId: string,
+  ): Promise<boolean> {
+    return this.db.transaction(async (tx) => {
+      const [membership] = await tx
+        .select({ role: users.role })
+        .from(users)
+        .innerJoin(businesses, eq(users.businessId, businesses.id))
+        .where(
+          and(
+            eq(users.businessId, businessId),
+            eq(users.accountId, accountId),
+            eq(users.role, 'owner'),
+            eq(users.isActive, true),
+            eq(users.isDeleted, false),
+            eq(businesses.isDeleted, false),
+          ),
+        )
+        .limit(1);
+
+      if (!membership) {
+        return false;
+      }
+
+      const [updated] = await tx
+        .update(businesses)
+        .set({
+          isDeleted: true,
+          deletedAt: new Date(),
+          updatedAt: new Date(),
+          syncVersion: sql`${businesses.syncVersion} + 1`,
+        })
+        .where(
+          and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)),
+        )
+        .returning({ id: businesses.id });
+
+      return updated != null;
+    });
   }
 
   async getProfile(
@@ -369,6 +443,7 @@ export class BusinessRepository {
         email: business.email,
         state_code: business.stateCode,
         address: business.address,
+        owner_name: ownerName,
         is_shared: false,
       };
     });

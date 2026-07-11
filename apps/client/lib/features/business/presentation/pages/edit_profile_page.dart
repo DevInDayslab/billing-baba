@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/business/application/business_profile_controller.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
@@ -99,11 +100,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     if (_hydratedProfileId == profile.id) return;
 
     _businessNameController.text = profile.name;
-    _phoneController.text = profile.phone ?? '';
+    _phoneController.text = Validators.normalizeIndianPhone(profile.phone) ?? '';
     _gstinController.text = profile.gstin ?? '';
     _emailController.text = profile.email ?? '';
     _addressController.text = profile.address ?? '';
-    _pincodeController.text = profile.pincode ?? '';
+    _pincodeController.text =
+        Validators.normalizePincode(profile.pincode) ?? '';
     _businessType = profile.businessType;
     _businessCategory = profile.businessCategory;
     _state = profile.state;
@@ -111,26 +113,26 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _hydratedProfileId = profile.id;
   }
 
-  void _syncDropdownsFromProfile(BusinessProfileModel profile) {
-    setState(() {
-      _businessType = profile.businessType;
-      _businessCategory = profile.businessCategory;
-      _state = profile.state;
-      _profileSeed = profile.id;
-    });
+  List<String> _dropdownOptions(List<String> options, String? selected) {
+    if (selected == null || selected.isEmpty || options.contains(selected)) {
+      return options;
+    }
+    return [selected, ...options];
   }
 
   Future<void> _save() async {
+    ref.read(editBusinessProfileFormProvider.notifier).clearErrors();
+
     final input = UpdateBusinessProfileInput(
       name: _businessNameController.text,
-      phone: _phoneController.text,
+      phone: Validators.normalizeIndianPhone(_phoneController.text),
       email: _emailController.text,
       gstin: _gstinController.text,
       address: _addressController.text,
       businessType: _businessType,
       businessCategory: _businessCategory,
       state: _state,
-      pincode: _pincodeController.text,
+      pincode: Validators.normalizePincode(_pincodeController.text),
     );
 
     final updated = await ref
@@ -144,7 +146,32 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Business profile saved successfully')),
       );
+      return;
     }
+
+    final formState = ref.read(editBusinessProfileFormProvider);
+    final message = formState.generalError ??
+        (formState.fieldErrors.isNotEmpty
+            ? formState.fieldErrors.values.first
+            : null);
+    if (message != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
+
+  void _syncDropdownsFromProfile(BusinessProfileModel profile) {
+    setState(() {
+      _businessType = profile.businessType;
+      _businessCategory = profile.businessCategory;
+      _state = profile.state;
+      _profileSeed = profile.id;
+      _phoneController.text =
+          Validators.normalizeIndianPhone(profile.phone) ?? '';
+      _pincodeController.text =
+          Validators.normalizePincode(profile.pincode) ?? '';
+    });
   }
 
   @override
@@ -297,7 +324,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                   child: _OutlinedDropdown<String>(
                                     value: _businessType,
                                     hintText: 'Business Type',
-                                    items: _businessTypes,
+                                    items: _dropdownOptions(
+                                      _businessTypes,
+                                      _businessType,
+                                    ),
                                     onChanged: (value) =>
                                         setState(() => _businessType = value),
                                   ),
@@ -311,7 +341,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                   child: _OutlinedDropdown<String>(
                                     value: _businessCategory,
                                     hintText: 'Business Category',
-                                    items: _businessCategories,
+                                    items: _dropdownOptions(
+                                      _businessCategories,
+                                      _businessCategory,
+                                    ),
                                     onChanged: (value) => setState(
                                       () => _businessCategory = value,
                                     ),
@@ -324,7 +357,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                   child: _OutlinedDropdown<String>(
                                     value: _state,
                                     hintText: 'State',
-                                    items: _indianStates,
+                                    items: _dropdownOptions(
+                                      _indianStates,
+                                      _state,
+                                    ),
                                     onChanged: (value) =>
                                         setState(() => _state = value),
                                   ),

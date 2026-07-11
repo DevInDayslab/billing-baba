@@ -92,7 +92,7 @@ final class ExpenseTransactionsProvider
 }
 
 String _$expenseTransactionsHash() =>
-    r'33afffaa5cf0bfc96af3538d8d4a56b7262b94c5';
+    r'24f2bef7150f6250c1e71a4c9de63e54a601f567';
 
 abstract class _$ExpenseTransactions
     extends $AsyncNotifier<List<ExpenseTransactionModel>> {

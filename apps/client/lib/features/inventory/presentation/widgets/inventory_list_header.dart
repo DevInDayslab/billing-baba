@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:flutter/material.dart';
 
+export 'inventory_list_row_menu.dart';
+
 class InventoryListHeader extends StatelessWidget {
   const InventoryListHeader({
     required this.columns,
@@ -115,41 +117,3 @@ class InventoryListEmptyState extends StatelessWidget {
   }
 }
 
-class InventoryListRowMenu extends StatelessWidget {
-  const InventoryListRowMenu({
-    this.menuItems,
-    this.onSelected,
-    super.key,
-  });
-
-  final List<PopupMenuEntry<String>>? menuItems;
-  final ValueChanged<String>? onSelected;
-
-  static const _iconColor = Color(0xFF616161);
-
-  static const _defaultMenuItems = <PopupMenuEntry<String>>[
-    PopupMenuItem(value: 'Edit', child: Text('Edit')),
-    PopupMenuItem(value: 'Delete', child: Text('Delete')),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return InventoryPopupMenuButton<String>(
-      tooltip: 'More options',
-      offset: const Offset(0, 28),
-      onSelected:
-          onSelected ??
-          (value) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$value coming soon')),
-            );
-          },
-      itemBuilder: (context) => menuItems ?? _defaultMenuItems,
-      child: const SizedBox(
-        width: 28,
-        height: 28,
-        child: Icon(Icons.more_vert, size: 18, color: _iconColor),
-      ),
-    );
-  }
-}

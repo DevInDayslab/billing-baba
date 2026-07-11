@@ -8,11 +8,14 @@ part of 'pos_session_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Whether the full-screen POS terminal is open (vs the landing list).
 
 @ProviderFor(PosSession)
 final posSessionProvider = PosSessionProvider._();
 
+/// Whether the full-screen POS terminal is open (vs the landing list).
 final class PosSessionProvider extends $NotifierProvider<PosSession, bool> {
+  /// Whether the full-screen POS terminal is open (vs the landing list).
   PosSessionProvider._()
     : super(
         from: null,
@@ -40,7 +43,9 @@ final class PosSessionProvider extends $NotifierProvider<PosSession, bool> {
   }
 }
 
-String _$posSessionHash() => r'd4e5f678901234567890abcdef012345678901234';
+String _$posSessionHash() => r'9a9266aff0cf657732927f8dabfb76d827dc5cb2';
+
+/// Whether the full-screen POS terminal is open (vs the landing list).
 
 abstract class _$PosSession extends $Notifier<bool> {
   bool build();

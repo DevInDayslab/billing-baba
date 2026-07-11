@@ -2,9 +2,11 @@
 abstract final class ApiEndpoints {
   static const auth = '/api/v1/auth';
   static const businesses = '/api/v1/businesses';
+  static String business(String id) => '$businesses/$id';
   static const businessProfile = '/api/v1/business/profile';
   static const parties = '/api/v1/parties';
   static String party(String id) => '/api/v1/parties/$id';
+  static String partyLedger(String id) => '/api/v1/parties/$id/ledger';
   static const sync = '/api/v1/sync';
   static const health = '/api/v1/health';
 
@@ -54,6 +56,8 @@ abstract final class ApiEndpoints {
 
   static const sales = '/api/v1/sales';
   static const salesDocuments = '$sales/sales-documents';
+  static const fixedAssetSales = '$sales/fixed-asset-sales';
+  static String fixedAssetSale(String batchId) => '$fixedAssetSales/$batchId';
   static String salesDocument(String id) => '$salesDocuments/$id';
   static String salesDocumentLines(String id) => '${salesDocument(id)}/lines';
   static String salesDocumentLine(String id, String lineId) =>

@@ -10,23 +10,30 @@ part of 'sale_order_form_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(SaleOrderFormNotifier)
-final saleOrderFormProvider = SaleOrderFormNotifierProvider._();
+final saleOrderFormProvider = SaleOrderFormNotifierFamily._();
 
 final class SaleOrderFormNotifierProvider
     extends $NotifierProvider<SaleOrderFormNotifier, SaleOrderFormState> {
-  SaleOrderFormNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'saleOrderFormProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  SaleOrderFormNotifierProvider._({
+    required SaleOrderFormNotifierFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'saleOrderFormProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$saleOrderFormNotifierHash();
+
+  @override
+  String toString() {
+    return r'saleOrderFormProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -39,13 +46,51 @@ final class SaleOrderFormNotifierProvider
       providerOverride: $SyncValueProvider<SaleOrderFormState>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SaleOrderFormNotifierProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$saleOrderFormNotifierHash() =>
-    r'e085cd85c9d763681e1d4fba4a5f79225a34c621';
+    r'5dcb2c97b85da161d4c196292abf278bfdd69064';
+
+final class SaleOrderFormNotifierFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          SaleOrderFormNotifier,
+          SaleOrderFormState,
+          SaleOrderFormState,
+          SaleOrderFormState,
+          String
+        > {
+  SaleOrderFormNotifierFamily._()
+    : super(
+        retry: null,
+        name: r'saleOrderFormProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  SaleOrderFormNotifierProvider call({String sessionKey = 'default'}) =>
+      SaleOrderFormNotifierProvider._(argument: sessionKey, from: this);
+
+  @override
+  String toString() => r'saleOrderFormProvider';
+}
 
 abstract class _$SaleOrderFormNotifier extends $Notifier<SaleOrderFormState> {
-  SaleOrderFormState build();
+  late final _$args = ref.$arg as String;
+  String get sessionKey => _$args;
+
+  SaleOrderFormState build({String sessionKey = 'default'});
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -58,29 +103,36 @@ abstract class _$SaleOrderFormNotifier extends $Notifier<SaleOrderFormState> {
               Object?,
               Object?
             >;
-    return element.handleCreate(ref, build);
+    return element.handleCreate(ref, () => build(sessionKey: _$args));
   }
 }
 
 @ProviderFor(saleOrderGrandTotal)
-final saleOrderGrandTotalProvider = SaleOrderGrandTotalProvider._();
+final saleOrderGrandTotalProvider = SaleOrderGrandTotalFamily._();
 
 final class SaleOrderGrandTotalProvider
     extends $FunctionalProvider<double, double, double>
     with $Provider<double> {
-  SaleOrderGrandTotalProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'saleOrderGrandTotalProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  SaleOrderGrandTotalProvider._({
+    required SaleOrderGrandTotalFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'saleOrderGrandTotalProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$saleOrderGrandTotalHash();
+
+  @override
+  String toString() {
+    return r'saleOrderGrandTotalProvider'
+        ''
+        '($argument)';
+  }
 
   @$internal
   @override
@@ -89,7 +141,8 @@ final class SaleOrderGrandTotalProvider
 
   @override
   double create(Ref ref) {
-    return saleOrderGrandTotal(ref);
+    final argument = this.argument as String;
+    return saleOrderGrandTotal(ref, sessionKey: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -99,7 +152,113 @@ final class SaleOrderGrandTotalProvider
       providerOverride: $SyncValueProvider<double>(value),
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SaleOrderGrandTotalProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
 }
 
 String _$saleOrderGrandTotalHash() =>
     r'a71cad1be905b34a2314d0e6a74240d9d6924fcb';
+
+final class SaleOrderGrandTotalFamily extends $Family
+    with $FunctionalFamilyOverride<double, String> {
+  SaleOrderGrandTotalFamily._()
+    : super(
+        retry: null,
+        name: r'saleOrderGrandTotalProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  SaleOrderGrandTotalProvider call({String sessionKey = 'default'}) =>
+      SaleOrderGrandTotalProvider._(argument: sessionKey, from: this);
+
+  @override
+  String toString() => r'saleOrderGrandTotalProvider';
+}
+
+@ProviderFor(saleOrderTotalTax)
+final saleOrderTotalTaxProvider = SaleOrderTotalTaxFamily._();
+
+final class SaleOrderTotalTaxProvider
+    extends $FunctionalProvider<double, double, double>
+    with $Provider<double> {
+  SaleOrderTotalTaxProvider._({
+    required SaleOrderTotalTaxFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'saleOrderTotalTaxProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$saleOrderTotalTaxHash();
+
+  @override
+  String toString() {
+    return r'saleOrderTotalTaxProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<double> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  double create(Ref ref) {
+    final argument = this.argument as String;
+    return saleOrderTotalTax(ref, sessionKey: argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(double value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<double>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SaleOrderTotalTaxProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$saleOrderTotalTaxHash() =>
+    r'c4e8f1a92b3d7e6f5a0c9b8d7e6f5a4b3c2d1e0f';
+
+final class SaleOrderTotalTaxFamily extends $Family
+    with $FunctionalFamilyOverride<double, String> {
+  SaleOrderTotalTaxFamily._()
+    : super(
+        retry: null,
+        name: r'saleOrderTotalTaxProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  SaleOrderTotalTaxProvider call({String sessionKey = 'default'}) =>
+      SaleOrderTotalTaxProvider._(argument: sessionKey, from: this);
+
+  @override
+  String toString() => r'saleOrderTotalTaxProvider';
+}

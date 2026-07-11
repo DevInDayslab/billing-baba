@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+const _summaryBannerColor = Color(0xFFFFF8E1);
+
 class JobWorkOutFooter extends ConsumerWidget {
   const JobWorkOutFooter({super.key});
 
@@ -20,59 +22,50 @@ class JobWorkOutFooter extends ConsumerWidget {
     final notifier = ref.read(jobWorkOutFormProvider.notifier);
     final grandTotal = ref.watch(jobWorkOutGrandTotalProvider);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: SaleFormAttachmentsSection(
-            description: form.description,
-            images: form.attachedImages,
-            documents: form.attachedDocuments,
-            onDescriptionChanged: notifier.updateDescription,
-            onAddImage: () => _promptAddImage(
-              context,
-              notifier,
-              form.attachedImages.length,
-            ),
-            onRemoveImage: notifier.removeImage,
-            onUpdateImage: notifier.updateImage,
-            onAddDocument: () => _promptAddDocument(
-              context,
-              notifier,
-              form.attachedDocuments.length,
-            ),
-            onRemoveDocument: notifier.removeDocument,
-            onUpdateDocument: notifier.updateDocument,
+        SaleFormAttachmentsSection(
+          description: form.description,
+          images: form.attachedImages,
+          documents: form.attachedDocuments,
+          onDescriptionChanged: notifier.updateDescription,
+          onAddImage: () => _promptAddImage(
+            context,
+            notifier,
+            form.attachedImages.length,
           ),
+          onRemoveImage: notifier.removeImage,
+          onUpdateImage: notifier.updateImage,
+          onAddDocument: () => _promptAddDocument(
+            context,
+            notifier,
+            form.attachedDocuments.length,
+          ),
+          onRemoveDocument: notifier.removeDocument,
+          onUpdateDocument: notifier.updateDocument,
         ),
-        const SizedBox(width: 16),
-        SizedBox(
-          width: 220,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  const Text(
-                    'Grand Total',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    _currencyFormat.format(grandTotal),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+        const SizedBox(height: AppSpacing.md),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: _summaryBannerColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              'Total Estimated Cost (Raw Material + Additional Cost) = '
+              '${_currencyFormat.format(grandTotal)}',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
               ),
-            ],
+            ),
           ),
         ),
       ],
@@ -84,12 +77,9 @@ class JobWorkOutFooter extends ConsumerWidget {
     JobWorkOutFormNotifier notifier,
     int currentCount,
   ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add image',
-      defaultName: 'image_${currentCount + 1}.png',
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Image attachments coming soon.')),
     );
-    if (attachment != null) notifier.addImage(attachment);
   }
 
   Future<void> _promptAddDocument(
@@ -97,11 +87,8 @@ class JobWorkOutFooter extends ConsumerWidget {
     JobWorkOutFormNotifier notifier,
     int currentCount,
   ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add document',
-      defaultName: 'document_${currentCount + 1}.pdf',
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Document attachments coming soon.')),
     );
-    if (attachment != null) notifier.addDocument(attachment);
   }
 }

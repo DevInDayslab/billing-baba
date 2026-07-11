@@ -14,6 +14,9 @@ class SaleFilterDropdown extends StatefulWidget {
     required this.selected,
     required this.onSelected,
     this.showSearchField = false,
+    this.chipBackgroundColor,
+    this.chipBorderColor,
+    this.leadingIcon,
     super.key,
   });
 
@@ -22,6 +25,9 @@ class SaleFilterDropdown extends StatefulWidget {
   final String selected;
   final ValueChanged<String> onSelected;
   final bool showSearchField;
+  final Color? chipBackgroundColor;
+  final Color? chipBorderColor;
+  final IconData? leadingIcon;
 
   @override
   State<SaleFilterDropdown> createState() => SaleFilterDropdownState();
@@ -213,7 +219,12 @@ class SaleFilterDropdownState extends State<SaleFilterDropdown> {
           behavior: HitTestBehavior.opaque,
           child: widget.label.isEmpty
               ? const SizedBox.shrink()
-              : _FilterChipTrigger(label: widget.label),
+              : _FilterChipTrigger(
+                  label: widget.label,
+                  backgroundColor: widget.chipBackgroundColor,
+                  borderColor: widget.chipBorderColor,
+                  leadingIcon: widget.leadingIcon,
+                ),
         ),
       );
     }
@@ -246,7 +257,12 @@ class SaleFilterDropdownState extends State<SaleFilterDropdown> {
           behavior: HitTestBehavior.opaque,
           child: widget.label.isEmpty
               ? const SizedBox.shrink()
-              : _FilterChipTrigger(label: widget.label),
+              : _FilterChipTrigger(
+                  label: widget.label,
+                  backgroundColor: widget.chipBackgroundColor,
+                  borderColor: widget.chipBorderColor,
+                  leadingIcon: widget.leadingIcon,
+                ),
         );
       },
     );
@@ -319,26 +335,50 @@ class SaleFilterChip extends StatelessWidget {
   const SaleFilterChip({
     required this.label,
     required this.onTap,
+    this.backgroundColor,
+    this.borderColor,
+    this.leadingIcon,
+    this.showDropdownArrow = true,
     super.key,
   });
 
   final String label;
   final VoidCallback onTap;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final IconData? leadingIcon;
+  final bool showDropdownArrow;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: _FilterChipTrigger(label: label),
+      child: _FilterChipTrigger(
+        label: label,
+        backgroundColor: backgroundColor,
+        borderColor: borderColor,
+        leadingIcon: leadingIcon,
+        showDropdownArrow: showDropdownArrow,
+      ),
     );
   }
 }
 
 class _FilterChipTrigger extends StatelessWidget {
-  const _FilterChipTrigger({required this.label});
+  const _FilterChipTrigger({
+    required this.label,
+    this.backgroundColor,
+    this.borderColor,
+    this.leadingIcon,
+    this.showDropdownArrow = true,
+  });
 
   final String label;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final IconData? leadingIcon;
+  final bool showDropdownArrow;
 
   static const _cardBorder = Color(0xFFE0E0E0);
 
@@ -350,13 +390,21 @@ class _FilterChipTrigger extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: backgroundColor ?? AppColors.surface,
         borderRadius: AppRadius.mdBorder,
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: borderColor ?? _cardBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (leadingIcon != null) ...[
+            Icon(
+              leadingIcon,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+          ],
           Text(
             label,
             style: const TextStyle(
@@ -364,12 +412,14 @@ class _FilterChipTrigger extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(width: AppSpacing.xs),
-          const Icon(
-            Icons.keyboard_arrow_down,
-            size: 18,
-            color: AppColors.textSecondary,
-          ),
+          if (showDropdownArrow) ...[
+            const SizedBox(width: AppSpacing.xs),
+            const Icon(
+              Icons.keyboard_arrow_down,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
+          ],
         ],
       ),
     );

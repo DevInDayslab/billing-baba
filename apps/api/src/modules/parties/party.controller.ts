@@ -9,6 +9,8 @@ import {
   updatePartyBodySchema,
 } from './party.schema';
 import { PartyService } from './party.service';
+import { partyLedgerQuerySchema } from './party-ledger.schema';
+import { PartyLedgerService } from './party-ledger.service';
 import type { PaginatedPartiesResponse } from './party.types';
 
 function formatZodError(error: ZodError): Record<string, string[]> {
@@ -106,6 +108,32 @@ export function createPartyController() {
           throw new AppError(
             'VALIDATION_ERROR',
             'Invalid party ID',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    getLedger: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { accountId, businessId } = requireAuthContext(request);
+        const { id } = partyIdParamSchema.parse(request.params);
+        const query = partyLedgerQuerySchema.parse(request.query);
+        const service = new PartyLedgerService();
+        const data = await service.getPartyLedger(
+          businessId,
+          accountId,
+          id,
+          query,
+        );
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid request parameters',
             400,
             formatZodError(error),
           );

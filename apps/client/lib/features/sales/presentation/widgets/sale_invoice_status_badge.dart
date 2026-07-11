@@ -2,9 +2,14 @@ import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:flutter/material.dart';
 
 class SaleInvoiceStatusBadge extends StatelessWidget {
-  const SaleInvoiceStatusBadge({required this.status, super.key});
+  const SaleInvoiceStatusBadge({
+    required this.status,
+    this.plain = false,
+    super.key,
+  });
 
   final SaleInvoiceStatus status;
+  final bool plain;
 
   @override
   Widget build(BuildContext context) {
@@ -36,23 +41,31 @@ class SaleInvoiceStatusBadge extends StatelessWidget {
       ),
     };
 
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    if (plain) {
+      return Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: textColor,
+        ),
+      );
+    }
+
+    return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: FontWeight.w500,
             color: textColor,
           ),
         ),
-      ),
-    );
+      );
   }
 }

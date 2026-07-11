@@ -103,6 +103,10 @@ export class PartyService {
       await this.assertMobileAvailable(businessId, mobile);
     }
 
+    if (gstin) {
+      await this.assertGstinAvailable(businessId, gstin);
+    }
+
     return this.repository.create({
       businessId,
       name: input.name.trim(),
@@ -157,6 +161,10 @@ export class PartyService {
 
     if (mobile) {
       await this.assertMobileAvailable(businessId, mobile, partyId);
+    }
+
+    if (gstin) {
+      await this.assertGstinAvailable(businessId, gstin, partyId);
     }
 
     const updated = await this.repository.update(businessId, partyId, {
@@ -270,6 +278,24 @@ export class PartyService {
     if (conflictId) {
       throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
         mobile: ['This mobile number is already registered to another party'],
+      });
+    }
+  }
+
+  private async assertGstinAvailable(
+    businessId: string,
+    gstin: string,
+    excludePartyId?: string,
+  ): Promise<void> {
+    const conflictId = await this.repository.findActiveGstinConflict(
+      businessId,
+      gstin,
+      excludePartyId,
+    );
+
+    if (conflictId) {
+      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        gstin: ['This GSTIN is already registered to another party'],
       });
     }
   }

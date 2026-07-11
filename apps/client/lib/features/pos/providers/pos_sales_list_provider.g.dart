@@ -41,7 +41,7 @@ final class PosSalesListProvider
   }
 }
 
-String _$posSalesListHash() => r'e5f678901234567890abcdef0123456789012345';
+String _$posSalesListHash() => r'69aa457e98a271e38c3103d3c167323e77f2e95d';
 
 abstract class _$PosSalesList extends $Notifier<List<PosSale>> {
   List<PosSale> build();

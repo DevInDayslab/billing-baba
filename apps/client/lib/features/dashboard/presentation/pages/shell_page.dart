@@ -4,9 +4,11 @@ import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/app_top_bar.dart';
+import 'package:billing_baba/features/dashboard/providers/shell_sidebar_provider.dart';
 import 'package:billing_baba/features/pos/providers/pos_session_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
+import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -24,16 +26,27 @@ class ShellPage extends ConsumerStatefulWidget {
 class _ShellPageState extends ConsumerState<ShellPage> {
   static const _sidebarExpandedWidth = 220.0;
   static const _sidebarCollapsedWidth = 60.0;
+  static const _sidebarCompactLayoutMaxWidth = 140.0;
+  static const _overlayBreakpoint = 800.0;
+
+  /// Sidebar content toggles immediately on collapse, but [AnimatedContainer]
+  /// width animates over 200ms — use compact layout until there is room.
+  static bool _useCompactSidebarLayout(bool collapsed, double width) {
+    return collapsed || width < _sidebarCompactLayoutMaxWidth;
+  }
   static const _sidebarColor = Color(0xFF1C2333);
   static const _sidebarText = Color(0xFFB0BEC5);
   static const _sidebarTextActive = Color(0xFFFFFFFF);
 
-  bool _isCollapsed = false;
   bool _isSaleExpanded = false;
   bool _isPurchaseExpanded = false;
   bool _expandInitialized = false;
   bool _isPartiesExpanded = false;
   bool _partiesExpandInitialized = false;
+  bool _isUtilitiesExpanded = false;
+  bool _utilitiesExpandInitialized = false;
+  bool? _wasOverlaySidebar;
+  bool _useOverlaySidebar = false;
 
   @override
   void didChangeDependencies() {
@@ -55,6 +68,13 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         _isPartiesExpanded = true;
       }
     }
+    if (!_utilitiesExpandInitialized) {
+      _utilitiesExpandInitialized = true;
+      final location = GoRouterState.of(context).uri.path;
+      if (location.startsWith(AppRoutes.utilities)) {
+        _isUtilitiesExpanded = true;
+      }
+    }
   }
 
   static const List<_NavSubItem> _partiesSubItems = [
@@ -66,6 +86,10 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       .toList();
 
   static final List<_NavSubItem> _purchaseSubItems = PurchaseSubRoutes.items
+      .map((item) => _NavSubItem(route: item.route, label: item.label))
+      .toList();
+
+  static final List<_NavSubItem> _utilitiesSubItems = UtilitiesSubRoutes.items
       .map((item) => _NavSubItem(route: item.route, label: item.label))
       .toList();
 
@@ -112,6 +136,13 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       icon: Icons.bar_chart_outlined,
       label: 'Reports',
     ),
+    _NavItem(
+      icon: Icons.build_outlined,
+      label: 'Utilities',
+      isExpandable: true,
+      routePrefix: AppRoutes.utilities,
+      subItems: _utilitiesSubItems,
+    ),
     const _NavItem(
       route: AppRoutes.settings,
       icon: Icons.settings_outlined,
@@ -124,49 +155,176 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     ),
   ];
 
+  void _navigateTo(String route) {
+    ref.read(shellSidebarProvider.notifier).closeOnNavigation(
+      overlayLayout: _useOverlaySidebar,
+    );
+    setState(() {
+      _isSaleExpanded = false;
+      _isPurchaseExpanded = false;
+      _isPartiesExpanded = false;
+      _isUtilitiesExpanded = false;
+    });
+    context.go(route);
+  }
+
+  void _expandSidebarIfCollapsed() {
+    if (ref.read(shellSidebarProvider).isCollapsed) {
+      ref.read(shellSidebarProvider.notifier).expand();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentLocation = GoRouterState.of(context).uri.path;
+    final sidebarState = ref.watch(shellSidebarProvider);
+    final isCollapsed = sidebarState.isCollapsed;
+    final isDrawerOpen = sidebarState.isDrawerOpen;
 
-    return Scaffold(
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            width: _isCollapsed
-                ? _sidebarCollapsedWidth
-                : _sidebarExpandedWidth,
-            color: _sidebarColor,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useOverlaySidebar = constraints.maxWidth < _overlayBreakpoint;
+        _useOverlaySidebar = useOverlaySidebar;
+
+        if (_wasOverlaySidebar == true &&
+            !useOverlaySidebar &&
+            isDrawerOpen) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ref.read(shellSidebarProvider.notifier).closeDrawer();
+            }
+          });
+        }
+        _wasOverlaySidebar = useOverlaySidebar;
+
+        final showTopBar =
+            currentLocation != AppRoutes.pos || !ref.watch(posSessionProvider);
+        final pageTitle = _pageTitleFor(currentLocation);
+        final mainContent = ColoredBox(
+          color: AppColors.background,
+          child: Column(
+            children: [
+              if (showTopBar)
+                AppTopBar(
+                  pageTitle: pageTitle,
+                  showMenuButton: useOverlaySidebar,
+                ),
+              Expanded(child: widget.child),
+            ],
+          ),
+        );
+
+        if (useOverlaySidebar) {
+          return Scaffold(
+            body: Stack(
+              fit: StackFit.expand,
               children: [
-                _buildSidebarHeader(),
-                Expanded(child: _buildNavList(currentLocation)),
-                _buildSidebarFooter(),
+                mainContent,
+                Positioned.fill(
+                  child: IgnorePointer(
+                    ignoring: !isDrawerOpen,
+                    child: GestureDetector(
+                      onTap: () =>
+                          ref.read(shellSidebarProvider.notifier).closeDrawer(),
+                      child: AnimatedOpacity(
+                        opacity: isDrawerOpen ? 1 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: const ColoredBox(color: Color(0x80000000)),
+                      ),
+                    ),
+                  ),
+                ),
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  left: isDrawerOpen ? 0 : -_sidebarExpandedWidth,
+                  top: 0,
+                  bottom: 0,
+                  width: _sidebarExpandedWidth,
+                  child: Material(
+                    elevation: isDrawerOpen ? 8 : 0,
+                    color: _sidebarColor,
+                    child: _buildSidebarPanel(
+                      currentLocation: currentLocation,
+                      collapsed: false,
+                      showCloseButton: true,
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
-          Expanded(
-            child: ColoredBox(
-              color: AppColors.background,
-              child: Column(
-                children: [
-                  if (currentLocation != AppRoutes.pos ||
-                      !ref.watch(posSessionProvider))
-                    AppTopBar(pageTitle: _pageTitleFor(currentLocation)),
-                  Expanded(child: widget.child),
-                ],
+          );
+        }
+
+        return Scaffold(
+          body: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                width: isCollapsed
+                    ? _sidebarCollapsedWidth
+                    : _sidebarExpandedWidth,
+                color: _sidebarColor,
+                child: GestureDetector(
+                  onTap: isCollapsed
+                      ? () =>
+                          ref.read(shellSidebarProvider.notifier).expand()
+                      : null,
+                  behavior: HitTestBehavior.translucent,
+                  child: _buildSidebarPanel(
+                    currentLocation: currentLocation,
+                    collapsed: isCollapsed,
+                  ),
+                ),
               ),
-            ),
+              Expanded(child: mainContent),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildSidebarHeader() {
+  Widget _buildSidebarPanel({
+    required String currentLocation,
+    required bool collapsed,
+    bool showCloseButton = false,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compactLayout = _useCompactSidebarLayout(
+          collapsed,
+          constraints.maxWidth,
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildSidebarHeader(
+              collapsed: compactLayout,
+              showCloseButton: showCloseButton,
+            ),
+            Expanded(
+              child: _buildNavList(
+                currentLocation,
+                collapsed: compactLayout,
+              ),
+            ),
+            _buildSidebarFooter(collapsed: compactLayout),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSidebarHeader({
+    required bool collapsed,
+    bool showCloseButton = false,
+  }) {
+    final sidebarNotifier = ref.read(shellSidebarProvider.notifier);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.sm,
@@ -174,20 +332,30 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         AppSpacing.sm,
         AppSpacing.sm,
       ),
-      child: _isCollapsed
-          ? Center(
-              child: IconButton(
-                icon: const Icon(
+      child: collapsed
+          ? InkWell(
+              onTap: sidebarNotifier.expand,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                child: Icon(
                   Icons.last_page,
                   color: _sidebarText,
                   size: 20,
                 ),
-                onPressed: () => setState(() => _isCollapsed = false),
-                tooltip: 'Expand sidebar',
               ),
             )
           : Row(
               children: [
+                if (showCloseButton)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close,
+                      color: _sidebarText,
+                      size: 20,
+                    ),
+                    onPressed: sidebarNotifier.closeDrawer,
+                    tooltip: 'Close menu',
+                  ),
                 Expanded(
                   child: TextField(
                     decoration: InputDecoration(
@@ -218,51 +386,62 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.first_page,
-                    color: _sidebarText,
-                    size: 20,
+                if (!showCloseButton)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.first_page,
+                      color: _sidebarText,
+                      size: 20,
+                    ),
+                    onPressed: sidebarNotifier.toggleCollapsed,
+                    tooltip: 'Collapse sidebar',
                   ),
-                  onPressed: () => setState(() => _isCollapsed = true),
-                  tooltip: 'Collapse sidebar',
-                ),
               ],
             ),
     );
   }
 
-  Widget _buildNavList(String currentLocation) {
+  Widget _buildNavList(String currentLocation, {required bool collapsed}) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final item in _navItems) _buildNavItem(item, currentLocation),
+          for (final item in _navItems)
+            _buildNavItem(item, currentLocation, collapsed: collapsed),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(_NavItem item, String currentLocation) {
+  Widget _buildNavItem(
+    _NavItem item,
+    String currentLocation, {
+    required bool collapsed,
+  }) {
     if (item.isExpandable) {
       final isSale = item.routePrefix == AppRoutes.sale;
       final isPurchase = item.routePrefix == AppRoutes.purchase;
       final isParties = item.route == AppRoutes.parties;
+      final isUtilities = item.routePrefix == AppRoutes.utilities;
       final routePrefix = item.routePrefix ?? item.route!;
 
       final isParentActive = isSale
           ? currentLocation.startsWith(AppRoutes.sale)
           : isPurchase
           ? currentLocation.startsWith(AppRoutes.purchase)
-          : isParties && currentLocation.startsWith(AppRoutes.parties);
+          : isParties
+          ? currentLocation.startsWith(AppRoutes.parties)
+          : isUtilities && currentLocation.startsWith(AppRoutes.utilities);
 
       final isExpanded = isSale
           ? _isSaleExpanded
           : isPurchase
           ? _isPurchaseExpanded
-          : isParties && _isPartiesExpanded;
+          : isParties
+          ? _isPartiesExpanded
+          : isUtilities && _isUtilitiesExpanded;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -270,7 +449,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         children: [
           _SidebarExpandableNavTile(
             item: item,
-            collapsed: _isCollapsed,
+            collapsed: collapsed,
             isActive: isParentActive,
             isExpanded: isExpanded,
             onToggle: () => setState(() {
@@ -280,10 +459,26 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                 _isPurchaseExpanded = !_isPurchaseExpanded;
               } else if (isParties) {
                 _isPartiesExpanded = !_isPartiesExpanded;
+              } else if (isUtilities) {
+                _isUtilitiesExpanded = !_isUtilitiesExpanded;
               }
             }),
+            onCollapsedTap: () {
+              _expandSidebarIfCollapsed();
+              setState(() {
+                if (isSale) {
+                  _isSaleExpanded = true;
+                } else if (isPurchase) {
+                  _isPurchaseExpanded = true;
+                } else if (isParties) {
+                  _isPartiesExpanded = true;
+                } else if (isUtilities) {
+                  _isUtilitiesExpanded = true;
+                }
+              });
+            },
           ),
-          if (isExpanded && !_isCollapsed)
+          if (isExpanded && !collapsed)
             ...item.subItems.map((sub) {
               final isSubActive = _isSubItemActive(
                 routePrefix: routePrefix,
@@ -293,7 +488,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
               return _SidebarNavSubTile(
                 label: sub.label,
                 isActive: isSubActive,
-                onTap: () => context.go(sub.route),
+                onTap: () => _navigateTo(sub.route),
               );
             }),
         ],
@@ -308,9 +503,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
 
     return _SidebarNavTile(
       item: item,
-      collapsed: _isCollapsed,
+      collapsed: collapsed,
       isActive: isActive,
-      onTap: item.route != null ? () => context.go(item.route!) : null,
+      onTap: item.route != null ? () => _navigateTo(item.route!) : null,
     );
   }
 
@@ -359,21 +554,22 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     return false;
   }
 
-  Widget _buildSidebarFooter() {
+  Widget _buildSidebarFooter({required bool collapsed}) {
     final sidebarBusiness = ref.watch(sidebarBusinessProvider);
 
     return _SidebarProfileFooter(
-      collapsed: _isCollapsed,
+      collapsed: collapsed,
       companyName: sidebarBusiness.name,
       avatarSeed: sidebarBusiness.seed,
-      onEditProfile: () => context.go(AppRoutes.editProfile),
+      onExpand: _expandSidebarIfCollapsed,
+      onEditProfile: () => _navigateTo(AppRoutes.editProfile),
       onSwitchCompany: () async {
         await ref.read(authProvider.notifier).enterBusinessSelection();
-        if (mounted) context.go(AppRoutes.businessList);
+        if (mounted) _navigateTo(AppRoutes.businessList);
       },
       onLogout: () async {
         await ref.read(authProvider.notifier).logout();
-        if (mounted) context.go(AppRoutes.login);
+        if (mounted) _navigateTo(AppRoutes.login);
       },
     );
   }
@@ -386,6 +582,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     if (location.startsWith(AppRoutes.sale)) return 'Sale';
     if (location.startsWith(AppRoutes.purchase)) return 'Purchase & Expense';
     if (location.startsWith(AppRoutes.reports)) return 'Reports';
+    if (location.startsWith(AppRoutes.utilities)) {
+      return UtilitiesSubRoutes.labelForRoute(location);
+    }
     if (location.startsWith(AppRoutes.settings)) return 'Settings';
     return 'Billing Baba';
   }
@@ -423,6 +622,7 @@ class _SidebarExpandableNavTile extends StatelessWidget {
     required this.isActive,
     required this.isExpanded,
     required this.onToggle,
+    this.onCollapsedTap,
   });
 
   final _NavItem item;
@@ -430,6 +630,7 @@ class _SidebarExpandableNavTile extends StatelessWidget {
   final bool isActive;
   final bool isExpanded;
   final VoidCallback onToggle;
+  final VoidCallback? onCollapsedTap;
 
   static const _sidebarActiveBg = Color(0xFF2A3447);
   static const _sidebarText = Color(0xFFB0BEC5);
@@ -442,7 +643,7 @@ class _SidebarExpandableNavTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: collapsed ? null : onToggle,
+        onTap: collapsed ? onCollapsedTap : onToggle,
         child: Container(
           margin: const EdgeInsets.symmetric(
             horizontal: AppSpacing.sm,
@@ -451,48 +652,57 @@ class _SidebarExpandableNavTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive ? _sidebarActiveBg : Colors.transparent,
             borderRadius: AppRadius.smBorder,
-            border: isActive
+            border: isActive && !collapsed
                 ? Border(left: BorderSide(color: accentColor, width: 3))
                 : null,
           ),
           padding: EdgeInsets.symmetric(
-            horizontal: collapsed ? AppSpacing.sm : AppSpacing.md,
+            horizontal: collapsed ? 4 : AppSpacing.md,
             vertical: AppSpacing.sm + 2,
           ),
-          child: Row(
-            children: [
-              Icon(
-                item.icon,
-                color: isActive ? _sidebarTextActive : _sidebarText,
-                size: 22,
-              ),
-              if (!collapsed) ...[
-                const SizedBox(width: AppSpacing.sm + 4),
-                Expanded(
-                  child: Text(
-                    item.label,
-                    style: TextStyle(
+          child: collapsed
+              ? Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Icon(
+                      item.icon,
                       color: isActive ? _sidebarTextActive : _sidebarText,
-                      fontSize: 13,
-                      fontWeight: isActive
-                          ? FontWeight.w500
-                          : FontWeight.normal,
+                      size: 20,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
+                )
+              : Row(
+                  children: [
+                    Icon(
+                      item.icon,
+                      color: isActive ? _sidebarTextActive : _sidebarText,
+                      size: 22,
+                    ),
+                    const SizedBox(width: AppSpacing.sm + 4),
+                    Expanded(
+                      child: Text(
+                        item.label,
+                        style: TextStyle(
+                          color: isActive ? _sidebarTextActive : _sidebarText,
+                          fontSize: 13,
+                          fontWeight: isActive
+                              ? FontWeight.w500
+                              : FontWeight.normal,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.25 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.chevron_right,
+                        color: isActive ? _sidebarTextActive : _sidebarText,
+                        size: 20,
+                      ),
+                    ),
+                  ],
                 ),
-                AnimatedRotation(
-                  turns: isExpanded ? 0.25 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    Icons.chevron_right,
-                    color: isActive ? _sidebarTextActive : _sidebarText,
-                    size: 20,
-                  ),
-                ),
-              ],
-            ],
-          ),
         ),
       ),
     );
@@ -588,39 +798,48 @@ class _SidebarNavTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive ? _sidebarActiveBg : Colors.transparent,
             borderRadius: AppRadius.smBorder,
-            border: isActive
+            border: isActive && !collapsed
                 ? Border(left: BorderSide(color: accentColor, width: 3))
                 : null,
           ),
           padding: EdgeInsets.symmetric(
-            horizontal: collapsed ? AppSpacing.sm : AppSpacing.md,
+            horizontal: collapsed ? 4 : AppSpacing.md,
             vertical: AppSpacing.sm + 2,
           ),
-          child: Row(
-            children: [
-              Icon(
-                item.icon,
-                color: isActive ? _sidebarTextActive : _sidebarText,
-                size: 22,
-              ),
-              if (!collapsed) ...[
-                const SizedBox(width: AppSpacing.sm + 4),
-                Expanded(
-                  child: Text(
-                    item.label,
-                    style: TextStyle(
+          child: collapsed
+              ? Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Icon(
+                      item.icon,
                       color: isActive ? _sidebarTextActive : _sidebarText,
-                      fontSize: 13,
-                      fontWeight: isActive
-                          ? FontWeight.w500
-                          : FontWeight.normal,
+                      size: 20,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
+                )
+              : Row(
+                  children: [
+                    Icon(
+                      item.icon,
+                      color: isActive ? _sidebarTextActive : _sidebarText,
+                      size: 22,
+                    ),
+                    const SizedBox(width: AppSpacing.sm + 4),
+                    Expanded(
+                      child: Text(
+                        item.label,
+                        style: TextStyle(
+                          color: isActive ? _sidebarTextActive : _sidebarText,
+                          fontSize: 13,
+                          fontWeight: isActive
+                              ? FontWeight.w500
+                              : FontWeight.normal,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ],
-          ),
         ),
       ),
     );
@@ -632,6 +851,7 @@ class _SidebarProfileFooter extends StatefulWidget {
     required this.collapsed,
     required this.companyName,
     required this.avatarSeed,
+    required this.onExpand,
     required this.onEditProfile,
     required this.onSwitchCompany,
     required this.onLogout,
@@ -640,6 +860,7 @@ class _SidebarProfileFooter extends StatefulWidget {
   final bool collapsed;
   final String companyName;
   final String avatarSeed;
+  final VoidCallback onExpand;
   final VoidCallback onEditProfile;
   final VoidCallback onSwitchCompany;
   final Future<void> Function() onLogout;
@@ -725,7 +946,7 @@ class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
       child: Material(
         color: _sidebarColor,
         child: InkWell(
-          onTap: _toggleMenu,
+          onTap: widget.collapsed ? widget.onExpand : _toggleMenu,
           child: Container(
             padding: EdgeInsets.symmetric(
               horizontal: widget.collapsed ? AppSpacing.sm : AppSpacing.md,

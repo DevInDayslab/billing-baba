@@ -35,14 +35,31 @@ class PrintOutputService {
     required Uint8List bytes,
     required String filename,
   }) async {
+    final safeName = filename.endsWith('.pdf') ? filename : '$filename.pdf';
+    final basename = safeName.split(RegExp(r'[/\\]')).last;
+
     if (kIsWeb) {
-      await Printing.sharePdf(bytes: bytes, filename: filename);
+      await Printing.sharePdf(bytes: bytes, filename: basename);
       return;
     }
 
-    final safeName = filename.endsWith('.pdf') ? filename : '$filename.pdf';
+    // Desktop: native share UI via the printing plugin. share_plus cannot read
+    // sandboxed temp files on macOS/Windows.
+    if (PlatformFileOutput.isDesktop) {
+      try {
+        await Printing.sharePdf(bytes: bytes, filename: basename);
+        return;
+      } on Object {
+        await PlatformFileOutput.saveViaDialog(
+          filename: basename,
+          bytes: bytes,
+        );
+        return;
+      }
+    }
+
     await PlatformFileOutput.shareFromTemp(
-      filename: safeName,
+      filename: basename,
       bytes: bytes,
       mimeType: 'application/pdf',
     );

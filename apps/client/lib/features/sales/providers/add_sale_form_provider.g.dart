@@ -16,7 +16,7 @@ final class AddSaleFormProvider
     extends $NotifierProvider<AddSaleForm, AddSaleFormState> {
   AddSaleFormProvider._({
     required AddSaleFormFamily super.from,
-    required String? super.argument,
+    required String super.argument,
   }) : super(
          retry: null,
          name: r'addSaleFormProvider',
@@ -58,7 +58,7 @@ final class AddSaleFormProvider
   }
 }
 
-String _$addSaleFormHash() => r'647b026f6e1ccba77c91389cc3a388bb9ecfc5aa';
+String _$addSaleFormHash() => r'a6dd3b028194b4b95263a9d76cba9afe8f068e61';
 
 final class AddSaleFormFamily extends $Family
     with
@@ -67,7 +67,7 @@ final class AddSaleFormFamily extends $Family
           AddSaleFormState,
           AddSaleFormState,
           AddSaleFormState,
-          String?
+          String
         > {
   AddSaleFormFamily._()
     : super(
@@ -78,18 +78,18 @@ final class AddSaleFormFamily extends $Family
         isAutoDispose: true,
       );
 
-  AddSaleFormProvider call({String? invoiceId}) =>
-      AddSaleFormProvider._(argument: invoiceId, from: this);
+  AddSaleFormProvider call({String sessionKey = 'default'}) =>
+      AddSaleFormProvider._(argument: sessionKey, from: this);
 
   @override
   String toString() => r'addSaleFormProvider';
 }
 
 abstract class _$AddSaleForm extends $Notifier<AddSaleFormState> {
-  late final _$args = ref.$arg as String?;
-  String? get invoiceId => _$args;
+  late final _$args = ref.$arg as String;
+  String get sessionKey => _$args;
 
-  AddSaleFormState build({String? invoiceId});
+  AddSaleFormState build({String sessionKey = 'default'});
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -102,7 +102,7 @@ abstract class _$AddSaleForm extends $Notifier<AddSaleFormState> {
               Object?,
               Object?
             >;
-    return element.handleCreate(ref, () => build(invoiceId: _$args));
+    return element.handleCreate(ref, () => build(sessionKey: _$args));
   }
 }
 
@@ -114,7 +114,7 @@ final class AddSaleSubtotalProvider
     with $Provider<double> {
   AddSaleSubtotalProvider._({
     required AddSaleSubtotalFamily super.from,
-    required String? super.argument,
+    required String super.argument,
   }) : super(
          retry: null,
          name: r'addSaleSubtotalProvider',
@@ -140,8 +140,8 @@ final class AddSaleSubtotalProvider
 
   @override
   double create(Ref ref) {
-    final argument = this.argument as String?;
-    return addSaleSubtotal(ref, invoiceId: argument);
+    final argument = this.argument as String;
+    return addSaleSubtotal(ref, sessionKey: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -163,10 +163,10 @@ final class AddSaleSubtotalProvider
   }
 }
 
-String _$addSaleSubtotalHash() => r'99713f7c2f76e90b8d9ad80bd6c54de2048feb50';
+String _$addSaleSubtotalHash() => r'bd6fcede1e437ef366583a7f4fe2e20136770a2a';
 
 final class AddSaleSubtotalFamily extends $Family
-    with $FunctionalFamilyOverride<double, String?> {
+    with $FunctionalFamilyOverride<double, String> {
   AddSaleSubtotalFamily._()
     : super(
         retry: null,
@@ -176,8 +176,8 @@ final class AddSaleSubtotalFamily extends $Family
         isAutoDispose: true,
       );
 
-  AddSaleSubtotalProvider call({String? invoiceId}) =>
-      AddSaleSubtotalProvider._(argument: invoiceId, from: this);
+  AddSaleSubtotalProvider call({String sessionKey = 'default'}) =>
+      AddSaleSubtotalProvider._(argument: sessionKey, from: this);
 
   @override
   String toString() => r'addSaleSubtotalProvider';
@@ -191,7 +191,7 @@ final class AddSaleTotalTaxProvider
     with $Provider<double> {
   AddSaleTotalTaxProvider._({
     required AddSaleTotalTaxFamily super.from,
-    required String? super.argument,
+    required String super.argument,
   }) : super(
          retry: null,
          name: r'addSaleTotalTaxProvider',
@@ -217,8 +217,8 @@ final class AddSaleTotalTaxProvider
 
   @override
   double create(Ref ref) {
-    final argument = this.argument as String?;
-    return addSaleTotalTax(ref, invoiceId: argument);
+    final argument = this.argument as String;
+    return addSaleTotalTax(ref, sessionKey: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -240,10 +240,10 @@ final class AddSaleTotalTaxProvider
   }
 }
 
-String _$addSaleTotalTaxHash() => r'361418e0fc0f56dc580cb52ccc00c7f59e9381a9';
+String _$addSaleTotalTaxHash() => r'7db6eab935d6b911f8549b9c281422cf5e5339f0';
 
 final class AddSaleTotalTaxFamily extends $Family
-    with $FunctionalFamilyOverride<double, String?> {
+    with $FunctionalFamilyOverride<double, String> {
   AddSaleTotalTaxFamily._()
     : super(
         retry: null,
@@ -253,8 +253,8 @@ final class AddSaleTotalTaxFamily extends $Family
         isAutoDispose: true,
       );
 
-  AddSaleTotalTaxProvider call({String? invoiceId}) =>
-      AddSaleTotalTaxProvider._(argument: invoiceId, from: this);
+  AddSaleTotalTaxProvider call({String sessionKey = 'default'}) =>
+      AddSaleTotalTaxProvider._(argument: sessionKey, from: this);
 
   @override
   String toString() => r'addSaleTotalTaxProvider';
@@ -268,7 +268,7 @@ final class AddSaleGrandTotalProvider
     with $Provider<double> {
   AddSaleGrandTotalProvider._({
     required AddSaleGrandTotalFamily super.from,
-    required String? super.argument,
+    required String super.argument,
   }) : super(
          retry: null,
          name: r'addSaleGrandTotalProvider',
@@ -294,8 +294,8 @@ final class AddSaleGrandTotalProvider
 
   @override
   double create(Ref ref) {
-    final argument = this.argument as String?;
-    return addSaleGrandTotal(ref, invoiceId: argument);
+    final argument = this.argument as String;
+    return addSaleGrandTotal(ref, sessionKey: argument);
   }
 
   /// {@macro riverpod.override_with_value}
@@ -317,10 +317,10 @@ final class AddSaleGrandTotalProvider
   }
 }
 
-String _$addSaleGrandTotalHash() => r'851e01fa5165a5860dec90b2c47989bf84b0726f';
+String _$addSaleGrandTotalHash() => r'67e660e66fb9e701f1b711521ab596a6b1b01ba6';
 
 final class AddSaleGrandTotalFamily extends $Family
-    with $FunctionalFamilyOverride<double, String?> {
+    with $FunctionalFamilyOverride<double, String> {
   AddSaleGrandTotalFamily._()
     : super(
         retry: null,
@@ -330,8 +330,8 @@ final class AddSaleGrandTotalFamily extends $Family
         isAutoDispose: true,
       );
 
-  AddSaleGrandTotalProvider call({String? invoiceId}) =>
-      AddSaleGrandTotalProvider._(argument: invoiceId, from: this);
+  AddSaleGrandTotalProvider call({String sessionKey = 'default'}) =>
+      AddSaleGrandTotalProvider._(argument: sessionKey, from: this);
 
   @override
   String toString() => r'addSaleGrandTotalProvider';

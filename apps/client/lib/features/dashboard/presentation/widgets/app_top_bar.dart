@@ -3,14 +3,20 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/global_search_field.dart';
 import 'package:billing_baba/features/dashboard/providers/dashboard_provider.dart';
+import 'package:billing_baba/features/dashboard/providers/shell_sidebar_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class AppTopBar extends ConsumerWidget {
-  const AppTopBar({required this.pageTitle, super.key});
+  const AppTopBar({
+    required this.pageTitle,
+    this.showMenuButton = false,
+    super.key,
+  });
 
   final String pageTitle;
+  final bool showMenuButton;
 
   static const _barHeight = 60.0;
 
@@ -30,6 +36,16 @@ class AppTopBar extends ConsumerWidget {
 
           return Row(
             children: [
+              if (showMenuButton) ...[
+                IconButton(
+                  tooltip: 'Open menu',
+                  icon: const Icon(Icons.menu, size: 22),
+                  color: AppColors.textSecondary,
+                  onPressed: () =>
+                      ref.read(shellSidebarProvider.notifier).openDrawer(),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ],
               SizedBox(
                 width: isNarrow ? 120 : 180,
                 child: Text(
@@ -41,40 +57,61 @@ class AppTopBar extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(width: AppSpacing.lg),
+              if (!isNarrow) const SizedBox(width: AppSpacing.lg),
               Expanded(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minWidth: 280,
-                      maxWidth: 560,
-                    ),
-                    child: const GlobalSearchField(),
-                  ),
-                ),
+                child: isNarrow
+                    ? const Align(
+                        alignment: Alignment.centerRight,
+                        child: _TopBarActions(),
+                      )
+                    : Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            minWidth: 280,
+                            maxWidth: 560,
+                          ),
+                          child: const GlobalSearchField(),
+                        ),
+                      ),
               ),
-              const SizedBox(width: AppSpacing.lg),
-              const _QuickAddMenu(),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                tooltip: 'Refresh',
-                icon: const Icon(Icons.refresh, size: 20),
-                color: AppColors.textSecondary,
-                onPressed: () => ref.read(dashboardProvider.notifier).refresh(),
-              ),
-              IconButton(
-                tooltip: 'Cloud Sync',
-                icon: Icon(
-                  Icons.cloud_done_outlined,
-                  size: 20,
-                  color: Colors.green.shade600,
-                ),
-                onPressed: () {},
-              ),
+              if (!isNarrow) ...[
+                const SizedBox(width: AppSpacing.lg),
+                const _TopBarActions(),
+              ],
             ],
           );
         },
       ),
+    );
+  }
+}
+
+class _TopBarActions extends ConsumerWidget {
+  const _TopBarActions();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const _QuickAddMenu(),
+        const SizedBox(width: AppSpacing.xs),
+        IconButton(
+          tooltip: 'Refresh',
+          icon: const Icon(Icons.refresh, size: 20),
+          color: AppColors.textSecondary,
+          onPressed: () => ref.read(dashboardProvider.notifier).refresh(),
+        ),
+        IconButton(
+          tooltip: 'Cloud Sync',
+          icon: Icon(
+            Icons.cloud_done_outlined,
+            size: 20,
+            color: Colors.green.shade600,
+          ),
+          onPressed: () {},
+        ),
+      ],
     );
   }
 }

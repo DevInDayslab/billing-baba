@@ -11,14 +11,72 @@ class SaleInvoiceSummaryCard extends ConsumerWidget {
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
-    symbol: '₹',
+    symbol: '₹ ',
     decimalDigits: 0,
   );
+
+  static final _pointsFormat = NumberFormat('#,##0.##', 'en_IN');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(saleInvoiceSummaryProvider);
 
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stackVertically = constraints.maxWidth < 640;
+
+        final salesPanel = _SummaryPanel(
+          title: 'Total Sales Amount',
+          primaryValue: _currencyFormat.format(summary.totalSalesAmount),
+          secondaryLine:
+              'Received: ${_currencyFormat.format(summary.receivedAmount)} | '
+              'Balance: ${_currencyFormat.format(summary.balanceAmount)}',
+        );
+
+        final loyaltyPanel = _SummaryPanel(
+          title: 'Total Loyalty Points Rewarded',
+          primaryValue: _pointsFormat.format(summary.loyaltyPointsRewarded),
+          secondaryLine:
+              'Total Discount Redeemed: '
+              '${_currencyFormat.format(summary.totalDiscountRedeemed)}',
+        );
+
+        if (stackVertically) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              salesPanel,
+              const SizedBox(height: AppSpacing.md),
+              loyaltyPanel,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: salesPanel),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(child: loyaltyPanel),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SummaryPanel extends StatelessWidget {
+  const _SummaryPanel({
+    required this.title,
+    required this.primaryValue,
+    required this.secondaryLine,
+  });
+
+  final String title;
+  final String primaryValue;
+  final String secondaryLine;
+
+  @override
+  Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -26,75 +84,32 @@ class SaleInvoiceSummaryCard extends ConsumerWidget {
         border: Border.all(color: _cardBorder),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Total Sales Amount',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.arrow_upward,
-                        size: 12,
-                        color: Colors.green.shade700,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '0%',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                const Text(
-                  'vs last month',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              _currencyFormat.format(summary.totalSalesAmount),
+              primaryValue,
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
-            const Divider(height: 1, color: _cardBorder),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Received: ${_currencyFormat.format(summary.receivedAmount)} | '
-              'Balance: ${_currencyFormat.format(summary.balanceAmount)}',
+              secondaryLine,
               style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textSecondary,

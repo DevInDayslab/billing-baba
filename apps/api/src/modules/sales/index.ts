@@ -4,6 +4,7 @@ import {
   createDocumentSequenceRoutes,
   createSalesDocumentRoutes,
 } from './sales-document.routes';
+import { createSaleFaRoutes } from './sale-fa.routes';
 
 export const salesModule: FastifyPluginAsync = async (app) => {
   await app.register(createSalesDocumentRoutes(), {
@@ -12,5 +13,8 @@ export const salesModule: FastifyPluginAsync = async (app) => {
   await app.register(createPosSessionRoutes(), { prefix: '/pos-sessions' });
   await app.register(createDocumentSequenceRoutes(), {
     prefix: '/document-sequences',
+  });
+  await app.register(createSaleFaRoutes(), {
+    prefix: '/fixed-asset-sales',
   });
 };

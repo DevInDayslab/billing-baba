@@ -6,13 +6,20 @@ import {
   eq,
   gte,
   ilike,
+  inArray,
+  isNotNull,
   isNull,
   lte,
   sql,
 } from 'drizzle-orm';
 import type { Database } from '../../db/client';
+import {
+  paymentAllocations,
+  payments,
+} from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
-import { godowns, items } from '../../db/schema/inventory/tables';
+import { users } from '../../db/schema/identity/tables';
+import { godowns, inventoryMovements, items } from '../../db/schema/inventory/tables';
 import { documentNumberSequences } from '../../db/schema/settings/tables';
 import {
   posSessions,
@@ -23,11 +30,14 @@ import {
   toSalesDocumentLineRecord,
   toSalesDocumentRecord,
 } from './sales-document.mapper';
+import { normalizeMoney } from '../inventory/inventory.utils';
 import type {
+  ListSalesDocumentsFilterParams,
   ListSalesDocumentsParams,
   PosSessionRecord,
   SalesDocumentInsertValues,
   SalesDocumentRecord,
+  SalesDocumentsListSummary,
   SalesDocumentUpdateValues,
   SalesLineInsertValues,
   SalesLineUpdateValues,
@@ -36,10 +46,7 @@ import type {
 export class SalesDocumentRepository {
   constructor(private readonly db: Database) {}
 
-  async list(params: ListSalesDocumentsParams): Promise<{
-    rows: SalesDocumentRecord[];
-    total: number;
-  }> {
+  private buildListFilters(params: ListSalesDocumentsFilterParams) {
     const filters = [
       eq(salesDocuments.businessId, params.businessId),
       eq(salesDocuments.isDeleted, false),
@@ -67,7 +74,101 @@ export class SalesDocumentRepository {
       filters.push(ilike(salesDocuments.documentNumber, `%${params.q}%`));
     }
 
-    const whereClause = and(...filters);
+    return and(...filters);
+  }
+
+  private allocationTotalsSubquery(businessId: string) {
+    return this.db
+      .select({
+        salesDocumentId: paymentAllocations.salesDocumentId,
+        allocated: sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+          'allocated',
+        ),
+      })
+      .from(paymentAllocations)
+      .where(
+        and(
+          eq(paymentAllocations.businessId, businessId),
+          eq(paymentAllocations.isDeleted, false),
+          isNotNull(paymentAllocations.salesDocumentId),
+        ),
+      )
+      .groupBy(paymentAllocations.salesDocumentId)
+      .as('alloc');
+  }
+
+  private firstPaymentModeSubquery(businessId: string) {
+    const ranked = this.db
+      .select({
+        salesDocumentId: paymentAllocations.salesDocumentId,
+        paymentMode: payments.paymentMode,
+        rowNum: sql<number>`ROW_NUMBER() OVER (
+          PARTITION BY ${paymentAllocations.salesDocumentId}
+          ORDER BY ${paymentAllocations.createdAt} ASC
+        )`.as('row_num'),
+      })
+      .from(paymentAllocations)
+      .innerJoin(
+        payments,
+        eq(paymentAllocations.paymentId, payments.id),
+      )
+      .where(
+        and(
+          eq(paymentAllocations.businessId, businessId),
+          eq(paymentAllocations.isDeleted, false),
+          eq(payments.isDeleted, false),
+          isNotNull(paymentAllocations.salesDocumentId),
+        ),
+      )
+      .as('ranked_payments');
+
+    return this.db
+      .select({
+        salesDocumentId: ranked.salesDocumentId,
+        paymentMode: ranked.paymentMode,
+      })
+      .from(ranked)
+      .where(eq(ranked.rowNum, 1))
+      .as('first_payment');
+  }
+
+  async aggregateListSummary(
+    params: ListSalesDocumentsFilterParams,
+  ): Promise<SalesDocumentsListSummary> {
+    const whereClause = this.buildListFilters(params);
+    const alloc = this.allocationTotalsSubquery(params.businessId);
+
+    const [totals] = await this.db
+      .select({
+        totalAmount: sql<string>`COALESCE(SUM(${salesDocuments.totalAmount}::numeric), 0)`,
+      })
+      .from(salesDocuments)
+      .where(whereClause);
+
+    const [received] = await this.db
+      .select({
+        receivedAmount: sql<string>`COALESCE(SUM(COALESCE(${alloc.allocated}, 0)::numeric), 0)`,
+      })
+      .from(salesDocuments)
+      .leftJoin(alloc, eq(alloc.salesDocumentId, salesDocuments.id))
+      .where(whereClause);
+
+    const total = Number(totals?.totalAmount ?? 0);
+    const receivedTotal = Number(received?.receivedAmount ?? 0);
+    const balance = Math.max(total - receivedTotal, 0);
+
+    return {
+      total_amount: normalizeMoney(total),
+      received_amount: normalizeMoney(receivedTotal),
+      balance_amount: normalizeMoney(balance),
+    };
+  }
+
+  async list(params: ListSalesDocumentsParams): Promise<{
+    rows: SalesDocumentRecord[];
+    total: number;
+  }> {
+    const whereClause = this.buildListFilters(params);
 
     const countResult = await this.db
       .select({ total: count() })
@@ -86,18 +187,88 @@ export class SalesDocumentRepository {
       params.order === 'desc' ? desc(sortColumn) : asc(sortColumn);
     const offset = (params.page - 1) * params.limit;
 
+    const alloc = this.allocationTotalsSubquery(params.businessId);
+    const firstPayment = this.firstPaymentModeSubquery(params.businessId);
+
     const rows = await this.db
-      .select()
+      .select({
+        document: salesDocuments,
+        paidAmount: sql<string>`COALESCE(${alloc.allocated}, 0)`,
+        paymentMode: firstPayment.paymentMode,
+        createdByName: users.name,
+      })
       .from(salesDocuments)
+      .leftJoin(alloc, eq(alloc.salesDocumentId, salesDocuments.id))
+      .leftJoin(
+        firstPayment,
+        eq(firstPayment.salesDocumentId, salesDocuments.id),
+      )
+      .leftJoin(users, eq(salesDocuments.createdBy, users.id))
       .where(whereClause)
       .orderBy(orderBy)
       .limit(params.limit)
       .offset(offset);
 
+    const documentIds = rows.map((row) => row.document.id);
+    const godownNamesByDocumentId = await this.getGodownNamesForDocuments(
+      params.businessId,
+      documentIds,
+    );
+
     return {
-      rows: rows.map((row) => toSalesDocumentRecord(row)),
+      rows: rows.map((row) =>
+        toSalesDocumentRecord(
+          {
+            ...row.document,
+            paidAmount: row.paidAmount,
+            paymentMode: row.paymentMode,
+          },
+          undefined,
+          {
+            createdByName: row.createdByName,
+            godownName: godownNamesByDocumentId.get(row.document.id) ?? null,
+          },
+        ),
+      ),
       total,
     };
+  }
+
+  private async getGodownNamesForDocuments(
+    businessId: string,
+    documentIds: string[],
+  ): Promise<Map<string, string>> {
+    if (documentIds.length === 0) {
+      return new Map();
+    }
+
+    const rows = await this.db
+      .selectDistinctOn([inventoryMovements.referenceId], {
+        referenceId: inventoryMovements.referenceId,
+        godownName: godowns.name,
+      })
+      .from(inventoryMovements)
+      .innerJoin(godowns, eq(inventoryMovements.godownId, godowns.id))
+      .where(
+        and(
+          eq(inventoryMovements.businessId, businessId),
+          eq(inventoryMovements.referenceType, 'sales_documents'),
+          inArray(inventoryMovements.referenceId, documentIds),
+        ),
+      )
+      .orderBy(
+        inventoryMovements.referenceId,
+        asc(inventoryMovements.createdAt),
+      );
+
+    const godownNames = new Map<string, string>();
+    for (const row of rows) {
+      if (row.referenceId != null) {
+        godownNames.set(row.referenceId, row.godownName);
+      }
+    }
+
+    return godownNames;
   }
 
   async findById(

@@ -260,3 +260,33 @@ class PaymentListQuery {
     'order': order,
   };
 }
+
+class ConvertSalesDocumentRequest {
+  const ConvertSalesDocumentRequest({
+    required this.targetType,
+    this.applyGst = false,
+  });
+
+  final String targetType;
+  final bool applyGst;
+
+  Map<String, dynamic> toJson() => {
+    'target_type': targetType,
+    'apply_gst': applyGst,
+  };
+}
+
+class UpdatePaymentRequest {
+  const UpdatePaymentRequest({
+    this.notes,
+    this.referenceNumber,
+  });
+
+  final String? notes;
+  final String? referenceNumber;
+
+  Map<String, dynamic> toJson() => {
+    if (notes != null) 'notes': notes,
+    if (referenceNumber != null) 'reference_number': referenceNumber,
+  };
+}

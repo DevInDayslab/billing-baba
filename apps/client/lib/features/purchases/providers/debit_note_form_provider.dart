@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
@@ -260,9 +261,7 @@ class DebitNoteForm extends _$DebitNoteForm {
   }
 
   bool validate({bool finalize = false}) {
-    final hasParty =
-        (state.partyId != null && state.partyId!.isNotEmpty) ||
-        state.party.trim().isNotEmpty;
+    final hasParty = state.partyId != null && state.partyId!.isNotEmpty;
     final isValid = state.hasValidLineItems && (!finalize || hasParty);
     if (!isValid) {
       state = state.copyWith(showValidationErrors: true);
@@ -272,7 +271,10 @@ class DebitNoteForm extends _$DebitNoteForm {
 
   Future<String?> saveDebitNote({bool finalize = true}) async {
     if (!validate(finalize: finalize)) {
-      return 'Supplier and line items are required';
+      if (state.partyId == null || state.partyId!.isEmpty) {
+        return 'Please select a supplier';
+      }
+      return 'Add at least one item with name and quantity';
     }
 
     try {
@@ -302,6 +304,7 @@ class DebitNoteForm extends _$DebitNoteForm {
       }
 
       ref.invalidate(purchaseReturnsProvider);
+      refreshAfterPurchaseReturn(ref);
       resetForm();
       return null;
     } catch (error) {

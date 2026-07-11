@@ -6,6 +6,9 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_ta
 import 'package:billing_baba/features/sales/presentation/widgets/sale_page_title_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+const _addSaleRed = Color(0xFFE53935);
 
 class SaleInvoicesPage extends ConsumerWidget {
   const SaleInvoicesPage({super.key});
@@ -13,24 +16,40 @@ class SaleInvoicesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SalePageTitleBar(
-              currentRoute: AppRoutes.saleInvoices,
-              onSettingsTap: () => debugPrint('Settings tapped'),
+      backgroundColor: AppColors.surface,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding = constraints.maxWidth < 600
+              ? AppSpacing.md
+              : AppSpacing.lg;
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              AppSpacing.md,
+              horizontalPadding,
+              AppSpacing.lg,
             ),
-            const SizedBox(height: AppSpacing.md),
-            const SaleInvoiceFilterBar(),
-            const SizedBox(height: AppSpacing.md),
-            const SaleInvoiceSummaryCard(),
-            const SizedBox(height: AppSpacing.md),
-            const SaleInvoiceTable(),
-          ],
-        ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SalePageTitleBar(
+                  currentRoute: AppRoutes.saleInvoices,
+                  addButtonLabel: 'Add Sale',
+                  addButtonColor: _addSaleRed,
+                  onAddTap: () => context.push(AppRoutes.addSale),
+                  onSettingsTap: () => debugPrint('Settings tapped'),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                const SaleInvoiceFilterBar(),
+                const SizedBox(height: AppSpacing.md),
+                const SaleInvoiceSummaryCard(),
+                const SizedBox(height: AppSpacing.md),
+                const SaleInvoiceTable(),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

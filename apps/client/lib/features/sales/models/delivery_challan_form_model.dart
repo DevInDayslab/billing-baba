@@ -8,6 +8,8 @@ class DeliveryChallanFormState {
     this.documentId,
     this.partyId,
     this.party = '',
+    this.billingAddress = '',
+    this.shippingAddress = '',
     this.godown = 'Main Godown',
     this.godownId,
     this.challanNo = '1',
@@ -16,11 +18,15 @@ class DeliveryChallanFormState {
     this.dueDate,
     this.stateOfSupply = '',
     this.items = const [],
+    this.termsTitle = 'Delivery Challan',
+    this.termsText = 'Thanks for doing business with us!',
     this.description = '',
     this.attachedImages = const [],
     this.attachedDocuments = const [],
+    this.taxOption = 'NONE',
     this.roundOff = false,
     this.showValidationErrors = false,
+    this.isLoading = false,
     this.isSaving = false,
     this.saveError,
   });
@@ -29,6 +35,8 @@ class DeliveryChallanFormState {
   final String? documentId;
   final String? partyId;
   final String party;
+  final String billingAddress;
+  final String shippingAddress;
   final String godown;
   final String? godownId;
   final String challanNo;
@@ -37,13 +45,23 @@ class DeliveryChallanFormState {
   final DateTime? dueDate;
   final String stateOfSupply;
   final List<SaleLineItem> items;
+  final String termsTitle;
+  final String termsText;
   final String description;
   final List<SaleFormAttachment> attachedImages;
   final List<SaleFormAttachment> attachedDocuments;
+  final String taxOption;
   final bool roundOff;
   final bool showValidationErrors;
+  final bool isLoading;
   final bool isSaving;
   final String? saveError;
+
+  double get subtotal =>
+      items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
+
+  double get taxAmount =>
+      items.fold<double>(0, (sum, item) => sum + item.lineTax);
 
   double get rawGrandTotal =>
       items.fold<double>(0, (sum, item) => sum + item.amount);
@@ -76,6 +94,8 @@ class DeliveryChallanFormState {
     String? documentId,
     String? partyId,
     String? party,
+    String? billingAddress,
+    String? shippingAddress,
     String? godown,
     String? godownId,
     String? challanNo,
@@ -84,20 +104,27 @@ class DeliveryChallanFormState {
     DateTime? dueDate,
     String? stateOfSupply,
     List<SaleLineItem>? items,
+    String? termsTitle,
+    String? termsText,
     String? description,
     List<SaleFormAttachment>? attachedImages,
     List<SaleFormAttachment>? attachedDocuments,
+    String? taxOption,
     bool? roundOff,
     bool? showValidationErrors,
+    bool? isLoading,
     bool? isSaving,
     String? saveError,
+    bool clearDocumentId = false,
     bool clearSaveError = false,
   }) {
     return DeliveryChallanFormState(
       isFormOpen: isFormOpen ?? this.isFormOpen,
-      documentId: documentId ?? this.documentId,
+      documentId: clearDocumentId ? null : (documentId ?? this.documentId),
       partyId: partyId ?? this.partyId,
       party: party ?? this.party,
+      billingAddress: billingAddress ?? this.billingAddress,
+      shippingAddress: shippingAddress ?? this.shippingAddress,
       godown: godown ?? this.godown,
       godownId: godownId ?? this.godownId,
       challanNo: challanNo ?? this.challanNo,
@@ -106,11 +133,15 @@ class DeliveryChallanFormState {
       dueDate: dueDate ?? this.dueDate,
       stateOfSupply: stateOfSupply ?? this.stateOfSupply,
       items: items ?? this.items,
+      termsTitle: termsTitle ?? this.termsTitle,
+      termsText: termsText ?? this.termsText,
       description: description ?? this.description,
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
+      taxOption: taxOption ?? this.taxOption,
       roundOff: roundOff ?? this.roundOff,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
+      isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );

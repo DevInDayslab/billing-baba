@@ -7,7 +7,7 @@ import 'package:billing_baba/features/export/models/export_format.dart';
 import 'package:billing_baba/features/export/models/export_request.dart';
 import 'package:billing_baba/features/export/models/export_sheet.dart';
 import 'package:billing_baba/features/export/utils/export_filename.dart';
-import 'package:excel/excel.dart';
+import 'package:justkawal_excel_updated/justkawal_excel_updated.dart';
 
 /// Generates native .xlsx files from [ExportRequest].
 class ExcelExporter {

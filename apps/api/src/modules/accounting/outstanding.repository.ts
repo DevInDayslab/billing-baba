@@ -1,7 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
-import { ledgerEntries } from '../../db/schema/accounting/tables';
-import { parties } from '../../db/schema/crm/tables';
+import { aggregatePartyLedgerBalances } from '../../shared/reporting/party-ledger';
 import type {
   OutstandingSummary,
   PartyOutstandingBalance,
@@ -11,82 +10,51 @@ import type {
  * Ledger sign convention (customer/supplier running balance):
  * balance = opening_balance + SUM(debit) - SUM(credit)
  * Positive → receivable; negative → payable.
+ *
+ * Uses aggregatePartyLedgerBalances from the shared party-ledger engine.
  */
 export class OutstandingRepository {
   constructor(private readonly db: Database) {}
 
-  private partyBalanceSubquery(businessId: string) {
-    return this.db
-      .select({
-        partyId: parties.id,
-        balance: sql<string>`(
-          ${parties.openingBalance}::numeric
-          + COALESCE((
-            SELECT SUM(${ledgerEntries.debit}::numeric)
-            FROM ${ledgerEntries}
-            WHERE ${ledgerEntries.businessId} = ${businessId}
-              AND ${ledgerEntries.partyId} = ${parties.id}
-          ), 0)
-          - COALESCE((
-            SELECT SUM(${ledgerEntries.credit}::numeric)
-            FROM ${ledgerEntries}
-            WHERE ${ledgerEntries.businessId} = ${businessId}
-              AND ${ledgerEntries.partyId} = ${parties.id}
-          ), 0)
-        )`.as('balance'),
-      })
-      .from(parties)
-      .where(
-        and(eq(parties.businessId, businessId), eq(parties.isDeleted, false)),
-      )
-      .as('party_balances');
-  }
-
   async getOutstandingSummary(businessId: string): Promise<OutstandingSummary> {
-    const balances = this.partyBalanceSubquery(businessId);
+    const balances = await aggregatePartyLedgerBalances(this.db, businessId);
 
-    const [row] = await this.db
-      .select({
-        totalReceivable: sql<string>`COALESCE(SUM(
-          CASE WHEN ${balances.balance}::numeric > 0
-            THEN ${balances.balance}::numeric ELSE 0 END
-        ), 0)`,
-        receivablePartyCount: sql<number>`COUNT(*) FILTER (
-          WHERE ${balances.balance}::numeric > 0
-        )::int`,
-        totalPayable: sql<string>`COALESCE(SUM(
-          CASE WHEN ${balances.balance}::numeric < 0
-            THEN ABS(${balances.balance}::numeric) ELSE 0 END
-        ), 0)`,
-        payablePartyCount: sql<number>`COUNT(*) FILTER (
-          WHERE ${balances.balance}::numeric < 0
-        )::int`,
-      })
-      .from(balances);
+    let totalReceivable = 0;
+    let receivablePartyCount = 0;
+    let totalPayable = 0;
+    let payablePartyCount = 0;
+
+    for (const row of balances) {
+      const balance = Number(row.balance);
+      if (balance > 0) {
+        totalReceivable += balance;
+        receivablePartyCount += 1;
+      } else if (balance < 0) {
+        totalPayable += Math.abs(balance);
+        payablePartyCount += 1;
+      }
+    }
 
     return {
-      total_receivable: row?.totalReceivable ?? '0',
-      receivable_party_count: Number(row?.receivablePartyCount ?? 0),
-      total_payable: row?.totalPayable ?? '0',
-      payable_party_count: Number(row?.payablePartyCount ?? 0),
+      total_receivable: totalReceivable.toFixed(4),
+      receivable_party_count: receivablePartyCount,
+      total_payable: totalPayable.toFixed(4),
+      payable_party_count: payablePartyCount,
     };
   }
 
   async listPartyBalances(
     businessId: string,
   ): Promise<PartyOutstandingBalance[]> {
-    const balances = this.partyBalanceSubquery(businessId);
+    return aggregatePartyLedgerBalances(this.db, businessId);
+  }
 
-    const rows = await this.db
-      .select({
-        partyId: balances.partyId,
-        balance: balances.balance,
-      })
-      .from(balances);
-
-    return rows.map((row) => ({
-      party_id: row.partyId,
-      balance: row.balance ?? '0',
-    }));
+  async getPartyBalance(
+    businessId: string,
+    partyId: string,
+  ): Promise<string | null> {
+    const balances = await this.listPartyBalances(businessId);
+    const match = balances.find((row) => row.party_id === partyId);
+    return match?.balance ?? null;
   }
 }

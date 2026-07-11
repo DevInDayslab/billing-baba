@@ -12,8 +12,7 @@ part of 'pos_cart_provider.dart';
 @ProviderFor(PosCart)
 final posCartProvider = PosCartProvider._();
 
-final class PosCartProvider
-    extends $NotifierProvider<PosCart, PosCartState> {
+final class PosCartProvider extends $NotifierProvider<PosCart, PosCartState> {
   PosCartProvider._()
     : super(
         from: null,
@@ -41,7 +40,7 @@ final class PosCartProvider
   }
 }
 
-String _$posCartHash() => r'a1b2c3d4e5f6789012345678abcdef9012345678';
+String _$posCartHash() => r'c09b287747d50517abd2c6d66406dd1efef047d0';
 
 abstract class _$PosCart extends $Notifier<PosCartState> {
   PosCartState build();

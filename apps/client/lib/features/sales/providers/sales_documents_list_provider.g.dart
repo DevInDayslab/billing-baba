@@ -20,7 +20,7 @@ final class SalesDocumentSearchQueryProvider
   }) : super(
          retry: null,
          name: r'salesDocumentSearchQueryProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -60,7 +60,7 @@ final class SalesDocumentSearchQueryProvider
 }
 
 String _$salesDocumentSearchQueryHash() =>
-    r'dfa59a235a29a3c64d8c7e953784c0455161d370';
+    r'f8ef92e21c06677e920e5771da9cbd823f702d1a';
 
 final class SalesDocumentSearchQueryFamily extends $Family
     with
@@ -77,7 +77,7 @@ final class SalesDocumentSearchQueryFamily extends $Family
         name: r'salesDocumentSearchQueryProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   SalesDocumentSearchQueryProvider call(SalesDocumentListScope scope) =>
@@ -119,7 +119,7 @@ final class SalesDocumentFiltersProvider
   }) : super(
          retry: null,
          name: r'salesDocumentFiltersProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -158,7 +158,7 @@ final class SalesDocumentFiltersProvider
 }
 
 String _$salesDocumentFiltersHash() =>
-    r'0e894dc1155a72ab6fa948ded894567f533cbcc1';
+    r'1e8487a6d4269ff00582834b03f6cac64ada1995';
 
 final class SalesDocumentFiltersFamily extends $Family
     with
@@ -175,7 +175,7 @@ final class SalesDocumentFiltersFamily extends $Family
         name: r'salesDocumentFiltersProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   SalesDocumentFiltersProvider call(SalesDocumentListScope scope) =>
@@ -250,7 +250,7 @@ final class SalesDocumentsListProvider
 }
 
 String _$salesDocumentsListHash() =>
-    r'18ffaa51a42a887b1161b88cb6d9e803363b99c9';
+    r'fe68fadeecae7871501ec568851822abaf098333';
 
 final class SalesDocumentsListFamily extends $Family
     with
@@ -392,3 +392,45 @@ final class PaginatedSalesDocumentsFamily extends $Family
   @override
   String toString() => r'paginatedSalesDocumentsProvider';
 }
+
+@ProviderFor(salesOrderStatusSummary)
+final salesOrderStatusSummaryProvider = SalesOrderStatusSummaryProvider._();
+
+final class SalesOrderStatusSummaryProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<SalesOrderSummaryData>,
+          SalesOrderSummaryData,
+          FutureOr<SalesOrderSummaryData>
+        >
+    with
+        $FutureModifier<SalesOrderSummaryData>,
+        $FutureProvider<SalesOrderSummaryData> {
+  SalesOrderStatusSummaryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'salesOrderStatusSummaryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$salesOrderStatusSummaryHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<SalesOrderSummaryData> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<SalesOrderSummaryData> create(Ref ref) {
+    return salesOrderStatusSummary(ref);
+  }
+}
+
+String _$salesOrderStatusSummaryHash() =>
+    r'dd2a96973d3a4a46f8dd10d19c376cb1164eb999';

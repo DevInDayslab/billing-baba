@@ -2,6 +2,9 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 const saleFieldBorderColor = Color(0xFFE0E0E0);
+const saleCompactFieldBorderColor = Color(0xFFBDBDBD);
+const saleCompactFieldHeight = 30.0;
+const _compactBorderRadius = 4.0;
 const saleFieldFocusColor = Color(0xFF42A5F5);
 const saleFieldErrorColor = Color(0xFFD32F2F);
 const saleFieldTextStyle = TextStyle(
@@ -22,44 +25,106 @@ InputDecoration buildSaleFieldDecoration({
   bool hasError = false,
   bool filled = false,
   bool compact = false,
+  bool borderless = false,
 }) {
-  final borderColor = hasError ? saleFieldErrorColor : saleFieldBorderColor;
+  if (borderless) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(
+        color: Colors.grey.shade400,
+        fontSize: compact ? 12 : 14,
+      ),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: compact ? 4 : 12,
+        vertical: compact ? 8 : 10,
+      ),
+      isDense: true,
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      errorBorder: InputBorder.none,
+      focusedErrorBorder: InputBorder.none,
+      suffixIcon: suffixIcon,
+      suffix: suffix,
+    );
+  }
+
+  final borderColor = hasError
+      ? saleFieldErrorColor
+      : (compact ? saleCompactFieldBorderColor : saleFieldBorderColor);
   final focusedBorderColor = hasError
       ? saleFieldErrorColor
       : saleFieldFocusColor;
+  final borderRadius = compact ? _compactBorderRadius : 6.0;
+  final compactVerticalPadding =
+      (saleCompactFieldHeight - 12 - 2) / 2; // font + border
 
   return InputDecoration(
     hintText: hint,
     hintStyle: TextStyle(
       color: Colors.grey.shade400,
-      fontSize: compact ? 13 : 14,
+      fontSize: compact ? 12 : 14,
     ),
     contentPadding: EdgeInsets.symmetric(
-      horizontal: compact ? 8 : 12,
-      vertical: compact ? 6 : 10,
+      horizontal: compact ? 6 : 12,
+      vertical: compact ? compactVerticalPadding : 10,
     ),
     isDense: true,
-    filled: filled,
-    fillColor: filled ? const Color(0xFFF9F9F9) : null,
+    constraints: compact
+        ? const BoxConstraints.tightFor(height: saleCompactFieldHeight)
+        : null,
+    filled: compact || filled,
+    fillColor: compact
+        ? Colors.white
+        : (filled ? const Color(0xFFF9F9F9) : null),
     suffixIcon: suffixIcon,
     suffix: suffix,
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(borderRadius),
       borderSide: BorderSide(color: borderColor),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(borderRadius),
       borderSide: BorderSide(color: borderColor),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(borderRadius),
       borderSide: BorderSide(color: focusedBorderColor, width: 1.5),
     ),
     errorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(borderRadius),
       borderSide: const BorderSide(color: saleFieldErrorColor),
     ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(borderRadius),
+      borderSide: const BorderSide(color: saleFieldErrorColor, width: 1.5),
+    ),
   );
+}
+
+/// Fixed-height shell so compact text fields, dropdowns, and date triggers align.
+class SaleCompactFieldBox extends StatelessWidget {
+  const SaleCompactFieldBox({
+    required this.child,
+    this.width,
+    super.key,
+  });
+
+  final Widget child;
+  final double? width;
+
+  @override
+  Widget build(BuildContext context) {
+    final field = SizedBox(
+      height: saleCompactFieldHeight,
+      child: child,
+    );
+
+    if (width != null) {
+      return SizedBox(width: width, child: field);
+    }
+    return field;
+  }
 }
 
 /// Trigger shell for picker/dropdown fields that mirrors [buildSaleFieldDecoration].
@@ -69,6 +134,7 @@ class SaleFieldTrigger extends StatelessWidget {
     required this.onTap,
     this.hasError = false,
     this.compact = false,
+    this.borderless = false,
     super.key,
   });
 
@@ -76,25 +142,57 @@ class SaleFieldTrigger extends StatelessWidget {
   final VoidCallback onTap;
   final bool hasError;
   final bool compact;
+  final bool borderless;
 
   @override
   Widget build(BuildContext context) {
+    if (borderless) {
+      return GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: compact
+              ? SizedBox(
+                  width: double.infinity,
+                  height: saleCompactFieldHeight,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: child,
+                  ),
+                )
+              : child,
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 8 : 12,
-          vertical: compact ? 6 : 10,
-        ),
+        height: compact ? saleCompactFieldHeight : null,
+        padding: compact
+            ? const EdgeInsets.symmetric(horizontal: 6)
+            : const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        alignment: compact ? Alignment.centerLeft : null,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(6),
+          color: compact ? Colors.white : null,
+          borderRadius: BorderRadius.circular(
+            compact ? _compactBorderRadius : 6,
+          ),
           border: Border.all(
-            color: hasError ? saleFieldErrorColor : saleFieldBorderColor,
+            color: hasError
+                ? saleFieldErrorColor
+                : (compact
+                    ? saleCompactFieldBorderColor
+                    : saleFieldBorderColor),
           ),
         ),
-        child: child,
+        child: compact
+            ? Align(alignment: Alignment.centerLeft, child: child)
+            : child,
       ),
     );
   }

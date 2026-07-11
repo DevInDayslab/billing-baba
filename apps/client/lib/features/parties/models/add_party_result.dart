@@ -2,6 +2,7 @@
 class AddPartyResult {
   const AddPartyResult({
     required this.partyName,
+    this.partyType = 'customer',
     this.gstin = '',
     this.phone = '',
     this.gstType = 'Unregistered/Consumer',
@@ -18,9 +19,9 @@ class AddPartyResult {
     this.shippingCity = '',
     this.shippingPincode = '',
     this.shippingCountry = 'India',
-    this.openingBalance = '',
+    this.openingBalance = '0.00',
     this.openingBalanceAsOfDate,
-    this.loyaltyPointsOpeningBalance = '',
+    this.loyaltyPointsOpeningBalance = '0.00',
     this.loyaltyPointsAsOfDate,
     this.hasCustomCreditLimit = false,
     this.creditLimit = '',
@@ -31,6 +32,7 @@ class AddPartyResult {
   });
 
   final String partyName;
+  final String partyType;
   final String gstin;
   final String phone;
   final String gstType;

@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
+import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final selectedPartyIdProvider = NotifierProvider<SelectedPartyId, String?>(
@@ -12,6 +13,11 @@ final partySearchQueryProvider = NotifierProvider<PartySearchQuery, String>(
 final partyListFilterProvider =
     NotifierProvider<PartyListFilterNotifier, PartyListFilter>(
       PartyListFilterNotifier.new,
+    );
+
+final partyTypeFilterProvider =
+    NotifierProvider<PartyTypeFilterNotifier, PartyTypeFilter>(
+      PartyTypeFilterNotifier.new,
     );
 
 class SelectedPartyId extends Notifier<String?> {
@@ -36,4 +42,12 @@ class PartyListFilterNotifier extends Notifier<PartyListFilter> {
 
   PartyListFilter get filter => state;
   set filter(PartyListFilter value) => state = value;
+}
+
+class PartyTypeFilterNotifier extends Notifier<PartyTypeFilter> {
+  @override
+  PartyTypeFilter build() => PartyTypeFilter.all;
+
+  PartyTypeFilter get filter => state;
+  set filter(PartyTypeFilter value) => state = value;
 }

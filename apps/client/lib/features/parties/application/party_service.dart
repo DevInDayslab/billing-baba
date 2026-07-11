@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/data/party_cache.dart';
@@ -12,12 +13,14 @@ import 'package:billing_baba/features/parties/models/party_dto.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_list_query.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/parties/providers/parties_selection_providers.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
-export 'party_error_mapper.dart' show PartyException, PartyOfflineException;
+export 'party_error_mapper.dart'
+    show PartyException, PartyHasDependenciesException, PartyOfflineException;
 
 part 'party_service.g.dart';
 
@@ -30,7 +33,6 @@ Future<PartyService> partyService(Ref ref) async {
   return PartyService(
     repository: PartyRepository(api.dio),
     cache: PartyCache(storage),
-    ref: ref,
   );
 }
 
@@ -38,12 +40,10 @@ class PartyService {
   PartyService({
     required this._repository,
     required this._cache,
-    required this._ref,
   });
 
   final PartyRepository _repository;
   final PartyCache _cache;
-  final Ref _ref;
 
   bool _isShowingCachedData = false;
   bool get isShowingCachedData => _isShowingCachedData;
@@ -51,9 +51,9 @@ class PartyService {
   String? get _businessId => _cache.readBusinessId();
 
   Future<List<PartyModel>> fetchParties({
-    bool forceRefresh = false,
     String? searchQuery,
     PartyListFilter filter = PartyListFilter.all,
+    PartyTypeFilter typeFilter = PartyTypeFilter.all,
   }) async {
     final businessId = _businessId;
     if (businessId == null || businessId.isEmpty) {
@@ -62,27 +62,30 @@ class PartyService {
 
     _isShowingCachedData = false;
 
-    if (!forceRefresh) {
-      final cached = await _loadFromCache(businessId);
-      if (cached.isNotEmpty) {
-        _isShowingCachedData = true;
-        return _applyClientFilters(cached, searchQuery, filter);
-      }
-    }
-
     try {
       final remote = await _fetchRemoteParties(
         searchQuery: searchQuery,
         filter: filter,
+        typeFilter: typeFilter,
       );
       await _persistParties(businessId, remote);
       final merged = await _mergeWithExtensions(businessId, remote);
-      return _applyClientFilters(merged, searchQuery, filter);
+      return _applyClientFilters(
+        merged,
+        searchQuery,
+        filter,
+        typeFilter,
+      );
     } on DioException catch (e) {
       final cached = await _loadFromCache(businessId);
       if (cached.isNotEmpty) {
         _isShowingCachedData = true;
-        return _applyClientFilters(cached, searchQuery, filter);
+        return _applyClientFilters(
+          cached,
+          searchQuery,
+          filter,
+          typeFilter,
+        );
       }
       PartyErrorMapper.mapAndThrow(e);
     }
@@ -139,7 +142,7 @@ class PartyService {
           name: result.partyName.trim(),
           mobile: PartyModel.normalizePhone(result.phone),
           email: result.email.trim().isEmpty ? null : result.email.trim(),
-          partyType: 'customer',
+          partyType: result.partyType,
           pricingTier: 'tier_1',
           gstin: result.gstin.trim().isEmpty ? null : result.gstin.trim(),
           state: result.state.trim().isEmpty ? null : result.state.trim(),
@@ -197,11 +200,74 @@ class PartyService {
     }
   }
 
+  Future<PartyModel> setPartyActive(
+    String partyId, {
+    required bool isActive,
+  }) async {
+    final businessId = _requireBusinessId();
+    final request = UpdatePartyRequest(isActive: isActive);
+
+    try {
+      await _syncPendingOperations();
+      final updated = await _repository.updateParty(partyId, request);
+      await _cache.upsertParty(businessId, updated.toJson());
+      return await _dtoToModel(businessId, updated);
+    } on DioException catch (e) {
+      if (_isOffline(e)) {
+        await _cache.queuePendingOperation(businessId, {
+          'type': 'update',
+          'party_id': partyId,
+          'request': request.toJson(),
+        });
+        final cachedParties = await _loadFromCache(businessId);
+        final cached = cachedParties
+            .where((party) => party.id == partyId)
+            .firstOrNull;
+        if (cached != null) {
+          final offlineParty = cached.copyWith(
+            isActive: isActive,
+            updatedAt: DateTime.now(),
+          );
+          await _cache.upsertParty(
+            businessId,
+            PartyDto(
+              id: offlineParty.id,
+              name: offlineParty.name,
+              mobile: PartyModel.normalizePhone(offlineParty.phone),
+              email: offlineParty.email.isEmpty ? null : offlineParty.email,
+              partyType: offlineParty.partyType,
+              pricingTier: 'tier_1',
+              gstin: offlineParty.gstin.isEmpty ? null : offlineParty.gstin,
+              state: offlineParty.state.isEmpty ? null : offlineParty.state,
+              creditLimit: offlineParty.hasCustomCreditLimit
+                  ? offlineParty.creditLimit
+                  : '0',
+              openingBalance: offlineParty.openingBalance.toString(),
+              balance: offlineParty.balance.toString(),
+              isActive: isActive,
+              createdAt:
+                  offlineParty.createdAt?.toIso8601String() ??
+                  DateTime.now().toIso8601String(),
+              updatedAt: DateTime.now().toIso8601String(),
+            ).toJson(),
+          );
+          return offlineParty;
+        }
+        throw const PartyOfflineException();
+      }
+      PartyErrorMapper.mapAndThrow(e);
+    }
+  }
+
   Future<void> deleteParty(String partyId) async {
     final businessId = _requireBusinessId();
 
     try {
-      await _syncPendingOperations();
+      try {
+        await _syncPendingOperations();
+      } on Object {
+        // Do not block delete when pending sync fails.
+      }
       await _repository.deleteParty(partyId);
       await _cache.removeLocalExtension(businessId, partyId);
       await _cache.removeParty(businessId, partyId);
@@ -247,6 +313,18 @@ class PartyService {
         .firstOrNull;
   }
 
+  Future<List<String>> readPartyGroupNames() async {
+    final businessId = _businessId;
+    if (businessId == null || businessId.isEmpty) return [];
+    return _cache.readPartyGroupNames(businessId);
+  }
+
+  Future<void> savePartyGroupNames(List<String> names) async {
+    final businessId = _businessId;
+    if (businessId == null || businessId.isEmpty) return;
+    await _cache.savePartyGroupNames(businessId, names);
+  }
+
   Future<void> _fetchPartyInBackground(
     String businessId,
     String partyId,
@@ -254,20 +332,15 @@ class PartyService {
     try {
       final dto = await _repository.getParty(partyId);
       await _cache.upsertParty(businessId, dto.toJson());
-      // Defer so partyDetailProvider is not invalidated during its own build.
-      unawaited(
-        Future.microtask(
-          () => _ref.invalidate(partyDetailProvider(partyId)),
-        ),
-      );
     } on DioException {
-      // Keep cached detail.
+      // Keep cached detail; avoid touching partyDetailProvider during its build.
     }
   }
 
   Future<List<PartyDto>> _fetchRemoteParties({
     String? searchQuery,
     PartyListFilter filter = PartyListFilter.all,
+    PartyTypeFilter typeFilter = PartyTypeFilter.all,
   }) async {
     final allParties = <PartyDto>[];
     var page = 1;
@@ -294,10 +367,13 @@ class PartyService {
     List<PartyModel> parties,
     String? searchQuery,
     PartyListFilter filter,
+    PartyTypeFilter typeFilter,
   ) {
     final query = searchQuery?.trim().toLowerCase() ?? '';
 
     final filtered = parties.where((party) {
+      if (!typeFilter.matches(party.partyType)) return false;
+
       if (query.isNotEmpty) {
         final matchesName = party.name.toLowerCase().contains(query);
         final matchesPhone = party.phone.toLowerCase().contains(query);
@@ -416,6 +492,7 @@ class PartyService {
               mobile: requestJson['mobile'] as String?,
               email: requestJson['email'] as String?,
               gstin: requestJson['gstin'] as String?,
+              partyType: requestJson['party_type'] as String?,
               state: requestJson['state'] as String?,
               creditLimit: requestJson['credit_limit']?.toString(),
               openingBalance: requestJson['opening_balance']?.toString(),
@@ -481,56 +558,36 @@ extension on PartyListQuery {
 
 @Riverpod(keepAlive: true)
 class PartyList extends _$PartyList {
-  var _revalidateGeneration = 0;
-
   @override
   Future<List<PartyModel>> build() async {
     ref
       ..watch(partySearchQueryProvider)
       ..watch(partyListFilterProvider)
+      ..watch(partyTypeFilterProvider)
       ..watch(partyBackendSearchProvider);
 
     final service = await ref.watch(partyServiceProvider.future);
     final parties = await service.fetchParties(
       searchQuery: ref.read(partyBackendSearchProvider),
       filter: ref.read(partyListFilterProvider),
+      typeFilter: ref.read(partyTypeFilterProvider),
     );
 
-    if (service.isShowingCachedData) {
-      unawaited(_revalidateFromRemote());
-    }
-
     return parties;
-  }
-
-  Future<void> _revalidateFromRemote() async {
-    final generation = ++_revalidateGeneration;
-
-    try {
-      final service = await ref.read(partyServiceProvider.future);
-      final fresh = await service.fetchParties(
-        forceRefresh: true,
-        searchQuery: ref.read(partyBackendSearchProvider),
-        filter: ref.read(partyListFilterProvider),
-      );
-      if (!ref.mounted || generation != _revalidateGeneration) return;
-      state = AsyncData(fresh);
-    } on Object {
-      // Keep showing cached data.
-    }
   }
 
   Future<void> refresh({
     String? searchQuery,
     PartyListFilter? filter,
+    PartyTypeFilter? typeFilter,
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final service = await ref.read(partyServiceProvider.future);
       return service.fetchParties(
-        forceRefresh: true,
         searchQuery: searchQuery ?? ref.read(partyBackendSearchProvider),
         filter: filter ?? ref.read(partyListFilterProvider),
+        typeFilter: typeFilter ?? ref.read(partyTypeFilterProvider),
       );
     });
   }
@@ -542,7 +599,8 @@ class PartyList extends _$PartyList {
       _upsertInState(created);
       ref.read(selectedPartyIdProvider.notifier).selected = created.id;
       await service.rememberSelectedParty(created.id);
-      ref.invalidate(partyDetailProvider(created.id));
+      ref.read(partyDetailProvider(created.id).notifier).setParty(created);
+      refreshAfterPartyMutation(ref);
       return created;
     } on PartyOfflineException {
       await refresh();
@@ -564,6 +622,7 @@ class PartyList extends _$PartyList {
       );
       _upsertInState(updated);
       ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
+      refreshAfterPartyMutation(ref);
       return updated;
     } on PartyOfflineException {
       await refresh();
@@ -576,13 +635,38 @@ class PartyList extends _$PartyList {
     try {
       await service.deleteParty(partyId);
       _removeFromState(partyId);
+      ref.invalidate(partyDetailProvider(partyId));
       final selectedId = ref.read(selectedPartyIdProvider);
       if (selectedId == partyId) {
         ref.read(selectedPartyIdProvider.notifier).selected = null;
         await service.rememberSelectedParty(null);
       }
+      await refresh();
     } on PartyOfflineException {
       _removeFromState(partyId);
+      ref.invalidate(partyDetailProvider(partyId));
+      rethrow;
+    }
+  }
+
+  Future<PartyModel> deactivateParty(String partyId) async {
+    final service = await ref.read(partyServiceProvider.future);
+    try {
+      final updated = await service.setPartyActive(partyId, isActive: false);
+      final filter = ref.read(partyListFilterProvider);
+      if (filter == PartyListFilter.active) {
+        _removeFromState(partyId);
+        if (ref.read(selectedPartyIdProvider) == partyId) {
+          ref.read(selectedPartyIdProvider.notifier).selected = null;
+          await service.rememberSelectedParty(null);
+        }
+      } else {
+        _upsertInState(updated);
+      }
+      ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
+      return updated;
+    } on PartyOfflineException {
+      await refresh();
       rethrow;
     }
   }
@@ -641,7 +725,6 @@ class PartyList extends _$PartyList {
 class PartyDetail extends _$PartyDetail {
   @override
   Future<PartyModel> build(String partyId) async {
-    ref.watch(partyListProvider);
     final service = await ref.watch(partyServiceProvider.future);
     return service.getParty(partyId);
   }

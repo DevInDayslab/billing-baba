@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/purchases/application/expense_service.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/expense_form_model.dart';
@@ -301,7 +302,13 @@ class AddExpenseForm extends _$AddExpenseForm {
   }
 
   Future<String?> saveExpense() async {
-    if (!validate()) return 'Please fill required fields';
+    if (!validate()) {
+      if (state.gstEnabled &&
+          (state.partyId == null || state.partyId!.isEmpty)) {
+        return 'Please select a supplier';
+      }
+      return 'Please fill required fields';
+    }
 
     final categoryId = state.categoryId;
     if (categoryId.isEmpty) {
@@ -359,6 +366,7 @@ class AddExpenseForm extends _$AddExpenseForm {
 
       ref.invalidate(expenseTransactionsProvider);
       ref.invalidate(expenseCategoriesProvider);
+      refreshAfterExpense(ref);
       ref.invalidateSelf();
       return null;
     } catch (error) {

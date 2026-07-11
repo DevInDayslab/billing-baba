@@ -282,29 +282,34 @@ class DashboardRecentTransactionDto {
   const DashboardRecentTransactionDto({
     required this.id,
     required this.type,
-    required this.referenceNumber,
-    required this.partyName,
-    required this.amount,
-    required this.date,
+    required this.referenceNumber, required this.partyName, required this.amount, required this.date, this.referenceId,
+    this.referenceType,
+    this.direction,
   });
 
   factory DashboardRecentTransactionDto.fromJson(Map<String, dynamic> json) {
     return DashboardRecentTransactionDto(
       id: json['id'] as String? ?? '',
       type: json['type'] as String? ?? '',
+      referenceId: json['reference_id'] as String?,
+      referenceType: json['reference_type'] as String?,
       referenceNumber: json['reference_number'] as String?,
       partyName: json['party_name'] as String?,
       amount: json['amount'] as String? ?? '0',
       date: json['date'] as String? ?? '',
+      direction: json['direction'] as String?,
     );
   }
 
   final String id;
   final String type;
+  final String? referenceId;
+  final String? referenceType;
   final String? referenceNumber;
   final String? partyName;
   final String amount;
   final String date;
+  final String? direction;
 }
 
 class DashboardQuickReportDto {

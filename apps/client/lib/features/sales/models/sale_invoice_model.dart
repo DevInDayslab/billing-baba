@@ -8,6 +8,22 @@ enum SaleInvoiceStatus {
   cancelled,
 }
 
+class SaleInvoiceSummaryData {
+  const SaleInvoiceSummaryData({
+    required this.totalSalesAmount,
+    required this.receivedAmount,
+    required this.balanceAmount,
+    this.loyaltyPointsRewarded = 0,
+    this.totalDiscountRedeemed = 0,
+  });
+
+  final double totalSalesAmount;
+  final double receivedAmount;
+  final double balanceAmount;
+  final double loyaltyPointsRewarded;
+  final double totalDiscountRedeemed;
+}
+
 class SaleInvoiceModel {
   const SaleInvoiceModel({
     required this.id,
@@ -24,6 +40,9 @@ class SaleInvoiceModel {
     this.documentSeries,
     this.user = 'Admin',
     this.godown = 'Main Location',
+    this.firm = 'Main Firm',
+    this.loyaltyRedeemed = 0,
+    this.dueDate,
   });
 
   final String id;
@@ -40,8 +59,13 @@ class SaleInvoiceModel {
   final double balance;
   final String user;
   final String godown;
+  final String firm;
+  final double loyaltyRedeemed;
+  final DateTime? dueDate;
 
   bool get isDraft => documentStatus == SalesDocumentStatus.draft;
+
+  bool get isCancelled => documentStatus == SalesDocumentStatus.cancelled;
 
   SaleInvoiceModel copyWith({
     String? id,
@@ -58,6 +82,9 @@ class SaleInvoiceModel {
     double? balance,
     String? user,
     String? godown,
+    String? firm,
+    double? loyaltyRedeemed,
+    DateTime? dueDate,
   }) {
     return SaleInvoiceModel(
       id: id ?? this.id,
@@ -74,6 +101,9 @@ class SaleInvoiceModel {
       balance: balance ?? this.balance,
       user: user ?? this.user,
       godown: godown ?? this.godown,
+      firm: firm ?? this.firm,
+      loyaltyRedeemed: loyaltyRedeemed ?? this.loyaltyRedeemed,
+      dueDate: dueDate ?? this.dueDate,
     );
   }
 }
@@ -84,10 +114,12 @@ class PaginatedSaleInvoices {
     required this.currentPage,
     required this.totalPages,
     required this.totalItems,
+    this.summary,
   });
 
   final List<SaleInvoiceModel> items;
   final int currentPage;
   final int totalPages;
   final int totalItems;
+  final SaleInvoiceSummaryData? summary;
 }

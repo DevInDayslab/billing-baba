@@ -7,6 +7,7 @@ import 'package:billing_baba/features/purchases/application/purchase_error_mappe
 import 'package:billing_baba/features/purchases/models/purchase_order_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_order_status_badge.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_orders_provider.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -124,6 +125,7 @@ class PurchaseOrderTable extends ConsumerWidget {
           ),
           const Divider(height: 1, color: _cardBorder),
           ordersAsync.when(
+            skipLoadingOnReload: true,
             loading: () => const Padding(
               padding: EdgeInsets.all(AppSpacing.xl),
               child: Center(child: CircularProgressIndicator()),
@@ -271,100 +273,106 @@ class PurchaseOrderTable extends ConsumerWidget {
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 tooltip: 'Share',
               ),
-              IconButton(
-                onPressed: () => _showOrderActions(context, ref, order),
-                icon: const Icon(Icons.more_vert, size: 18),
-                color: AppColors.textSecondary,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                tooltip: 'More',
+              SalesActionMenuButton(
+                items: [
+                  if (order.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Edit draft',
+                      onSelected: () async {
+                        await context.push(
+                          '${AppRoutes.editPurchaseOrder}/${order.id}',
+                        );
+                      },
+                    ),
+                  if (order.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Finalize',
+                      onSelected: () async {
+                        final error = await ref
+                            .read(purchaseOrdersProvider.notifier)
+                            .finalizeOrder(order.id);
+                        if (!context.mounted) return;
+                        if (error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(error)),
+                          );
+                        }
+                      },
+                    ),
+                  if (order.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Delete draft',
+                      onSelected: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete draft?'),
+                            content: Text('Delete draft ${order.orderNo}?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              FilledButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed != true || !context.mounted) return;
+                        final error = await ref
+                            .read(purchaseOrdersProvider.notifier)
+                            .deleteDraft(order.id);
+                        if (!context.mounted) return;
+                        if (error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(error)),
+                          );
+                        }
+                      },
+                    ),
+                  if (order.canConvertToBill)
+                    SalesActionMenuItem(
+                      label: 'Convert to purchase bill',
+                      onSelected: () async {
+                        final error = await ref
+                            .read(purchaseOrdersProvider.notifier)
+                            .convertToBill(order.id);
+                        if (!context.mounted) return;
+                        if (error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(error)),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Purchase order converted to bill',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  if (!order.isDraft)
+                    SalesActionMenuItem(
+                      label: 'Open',
+                      onSelected: () async {
+                        await context.push(
+                          '${AppRoutes.editPurchaseOrder}/${order.id}',
+                        );
+                      },
+                    ),
+                ],
               ),
             ],
           ),
         ),
       ],
     );
-  }
-
-  Future<void> _showOrderActions(
-    BuildContext context,
-    WidgetRef ref,
-    PurchaseOrderModel order,
-  ) async {
-    final action = await showMenu<String>(
-      context: context,
-      position: const RelativeRect.fromLTRB(200, 400, 200, 0),
-      items: [
-        if (order.isDraft)
-          const PopupMenuItem(value: 'edit', child: Text('Edit draft')),
-        if (order.isDraft)
-          const PopupMenuItem(value: 'finalize', child: Text('Finalize')),
-        if (order.isDraft)
-          const PopupMenuItem(value: 'delete', child: Text('Delete draft')),
-        if (order.canConvertToBill)
-          const PopupMenuItem(
-            value: 'convert',
-            child: Text('Convert to purchase bill'),
-          ),
-        if (!order.isDraft)
-          const PopupMenuItem(value: 'open', child: Text('Open')),
-      ],
-    );
-
-    if (action == null || !context.mounted) return;
-    final notifier = ref.read(purchaseOrdersProvider.notifier);
-
-    switch (action) {
-      case 'edit':
-      case 'open':
-        await context.push('${AppRoutes.editPurchaseOrder}/${order.id}');
-      case 'finalize':
-        final error = await notifier.finalizeOrder(order.id);
-        if (!context.mounted) return;
-        if (error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error)),
-          );
-        }
-      case 'delete':
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Delete draft?'),
-            content: Text('Delete draft ${order.orderNo}?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Delete'),
-              ),
-            ],
-          ),
-        );
-        if (confirmed != true || !context.mounted) return;
-        final error = await notifier.deleteDraft(order.id);
-        if (!context.mounted) return;
-        if (error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error)),
-          );
-        }
-      case 'convert':
-        final error = await notifier.convertToBill(order.id);
-        if (!context.mounted) return;
-        if (error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error)),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Purchase order converted to bill')),
-          );
-        }
-    }
   }
 }
 

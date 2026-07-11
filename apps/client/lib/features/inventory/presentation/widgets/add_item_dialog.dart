@@ -8,6 +8,7 @@ import 'package:billing_baba/features/inventory/models/add_item_form_model.dart'
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_brand_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_category_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_godown_dialog.dart';
@@ -32,12 +33,12 @@ const _cardBorder = Color(0xFFE0E0E0);
 const _tabActiveColor = Color(0xFFD32F2F);
 const _summaryBannerColor = Color(0xFFFFF8E1);
 
-Future<void> showAddItemDialog(
+Future<InventoryItem?> showAddItemDialog(
   BuildContext context, {
   ItemType initialType = ItemType.product,
   InventoryItem? editItem,
 }) {
-  return showDialog<void>(
+  return showDialog<InventoryItem>(
     context: context,
     builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
@@ -97,9 +98,23 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       if (widget.editItem != null) {
         unawaited(_hydrateEditItem(widget.editItem!));
       } else {
-        ref.read(addItemFormProvider.notifier).setInitialType(widget.initialType);
+        ref
+            .read(addItemFormProvider.notifier)
+            .setInitialType(widget.initialType);
+        _ensureDefaultServiceUnit();
       }
     });
+  }
+
+  void _ensureDefaultServiceUnit() {
+    final form = ref.read(addItemFormProvider);
+    if (form.itemType != ItemType.service || form.baseUnitId != null) return;
+
+    final units = ref.read(inventoryUnitsProvider).value ?? [];
+    final defaultUnit = resolveDefaultServiceUnit(units);
+    if (defaultUnit == null) return;
+
+    ref.read(addItemFormProvider.notifier).setUnits(baseUnitId: defaultUnit.id);
   }
 
   Future<void> _hydrateEditItem(InventoryItem item) async {
@@ -181,6 +196,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     ref.read(addItemFormProvider.notifier).setItemType(type);
     ref.read(addItemFormProvider.notifier).setActiveTab(0);
     ref.read(inventoryItemsTabIndexProvider.notifier).selectForItemType(type);
+    if (type == ItemType.service) {
+      _ensureDefaultServiceUnit();
+    }
 
     // Dispose after rebuild so TabBar/AnimatedBuilder stop using the old controller.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -238,15 +256,18 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
     try {
       final form = ref.read(addItemFormProvider);
+      InventoryItem? savedItem;
       final editItem = widget.editItem;
       if (editItem != null) {
-        await ref
+        savedItem = await ref
             .read(inventoryItemsProvider.notifier)
             .updateItemFromForm(editItem.id, form);
         ref.invalidate(productDetailProvider(editItem.id));
         ref.invalidate(itemTierPricesProvider(editItem.id));
       } else {
-        await ref.read(inventoryItemsProvider.notifier).addItemFromForm(form);
+        savedItem = await ref
+            .read(inventoryItemsProvider.notifier)
+            .addItemFromForm(form);
       }
 
       if (!mounted) return;
@@ -259,7 +280,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         return;
       }
 
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(savedItem);
     } on ApiValidationException catch (error) {
       if (!mounted) return;
       setState(() => _isSaving = false);
@@ -327,16 +348,22 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   String _displayUnitLabel() {
     final form = ref.watch(addItemFormProvider);
     final units = ref.watch(unitsProvider);
-    if (form.baseUnitId == null) return 'PCS';
+    if (form.baseUnitId == null) {
+      return units.isEmpty ? 'Select unit' : 'None';
+    }
     return units
             .where((unit) => unit.id == form.baseUnitId)
             .map((unit) => unit.shortName)
             .firstOrNull ??
-        'PCS';
+        'None';
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(inventoryUnitsProvider, (previous, next) {
+      next.whenData((_) => _ensureDefaultServiceUnit());
+    });
+
     ref.listen<int>(inventoryItemsTabIndexProvider, (previous, next) {
       if (next > inventoryServicesTabIndex) return;
       final targetType = next == inventoryProductsTabIndex

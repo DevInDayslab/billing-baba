@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/export/application/adapters/sale_export_sheet_builder.dart';
 import 'package:billing_baba/features/export/models/export_sheet.dart';
+import 'package:billing_baba/features/export/models/sale_invoice_report_options.dart';
 import 'package:billing_baba/features/export/utils/export_time_range.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
@@ -10,7 +11,10 @@ import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Builds export sheet for sale invoice list using current filters.
-Future<ExportSheet> buildSaleInvoiceExportSheet(WidgetRef ref) async {
+Future<ExportSheet> buildSaleInvoiceExportSheet(
+  WidgetRef ref, {
+  SaleInvoiceReportOptions options = const SaleInvoiceReportOptions(),
+}) async {
   final filters = ref.read(saleInvoiceFiltersProvider);
   final search = ref.read(saleInvoiceSearchQueryProvider);
   final service = await ref.read(salesServiceProvider.future);
@@ -24,6 +28,7 @@ Future<ExportSheet> buildSaleInvoiceExportSheet(WidgetRef ref) async {
   return SaleExportSheetBuilder.fromSaleInvoices(
     sheetName: 'Sale Invoices',
     items: items,
+    options: options,
   );
 }
 
@@ -37,7 +42,7 @@ Future<List<SaleInvoiceModel>> _fetchAllSaleInvoices({
       final query = _buildSaleInvoiceQuery(filters, search, page: page);
       final result = await service.fetchInvoicesPage(query);
       return (
-        items: _applySaleInvoiceClientFilters(result.items, filters),
+        items: applySaleInvoiceClientFilters(result.items, filters),
         totalPages: result.totalPages,
       );
     },
@@ -64,38 +69,6 @@ SalesDocumentListQuery _buildSaleInvoiceQuery(
     q: search.trim().isEmpty ? null : search.trim(),
   );
 }
-
-List<SaleInvoiceModel> _applySaleInvoiceClientFilters(
-  List<SaleInvoiceModel> invoices,
-  SaleInvoiceFiltersState filters,
-) {
-  final paymentStatus = _paymentStatusFromFilterLabel(filters.selectedStatus);
-
-  return invoices.where((invoice) {
-    if (paymentStatus != null && invoice.status != paymentStatus) {
-      return false;
-    }
-    if (filters.selectedUser != 'All Users' &&
-        invoice.user != filters.selectedUser) {
-      return false;
-    }
-    if (filters.selectedGodown != 'All Godown' &&
-        invoice.godown != filters.selectedGodown) {
-      return false;
-    }
-    return true;
-  }).toList();
-}
-
-SaleInvoiceStatus? _paymentStatusFromFilterLabel(String label) =>
-    switch (label) {
-      'Paid' => SaleInvoiceStatus.paid,
-      'Unpaid' => SaleInvoiceStatus.unpaid,
-      'Partial' => SaleInvoiceStatus.partiallyPaid,
-      'Overdue' => SaleInvoiceStatus.overdue,
-      'Cancelled' => SaleInvoiceStatus.cancelled,
-      _ => null,
-    };
 
 String? _documentStatusFromFilterLabel(String label) => switch (label) {
   'Cancelled' => 'cancelled',

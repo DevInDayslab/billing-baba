@@ -2,6 +2,12 @@ abstract final class PurchaseConstants {
   static const purchaseBillSeries = 'PB';
   static const purchaseOrderSeries = 'PO';
   static const purchaseReturnSeries = 'DN';
+
+  /// API date fields (`due_date`, `expense_date`, query `from`/`to`) expect YYYY-MM-DD.
+  static String formatApiDate(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
 }
 
 enum PurchaseDocumentType {

@@ -17,4 +17,6 @@ abstract final class StorageKeys {
   static const pendingPartyOperations = 'pending_party_operations';
   static const partyListFilter = 'party_list_filter';
   static const selectedPartyId = 'selected_party_id';
+  static const partyGroupNames = 'party_group_names';
+  static const saleLineItemColumnVisibility = 'sale_line_item_column_visibility';
 }
