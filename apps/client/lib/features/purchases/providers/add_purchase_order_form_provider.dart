@@ -273,7 +273,7 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
   Future<String?> saveOrder({bool finalize = true}) async {
     if (!validate(finalize: finalize)) {
       if (state.partyId == null || state.partyId!.isEmpty) {
-        return 'Please select a supplier';
+        return 'Please select a party';
       }
       return 'Add at least one item with name and quantity';
     }
@@ -309,6 +309,10 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
       }
 
       ref.invalidate(purchaseOrdersProvider);
+      await ref.read(purchaseOrdersProvider.notifier).refresh();
+      ref
+          .read(purchaseOrderSaveSuccessMessageProvider.notifier)
+          .setMessage('Purchase order saved successfully');
       ref.invalidateSelf();
       return null;
     } catch (error) {

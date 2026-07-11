@@ -24,6 +24,9 @@ class DebitNoteFormState {
     this.roundOff = true,
     this.showValidationErrors = false,
     this.isDirty = false,
+    this.isLoading = false,
+    this.isSaving = false,
+    this.saveError,
   });
 
   final String? documentId;
@@ -45,6 +48,9 @@ class DebitNoteFormState {
   final bool roundOff;
   final bool showValidationErrors;
   final bool isDirty;
+  final bool isLoading;
+  final bool isSaving;
+  final String? saveError;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -94,6 +100,10 @@ class DebitNoteFormState {
     bool? roundOff,
     bool? showValidationErrors,
     bool? isDirty,
+    bool? isLoading,
+    bool? isSaving,
+    String? saveError,
+    bool clearSaveError = false,
   }) {
     return DebitNoteFormState(
       documentId: documentId ?? this.documentId,
@@ -115,6 +125,9 @@ class DebitNoteFormState {
       roundOff: roundOff ?? this.roundOff,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isDirty: isDirty ?? this.isDirty,
+      isLoading: isLoading ?? this.isLoading,
+      isSaving: isSaving ?? this.isSaving,
+      saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }
 }

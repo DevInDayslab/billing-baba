@@ -135,7 +135,7 @@ export type UpdatePurchaseLineBody = z.infer<
 >;
 
 export const convertPurchaseDocumentBodySchema = z.object({
-  target_type: z.enum(['purchase_bill']),
+  target_type: z.enum(['purchase_bill', 'purchase_return']),
 });
 
 export type ConvertPurchaseDocumentBody = z.infer<

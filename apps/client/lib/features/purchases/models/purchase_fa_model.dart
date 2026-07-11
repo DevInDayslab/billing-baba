@@ -21,6 +21,7 @@ class PurchaseFaModel {
     required this.dueDate,
     this.user = 'Admin',
     this.firm = 'All Firms',
+    this.godown = 'Main Godown',
   });
 
   final String id;
@@ -36,6 +37,7 @@ class PurchaseFaModel {
   final DateTime dueDate;
   final String user;
   final String firm;
+  final String godown;
 
   double get paidAmount => amount - balanceDue;
 }

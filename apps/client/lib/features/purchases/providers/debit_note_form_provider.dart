@@ -56,10 +56,12 @@ class DebitNoteForm extends _$DebitNoteForm {
     if (debitNoteId != null) {
       Future.microtask(() => _loadDocument(debitNoteId));
     }
-    return _initialDebitNoteFormState(documentId: debitNoteId);
+    return _initialDebitNoteFormState(documentId: debitNoteId)
+        .copyWith(isLoading: debitNoteId != null);
   }
 
   Future<void> _loadDocument(String documentId) async {
+    state = state.copyWith(isLoading: true, clearSaveError: true);
     try {
       final service = await ref.read(purchaseServiceProvider.future);
       final loaded = await service.loadDebitNoteForm(documentId);
@@ -93,9 +95,13 @@ class DebitNoteForm extends _$DebitNoteForm {
         items: items.isEmpty
             ? [SaleLineItem.empty(id: _nextDebitNoteLineItemId())]
             : items,
+        isLoading: false,
       );
     } catch (error) {
-      // Load errors surface when user attempts save; keep form editable.
+      state = state.copyWith(
+        isLoading: false,
+        saveError: PurchaseErrorMapper.messageFor(error),
+      );
     }
   }
 
@@ -272,10 +278,12 @@ class DebitNoteForm extends _$DebitNoteForm {
   Future<String?> saveDebitNote({bool finalize = true}) async {
     if (!validate(finalize: finalize)) {
       if (state.partyId == null || state.partyId!.isEmpty) {
-        return 'Please select a supplier';
+        return 'Please select a party';
       }
       return 'Add at least one item with name and quantity';
     }
+
+    state = state.copyWith(isSaving: true, clearSaveError: true);
 
     try {
       final service = await ref.read(purchaseServiceProvider.future);
@@ -305,10 +313,16 @@ class DebitNoteForm extends _$DebitNoteForm {
 
       ref.invalidate(purchaseReturnsProvider);
       refreshAfterPurchaseReturn(ref);
+      await ref.read(purchaseReturnsProvider.notifier).refresh();
+      ref
+          .read(purchaseReturnSaveSuccessMessageProvider.notifier)
+          .setMessage('Debit note saved successfully');
       resetForm();
       return null;
     } catch (error) {
-      return PurchaseErrorMapper.messageFor(error);
+      final message = PurchaseErrorMapper.messageFor(error);
+      state = state.copyWith(isSaving: false, saveError: message);
+      return message;
     }
   }
 }

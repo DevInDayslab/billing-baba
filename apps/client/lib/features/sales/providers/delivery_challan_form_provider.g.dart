@@ -46,7 +46,7 @@ final class DeliveryChallanFormNotifierProvider
 }
 
 String _$deliveryChallanFormNotifierHash() =>
-    r'ab03df4e85637ea7e286a23eae102c33d4dffac4';
+    r'15aadce510c1d35186a8f7d309966c0392ad6b11';
 
 abstract class _$DeliveryChallanFormNotifier
     extends $Notifier<DeliveryChallanFormState> {
@@ -67,6 +67,48 @@ abstract class _$DeliveryChallanFormNotifier
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(deliveryChallanTotalTax)
+final deliveryChallanTotalTaxProvider = DeliveryChallanTotalTaxProvider._();
+
+final class DeliveryChallanTotalTaxProvider
+    extends $FunctionalProvider<double, double, double>
+    with $Provider<double> {
+  DeliveryChallanTotalTaxProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'deliveryChallanTotalTaxProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$deliveryChallanTotalTaxHash();
+
+  @$internal
+  @override
+  $ProviderElement<double> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  double create(Ref ref) {
+    return deliveryChallanTotalTax(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(double value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<double>(value),
+    );
+  }
+}
+
+String _$deliveryChallanTotalTaxHash() =>
+    r'cd71d4f47b9046a47cb3b3aa2923108e54acb999';
 
 @ProviderFor(deliveryChallanGrandTotal)
 final deliveryChallanGrandTotalProvider = DeliveryChallanGrandTotalProvider._();
@@ -109,45 +151,3 @@ final class DeliveryChallanGrandTotalProvider
 
 String _$deliveryChallanGrandTotalHash() =>
     r'9ad8d5a8e031632cd7cd22dd697e6d3f15b32d90';
-
-@ProviderFor(deliveryChallanTotalTax)
-final deliveryChallanTotalTaxProvider = DeliveryChallanTotalTaxProvider._();
-
-final class DeliveryChallanTotalTaxProvider
-    extends $FunctionalProvider<double, double, double>
-    with $Provider<double> {
-  DeliveryChallanTotalTaxProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'deliveryChallanTotalTaxProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$deliveryChallanTotalTaxHash();
-
-  @$internal
-  @override
-  $ProviderElement<double> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  double create(Ref ref) {
-    return deliveryChallanTotalTax(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(double value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<double>(value),
-    );
-  }
-}
-
-String _$deliveryChallanTotalTaxHash() =>
-    r'a1b2c3d4e5f6789012345678abcdef9012345678';

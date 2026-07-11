@@ -6,7 +6,7 @@ const ALLOWED_CONVERSIONS: Record<
   PurchaseDocumentType[]
 > = {
   purchase_order: ['purchase_bill'],
-  purchase_bill: [],
+  purchase_bill: ['purchase_return'],
   purchase_return: [],
 };
 

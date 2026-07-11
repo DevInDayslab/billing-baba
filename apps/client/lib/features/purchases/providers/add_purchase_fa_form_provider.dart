@@ -228,7 +228,7 @@ class AddPurchaseFaForm extends _$AddPurchaseFaForm {
     if (!validate()) {
       if ((state.partyId == null || state.partyId!.isEmpty) &&
           state.party.trim().isEmpty) {
-        return 'Please select a supplier';
+        return 'Please select a party';
       }
       return 'Add at least one asset with name and quantity';
     }
@@ -244,6 +244,10 @@ class AddPurchaseFaForm extends _$AddPurchaseFaForm {
       }
 
       ref.invalidate(purchaseFaProvider);
+      await ref.read(purchaseFaProvider.notifier).refresh();
+      ref
+          .read(purchaseFaSaveSuccessMessageProvider.notifier)
+          .setMessage('Purchase FA saved successfully');
       state = state.copyWith(isSaving: false, isDirty: false);
       ref.invalidateSelf();
       return null;

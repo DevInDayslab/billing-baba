@@ -58,7 +58,7 @@ final class SaleOrderTabsProvider
   }
 }
 
-String _$saleOrderTabsHash() => r'f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0';
+String _$saleOrderTabsHash() => r'2d9ccafd48cbf3d5d8af23551097ea69e71a6ec9';
 
 final class SaleOrderTabsFamily extends $Family
     with

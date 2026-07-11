@@ -1,7 +1,5 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
-import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
@@ -32,66 +30,82 @@ class AddPurchaseOrderPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ColoredBox(
-      color: AppColors.background,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            PurchasePageTitleBar(
-              currentRoute: AppRoutes.purchaseOrder,
-              onSettingsTap: () {},
+    final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
+    final isBusy = form.isSaving || form.isLoading;
+
+    return Stack(
+      children: [
+        ColoredBox(
+          color: AppColors.background,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                PurchasePageTitleBar(
+                  currentRoute: AppRoutes.purchaseOrder,
+                  onSettingsTap: () {},
+                ),
+                const SizedBox(height: AppSpacing.md),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.lgBorder,
+                    border: Border.all(color: _cardBorder),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0A000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          _sectionGap,
+                          _sectionGap,
+                          _sectionGap,
+                          0,
+                        ),
+                        child: _PageHeader(orderId: orderId),
+                      ),
+                      const SizedBox(height: _sectionGap),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: _sectionGap,
+                        ),
+                        child: _FormFields(orderId: orderId),
+                      ),
+                      const SizedBox(height: _sectionGap),
+                      PurchaseOrderLineItemsTable(
+                        embedded: true,
+                        orderId: orderId,
+                      ),
+                      const Divider(height: 1, color: _cardBorder),
+                      Padding(
+                        padding: const EdgeInsets.all(_sectionGap),
+                        child: AddPurchaseOrderFooter(orderId: orderId),
+                      ),
+                      const Divider(height: 1, color: _cardBorder),
+                      _BottomActionBar(orderId: orderId),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.md),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppRadius.lgBorder,
-                border: Border.all(color: _cardBorder),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      _sectionGap,
-                      _sectionGap,
-                      _sectionGap,
-                      0,
-                    ),
-                    child: _PageHeader(orderId: orderId),
-                  ),
-                  const SizedBox(height: _sectionGap),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: _sectionGap),
-                    child: _FormFields(orderId: orderId),
-                  ),
-                  const SizedBox(height: _sectionGap),
-                  PurchaseOrderLineItemsTable(
-                    embedded: true,
-                    orderId: orderId,
-                  ),
-                  const Divider(height: 1, color: _cardBorder),
-                  Padding(
-                    padding: const EdgeInsets.all(_sectionGap),
-                    child: AddPurchaseOrderFooter(orderId: orderId),
-                  ),
-                  const Divider(height: 1, color: _cardBorder),
-                  _BottomActionBar(orderId: orderId),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+        if (isBusy)
+          Positioned.fill(
+            child: ColoredBox(
+              color: Colors.black.withValues(alpha: 0.12),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -160,9 +174,8 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                 label: 'Party *',
                 child: BillingNamePartySearchField(
                   value: form.party,
-                  partyTypeFilter: PartyTypeFilter.supplier,
                   hasError: form.partyHasError,
-                  errorMessage: 'Please select a supplier',
+                  errorMessage: 'Please select a party',
                   onSelected: notifier.updateParty,
                   onPartySelectedWithId: (partyId, name) =>
                       notifier.updateParty(name, partyId: partyId),
@@ -296,6 +309,7 @@ class _BottomActionBar extends ConsumerWidget {
     final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
     final notifier =
         ref.read(addPurchaseOrderFormProvider(orderId: orderId).notifier);
+    final isSaving = form.isSaving;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -306,7 +320,7 @@ class _BottomActionBar extends ConsumerWidget {
         children: [
           const Spacer(),
           OutlinedButton(
-            onPressed: () => _handleCancel(context, ref),
+            onPressed: isSaving ? null : () => _handleCancel(context, ref),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               side: const BorderSide(color: _cardBorder),
@@ -334,13 +348,22 @@ class _BottomActionBar extends ConsumerWidget {
             const SizedBox(width: AppSpacing.sm),
           ],
           FilledButton(
-            onPressed: () => _handleSave(context, ref, notifier),
+            onPressed: isSaving ? null : () => _handleSave(context, ref, notifier),
             style: FilledButton.styleFrom(
               backgroundColor: _addPurchaseRed,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             ),
-            child: const Text('Save', style: TextStyle(fontSize: 13)),
+            child: isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Save', style: TextStyle(fontSize: 13)),
           ),
         ],
       ),
@@ -379,6 +402,10 @@ class _BottomActionBar extends ConsumerWidget {
     WidgetRef ref,
     AddPurchaseOrderForm notifier,
   ) async {
+    if (ref.read(addPurchaseOrderFormProvider(orderId: orderId)).isSaving) {
+      return;
+    }
+
     final error = await notifier.saveOrder();
     if (!context.mounted) return;
     if (error != null) {
@@ -388,7 +415,6 @@ class _BottomActionBar extends ConsumerWidget {
       return;
     }
 
-    showTransactionSuccessToast(context);
     context.go(AppRoutes.purchaseOrder);
   }
 

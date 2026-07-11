@@ -316,6 +316,51 @@ export class PaymentRepository {
     return Number(row?.total ?? 0);
   }
 
+  async listPaymentHistoryForPurchaseDocument(
+    businessId: string,
+    purchaseDocumentId: string,
+  ): Promise<
+    Array<{
+      payment_id: string;
+      payment_date: string;
+      payment_mode: string;
+      reference_number: string | null;
+      payment_amount: string;
+      allocated_amount: string;
+    }>
+  > {
+    const rows = await this.db
+      .select({
+        paymentId: payments.id,
+        paymentDate: payments.paymentDate,
+        paymentMode: payments.paymentMode,
+        referenceNumber: payments.referenceNumber,
+        paymentAmount: payments.amount,
+        allocatedAmount: paymentAllocations.allocatedAmount,
+      })
+      .from(paymentAllocations)
+      .innerJoin(payments, eq(paymentAllocations.paymentId, payments.id))
+      .where(
+        and(
+          eq(paymentAllocations.purchaseDocumentId, purchaseDocumentId),
+          eq(paymentAllocations.businessId, businessId),
+          eq(paymentAllocations.isDeleted, false),
+          eq(payments.isDeleted, false),
+          eq(payments.businessId, businessId),
+        ),
+      )
+      .orderBy(desc(payments.paymentDate));
+
+    return rows.map((row) => ({
+      payment_id: row.paymentId,
+      payment_date: row.paymentDate.toISOString(),
+      payment_mode: row.paymentMode,
+      reference_number: row.referenceNumber,
+      payment_amount: row.paymentAmount,
+      allocated_amount: row.allocatedAmount,
+    }));
+  }
+
   async findSalesDocumentForAllocation(
     businessId: string,
     salesDocumentId: string,

@@ -1,23 +1,57 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/purchase_fa_filter_bar.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/purchase_fa_summary_card.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_fa_table.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_page_title_bar.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/purchase_section_async_content.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_fa_provider.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_empty_state_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-class PurchaseFaPage extends ConsumerWidget {
+const _successSnackBarColor = Color(0xFF2E7D32);
+
+class PurchaseFaPage extends ConsumerStatefulWidget {
   const PurchaseFaPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final faAsync = ref.watch(purchaseFaProvider);
-    final isEmpty = faAsync.maybeWhen(
-      data: (page) => page.totalItems == 0,
-      orElse: () => false,
+  ConsumerState<PurchaseFaPage> createState() => _PurchaseFaPageState();
+}
+
+class _PurchaseFaPageState extends ConsumerState<PurchaseFaPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(purchaseFaProvider.notifier).refresh();
+      _showPendingSuccessMessage();
+    });
+  }
+
+  void _showPendingSuccessMessage() {
+    final message = ref.read(purchaseFaSaveSuccessMessageProvider);
+    if (message == null || !mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: _successSnackBarColor,
+      ),
     );
+    ref.read(purchaseFaSaveSuccessMessageProvider.notifier).setMessage(null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final faAsync = ref.watch(purchaseFaProvider);
+
+    ref.listen<String?>(purchaseFaSaveSuccessMessageProvider, (
+      previous,
+      next,
+    ) {
+      if (next == null) return;
+      _showPendingSuccessMessage();
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -28,27 +62,23 @@ class PurchaseFaPage extends ConsumerWidget {
           children: [
             PurchasePageTitleBar(
               currentRoute: AppRoutes.purchaseFa,
-              addButtonLabel: isEmpty ? null : 'Add Purchase FA',
-              onAddTap: isEmpty
-                  ? null
-                  : () => context.push(AppRoutes.addPurchaseFa),
               onSettingsTap: () => debugPrint('Settings tapped'),
             ),
             const SizedBox(height: AppSpacing.md),
-            if (isEmpty)
-              SaleEmptyStateCard(
-                illustration: const SaleGeometricIllustration(
-                  circleColor: Color(0xFFE3F2FD),
-                  shapeColor: Color(0xFF64B5F6),
-                  shapeIcon: Icons.shopping_cart_outlined,
-                ),
-                description:
-                    'You can manage purchase of all your fixed assets here.',
-                buttonLabel: 'Add Your First Purchase Of A Fixed Asset Here',
-                onPressed: () => context.push(AppRoutes.addPurchaseFa),
-              )
-            else
-              const PurchaseFaTable(),
+            PurchaseSectionAsyncContent(
+              value: faAsync,
+              onRetry: () => ref.read(purchaseFaProvider.notifier).refresh(),
+              builder: (_) => const Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PurchaseFaFilterBar(),
+                  SizedBox(height: AppSpacing.md),
+                  PurchaseFaSummaryCard(),
+                  SizedBox(height: AppSpacing.md),
+                  PurchaseFaTable(),
+                ],
+              ),
+            ),
           ],
         ),
       ),

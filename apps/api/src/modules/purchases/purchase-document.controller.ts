@@ -232,6 +232,29 @@ export function createPurchaseDocumentController() {
       }
     },
 
+    getPaymentHistory: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { accountId, businessId } = requireAuthContext(request);
+        const { id } = purchaseDocumentIdParamSchema.parse(request.params);
+        const result = await service.getPaymentHistory(
+          businessId,
+          accountId,
+          id,
+        );
+        return sendData(reply, result.data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid document ID',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
     listLines: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const { accountId, businessId } = requireAuthContext(request);

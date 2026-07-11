@@ -103,6 +103,7 @@ class AddExpenseFormState {
     this.isDirty = false,
     this.showValidationErrors = false,
     this.isLoading = false,
+    this.isSaving = false,
     this.saveError,
   });
 
@@ -127,6 +128,7 @@ class AddExpenseFormState {
   final bool isDirty;
   final bool showValidationErrors;
   final bool isLoading;
+  final bool isSaving;
   final String? saveError;
 
   bool get categoryHasError => showValidationErrors && category.trim().isEmpty;
@@ -191,6 +193,7 @@ class AddExpenseFormState {
     bool? isDirty,
     bool? showValidationErrors,
     bool? isLoading,
+    bool? isSaving,
     String? saveError,
     bool clearSaveError = false,
   }) {
@@ -216,6 +219,7 @@ class AddExpenseFormState {
       isDirty: isDirty ?? this.isDirty,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       isLoading: isLoading ?? this.isLoading,
+      isSaving: isSaving ?? this.isSaving,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
     );
   }

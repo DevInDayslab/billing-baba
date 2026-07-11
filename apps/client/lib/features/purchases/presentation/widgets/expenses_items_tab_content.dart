@@ -1,12 +1,14 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/filter_icon.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
-import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/expense_status_badge.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/expenses_category_tab_content.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_transaction_table_layout.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,47 +30,31 @@ class ExpensesItemsTabContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final transactionsAsync = ref.watch(expenseTransactionsProvider);
+    ref.watch(expenseTransactionsProvider).requireValue;
     final items = ref.watch(filteredExpenseItemsProvider);
     final allItems = ref.watch(expenseItemsProvider);
     final selectedId = ref.watch(selectedExpenseItemIdProvider);
 
-    return transactionsAsync.when(
-      skipLoadingOnReload: true,
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Text(
-            PurchaseErrorMapper.messageFor(error),
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-        ),
-      ),
-      data: (_) {
-        final selectedItem = selectedId == null
-            ? null
-            : allItems.where((item) => item.id == selectedId).firstOrNull;
+    final selectedItem = selectedId == null
+        ? null
+        : allItems.where((item) => item.id == selectedId).firstOrNull;
 
-        return InventorySplitLayout(
-          listWidth: 340,
-          listPanel: _ItemListPanel(
-            items: items,
-            selectedId: selectedId,
-            onSearchChanged: (query) =>
-                ref.read(expenseItemSearchQueryProvider.notifier).query = query,
-            onItemSelected: (id) =>
-                ref.read(selectedExpenseItemIdProvider.notifier).selected = id,
-            onAddExpense: () => context.push(AppRoutes.addExpense),
-          ),
-          detailPanel: selectedItem != null
-              ? _ItemDetailPanel(item: selectedItem)
-              : const InventoryDetailPlaceholder(
-                  message: 'Select an item to view transactions',
-                ),
-        );
-      },
+    return InventorySplitLayout(
+      listWidth: 340,
+      listPanel: _ItemListPanel(
+        items: items,
+        selectedId: selectedId,
+        onSearchChanged: (query) =>
+            ref.read(expenseItemSearchQueryProvider.notifier).query = query,
+        onItemSelected: (id) =>
+            ref.read(selectedExpenseItemIdProvider.notifier).selected = id,
+        onAddExpense: () => context.push(AppRoutes.addExpense),
+      ),
+      detailPanel: selectedItem != null
+          ? _ItemDetailPanel(item: selectedItem)
+          : const InventoryDetailPlaceholder(
+              message: 'Select an item to view transactions',
+            ),
     );
   }
 }
@@ -169,19 +155,25 @@ class _ItemListHeader extends StatelessWidget {
         color: Color(0xFFF5F5F5),
         border: Border(bottom: BorderSide(color: inventoryCardBorder)),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Expanded(
             child: Row(
               children: [
-                Text('ITEM', style: InventoryStyles.listHeaderStyle),
-                SizedBox(width: 4),
-                Icon(Icons.arrow_drop_down, size: 16, color: Colors.grey),
+                const Text('ITEM', style: InventoryStyles.listHeaderStyle),
+                const SizedBox(width: 4),
+                AppFilterIcon(color: Colors.grey.shade500, size: 16),
               ],
             ),
           ),
-          Text('AMOUNT', style: InventoryStyles.listHeaderStyle),
-          SizedBox(width: 28),
+          Row(
+            children: [
+              const Text('AMOUNT', style: InventoryStyles.listHeaderStyle),
+              const SizedBox(width: 4),
+              AppFilterIcon(color: Colors.grey.shade500, size: 16),
+            ],
+          ),
+          const SizedBox(width: 28),
         ],
       ),
     );
@@ -249,31 +241,34 @@ class _ItemDetailPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactions = ref.watch(itemExpenseTransactionsProvider(item.id));
+    final filters = ref.watch(expenseFiltersProvider);
+    final searchQuery = ref.watch(expenseItemTransactionSearchQueryProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: InventorySearchField(
-            hint: 'Search',
-            onChanged: (query) => ref
-                .read(expenseItemTransactionSearchQueryProvider.notifier)
-                .query = query,
-          ),
-        ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: InventoryListHeader(
-            columns: [
-              InventoryListColumn(label: 'DATE', showFilter: true),
-              InventoryListColumn(label: 'EXP NO.', showFilter: true),
-              InventoryListColumn(label: 'PARTY', showFilter: true),
-              InventoryListColumn(label: 'PAYMENT TYPE', showFilter: true),
-              InventoryListColumn(label: 'AMOUNT', showFilter: true),
-              InventoryListColumn(label: 'BALANCE', showFilter: true),
-              InventoryListColumn(label: 'DUE DATE', showFilter: true),
-              InventoryListColumn(label: 'STATUS', showFilter: true),
+          child: Row(
+            children: [
+              Expanded(
+                child: InventorySearchField(
+                  hint: 'Search',
+                  onChanged: (query) => ref
+                      .read(expenseItemTransactionSearchQueryProvider.notifier)
+                      .query = query,
+                ),
+              ),
+              if (filters.hasTransactionFilters ||
+                  searchQuery.trim().isNotEmpty) ...[
+                const SizedBox(width: AppSpacing.sm),
+                TextButton(
+                  onPressed: ref
+                      .read(expenseFiltersProvider.notifier)
+                      .clearAllFilters,
+                  child: const Text('Clear Filters'),
+                ),
+              ],
             ],
           ),
         ),
@@ -284,10 +279,21 @@ class _ItemDetailPanel extends ConsumerWidget {
                 ? const InventoryListEmptyState(
                     message: 'No transactions for this item',
                   )
-                : ListView.builder(
-                    itemCount: transactions.length,
-                    itemBuilder: (context, index) => _ItemTransactionRow(
-                      transaction: transactions[index],
+                : ExpenseTransactionTableViewport(
+                    minWidth: expenseTransactionStandardMinTableWidth,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const ExpenseStandardTransactionFilterHeader(),
+                        Expanded(
+                          child: ListView.builder(
+                            itemCount: transactions.length,
+                            itemBuilder: (context, index) => _ItemTransactionRow(
+                              transaction: transactions[index],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
           ),
@@ -304,61 +310,78 @@ class _ItemTransactionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 12,
+    return PurchaseTransactionTableDataRow(
+      onTap: () => context.push(
+        '${AppRoutes.editExpense}/${transaction.id}',
       ),
-      decoration: const BoxDecoration(
-        color: inventorySelectedRowColor,
-        border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-      ),
-      child: InventoryListRowLayout(
-        flexValues: const [1, 1, 1, 1, 1, 1, 1, 1],
-        trailing: const InventoryListRowMenu(),
-        children: [
-          Text(
+      children: [
+        PurchaseTransactionTableCell(
+          width: expenseTransactionDateColWidth,
+          child: Text(
             ExpensesItemsTabContent._dateTimeFormat.format(transaction.date),
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionInvoiceColWidth,
+          child: Text(
             transaction.transactionNo,
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
-            transaction.party,
-            style: InventoryStyles.listCellStyle,
-            overflow: TextOverflow.ellipsis,
+        ),
+        Expanded(
+          flex: expenseTransactionPartyColFlex,
+          child: PurchaseTransactionTableCell(
+            child: Text(
+              transaction.party,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionPaymentColWidth,
+          child: Text(
             transaction.paymentType ?? '',
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionAmountColWidth,
+          alignment: Alignment.centerRight,
+          child: Text(
             transaction.amount != null ? '${transaction.amount!.toInt()}' : '',
-            style: InventoryStyles.listCellStyle,
+            style: purchaseTransactionAmountTextStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionBalanceColWidth,
+          alignment: Alignment.centerRight,
+          child: Text(
             transaction.balance != null
                 ? '${transaction.balance!.toInt()}'
                 : '',
-            style: InventoryStyles.listCellStyle,
+            style: purchaseTransactionAmountTextStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionDueDateColWidth,
+          child: Text(
             transaction.dueDate != null
                 ? DateFormat('dd/MM/yyyy').format(transaction.dueDate!)
                 : '',
-            style: InventoryStyles.listCellStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          if (transaction.status != null) ExpenseStatusBadge(status: transaction.status!) else const SizedBox.shrink(),
-        ],
-      ),
+        ),
+        PurchaseTransactionTableCell(
+          width: expenseTransactionStatusColWidth,
+          showDivider: false,
+          child: transaction.status != null
+              ? ExpenseStatusBadge(status: transaction.status!)
+              : const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 }

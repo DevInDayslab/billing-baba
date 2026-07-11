@@ -1,17 +1,34 @@
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_list_filter_utils.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'payment_out_provider.g.dart';
 
 const paymentOutPageSize = 10;
+
+/// One-shot success message shown on the payment out list after save.
+final paymentOutSaveSuccessMessageProvider =
+    NotifierProvider<PaymentOutSaveSuccessMessage, String?>(
+      PaymentOutSaveSuccessMessage.new,
+    );
+
+class PaymentOutSaveSuccessMessage extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setMessage(String? value) => state = value;
+}
 
 abstract final class PaymentOutDropdownOptions {
   static const paymentTypes = [
@@ -35,16 +52,28 @@ class PaymentOutFiltersState {
     this.customDateRange,
     this.selectedFirm = 'All Firms',
     this.selectedUser = 'All Users',
+    this.selectedStatus = 'All Status',
     this.currentPage = 1,
+    this.columnFilters = const PurchaseColumnFilterFields(),
   });
 
   final TimeRangeOption timeRangeOption;
   final DateTimeRange? customDateRange;
   final String selectedFirm;
   final String selectedUser;
+  final String selectedStatus;
   final int currentPage;
+  final PurchaseColumnFilterFields columnFilters;
 
   String get timeRangeLabel => timeRangeOption.label;
+
+  bool get hasActiveFilters =>
+      timeRangeOption != TimeRangeOption.thisMonth ||
+      customDateRange != null ||
+      selectedFirm != 'All Firms' ||
+      selectedUser != 'All Users' ||
+      selectedStatus != 'All Status' ||
+      columnFilters.hasColumnFilters;
 
   PaymentOutFiltersState copyWith({
     TimeRangeOption? timeRangeOption,
@@ -52,7 +81,9 @@ class PaymentOutFiltersState {
     bool clearCustomDateRange = false,
     String? selectedFirm,
     String? selectedUser,
+    String? selectedStatus,
     int? currentPage,
+    PurchaseColumnFilterFields? columnFilters,
   }) {
     return PaymentOutFiltersState(
       timeRangeOption: timeRangeOption ?? this.timeRangeOption,
@@ -61,7 +92,9 @@ class PaymentOutFiltersState {
           : (customDateRange ?? this.customDateRange),
       selectedFirm: selectedFirm ?? this.selectedFirm,
       selectedUser: selectedUser ?? this.selectedUser,
+      selectedStatus: selectedStatus ?? this.selectedStatus,
       currentPage: currentPage ?? this.currentPage,
+      columnFilters: columnFilters ?? this.columnFilters,
     );
   }
 }
@@ -75,6 +108,14 @@ class PaymentOutSummaryData {
   final double totalAmount;
   final double paidAmount;
 }
+
+PaymentOutStatus? _paymentOutStatusFromFilterLabel(String label) =>
+    switch (label) {
+      'Paid' => PaymentOutStatus.paid,
+      'Pending' => PaymentOutStatus.pending,
+      'Cancelled' => PaymentOutStatus.cancelled,
+      _ => null,
+    };
 
 DateTime _startOfDay(DateTime date) =>
     DateTime(date.year, date.month, date.day);
@@ -117,19 +158,74 @@ PaymentListQuery _buildPaymentListQuery(PaymentOutFiltersState filters) {
   );
 
   return PaymentListQuery(
-    page: filters.currentPage,
-    limit: paymentOutPageSize,
+    page: 1,
+    limit: PaginatedFetch.defaultPageSize,
     direction: 'paid',
     from: dateRange?.start.toUtc().toIso8601String(),
     to: dateRange?.end.toUtc().toIso8601String(),
   );
 }
 
-List<PaymentOutModel> _applyClientFilters(
+List<PaymentOutModel> _applyFilters(
   List<PaymentOutModel> records,
   PaymentOutFiltersState filters,
+  String globalSearch,
 ) {
+  final statusFilter = _paymentOutStatusFromFilterLabel(filters.selectedStatus);
+  final columns = filters.columnFilters;
+  final globalQuery = globalSearch.trim().toLowerCase();
+
   return records.where((record) {
+    if (globalQuery.isNotEmpty &&
+        !purchaseFilterMatchesGlobalSearch(globalQuery, [
+          record.receiptNo,
+          record.partyName,
+          record.paymentType,
+        ])) {
+      return false;
+    }
+
+    if (columns.columnDateRange != null &&
+        !purchaseFilterIsWithinDateRange(
+          record.date,
+          columns.columnDateRange!,
+        )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesText(columns.documentNoFilter, record.receiptNo)) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesParty(columns.selectedParty, record.partyName)) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesNumericFilter(
+      record.totalAmount,
+      columns.totalAmountFilter,
+    )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesNumericFilter(
+      record.paidAmount,
+      columns.paidAmountFilter,
+    )) {
+      return false;
+    }
+
+    if (!purchaseFilterMatchesPaymentTypes(
+      columns.selectedPaymentTypes,
+      record.paymentType,
+    )) {
+      return false;
+    }
+
+    if (statusFilter != null && record.status != statusFilter) {
+      return false;
+    }
+
     if (filters.selectedFirm != 'All Firms' &&
         record.firm != filters.selectedFirm) {
       return false;
@@ -138,34 +234,147 @@ List<PaymentOutModel> _applyClientFilters(
         record.user != filters.selectedUser) {
       return false;
     }
+
     return true;
   }).toList();
+}
+
+PaginatedPaymentOut _paginateFilteredRecords(
+  List<PaymentOutModel> filtered,
+  int currentPage,
+) {
+  final slice = purchaseFilterPaginate(
+    filtered,
+    currentPage,
+    paymentOutPageSize,
+  );
+  return PaginatedPaymentOut(
+    items: slice.items,
+    currentPage: slice.currentPage,
+    totalPages: slice.totalPages,
+    totalItems: slice.totalItems,
+  );
+}
+
+PaginatedPaymentOut _allRecordsPage(List<PaymentOutModel> allRecords) {
+  return PaginatedPaymentOut(
+    items: allRecords,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: allRecords.length,
+  );
+}
+
+List<PaymentOutModel> _allRecordsFromAsync(
+  AsyncValue<PaginatedPaymentOut> recordsAsync,
+) {
+  return recordsAsync.when(
+    data: (page) => page.items,
+    loading: () => const [],
+    error: (_, _) => const [],
+  );
+}
+
+@Riverpod(keepAlive: true)
+class PaymentOutSearchQuery extends _$PaymentOutSearchQuery {
+  @override
+  String build() => '';
+
+  void setQuery(String value) {
+    state = value;
+    final filters = ref.read(paymentOutFiltersProvider);
+    if (filters.currentPage != 1) {
+      ref.read(paymentOutFiltersProvider.notifier).setPage(1);
+    }
+  }
 }
 
 @Riverpod(keepAlive: true)
 class PaymentOutRecords extends _$PaymentOutRecords {
   @override
   Future<PaginatedPaymentOut> build() async {
-    ref.watch(paymentOutFiltersProvider);
-    return _fetchPage();
+    ref.watch(
+      paymentOutFiltersProvider.select(
+        (filters) => (filters.timeRangeOption, filters.customDateRange),
+      ),
+    );
+    final allRecords = await _fetchAllRecords();
+    return _allRecordsPage(allRecords);
   }
 
-  Future<PaginatedPaymentOut> _fetchPage() async {
+  Future<List<PaymentOutModel>> _fetchAllRecords() async {
     final filters = ref.read(paymentOutFiltersProvider);
     final service = await ref.read(purchaseServiceProvider.future);
-    final page = await service.fetchPaymentsPage(_buildPaymentListQuery(filters));
 
-    return PaginatedPaymentOut(
-      items: _applyClientFilters(page.items, filters),
-      currentPage: page.currentPage,
-      totalPages: page.totalPages,
-      totalItems: page.totalItems,
+    return PaginatedFetch.fetchAll(
+      fetchPage: (page) async {
+        final baseQuery = _buildPaymentListQuery(filters);
+        final query = PaymentListQuery(
+          page: page,
+          limit: baseQuery.limit,
+          direction: baseQuery.direction,
+          from: baseQuery.from,
+          to: baseQuery.to,
+        );
+        final pageResult = await service.fetchPaymentsPage(query);
+        return (
+          items: pageResult.items,
+          totalPages: pageResult.totalPages,
+        );
+      },
     );
   }
 
-  Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchPage);
+  Future<void> refresh({bool silent = false}) async {
+    if (!silent) {
+      state = const AsyncLoading();
+    }
+    state = await AsyncValue.guard(() async {
+      final allRecords = await _fetchAllRecords();
+      return _allRecordsPage(allRecords);
+    });
+  }
+
+  Future<void> refreshAllRelated({bool silent = false}) async {
+    ref.read(paymentOutFiltersProvider.notifier).ensureFirstPage();
+    await refresh(silent: silent);
+    await ref.read(purchaseBillsProvider.notifier).refresh();
+  }
+
+  /// Inserts a freshly saved payment at the top of page 1 until the API refresh
+  /// completes, so the list updates immediately after save.
+  void optimisticPrepend(PaymentOutModel record) {
+    final filters = ref.read(paymentOutFiltersProvider);
+    final search = ref.read(paymentOutSearchQueryProvider);
+    if (filters.currentPage != 1) return;
+    if (_applyFilters([record], filters, search).isEmpty) return;
+
+    final value = state.asData?.value;
+    if (value == null) {
+      state = AsyncData(
+        PaginatedPaymentOut(
+          items: [record],
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: 1,
+        ),
+      );
+      return;
+    }
+
+    final items = [
+      record,
+      ...value.items.where((PaymentOutModel item) => item.id != record.id),
+    ].take(PaginatedFetch.defaultPageSize).toList();
+
+    state = AsyncData(
+      PaginatedPaymentOut(
+        items: items,
+        currentPage: value.currentPage,
+        totalPages: value.totalPages,
+        totalItems: value.totalItems + 1,
+      ),
+    );
   }
 }
 
@@ -198,38 +407,146 @@ class PaymentOutFilters extends _$PaymentOutFilters {
 
   void setFirm(String firm) {
     state = state.copyWith(selectedFirm: firm, currentPage: 1);
-    ref.invalidate(paymentOutRecordsProvider);
   }
 
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
-    ref.invalidate(paymentOutRecordsProvider);
+  }
+
+  void setStatus(String status) {
+    state = state.copyWith(selectedStatus: status, currentPage: 1);
+  }
+
+  void setColumnDateRange(DateTimeRange range) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(columnDateRange: range),
+      currentPage: 1,
+    );
+  }
+
+  void setDocumentNoFilter(String value) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(documentNoFilter: value),
+      currentPage: 1,
+    );
+  }
+
+  void setParty(String party) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(selectedParty: party),
+      currentPage: 1,
+    );
+  }
+
+  void togglePaymentType(String paymentType) {
+    final updated = Set<String>.from(state.columnFilters.selectedPaymentTypes);
+    if (updated.contains(paymentType)) {
+      updated.remove(paymentType);
+    } else {
+      updated.add(paymentType);
+    }
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(
+        selectedPaymentTypes: updated,
+      ),
+      currentPage: 1,
+    );
+  }
+
+  void clearPaymentTypes() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearPaymentTypes: true),
+      currentPage: 1,
+    );
+  }
+
+  void applyTotalAmountFilter(PurchaseNumericFilter filter) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(totalAmountFilter: filter),
+      currentPage: 1,
+    );
+  }
+
+  void clearTotalAmountFilter() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearTotalAmountFilter: true),
+      currentPage: 1,
+    );
+  }
+
+  void applyPaidAmountFilter(PurchaseNumericFilter filter) {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(paidAmountFilter: filter),
+      currentPage: 1,
+    );
+  }
+
+  void clearPaidAmountFilter() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearPaidAmountFilter: true),
+      currentPage: 1,
+    );
+  }
+
+  void applyAmountFilter(PurchaseNumericFilter filter) {
+    applyTotalAmountFilter(filter);
+  }
+
+  void clearAmountFilter() {
+    clearTotalAmountFilter();
+  }
+
+  void applyBalanceFilter(PurchaseNumericFilter filter) {
+    applyPaidAmountFilter(filter);
+  }
+
+  void clearBalanceFilter() {
+    clearPaidAmountFilter();
   }
 
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
+  }
+
+  void ensureFirstPage() {
+    if (state.currentPage != 1) {
+      state = state.copyWith(currentPage: 1);
+    }
+  }
+
+  void clearAllFilters() {
+    state = const PaymentOutFiltersState();
+    ref.read(paymentOutSearchQueryProvider.notifier).setQuery('');
     ref.invalidate(paymentOutRecordsProvider);
   }
 }
 
 @riverpod
+List<PaymentOutModel> filteredPaymentOutRecords(Ref ref) {
+  final allRecords = _allRecordsFromAsync(ref.watch(paymentOutRecordsProvider));
+  final filters = ref.watch(paymentOutFiltersProvider);
+  final search = ref.watch(paymentOutSearchQueryProvider);
+  return _applyFilters(allRecords, filters, search);
+}
+
+@riverpod
 PaginatedPaymentOut paginatedPaymentOutRecords(Ref ref) {
-  final recordsAsync = ref.watch(paymentOutRecordsProvider);
-  return recordsAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedPaymentOut(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
+  final filtered = ref.watch(filteredPaymentOutRecordsProvider);
+  final filters = ref.watch(paymentOutFiltersProvider);
+  return _paginateFilteredRecords(filtered, filters.currentPage);
+}
+
+@riverpod
+List<String> paymentOutPartyOptions(Ref ref) {
+  final allRecords = _allRecordsFromAsync(ref.watch(paymentOutRecordsProvider));
+  return purchasePartyOptionsFromNames(
+    allRecords.map((record) => record.partyName),
   );
 }
 
 @riverpod
 PaymentOutSummaryData paymentOutSummary(Ref ref) {
-  final page = ref.watch(paginatedPaymentOutRecordsProvider);
-  final records = page.items;
+  final records = ref.watch(filteredPaymentOutRecordsProvider);
   final totalAmount = records.fold<double>(
     0,
     (sum, record) => sum + record.totalAmount,
@@ -261,6 +578,7 @@ class PaymentOutFormState {
     this.showValidationErrors = false,
     this.saveError,
     this.isSaving = false,
+    this.isLoadingBalance = false,
   });
 
   final String? partyId;
@@ -277,14 +595,15 @@ class PaymentOutFormState {
   final bool showValidationErrors;
   final String? saveError;
   final bool isSaving;
+  final bool isLoadingBalance;
 
-  double get total => (paidAmount - discount).clamp(0, double.infinity);
+  double get total => (paidAmount - discount).clamp(0, double.infinity).toDouble();
 
   bool get isValid =>
       party.trim().isNotEmpty &&
       partyId != null &&
       partyId!.isNotEmpty &&
-      paidAmount > 0;
+      total > 0;
 
   PaymentOutFormState copyWith({
     String? partyId,
@@ -302,6 +621,7 @@ class PaymentOutFormState {
     String? saveError,
     bool clearSaveError = false,
     bool? isSaving,
+    bool? isLoadingBalance,
   }) {
     return PaymentOutFormState(
       partyId: partyId ?? this.partyId,
@@ -318,6 +638,7 @@ class PaymentOutFormState {
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
       isSaving: isSaving ?? this.isSaving,
+      isLoadingBalance: isLoadingBalance ?? this.isLoadingBalance,
     );
   }
 }
@@ -344,16 +665,18 @@ class PaymentOutForm extends _$PaymentOutForm {
     state = state.copyWith(
       party: name,
       partyId: partyId,
+      balanceDue: 0,
       clearSaveError: true,
+      isLoadingBalance: partyId != null && partyId.isNotEmpty,
     );
 
     if (partyId != null && partyId.isNotEmpty) {
       try {
         final service = await ref.read(purchaseServiceProvider.future);
         final balanceDue = await service.fetchPartyBalanceDue(partyId);
-        state = state.copyWith(balanceDue: balanceDue);
+        state = state.copyWith(balanceDue: balanceDue, isLoadingBalance: false);
       } catch (_) {
-        // Balance lookup is best-effort for the dialog.
+        state = state.copyWith(isLoadingBalance: false);
       }
     }
   }
@@ -386,7 +709,9 @@ class PaymentOutForm extends _$PaymentOutForm {
     state = state.copyWith(showDescriptionField: !state.showDescriptionField);
   }
 
-  Future<({String? error, String? paymentId})> savePayment() async {
+  Future<({String? error, String? paymentId})> savePayment({
+    bool showSuccessMessage = true,
+  }) async {
     if (!state.isValid) {
       state = state.copyWith(showValidationErrors: true);
       return (error: 'Please fill required fields', paymentId: null);
@@ -406,29 +731,41 @@ class PaymentOutForm extends _$PaymentOutForm {
         time.minute,
       );
 
+      final paymentAmount = state.total;
+
       final allocations = await service.buildFifoAllocations(
         partyId: state.partyId!,
-        amount: state.paidAmount,
+        amount: paymentAmount,
       );
+
+      final receiptNo = state.receiptNo;
 
       final created = await service.createPayment(
         CreatePaymentRequest(
           partyId: state.partyId!,
           direction: 'paid',
-          amount: state.paidAmount.toStringAsFixed(4),
+          amount: paymentAmount.toStringAsFixed(4),
           paymentMode: PurchasePaymentModes.toApi(state.paymentType),
           paymentDate: paymentDate.toUtc().toIso8601String(),
-          referenceNumber: state.receiptNo,
+          referenceNumber: receiptNo,
           notes: state.description.trim().isEmpty ? null : state.description,
           allocations: allocations,
         ),
       );
 
-      ref.invalidate(paymentOutRecordsProvider);
-      ref.invalidate(purchaseBillsProvider);
+      ref.read(paymentOutRecordsProvider.notifier).optimisticPrepend(created);
+      await ref
+          .read(paymentOutRecordsProvider.notifier)
+          .refreshAllRelated(silent: true);
       refreshAfterPaymentOut(ref);
       final paymentId = created.id;
+      state = state.copyWith(isSaving: false);
       reset();
+      if (showSuccessMessage) {
+        ref.read(paymentOutSaveSuccessMessageProvider.notifier).setMessage(
+          'Payment $receiptNo saved successfully',
+        );
+      }
       return (error: null, paymentId: paymentId);
     } catch (error) {
       final message = PurchaseErrorMapper.messageFor(error);

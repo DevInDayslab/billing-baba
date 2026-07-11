@@ -58,7 +58,7 @@ final class DebitNoteFormProvider
   }
 }
 
-String _$debitNoteFormHash() => r'46700076a2c444ee1fbbe2234d1e7ffbec36cc84';
+String _$debitNoteFormHash() => r'9a0811720dc993244816dd32735ae86c623c4828';
 
 final class DebitNoteFormFamily extends $Family
     with

@@ -59,7 +59,7 @@ final class SaleOrderFormNotifierProvider
 }
 
 String _$saleOrderFormNotifierHash() =>
-    r'5dcb2c97b85da161d4c196292abf278bfdd69064';
+    r'967858e4c38496f37c412e32ef62aa70f04731f9';
 
 final class SaleOrderFormNotifierFamily extends $Family
     with
@@ -165,7 +165,7 @@ final class SaleOrderGrandTotalProvider
 }
 
 String _$saleOrderGrandTotalHash() =>
-    r'a71cad1be905b34a2314d0e6a74240d9d6924fcb';
+    r'7181867151a937bd04338549240dd2369aef1679';
 
 final class SaleOrderGrandTotalFamily extends $Family
     with $FunctionalFamilyOverride<double, String> {
@@ -242,8 +242,7 @@ final class SaleOrderTotalTaxProvider
   }
 }
 
-String _$saleOrderTotalTaxHash() =>
-    r'c4e8f1a92b3d7e6f5a0c9b8d7e6f5a4b3c2d1e0f';
+String _$saleOrderTotalTaxHash() => r'6d355cbc3303600fb56b6fcb205c566ab97b6426';
 
 final class SaleOrderTotalTaxFamily extends $Family
     with $FunctionalFamilyOverride<double, String> {

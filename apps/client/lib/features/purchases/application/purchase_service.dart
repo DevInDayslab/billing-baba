@@ -361,6 +361,283 @@ class PurchaseService {
     }
   }
 
+  Future<PurchaseDocumentDto> convertBillToReturn(String billId) async {
+    try {
+      return _repository.convertDocument(
+        billId,
+        const ConvertPurchaseDocumentRequest(targetType: 'purchase_return'),
+      );
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<String> duplicatePurchaseBill(String documentId) async {
+    return _duplicatePurchaseDocument(documentId, PurchaseDocumentType.purchaseBill);
+  }
+
+  Future<String> duplicatePurchaseOrder(String documentId) async {
+    return _duplicatePurchaseDocument(documentId, PurchaseDocumentType.purchaseOrder);
+  }
+
+  Future<String> duplicatePurchaseReturn(String documentId) async {
+    return _duplicatePurchaseDocument(
+      documentId,
+      PurchaseDocumentType.purchaseReturn,
+    );
+  }
+
+  Future<String> _duplicatePurchaseDocument(
+    String documentId,
+    PurchaseDocumentType documentType,
+  ) async {
+    try {
+      final source = await _repository.getDocument(documentId);
+      final newDoc = await _repository.createDocument(
+        CreatePurchaseDocumentRequest(
+          documentType: documentType.apiValue,
+          documentSeries: PurchaseDocumentMapper.seriesForType(documentType),
+          partyId: source.partyId,
+          isGstFormal: source.isGstFormal,
+          partyStateCode: source.partyStateCode,
+          documentDate: DateTime.now().toUtc().toIso8601String(),
+          dueDate: source.dueDate,
+          notes: source.notes,
+        ),
+      );
+
+      for (final line in source.lines) {
+        await _repository.addLine(
+          newDoc.id,
+          CreatePurchaseLineRequest(
+            itemId: line.itemId,
+            quantity: line.quantity,
+            unit: line.unit,
+            unitPrice: line.unitPrice,
+            discountAmount: line.discountAmount,
+            taxType: line.taxType,
+            taxRate: line.taxRate,
+            sortOrder: line.sortOrder,
+          ),
+        );
+      }
+
+      return newDoc.id;
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<List<PurchaseBillPaymentHistoryEntry>> fetchPaymentHistory(
+    String documentId,
+  ) async {
+    try {
+      return _repository.getPaymentHistory(documentId);
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<List<PurchaseBillHistoryEvent>> fetchBillHistory(
+    String documentId,
+  ) async {
+    try {
+      final document = await _repository.getDocument(documentId);
+      final events = <PurchaseBillHistoryEvent>[
+        PurchaseBillHistoryEvent(
+          timestamp: DateTime.parse(document.createdAt).toLocal(),
+          title: 'Bill created',
+          subtitle: document.documentNumber ?? 'Draft',
+        ),
+      ];
+
+      if (document.convertedFromId != null) {
+        try {
+          final source = await _repository.getDocument(
+            document.convertedFromId!,
+          );
+          events.add(
+            PurchaseBillHistoryEvent(
+              timestamp: DateTime.parse(document.createdAt).toLocal(),
+              title: 'Converted from purchase order',
+              subtitle: source.documentNumber ?? source.id,
+            ),
+          );
+        } catch (_) {
+          events.add(
+            PurchaseBillHistoryEvent(
+              timestamp: DateTime.parse(document.createdAt).toLocal(),
+              title: 'Converted from another document',
+              subtitle: document.convertedFromId,
+            ),
+          );
+        }
+      }
+
+      if (document.status == 'finalized') {
+        events.add(
+          PurchaseBillHistoryEvent(
+            timestamp: DateTime.parse(document.updatedAt).toLocal(),
+            title: 'Bill finalized',
+            subtitle: document.documentNumber,
+          ),
+        );
+      }
+
+      if (document.status == 'cancelled') {
+        events.add(
+          PurchaseBillHistoryEvent(
+            timestamp: DateTime.parse(document.updatedAt).toLocal(),
+            title: 'Bill cancelled',
+            subtitle: document.documentNumber,
+          ),
+        );
+      }
+
+      final payments = await _repository.getPaymentHistory(documentId);
+      for (final payment in payments) {
+        events.add(
+          PurchaseBillHistoryEvent(
+            timestamp: payment.paymentDate.toLocal(),
+            title: 'Payment recorded',
+            subtitle:
+                '${payment.paymentMode} · ₹${payment.allocatedAmount.toStringAsFixed(2)}',
+          ),
+        );
+      }
+
+      events.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return events;
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<List<PurchaseBillHistoryEvent>> fetchOrderHistory(
+    String documentId,
+  ) async {
+    try {
+      final document = await _repository.getDocument(documentId);
+      final events = <PurchaseBillHistoryEvent>[
+        PurchaseBillHistoryEvent(
+          timestamp: DateTime.parse(document.createdAt).toLocal(),
+          title: 'Order created',
+          subtitle: document.documentNumber ?? 'Draft',
+        ),
+      ];
+
+      if (document.status == 'finalized') {
+        events.add(
+          PurchaseBillHistoryEvent(
+            timestamp: DateTime.parse(document.updatedAt).toLocal(),
+            title: 'Order finalized',
+            subtitle: document.documentNumber,
+          ),
+        );
+      }
+
+      if (document.status == 'converted') {
+        events.add(
+          PurchaseBillHistoryEvent(
+            timestamp: DateTime.parse(document.updatedAt).toLocal(),
+            title: 'Converted to purchase bill',
+            subtitle: document.documentNumber,
+          ),
+        );
+      }
+
+      if (document.status == 'cancelled') {
+        events.add(
+          PurchaseBillHistoryEvent(
+            timestamp: DateTime.parse(document.updatedAt).toLocal(),
+            title: 'Order cancelled',
+            subtitle: document.documentNumber,
+          ),
+        );
+      }
+
+      events.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return events;
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+
+  Future<List<PurchaseBillHistoryEvent>> fetchReturnHistory(
+    String documentId,
+  ) async {
+    try {
+      final document = await _repository.getDocument(documentId);
+      final events = <PurchaseBillHistoryEvent>[
+        PurchaseBillHistoryEvent(
+          timestamp: DateTime.parse(document.createdAt).toLocal(),
+          title: 'Debit note created',
+          subtitle: document.documentNumber ?? 'Draft',
+        ),
+      ];
+
+      if (document.convertedFromId != null) {
+        try {
+          final source = await _repository.getDocument(
+            document.convertedFromId!,
+          );
+          events.add(
+            PurchaseBillHistoryEvent(
+              timestamp: DateTime.parse(document.createdAt).toLocal(),
+              title: 'Converted from purchase bill',
+              subtitle: source.documentNumber ?? source.id,
+            ),
+          );
+        } catch (_) {
+          events.add(
+            PurchaseBillHistoryEvent(
+              timestamp: DateTime.parse(document.createdAt).toLocal(),
+              title: 'Converted from another document',
+              subtitle: document.convertedFromId,
+            ),
+          );
+        }
+      }
+
+      if (document.status == 'finalized') {
+        events.add(
+          PurchaseBillHistoryEvent(
+            timestamp: DateTime.parse(document.updatedAt).toLocal(),
+            title: 'Debit note finalized',
+            subtitle: document.documentNumber,
+          ),
+        );
+      }
+
+      if (document.status == 'cancelled') {
+        events.add(
+          PurchaseBillHistoryEvent(
+            timestamp: DateTime.parse(document.updatedAt).toLocal(),
+            title: 'Debit note cancelled',
+            subtitle: document.documentNumber,
+          ),
+        );
+      }
+
+      final payments = await _repository.getPaymentHistory(documentId);
+      for (final payment in payments) {
+        events.add(
+          PurchaseBillHistoryEvent(
+            timestamp: payment.paymentDate.toLocal(),
+            title: 'Payment recorded',
+            subtitle:
+                '${payment.paymentMode} · ₹${payment.allocatedAmount.toStringAsFixed(2)}',
+          ),
+        );
+      }
+
+      events.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return events;
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+
   Future<void> deleteDraft(String documentId) async {
     try {
       await _repository.deleteDocument(documentId);
@@ -395,6 +672,39 @@ class PurchaseService {
       return PurchaseDocumentMapper.toPaymentOutModel(
         payment,
         partyName: partyNames[payment.partyId] ?? '',
+      );
+    } on DioException catch (error) {
+      throw mapPurchaseError(error);
+    }
+  }
+
+  /// Records an outgoing payment allocated to a finalized purchase bill.
+  Future<void> recordPurchaseBillPayment({
+    required String partyId,
+    required String purchaseDocumentId,
+    required double amount,
+    required String paymentModeUi,
+    String? referenceNumber,
+    DateTime? paymentDate,
+  }) async {
+    if (amount <= 0) return;
+
+    try {
+      await _repository.createPayment(
+        CreatePaymentRequest(
+          partyId: partyId,
+          direction: 'paid',
+          amount: amount.toStringAsFixed(4),
+          paymentMode: PurchasePaymentModes.toApi(paymentModeUi),
+          paymentDate: paymentDate?.toUtc().toIso8601String(),
+          referenceNumber: referenceNumber,
+          allocations: [
+            PaymentAllocationRequest(
+              purchaseDocumentId: purchaseDocumentId,
+              allocatedAmount: amount.toStringAsFixed(4),
+            ),
+          ],
+        ),
       );
     } on DioException catch (error) {
       throw mapPurchaseError(error);

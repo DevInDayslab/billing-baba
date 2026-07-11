@@ -1,5 +1,20 @@
-import { and, asc, count, desc, eq, gte, ilike, lte, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  isNotNull,
+  lte,
+  sql,
+} from 'drizzle-orm';
 import type { Database } from '../../db/client';
+import {
+  paymentAllocations,
+  payments,
+} from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
 import { godowns, items } from '../../db/schema/inventory/tables';
 import {
@@ -21,6 +36,61 @@ import type {
 
 export class PurchaseDocumentRepository {
   constructor(private readonly db: Database) {}
+
+  private allocationTotalsSubquery(businessId: string) {
+    return this.db
+      .select({
+        purchaseDocumentId: paymentAllocations.purchaseDocumentId,
+        allocated: sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+          'allocated',
+        ),
+      })
+      .from(paymentAllocations)
+      .where(
+        and(
+          eq(paymentAllocations.businessId, businessId),
+          eq(paymentAllocations.isDeleted, false),
+          isNotNull(paymentAllocations.purchaseDocumentId),
+        ),
+      )
+      .groupBy(paymentAllocations.purchaseDocumentId)
+      .as('alloc');
+  }
+
+  private firstPaymentModeSubquery(businessId: string) {
+    const ranked = this.db
+      .select({
+        purchaseDocumentId: paymentAllocations.purchaseDocumentId,
+        paymentMode: payments.paymentMode,
+        rowNum: sql<number>`ROW_NUMBER() OVER (
+          PARTITION BY ${paymentAllocations.purchaseDocumentId}
+          ORDER BY ${paymentAllocations.createdAt} ASC
+        )`.as('row_num'),
+      })
+      .from(paymentAllocations)
+      .innerJoin(
+        payments,
+        eq(paymentAllocations.paymentId, payments.id),
+      )
+      .where(
+        and(
+          eq(paymentAllocations.businessId, businessId),
+          eq(paymentAllocations.isDeleted, false),
+          eq(payments.isDeleted, false),
+          isNotNull(paymentAllocations.purchaseDocumentId),
+        ),
+      )
+      .as('ranked_payments');
+
+    return this.db
+      .select({
+        purchaseDocumentId: ranked.purchaseDocumentId,
+        paymentMode: ranked.paymentMode,
+      })
+      .from(ranked)
+      .where(eq(ranked.rowNum, 1))
+      .as('first_payment');
+  }
 
   async list(params: ListPurchaseDocumentsParams): Promise<{
     rows: PurchaseDocumentRecord[];
@@ -69,9 +139,39 @@ export class PurchaseDocumentRepository {
       params.order === 'desc' ? desc(sortColumn) : asc(sortColumn);
     const offset = (params.page - 1) * params.limit;
 
+    const alloc = this.allocationTotalsSubquery(params.businessId);
+    const firstPayment = this.firstPaymentModeSubquery(params.businessId);
+
     const rows = await this.db
-      .select()
+      .select({
+        id: purchaseDocuments.id,
+        documentType: purchaseDocuments.documentType,
+        status: purchaseDocuments.status,
+        documentNumber: purchaseDocuments.documentNumber,
+        documentSeries: purchaseDocuments.documentSeries,
+        partyId: purchaseDocuments.partyId,
+        isGstFormal: purchaseDocuments.isGstFormal,
+        partyStateCode: purchaseDocuments.partyStateCode,
+        subtotal: purchaseDocuments.subtotal,
+        discountTotal: purchaseDocuments.discountTotal,
+        taxAmount: purchaseDocuments.taxAmount,
+        totalAmount: purchaseDocuments.totalAmount,
+        documentDate: purchaseDocuments.documentDate,
+        convertedFromId: purchaseDocuments.convertedFromId,
+        supplierInvoiceNumber: purchaseDocuments.supplierInvoiceNumber,
+        dueDate: purchaseDocuments.dueDate,
+        notes: purchaseDocuments.notes,
+        createdAt: purchaseDocuments.createdAt,
+        updatedAt: purchaseDocuments.updatedAt,
+        paidAmount: sql<string>`COALESCE(${alloc.allocated}, 0)`,
+        paymentMode: firstPayment.paymentMode,
+      })
       .from(purchaseDocuments)
+      .leftJoin(alloc, eq(alloc.purchaseDocumentId, purchaseDocuments.id))
+      .leftJoin(
+        firstPayment,
+        eq(firstPayment.purchaseDocumentId, purchaseDocuments.id),
+      )
       .where(whereClause)
       .orderBy(orderBy)
       .limit(params.limit)

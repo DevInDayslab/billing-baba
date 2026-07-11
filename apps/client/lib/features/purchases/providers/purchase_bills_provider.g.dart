@@ -20,7 +20,7 @@ final class PurchaseBillSearchQueryProvider
         argument: null,
         retry: null,
         name: r'purchaseBillSearchQueryProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -42,7 +42,7 @@ final class PurchaseBillSearchQueryProvider
 }
 
 String _$purchaseBillSearchQueryHash() =>
-    r'64d6558cd9224b118dfb5aacfa00e96af9791083';
+    r'2aff2e2cb5790e933cffd0ecd3c750a4df758ac9';
 
 abstract class _$PurchaseBillSearchQuery extends $Notifier<String> {
   String build();
@@ -86,7 +86,7 @@ final class PurchaseBillsProvider
   PurchaseBills create() => PurchaseBills();
 }
 
-String _$purchaseBillsHash() => r'b830c9950f7d7b781307f8a6cf651e1f781f8648';
+String _$purchaseBillsHash() => r'2d4a84356fbc1516d2d2257461b266b5ff6ee253';
 
 abstract class _$PurchaseBills extends $AsyncNotifier<PaginatedPurchaseBills> {
   FutureOr<PaginatedPurchaseBills> build();
@@ -144,7 +144,7 @@ final class PurchaseBillFiltersProvider
 }
 
 String _$purchaseBillFiltersHash() =>
-    r'fc5b6d4dde51ef6d473515d01560f47ca318505b';
+    r'4ab2fb5a88e6be89f62e667f687d734a0c1b54bb';
 
 abstract class _$PurchaseBillFilters
     extends $Notifier<PurchaseBillFiltersState> {
@@ -165,6 +165,54 @@ abstract class _$PurchaseBillFilters
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(filteredPurchaseBills)
+final filteredPurchaseBillsProvider = FilteredPurchaseBillsProvider._();
+
+final class FilteredPurchaseBillsProvider
+    extends
+        $FunctionalProvider<
+          List<PurchaseBillModel>,
+          List<PurchaseBillModel>,
+          List<PurchaseBillModel>
+        >
+    with $Provider<List<PurchaseBillModel>> {
+  FilteredPurchaseBillsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'filteredPurchaseBillsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredPurchaseBillsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<PurchaseBillModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<PurchaseBillModel> create(Ref ref) {
+    return filteredPurchaseBills(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<PurchaseBillModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<PurchaseBillModel>>(value),
+    );
+  }
+}
+
+String _$filteredPurchaseBillsHash() =>
+    r'dcbd683fcfde401cb507ff01b8b92620fa70d431';
 
 @ProviderFor(paginatedPurchaseBills)
 final paginatedPurchaseBillsProvider = PaginatedPurchaseBillsProvider._();
@@ -212,7 +260,49 @@ final class PaginatedPurchaseBillsProvider
 }
 
 String _$paginatedPurchaseBillsHash() =>
-    r'446aaf3db4fee10ddc49a849113d8049657b6f5b';
+    r'c7f59306ab02c5e33544d6a2d14dcea075a94edf';
+
+@ProviderFor(purchaseBillPartyOptions)
+final purchaseBillPartyOptionsProvider = PurchaseBillPartyOptionsProvider._();
+
+final class PurchaseBillPartyOptionsProvider
+    extends $FunctionalProvider<List<String>, List<String>, List<String>>
+    with $Provider<List<String>> {
+  PurchaseBillPartyOptionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'purchaseBillPartyOptionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$purchaseBillPartyOptionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<String>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<String> create(Ref ref) {
+    return purchaseBillPartyOptions(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<String>>(value),
+    );
+  }
+}
+
+String _$purchaseBillPartyOptionsHash() =>
+    r'1d898e4d49ee5d2bb30a7b0c683cb3ed0edf2a7b';
 
 @ProviderFor(purchaseBillSummary)
 final purchaseBillSummaryProvider = PurchaseBillSummaryProvider._();
@@ -260,4 +350,4 @@ final class PurchaseBillSummaryProvider
 }
 
 String _$purchaseBillSummaryHash() =>
-    r'70693f45ba610989f6f6192eff5aba39056b0bae';
+    r'f87e89e2d879886392c9631cf6ec5d67c220512c';

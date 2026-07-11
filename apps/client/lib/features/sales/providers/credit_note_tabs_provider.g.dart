@@ -58,7 +58,7 @@ final class CreditNoteTabsProvider
   }
 }
 
-String _$creditNoteTabsHash() => r'b2c3d4e5f6789012345678abcdef01234567890';
+String _$creditNoteTabsHash() => r'abd07f4b14be6d8211e0ca302b62ea4694611a63';
 
 final class CreditNoteTabsFamily extends $Family
     with
@@ -102,9 +102,6 @@ abstract class _$CreditNoteTabs extends $Notifier<CreditNoteTabsState> {
               Object?,
               Object?
             >;
-    return element.handleCreate(
-      ref,
-      () => build(initialDocumentId: _$args),
-    );
+    return element.handleCreate(ref, () => build(initialDocumentId: _$args));
   }
 }

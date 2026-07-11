@@ -74,7 +74,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
   }
 
   List<PartyModel> get _filteredParties {
-    final parties = ref.watch(partiesListProvider);
+    final parties = ref.watch(partyPickerListProvider).value ?? [];
     final filtered = parties
         .where((party) => widget.partyTypeFilter.matches(party.partyType))
         .toList();
@@ -108,6 +108,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
 
     try {
       await ref.read(partyListProvider.notifier).createParty(result);
+      ref.invalidate(partyPickerListProvider);
     } on PartyOfflineException {
       if (!mounted) return;
     } on ApiValidationException catch (e) {
@@ -126,10 +127,9 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
 
     if (!mounted) return;
     widget.onSelected(result.partyName);
-    final parties = ref.read(partiesListProvider);
-    final match = parties
-        .where((party) => party.name == result.partyName)
-        .firstOrNull;
+    final parties = ref.read(partyPickerListProvider).value ?? [];
+    final match =
+        parties.where((party) => party.name == result.partyName).firstOrNull;
     if (match != null) {
       widget.onPartySelected?.call(match);
       widget.onPartySelectedWithId?.call(match.id, match.name);
@@ -174,7 +174,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
   }
 
   Widget _buildOverlayContent() {
-    final partiesAsync = ref.watch(partyListProvider);
+    final partiesAsync = ref.watch(partyPickerListProvider);
     final filtered = _filteredParties;
 
     return Column(
