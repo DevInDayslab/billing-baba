@@ -17,6 +17,7 @@ class InventoryItem {
     this.brandId,
     this.baseUnitShortName,
     this.purchasePrice,
+    this.mrp,
     this.reorderLevel,
     this.primaryImageUrl,
     this.isRawMaterial = false,
@@ -37,6 +38,7 @@ class InventoryItem {
   final String? brandId;
   final String? baseUnitShortName;
   final double? purchasePrice;
+  final double? mrp;
   final double? reorderLevel;
   final String? primaryImageUrl;
   final bool isRawMaterial;
@@ -57,6 +59,7 @@ class InventoryItem {
     String? brandId,
     String? baseUnitShortName,
     double? purchasePrice,
+    double? mrp,
     double? reorderLevel,
     String? primaryImageUrl,
     bool? isRawMaterial,
@@ -77,6 +80,7 @@ class InventoryItem {
       brandId: brandId ?? this.brandId,
       baseUnitShortName: baseUnitShortName ?? this.baseUnitShortName,
       purchasePrice: purchasePrice ?? this.purchasePrice,
+      mrp: mrp ?? this.mrp,
       reorderLevel: reorderLevel ?? this.reorderLevel,
       primaryImageUrl: primaryImageUrl ?? this.primaryImageUrl,
       isRawMaterial: isRawMaterial ?? this.isRawMaterial,

@@ -27,6 +27,7 @@ abstract final class ItemMapper {
       brandId: dto.brandId,
       baseUnitShortName: dto.baseUnit,
       purchasePrice: _parseMoney(dto.purchasePrice),
+      mrp: _parseMoney(dto.mrp),
       reorderLevel: _parseMoney(dto.reorderLevel),
       primaryImageUrl: dto.primaryImageUrl,
       isRawMaterial: dto.itemType == 'raw_material',
