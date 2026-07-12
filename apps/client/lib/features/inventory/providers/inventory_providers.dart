@@ -1,7 +1,12 @@
+import 'package:billing_baba/features/inventory/application/inventory_item_filter_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
+import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
+import 'package:billing_baba/features/inventory/application/inventory_transaction_table_service.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
+import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
+import 'package:billing_baba/features/inventory/models/inventory_transaction_filters.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/models/item_location_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
@@ -9,24 +14,35 @@ import 'package:billing_baba/features/inventory/models/price_history_model.dart'
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_stock_utils.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_brands_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_select_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final productsProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(productSearchQueryProvider).toLowerCase();
+  final filters = ref.watch(inventoryItemFiltersProvider);
   return (ref.watch(inventoryItemsProvider).value ?? [])
       .where((item) => item.type == ItemType.product)
       .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
+      .where((item) => InventoryItemFilterService.matches(item, filters: filters))
       .toList();
 });
 
 final servicesProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(serviceSearchQueryProvider).toLowerCase();
+  final filters = ref.watch(inventoryItemFiltersProvider);
   return (ref.watch(inventoryItemsProvider).value ?? [])
       .where((item) => item.type == ItemType.service)
       .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
+      .where((item) => InventoryItemFilterService.matches(item, filters: filters))
       .toList();
 });
 
@@ -150,6 +166,205 @@ final productTransactionSearchQueryProvider =
     NotifierProvider<ProductTransactionSearchQuery, String>(
       ProductTransactionSearchQuery.new,
     );
+
+const inventoryTransactionPageSize = 35;
+
+final productTransactionFiltersProvider =
+    NotifierProvider<ProductTransactionFilters, InventoryTransactionFiltersState>(
+      ProductTransactionFilters.new,
+    );
+
+final selectedProductTransactionIdProvider =
+    NotifierProvider<SelectedProductTransactionId, String?>(
+      SelectedProductTransactionId.new,
+    );
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final filteredProductTransactionsProvider =
+    Provider.family<List<ProductTransaction>, String>((ref, itemId) {
+      final transactions =
+          ref.watch(productTransactionsProvider(itemId)).value ?? [];
+      final filters = ref.watch(productTransactionFiltersProvider);
+      return InventoryTransactionTableService.applyFiltersAndSort(
+        transactions: transactions,
+        filters: filters,
+      );
+    });
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final productTransactionTypeOptionsProvider =
+    Provider.family<List<String>, String>((ref, itemId) {
+      final transactions =
+          ref.watch(productTransactionsProvider(itemId)).value ?? [];
+      return InventoryTransactionTableService.uniqueTypeOptions(transactions);
+    });
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final productTransactionStatusOptionsProvider =
+    Provider.family<List<String>, String>((ref, itemId) {
+      final transactions =
+          ref.watch(productTransactionsProvider(itemId)).value ?? [];
+      return InventoryTransactionTableService.uniqueStatusOptions(transactions);
+    });
+
+final inventoryItemFiltersProvider =
+    NotifierProvider<InventoryItemFilters, InventoryItemFiltersState>(
+      InventoryItemFilters.new,
+    );
+
+class PaginatedProductTransactions {
+  const PaginatedProductTransactions({
+    required this.items,
+    required this.currentPage,
+    required this.totalPages,
+    required this.totalItems,
+  });
+
+  final List<ProductTransaction> items;
+  final int currentPage;
+  final int totalPages;
+  final int totalItems;
+}
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final paginatedProductTransactionsProvider =
+    Provider.family<PaginatedProductTransactions, String>((ref, itemId) {
+      final transactions = ref.watch(filteredProductTransactionsProvider(itemId));
+      final page = ref.watch(productTransactionFiltersProvider).currentPage;
+      final totalPages = transactions.isEmpty
+          ? 1
+          : (transactions.length / inventoryTransactionPageSize).ceil();
+      final safePage = page.clamp(0, totalPages - 1);
+      final start = safePage * inventoryTransactionPageSize;
+      final end = (start + inventoryTransactionPageSize).clamp(
+        0,
+        transactions.length,
+      );
+
+      return PaginatedProductTransactions(
+        items: transactions.sublist(start, end),
+        currentPage: safePage,
+        totalPages: totalPages,
+        totalItems: transactions.length,
+      );
+    });
+
+class ProductStockSummary {
+  const ProductStockSummary({
+    this.availableStock,
+    this.reservedStock,
+    this.stockValue,
+    this.averagePurchasePrice,
+    this.lastPurchasePrice,
+    this.reorderLevel,
+    this.isLowStock,
+  });
+
+  final double? availableStock;
+  final double? reservedStock;
+  final double? stockValue;
+  final double? averagePurchasePrice;
+  final double? lastPurchasePrice;
+  final double? reorderLevel;
+  final bool? isLowStock;
+}
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final productStockSummaryProvider =
+    Provider.family<ProductStockSummary, String>((ref, itemId) {
+      final item = (ref.watch(inventoryItemsProvider).value ?? [])
+          .where((entry) => entry.id == itemId)
+          .firstOrNull;
+      final stockLevels =
+          ref.watch(itemStockLevelsProvider(itemId)).value ?? [];
+      final transactions =
+          ref.watch(productTransactionsProvider(itemId)).value ?? [];
+
+      double? averageCost;
+      var hasLowStock = false;
+      for (final level in stockLevels) {
+        final cost = parseDecimal(level.averageCost);
+        if (cost != null) {
+          averageCost = cost;
+        }
+        if (level.isLowStock) {
+          hasLowStock = true;
+        }
+      }
+
+      final lastPurchase =
+          InventoryStockCalculator.lastPurchasePrice(transactions) ??
+          item?.purchasePrice;
+
+      final available = item?.availableForSale ?? item?.quantity;
+      final reserved = item?.reservedQuantity;
+      final stockValue = item?.stockValue ??
+          stockLevels.fold<double>(
+            0,
+            (sum, level) =>
+                sum +
+                ((parseDecimal(level.quantity) ?? 0) *
+                    (parseDecimal(level.averageCost) ?? 0)),
+          );
+
+      final reorder = item?.reorderLevel ??
+          parseDecimal(stockLevels.firstOrNull?.reorderLevel);
+
+      final isLowStock = hasLowStock ||
+          (available != null &&
+              reorder != null &&
+              available > 0 &&
+              available <= reorder);
+
+      return ProductStockSummary(
+        availableStock: available,
+        reservedStock: reserved,
+        stockValue: stockValue > 0 ? stockValue : item?.stockValue,
+        averagePurchasePrice: averageCost,
+        lastPurchasePrice: lastPurchase,
+        reorderLevel: reorder,
+        isLowStock: stockLevels.isNotEmpty || reorder != null ? isLowStock : null,
+      );
+    });
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final productStockAfterProvider =
+    Provider.family<Map<String, double>, String>((ref, itemId) {
+      final transactions =
+          ref.watch(productTransactionsProvider(itemId)).value ?? [];
+      return InventoryStockCalculator.stockAfterByTransactionId(transactions);
+    });
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final productDetailContextProvider =
+    Provider.family<({InventoryItem? item, String? categoryName, String? brandName}), String>((
+  ref,
+  itemId,
+) {
+  final item = (ref.watch(inventoryItemsProvider).value ?? [])
+      .where((entry) => entry.id == itemId)
+      .firstOrNull;
+  final categories = ref.watch(categoriesProvider);
+  final brands = ref.watch(inventoryBrandsProvider).value ?? [];
+
+  final categoryName = categories
+      .where((category) => category.id == item?.categoryId)
+      .map((category) => category.name)
+      .firstOrNull;
+  final brandName = brands
+      .where((brand) => brand.id == item?.brandId)
+      .map((brand) => brand.name)
+      .firstOrNull;
+
+  return (item: item, categoryName: categoryName, brandName: brandName);
+});
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
@@ -315,4 +530,111 @@ class ProductTransactionSearchQuery extends Notifier<String> {
 
   String get query => state;
   set query(String value) => state = value;
+}
+
+class InventoryItemFilters extends Notifier<InventoryItemFiltersState> {
+  @override
+  InventoryItemFiltersState build() => const InventoryItemFiltersState();
+
+  void apply(InventoryItemFiltersState filters) => state = filters;
+
+  void clear() => state = const InventoryItemFiltersState();
+}
+
+class ProductTransactionFilters extends Notifier<InventoryTransactionFiltersState> {
+  @override
+  InventoryTransactionFiltersState build() =>
+      const InventoryTransactionFiltersState();
+
+  void setTypeColumnFilter(SelectColumnFilter? filter) {
+    state = state.copyWith(
+      typeColumnFilter: filter,
+      clearTypeColumnFilter: filter == null,
+      currentPage: 0,
+    );
+  }
+
+  void setInvoiceRefColumnFilter(TextColumnFilter? filter) {
+    state = state.copyWith(
+      invoiceRefColumnFilter: filter,
+      clearInvoiceRefColumnFilter: filter == null,
+      currentPage: 0,
+    );
+  }
+
+  void setPartyColumnFilter(TextColumnFilter? filter) {
+    state = state.copyWith(
+      partyColumnFilter: filter,
+      clearPartyColumnFilter: filter == null,
+      currentPage: 0,
+    );
+  }
+
+  void setDateColumnFilter(DateColumnFilter? filter) {
+    state = state.copyWith(
+      dateColumnFilter: filter,
+      clearDateColumnFilter: filter == null,
+      currentPage: 0,
+    );
+  }
+
+  void setQuantityColumnFilter(AmountColumnFilter? filter) {
+    state = state.copyWith(
+      quantityColumnFilter: filter,
+      clearQuantityColumnFilter: filter == null,
+      currentPage: 0,
+    );
+  }
+
+  void setPriceColumnFilter(AmountColumnFilter? filter) {
+    state = state.copyWith(
+      priceColumnFilter: filter,
+      clearPriceColumnFilter: filter == null,
+      currentPage: 0,
+    );
+  }
+
+  void setStatusColumnFilter(SelectColumnFilter? filter) {
+    state = state.copyWith(
+      statusColumnFilter: filter,
+      clearStatusColumnFilter: filter == null,
+      currentPage: 0,
+    );
+  }
+
+  void toggleSort(InventoryTransactionSortColumn column) {
+    if (state.sortColumn == column) {
+      final nextDirection = switch (state.sortDirection) {
+        InventoryTransactionSortDirection.none =>
+          InventoryTransactionSortDirection.ascending,
+        InventoryTransactionSortDirection.ascending =>
+          InventoryTransactionSortDirection.descending,
+        InventoryTransactionSortDirection.descending =>
+          InventoryTransactionSortDirection.none,
+      };
+      state = state.copyWith(sortDirection: nextDirection, currentPage: 0);
+      return;
+    }
+
+    state = state.copyWith(
+      sortColumn: column,
+      sortDirection: InventoryTransactionSortDirection.ascending,
+      currentPage: 0,
+    );
+  }
+
+  void setPage(int page) {
+    state = state.copyWith(currentPage: page);
+  }
+
+  void reset() {
+    state = const InventoryTransactionFiltersState();
+  }
+}
+
+class SelectedProductTransactionId extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void select(String? id) => state = id;
 }

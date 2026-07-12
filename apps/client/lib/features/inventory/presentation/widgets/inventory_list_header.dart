@@ -28,25 +28,7 @@ class InventoryListHeader extends StatelessWidget {
         flexValues: [for (final column in columns) column.flex],
         children: [
           for (final column in columns)
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    column.label,
-                    style: InventoryStyles.listHeaderStyle,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (column.showFilter) ...[
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.filter_list,
-                    size: 14,
-                    color: Colors.grey.shade500,
-                  ),
-                ],
-              ],
-            ),
+            _HeaderCell(column: column),
         ],
       ),
     );
@@ -89,16 +71,72 @@ class InventoryListRowLayout extends StatelessWidget {
   }
 }
 
+class _HeaderCell extends StatelessWidget {
+  const _HeaderCell({required this.column});
+
+  final InventoryListColumn column;
+
+  @override
+  Widget build(BuildContext context) {
+    if (column.trailing != null && !column.alignEnd) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              column.label,
+              style: InventoryStyles.listHeaderStyle,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          column.trailing!,
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        if (column.leading != null) ...[
+          column.leading!,
+          const SizedBox(width: 4),
+        ],
+        Expanded(
+          child: Text(
+            column.label,
+            textAlign: column.alignEnd ? TextAlign.right : TextAlign.left,
+            style: InventoryStyles.listHeaderStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (column.showFilter) ...[
+          const SizedBox(width: 4),
+          Icon(
+            Icons.filter_list,
+            size: 14,
+            color: Colors.grey.shade500,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class InventoryListColumn {
   const InventoryListColumn({
     required this.label,
     this.flex = 1,
     this.showFilter = false,
+    this.alignEnd = false,
+    this.leading,
+    this.trailing,
   });
 
   final String label;
   final int flex;
   final bool showFilter;
+  final bool alignEnd;
+  final Widget? leading;
+  final Widget? trailing;
 }
 
 class InventoryListEmptyState extends StatelessWidget {

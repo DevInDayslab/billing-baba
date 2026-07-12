@@ -40,6 +40,7 @@ class SaleColumnAmountFilterTrigger extends StatefulWidget {
     this.headerStyle,
     this.maxAmount = AmountColumnFilter.defaultCeiling,
     this.rangeLabel = 'Price range',
+    this.iconOnly = false,
     super.key,
   });
 
@@ -50,6 +51,7 @@ class SaleColumnAmountFilterTrigger extends StatefulWidget {
   final TextStyle? headerStyle;
   final double maxAmount;
   final String rangeLabel;
+  final bool iconOnly;
 
   @override
   State<SaleColumnAmountFilterTrigger> createState() =>
@@ -132,6 +134,25 @@ class _SaleColumnAmountFilterTriggerState
   Widget build(BuildContext context) {
     final isActive = widget.initialFilter?.isActive ?? false;
 
+    if (widget.iconOnly) {
+      return CompositedTransformTarget(
+        link: _layerLink,
+        child: InkWell(
+          key: _triggerKey,
+          onTap: _togglePopover,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          child: Padding(
+            padding: const EdgeInsets.all(2),
+            child: Icon(
+              Icons.filter_list,
+              size: 14,
+              color: isActive ? AppColors.error : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
+
     return CompositedTransformTarget(
       link: _layerLink,
       child: Padding(
@@ -200,7 +221,7 @@ class _SaleColumnAmountFilterPopoverState
     extends State<_SaleColumnAmountFilterPopover> {
   static final _amountFormat = NumberFormat('#,##0', 'en_IN');
   static final _amountInputFormatter = FilteringTextInputFormatter.allow(
-    RegExp(r'[0-9,]'),
+    RegExp('[0-9,]'),
   );
 
   late RangeValues _rangeValues;
@@ -312,7 +333,7 @@ class _SaleColumnAmountFilterPopoverState
                   trackHeight: 4,
                   rangeTrackShape: const RoundedRectRangeSliderTrackShape(),
                   rangeThumbShape: const _OutlinedRangeSliderThumbShape(
-                    enabledThumbRadius: 8,
+                    
                   ),
                   overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
                   activeTrackColor: AppColors.primary,
@@ -321,7 +342,6 @@ class _SaleColumnAmountFilterPopoverState
                 ),
                 child: RangeSlider(
                   values: _rangeValues,
-                  min: 0,
                   max: widget.maxAmount,
                   onChanged: _syncFromSlider,
                 ),
@@ -471,11 +491,10 @@ class _OutlinedRangeSliderThumbShape extends RangeSliderThumbShape {
     Offset center, {
     required Animation<double> activationAnimation,
     required Animation<double> enableAnimation,
-    bool isDiscrete = false,
+    required SliderThemeData sliderTheme, bool isDiscrete = false,
     bool isEnabled = false,
     bool isOnTop = false,
     bool isPressed = false,
-    required SliderThemeData sliderTheme,
     TextDirection textDirection = TextDirection.ltr,
     Thumb thumb = Thumb.start,
   }) {

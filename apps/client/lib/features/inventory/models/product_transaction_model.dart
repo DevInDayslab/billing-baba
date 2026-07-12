@@ -12,6 +12,7 @@ class ProductTransaction {
     required this.documentLabel,
     required this.transactionType,
     required this.referenceNo,
+    required this.movementType,
     this.unit,
     this.isInbound = false,
     this.godownName,
@@ -31,6 +32,7 @@ class ProductTransaction {
   final String documentLabel;
   final String transactionType;
   final String referenceNo;
+  final String movementType;
   final String? godownName;
 
   double get signedQuantity => isInbound ? quantity : -quantity;

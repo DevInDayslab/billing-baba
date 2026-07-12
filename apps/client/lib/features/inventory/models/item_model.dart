@@ -19,6 +19,7 @@ class InventoryItem {
     this.purchasePrice,
     this.reorderLevel,
     this.primaryImageUrl,
+    this.isRawMaterial = false,
   });
 
   final String id;
@@ -38,6 +39,7 @@ class InventoryItem {
   final double? purchasePrice;
   final double? reorderLevel;
   final String? primaryImageUrl;
+  final bool isRawMaterial;
 
   InventoryItem copyWith({
     String? id,
@@ -57,6 +59,7 @@ class InventoryItem {
     double? purchasePrice,
     double? reorderLevel,
     String? primaryImageUrl,
+    bool? isRawMaterial,
   }) {
     return InventoryItem(
       id: id ?? this.id,
@@ -76,6 +79,7 @@ class InventoryItem {
       purchasePrice: purchasePrice ?? this.purchasePrice,
       reorderLevel: reorderLevel ?? this.reorderLevel,
       primaryImageUrl: primaryImageUrl ?? this.primaryImageUrl,
+      isRawMaterial: isRawMaterial ?? this.isRawMaterial,
     );
   }
 }

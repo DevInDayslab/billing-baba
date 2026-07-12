@@ -55,6 +55,7 @@ class SaleColumnTextFilterTrigger extends StatefulWidget {
     this.alignment = Alignment.centerLeft,
     this.headerStyle,
     this.hintText = 'Enter value',
+    this.iconOnly = false,
     super.key,
   });
 
@@ -64,6 +65,7 @@ class SaleColumnTextFilterTrigger extends StatefulWidget {
   final Alignment alignment;
   final TextStyle? headerStyle;
   final String hintText;
+  final bool iconOnly;
 
   @override
   State<SaleColumnTextFilterTrigger> createState() =>
@@ -145,6 +147,25 @@ class _SaleColumnTextFilterTriggerState
   Widget build(BuildContext context) {
     final isActive = widget.initialFilter != null &&
         widget.initialFilter!.value.trim().isNotEmpty;
+
+    if (widget.iconOnly) {
+      return CompositedTransformTarget(
+        link: _layerLink,
+        child: InkWell(
+          key: _triggerKey,
+          onTap: _togglePopover,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          child: Padding(
+            padding: const EdgeInsets.all(2),
+            child: Icon(
+              Icons.filter_list,
+              size: 14,
+              color: isActive ? AppColors.error : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
 
     return CompositedTransformTarget(
       link: _layerLink,

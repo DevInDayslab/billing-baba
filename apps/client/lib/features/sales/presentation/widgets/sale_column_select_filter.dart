@@ -28,6 +28,7 @@ class SaleColumnSelectFilterTrigger extends StatefulWidget {
     required this.onApply,
     this.alignment = Alignment.centerLeft,
     this.headerStyle,
+    this.iconOnly = false,
     super.key,
   });
 
@@ -37,6 +38,7 @@ class SaleColumnSelectFilterTrigger extends StatefulWidget {
   final ValueChanged<SelectColumnFilter?> onApply;
   final Alignment alignment;
   final TextStyle? headerStyle;
+  final bool iconOnly;
 
   @override
   State<SaleColumnSelectFilterTrigger> createState() =>
@@ -118,6 +120,25 @@ class _SaleColumnSelectFilterTriggerState
     final isActive =
         widget.initialFilter?.value != null &&
         widget.initialFilter!.value!.trim().isNotEmpty;
+
+    if (widget.iconOnly) {
+      return CompositedTransformTarget(
+        link: _layerLink,
+        child: InkWell(
+          key: _triggerKey,
+          onTap: _togglePopover,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          child: Padding(
+            padding: const EdgeInsets.all(2),
+            child: Icon(
+              Icons.filter_list,
+              size: 14,
+              color: isActive ? AppColors.error : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
 
     return CompositedTransformTarget(
       link: _layerLink,

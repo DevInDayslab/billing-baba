@@ -55,6 +55,7 @@ class SaleColumnDateFilterTrigger extends StatefulWidget {
     required this.onApply,
     this.alignment = Alignment.centerLeft,
     this.headerStyle,
+    this.iconOnly = false,
     super.key,
   });
 
@@ -63,6 +64,7 @@ class SaleColumnDateFilterTrigger extends StatefulWidget {
   final ValueChanged<DateColumnFilter?> onApply;
   final Alignment alignment;
   final TextStyle? headerStyle;
+  final bool iconOnly;
 
   @override
   State<SaleColumnDateFilterTrigger> createState() =>
@@ -143,6 +145,25 @@ class _SaleColumnDateFilterTriggerState
   Widget build(BuildContext context) {
     final isActive = widget.initialFilter != null;
 
+    if (widget.iconOnly) {
+      return CompositedTransformTarget(
+        link: _layerLink,
+        child: InkWell(
+          key: _triggerKey,
+          onTap: _togglePopover,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          child: Padding(
+            padding: const EdgeInsets.all(2),
+            child: Icon(
+              Icons.filter_list,
+              size: 14,
+              color: isActive ? AppColors.error : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
+
     return CompositedTransformTarget(
       link: _layerLink,
       child: Padding(
@@ -206,7 +227,7 @@ class _SaleColumnDateFilterPopoverState
     extends State<_SaleColumnDateFilterPopover> {
   static final _dateFormat = DateFormat('dd/MM/yyyy');
   static final _dateInputFormatter = FilteringTextInputFormatter.allow(
-    RegExp(r'[0-9/]'),
+    RegExp('[0-9/]'),
   );
 
   late DateColumnOperator _operator;

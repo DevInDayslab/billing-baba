@@ -29,6 +29,7 @@ abstract final class ItemMapper {
       purchasePrice: _parseMoney(dto.purchasePrice),
       reorderLevel: _parseMoney(dto.reorderLevel),
       primaryImageUrl: dto.primaryImageUrl,
+      isRawMaterial: dto.itemType == 'raw_material',
     );
   }
 
