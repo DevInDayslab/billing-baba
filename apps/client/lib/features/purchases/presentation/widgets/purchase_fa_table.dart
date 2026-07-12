@@ -202,7 +202,6 @@ class PurchaseFaTable extends ConsumerWidget {
           ),
         ),
         Expanded(
-          flex: purchaseTransactionPartyColFlex,
           child: PurchaseTransactionTableCell(
             child: Text(
               record.partyName,
@@ -372,7 +371,6 @@ class _TableHeaderRow extends ConsumerWidget {
           ),
         ),
         Expanded(
-          flex: purchaseTransactionPartyColFlex,
           child: PurchaseTransactionTableCell(
             child: purchaseColumnFilterCell(
               label: 'Party Name',

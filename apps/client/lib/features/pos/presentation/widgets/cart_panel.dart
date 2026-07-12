@@ -28,10 +28,10 @@ class CartPanel extends ConsumerWidget {
   static const _cartColumns = [
     ListPanelColumn(label: 'PRODUCT', flex: 3),
     ListPanelColumn(label: 'QTY', flex: 2),
-    ListPanelColumn(label: 'UNIT', flex: 1),
-    ListPanelColumn(label: 'RATE', flex: 1),
-    ListPanelColumn(label: 'DISC', flex: 1),
-    ListPanelColumn(label: 'AMOUNT', flex: 1),
+    ListPanelColumn(label: 'UNIT'),
+    ListPanelColumn(label: 'RATE'),
+    ListPanelColumn(label: 'DISC'),
+    ListPanelColumn(label: 'AMOUNT'),
   ];
 
   @override

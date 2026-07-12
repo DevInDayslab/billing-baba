@@ -228,9 +228,9 @@ class SaleFaTable extends ConsumerWidget {
             ),
           ),
         ),
-        _TableCell(
+        const _TableCell(
           width: _transactionTypeColWidth,
-          child: const Text('Sale FA'),
+          child: Text('Sale FA'),
         ),
         _TableCell(
           width: _paymentColWidth,

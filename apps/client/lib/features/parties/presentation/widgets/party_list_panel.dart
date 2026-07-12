@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/theme/list_panel_theme.dart';
-import 'package:billing_baba/core/widgets/list_panel_header.dart';
-import 'package:billing_baba/core/widgets/list_search_field.dart';
-import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_async_list.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_highlighted_text.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_table_row.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
@@ -12,6 +14,45 @@ import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
+
+enum PartyListSortColumn { name, amount }
+
+enum PartyListSortDirection { none, ascending, descending }
+
+class _PartyListSortState {
+  const _PartyListSortState({
+    this.column = PartyListSortColumn.name,
+    this.direction = PartyListSortDirection.none,
+  });
+
+  final PartyListSortColumn column;
+  final PartyListSortDirection direction;
+
+  _PartyListSortState toggle(PartyListSortColumn target) {
+    if (column == target) {
+      final nextDirection = switch (direction) {
+        PartyListSortDirection.none => PartyListSortDirection.ascending,
+        PartyListSortDirection.ascending => PartyListSortDirection.descending,
+        PartyListSortDirection.descending => PartyListSortDirection.none,
+      };
+      return _PartyListSortState(column: target, direction: nextDirection);
+    }
+
+    return _PartyListSortState(
+      column: target,
+      direction: PartyListSortDirection.ascending,
+    );
+  }
+
+  bool isSorted(PartyListSortColumn target) =>
+      column == target && direction != PartyListSortDirection.none;
+
+  bool isAscending(PartyListSortColumn target) =>
+      column == target && direction == PartyListSortDirection.ascending;
+}
+
+/// Fixed width for the Amount column in the Parties left list header.
+const partyListAmountHeaderWidth = 88.0;
 
 class PartyListPanel extends ConsumerStatefulWidget {
   const PartyListPanel({super.key});
@@ -22,6 +63,7 @@ class PartyListPanel extends ConsumerStatefulWidget {
 
 class _PartyListPanelState extends ConsumerState<PartyListPanel> {
   Timer? _debounce;
+  _PartyListSortState _sort = const _PartyListSortState();
 
   @override
   void dispose() {
@@ -47,14 +89,50 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
     await ref.read(partyListProvider.notifier).refresh(filter: filter);
   }
 
+  void _toggleSort(PartyListSortColumn column) {
+    setState(() => _sort = _sort.toggle(column));
+  }
+
+  List<PartyModel> _sortedParties(List<PartyModel> parties) {
+    if (_sort.direction == PartyListSortDirection.none) {
+      return parties;
+    }
+
+    final ascending = _sort.direction == PartyListSortDirection.ascending;
+    final sorted = List<PartyModel>.from(parties)
+      ..sort((a, b) {
+        final comparison = switch (_sort.column) {
+          PartyListSortColumn.name => a.name.toLowerCase().compareTo(
+            b.name.toLowerCase(),
+          ),
+          PartyListSortColumn.amount =>
+            a.balance.abs().compareTo(b.balance.abs()),
+        };
+        return ascending ? comparison : -comparison;
+      });
+    return sorted;
+  }
+
+  Future<void> _onRefresh() {
+    final searchQuery = ref.read(partySearchQueryProvider);
+    final activeFilter = ref.read(partyListFilterProvider);
+    return ref
+        .read(partyListProvider.notifier)
+        .refresh(
+          searchQuery: searchQuery.trim(),
+          filter: activeFilter,
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final partiesAsync = ref.watch(partyListProvider);
-    final parties = ref.watch(partiesListProvider);
+    final parties = _sortedParties(ref.watch(partiesListProvider));
     final selectedId = ref.watch(selectedPartyIdProvider);
     final activeFilter = ref.watch(partyListFilterProvider);
     final searchQuery = ref.watch(partySearchQueryProvider);
     final usingCache = ref.watch(partiesUsingCacheProvider);
+    final isFiltered = activeFilter != PartyListFilter.all || searchQuery.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -74,145 +152,190 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
             AppSpacing.md,
             AppSpacing.md,
             AppSpacing.md,
-            AppSpacing.sm,
+            0,
           ),
-          child: ListSearchField(
+          child: InventorySearchField(
             hint: 'Search Party Name',
+            initialValue: searchQuery,
+            debounceDuration: const Duration(milliseconds: 300),
             onChanged: _onSearchChanged,
+            onDebouncedChanged: _onSearchChanged,
           ),
         ),
-        _PartyListHeader(
-          activeFilter: activeFilter,
-          onFilterSelected: _onFilterSelected,
+        const SizedBox(height: 14),
+        InventoryListHeader(
+          showColumnSeparators: false,
+          includeTrailingSpace: false,
+          dividerAfterColumnIndex: 0,
+          columns: [
+            InventoryListColumn(
+              label: 'PARTY NAME',
+              trailing: _PartyListFilterTrigger(
+                activeFilter: activeFilter,
+                onFilterSelected: _onFilterSelected,
+              ),
+              sortable: true,
+              isSorted: _sort.isSorted(PartyListSortColumn.name),
+              sortAscending: _sort.isAscending(PartyListSortColumn.name),
+              onSort: () => _toggleSort(PartyListSortColumn.name),
+            ),
+            InventoryListColumn(
+              label: 'AMOUNT',
+              fixedWidth: partyListAmountHeaderWidth,
+              sortable: true,
+              isSorted: _sort.isSorted(PartyListSortColumn.amount),
+              sortAscending: _sort.isAscending(PartyListSortColumn.amount),
+              onSort: () => _toggleSort(PartyListSortColumn.amount),
+            ),
+          ],
         ),
         Expanded(
-          child: RefreshIndicator(
-            onRefresh: () => ref
-                .read(partyListProvider.notifier)
-                .refresh(
-                  searchQuery: searchQuery.trim(),
-                  filter: activeFilter,
+          child: partiesAsync.isLoading && parties.isEmpty
+              ? const _PartyListSkeleton()
+              : InventoryAsyncList<PartyModel>(
+                  asyncValue: partiesAsync,
+                  items: parties,
+                  onRefresh: _onRefresh,
+                  emptyMessage: isFiltered
+                      ? 'No parties found'
+                      : 'No parties yet. Add your first party.',
+                  itemBuilder: (context, party) {
+                    final index = parties.indexOf(party);
+                    return _PartyListTile(
+                      party: party,
+                      index: index,
+                      isSelected: party.id == selectedId,
+                      searchQuery: searchQuery,
+                      onTap: () async {
+                        ref.read(selectedPartyIdProvider.notifier).selected =
+                            party.id;
+                        final service = await ref.read(
+                          partyServiceProvider.future,
+                        );
+                        await service.rememberSelectedParty(party.id);
+                      },
+                    );
+                  },
                 ),
-            child: partiesAsync.when(
-              loading: () => const _PartyListSkeleton(),
-              error: (error, _) {
-                if (parties.isNotEmpty) {
-                  return _buildList(
-                    parties: parties,
-                    selectedId: selectedId,
-                  );
-                }
-
-                return ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: [
-                    SizedBox(
-                      height: 200,
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.error_outline,
-                                color: AppColors.error,
-                                size: 32,
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Text(
-                                PartyErrorMapper.messageFor(error),
-                                style: ListPanelStyles.emptyStateStyle.copyWith(
-                                  color: AppColors.textPrimary,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              FilledButton(
-                                onPressed: () => ref
-                                    .read(partyListProvider.notifier)
-                                    .refresh(
-                                      searchQuery: searchQuery.trim(),
-                                      filter: activeFilter,
-                                    ),
-                                child: const Text('Retry'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-              data: (_) {
-                if (parties.isEmpty) {
-                  return ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: [
-                      SizedBox(
-                        height: 200,
-                        child: ListPanelEmptyState(
-                          message:
-                              searchQuery.isNotEmpty ||
-                                  activeFilter != PartyListFilter.all
-                              ? 'No parties found'
-                              : 'No parties yet. Add your first party.',
-                        ),
-                      ),
-                    ],
-                  );
-                }
-
-                return Column(
-                  children: [
-                    Expanded(
-                      child: _buildList(
-                        parties: parties,
-                        selectedId: selectedId,
-                      ),
-                    ),
-                    if (parties.length > 20)
-                      Padding(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        child: Text(
-                          'Showing ${parties.length} parties',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildList({
-    required List<PartyModel> parties,
-    required String? selectedId,
-  }) {
-    return ListView.builder(
-      physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: parties.length,
-      itemBuilder: (context, index) {
-        final party = parties[index];
-        return _PartyListTile(
-          party: party,
-          isSelected: party.id == selectedId,
-          onTap: () async {
-            ref.read(selectedPartyIdProvider.notifier).selected = party.id;
-            final service = await ref.read(partyServiceProvider.future);
-            await service.rememberSelectedParty(party.id);
-          },
-        );
-      },
+class _PartyListFilterTrigger extends StatelessWidget {
+  const _PartyListFilterTrigger({
+    required this.activeFilter,
+    required this.onFilterSelected,
+  });
+
+  final PartyListFilter activeFilter;
+  final ValueChanged<PartyListFilter> onFilterSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final isFiltered = activeFilter != PartyListFilter.all;
+
+    return PopupMenuButton<PartyListFilter>(
+      tooltip: 'Filter parties',
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+      icon: Icon(
+        Icons.filter_list,
+        size: 14,
+        color: isFiltered ? AppColors.error : AppColors.textSecondary,
+      ),
+      onSelected: onFilterSelected,
+      itemBuilder: (context) => PartyListFilter.values
+          .map(
+            (filter) => PopupMenuItem(
+              value: filter,
+              child: Row(
+                children: [
+                  if (filter == activeFilter)
+                    const Icon(Icons.check, size: 16)
+                  else
+                    const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(filter.label),
+                ],
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class _PartyListTile extends StatelessWidget {
+  const _PartyListTile({
+    required this.party,
+    required this.index,
+    required this.isSelected,
+    required this.searchQuery,
+    required this.onTap,
+  });
+
+  final PartyModel party;
+  final int index;
+  final bool isSelected;
+  final String searchQuery;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final amountColor = party.hasReceivable
+        ? inventoryPositiveColor
+        : party.hasPayable
+        ? inventoryNegativeColor
+        : AppColors.textSecondary;
+    final amountText = PartyModel.displayOutstanding(party.balance);
+
+    return InventoryListTableRow(
+      index: index,
+      isSelected: isSelected,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        child: Row(
+          children: [
+            Icon(
+              Icons.person_outline,
+              size: 16,
+              color: party.isActive
+                  ? Colors.grey.shade500
+                  : Colors.grey.shade400,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 3,
+              child: InventoryHighlightedText(
+                text: party.name,
+                query: searchQuery,
+                style: InventoryStyles.listCellStyle.copyWith(
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: party.isActive
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Text(
+                amountText,
+                textAlign: TextAlign.right,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: amountColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -228,15 +351,11 @@ class _PartyListSkeleton extends StatelessWidget {
       child: ListView.builder(
         itemCount: 8,
         itemBuilder: (context, index) => Container(
-          margin: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
+          height: inventoryItemListRowHeight,
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: inventoryCardBorder)),
           ),
-          height: 48,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6),
-          ),
+          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         ),
       ),
     );
@@ -261,170 +380,6 @@ class _OfflineBanner extends StatelessWidget {
       child: Text(
         'Offline — showing cached parties',
         style: TextStyle(color: Colors.orange.shade900, fontSize: 12),
-      ),
-    );
-  }
-}
-
-class _PartyListHeader extends StatelessWidget {
-  const _PartyListHeader({
-    required this.activeFilter,
-    required this.onFilterSelected,
-  });
-
-  final PartyListFilter activeFilter;
-  final ValueChanged<PartyListFilter> onFilterSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final isFiltered = activeFilter != PartyListFilter.all;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
-      ),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: listPanelCardBorder)),
-      ),
-      child: Row(
-        children: [
-          const Expanded(
-            child: Text('PARTY NAME', style: ListPanelStyles.listHeaderStyle),
-          ),
-          const SizedBox(
-            width: 88,
-            child: Text(
-              'OUTSTANDING',
-              textAlign: TextAlign.right,
-              overflow: TextOverflow.ellipsis,
-              style: ListPanelStyles.listHeaderStyle,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          PopupMenuButton<PartyListFilter>(
-            tooltip: 'Filter parties',
-            icon: Icon(
-              Icons.filter_list,
-              size: 20,
-              color: isFiltered ? AppColors.primary : AppColors.textSecondary,
-            ),
-            onSelected: onFilterSelected,
-            itemBuilder: (context) => PartyListFilter.values
-                .map(
-                  (filter) => PopupMenuItem(
-                    value: filter,
-                    child: Row(
-                      children: [
-                        if (filter == activeFilter)
-                          const Icon(Icons.check, size: 16)
-                        else
-                          const SizedBox(width: 16),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(filter.label),
-                      ],
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PartyListTile extends StatelessWidget {
-  const _PartyListTile({
-    required this.party,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final PartyModel party;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final amountColor = party.hasReceivable
-        ? listPanelPositiveColor
-        : party.hasPayable
-        ? listPanelNegativeColor
-        : AppColors.textSecondary;
-    final amountText = PartyModel.displayOutstanding(party.balance);
-
-    return Material(
-      color: isSelected ? listPanelSelectedRowColor : Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: listPanelCardBorder)),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: 12,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.person_outline,
-                      size: 16,
-                      color: party.isActive
-                          ? Colors.grey.shade500
-                          : Colors.grey.shade400,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            party.name,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: party.isActive
-                                  ? AppColors.textPrimary
-                                  : AppColors.textSecondary,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (party.partyType != 'customer')
-                            Text(
-                              party.partyTypeLabel,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  amountText,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: amountColor,
-                  ),
-                  textAlign: TextAlign.end,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

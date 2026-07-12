@@ -156,7 +156,6 @@ PurchaseFaListQuery _buildListQuery(PurchaseFaFiltersState filters) {
   );
 
   return PurchaseFaListQuery(
-    page: 1,
     limit: PaginatedFetch.defaultPageSize,
     status: _documentStatusFromFilterLabel(filters.selectedStatus),
     from: dateRange?.start.toUtc().toIso8601String().split('T').first,

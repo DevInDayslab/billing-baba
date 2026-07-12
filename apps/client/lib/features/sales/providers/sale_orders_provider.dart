@@ -498,7 +498,7 @@ class SaleOrderFilters extends _$SaleOrderFilters {
   @override
   SaleOrderFiltersState build() {
     return const SaleOrderFiltersState(
-      timeRangeOption: TimeRangeOption.thisMonth,
+      
     );
   }
 

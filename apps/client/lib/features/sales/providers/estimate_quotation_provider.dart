@@ -456,7 +456,7 @@ class EstimateQuotationFilters extends _$EstimateQuotationFilters {
   @override
   EstimateQuotationFiltersState build() {
     return const EstimateQuotationFiltersState(
-      timeRangeOption: TimeRangeOption.thisMonth,
+      
     );
   }
 

@@ -47,8 +47,8 @@ class SaleLineItemColumnPickerButton extends StatelessWidget {
               const Divider(height: 1, color: SaleLineItemTableLayout.gridBorderColor),
               InkWell(
                 onTap: onMoreSettings,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 10,
                   ),
@@ -59,7 +59,7 @@ class SaleLineItemColumnPickerButton extends StatelessWidget {
                         size: 16,
                         color: AppColors.primary,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         'More Settings',
                         style: TextStyle(

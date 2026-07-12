@@ -28,7 +28,7 @@ class _ImportItemsExcelContentState extends State<ImportItemsExcelContent> {
   static const _cardBorder = Color(0xFFE0E0E0);
 
   final _scrollController = ScrollController();
-  final _previewSectionKey = GlobalKey();
+  final GlobalKey<State<StatefulWidget>> _previewSectionKey = GlobalKey();
 
   @override
   void dispose() {
@@ -553,8 +553,7 @@ class _StepBlock extends StatelessWidget {
 
 class _UploadPanel extends StatelessWidget {
   const _UploadPanel({
-    this.fileName,
-    required this.onBrowse,
+    required this.onBrowse, this.fileName,
     this.minHeight,
   });
 
@@ -843,7 +842,7 @@ class _PreviewSection extends StatelessWidget {
                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.check_circle_outline,
                         color: inventoryPositiveColor,
                         size: 22,

@@ -1,5 +1,4 @@
 import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
-import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_async_list.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_items_filter_trigger.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
@@ -29,8 +28,8 @@ class InventoryItemListColumnSpec {
   final VoidCallback? onSort;
 }
 
-/// Canonical right-side detail item list table (Category Items, etc.).
-class InventoryItemListTable extends StatelessWidget {
+/// Canonical right-side detail list table (Category Items, party ledger, etc.).
+class InventoryItemListTable<T> extends StatelessWidget {
   const InventoryItemListTable({
     required this.columns,
     required this.items,
@@ -44,12 +43,11 @@ class InventoryItemListTable extends StatelessWidget {
   });
 
   final List<InventoryListColumn> columns;
-  final List<InventoryItem> items;
-  final AsyncValue<List<InventoryItem>> itemsAsync;
+  final List<T> items;
+  final AsyncValue<List<T>> itemsAsync;
   final String emptyMessage;
   final Future<void> Function() onRefresh;
-  final Widget Function(BuildContext context, InventoryItem item, int index)
-  itemBuilder;
+  final Widget Function(BuildContext context, T item, int index) itemBuilder;
   final bool includeTrailingSpace;
   final bool showColumnSeparators;
 
@@ -64,7 +62,7 @@ class InventoryItemListTable extends StatelessWidget {
           showColumnSeparators: showColumnSeparators,
         ),
         Expanded(
-          child: InventoryAsyncList<InventoryItem>(
+          child: InventoryAsyncList<T>(
             asyncValue: itemsAsync,
             items: items,
             onRefresh: onRefresh,

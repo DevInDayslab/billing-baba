@@ -77,7 +77,6 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
         stateOfSupply: loaded.stateOfSupply,
         items: items,
         description: loaded.description,
-        isLoading: false,
       );
     } catch (error) {
       state = state.copyWith(

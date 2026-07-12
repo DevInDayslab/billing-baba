@@ -13,7 +13,7 @@ import 'package:intl/intl.dart';
 const _cardBorder = Color(0xFFE0E0E0);
 const _headerBackground = Color(0xFFF5F5F5);
 const _rowHeight = 48.0;
-const _addRowColor = AppColors.primary;
+const Color _addRowColor = AppColors.primary;
 const _rowHorizontalPadding = 12.0;
 
 const _indexColWidth = 28.0;

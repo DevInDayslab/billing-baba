@@ -1,6 +1,4 @@
-import 'package:billing_baba/shared/widgets/table_filters/filter_controller.dart' show FilterController;
 import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
-import 'package:billing_baba/shared/widgets/table_filters/filter_state.dart' show FilterState;
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart' show FilterController, FilterState;
 
 /// Typed filter value stored in [FilterState] / [FilterController].

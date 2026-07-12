@@ -23,7 +23,7 @@ const purchaseTransactionPartyColMinWidth = 97.0;
 const purchaseTransactionPartyColFlex = 1;
 
 /// @deprecated Use [purchaseTransactionPartyColMinWidth] or flex layout.
-const purchaseTransactionPartyColWidth = purchaseTransactionPartyColMinWidth;
+const double purchaseTransactionPartyColWidth = purchaseTransactionPartyColMinWidth;
 
 /// Short-content columns (fixed, compact).
 const purchaseTransactionPaymentColWidth = 123.0;
@@ -45,7 +45,7 @@ const expenseTransactionBalanceColWidth = 92.0;
 const expenseTransactionDueDateColWidth = 95.0;
 const expenseTransactionStatusColWidth = 88.0;
 
-const expenseTransactionStandardMinTableWidth =
+const double expenseTransactionStandardMinTableWidth =
     expenseTransactionDateColWidth +
     expenseTransactionInvoiceColWidth +
     expenseTransactionPartyColMinWidth +
@@ -55,7 +55,7 @@ const expenseTransactionStandardMinTableWidth =
     expenseTransactionDueDateColWidth +
     expenseTransactionStatusColWidth;
 
-const expenseTransactionLoyaltyMinTableWidth =
+const double expenseTransactionLoyaltyMinTableWidth =
     expenseTransactionDateColWidth +
     expenseTransactionInvoiceColWidth +
     expenseTransactionPartyColMinWidth +
@@ -172,7 +172,6 @@ class PurchaseTransactionTableCell extends StatelessWidget {
               border: Border(
                 right: BorderSide(
                   color: purchaseTransactionTableColumnDivider,
-                  width: 1,
                 ),
               ),
             )

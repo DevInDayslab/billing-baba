@@ -235,7 +235,6 @@ class _PageHeaderState extends ConsumerState<_PageHeader> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               widget.isEditing ? 'Edit Credit Note' : 'Credit Note',
@@ -417,7 +416,6 @@ class _FormFields extends ConsumerWidget {
         ),
         const SizedBox(width: _sectionGap),
         Expanded(
-          flex: 1,
           child: _LabeledField(
             label: 'Phone No.',
             child: _SaleTextField(
@@ -649,7 +647,6 @@ class _InlineHeaderField extends StatelessWidget {
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text('$label ', style: saleFieldLabelStyle),
         field,

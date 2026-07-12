@@ -21,7 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-const _documentType = SaleDocumentType.estimate;
+const SaleDocumentType _documentType = SaleDocumentType.estimate;
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 
@@ -192,7 +192,6 @@ class _EstimatePageHeader extends ConsumerWidget {
     );
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           isEditing ? 'Edit Estimate/Quotation' : 'Estimate/Quotation',
@@ -329,7 +328,6 @@ class _EstimateFormFieldsState extends ConsumerState<_EstimateFormFields> {
                 child: SaleGenericSelectDropdown(
                   value: form.stateOfSupply,
                   options: SaleDropdownOptions.indianStates,
-                  hintText: 'Select',
                   maxMenuHeight: 280,
                   onSelected: notifier.updateStateOfSupply,
                 ),

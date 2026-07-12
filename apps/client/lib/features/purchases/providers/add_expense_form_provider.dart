@@ -353,7 +353,6 @@ class AddExpenseForm extends _$AddExpenseForm {
       documentDate: expenseDate,
       dueDate: state.dueDate,
       notes: state.description.trim().isEmpty ? null : state.description.trim(),
-      isGstFormal: true,
       items: _expenseItemsToPurchaseLines(),
     );
 

@@ -167,7 +167,6 @@ PurchaseDocumentListQuery _buildListQuery(PurchaseReturnFiltersState filters) {
   );
 
   return PurchaseDocumentListQuery(
-    page: 1,
     limit: PaginatedFetch.defaultPageSize,
     documentType: PurchaseDocumentType.purchaseReturn.apiValue,
     status: _documentStatusFromFilterLabel(filters.selectedStatus),

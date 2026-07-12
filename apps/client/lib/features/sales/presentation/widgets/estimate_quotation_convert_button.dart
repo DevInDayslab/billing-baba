@@ -127,14 +127,14 @@ class _ConvertMenuButton extends ConsumerWidget {
             onTap: () => _openMenu(buttonContext, ref),
             borderRadius: BorderRadius.circular(AppRadius.sm),
             hoverColor: const Color(0xFFE3F2FD),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
+            child: const Padding(
+              padding: EdgeInsets.symmetric(
                 horizontal: AppSpacing.xs,
                 vertical: AppSpacing.xs,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Text(
                     'Convert',
                     style: TextStyle(

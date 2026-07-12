@@ -92,7 +92,6 @@ class SaleDateRangePickerAnchorState extends State<SaleDateRangePickerAnchor> {
             ),
             CompositedTransformFollower(
               link: _layerLink,
-              showWhenUnlinked: true,
               targetAnchor: Alignment.bottomLeft,
               offset: followerOffset,
               child: _SaleDateRangePickerPanel(

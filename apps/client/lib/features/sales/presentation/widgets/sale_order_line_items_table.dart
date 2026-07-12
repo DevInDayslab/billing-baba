@@ -12,7 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-const _addRowColor = AppColors.primary;
+const Color _addRowColor = AppColors.primary;
 const _gridBorderless = true;
 
 /// Full Vyapar-style line items grid for the Add Sale Order page.
@@ -504,7 +504,6 @@ class _LineItemRow extends ConsumerWidget {
                   child: SaleGenericSelectDropdown(
                     value: taxLabelForPercent(item.taxPercent),
                     options: SaleDropdownOptions.taxSlabs,
-                    hintText: 'Select',
                     highlight: SaleDropdownHighlight.red,
                     compact: true,
                     borderless: _gridBorderless,
@@ -729,7 +728,6 @@ class _CompactTextFieldState extends State<_CompactTextField> {
     return SaleCompactFieldBox(
       child: TextField(
         controller: _controller,
-        maxLines: 1,
         style: saleFieldTextStyle.copyWith(fontSize: 12, height: 1),
         textAlignVertical: TextAlignVertical.center,
         decoration: buildSaleFieldDecoration(
@@ -789,7 +787,6 @@ class _CompactNumberFieldState extends State<_CompactNumberField> {
   Widget build(BuildContext context) {
     final field = TextField(
       controller: _controller,
-      maxLines: 1,
       style: saleFieldTextStyle.copyWith(fontSize: 12, height: 1),
       textAlignVertical: TextAlignVertical.center,
       decoration: buildSaleFieldDecoration(

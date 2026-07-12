@@ -11,7 +11,6 @@ Future<SaleInvoiceReportOptions?> showSaleInvoiceReportOptionsDialog(
 ) {
   return showDialog<SaleInvoiceReportOptions>(
     context: context,
-    barrierDismissible: true,
     builder: (context) => const Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),

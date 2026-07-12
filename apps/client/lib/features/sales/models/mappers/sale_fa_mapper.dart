@@ -1,9 +1,9 @@
 import 'package:billing_baba/features/sales/models/dto/sale_fa_dto.dart';
+import 'package:billing_baba/features/sales/models/requests/sale_fa_requests.dart';
 import 'package:billing_baba/features/sales/models/sale_fa_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_fa_model.dart';
-import 'package:billing_baba/features/sales/models/requests/sale_fa_requests.dart';
-import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:flutter/material.dart';
 
 class SaleFaMapper {

@@ -1,5 +1,5 @@
-import '../models/pos_item.dart';
-import '../providers/pos_cart_state.dart';
+import 'package:billing_baba/features/pos/models/pos_item.dart';
+import 'package:billing_baba/features/pos/providers/pos_cart_state.dart';
 
 abstract class PosRepository {
   /// Fetch all available items (with stock levels)

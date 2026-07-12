@@ -12,12 +12,14 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_o
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 export 'package:billing_baba/features/parties/models/add_party_result.dart';
 
 const _dialogMaxWidth = 900.0;
+const _tabContentMaxHeight = 360.0;
 const _cardBorder = Color(0xFFE0E0E0);
 const _gstLeftColumnWidth = 220.0;
 const _defaultDecimal = '0.00';
@@ -49,6 +51,20 @@ Future<AddPartyResult?> showEditPartyDialog(
   );
 }
 
+/// Opens the add form prefilled from an existing party (new record on save).
+Future<AddPartyResult?> showDuplicatePartyDialog(
+  BuildContext context, {
+  required PartyModel party,
+}) {
+  return showDialog<AddPartyResult>(
+    context: context,
+    builder: (context) => _buildPartyDialogShell(
+      context: context,
+      child: AddPartyDialog(duplicateFrom: party),
+    ),
+  );
+}
+
 Widget _buildPartyDialogShell({
   required BuildContext context,
   required Widget child,
@@ -64,7 +80,7 @@ Widget _buildPartyDialogShell({
     child: ConstrainedBox(
       constraints: BoxConstraints(
         maxWidth: _dialogMaxWidth,
-        maxHeight: size.height * 0.92,
+        maxHeight: size.height * FormSpacing.dialogMaxHeightFactor,
       ),
       child: child,
     ),
@@ -72,9 +88,14 @@ Widget _buildPartyDialogShell({
 }
 
 class AddPartyDialog extends ConsumerStatefulWidget {
-  const AddPartyDialog({this.partyToEdit, super.key});
+  const AddPartyDialog({
+    this.partyToEdit,
+    this.duplicateFrom,
+    super.key,
+  });
 
   final PartyModel? partyToEdit;
+  final PartyModel? duplicateFrom;
 
   @override
   ConsumerState<AddPartyDialog> createState() => _AddPartyDialogState();
@@ -163,15 +184,18 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _openingBalanceController.text = _defaultDecimal;
     _loyaltyPointsOpeningBalanceController.text = _defaultDecimal;
     final party = widget.partyToEdit;
+    final duplicateFrom = widget.duplicateFrom;
     if (party != null) {
       _populateFromParty(party);
+    } else if (duplicateFrom != null) {
+      _populateFromParty(duplicateFrom, duplicateNameSuffix: ' (Copy)');
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) => _applyCreateDefaults());
     }
   }
 
   void _applyCreateDefaults() {
-    if (!mounted || _isEditMode) return;
+    if (!mounted || _isEditMode || widget.duplicateFrom != null) return;
 
     final businessState =
         ref.read(businessProfileProvider).asData?.value.state?.trim();
@@ -208,8 +232,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return _defaultState;
   }
 
-  void _populateFromParty(PartyModel party) {
-    _partyNameController.text = party.name;
+  void _populateFromParty(PartyModel party, {String? duplicateNameSuffix}) {
+    _partyNameController.text = duplicateNameSuffix == null
+        ? party.name
+        : '${party.name}$duplicateNameSuffix';
     _partyType = party.partyType;
     _gstinController.text = party.gstin;
     if (party.phone != '+91 00000 00000') {
@@ -681,23 +707,31 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       borderRadius: AppRadius.lgBorder,
       clipBehavior: Clip.antiAlias,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildHeader(),
+          const Divider(height: 1, color: _cardBorder),
           Padding(
             padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.lg,
-              AppSpacing.md,
+              FormSpacing.page,
+              FormSpacing.section,
+              FormSpacing.page,
+              FormSpacing.section,
             ),
             child: _buildTopFields(),
           ),
-          _buildTabBar(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: FormSpacing.page),
+            child: _buildTabBar(),
+          ),
           const Divider(height: 1, color: _cardBorder),
-          Expanded(
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxHeight: _tabContentMaxHeight,
+            ),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(FormSpacing.page),
               child: AnimatedBuilder(
                 animation: _tabController,
                 builder: (context, _) {
@@ -718,39 +752,40 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.sm,
-        AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              _isEditMode ? 'Edit Party' : 'Add Party',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+    return SizedBox(
+      height: FormSpacing.headerHeight,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: FormSpacing.page),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                _isEditMode ? 'Edit Party' : 'Add Party',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
-          ),
-          IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Party settings coming soon')),
-              );
-            },
-            icon: const Icon(Icons.settings_outlined, size: 20),
-            color: AppColors.textSecondary,
-            tooltip: 'Settings',
-          ),
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close, color: AppColors.textSecondary),
-          ),
-        ],
+            IconButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Party settings coming soon')),
+                );
+              },
+              icon: const Icon(Icons.settings_outlined, size: 20),
+              color: AppColors.textSecondary,
+              tooltip: 'Settings',
+              visualDensity: VisualDensity.compact,
+            ),
+            IconButton(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close, color: AppColors.textSecondary),
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -796,64 +831,64 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       },
     );
 
-    final partyTypeField = SaleGenericSelectDropdown(
-      value: _partyTypeLabels[_partyType] ?? 'Customer',
-      options: _partyTypes.map((type) => _partyTypeLabels[type]!).toList(),
-      hintText: 'Party Type',
-      onSelected: (label) {
-        final type = _partyTypeLabels.entries
-            .where((entry) => entry.value == label)
-            .map((entry) => entry.key)
-            .firstOrNull;
-        if (type != null) setState(() => _partyType = type);
-      },
-    );
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 800;
-
-        if (isNarrow) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              partyNameField,
-              const SizedBox(height: AppSpacing.md),
-              partyTypeField,
-              const SizedBox(height: AppSpacing.md),
-              gstinField,
-              const SizedBox(height: AppSpacing.md),
-              phoneField,
-              const SizedBox(height: AppSpacing.md),
-              _buildPartyGroupRow(),
-            ],
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: partyNameField),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(child: partyTypeField),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(child: gstinField),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(child: phoneField),
-              ],
+    final billingNameField = _isEditMode
+        ? InputDecorator(
+            decoration: buildSaleFieldDecoration(hint: 'Billing Name'),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                widget.partyToEdit!.name,
+                style: saleFieldTextStyle,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            const SizedBox(height: AppSpacing.md),
-            _buildPartyGroupRow(matchPartyNameWidth: true),
+          )
+        : null;
+
+    final rowOneCells = <FormGridCell>[
+      FormGridCell(
+        span: _isEditMode ? 4 : 6,
+        child: partyNameField,
+      ),
+      if (billingNameField != null)
+        FormGridCell(span: 4, child: billingNameField),
+      FormGridCell(
+        span: _isEditMode ? 4 : 6,
+        child: gstinField,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FormGrid(
+          rowGap: FormSpacing.section,
+          cells: [
+            ...rowOneCells,
+            FormGridCell(span: 6, child: phoneField),
+            FormGridCell(span: 6, child: _buildPartyGroupControls()),
           ],
-        );
-      },
+        ),
+        const SizedBox(height: 4),
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _partyNameController,
+          builder: (context, value, _) {
+            final name = value.text.trim();
+            final label = name.isEmpty ? '<Party Name>' : "'$name'";
+            return Text(
+              '$label will be printed on your invoice.',
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
-  Widget _buildPartyGroupRow({bool matchPartyNameWidth = false}) {
+  Widget _buildPartyGroupControls() {
     final partyGroups = ref.watch(partyGroupsProvider);
     final dropdown = SaleGenericSelectDropdown(
       value: _partyGroup,
@@ -871,7 +906,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     );
 
-    final groupControls = Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
@@ -890,18 +925,6 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           ),
-      ],
-    );
-
-    if (!matchPartyNameWidth) {
-      return groupControls;
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: groupControls),
-        const Expanded(flex: 2, child: SizedBox.shrink()),
       ],
     );
   }
@@ -971,6 +994,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       labelColor: AppColors.primary,
       unselectedLabelColor: AppColors.textSecondary,
       indicatorColor: AppColors.primary,
+      labelPadding: const EdgeInsets.symmetric(horizontal: 12),
       labelStyle: const TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
@@ -1018,6 +1042,24 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _LabeledField(
+              label: 'Party Type',
+              child: SaleGenericSelectDropdown(
+                value: _partyTypeLabels[_partyType] ?? 'Customer',
+                options: _partyTypes
+                    .map((type) => _partyTypeLabels[type]!)
+                    .toList(),
+                hintText: 'Party Type',
+                onSelected: (label) {
+                  final type = _partyTypeLabels.entries
+                      .where((entry) => entry.value == label)
+                      .map((entry) => entry.key)
+                      .firstOrNull;
+                  if (type != null) setState(() => _partyType = type);
+                },
+              ),
+            ),
+            const SizedBox(height: FormSpacing.section),
+            _LabeledField(
               label: 'GST Type',
               child: SaleGenericSelectDropdown(
                 value: _gstType,
@@ -1025,7 +1067,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                 onSelected: (value) => setState(() => _gstType = value),
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: FormSpacing.section),
             _LabeledField(
               label: 'State',
               child: SaleGenericSelectDropdown(
@@ -1034,7 +1076,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                 onSelected: (value) => setState(() => _state = value),
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: FormSpacing.section),
             _LabeledField(
               label: 'Email ID',
               child: Column(
@@ -1135,7 +1177,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   billingSection,
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: FormSpacing.section),
                   shippingSection,
                 ],
               )
@@ -1143,7 +1185,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: billingSection),
-                  const SizedBox(width: AppSpacing.lg),
+                  const SizedBox(width: FormSpacing.gutter),
                   Expanded(child: shippingSection),
                 ],
               );
@@ -1156,7 +1198,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             children: [
               leftColumn,
               const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                padding: EdgeInsets.symmetric(vertical: FormSpacing.section),
                 child: Divider(height: 1, thickness: 1, color: _cardBorder),
               ),
               rightColumn,
@@ -1168,7 +1210,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(width: _gstLeftColumnWidth, child: leftColumn),
-            const SizedBox(width: AppSpacing.lg),
+            const SizedBox(width: FormSpacing.gutter),
             Expanded(
               child: DecoratedBox(
                 decoration: const BoxDecoration(
@@ -1177,7 +1219,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.only(left: AppSpacing.lg),
+                  padding: const EdgeInsets.only(left: FormSpacing.gutter),
                   child: rightColumn,
                 ),
               ),
@@ -1442,7 +1484,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           onDateSelected: (date) =>
               setState(() => _openingBalanceAsOfDate = _dateOnly(date)),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: FormSpacing.section),
         _LabeledField(
           label: 'Loyalty Points Opening Balance',
           child: Column(
@@ -1478,7 +1520,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: FormSpacing.section),
         _buildCreditLimitSection(),
       ],
     );
@@ -1760,72 +1802,236 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   Widget _buildFooter() {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < 480;
+    return SizedBox(
+      height: FormSpacing.footerHeight,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: FormSpacing.page),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 480;
 
-          final saveButton = FilledButton(
-            onPressed: () => _save(saveAndNew: false),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+            final saveButton = FilledButton(
+              onPressed: () => _save(saveAndNew: false),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                minimumSize: const Size(0, FormSpacing.inputHeight),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
               ),
-            ),
-            child: const Text(
-              'Save',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          );
+              child: Text(
+                _isEditMode ? 'Update' : 'Save',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            );
 
-          final saveAndNewButton = OutlinedButton(
-            onPressed: () => _save(saveAndNew: true),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.primary),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
+            final saveAndNewButton = OutlinedButton(
+              onPressed: () => _save(saveAndNew: true),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                minimumSize: const Size(0, FormSpacing.inputHeight),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+              child: const Text(
+                'Save & New',
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
-            ),
-            child: const Text(
-              'Save & New',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          );
+            );
 
-          if (isNarrow) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (!_isEditMode) ...[
+            final deleteButton = OutlinedButton(
+              onPressed: _confirmAndDeleteParty,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: const BorderSide(color: AppColors.error),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                minimumSize: const Size(0, FormSpacing.inputHeight),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: const Text(
+                'Delete',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            );
+
+            if (_isEditMode) {
+              if (isNarrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    deleteButton,
+                    const SizedBox(height: AppSpacing.sm),
+                    saveButton,
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  deleteButton,
+                  const Spacer(),
+                  saveButton,
+                ],
+              );
+            }
+
+            if (isNarrow) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                   saveAndNewButton,
                   const SizedBox(height: AppSpacing.sm),
+                  saveButton,
                 ],
+              );
+            }
+
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                saveAndNewButton,
+                const SizedBox(width: AppSpacing.sm),
                 saveButton,
               ],
             );
-          }
-
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (!_isEditMode) ...[
-                saveAndNewButton,
-                const SizedBox(width: AppSpacing.sm),
-              ],
-              saveButton,
-            ],
-          );
-        },
+          },
+        ),
       ),
     );
+  }
+
+  Future<void> _confirmAndDeleteParty() async {
+    final party = widget.partyToEdit;
+    if (party == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete party?'),
+        content: Text(
+          'Are you sure you want to delete "${party.name}"?\n\n'
+          'If this party is linked to invoices or purchases, it will be '
+          'deactivated instead.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await ref.read(partyListProvider.notifier).deleteParty(party.id);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      _showSaveSnackBar(
+        message: 'Party "${party.name}" deleted',
+        backgroundColor: _successSnackBarColor,
+      );
+    } on PartyHasDependenciesException {
+      if (!mounted) return;
+      await _offerDeactivateParty(party);
+    } on PartyOfflineException {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      _showSaveSnackBar(
+        message:
+            'Delete queued offline. It will sync when you are back online.',
+        backgroundColor: Colors.orange.shade800,
+      );
+    } on PartyException catch (e) {
+      if (!mounted) return;
+      _showSaveSnackBar(
+        message: e.message,
+        backgroundColor: AppColors.error,
+      );
+    } on Object catch (_) {
+      if (!mounted) return;
+      _showSaveSnackBar(
+        message: 'Failed to delete party. Please try again.',
+        backgroundColor: AppColors.error,
+      );
+    }
+  }
+
+  Future<void> _offerDeactivateParty(PartyModel party) async {
+    final deactivate = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Deactivate party instead?'),
+        content: Text(
+          '"${party.name}" is linked to invoices or other documents and '
+          'cannot be permanently deleted.\n\n'
+          'Deactivate it to hide it from active lists. You can view inactive '
+          'parties using the list filter.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Deactivate'),
+          ),
+        ],
+      ),
+    );
+
+    if (deactivate != true || !mounted) return;
+
+    try {
+      await ref.read(partyListProvider.notifier).deactivateParty(party.id);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      _showSaveSnackBar(
+        message: 'Party "${party.name}" deactivated',
+        backgroundColor: _successSnackBarColor,
+      );
+    } on PartyOfflineException {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      _showSaveSnackBar(
+        message:
+            'Deactivation saved offline. It will sync when you are back online.',
+        backgroundColor: Colors.orange.shade800,
+      );
+    } on PartyException catch (e) {
+      if (!mounted) return;
+      _showSaveSnackBar(
+        message: e.message,
+        backgroundColor: AppColors.error,
+      );
+    } on Object catch (_) {
+      if (!mounted) return;
+      _showSaveSnackBar(
+        message: 'Failed to deactivate party. Please try again.',
+        backgroundColor: AppColors.error,
+      );
+    }
   }
 }
 
@@ -1844,7 +2050,7 @@ class _LabeledField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: saleFieldLabelStyle),
-        const SizedBox(height: 6),
+        const SizedBox(height: FormSpacing.label),
         child,
       ],
     );

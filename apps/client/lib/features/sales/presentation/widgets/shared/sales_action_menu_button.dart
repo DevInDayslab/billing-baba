@@ -9,10 +9,12 @@ class SalesActionMenuItem {
   const SalesActionMenuItem({
     required this.label,
     required this.onSelected,
+    this.dividerBefore = false,
   });
 
   final String label;
   final Future<void> Function() onSelected;
+  final bool dividerBefore;
 }
 
 /// Three-dot overflow menu anchored to the trigger icon (filter-dropdown style).
@@ -65,7 +67,12 @@ class _SalesActionMenuButtonState extends State<SalesActionMenuButton> {
         minimumSize: const WidgetStatePropertyAll(Size(_menuMinWidth, 0)),
       ),
       menuChildren: [
-        for (final item in widget.items)
+        for (final item in widget.items) ...[
+          if (item.dividerBefore)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Divider(height: 1, thickness: 1, color: _menuBorderColor),
+            ),
           MenuItemButton(
             onPressed: () => _selectItem(item),
             style: ButtonStyle(
@@ -92,6 +99,7 @@ class _SalesActionMenuButtonState extends State<SalesActionMenuButton> {
               ),
             ),
           ),
+        ],
       ],
       builder: (context, controller, child) {
         return IconButton(

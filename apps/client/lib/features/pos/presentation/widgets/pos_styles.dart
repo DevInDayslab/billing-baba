@@ -7,18 +7,18 @@ export 'package:billing_baba/features/sales/presentation/widgets/sale_field_deco
     show buildSaleFieldDecoration, saleFieldTextStyle;
 
 /// POS panel border — matches list/inventory panels across the app.
-const posCardBorder = listPanelCardBorder;
+const Color posCardBorder = listPanelCardBorder;
 
-const posPositiveColor = listPanelPositiveColor;
-const posNegativeColor = listPanelNegativeColor;
-const posSelectedBackground = listPanelSelectedRowColor;
+const Color posPositiveColor = listPanelPositiveColor;
+const Color posNegativeColor = listPanelNegativeColor;
+const Color posSelectedBackground = listPanelSelectedRowColor;
 
 abstract final class PosStyles {
-  static const panelTitleStyle = ListPanelStyles.panelTitleStyle;
+  static const TextStyle panelTitleStyle = ListPanelStyles.panelTitleStyle;
 
-  static const listHeaderStyle = ListPanelStyles.listHeaderStyle;
+  static const TextStyle listHeaderStyle = ListPanelStyles.listHeaderStyle;
 
-  static const emptyStateStyle = ListPanelStyles.emptyStateStyle;
+  static const TextStyle emptyStateStyle = ListPanelStyles.emptyStateStyle;
 
   static const sectionTitleStyle = TextStyle(
     fontSize: 14,
@@ -60,13 +60,13 @@ abstract final class PosStyles {
 
 /// Shared button styles so POS actions use [AppColors.primary], not theme seed.
 abstract final class PosButtonStyles {
-  static final primaryFilled = FilledButton.styleFrom(
+  static final ButtonStyle primaryFilled = FilledButton.styleFrom(
     backgroundColor: AppColors.primary,
     foregroundColor: Colors.white,
     elevation: 0,
   );
 
-  static final primaryOutlined = OutlinedButton.styleFrom(
+  static final ButtonStyle primaryOutlined = OutlinedButton.styleFrom(
     foregroundColor: AppColors.primary,
     side: const BorderSide(color: AppColors.primary),
   );

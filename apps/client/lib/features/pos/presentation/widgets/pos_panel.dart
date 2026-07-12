@@ -13,7 +13,7 @@ class PosPanel extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
 
-  static const borderColor = posCardBorder;
+  static const Color borderColor = posCardBorder;
 
   @override
   Widget build(BuildContext context) {

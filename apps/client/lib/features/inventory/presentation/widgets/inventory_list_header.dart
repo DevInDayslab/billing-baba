@@ -12,6 +12,7 @@ class InventoryListHeader extends StatelessWidget {
     required this.columns,
     this.includeTrailingSpace = true,
     this.showColumnSeparators = true,
+    this.dividerAfterColumnIndex,
     super.key,
   });
 
@@ -19,12 +20,19 @@ class InventoryListHeader extends StatelessWidget {
   final bool includeTrailingSpace;
   final bool showColumnSeparators;
 
+  /// When [showColumnSeparators] is false, draws a vertical divider after the
+  /// column at this index (e.g. `0` between the first and second columns).
+  final int? dividerAfterColumnIndex;
+
   @override
   Widget build(BuildContext context) {
     final rowLayout = InventoryListRowLayout(
       flexValues: [for (final column in columns) column.flex],
+      fixedWidths: [for (final column in columns) column.fixedWidth],
       alignEnds: [for (final column in columns) column.alignEnd],
       showColumnSeparators: showColumnSeparators,
+      dividerAfterColumnIndex:
+          showColumnSeparators ? null : dividerAfterColumnIndex,
       cellVerticalPadding: showColumnSeparators
           ? const EdgeInsets.symmetric(vertical: 12)
           : EdgeInsets.zero,
@@ -46,9 +54,10 @@ class InventoryListHeader extends StatelessWidget {
         color: Color(0xFFF5F5F5),
         border: Border(bottom: BorderSide(color: inventoryCardBorder)),
       ),
-      child: showColumnSeparators
-          ? SizedBox(height: inventoryListHeaderHeight, child: rowLayout)
-          : rowLayout,
+      child: SizedBox(
+        height: inventoryListHeaderHeight,
+        child: rowLayout,
+      ),
     );
   }
 }
@@ -59,24 +68,67 @@ class InventoryListRowLayout extends StatelessWidget {
   const InventoryListRowLayout({
     required this.flexValues,
     required this.children,
+    this.fixedWidths,
     this.alignEnds,
     this.trailing = const SizedBox(width: 28),
     this.showColumnSeparators = true,
+    this.dividerAfterColumnIndex,
     this.cellVerticalPadding = EdgeInsets.zero,
     super.key,
   });
 
   final List<int> flexValues;
   final List<Widget> children;
+  final List<double?>? fixedWidths;
   final List<bool>? alignEnds;
   final Widget trailing;
   final bool showColumnSeparators;
+  final int? dividerAfterColumnIndex;
   final EdgeInsets cellVerticalPadding;
 
   Alignment _cellAlignment(int index) {
     final alignEnd =
         (alignEnds != null && index < alignEnds!.length) && alignEnds![index];
     return alignEnd ? Alignment.centerRight : Alignment.centerLeft;
+  }
+
+  Widget _columnChild({
+    required int index,
+    required Widget child,
+  }) {
+    final fixedWidth = fixedWidths != null && index < fixedWidths!.length
+        ? fixedWidths![index]
+        : null;
+
+    if (fixedWidth != null) {
+      return SizedBox(width: fixedWidth, child: child);
+    }
+
+    return Expanded(
+      flex: flexValues[index],
+      child: child,
+    );
+  }
+
+  Widget _wrapColumnChild({
+    required int index,
+    required Widget child,
+  }) {
+    if (dividerAfterColumnIndex == index) {
+      return DecoratedBox(
+        decoration: const BoxDecoration(
+          border: Border(
+            right: BorderSide(color: inventoryCardBorder),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.sm),
+          child: child,
+        ),
+      );
+    }
+
+    return child;
   }
 
   @override
@@ -90,10 +142,13 @@ class InventoryListRowLayout extends StatelessWidget {
       return Row(
         children: [
           for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              flex: flexValues[i],
-              child: children[i],
+            if (i > 0 &&
+                !(dividerAfterColumnIndex != null &&
+                    dividerAfterColumnIndex == i - 1))
+              const SizedBox(width: AppSpacing.sm),
+            _columnChild(
+              index: i,
+              child: _wrapColumnChild(index: i, child: children[i]),
             ),
           ],
           trailing,
@@ -105,8 +160,8 @@ class InventoryListRowLayout extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var i = 0; i < children.length; i++)
-          Expanded(
-            flex: flexValues[i],
+          _columnChild(
+            index: i,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 border: i < children.length - 1
@@ -144,9 +199,8 @@ class _HeaderCell extends StatelessWidget {
   Widget build(BuildContext context) {
     if (column.trailing != null) {
       return Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Flexible(child: _SortableLabel(column: column)),
+          Expanded(child: _SortableHeaderContent(column: column)),
           column.trailing!,
         ],
       );
@@ -158,16 +212,7 @@ class _HeaderCell extends StatelessWidget {
           column.leading!,
           const SizedBox(width: 4),
         ],
-        Expanded(
-          child: column.sortable && column.onSort != null
-              ? _SortableLabel(column: column)
-              : Text(
-                  column.label,
-                  textAlign: column.alignEnd ? TextAlign.right : TextAlign.left,
-                  style: InventoryStyles.listHeaderStyle,
-                  overflow: TextOverflow.ellipsis,
-                ),
-        ),
+        Expanded(child: _SortableHeaderContent(column: column)),
         if (column.showFilter) ...[
           const SizedBox(width: 4),
           Icon(
@@ -181,8 +226,8 @@ class _HeaderCell extends StatelessWidget {
   }
 }
 
-class _SortableLabel extends StatelessWidget {
-  const _SortableLabel({required this.column});
+class _SortableHeaderContent extends StatelessWidget {
+  const _SortableHeaderContent({required this.column});
 
   final InventoryListColumn column;
 
@@ -199,33 +244,36 @@ class _SortableLabel extends StatelessWidget {
       return label;
     }
 
-    if (!column.isSorted) {
-      return InkWell(
-        onTap: column.onSort,
-        borderRadius: BorderRadius.circular(4),
-        child: label,
-      );
-    }
+    final sortIcon = column.isSorted
+        ? Icon(
+            column.sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+            size: 14,
+            color: Colors.grey.shade500,
+          )
+        : null;
 
-    final sortIcon = Icon(
-      column.sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
-      size: 14,
-      color: Colors.grey.shade500,
-    );
-
-    final content = Row(
+    final labelRow = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Flexible(child: label),
-        const SizedBox(width: 4),
-        sortIcon,
+        if (sortIcon != null) ...[
+          const SizedBox(width: 4),
+          sortIcon,
+        ],
       ],
     );
 
-    return InkWell(
-      onTap: column.onSort,
-      borderRadius: BorderRadius.circular(4),
-      child: content,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: column.onSort,
+        behavior: HitTestBehavior.opaque,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          widthFactor: 1,
+          child: labelRow,
+        ),
+      ),
     );
   }
 }
@@ -234,6 +282,7 @@ class InventoryListColumn {
   const InventoryListColumn({
     required this.label,
     this.flex = 1,
+    this.fixedWidth,
     this.showFilter = false,
     this.alignEnd = false,
     this.sortable = false,
@@ -246,6 +295,9 @@ class InventoryListColumn {
 
   final String label;
   final int flex;
+
+  /// When set, this column uses a fixed width instead of [flex].
+  final double? fixedWidth;
   final bool showFilter;
 
   /// When true, data cells in this column are right-aligned. Headers are

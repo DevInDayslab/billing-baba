@@ -171,7 +171,6 @@ class PurchaseOrderTable extends ConsumerWidget {
           child: Text(_dateFormat.format(order.date)),
         ),
         Expanded(
-          flex: purchaseTransactionPartyColFlex,
           child: PurchaseTransactionTableCell(
             child: Text(
               order.partyName,
@@ -332,7 +331,6 @@ class _TableHeaderRow extends ConsumerWidget {
           ),
         ),
         Expanded(
-          flex: purchaseTransactionPartyColFlex,
           child: PurchaseTransactionTableCell(
             child: purchaseColumnFilterCell(
               label: 'Party',

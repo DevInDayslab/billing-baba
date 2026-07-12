@@ -515,9 +515,8 @@ class _SaleTextField extends StatefulWidget {
     this.hintText,
     this.keyboardType,
     this.inputFormatters,
-    this.hasError = false,
     this.readOnly = false,
-  });
+  }) : hasError = false;
 
   final String initialValue;
   final ValueChanged<String> onChanged;

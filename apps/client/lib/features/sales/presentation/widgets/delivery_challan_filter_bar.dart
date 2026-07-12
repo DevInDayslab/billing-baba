@@ -25,7 +25,7 @@ class _DeliveryChallanFilterBarState
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   final _timeDropdownKey = GlobalKey<SaleFilterDropdownState>();
 
-  static const _chipStyle = (
+  static const ({Color backgroundColor, Color borderColor}) _chipStyle = (
     backgroundColor: _filterChipBg,
     borderColor: _filterChipBorder,
   );
@@ -49,7 +49,6 @@ class _DeliveryChallanFilterBarState
       child: Padding(
         padding: const EdgeInsets.only(bottom: AppSpacing.md),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text(
               'Filter by :',
