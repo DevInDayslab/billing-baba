@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
@@ -5,6 +6,7 @@ import 'package:billing_baba/features/business/application/business_service.dart
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/app_top_bar.dart';
 import 'package:billing_baba/features/dashboard/providers/shell_sidebar_provider.dart';
+import 'package:billing_baba/features/developer/models/developer_sub_route.dart';
 import 'package:billing_baba/features/pos/providers/pos_session_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
@@ -45,6 +47,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   bool _partiesExpandInitialized = false;
   bool _isUtilitiesExpanded = false;
   bool _utilitiesExpandInitialized = false;
+  bool _isDeveloperExpanded = false;
+  bool _developerExpandInitialized = false;
   bool? _wasOverlaySidebar;
   bool _useOverlaySidebar = false;
 
@@ -75,6 +79,13 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         _isUtilitiesExpanded = true;
       }
     }
+    if (!_developerExpandInitialized) {
+      _developerExpandInitialized = true;
+      final location = GoRouterState.of(context).uri.path;
+      if (location.startsWith(AppRoutes.developer)) {
+        _isDeveloperExpanded = true;
+      }
+    }
   }
 
   static const List<_NavSubItem> _partiesSubItems = [
@@ -93,7 +104,18 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       .map((item) => _NavSubItem(route: item.route, label: item.label))
       .toList();
 
-  static final _navItems = [
+  static final List<_NavSubItem> _developerSubItems = [
+    const _NavSubItem(
+      route: AppRoutes.developerComponents,
+      label: 'Components',
+    ),
+    const _NavSubItem(
+      route: AppRoutes.developerComponentsTableFilters,
+      label: 'Table Filters',
+    ),
+  ];
+
+  List<_NavItem> get _navItems => [
     const _NavItem(
       route: AppRoutes.home,
       icon: Icons.home_outlined,
@@ -143,6 +165,14 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       routePrefix: AppRoutes.utilities,
       subItems: _utilitiesSubItems,
     ),
+    if (AppConfig.showDeveloperMenu)
+      _NavItem(
+        icon: Icons.code_outlined,
+        label: 'Developer',
+        isExpandable: true,
+        routePrefix: AppRoutes.developer,
+        subItems: _developerSubItems,
+      ),
     const _NavItem(
       route: AppRoutes.settings,
       icon: Icons.settings_outlined,
@@ -164,6 +194,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       _isPurchaseExpanded = false;
       _isPartiesExpanded = false;
       _isUtilitiesExpanded = false;
+      _isDeveloperExpanded = false;
     });
     context.go(route);
   }
@@ -425,6 +456,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       final isPurchase = item.routePrefix == AppRoutes.purchase;
       final isParties = item.route == AppRoutes.parties;
       final isUtilities = item.routePrefix == AppRoutes.utilities;
+      final isDeveloper = item.routePrefix == AppRoutes.developer;
       final routePrefix = item.routePrefix ?? item.route!;
 
       final isParentActive = isSale
@@ -433,7 +465,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
           ? currentLocation.startsWith(AppRoutes.purchase)
           : isParties
           ? currentLocation.startsWith(AppRoutes.parties)
-          : isUtilities && currentLocation.startsWith(AppRoutes.utilities);
+          : isUtilities
+          ? currentLocation.startsWith(AppRoutes.utilities)
+          : isDeveloper && currentLocation.startsWith(AppRoutes.developer);
 
       final isExpanded = isSale
           ? _isSaleExpanded
@@ -441,7 +475,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
           ? _isPurchaseExpanded
           : isParties
           ? _isPartiesExpanded
-          : isUtilities && _isUtilitiesExpanded;
+          : isUtilities
+          ? _isUtilitiesExpanded
+          : isDeveloper && _isDeveloperExpanded;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -461,6 +497,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                 _isPartiesExpanded = !_isPartiesExpanded;
               } else if (isUtilities) {
                 _isUtilitiesExpanded = !_isUtilitiesExpanded;
+              } else if (isDeveloper) {
+                _isDeveloperExpanded = !_isDeveloperExpanded;
               }
             }),
             onCollapsedTap: () {
@@ -474,6 +512,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                   _isPartiesExpanded = true;
                 } else if (isUtilities) {
                   _isUtilitiesExpanded = true;
+                } else if (isDeveloper) {
+                  _isDeveloperExpanded = true;
                 }
               });
             },
@@ -584,6 +624,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     if (location.startsWith(AppRoutes.reports)) return 'Reports';
     if (location.startsWith(AppRoutes.utilities)) {
       return UtilitiesSubRoutes.labelForRoute(location);
+    }
+    if (location.startsWith(AppRoutes.developer)) {
+      return DeveloperSubRoutes.labelForRoute(location);
     }
     if (location.startsWith(AppRoutes.settings)) return 'Settings';
     return 'Billing Baba';

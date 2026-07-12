@@ -99,8 +99,23 @@ class AddItemForm extends Notifier<AddItemFormState> {
     state = state.copyWith(description: value, isDirty: true);
   }
 
+  void setTrackingMode(ItemTrackingMode mode) {
+    state = state.copyWith(trackingMode: mode, isDirty: true);
+  }
+
+  void clearTracking() {
+    state = state.copyWith(
+      trackingMode: ItemTrackingMode.none,
+      isDirty: true,
+    );
+  }
+
   void setActiveTab(int index) {
     state = state.copyWith(activeTab: index);
+  }
+
+  void updateMrp(double value) {
+    state = state.copyWith(mrp: value, isDirty: true);
   }
 
   void updateSalePrice(double value) {
@@ -129,6 +144,14 @@ class AddItemForm extends Notifier<AddItemFormState> {
 
   void updateAtPrice(double value) {
     state = state.copyWith(atPrice: value, isDirty: true);
+  }
+
+  void setPurchasePriceTaxMode(PriceTaxMode mode) {
+    state = state.copyWith(purchasePriceTaxMode: mode, isDirty: true);
+  }
+
+  void setTaxRate(String value) {
+    state = state.copyWith(taxRate: value, isDirty: true);
   }
 
   void setAsOfDate(DateTime date) {

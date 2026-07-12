@@ -4,8 +4,7 @@ import 'package:billing_baba/features/print/presentation/widgets/document_print_
 import 'package:billing_baba/features/purchases/models/purchase_order_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_order_actions.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_order_status_badge.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_cell.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_transaction_table_layout.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_orders_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
@@ -291,6 +290,8 @@ class _TableHeaderRow extends ConsumerWidget {
       onType: filtersNotifier.setType,
       onDateRange: filtersNotifier.setColumnDateRange,
       onDueDateRange: filtersNotifier.setDueDateRange,
+      onClearDateRange: filtersNotifier.clearColumnDateRange,
+      onClearDueDateRange: filtersNotifier.clearDueDateRange,
     );
 
     return PurchaseTransactionTableHeaderRow(

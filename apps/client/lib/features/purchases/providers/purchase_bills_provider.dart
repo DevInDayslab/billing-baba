@@ -522,6 +522,10 @@ class PurchaseBillFilters extends _$PurchaseBillFilters {
     state = state.copyWith(columnDateRange: range, currentPage: 1);
   }
 
+  void clearColumnDateRange() {
+    state = state.copyWith(clearColumnDateRange: true, currentPage: 1);
+  }
+
   void setInvoiceNo(String value) {
     state = state.copyWith(invoiceNoFilter: value, currentPage: 1);
   }
@@ -562,6 +566,10 @@ class PurchaseBillFilters extends _$PurchaseBillFilters {
 
   void setDueDateRange(DateTimeRange range) {
     state = state.copyWith(dueDateRange: range, currentPage: 1);
+  }
+
+  void clearDueDateRange() {
+    state = state.copyWith(clearDueDateRange: true, currentPage: 1);
   }
 
   void setPage(int page) {

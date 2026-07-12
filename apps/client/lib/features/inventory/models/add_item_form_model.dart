@@ -55,6 +55,8 @@ class AdditionalCostRow {
   }
 }
 
+enum ItemTrackingMode { none, batch, serial }
+
 class AddItemFormState {
   const AddItemFormState({
     this.itemType = ItemType.product,
@@ -68,7 +70,9 @@ class AddItemFormState {
     this.godownId,
     this.primaryImageUrl = '',
     this.description = '',
+    this.trackingMode = ItemTrackingMode.none,
     this.activeTab = 0,
+    this.mrp = 0,
     this.salePrice = 0,
     this.salePriceTaxMode = PriceTaxMode.withoutTax,
     this.wholesalePrice = 0,
@@ -76,6 +80,8 @@ class AddItemFormState {
     this.minWholesaleQty = 0,
     this.openingQty = 0,
     this.atPrice = 0,
+    this.purchasePriceTaxMode = PriceTaxMode.withoutTax,
+    this.taxRate = 'None',
     this.asOfDate,
     this.minStock = 0,
     this.location = '',
@@ -98,7 +104,9 @@ class AddItemFormState {
   final String? godownId;
   final String primaryImageUrl;
   final String description;
+  final ItemTrackingMode trackingMode;
   final int activeTab;
+  final double mrp;
   final double salePrice;
   final PriceTaxMode salePriceTaxMode;
   final double wholesalePrice;
@@ -106,6 +114,8 @@ class AddItemFormState {
   final double minWholesaleQty;
   final double openingQty;
   final double atPrice;
+  final PriceTaxMode purchasePriceTaxMode;
+  final String taxRate;
   final DateTime? asOfDate;
   final double minStock;
   final String location;
@@ -141,7 +151,9 @@ class AddItemFormState {
     bool clearGodown = false,
     String? primaryImageUrl,
     String? description,
+    ItemTrackingMode? trackingMode,
     int? activeTab,
+    double? mrp,
     double? salePrice,
     PriceTaxMode? salePriceTaxMode,
     double? wholesalePrice,
@@ -149,6 +161,8 @@ class AddItemFormState {
     double? minWholesaleQty,
     double? openingQty,
     double? atPrice,
+    PriceTaxMode? purchasePriceTaxMode,
+    String? taxRate,
     DateTime? asOfDate,
     double? minStock,
     String? location,
@@ -173,7 +187,9 @@ class AddItemFormState {
       godownId: clearGodown ? null : (godownId ?? this.godownId),
       primaryImageUrl: primaryImageUrl ?? this.primaryImageUrl,
       description: description ?? this.description,
+      trackingMode: trackingMode ?? this.trackingMode,
       activeTab: activeTab ?? this.activeTab,
+      mrp: mrp ?? this.mrp,
       salePrice: salePrice ?? this.salePrice,
       salePriceTaxMode: salePriceTaxMode ?? this.salePriceTaxMode,
       wholesalePrice: wholesalePrice ?? this.wholesalePrice,
@@ -182,6 +198,8 @@ class AddItemFormState {
       minWholesaleQty: minWholesaleQty ?? this.minWholesaleQty,
       openingQty: openingQty ?? this.openingQty,
       atPrice: atPrice ?? this.atPrice,
+      purchasePriceTaxMode: purchasePriceTaxMode ?? this.purchasePriceTaxMode,
+      taxRate: taxRate ?? this.taxRate,
       asOfDate: asOfDate ?? this.asOfDate,
       minStock: minStock ?? this.minStock,
       location: location ?? this.location,

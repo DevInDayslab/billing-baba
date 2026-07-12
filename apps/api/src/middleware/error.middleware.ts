@@ -43,7 +43,12 @@ export function registerErrorHandler(app: FastifyInstance): void {
         );
     }
 
-    request.log.error({ err: error, requestId: request.id });
+    const validation =
+      'validation' in error && error.validation !== undefined
+        ? { validation: error.validation }
+        : {};
+
+    request.log.error({ err: error, ...validation });
 
     const statusCode = error.statusCode ?? 500;
     const message =

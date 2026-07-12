@@ -5,7 +5,7 @@ import 'package:billing_baba/features/purchases/application/purchase_list_filter
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
@@ -420,6 +420,13 @@ class PaymentOutFilters extends _$PaymentOutFilters {
   void setColumnDateRange(DateTimeRange range) {
     state = state.copyWith(
       columnFilters: state.columnFilters.copyWith(columnDateRange: range),
+      currentPage: 1,
+    );
+  }
+
+  void clearColumnDateRange() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearColumnDateRange: true),
       currentPage: 1,
     );
   }

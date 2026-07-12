@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/inventory/models/dto/movement_dto.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_stock_utils.dart';
 
 abstract final class MovementMapper {
   static final _uuidPattern = RegExp(
@@ -19,9 +20,10 @@ abstract final class MovementMapper {
       typeLabel: documentLabel,
       documentLabel: documentLabel,
       transactionType: _transactionTypeLabel(dto.movementType),
+      movementType: dto.movementType,
       invoiceRefNo: referenceNo,
       referenceNo: referenceNo,
-      partyName: '-',
+      partyName: inventoryEmDash,
       date: DateTime.tryParse(dto.createdAt) ?? DateTime.now(),
       quantity: qty.abs(),
       pricePerUnit: double.tryParse(dto.costPerUnit ?? '') ?? 0,
@@ -78,11 +80,11 @@ abstract final class MovementMapper {
 
   static String _formatReferenceNo(String? referenceId, String? referenceType) {
     if (referenceId == null || referenceId.trim().isEmpty) {
-      return '-';
+      return inventoryEmDash;
     }
 
     if (_uuidPattern.hasMatch(referenceId.trim())) {
-      return '-';
+      return inventoryEmDash;
     }
 
     if (referenceType != null && _uuidPattern.hasMatch(referenceType.trim())) {

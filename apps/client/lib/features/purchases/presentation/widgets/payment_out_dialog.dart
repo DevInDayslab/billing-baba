@@ -29,7 +29,7 @@ Future<bool> showPaymentOutDialog(
     barrierDismissible: false,
     builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: PaymentOutDialog(
         initialPartyId: initialPartyId,
         initialPartyName: initialPartyName,
@@ -448,7 +448,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   FilledButton(
-                    onPressed: isSaving ? null : () => _handleSave(),
+                    onPressed: isSaving ? null : _handleSave,
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.lg,

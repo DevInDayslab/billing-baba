@@ -38,6 +38,7 @@ abstract final class AddItemFormMapper {
       baseUnit: baseUnitShortName,
       salePrice: _formatMoney(form.salePrice),
       purchasePrice: _formatMoney(form.atPrice),
+      mrp: form.mrp > 0 ? _formatMoney(form.mrp) : null,
       reorderLevel: form.minStock > 0 ? _formatMoney(form.minStock) : null,
       hasStockTracking: form.itemType == ItemType.product,
       tierPrices: tierPrices,
@@ -70,6 +71,7 @@ abstract final class AddItemFormMapper {
       baseUnit: baseUnitShortName,
       salePrice: _formatMoney(form.salePrice),
       purchasePrice: _formatMoney(form.atPrice),
+      mrp: form.mrp > 0 ? _formatMoney(form.mrp) : null,
       reorderLevel: form.minStock > 0 ? _formatMoney(form.minStock) : '0',
       hasStockTracking: form.itemType == ItemType.product,
       primaryImageUrl: form.primaryImageUrl.trim().isEmpty

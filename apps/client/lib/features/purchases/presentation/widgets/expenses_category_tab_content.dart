@@ -7,8 +7,7 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_s
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/expense_status_badge.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_cell.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_transaction_table_layout.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
 import 'package:flutter/material.dart';
@@ -519,6 +518,8 @@ PurchaseColumnFilterActions _expenseTransactionFilterActions(
   return PurchaseColumnFilterActions(
     onDateRange: notifier.setColumnDateRange,
     onDueDateRange: notifier.setDueDateRange,
+    onClearDateRange: notifier.clearColumnDateRange,
+    onClearDueDateRange: notifier.clearDueDateRange,
     onDocumentNo: notifier.setDocumentNo,
     onParty: notifier.setParty,
     onTogglePaymentType: notifier.togglePaymentType,

@@ -5,9 +5,8 @@ import 'package:billing_baba/core/widgets/app_loader.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_error_mapper.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
-import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_inventory_section.dart';
+import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_action_center.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_overview_section.dart';
-import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_quick_reports_section.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_recent_transactions_section.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_sales_section.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_typography.dart';
@@ -26,6 +25,7 @@ class HomePage extends ConsumerWidget {
   static const _desktopBreakpoint = 1200.0;
   static const _laptopBreakpoint = 992.0;
   static const _tabletBreakpoint = 768.0;
+  static const _actionCenterHeight = 560.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -114,8 +114,12 @@ class HomePage extends ConsumerWidget {
                               ),
                               Expanded(
                                 flex: 3,
-                                child: DashboardQuickReportsSection(
-                                  reports: dashboard.quickReports,
+                                child: SizedBox(
+                                  height: _actionCenterHeight,
+                                  child: DashboardActionCenter(
+                                    inventory: dashboard.inventory,
+                                    reports: dashboard.quickReports,
+                                  ),
                                 ),
                               ),
                             ],
@@ -128,8 +132,12 @@ class HomePage extends ConsumerWidget {
                             const SizedBox(
                               height: DashboardSpacing.sectionGap,
                             ),
-                            DashboardQuickReportsSection(
-                              reports: dashboard.quickReports,
+                            SizedBox(
+                              height: _actionCenterHeight,
+                              child: DashboardActionCenter(
+                                inventory: dashboard.inventory,
+                                reports: dashboard.quickReports,
+                              ),
                             ),
                           ],
                         ],
@@ -190,11 +198,6 @@ class _DesktopChartsRow extends StatelessWidget {
             onPeriodChanged: onPeriodChanged,
           ),
         ),
-        const SizedBox(width: DashboardSpacing.widgetGap),
-        Expanded(
-          flex: 3,
-          child: DashboardInventorySection(inventory: dashboard.inventory),
-        ),
       ],
     );
   }
@@ -218,30 +221,24 @@ class _LaptopChartsSection extends StatelessWidget {
         final twoColumn = constraints.maxWidth >= 720;
 
         if (twoColumn) {
-          return Column(
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: DashboardSalesSection(
-                      sales: dashboard.sales,
-                      period: period,
-                      onPeriodChanged: onPeriodChanged,
-                    ),
-                  ),
-                  const SizedBox(width: DashboardSpacing.widgetGap),
-                  Expanded(
-                    child: DashboardPurchasesCard(
-                      purchases: dashboard.purchases,
-                      period: period,
-                      onPeriodChanged: onPeriodChanged,
-                    ),
-                  ),
-                ],
+              Expanded(
+                child: DashboardSalesSection(
+                  sales: dashboard.sales,
+                  period: period,
+                  onPeriodChanged: onPeriodChanged,
+                ),
               ),
-              const SizedBox(height: DashboardSpacing.widgetGap),
-              DashboardInventorySection(inventory: dashboard.inventory),
+              const SizedBox(width: DashboardSpacing.widgetGap),
+              Expanded(
+                child: DashboardPurchasesCard(
+                  purchases: dashboard.purchases,
+                  period: period,
+                  onPeriodChanged: onPeriodChanged,
+                ),
+              ),
             ],
           );
         }
@@ -282,8 +279,6 @@ class _StackedChartsSection extends StatelessWidget {
           period: period,
           onPeriodChanged: onPeriodChanged,
         ),
-        const SizedBox(height: DashboardSpacing.widgetGap),
-        DashboardInventorySection(inventory: dashboard.inventory),
       ],
     );
   }

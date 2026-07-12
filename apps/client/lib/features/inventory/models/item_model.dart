@@ -17,8 +17,10 @@ class InventoryItem {
     this.brandId,
     this.baseUnitShortName,
     this.purchasePrice,
+    this.mrp,
     this.reorderLevel,
     this.primaryImageUrl,
+    this.isRawMaterial = false,
   });
 
   final String id;
@@ -36,8 +38,10 @@ class InventoryItem {
   final String? brandId;
   final String? baseUnitShortName;
   final double? purchasePrice;
+  final double? mrp;
   final double? reorderLevel;
   final String? primaryImageUrl;
+  final bool isRawMaterial;
 
   InventoryItem copyWith({
     String? id,
@@ -55,8 +59,10 @@ class InventoryItem {
     String? brandId,
     String? baseUnitShortName,
     double? purchasePrice,
+    double? mrp,
     double? reorderLevel,
     String? primaryImageUrl,
+    bool? isRawMaterial,
   }) {
     return InventoryItem(
       id: id ?? this.id,
@@ -74,8 +80,10 @@ class InventoryItem {
       brandId: brandId ?? this.brandId,
       baseUnitShortName: baseUnitShortName ?? this.baseUnitShortName,
       purchasePrice: purchasePrice ?? this.purchasePrice,
+      mrp: mrp ?? this.mrp,
       reorderLevel: reorderLevel ?? this.reorderLevel,
       primaryImageUrl: primaryImageUrl ?? this.primaryImageUrl,
+      isRawMaterial: isRawMaterial ?? this.isRawMaterial,
     );
   }
 }

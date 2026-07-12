@@ -7,12 +7,9 @@ import 'package:billing_baba/features/sales/application/sales_error_mapper.dart'
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_select_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -78,8 +75,8 @@ class SaleInvoiceFiltersState {
   final SelectColumnFilter? transactionTypeColumnFilter;
   final SelectColumnFilter? paymentTypeColumnFilter;
   final AmountColumnFilter? amountColumnFilter;
-  final AmountColumnFilter? loyaltyColumnFilter;
   final AmountColumnFilter? balanceColumnFilter;
+  final RangeSliderColumnFilter? loyaltyColumnFilter;
   final String selectedFirm;
   final String selectedUser;
   final String selectedGodown;
@@ -106,10 +103,10 @@ class SaleInvoiceFiltersState {
     bool clearPaymentTypeColumnFilter = false,
     AmountColumnFilter? amountColumnFilter,
     bool clearAmountColumnFilter = false,
-    AmountColumnFilter? loyaltyColumnFilter,
-    bool clearLoyaltyColumnFilter = false,
     AmountColumnFilter? balanceColumnFilter,
     bool clearBalanceColumnFilter = false,
+    RangeSliderColumnFilter? loyaltyColumnFilter,
+    bool clearLoyaltyColumnFilter = false,
     String? selectedUser,
     String? selectedGodown,
     String? selectedFirm,
@@ -679,7 +676,7 @@ class SaleInvoiceFilters extends _$SaleInvoiceFilters {
         : state.copyWith(amountColumnFilter: filter, currentPage: 1);
   }
 
-  void setLoyaltyColumnFilter(AmountColumnFilter? filter) {
+  void setLoyaltyColumnFilter(RangeSliderColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearLoyaltyColumnFilter: true, currentPage: 1)
         : state.copyWith(loyaltyColumnFilter: filter, currentPage: 1);

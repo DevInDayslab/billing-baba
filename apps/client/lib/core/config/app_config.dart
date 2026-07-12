@@ -30,6 +30,9 @@ abstract final class AppConfig {
   static bool get enableDevLogin =>
       dotenv.env['ENABLE_DEV_LOGIN']?.toLowerCase() == 'true';
 
+  /// When true, shows Developer menu in the app shell (debug / dev profile).
+  static bool get showDeveloperMenu => kDebugMode || enableDevLogin;
+
   /// Verbose auth/MSG91 logging in development builds.
   static bool get authDebugLogging =>
       kDebugMode ||
@@ -43,7 +46,7 @@ abstract final class AppConfig {
   static void logStartupConfig() {
     if (!authDebugLogging) return;
     debugPrint(
-      '[CONFIG] API_BASE_URL=${apiBaseUrl} (source: $apiBaseUrlSource)',
+      '[CONFIG] API_BASE_URL=$apiBaseUrl (source: $apiBaseUrlSource)',
     );
     debugPrint('[CONFIG] ENABLE_DEV_LOGIN=$enableDevLogin');
     debugPrint('[CONFIG] APP_ENV=${dotenv.env['APP_ENV'] ?? '(unset)'}');
