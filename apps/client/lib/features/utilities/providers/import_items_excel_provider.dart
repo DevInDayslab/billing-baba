@@ -248,7 +248,7 @@ class ImportItemsExcelNotifier extends Notifier<ImportItemsExcelState> {
   Future<List<InventoryUnit>> _loadUnitsForImport() async {
     ref.read(unitBackendSearchProvider.notifier).query = '';
     await ref.read(inventoryUnitsProvider.notifier).refresh(searchQuery: '');
-    var units = await ref.read(inventoryUnitsProvider.future);
+    final units = await ref.read(inventoryUnitsProvider.future);
 
     if (units.isNotEmpty) return units;
 

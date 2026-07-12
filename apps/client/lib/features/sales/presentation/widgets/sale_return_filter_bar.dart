@@ -24,7 +24,7 @@ class _SaleReturnFilterBarState extends ConsumerState<SaleReturnFilterBar> {
   final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   final _timeDropdownKey = GlobalKey<SaleFilterDropdownState>();
 
-  static const _chipStyle = (
+  static const ({Color backgroundColor, Color borderColor}) _chipStyle = (
     backgroundColor: _filterChipBg,
     borderColor: _filterChipBorder,
   );

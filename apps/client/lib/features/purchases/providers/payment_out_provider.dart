@@ -158,7 +158,6 @@ PaymentListQuery _buildPaymentListQuery(PaymentOutFiltersState filters) {
   );
 
   return PaymentListQuery(
-    page: 1,
     limit: PaginatedFetch.defaultPageSize,
     direction: 'paid',
     from: dateRange?.start.toUtc().toIso8601String(),
@@ -364,7 +363,7 @@ class PaymentOutRecords extends _$PaymentOutRecords {
 
     final items = [
       record,
-      ...value.items.where((PaymentOutModel item) => item.id != record.id),
+      ...value.items.where((item) => item.id != record.id),
     ].take(PaginatedFetch.defaultPageSize).toList();
 
     state = AsyncData(

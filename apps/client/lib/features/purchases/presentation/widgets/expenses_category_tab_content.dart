@@ -344,10 +344,8 @@ class _CategoryDetailPanel extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        category.variant ==
-                                ExpenseCategoryVariant.loyaltyRedeemed
-                            ? const ExpenseLoyaltyTransactionFilterHeader()
-                            : const ExpenseStandardTransactionFilterHeader(),
+                        if (category.variant ==
+                                ExpenseCategoryVariant.loyaltyRedeemed) const ExpenseLoyaltyTransactionFilterHeader() else const ExpenseStandardTransactionFilterHeader(),
                         Expanded(
                           child: ListView.builder(
                             itemCount: transactions.length,
@@ -758,7 +756,7 @@ class ExpenseLoyaltyTransactionFilterHeader extends ConsumerWidget {
             ),
           ),
         ),
-        PurchaseTransactionTableCell(
+        const PurchaseTransactionTableCell(
           width: expenseTransactionAmountColWidth,
           child: Text(
             'LOYALTY REDEEMED IN POINTS',
@@ -766,7 +764,7 @@ class ExpenseLoyaltyTransactionFilterHeader extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        PurchaseTransactionTableCell(
+        const PurchaseTransactionTableCell(
           width: expenseTransactionAmountColWidth,
           showDivider: false,
           child: Text(

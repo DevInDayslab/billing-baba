@@ -216,7 +216,6 @@ class _PageHeaderState extends ConsumerState<_PageHeader> {
     );
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           widget.isEditing ? 'Edit Sale Order' : 'Sale Order',
@@ -292,7 +291,6 @@ class _PageHeaderState extends ConsumerState<_PageHeader> {
           child: SaleGenericSelectDropdown(
             value: form.stateOfSupply,
             options: SaleDropdownOptions.indianStates,
-            hintText: 'Select',
             maxMenuHeight: 280,
             compact: true,
             onSelected: notifier.updateStateOfSupply,
@@ -653,7 +651,6 @@ class _InlineHeaderField extends StatelessWidget {
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text('$label ', style: saleFieldLabelStyle),
         field,

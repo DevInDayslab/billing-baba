@@ -484,7 +484,7 @@ class DeliveryChallanFilters extends _$DeliveryChallanFilters {
   @override
   DeliveryChallanFiltersState build() {
     return const DeliveryChallanFiltersState(
-      timeRangeOption: TimeRangeOption.thisMonth,
+      
     );
   }
 

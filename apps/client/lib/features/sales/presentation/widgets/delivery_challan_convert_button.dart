@@ -29,10 +29,10 @@ class DeliveryChallanConvertButton extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (_isConverted)
-          Flexible(
+          const Flexible(
             child: Text(
               'Converted To Sale',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
                 color: _convertColor,

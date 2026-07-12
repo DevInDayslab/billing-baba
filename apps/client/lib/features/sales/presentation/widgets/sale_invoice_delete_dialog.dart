@@ -296,7 +296,7 @@ class _DeleteInvoiceIllustration extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: _iconAccentDark,
                       borderRadius: BorderRadius.circular(3),
-                      border: Border.all(color: _iconAccentDark, width: 1),
+                      border: Border.all(color: _iconAccentDark),
                     ),
                   ),
                 ),
@@ -325,11 +325,10 @@ class _DeleteInvoiceIllustration extends StatelessWidget {
 
 class _DecorativeDot extends StatelessWidget {
   const _DecorativeDot({
-    this.left,
+    required this.size, this.left,
     this.right,
     this.top,
     this.bottom,
-    required this.size,
   });
 
   final double? left;

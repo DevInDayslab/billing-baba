@@ -16,7 +16,6 @@ JobWorkOutFormState _initialJobWorkOutFormState() {
   return JobWorkOutFormState(
     invoiceDate: today,
     deliveryDate: today,
-    finishedGoodUnit: 'NONE',
     rawMaterials: [
       JobWorkOutRawMaterialItem.empty(id: nextRawMaterialId()),
       JobWorkOutRawMaterialItem.empty(id: nextRawMaterialId()),

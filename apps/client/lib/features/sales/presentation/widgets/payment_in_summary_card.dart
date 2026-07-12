@@ -38,7 +38,6 @@ class PaymentInSummaryCard extends ConsumerWidget {
           vertical: AppSpacing.md,
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(

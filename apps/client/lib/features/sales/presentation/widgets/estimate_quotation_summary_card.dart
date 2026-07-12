@@ -36,7 +36,6 @@ class EstimateQuotationSummaryCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Expanded(
                       child: Text(

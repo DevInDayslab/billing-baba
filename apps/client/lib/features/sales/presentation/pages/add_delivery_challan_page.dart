@@ -185,7 +185,6 @@ class _ChallanPageHeader extends ConsumerWidget {
     final notifier = ref.read(deliveryChallanFormProvider.notifier);
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           isEditing ? 'Edit Delivery Challan' : 'Delivery Challan',
@@ -335,7 +334,6 @@ class _ChallanFormFieldsState extends ConsumerState<_ChallanFormFields> {
                 child: SaleGenericSelectDropdown(
                   value: form.stateOfSupply,
                   options: SaleDropdownOptions.indianStates,
-                  hintText: 'Select',
                   maxMenuHeight: 280,
                   onSelected: notifier.updateStateOfSupply,
                 ),

@@ -694,9 +694,8 @@ class _StatusFilterMenuItem extends StatelessWidget {
 class _HeaderCell extends StatelessWidget {
   const _HeaderCell({
     required this.label,
-    this.alignment = Alignment.centerLeft,
     this.headerStyle,
-  });
+  }) : alignment = Alignment.centerLeft;
 
   static const _defaultHeaderStyle = TextStyle(
     fontSize: 13,

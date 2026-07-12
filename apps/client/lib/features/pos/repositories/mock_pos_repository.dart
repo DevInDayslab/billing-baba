@@ -114,7 +114,6 @@ class MockPosRepository implements PosRepository {
       id: 'C002',
       name: 'Priya Singh',
       phone: '9123456789',
-      outstanding: 0,
       creditLimit: 2000,
     ),
     PosCustomer(
@@ -128,8 +127,6 @@ class MockPosRepository implements PosRepository {
       id: 'C004',
       name: 'Sunita Devi',
       phone: '9765432100',
-      outstanding: 0,
-      creditLimit: 0,
     ),
     PosCustomer(
       id: 'C005',

@@ -95,7 +95,6 @@ class DebitNoteForm extends _$DebitNoteForm {
         items: items.isEmpty
             ? [SaleLineItem.empty(id: _nextDebitNoteLineItemId())]
             : items,
-        isLoading: false,
       );
     } catch (error) {
       state = state.copyWith(

@@ -92,7 +92,6 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
       final items = await _resolveItemNames(loaded.items);
       final now = DateTime.now();
       state = loaded.copyWith(
-        documentId: null,
         clearDocumentId: true,
         invoiceDate: DateTime(now.year, now.month, now.day),
         invoiceTime: TimeOfDay.fromDateTime(now),

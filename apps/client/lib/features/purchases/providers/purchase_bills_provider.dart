@@ -212,7 +212,6 @@ PurchaseDocumentListQuery _buildListQuery(PurchaseBillFiltersState filters) {
   );
 
   return PurchaseDocumentListQuery(
-    page: 1,
     limit: PaginatedFetch.defaultPageSize,
     documentType: PurchaseDocumentType.purchaseBill.apiValue,
     status: _documentStatusFromFilterLabel(filters.selectedStatus),

@@ -211,7 +211,6 @@ class PurchaseReturnTable extends ConsumerWidget {
           ),
         ),
         Expanded(
-          flex: purchaseTransactionPartyColFlex,
           child: PurchaseTransactionTableCell(
             child: Text(
               item.partyName,
@@ -507,7 +506,6 @@ class _TableHeaderRow extends ConsumerWidget {
           ),
         ),
         Expanded(
-          flex: purchaseTransactionPartyColFlex,
           child: PurchaseTransactionTableCell(
             child: purchaseColumnFilterCell(
               label: 'PARTY NAME',

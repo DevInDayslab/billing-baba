@@ -73,7 +73,6 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
         stateOfSupply: loaded.stateOfSupply,
         items: items,
         description: loaded.description,
-        isLoading: false,
       );
     } catch (error) {
       state = state.copyWith(
@@ -102,7 +101,6 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
         stateOfSupply: loaded.stateOfSupply,
         items: _cloneLineItemsForDuplicate(items),
         description: loaded.description,
-        isLoading: false,
       );
     } catch (error) {
       state = state.copyWith(

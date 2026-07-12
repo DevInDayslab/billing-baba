@@ -288,7 +288,6 @@ class _PageHeaderState extends ConsumerState<_PageHeader> {
     final isAutoNumber = form.invoiceNumberMode == InvoiceNumberMode.auto;
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           widget.readOnly
@@ -877,7 +876,6 @@ class _InlineHeaderField extends StatelessWidget {
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           '$label ',

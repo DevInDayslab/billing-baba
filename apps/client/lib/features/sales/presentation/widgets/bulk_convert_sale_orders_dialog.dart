@@ -297,7 +297,6 @@ class _BulkConvertSaleOrdersDialogState
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
                         'Filter By :',
@@ -479,7 +478,7 @@ class _BulkConvertSaleOrdersDialogState
                   ),
                 ),
               ),
-              Expanded(
+              const Expanded(
                 child: Text(
                   'AMOUNT',
                   textAlign: TextAlign.right,
@@ -496,7 +495,7 @@ class _BulkConvertSaleOrdersDialogState
         Expanded(
           child: ListView.separated(
             itemCount: _orders.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (_, _) =>
                 const Divider(height: 1, color: _cardBorder),
             itemBuilder: (context, index) {
               final order = _orders[index];

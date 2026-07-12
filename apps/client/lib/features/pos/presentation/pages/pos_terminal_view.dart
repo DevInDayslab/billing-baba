@@ -162,7 +162,7 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
                     width < PosBreakpoints.tablet;
                 final isCompact = width < PosBreakpoints.laptop;
 
-                final itemGrid = PosPanel(
+                const itemGrid = PosPanel(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   child: const ItemGrid(),
                 );
@@ -538,7 +538,7 @@ class _PosSearchField extends StatelessWidget {
                   ],
                 ),
               ),
-        suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+        suffixIconConstraints: const BoxConstraints(minHeight: 0),
       ),
     );
   }

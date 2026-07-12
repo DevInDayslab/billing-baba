@@ -132,7 +132,6 @@ class _FormHeader extends ConsumerWidget {
     final notifier = ref.read(deliveryChallanFormProvider.notifier);
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const Text(
           'Delivery Challan',
@@ -283,7 +282,6 @@ class _DeliveryChallanFormFieldsState
                 child: SaleGenericSelectDropdown(
                   value: form.stateOfSupply,
                   options: SaleDropdownOptions.indianStates,
-                  hintText: 'Select',
                   maxMenuHeight: 280,
                   onSelected: notifier.updateStateOfSupply,
                 ),

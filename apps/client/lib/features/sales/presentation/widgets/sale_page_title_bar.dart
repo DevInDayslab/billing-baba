@@ -25,7 +25,7 @@ class SalePageTitleBar extends StatefulWidget {
 }
 
 class _SalePageTitleBarState extends State<SalePageTitleBar> {
-  static final _hoverColor = AppColors.primary;
+  static const Color _hoverColor = AppColors.primary;
   static const Color _defaultColor = Colors.black87;
 
   static const _titleStyle = TextStyle(

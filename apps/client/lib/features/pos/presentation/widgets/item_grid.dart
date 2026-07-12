@@ -28,7 +28,7 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
     'Snacks',
   ];
 
-  static const _gridSpacing = AppSpacing.sm;
+  static const double _gridSpacing = AppSpacing.sm;
   static const _cardHeight = 180.0;
 
   @override
