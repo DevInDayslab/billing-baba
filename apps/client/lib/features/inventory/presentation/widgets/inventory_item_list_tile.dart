@@ -1,14 +1,53 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_highlighted_text.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_row_menu.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_table_row.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:flutter/material.dart';
 
-const inventoryItemListRowHeight = 44.0;
+export 'inventory_list_table_row.dart' show inventoryItemListRowHeight;
 
-/// Shared inventory list row used by Products and Services.
-class InventoryItemListTile extends StatefulWidget {
+const inventoryListRowHorizontalPadding = EdgeInsets.symmetric(
+  horizontal: AppSpacing.md,
+);
+
+/// Trailing/value text style shared by Products and Category list rows.
+TextStyle inventoryListValueTextStyle({Color? color}) {
+  return TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: color ?? AppColors.textPrimary,
+  );
+}
+
+class InventoryListValueText extends StatelessWidget {
+  const InventoryListValueText({
+    required this.value,
+    this.color,
+    this.textAlign = TextAlign.left,
+    super.key,
+  });
+
+  final String value;
+  final Color? color;
+  final TextAlign textAlign;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      value,
+      textAlign: textAlign,
+      overflow: TextOverflow.ellipsis,
+      style: inventoryListValueTextStyle(color: color),
+    );
+  }
+}
+
+/// Shared inventory list row used by Products, Services, and Categories.
+class InventoryItemListTile extends StatelessWidget {
+  /// Products / Services row.
   const InventoryItemListTile({
+    required this.index,
     required this.title,
     required this.trailingValue,
     required this.isSelected,
@@ -19,8 +58,36 @@ class InventoryItemListTile extends StatefulWidget {
     required this.onMenuSelected,
     this.trailingColor,
     this.leadingIcon = Icons.inventory_2_outlined,
+    this.showColumnSeparators = true,
     super.key,
-  });
+  }) : flexValues = const [3, 1],
+       alignEnds = const [false, true],
+       cells = null;
+
+  /// Category rows — same [InventoryListTableRow] + [InventoryListRowLayout] tree.
+  const InventoryItemListTile.columns({
+    required this.index,
+    required this.flexValues,
+    required this.cells,
+    required this.alignEnds,
+    this.showColumnSeparators = true,
+    super.key,
+  }) : title = '',
+       trailingValue = '',
+       trailingColor = null,
+       isSelected = false,
+       isFocused = false,
+       searchQuery = '',
+       onHover = null,
+       onTap = null,
+       onMenuSelected = null,
+       leadingIcon = Icons.inventory_2_outlined;
+
+  final int index;
+  final List<int> flexValues;
+  final List<Widget>? cells;
+  final List<bool> alignEnds;
+  final bool showColumnSeparators;
 
   final String title;
   final String trailingValue;
@@ -28,86 +95,74 @@ class InventoryItemListTile extends StatefulWidget {
   final bool isSelected;
   final bool isFocused;
   final String searchQuery;
-  final VoidCallback onHover;
-  final VoidCallback onTap;
-  final ValueChanged<String> onMenuSelected;
+  final VoidCallback? onHover;
+  final VoidCallback? onTap;
+  final ValueChanged<String>? onMenuSelected;
   final IconData leadingIcon;
 
-  @override
-  State<InventoryItemListTile> createState() => _InventoryItemListTileState();
-}
-
-class _InventoryItemListTileState extends State<InventoryItemListTile> {
-  var _isHovered = false;
+  bool get _isProductRow => cells == null;
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = widget.isSelected
-        ? inventorySelectedRowColor
-        : _isHovered
-            ? const Color(0xFFF5F5F5)
-            : widget.isFocused
-                ? const Color(0xFFFAFAFA)
-                : Colors.transparent;
-
-    return MouseRegion(
-      onEnter: (_) {
-        setState(() => _isHovered = true);
-        widget.onHover();
-      },
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 120),
-        height: inventoryItemListRowHeight,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          border: const Border(bottom: BorderSide(color: inventoryCardBorder)),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: widget.onTap,
-            hoverColor: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(
-                children: [
-                  Icon(
-                    widget.leadingIcon,
-                    size: 16,
-                    color: Colors.grey.shade500,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 3,
-                    child: InventoryHighlightedText(
-                      text: widget.title,
-                      query: widget.searchQuery,
-                      style: InventoryStyles.listCellStyle.copyWith(
-                        fontWeight: widget.isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 56,
-                    child: Text(
-                      widget.trailingValue,
-                      textAlign: TextAlign.right,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: widget.trailingColor ?? AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  InventoryListRowMenu(onSelected: widget.onMenuSelected),
-                ],
-              ),
+    final layoutChildren =
+        cells ??
+        [
+          InventoryHighlightedText(
+            text: title,
+            query: searchQuery,
+            style: InventoryStyles.listCellStyle.copyWith(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             ),
           ),
+          SizedBox(
+            width: 56,
+            child: InventoryListValueText(
+              value: trailingValue,
+              color: trailingColor,
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ];
+
+    final layout = InventoryListRowLayout(
+      flexValues: flexValues,
+      alignEnds: alignEnds,
+      showColumnSeparators: showColumnSeparators,
+      trailing: onMenuSelected != null
+          ? InventoryListRowMenu(onSelected: onMenuSelected)
+          : const SizedBox.shrink(),
+      children: layoutChildren,
+    );
+
+    final inner = _isProductRow
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Icon(
+                  leadingIcon,
+                  size: 16,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: layout),
+            ],
+          )
+        : layout;
+
+    return InventoryListTableRow(
+      index: index,
+      isSelected: isSelected,
+      isFocused: isFocused,
+      onHover: onHover,
+      onTap: onTap,
+      child: Padding(
+        padding: inventoryListRowHorizontalPadding,
+        child: SizedBox(
+          height: inventoryItemListRowHeight,
+          child: inner,
         ),
       ),
     );

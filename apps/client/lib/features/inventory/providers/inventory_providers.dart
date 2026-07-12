@@ -3,6 +3,7 @@ import 'package:billing_baba/features/inventory/application/inventory_service.da
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/application/inventory_transaction_table_service.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
+import 'package:billing_baba/features/inventory/models/category_item_sort.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
 import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
@@ -29,7 +30,9 @@ final productsProvider = Provider<List<InventoryItem>>((ref) {
   return (ref.watch(inventoryItemsProvider).value ?? [])
       .where((item) => item.type == ItemType.product)
       .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
-      .where((item) => InventoryItemFilterService.matches(item, filters: filters))
+      .where(
+        (item) => InventoryItemFilterService.matches(item, filters: filters),
+      )
       .toList();
 });
 
@@ -39,7 +42,9 @@ final servicesProvider = Provider<List<InventoryItem>>((ref) {
   return (ref.watch(inventoryItemsProvider).value ?? [])
       .where((item) => item.type == ItemType.service)
       .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
-      .where((item) => InventoryItemFilterService.matches(item, filters: filters))
+      .where(
+        (item) => InventoryItemFilterService.matches(item, filters: filters),
+      )
       .toList();
 });
 
@@ -72,6 +77,8 @@ final categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
   categoryId,
 ) {
   final query = ref.watch(categoryItemSearchQueryProvider).toLowerCase();
+  final filters = ref.watch(categoryItemFiltersProvider);
+  final sort = ref.watch(categoryItemSortProvider);
   final items = ref.watch(inventoryItemsProvider).value ?? [];
 
   final filteredItems = categoryId == uncategorizedCategoryId
@@ -82,9 +89,34 @@ final categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
         )
       : items.where((item) => item.categoryId == categoryId);
 
-  return filteredItems
+  final result = filteredItems
       .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
+      .where(
+        (item) => InventoryItemFilterService.matches(item, filters: filters),
+      )
       .toList();
+
+  if (sort.direction == CategoryItemSortDirection.none) {
+    return result;
+  }
+
+  final ascending = sort.direction == CategoryItemSortDirection.ascending;
+  result.sort((a, b) {
+    final comparison = switch (sort.column) {
+      CategoryItemSortColumn.name => a.name.toLowerCase().compareTo(
+        b.name.toLowerCase(),
+      ),
+      CategoryItemSortColumn.quantity => (a.quantity ?? 0).compareTo(
+        b.quantity ?? 0,
+      ),
+      CategoryItemSortColumn.stockValue => (a.stockValue ?? 0).compareTo(
+        b.stockValue ?? 0,
+      ),
+    };
+    return ascending ? comparison : -comparison;
+  });
+
+  return result;
 });
 
 final unitsProvider = Provider<List<InventoryUnit>>((ref) {
@@ -150,6 +182,16 @@ final categoryItemSearchQueryProvider =
       CategoryItemSearchQuery.new,
     );
 
+final categoryItemFiltersProvider =
+    NotifierProvider<CategoryItemFilters, InventoryItemFiltersState>(
+      CategoryItemFilters.new,
+    );
+
+final categoryItemSortProvider =
+    NotifierProvider<CategoryItemSort, CategoryItemSortState>(
+      CategoryItemSort.new,
+    );
+
 final unitSearchQueryProvider = NotifierProvider<UnitSearchQuery, String>(
   UnitSearchQuery.new,
 );
@@ -167,7 +209,10 @@ final productTransactionSearchQueryProvider =
 const inventoryTransactionPageSize = 35;
 
 final productTransactionFiltersProvider =
-    NotifierProvider<ProductTransactionFilters, InventoryTransactionFiltersState>(
+    NotifierProvider<
+      ProductTransactionFilters,
+      InventoryTransactionFiltersState
+    >(
       ProductTransactionFilters.new,
     );
 
@@ -230,7 +275,9 @@ class PaginatedProductTransactions {
 // ignore: specify_nonobvious_property_types
 final paginatedProductTransactionsProvider =
     Provider.family<PaginatedProductTransactions, String>((ref, itemId) {
-      final transactions = ref.watch(filteredProductTransactionsProvider(itemId));
+      final transactions = ref.watch(
+        filteredProductTransactionsProvider(itemId),
+      );
       final page = ref.watch(productTransactionFiltersProvider).currentPage;
       final totalPages = transactions.isEmpty
           ? 1
@@ -300,7 +347,8 @@ final productStockSummaryProvider =
 
       final available = item?.availableForSale ?? item?.quantity;
       final reserved = item?.reservedQuantity;
-      final stockValue = item?.stockValue ??
+      final stockValue =
+          item?.stockValue ??
           stockLevels.fold<double>(
             0,
             (sum, level) =>
@@ -309,10 +357,12 @@ final productStockSummaryProvider =
                     (parseDecimal(level.averageCost) ?? 0)),
           );
 
-      final reorder = item?.reorderLevel ??
+      final reorder =
+          item?.reorderLevel ??
           parseDecimal(stockLevels.firstOrNull?.reorderLevel);
 
-      final isLowStock = hasLowStock ||
+      final isLowStock =
+          hasLowStock ||
           (available != null &&
               reorder != null &&
               available > 0 &&
@@ -325,43 +375,50 @@ final productStockSummaryProvider =
         averagePurchasePrice: averageCost,
         lastPurchasePrice: lastPurchase,
         reorderLevel: reorder,
-        isLowStock: stockLevels.isNotEmpty || reorder != null ? isLowStock : null,
+        isLowStock: stockLevels.isNotEmpty || reorder != null
+            ? isLowStock
+            : null,
       );
     });
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
-final productStockAfterProvider =
-    Provider.family<Map<String, double>, String>((ref, itemId) {
-      final transactions =
-          ref.watch(productTransactionsProvider(itemId)).value ?? [];
-      return InventoryStockCalculator.stockAfterByTransactionId(transactions);
-    });
+final productStockAfterProvider = Provider.family<Map<String, double>, String>((
+  ref,
+  itemId,
+) {
+  final transactions =
+      ref.watch(productTransactionsProvider(itemId)).value ?? [];
+  return InventoryStockCalculator.stockAfterByTransactionId(transactions);
+});
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
 final productDetailContextProvider =
-    Provider.family<({InventoryItem? item, String? categoryName, String? brandName}), String>((
-  ref,
-  itemId,
-) {
-  final item = (ref.watch(inventoryItemsProvider).value ?? [])
-      .where((entry) => entry.id == itemId)
-      .firstOrNull;
-  final categories = ref.watch(categoriesProvider);
-  final brands = ref.watch(inventoryBrandsProvider).value ?? [];
+    Provider.family<
+      ({InventoryItem? item, String? categoryName, String? brandName}),
+      String
+    >((
+      ref,
+      itemId,
+    ) {
+      final item = (ref.watch(inventoryItemsProvider).value ?? [])
+          .where((entry) => entry.id == itemId)
+          .firstOrNull;
+      final categories = ref.watch(categoriesProvider);
+      final brands = ref.watch(inventoryBrandsProvider).value ?? [];
 
-  final categoryName = categories
-      .where((category) => category.id == item?.categoryId)
-      .map((category) => category.name)
-      .firstOrNull;
-  final brandName = brands
-      .where((brand) => brand.id == item?.brandId)
-      .map((brand) => brand.name)
-      .firstOrNull;
+      final categoryName = categories
+          .where((category) => category.id == item?.categoryId)
+          .map((category) => category.name)
+          .firstOrNull;
+      final brandName = brands
+          .where((brand) => brand.id == item?.brandId)
+          .map((brand) => brand.name)
+          .firstOrNull;
 
-  return (item: item, categoryName: categoryName, brandName: brandName);
-});
+      return (item: item, categoryName: categoryName, brandName: brandName);
+    });
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
@@ -416,11 +473,13 @@ final itemTierPricesProvider =
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
-final itemImagesProvider =
-    FutureProvider.family<List<ItemImageModel>, String>((ref, itemId) async {
-      final service = await ref.watch(inventoryServiceProvider.future);
-      return service.fetchItemImages(itemId);
-    });
+final itemImagesProvider = FutureProvider.family<List<ItemImageModel>, String>((
+  ref,
+  itemId,
+) async {
+  final service = await ref.watch(inventoryServiceProvider.future);
+  return service.fetchItemImages(itemId);
+});
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
@@ -505,6 +564,38 @@ class CategoryItemSearchQuery extends Notifier<String> {
   set query(String value) => state = value;
 }
 
+class CategoryItemFilters extends Notifier<InventoryItemFiltersState> {
+  @override
+  InventoryItemFiltersState build() => const InventoryItemFiltersState();
+
+  void apply(InventoryItemFiltersState filters) => state = filters;
+
+  void clear() => state = const InventoryItemFiltersState();
+}
+
+class CategoryItemSort extends Notifier<CategoryItemSortState> {
+  @override
+  CategoryItemSortState build() => const CategoryItemSortState();
+
+  void toggle(CategoryItemSortColumn column) {
+    if (state.column == column) {
+      final nextDirection = switch (state.direction) {
+        CategoryItemSortDirection.none => CategoryItemSortDirection.ascending,
+        CategoryItemSortDirection.ascending =>
+          CategoryItemSortDirection.descending,
+        CategoryItemSortDirection.descending => CategoryItemSortDirection.none,
+      };
+      state = state.copyWith(direction: nextDirection);
+      return;
+    }
+
+    state = CategoryItemSortState(
+      column: column,
+      direction: CategoryItemSortDirection.ascending,
+    );
+  }
+}
+
 class UnitSearchQuery extends Notifier<String> {
   @override
   String build() => '';
@@ -538,7 +629,8 @@ class InventoryItemFilters extends Notifier<InventoryItemFiltersState> {
   void clear() => state = const InventoryItemFiltersState();
 }
 
-class ProductTransactionFilters extends Notifier<InventoryTransactionFiltersState> {
+class ProductTransactionFilters
+    extends Notifier<InventoryTransactionFiltersState> {
   @override
   InventoryTransactionFiltersState build() =>
       const InventoryTransactionFiltersState();

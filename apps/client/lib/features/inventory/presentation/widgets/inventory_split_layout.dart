@@ -23,38 +23,43 @@ class InventorySplitLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final resolvedListWidth = listWidth ??
-            (constraints.maxWidth * listWidthFactor)
-                .clamp(_minListWidth, _maxListWidth);
+    return SizedBox.expand(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final resolvedListWidth =
+              listWidth ??
+              (constraints.maxWidth * listWidthFactor).clamp(
+                _minListWidth,
+                _maxListWidth,
+              );
 
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadius.lgBorder,
-            border: Border.all(color: inventoryCardBorder),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0A000000),
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: AppRadius.lgBorder,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(width: resolvedListWidth, child: listPanel),
-                const VerticalDivider(width: 1, color: inventoryCardBorder),
-                Expanded(child: detailPanel),
+          return DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: AppRadius.lgBorder,
+              border: Border.all(color: inventoryCardBorder),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0A000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
               ],
             ),
-          ),
-        );
-      },
+            child: ClipRRect(
+              borderRadius: AppRadius.lgBorder,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(width: resolvedListWidth, child: listPanel),
+                  const VerticalDivider(width: 1, color: inventoryCardBorder),
+                  Expanded(child: detailPanel),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

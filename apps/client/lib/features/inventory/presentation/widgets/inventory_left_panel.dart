@@ -1,9 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/inventory_async_list.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_list_table.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_list_tile.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/inventory_items_filter_trigger.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_primary_button.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
@@ -71,6 +69,8 @@ class InventoryLeftPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final filters = ref.watch(inventoryItemFiltersProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -105,36 +105,33 @@ class InventoryLeftPanel extends ConsumerWidget {
             ],
           ),
         ),
-        InventoryListHeader(
-          columns: [
-            InventoryListColumn(
-              label: primaryColumnLabel,
-              flex: 3,
-              trailing: showListFilters
-                  ? InventoryItemsFilterTrigger(
-                      compact: true,
-                      initialFilters: ref.watch(inventoryItemFiltersProvider),
-                      onApply: ref
-                          .read(inventoryItemFiltersProvider.notifier)
-                          .apply,
-                    )
-                  : null,
-            ),
-            InventoryListColumn(
-              label: secondaryColumnLabel,
-              alignEnd: true,
-            ),
-          ],
-        ),
         Expanded(
-          child: InventoryAsyncList<InventoryItem>(
-            asyncValue: itemsAsync,
+          child: InventoryItemListTable(
+            columns: buildInventoryItemListColumns(
+              specs: [
+                InventoryItemListColumnSpec(
+                  label: primaryColumnLabel,
+                  flex: 3,
+                  showFilter: showListFilters,
+                ),
+                InventoryItemListColumnSpec(
+                  label: secondaryColumnLabel,
+                  alignEnd: true,
+                  showFilter: showListFilters,
+                ),
+              ],
+              filters: filters,
+              onFilterApply: ref
+                  .read(inventoryItemFiltersProvider.notifier)
+                  .apply,
+            ),
             items: items,
+            itemsAsync: itemsAsync,
             onRefresh: onRefresh,
             emptyMessage: emptyMessage,
-            itemBuilder: (context, item) {
-              final index = items.indexOf(item);
+            itemBuilder: (context, item, index) {
               return InventoryItemListTile(
+                index: index,
                 title: item.name,
                 trailingValue: trailingValueBuilder(item),
                 trailingColor: trailingColorBuilder(item),

@@ -2,17 +2,22 @@ import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
+import 'package:billing_baba/features/inventory/models/category_item_sort.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
-import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_category_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_async_list.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_highlighted_text.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_list_table.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_list_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_primary_button.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_stock_utils.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/select_items_for_category_dialog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -80,7 +85,9 @@ class _CategoriesTabContentState extends ConsumerState<CategoriesTabContent> {
         .deleteCategory(category.id);
     if (!context.mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
 
@@ -100,9 +107,11 @@ class _CategoriesTabContentState extends ConsumerState<CategoriesTabContent> {
         categoriesAsync: categoriesAsync,
         selectedId: selectedId,
         onSearchChanged: _onSearchChanged,
-        onRefresh: () => ref.read(inventoryCategoriesProvider.notifier).refresh(
-          searchQuery: ref.read(categoryBackendSearchProvider),
-        ),
+        onRefresh: () => ref
+            .read(inventoryCategoriesProvider.notifier)
+            .refresh(
+              searchQuery: ref.read(categoryBackendSearchProvider),
+            ),
         onCategorySelected: (id) =>
             ref.read(selectedCategoryIdProvider.notifier).selected = id,
         onAddCategory: () => showAddCategoryDialog(context),
@@ -110,7 +119,7 @@ class _CategoriesTabContentState extends ConsumerState<CategoriesTabContent> {
           if (category.isUncategorized) return;
           switch (value) {
             case 'Edit':
-              showAddCategoryDialog(context, editCategory: category);
+              unawaited(showAddCategoryDialog(context, editCategory: category));
             case 'Delete':
               unawaited(_confirmDeleteCategory(context, category));
           }
@@ -248,6 +257,12 @@ class _CategoryDetailPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(categoryItemsProvider(category.id));
+    final itemsAsync = ref.watch(inventoryItemsProvider);
+    final searchQuery = ref.watch(categoryItemSearchQueryProvider);
+    final sort = ref.watch(categoryItemSortProvider);
+    final sortNotifier = ref.read(categoryItemSortProvider.notifier);
+    final filters = ref.watch(categoryItemFiltersProvider);
+    final currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -298,9 +313,13 @@ class _CategoryDetailPanel extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.sm),
                     InventorySearchField(
                       hint: 'Search',
-                      onChanged: (query) => ref
-                          .read(categoryItemSearchQueryProvider.notifier)
-                          .query = query,
+                      onChanged: (query) =>
+                          ref
+                                  .read(
+                                    categoryItemSearchQueryProvider.notifier,
+                                  )
+                                  .query =
+                              query,
                     ),
                   ],
                 ),
@@ -309,26 +328,96 @@ class _CategoryDetailPanel extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: InventoryListHeader(
-            columns: [
-              InventoryListColumn(label: 'NAME'),
-              InventoryListColumn(label: 'QUANTITY', showFilter: true),
-              InventoryListColumn(label: 'STOCK VALUE', showFilter: true),
-            ],
-          ),
-        ),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: items.isEmpty
-                ? const InventoryListEmptyState(message: 'No items in category')
-                : ListView.builder(
-                    itemCount: items.length,
-                    itemBuilder: (context, index) =>
-                        _CategoryItemRow(item: items[index]),
+            child: InventoryItemListTable(
+              includeTrailingSpace: false,
+              columns: buildInventoryItemListColumns(
+                specs: [
+                  InventoryItemListColumnSpec(
+                    label: 'NAME',
+                    flex: 3,
+                    sortable: true,
+                    isSorted:
+                        sort.column == CategoryItemSortColumn.name &&
+                        sort.direction != CategoryItemSortDirection.none,
+                    sortAscending:
+                        sort.direction == CategoryItemSortDirection.ascending,
+                    onSort: () =>
+                        sortNotifier.toggle(CategoryItemSortColumn.name),
                   ),
+                  InventoryItemListColumnSpec(
+                    label: 'QUANTITY',
+                    sortable: true,
+                    isSorted:
+                        sort.column == CategoryItemSortColumn.quantity &&
+                        sort.direction != CategoryItemSortDirection.none,
+                    sortAscending:
+                        sort.direction == CategoryItemSortDirection.ascending,
+                    onSort: () =>
+                        sortNotifier.toggle(CategoryItemSortColumn.quantity),
+                  ),
+                  InventoryItemListColumnSpec(
+                    label: 'STOCK VALUE',
+                    alignEnd: true,
+                    sortable: true,
+                    isSorted:
+                        sort.column == CategoryItemSortColumn.stockValue &&
+                        sort.direction != CategoryItemSortDirection.none,
+                    sortAscending:
+                        sort.direction == CategoryItemSortDirection.ascending,
+                    onSort: () =>
+                        sortNotifier.toggle(CategoryItemSortColumn.stockValue),
+                  ),
+                ],
+                filters: filters,
+                onFilterApply: ref
+                    .read(categoryItemFiltersProvider.notifier)
+                    .apply,
+              ),
+              items: items,
+              itemsAsync: itemsAsync,
+              onRefresh: () =>
+                  ref.read(inventoryItemsProvider.notifier).refresh(),
+              emptyMessage: 'No items in category',
+              itemBuilder: (context, item, index) {
+                final quantity = item.quantity;
+                final quantityText = quantity != null
+                    ? formatQuantityValue(quantity)
+                    : inventoryEmDash;
+                final stockValueText = item.stockValue != null
+                    ? currency.format(item.stockValue)
+                    : inventoryEmDash;
+
+                return InventoryItemListTile.columns(
+                  index: index,
+                  flexValues: const [3, 1, 1],
+                  alignEnds: const [false, false, true],
+                  cells: [
+                    InventoryHighlightedText(
+                      text: item.name,
+                      query: searchQuery,
+                      style: InventoryStyles.listCellStyle.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    InventoryListValueText(
+                      value: quantityText,
+                      color: listQuantityColor(
+                        quantity,
+                        reorderLevel: item.reorderLevel,
+                      ),
+                    ),
+                    InventoryListValueText(
+                      value: stockValueText,
+                      color: inventoryPositiveColor,
+                      textAlign: TextAlign.right,
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -360,59 +449,6 @@ class _CategoryItemCountBadge extends StatelessWidget {
           height: 1,
         ),
         textAlign: TextAlign.center,
-      ),
-    );
-  }
-}
-
-class _CategoryItemRow extends StatelessWidget {
-  const _CategoryItemRow({required this.item});
-
-  final InventoryItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
-    final quantity = item.quantity;
-    final quantityColor = quantity != null && quantity < 0
-        ? inventoryNegativeColor
-        : AppColors.textPrimary;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 12,
-      ),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              item.name,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              quantity?.toString() ?? '-',
-              style: TextStyle(fontSize: 13, color: quantityColor),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              item.stockValue != null ? currency.format(item.stockValue) : '-',
-              style: const TextStyle(
-                fontSize: 13,
-                color: inventoryPositiveColor,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
