@@ -9,6 +9,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amo
 import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_column_select_filter.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_column_range_slider_filter.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_status_badge.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
@@ -31,7 +32,7 @@ const _balanceColWidth = 96.0;
 const _dueDateColWidth = 108.0;
 const _statusColWidth = 88.0;
 const _actionsColWidth = 120.0;
-const _cellHorizontalPadding = AppSpacing.sm;
+const double _cellHorizontalPadding = AppSpacing.sm;
 
 class SaleInvoiceTable extends ConsumerWidget {
   const SaleInvoiceTable({super.key});
@@ -186,8 +187,6 @@ class _SaleInvoiceTransactionsTableState
           child: ResizableDataTable(
             columns: columns,
             rows: rows,
-            headerBackgroundColor: _tableHeaderBg,
-            rowBorderColor: _cardBorder,
           ),
         ),
         if (widget.items.isEmpty)
@@ -333,7 +332,6 @@ class _SaleInvoiceTableColumns {
       ResizableDataColumn(
         initialWidth: _partyColWidth,
         minWidth: 100,
-        maxWidth: 420,
         header: SaleColumnTextFilterTrigger(
           label: 'Party Name',
           hintText: 'Party name',
@@ -378,9 +376,11 @@ class _SaleInvoiceTableColumns {
       ),
       ResizableDataColumn(
         initialWidth: _loyaltyColWidth,
-        header: SaleColumnAmountFilterTrigger(
+        header: SaleColumnRangeSliderFilterTrigger(
           label: 'Loyalty redee...',
           alignment: Alignment.centerRight,
+          maxValue: 5000,
+          rangeLabel: 'Loyalty points',
           initialFilter: filters.loyaltyColumnFilter,
           onApply: filtersNotifier.setLoyaltyColumnFilter,
         ),

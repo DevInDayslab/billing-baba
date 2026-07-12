@@ -64,6 +64,24 @@ abstract final class AppRoutes {
   static const reportsGst = '/reports/gst';
   static const utilities = '/utilities';
   static const utilitiesImportItems = '/utilities/import-items';
+  static const developer = '/developer';
+  static const developerComponents = '/developer/components';
+  static const developerComponentsButtons = '/developer/components/buttons';
+  static const developerComponentsInputs = '/developer/components/inputs';
+  static const developerComponentsDialogs = '/developer/components/dialogs';
+  static const developerComponentsDataTables = '/developer/components/data-tables';
+  static const developerComponentsTableFilters =
+      '/developer/components/table-filters';
+  static const developerComponentsBadges = '/developer/components/badges';
+  static const developerComponentsChips = '/developer/components/chips';
+  static const developerComponentsCards = '/developer/components/cards';
+  static const developerComponentsTypography =
+      '/developer/components/typography';
+  static const developerComponentsColors = '/developer/components/colors';
+  static const developerComponentsIcons = '/developer/components/icons';
+  static const developerComponentsLoading = '/developer/components/loading';
+  static const developerComponentsEmptyStates =
+      '/developer/components/empty-states';
   static const settings = '/settings';
   static const settingsUsers = '/settings/users';
   static const settingsTaxes = '/settings/taxes';
