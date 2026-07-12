@@ -49,6 +49,7 @@ class InventoryDetailListTile extends StatelessWidget {
     required this.cells,
     required this.alignEnds,
     this.showColumnSeparators = true,
+    this.onTap,
     super.key,
   });
 
@@ -57,11 +58,13 @@ class InventoryDetailListTile extends StatelessWidget {
   final List<Widget> cells;
   final List<bool> alignEnds;
   final bool showColumnSeparators;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return InventoryListTableRow(
       index: index,
+      onTap: onTap,
       child: Padding(
         padding: inventoryDetailListRowHorizontalPadding,
         child: SizedBox(

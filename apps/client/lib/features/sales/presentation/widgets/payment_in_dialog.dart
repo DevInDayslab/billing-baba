@@ -16,20 +16,34 @@ const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 
 /// Shows the Payment-In modal from the Payment-In page filter bar.
-Future<void> showPaymentInDialog(BuildContext context) {
+Future<void> showPaymentInDialog(
+  BuildContext context, {
+  String? initialPartyId,
+  String? initialPartyName,
+}) {
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
-    builder: (context) => const Dialog(
+    builder: (context) => Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: PaymentInDialog(),
+      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: PaymentInDialog(
+        initialPartyId: initialPartyId,
+        initialPartyName: initialPartyName,
+      ),
     ),
   );
 }
 
 class PaymentInDialog extends ConsumerStatefulWidget {
-  const PaymentInDialog({super.key});
+  const PaymentInDialog({
+    super.key,
+    this.initialPartyId,
+    this.initialPartyName,
+  });
+
+  final String? initialPartyId;
+  final String? initialPartyName;
 
   @override
   ConsumerState<PaymentInDialog> createState() => _PaymentInDialogState();
@@ -49,7 +63,14 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(paymentInFormProvider.notifier).reset();
+      final notifier = ref.read(paymentInFormProvider.notifier);
+      notifier.reset();
+      if (widget.initialPartyId != null && widget.initialPartyId!.isNotEmpty) {
+        notifier.updateParty(
+          widget.initialPartyName ?? '',
+          partyId: widget.initialPartyId,
+        );
+      }
     });
   }
 

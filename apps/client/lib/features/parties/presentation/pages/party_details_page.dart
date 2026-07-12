@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_detail_panel.dart';
@@ -136,17 +138,23 @@ class _PartyDetailsPageState extends ConsumerState<PartyDetailsPage> {
 
                     if (isCompact) {
                       if (selectedId == null) {
-                        return _buildListShell();
+                        return _buildInventoryShell(
+                          child: const PartyListPanel(),
+                        );
                       }
-                      return PartyDetailPanel(
-                        partyId: selectedId,
-                        onBack: _clearSelection,
+                      return _buildInventoryShell(
+                        child: PartyDetailPanel(
+                          partyId: selectedId,
+                          onBack: _clearSelection,
+                        ),
                       );
                     }
 
-                    return _buildListShell(
+                    return InventorySplitLayout(
+                      listWidth: 360,
+                      listPanel: const PartyListPanel(),
                       detailPanel: selectedId == null
-                          ? const MasterDetailPlaceholder(
+                          ? const InventoryDetailPlaceholder(
                               message: 'Select a party to view details',
                             )
                           : PartyDetailPanel(partyId: selectedId),
@@ -161,41 +169,23 @@ class _PartyDetailsPageState extends ConsumerState<PartyDetailsPage> {
     );
   }
 
-  Widget _buildListShell({Widget? detailPanel}) {
+  Widget _buildInventoryShell({required Widget child}) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: AppRadius.lgBorder,
+        border: Border.all(color: inventoryCardBorder),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: detailPanel == null
-            ? const PartyListPanel()
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(width: 360, child: PartyListPanel()),
-                  const VerticalDivider(width: 1, color: Color(0xFFE0E0E0)),
-                  Expanded(child: detailPanel),
-                ],
-              ),
-      ),
-    );
-  }
-}
-
-class MasterDetailPlaceholder extends StatelessWidget {
-  const MasterDetailPlaceholder({required this.message, super.key});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        message,
-        style: const TextStyle(color: AppColors.textSecondary),
+        borderRadius: AppRadius.lgBorder,
+        child: child,
       ),
     );
   }
