@@ -5,14 +5,10 @@ import 'package:billing_baba/features/export/presentation/widgets/module_export_
 import 'package:billing_baba/features/print/presentation/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_select_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_range_slider_filter.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_status_badge.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -314,92 +310,146 @@ class _SaleInvoiceTableColumns {
         initialWidth: _dateColWidth,
         minWidth: 96,
         maxWidth: 280,
-        header: SaleColumnDateFilterTrigger(
-          label: 'Date',
-          initialFilter: filters.dateColumnFilter,
-          onApply: filtersNotifier.setDateColumnFilter,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'date',
+            title: 'Date',
+            type: FilterType.date,
+          ),
+          initialValue: filters.dateColumnFilter,
+          onApply: (result) => filtersNotifier.setDateColumnFilter(
+            FilterUtils.fromResult(result) as DateColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _invoiceColWidth,
-        header: SaleColumnTextFilterTrigger(
-          label: 'Invoice no',
-          hintText: 'Invoice number',
-          initialFilter: filters.invoiceNoColumnFilter,
-          onApply: filtersNotifier.setInvoiceNoColumnFilter,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'invoiceNo',
+            title: 'Invoice no',
+            type: FilterType.text,
+            hintText: 'Invoice number',
+          ),
+          initialValue: filters.invoiceNoColumnFilter,
+          onApply: (result) => filtersNotifier.setInvoiceNoColumnFilter(
+            FilterUtils.fromResult(result) as TextColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _partyColWidth,
         minWidth: 100,
-        header: SaleColumnTextFilterTrigger(
-          label: 'Party Name',
-          hintText: 'Party name',
-          initialFilter: filters.partyNameColumnFilter,
-          onApply: filtersNotifier.setPartyNameColumnFilter,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'partyName',
+            title: 'Party Name',
+            type: FilterType.text,
+            hintText: 'Party name',
+          ),
+          initialValue: filters.partyNameColumnFilter,
+          onApply: (result) => filtersNotifier.setPartyNameColumnFilter(
+            FilterUtils.fromResult(result) as TextColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _transactionColWidth,
-        header: SaleColumnSelectFilterTrigger(
-          label: 'Transaction',
-          options: transactionOptions,
-          initialFilter: filters.transactionTypeColumnFilter != null
+        header: TableColumnFilterTrigger(
+          config: ColumnFilter(
+            id: 'transaction',
+            title: 'Transaction',
+            type: FilterType.singleSelect,
+            values: transactionOptions,
+          ),
+          initialValue: filters.transactionTypeColumnFilter != null
               ? SelectColumnFilter(
                   value: filters.transactionTypeColumnFilter!.value,
                 )
               : null,
-          onApply: filtersNotifier.setTransactionTypeColumnFilter,
+          onApply: (result) => filtersNotifier.setTransactionTypeColumnFilter(
+            FilterUtils.fromResult(result) as SelectColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _paymentColWidth,
-        header: SaleColumnSelectFilterTrigger(
-          label: 'Payment Type',
-          options: paymentOptions,
-          initialFilter: filters.paymentTypeColumnFilter != null
+        header: TableColumnFilterTrigger(
+          config: ColumnFilter(
+            id: 'paymentType',
+            title: 'Payment Type',
+            type: FilterType.singleSelect,
+            values: paymentOptions,
+          ),
+          initialValue: filters.paymentTypeColumnFilter != null
               ? SelectColumnFilter(
                   value: filters.paymentTypeColumnFilter!.value,
                 )
               : null,
-          onApply: filtersNotifier.setPaymentTypeColumnFilter,
+          onApply: (result) => filtersNotifier.setPaymentTypeColumnFilter(
+            FilterUtils.fromResult(result) as SelectColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _amountColWidth,
-        header: SaleColumnAmountFilterTrigger(
-          label: 'Amount',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'amount',
+            title: 'Amount',
+            type: FilterType.number,
+          ),
           alignment: Alignment.centerRight,
-          initialFilter: filters.amountColumnFilter,
-          onApply: filtersNotifier.setAmountColumnFilter,
+          initialValue: filters.amountColumnFilter,
+          onApply: (result) => filtersNotifier.setAmountColumnFilter(
+            FilterUtils.fromResult(result) as AmountColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _loyaltyColWidth,
-        header: SaleColumnRangeSliderFilterTrigger(
-          label: 'Loyalty redee...',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'loyalty',
+            title: 'Loyalty redee...',
+            type: FilterType.rangeSlider,
+            maxValue: 5000,
+            rangeLabel: 'Loyalty points',
+          ),
           alignment: Alignment.centerRight,
-          maxValue: 5000,
-          rangeLabel: 'Loyalty points',
-          initialFilter: filters.loyaltyColumnFilter,
-          onApply: filtersNotifier.setLoyaltyColumnFilter,
+          initialValue: filters.loyaltyColumnFilter,
+          onApply: (result) => filtersNotifier.setLoyaltyColumnFilter(
+            FilterUtils.fromResult(result) as RangeSliderColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _balanceColWidth,
-        header: SaleColumnAmountFilterTrigger(
-          label: 'Balance',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'balance',
+            title: 'Balance',
+            type: FilterType.number,
+          ),
           alignment: Alignment.centerRight,
-          initialFilter: filters.balanceColumnFilter,
-          onApply: filtersNotifier.setBalanceColumnFilter,
+          initialValue: filters.balanceColumnFilter,
+          onApply: (result) => filtersNotifier.setBalanceColumnFilter(
+            FilterUtils.fromResult(result) as AmountColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _dueDateColWidth,
-        header: SaleColumnDateFilterTrigger(
-          label: 'Due date',
-          initialFilter: filters.dueDateColumnFilter,
-          onApply: filtersNotifier.setDueDateColumnFilter,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'dueDate',
+            title: 'Due date',
+            type: FilterType.date,
+          ),
+          initialValue: filters.dueDateColumnFilter,
+          onApply: (result) => filtersNotifier.setDueDateColumnFilter(
+            FilterUtils.fromResult(result) as DateColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(

@@ -22,6 +22,7 @@ class ColumnFilter {
     this.prefixText,
     this.searchable = true,
     this.disabled = false,
+    this.exclusivePairs = const [],
     this.customBuilder,
   });
 
@@ -35,6 +36,9 @@ class ColumnFilter {
   final String? prefixText;
   final bool searchable;
   final bool disabled;
+
+  /// Mutually exclusive option pairs for [FilterType.multiSelect].
+  final List<(String, String)> exclusivePairs;
   final CustomFilterWidgetBuilder? customBuilder;
 }
 

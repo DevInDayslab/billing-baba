@@ -4,7 +4,7 @@ import 'package:billing_baba/features/purchases/application/purchase_fa_service.
 import 'package:billing_baba/features/purchases/application/purchase_list_filter_utils.dart';
 import 'package:billing_baba/features/purchases/models/purchase_fa_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_fa_requests.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -442,6 +442,13 @@ class PurchaseFaFilters extends _$PurchaseFaFilters {
     );
   }
 
+  void clearColumnDateRange() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearColumnDateRange: true),
+      currentPage: 1,
+    );
+  }
+
   void setDocumentNoFilter(String value) {
     state = state.copyWith(
       columnFilters: state.columnFilters.copyWith(documentNoFilter: value),
@@ -509,6 +516,13 @@ class PurchaseFaFilters extends _$PurchaseFaFilters {
   void setDueDateRange(DateTimeRange range) {
     state = state.copyWith(
       columnFilters: state.columnFilters.copyWith(dueDateRange: range),
+      currentPage: 1,
+    );
+  }
+
+  void clearDueDateRange() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearDueDateRange: true),
       currentPage: 1,
     );
   }

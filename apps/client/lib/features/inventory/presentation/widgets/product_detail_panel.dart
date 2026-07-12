@@ -14,13 +14,11 @@ class ProductDetailPanel extends ConsumerWidget {
   const ProductDetailPanel({
     required this.itemId,
     required this.fallbackItem,
-    this.categoryName,
     super.key,
   });
 
   final String itemId;
   final InventoryItem fallbackItem;
-  final String? categoryName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,7 +33,6 @@ class ProductDetailPanel extends ConsumerWidget {
       children: [
         _LedgerItemContextHeader(
           item: displayItem,
-          categoryName: categoryName,
           stockSummary: stockSummary,
           onAdjustStock: () =>
               showAdjustStockDialog(context, item: displayItem),
@@ -55,13 +52,11 @@ class ProductDetailPanel extends ConsumerWidget {
 class _LedgerItemContextHeader extends StatelessWidget {
   const _LedgerItemContextHeader({
     required this.item,
-    required this.categoryName,
     required this.stockSummary,
     required this.onAdjustStock,
   });
 
   final InventoryItem item;
-  final String? categoryName;
   final ProductStockSummary stockSummary;
   final VoidCallback onAdjustStock;
 
@@ -112,28 +107,24 @@ class _LedgerItemContextHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (categoryName != null && categoryName!.trim().isNotEmpty)
-                      _LedgerMetaLine(
-                        label: 'Category',
-                        value: categoryName!,
-                      ),
-                    if (item.salePrice != null)
-                      _LedgerMetaLine(
-                        label: 'Sale Price',
-                        value:
-                            '${_currencyFormat.format(item.salePrice)} (incl)',
-                      ),
-                    if (item.purchasePrice != null)
-                      _LedgerMetaLine(
-                        label: 'Purchase Price',
-                        value:
-                            '${_currencyFormat.format(item.purchasePrice)} (excl)',
-                      ),
-                    if (stockSummary.availableStock != null)
-                      _LedgerMetaLine(
-                        label: 'Available for Sale',
-                        value: formatQuantityValue(stockSummary.availableStock!),
-                      ),
+                    _LedgerMetaLine(
+                      label: 'Sale Price',
+                      value: item.salePrice != null
+                          ? '${_currencyFormat.format(item.salePrice)} (incl)'
+                          : inventoryEmDash,
+                    ),
+                    _LedgerMetaLine(
+                      label: 'Purchase Price',
+                      value: item.purchasePrice != null
+                          ? '${_currencyFormat.format(item.purchasePrice)} (excl)'
+                          : inventoryEmDash,
+                    ),
+                    _LedgerMetaLine(
+                      label: 'Available for Sale',
+                      value: stockSummary.availableStock != null
+                          ? formatQuantityValue(stockSummary.availableStock!)
+                          : inventoryEmDash,
+                    ),
                   ],
                 ),
               ),
@@ -141,26 +132,29 @@ class _LedgerItemContextHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (item.quantity != null)
-                      _LedgerMetaLine(
-                        label: 'Stock Quantity',
-                        value: formatQuantityValue(item.quantity!),
-                        valueColor: listQuantityColor(
-                          item.quantity,
-                          reorderLevel: item.reorderLevel,
-                        ),
+                    _LedgerMetaLine(
+                      label: 'Stock Quantity',
+                      value: item.quantity != null
+                          ? formatQuantityValue(item.quantity!)
+                          : inventoryEmDash,
+                      valueColor: listQuantityColor(
+                        item.quantity,
+                        reorderLevel: item.reorderLevel,
                       ),
-                    if (stockSummary.stockValue != null &&
-                        stockSummary.stockValue! > 0)
-                      _LedgerMetaLine(
-                        label: 'Stock Value',
-                        value: _currencyFormat.format(stockSummary.stockValue),
-                      ),
-                    if (stockSummary.reservedStock != null)
-                      _LedgerMetaLine(
-                        label: 'Reserved Quantity',
-                        value: formatQuantityValue(stockSummary.reservedStock!),
-                      ),
+                    ),
+                    _LedgerMetaLine(
+                      label: 'Stock Value',
+                      value: stockSummary.stockValue != null &&
+                              stockSummary.stockValue! > 0
+                          ? _currencyFormat.format(stockSummary.stockValue)
+                          : inventoryEmDash,
+                    ),
+                    _LedgerMetaLine(
+                      label: 'Reserved Quantity',
+                      value: stockSummary.reservedStock != null
+                          ? formatQuantityValue(stockSummary.reservedStock!)
+                          : inventoryEmDash,
+                    ),
                   ],
                 ),
               ),

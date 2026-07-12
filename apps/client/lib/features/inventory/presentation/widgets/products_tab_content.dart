@@ -5,8 +5,6 @@ import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_async_list.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_highlighted_text.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/inventory_hover_overlay.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_hover_card.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_items_filter_trigger.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_primary_button.dart';
@@ -23,6 +21,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _inventoryListRowHeight = 44.0;
+const _hoverPreviewDelay = Duration(milliseconds: 120);
 
 class ProductsTabContent extends ConsumerStatefulWidget {
   const ProductsTabContent({super.key});
@@ -36,8 +35,13 @@ class _ProductsTabContentState extends ConsumerState<ProductsTabContent> {
   int _focusedIndex = 0;
   int _searchResetToken = 0;
 
+  /// Detail panel target — updated by hover (delayed) and click (immediate).
+  String? _previewId;
+  Timer? _hoverTimer;
+
   @override
   void dispose() {
+    _hoverTimer?.cancel();
     _listFocusNode.dispose();
     super.dispose();
   }
@@ -67,20 +71,45 @@ class _ProductsTabContentState extends ConsumerState<ProductsTabContent> {
     });
   }
 
+  void _schedulePreview(String id) {
+    _hoverTimer?.cancel();
+    _hoverTimer = Timer(_hoverPreviewDelay, () {
+      if (!mounted || _previewId == id) return;
+      setState(() => _previewId = id);
+    });
+  }
+
+  void _setPreviewImmediate(String id) {
+    _hoverTimer?.cancel();
+    if (_previewId == id) return;
+    setState(() => _previewId = id);
+  }
+
   void _moveFocus(int delta, List<InventoryItem> products) {
     if (products.isEmpty) return;
     setState(() {
       _focusedIndex = (_focusedIndex + delta).clamp(0, products.length - 1);
     });
     final item = products[_focusedIndex];
+    _setPreviewImmediate(item.id);
     ref.read(selectedProductIdProvider.notifier).selected = item.id;
   }
 
   void _selectFocused(List<InventoryItem> products) {
     if (products.isEmpty) return;
     final item = products[_focusedIndex.clamp(0, products.length - 1)];
-    ref.read(selectedProductIdProvider.notifier).selected = item.id;
+    _selectItem(item.id);
     _listFocusNode.requestFocus();
+  }
+
+  void _selectItem(String id) {
+    final selectedId = ref.read(selectedProductIdProvider);
+    if (selectedId != id) {
+      ref.read(productTransactionFiltersProvider.notifier).reset();
+      ref.read(selectedProductTransactionIdProvider.notifier).select(null);
+    }
+    _setPreviewImmediate(id);
+    ref.read(selectedProductIdProvider.notifier).selected = id;
   }
 
   Future<void> _confirmDelete(BuildContext context, InventoryItem item) async {
@@ -121,9 +150,8 @@ class _ProductsTabContentState extends ConsumerState<ProductsTabContent> {
     final itemsAsync = ref.watch(inventoryItemsProvider);
     final selectedId = ref.watch(selectedProductIdProvider);
     final searchQuery = ref.watch(productSearchQueryProvider);
-    final contextData = selectedId == null
-        ? null
-        : ref.watch(productDetailContextProvider(selectedId));
+
+    final detailId = _previewId ?? selectedId;
 
     if (selectedId != null && products.isNotEmpty) {
       final selectedIndex = products.indexWhere((item) => item.id == selectedId);
@@ -133,6 +161,10 @@ class _ProductsTabContentState extends ConsumerState<ProductsTabContent> {
         });
       }
     }
+
+    final detailItem = detailId == null
+        ? null
+        : products.where((item) => item.id == detailId).firstOrNull;
 
     return InventorySplitLayout(
       listPanel: Focus(
@@ -167,15 +199,10 @@ class _ProductsTabContentState extends ConsumerState<ProductsTabContent> {
           onArrowUp: () => _moveFocus(-1, products),
           onEnter: () => _selectFocused(products),
           onRefresh: () => ref.read(inventoryItemsProvider.notifier).refresh(
-            searchQuery: ref.read(productBackendSearchProvider),
-          ),
-          onItemSelected: (id) {
-            if (selectedId != id) {
-              ref.read(productTransactionFiltersProvider.notifier).reset();
-              ref.read(selectedProductTransactionIdProvider.notifier).select(null);
-            }
-            ref.read(selectedProductIdProvider.notifier).selected = id;
-          },
+                searchQuery: ref.read(productBackendSearchProvider),
+              ),
+          onItemHover: _schedulePreview,
+          onItemSelected: _selectItem,
           onAddItem: () => showAddItemDialog(context),
           onMenuSelected: (value, item) {
             switch (value) {
@@ -191,18 +218,13 @@ class _ProductsTabContentState extends ConsumerState<ProductsTabContent> {
           },
         ),
       ),
-      detailPanel: selectedId == null
+      detailPanel: detailId == null || detailItem == null
           ? const InventoryDetailPlaceholder(
               message: 'Select an item to view ledger',
             )
-          : products.any((item) => item.id == selectedId)
-          ? ProductDetailPanel(
-              itemId: selectedId,
-              fallbackItem: products.firstWhere((item) => item.id == selectedId),
-              categoryName: contextData?.categoryName,
-            )
-          : const InventoryDetailPlaceholder(
-              message: 'Select an item to view ledger',
+          : ProductDetailPanel(
+              itemId: detailId,
+              fallbackItem: detailItem,
             ),
     );
   }
@@ -223,6 +245,7 @@ class _ProductsListPanel extends StatelessWidget {
     required this.onArrowUp,
     required this.onEnter,
     required this.onRefresh,
+    required this.onItemHover,
     required this.onItemSelected,
     required this.onAddItem,
     required this.onMenuSelected,
@@ -241,6 +264,7 @@ class _ProductsListPanel extends StatelessWidget {
   final VoidCallback onArrowUp;
   final VoidCallback onEnter;
   final Future<void> Function() onRefresh;
+  final ValueChanged<String> onItemHover;
   final ValueChanged<String> onItemSelected;
   final VoidCallback onAddItem;
   final void Function(String value, InventoryItem item) onMenuSelected;
@@ -253,9 +277,9 @@ class _ProductsListPanel extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
-            AppSpacing.sm,
             AppSpacing.md,
-            AppSpacing.xs,
+            AppSpacing.md,
+            0,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -272,12 +296,12 @@ class _ProductsListPanel extends StatelessWidget {
                 onArrowUp: onArrowUp,
                 onEnter: onEnter,
               ),
-              const SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: 12),
               InventoryPrimaryButton(label: 'Add Item', onPressed: onAddItem),
+              const SizedBox(height: 14),
             ],
           ),
         ),
-        const Divider(height: 1, thickness: 1),
         Consumer(
           builder: (context, ref, _) {
             final filters = ref.watch(inventoryItemFiltersProvider);
@@ -313,6 +337,7 @@ class _ProductsListPanel extends StatelessWidget {
                 isSelected: isSelected,
                 isFocused: isFocused,
                 searchQuery: searchQuery,
+                onHover: () => onItemHover(item.id),
                 onTap: () => onItemSelected(item.id),
                 onMenuSelected: (value) => onMenuSelected(value, item),
               );
@@ -324,12 +349,13 @@ class _ProductsListPanel extends StatelessWidget {
   }
 }
 
-class _ProductListTile extends ConsumerStatefulWidget {
+class _ProductListTile extends StatefulWidget {
   const _ProductListTile({
     required this.item,
     required this.isSelected,
     required this.isFocused,
     required this.searchQuery,
+    required this.onHover,
     required this.onTap,
     required this.onMenuSelected,
   });
@@ -338,14 +364,15 @@ class _ProductListTile extends ConsumerStatefulWidget {
   final bool isSelected;
   final bool isFocused;
   final String searchQuery;
+  final VoidCallback onHover;
   final VoidCallback onTap;
   final ValueChanged<String> onMenuSelected;
 
   @override
-  ConsumerState<_ProductListTile> createState() => _ProductListTileState();
+  State<_ProductListTile> createState() => _ProductListTileState();
 }
 
-class _ProductListTileState extends ConsumerState<_ProductListTile> {
+class _ProductListTileState extends State<_ProductListTile> {
   var _isHovered = false;
 
   @override
@@ -357,82 +384,73 @@ class _ProductListTileState extends ConsumerState<_ProductListTile> {
     );
     final quantityText =
         quantity != null ? formatQuantityValue(quantity) : inventoryEmDash;
-    final categoryName = ref
-        .watch(categoriesProvider)
-        .where((category) => category.id == widget.item.categoryId)
-        .map((category) => category.name)
-        .firstOrNull;
 
     final backgroundColor = widget.isSelected
         ? inventorySelectedRowColor
         : _isHovered
-        ? const Color(0xFFF5F5F5)
-        : widget.isFocused
-        ? const Color(0xFFFAFAFA)
-        : Colors.transparent;
+            ? const Color(0xFFF5F5F5)
+            : widget.isFocused
+                ? const Color(0xFFFAFAFA)
+                : Colors.transparent;
 
-    final tile = AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
-      height: _inventoryListRowHeight,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        border: const Border(bottom: BorderSide(color: inventoryCardBorder)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: widget.onTap,
-          hoverColor: Colors.transparent,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.inventory_2_outlined,
-                  size: 16,
-                  color: Colors.grey.shade500,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 3,
-                  child: InventoryHighlightedText(
-                    text: widget.item.name,
-                    query: widget.searchQuery,
-                    style: InventoryStyles.listCellStyle.copyWith(
-                      fontWeight:
-                          widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+    return MouseRegion(
+      onEnter: (_) {
+        setState(() => _isHovered = true);
+        widget.onHover();
+      },
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        height: _inventoryListRowHeight,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          border: const Border(bottom: BorderSide(color: inventoryCardBorder)),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            hoverColor: Colors.transparent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    size: 16,
+                    color: Colors.grey.shade500,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 3,
+                    child: InventoryHighlightedText(
+                      text: widget.item.name,
+                      query: widget.searchQuery,
+                      style: InventoryStyles.listCellStyle.copyWith(
+                        fontWeight: widget.isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(
-                  width: 56,
-                  child: Text(
-                    quantityText,
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: quantityColor,
+                  SizedBox(
+                    width: 56,
+                    child: Text(
+                      quantityText,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: quantityColor,
+                      ),
                     ),
                   ),
-                ),
-                InventoryListRowMenu(onSelected: widget.onMenuSelected),
-              ],
+                  InventoryListRowMenu(onSelected: widget.onMenuSelected),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
-
-    return InventoryHoverOverlay(
-      overlayBuilder: (context) => InventoryItemHoverCard(
-        item: widget.item,
-        categoryName: categoryName,
-      ),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        child: tile,
       ),
     );
   }

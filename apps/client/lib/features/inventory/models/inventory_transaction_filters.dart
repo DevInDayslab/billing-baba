@@ -1,7 +1,4 @@
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_select_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 
 enum InventoryTransactionSortColumn {
   type,
@@ -33,13 +30,13 @@ class InventoryTransactionFiltersState {
     this.currentPage = 0,
   });
 
-  final SelectColumnFilter? typeColumnFilter;
+  final MultiSelectColumnFilter? typeColumnFilter;
   final TextColumnFilter? invoiceRefColumnFilter;
   final TextColumnFilter? partyColumnFilter;
   final DateColumnFilter? dateColumnFilter;
   final AmountColumnFilter? quantityColumnFilter;
   final AmountColumnFilter? priceColumnFilter;
-  final SelectColumnFilter? statusColumnFilter;
+  final MultiSelectColumnFilter? statusColumnFilter;
   final InventoryTransactionSortColumn sortColumn;
   final InventoryTransactionSortDirection sortDirection;
   final int currentPage;
@@ -54,7 +51,7 @@ class InventoryTransactionFiltersState {
       statusColumnFilter != null;
 
   InventoryTransactionFiltersState copyWith({
-    SelectColumnFilter? typeColumnFilter,
+    MultiSelectColumnFilter? typeColumnFilter,
     bool clearTypeColumnFilter = false,
     TextColumnFilter? invoiceRefColumnFilter,
     bool clearInvoiceRefColumnFilter = false,
@@ -66,7 +63,7 @@ class InventoryTransactionFiltersState {
     bool clearQuantityColumnFilter = false,
     AmountColumnFilter? priceColumnFilter,
     bool clearPriceColumnFilter = false,
-    SelectColumnFilter? statusColumnFilter,
+    MultiSelectColumnFilter? statusColumnFilter,
     bool clearStatusColumnFilter = false,
     InventoryTransactionSortColumn? sortColumn,
     InventoryTransactionSortDirection? sortDirection,

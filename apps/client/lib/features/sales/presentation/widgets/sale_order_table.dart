@@ -5,13 +5,11 @@ import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/bulk_convert_sale_orders_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_order_convert_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_order_status_badge.dart';
 import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,8 +30,8 @@ const _balanceColWidth = 96.0;
 const _typeColWidth = 100.0;
 const _statusColWidth = 120.0;
 const _actionsColWidth = 180.0;
-const _cellHorizontalPadding = AppSpacing.sm;
-const _tableHeaderStyle = ListPanelStyles.listHeaderStyle;
+const double _cellHorizontalPadding = AppSpacing.sm;
+const TextStyle _tableHeaderStyle = ListPanelStyles.listHeaderStyle;
 
 class SaleOrderTable extends ConsumerWidget {
   const SaleOrderTable({super.key});
@@ -84,9 +82,9 @@ class SaleOrderTable extends ConsumerWidget {
                       vertical: 8,
                     ),
                   ).copyWith(
-                    foregroundColor: WidgetStatePropertyAll(_bulkConvertColor),
-                    side: WidgetStatePropertyAll(
-                      const BorderSide(color: _bulkConvertColor),
+                    foregroundColor: const WidgetStatePropertyAll(_bulkConvertColor),
+                    side: const WidgetStatePropertyAll(
+                      BorderSide(color: _bulkConvertColor),
                     ),
                   ),
                   child: const Text(
@@ -194,8 +192,6 @@ class _SaleOrderTransactionsTableState
       child: ResizableDataTable(
         columns: columns,
         rows: rows,
-        headerBackgroundColor: _tableHeaderBg,
-        rowBorderColor: _cardBorder,
       ),
     );
   }
@@ -313,53 +309,82 @@ class _SaleOrderTableColumns {
       ResizableDataColumn(
         initialWidth: _partyColWidth,
         minWidth: 100,
-        maxWidth: 420,
-        header: SaleColumnTextFilterTrigger(
-          label: 'PARTY',
-          hintText: 'Party name',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'partyName',
+            title: 'PARTY',
+            type: FilterType.text,
+            hintText: 'Party name',
+          ),
           headerStyle: _tableHeaderStyle,
-          initialFilter: filters.partyNameColumnFilter,
-          onApply: filtersNotifier.setPartyNameColumnFilter,
+          initialValue: filters.partyNameColumnFilter,
+          onApply: (result) => filtersNotifier.setPartyNameColumnFilter(
+            FilterUtils.fromResult(result) as TextColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _noColWidth,
-        header: SaleColumnTextFilterTrigger(
-          label: 'NO.',
-          hintText: 'Order number',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'orderNo',
+            title: 'NO.',
+            type: FilterType.text,
+            hintText: 'Order number',
+          ),
           headerStyle: _tableHeaderStyle,
-          initialFilter: filters.orderNoColumnFilter,
-          onApply: filtersNotifier.setOrderNoColumnFilter,
+          initialValue: filters.orderNoColumnFilter,
+          onApply: (result) => filtersNotifier.setOrderNoColumnFilter(
+            FilterUtils.fromResult(result) as TextColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _dateColWidth,
         minWidth: 96,
         maxWidth: 280,
-        header: SaleColumnDateFilterTrigger(
-          label: 'DATE',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'date',
+            title: 'DATE',
+            type: FilterType.date,
+          ),
           headerStyle: _tableHeaderStyle,
-          initialFilter: filters.dateColumnFilter,
-          onApply: filtersNotifier.setDateColumnFilter,
+          initialValue: filters.dateColumnFilter,
+          onApply: (result) => filtersNotifier.setDateColumnFilter(
+            FilterUtils.fromResult(result) as DateColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _dueDateColWidth,
-        header: SaleColumnDateFilterTrigger(
-          label: 'DUE DATE',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'dueDate',
+            title: 'DUE DATE',
+            type: FilterType.date,
+          ),
           headerStyle: _tableHeaderStyle,
-          initialFilter: filters.dueDateColumnFilter,
-          onApply: filtersNotifier.setDueDateColumnFilter,
+          initialValue: filters.dueDateColumnFilter,
+          onApply: (result) => filtersNotifier.setDueDateColumnFilter(
+            FilterUtils.fromResult(result) as DateColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _amountColWidth,
-        header: SaleColumnAmountFilterTrigger(
-          label: 'TOTAL AMOUNT',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'amount',
+            title: 'TOTAL AMOUNT',
+            type: FilterType.number,
+          ),
           alignment: Alignment.centerRight,
           headerStyle: _tableHeaderStyle,
-          initialFilter: filters.amountColumnFilter,
-          onApply: filtersNotifier.setAmountColumnFilter,
+          initialValue: filters.amountColumnFilter,
+          onApply: (result) => filtersNotifier.setAmountColumnFilter(
+            FilterUtils.fromResult(result) as AmountColumnFilter?,
+          ),
         ),
       ),
       const ResizableDataColumn(
@@ -408,7 +433,7 @@ class _StatusColumnFilterHeaderState extends State<_StatusColumnFilterHeader> {
   final GlobalKey _triggerKey = GlobalKey();
   OverlayEntry? _overlayEntry;
 
-  static const _headerStyle = _tableHeaderStyle;
+  static const TextStyle _headerStyle = _tableHeaderStyle;
 
   static const _statusOptions = [
     'All Status',
@@ -596,7 +621,7 @@ class _HeaderCell extends StatelessWidget {
     this.alignment = Alignment.centerLeft,
   });
 
-  static const _headerStyle = _tableHeaderStyle;
+  static const TextStyle _headerStyle = _tableHeaderStyle;
 
   final String label;
   final Alignment alignment;

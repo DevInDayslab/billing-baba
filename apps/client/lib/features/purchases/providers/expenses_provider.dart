@@ -443,6 +443,13 @@ class ExpenseFilters extends _$ExpenseFilters {
     );
   }
 
+  void clearColumnDateRange() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearColumnDateRange: true),
+      currentPage: 1,
+    );
+  }
+
   void setDocumentNo(String value) {
     state = state.copyWith(
       columnFilters: state.columnFilters.copyWith(documentNoFilter: value),
@@ -502,6 +509,13 @@ class ExpenseFilters extends _$ExpenseFilters {
   void setDueDateRange(DateTimeRange range) {
     state = state.copyWith(
       columnFilters: state.columnFilters.copyWith(dueDateRange: range),
+    );
+  }
+
+  void clearDueDateRange() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearDueDateRange: true),
+      currentPage: 1,
     );
   }
 

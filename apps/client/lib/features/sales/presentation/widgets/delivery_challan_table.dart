@@ -7,12 +7,10 @@ import 'package:billing_baba/features/sales/application/sales_error_mapper.dart'
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/delivery_challan_convert_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/delivery_challan_status_badge.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_empty_state_card.dart';
 import 'package:billing_baba/features/sales/providers/delivery_challan_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,8 +29,8 @@ const _dueDateColWidth = 148.0;
 const _amountColWidth = 120.0;
 const _statusColWidth = 100.0;
 const _actionsColWidth = 180.0;
-const _cellHorizontalPadding = AppSpacing.sm;
-const _tableHeaderStyle = ListPanelStyles.listHeaderStyle;
+const double _cellHorizontalPadding = AppSpacing.sm;
+const TextStyle _tableHeaderStyle = ListPanelStyles.listHeaderStyle;
 
 class DeliveryChallanTable extends ConsumerWidget {
   const DeliveryChallanTable({super.key});
@@ -83,9 +81,9 @@ class DeliveryChallanTable extends ConsumerWidget {
                       vertical: 8,
                     ),
                   ).copyWith(
-                    foregroundColor: WidgetStatePropertyAll(_bulkConvertColor),
-                    side: WidgetStatePropertyAll(
-                      const BorderSide(color: _bulkConvertColor),
+                    foregroundColor: const WidgetStatePropertyAll(_bulkConvertColor),
+                    side: const WidgetStatePropertyAll(
+                      BorderSide(color: _bulkConvertColor),
                     ),
                   ),
                   child: const Text(
@@ -256,8 +254,6 @@ class _ChallanTransactionsTableState
       child: ResizableDataTable(
         columns: columns,
         rows: rows,
-        headerBackgroundColor: _tableHeaderBg,
-        rowBorderColor: _cardBorder,
       ),
     );
   }
@@ -268,21 +264,21 @@ class _EmptyTransactionsState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
+    return const Padding(
+      padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.xl,
         vertical: AppSpacing.xxl,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SaleGeometricIllustration(
+          SaleGeometricIllustration(
             circleColor: Color(0xFFE8F5E9),
             shapeColor: Color(0xFF81C784),
             shapeIcon: Icons.local_shipping_outlined,
           ),
-          const SizedBox(height: AppSpacing.md),
-          const Text(
+          SizedBox(height: AppSpacing.md),
+          Text(
             'No data is available for Delivery Challan.',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -291,8 +287,8 @@ class _EmptyTransactionsState extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          const Text(
+          SizedBox(height: AppSpacing.xs),
+          Text(
             'Please try again after making relevant changes.',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -390,52 +386,81 @@ class _ChallanTableColumns {
         initialWidth: _dateColWidth,
         minWidth: 96,
         maxWidth: 280,
-        header: SaleColumnDateFilterTrigger(
-          label: 'DATE',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'date',
+            title: 'DATE',
+            type: FilterType.date,
+          ),
           headerStyle: _tableHeaderStyle,
-          initialFilter: filters.dateColumnFilter,
-          onApply: filtersNotifier.setDateColumnFilter,
+          initialValue: filters.dateColumnFilter,
+          onApply: (result) => filtersNotifier.setDateColumnFilter(
+            FilterUtils.fromResult(result) as DateColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _partyColWidth,
         minWidth: 100,
-        maxWidth: 420,
-        header: SaleColumnTextFilterTrigger(
-          label: 'PARTY',
-          hintText: 'Party name',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'partyName',
+            title: 'PARTY',
+            type: FilterType.text,
+            hintText: 'Party name',
+          ),
           headerStyle: _tableHeaderStyle,
-          initialFilter: filters.partyNameColumnFilter,
-          onApply: filtersNotifier.setPartyNameColumnFilter,
+          initialValue: filters.partyNameColumnFilter,
+          onApply: (result) => filtersNotifier.setPartyNameColumnFilter(
+            FilterUtils.fromResult(result) as TextColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _challanNoColWidth,
-        header: SaleColumnTextFilterTrigger(
-          label: 'CHALLAN NO.',
-          hintText: 'Challan number',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'challanNo',
+            title: 'CHALLAN NO.',
+            type: FilterType.text,
+            hintText: 'Challan number',
+          ),
           headerStyle: _tableHeaderStyle,
-          initialFilter: filters.challanNoColumnFilter,
-          onApply: filtersNotifier.setChallanNoColumnFilter,
+          initialValue: filters.challanNoColumnFilter,
+          onApply: (result) => filtersNotifier.setChallanNoColumnFilter(
+            FilterUtils.fromResult(result) as TextColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _dueDateColWidth,
-        header: SaleColumnDateFilterTrigger(
-          label: 'DUE DATE',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'dueDate',
+            title: 'DUE DATE',
+            type: FilterType.date,
+          ),
           headerStyle: _tableHeaderStyle,
-          initialFilter: filters.dueDateColumnFilter,
-          onApply: filtersNotifier.setDueDateColumnFilter,
+          initialValue: filters.dueDateColumnFilter,
+          onApply: (result) => filtersNotifier.setDueDateColumnFilter(
+            FilterUtils.fromResult(result) as DateColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _amountColWidth,
-        header: SaleColumnAmountFilterTrigger(
-          label: 'TOTAL AMOUNT',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'amount',
+            title: 'TOTAL AMOUNT',
+            type: FilterType.number,
+          ),
           alignment: Alignment.centerRight,
           headerStyle: _tableHeaderStyle,
-          initialFilter: filters.amountColumnFilter,
-          onApply: filtersNotifier.setAmountColumnFilter,
+          initialValue: filters.amountColumnFilter,
+          onApply: (result) => filtersNotifier.setAmountColumnFilter(
+            FilterUtils.fromResult(result) as AmountColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(

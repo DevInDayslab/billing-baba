@@ -3,8 +3,7 @@ import 'package:billing_baba/features/export/presentation/widgets/module_export_
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/payment_out_status_badge.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_cell.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_transaction_table_layout.dart';
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
 import 'package:flutter/material.dart';
@@ -367,6 +366,7 @@ class _TableHeaderRow extends ConsumerWidget {
       onApplyPaidAmountFilter: filtersNotifier.applyPaidAmountFilter,
       onClearPaidAmountFilter: filtersNotifier.clearPaidAmountFilter,
       onDateRange: filtersNotifier.setColumnDateRange,
+      onClearDateRange: filtersNotifier.clearColumnDateRange,
     );
 
     return PurchaseTransactionTableHeaderRow(

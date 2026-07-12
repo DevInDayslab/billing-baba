@@ -80,6 +80,7 @@ class FilterPopup extends StatelessWidget {
           options: config.values,
           initialFilter: initialValue as MultiSelectColumnFilter?,
           searchable: config.searchable,
+          exclusivePairs: config.exclusivePairs,
           onApply: _applyResult,
         ),
       FilterType.boolean => BooleanFilterWidget(

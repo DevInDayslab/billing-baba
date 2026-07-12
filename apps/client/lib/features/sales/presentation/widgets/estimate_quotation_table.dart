@@ -3,12 +3,10 @@ import 'package:billing_baba/features/sales/application/sales_error_mapper.dart'
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/estimate_quotation_convert_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/estimate_quotation_status_badge.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
 import 'package:billing_baba/features/sales/providers/estimate_quotation_provider.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/core/widgets/resizable_data_table.dart';
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -24,7 +22,7 @@ const _amountColWidth = 108.0;
 const _balanceColWidth = 108.0;
 const _statusColWidth = 100.0;
 const _actionsColWidth = 180.0;
-const _cellHorizontalPadding = AppSpacing.sm;
+const double _cellHorizontalPadding = AppSpacing.sm;
 
 class EstimateQuotationTable extends ConsumerWidget {
   const EstimateQuotationTable({super.key});
@@ -154,8 +152,6 @@ class _EstimateTransactionsTableState
       child: ResizableDataTable(
         columns: columns,
         rows: rows,
-        headerBackgroundColor: _tableHeaderBg,
-        rowBorderColor: _cardBorder,
       ),
     );
   }
@@ -272,39 +268,62 @@ class _EstimateTableColumns {
         initialWidth: _dateColWidth,
         minWidth: 96,
         maxWidth: 280,
-        header: SaleColumnDateFilterTrigger(
-          label: 'Date',
-          initialFilter: filters.dateColumnFilter,
-          onApply: filtersNotifier.setDateColumnFilter,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'date',
+            title: 'Date',
+            type: FilterType.date,
+          ),
+          initialValue: filters.dateColumnFilter,
+          onApply: (result) => filtersNotifier.setDateColumnFilter(
+            FilterUtils.fromResult(result) as DateColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _referenceColWidth,
-        header: SaleColumnTextFilterTrigger(
-          label: 'Reference no',
-          hintText: 'Reference number',
-          initialFilter: filters.referenceNoColumnFilter,
-          onApply: filtersNotifier.setReferenceNoColumnFilter,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'referenceNo',
+            title: 'Reference no',
+            type: FilterType.text,
+            hintText: 'Reference number',
+          ),
+          initialValue: filters.referenceNoColumnFilter,
+          onApply: (result) => filtersNotifier.setReferenceNoColumnFilter(
+            FilterUtils.fromResult(result) as TextColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _partyColWidth,
         minWidth: 100,
-        maxWidth: 420,
-        header: SaleColumnTextFilterTrigger(
-          label: 'Party Name',
-          hintText: 'Party name',
-          initialFilter: filters.partyNameColumnFilter,
-          onApply: filtersNotifier.setPartyNameColumnFilter,
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'partyName',
+            title: 'Party Name',
+            type: FilterType.text,
+            hintText: 'Party name',
+          ),
+          initialValue: filters.partyNameColumnFilter,
+          onApply: (result) => filtersNotifier.setPartyNameColumnFilter(
+            FilterUtils.fromResult(result) as TextColumnFilter?,
+          ),
         ),
       ),
       ResizableDataColumn(
         initialWidth: _amountColWidth,
-        header: SaleColumnAmountFilterTrigger(
-          label: 'Amount',
+        header: TableColumnFilterTrigger(
+          config: const ColumnFilter(
+            id: 'amount',
+            title: 'Amount',
+            type: FilterType.number,
+          ),
           alignment: Alignment.centerRight,
-          initialFilter: filters.amountColumnFilter,
-          onApply: filtersNotifier.setAmountColumnFilter,
+          initialValue: filters.amountColumnFilter,
+          onApply: (result) => filtersNotifier.setAmountColumnFilter(
+            FilterUtils.fromResult(result) as AmountColumnFilter?,
+          ),
         ),
       ),
       const ResizableDataColumn(

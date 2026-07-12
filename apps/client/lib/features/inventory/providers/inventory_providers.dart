@@ -19,10 +19,7 @@ import 'package:billing_baba/features/inventory/providers/inventory_brands_provi
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_select_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -546,7 +543,7 @@ class ProductTransactionFilters extends Notifier<InventoryTransactionFiltersStat
   InventoryTransactionFiltersState build() =>
       const InventoryTransactionFiltersState();
 
-  void setTypeColumnFilter(SelectColumnFilter? filter) {
+  void setTypeColumnFilter(MultiSelectColumnFilter? filter) {
     state = state.copyWith(
       typeColumnFilter: filter,
       clearTypeColumnFilter: filter == null,
@@ -594,7 +591,7 @@ class ProductTransactionFilters extends Notifier<InventoryTransactionFiltersStat
     );
   }
 
-  void setStatusColumnFilter(SelectColumnFilter? filter) {
+  void setStatusColumnFilter(MultiSelectColumnFilter? filter) {
     state = state.copyWith(
       statusColumnFilter: filter,
       clearStatusColumnFilter: filter == null,

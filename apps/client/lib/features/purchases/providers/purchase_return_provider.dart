@@ -1,7 +1,7 @@
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_list_filter_utils.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_column_filter_builder.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_return_model.dart';
@@ -469,6 +469,13 @@ class PurchaseReturnFilters extends _$PurchaseReturnFilters {
     );
   }
 
+  void clearColumnDateRange() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearColumnDateRange: true),
+      currentPage: 1,
+    );
+  }
+
   void setDocumentNoFilter(String value) {
     state = state.copyWith(
       columnFilters: state.columnFilters.copyWith(documentNoFilter: value),
@@ -546,6 +553,13 @@ class PurchaseReturnFilters extends _$PurchaseReturnFilters {
   void setDueDateRange(DateTimeRange range) {
     state = state.copyWith(
       columnFilters: state.columnFilters.copyWith(dueDateRange: range),
+      currentPage: 1,
+    );
+  }
+
+  void clearDueDateRange() {
+    state = state.copyWith(
+      columnFilters: state.columnFilters.copyWith(clearDueDateRange: true),
       currentPage: 1,
     );
   }

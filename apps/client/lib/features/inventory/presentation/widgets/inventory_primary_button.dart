@@ -29,7 +29,7 @@ class InventoryPrimaryButton extends StatelessWidget {
         bottomLeft: Radius.circular(6),
       ),
     ),
-    padding: const EdgeInsets.symmetric(horizontal: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
   );
 
   static final ButtonStyle _soloButtonStyle = FilledButton.styleFrom(
@@ -39,7 +39,7 @@ class InventoryPrimaryButton extends StatelessWidget {
     minimumSize: const Size(0, inventoryButtonHeight),
     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-    padding: const EdgeInsets.symmetric(horizontal: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
   );
 
   @override
@@ -48,16 +48,22 @@ class InventoryPrimaryButton extends StatelessWidget {
       return SizedBox(
         height: inventoryButtonHeight,
         width: double.infinity,
-        child: FilledButton.icon(
+        child: FilledButton(
           onPressed: onPressed,
           style: _soloButtonStyle,
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.add, size: 20),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -70,16 +76,25 @@ class InventoryPrimaryButton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: FilledButton.icon(
+            child: FilledButton(
               onPressed: onPressed,
               style: _mainButtonStyle,
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.add, size: 20),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -41,24 +41,33 @@ class _InventoryItemsFilterTriggerState
   }
 
   void _togglePopover() {
+    final options =
+        inventoryListFilterOptions.map((o) => o.label).toList(growable: false);
     _anchor.toggle(
       context: context,
       estimatedSize: FilterPopoverSize.forType(FilterType.multiSelect),
-      popover: MultiSelectFilterWidget(
-        title: 'Filter items',
-        options: inventoryListFilterOptions.map((o) => o.label).toList(),
-        initialFilter: widget.initialFilters.hasActiveFilters
+      popover: FilterPopup(
+        config: ColumnFilter(
+          id: 'inventoryItems',
+          title: 'Filter items',
+          type: FilterType.multiSelect,
+          values: options,
+          searchable: false,
+          exclusivePairs: const [
+            ('Show Raw Materials Only', "Don't Show Raw Materials"),
+          ],
+        ),
+        initialValue: widget.initialFilters.hasActiveFilters
             ? MultiSelectColumnFilter(
                 values: widget.initialFilters.selected
                     .map((o) => o.label)
                     .toSet(),
               )
             : null,
-        searchable: false,
-        exclusivePairs: const [
-          ('Show Raw Materials Only', "Don't Show Raw Materials"),
-        ],
-        onApply: (filter) {
+        onApply: (result) {
+          _anchor.removeOverlay();
+          final filter =
+              FilterUtils.fromResult(result) as MultiSelectColumnFilter?;
           if (filter == null || filter.values.isEmpty) {
             widget.onApply(const InventoryItemFiltersState());
             return;

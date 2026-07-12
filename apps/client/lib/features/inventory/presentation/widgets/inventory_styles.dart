@@ -7,8 +7,8 @@ const inventoryPrimaryOrange = Color(0xFFFF9800);
 const inventorySelectedRowColor = Color(0xFFE3F2FD);
 const inventoryNegativeColor = Color(0xFFD32F2F);
 const inventoryPositiveColor = Color(0xFF2E7D32);
-const inventoryButtonHeight = 40.0;
-const inventoryDropdownWidth = 32.0;
+const inventoryButtonHeight = 48.0;
+const inventoryDropdownWidth = 36.0;
 
 const inventoryPopupMenuShape = RoundedRectangleBorder(
   borderRadius: BorderRadius.all(Radius.circular(6)),

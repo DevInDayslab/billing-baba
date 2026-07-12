@@ -8,15 +8,11 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_m
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_stock_utils.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_amount_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_date_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_select_filter.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_column_text_filter.dart';
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-const _tableHeaderBg = Color(0xFFF5F7FA);
 const _tableBorder = Color(0xFFE0E0E0);
 const _zebraRowBg = Color(0xFFFAFAFA);
 const double _cellHorizontalPadding = 8;
@@ -318,12 +314,19 @@ class _InventoryTransactionTableColumns {
           onSort: () => filtersNotifier.toggleSort(
             InventoryTransactionSortColumn.type,
           ),
-          filter: SaleColumnSelectFilterTrigger(
-            label: 'Type',
+          filter: TableColumnFilterTrigger(
+            config: ColumnFilter(
+              id: 'type',
+              title: 'Type',
+              type: FilterType.multiSelect,
+              values: typeOptions,
+              searchable: false,
+            ),
             iconOnly: true,
-            options: typeOptions,
-            initialFilter: filters.typeColumnFilter,
-            onApply: filtersNotifier.setTypeColumnFilter,
+            initialValue: filters.typeColumnFilter,
+            onApply: (result) => filtersNotifier.setTypeColumnFilter(
+              FilterUtils.fromResult(result) as MultiSelectColumnFilter?,
+            ),
           ),
         ),
       ),
@@ -336,12 +339,18 @@ class _InventoryTransactionTableColumns {
           onSort: () => filtersNotifier.toggleSort(
             InventoryTransactionSortColumn.invoiceRef,
           ),
-          filter: SaleColumnTextFilterTrigger(
-            label: 'Invoice / Ref.',
+          filter: TableColumnFilterTrigger(
+            config: const ColumnFilter(
+              id: 'invoiceRef',
+              title: 'Invoice / Ref.',
+              type: FilterType.text,
+              hintText: 'Invoice / reference',
+            ),
             iconOnly: true,
-            hintText: 'Invoice / reference',
-            initialFilter: filters.invoiceRefColumnFilter,
-            onApply: filtersNotifier.setInvoiceRefColumnFilter,
+            initialValue: filters.invoiceRefColumnFilter,
+            onApply: (result) => filtersNotifier.setInvoiceRefColumnFilter(
+              FilterUtils.fromResult(result) as TextColumnFilter?,
+            ),
           ),
         ),
       ),
@@ -354,12 +363,18 @@ class _InventoryTransactionTableColumns {
           onSort: () => filtersNotifier.toggleSort(
             InventoryTransactionSortColumn.party,
           ),
-          filter: SaleColumnTextFilterTrigger(
-            label: 'Party',
+          filter: TableColumnFilterTrigger(
+            config: const ColumnFilter(
+              id: 'party',
+              title: 'Party',
+              type: FilterType.text,
+              hintText: 'Party',
+            ),
             iconOnly: true,
-            hintText: 'Party',
-            initialFilter: filters.partyColumnFilter,
-            onApply: filtersNotifier.setPartyColumnFilter,
+            initialValue: filters.partyColumnFilter,
+            onApply: (result) => filtersNotifier.setPartyColumnFilter(
+              FilterUtils.fromResult(result) as TextColumnFilter?,
+            ),
           ),
         ),
       ),
@@ -372,11 +387,17 @@ class _InventoryTransactionTableColumns {
           onSort: () => filtersNotifier.toggleSort(
             InventoryTransactionSortColumn.date,
           ),
-          filter: SaleColumnDateFilterTrigger(
-            label: 'Date',
+          filter: TableColumnFilterTrigger(
+            config: const ColumnFilter(
+              id: 'date',
+              title: 'Date',
+              type: FilterType.date,
+            ),
             iconOnly: true,
-            initialFilter: filters.dateColumnFilter,
-            onApply: filtersNotifier.setDateColumnFilter,
+            initialValue: filters.dateColumnFilter,
+            onApply: (result) => filtersNotifier.setDateColumnFilter(
+              FilterUtils.fromResult(result) as DateColumnFilter?,
+            ),
           ),
         ),
       ),
@@ -389,11 +410,19 @@ class _InventoryTransactionTableColumns {
           onSort: () => filtersNotifier.toggleSort(
             InventoryTransactionSortColumn.quantity,
           ),
-          filter: SaleColumnAmountFilterTrigger(
-            label: 'Quantity',
+          filter: TableColumnFilterTrigger(
+            config: const ColumnFilter(
+              id: 'quantity',
+              title: 'Quantity',
+              type: FilterType.number,
+              prefixText: '',
+              hintText: 'Enter quantity',
+            ),
             iconOnly: true,
-            initialFilter: filters.quantityColumnFilter,
-            onApply: filtersNotifier.setQuantityColumnFilter,
+            initialValue: filters.quantityColumnFilter,
+            onApply: (result) => filtersNotifier.setQuantityColumnFilter(
+              FilterUtils.fromResult(result) as AmountColumnFilter?,
+            ),
           ),
         ),
       ),
@@ -406,11 +435,17 @@ class _InventoryTransactionTableColumns {
           onSort: () => filtersNotifier.toggleSort(
             InventoryTransactionSortColumn.pricePerUnit,
           ),
-          filter: SaleColumnAmountFilterTrigger(
-            label: 'Price / Unit',
+          filter: TableColumnFilterTrigger(
+            config: const ColumnFilter(
+              id: 'price',
+              title: 'Price / Unit',
+              type: FilterType.number,
+            ),
             iconOnly: true,
-            initialFilter: filters.priceColumnFilter,
-            onApply: filtersNotifier.setPriceColumnFilter,
+            initialValue: filters.priceColumnFilter,
+            onApply: (result) => filtersNotifier.setPriceColumnFilter(
+              FilterUtils.fromResult(result) as AmountColumnFilter?,
+            ),
           ),
         ),
       ),
@@ -423,12 +458,19 @@ class _InventoryTransactionTableColumns {
           onSort: () => filtersNotifier.toggleSort(
             InventoryTransactionSortColumn.status,
           ),
-          filter: SaleColumnSelectFilterTrigger(
-            label: 'Status',
+          filter: TableColumnFilterTrigger(
+            config: ColumnFilter(
+              id: 'status',
+              title: 'Status',
+              type: FilterType.multiSelect,
+              values: statusOptions,
+              searchable: false,
+            ),
             iconOnly: true,
-            options: statusOptions,
-            initialFilter: filters.statusColumnFilter,
-            onApply: filtersNotifier.setStatusColumnFilter,
+            initialValue: filters.statusColumnFilter,
+            onApply: (result) => filtersNotifier.setStatusColumnFilter(
+              FilterUtils.fromResult(result) as MultiSelectColumnFilter?,
+            ),
           ),
         ),
       ),

@@ -18,7 +18,7 @@ class InventoryListHeader extends StatelessWidget {
       clipBehavior: Clip.hardEdge,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: 10,
+        vertical: 12,
       ),
       decoration: const BoxDecoration(
         color: Color(0xFFF5F5F5),
