@@ -12,7 +12,7 @@ const inventoryListRowFocusColor = Color(0xFFFAFAFA);
 
 const inventoryItemListRowHeight = 44.0;
 
-/// Shared row shell for inventory list tables (Products, Services, Categories).
+/// Shared row shell for right-side detail tables.
 class InventoryListTableRow extends StatefulWidget {
   const InventoryListTableRow({
     required this.index,

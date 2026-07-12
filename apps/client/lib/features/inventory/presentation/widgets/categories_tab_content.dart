@@ -6,9 +6,9 @@ import 'package:billing_baba/features/inventory/models/category_item_sort.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_category_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_async_list.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_list_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_highlighted_text.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_list_table.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_list_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_primary_button.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
@@ -390,7 +390,7 @@ class _CategoryDetailPanel extends ConsumerWidget {
                     ? currency.format(item.stockValue)
                     : inventoryEmDash;
 
-                return InventoryItemListTile.columns(
+                return InventoryDetailListTile(
                   index: index,
                   flexValues: const [3, 1, 1],
                   alignEnds: const [false, false, true],

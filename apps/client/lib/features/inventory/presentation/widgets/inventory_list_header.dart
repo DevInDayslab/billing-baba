@@ -88,16 +88,12 @@ class InventoryListRowLayout extends StatelessWidget {
 
     if (!showColumnSeparators) {
       return Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (var i = 0; i < children.length; i++) ...[
             if (i > 0) const SizedBox(width: AppSpacing.sm),
             Expanded(
               flex: flexValues[i],
-              child: Align(
-                alignment: _cellAlignment(i),
-                child: children[i],
-              ),
+              child: children[i],
             ),
           ],
           trailing,
@@ -162,7 +158,16 @@ class _HeaderCell extends StatelessWidget {
           column.leading!,
           const SizedBox(width: 4),
         ],
-        Expanded(child: _SortableLabel(column: column)),
+        Expanded(
+          child: column.sortable && column.onSort != null
+              ? _SortableLabel(column: column)
+              : Text(
+                  column.label,
+                  textAlign: column.alignEnd ? TextAlign.right : TextAlign.left,
+                  style: InventoryStyles.listHeaderStyle,
+                  overflow: TextOverflow.ellipsis,
+                ),
+        ),
         if (column.showFilter) ...[
           const SizedBox(width: 4),
           Icon(

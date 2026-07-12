@@ -29,7 +29,7 @@ class InventoryItemListColumnSpec {
   final VoidCallback? onSort;
 }
 
-/// Canonical inventory item list table — shared by Products and Categories.
+/// Canonical right-side detail item list table (Category Items, etc.).
 class InventoryItemListTable extends StatelessWidget {
   const InventoryItemListTable({
     required this.columns,
