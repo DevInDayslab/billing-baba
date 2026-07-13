@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/pricing/providers/item_api_tier_prices_provider.dart';
 import 'package:billing_baba/features/print/presentation/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/add_sale_footer.dart';
@@ -70,6 +74,18 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Sale item picker needs the full catalog, not an inventory-tab search subset.
+      unawaited(
+        ref.read(inventoryItemsProvider.notifier).refresh().then((_) async {
+          final items = ref.read(inventoryItemsProvider).value ?? [];
+          if (items.isEmpty) return;
+          await ref
+              .read(itemApiTierPricesProvider.notifier)
+              .preloadForItemIds(items.map((item) => item.id));
+        }),
+      );
+    });
     if (widget.invoiceId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _initializeEditForm());
     } else if (widget.attachOrderIds != null &&

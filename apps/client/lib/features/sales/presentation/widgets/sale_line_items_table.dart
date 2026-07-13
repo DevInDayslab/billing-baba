@@ -318,6 +318,7 @@ class _LineItemRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
     final notifier = ref.read(
       addSaleFormProvider(sessionKey: sessionKey).notifier,
     );
@@ -395,6 +396,7 @@ class _LineItemRow extends ConsumerWidget {
                               final updated = applyCatalogItemToLine(
                                 item,
                                 catalogItem,
+                                partyPriceTier: form.partyPriceTier,
                               );
                               notifier.updateLineItem(
                                 index,
@@ -588,6 +590,7 @@ class _LineItemRow extends ConsumerWidget {
                       index,
                       item.copyWith(
                         pricePerUnit: double.tryParse(value) ?? 0,
+                        priceManuallyOverridden: true,
                       ),
                     ),
                   ),

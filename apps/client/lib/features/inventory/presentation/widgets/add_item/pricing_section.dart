@@ -157,7 +157,7 @@ class PricingSection extends StatelessWidget {
             FormGridCell(
               span: 3,
               child: _priceField(
-                label: 'Sale Price',
+                label: 'Selling Price',
                 controller: salePriceController,
                 onChanged: onSalePriceChanged,
               ),

@@ -1,14 +1,21 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/pricing/providers/item_api_tier_prices_provider.dart';
+import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-SaleItemOption saleItemOptionFromInventory(InventoryItem item) {
+SaleItemOption saleItemOptionFromInventory(
+  InventoryItem item, {
+  Map<String, double> tierPrices = const {},
+}) {
   return SaleItemOption(
     id: item.id,
     name: item.name,
@@ -21,6 +28,7 @@ SaleItemOption saleItemOptionFromInventory(InventoryItem item) {
     itemCode: item.barcode,
     sku: item.barcode,
     barcode: item.barcode,
+    tierPrices: tierPrices,
   );
 }
 
@@ -70,6 +78,11 @@ class ItemNameAutocompleteFieldState
     super.initState();
     _controller = TextEditingController(text: widget.value);
     _focusNode.addListener(_onFocusChange);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(
+        ref.read(localItemTierPricesProvider.notifier).ensureInitialized(),
+      );
+    });
   }
 
   @override
@@ -100,7 +113,13 @@ class ItemNameAutocompleteFieldState
     await ref.read(inventoryItemsProvider.notifier).refresh();
     if (!mounted) return;
 
-    final catalogItem = saleItemOptionFromInventory(created);
+    await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
+    if (!mounted) return;
+
+    final catalogItem = saleItemOptionFromInventory(
+      created,
+      tierPrices: ref.read(localItemTierPricesProvider)[created.id] ?? const {},
+    );
     _controller.text = catalogItem.name;
     widget.onChanged(catalogItem.name);
     widget.onItemSelected(catalogItem);
@@ -110,25 +129,46 @@ class ItemNameAutocompleteFieldState
 
   void _onFocusChange() {
     if (_focusNode.hasFocus) {
+      final itemsAsync = ref.read(inventoryItemsProvider);
+      if (!itemsAsync.hasValue || (itemsAsync.value?.isEmpty ?? true)) {
+        unawaited(ref.read(inventoryItemsProvider.notifier).refresh());
+      } else {
+        final itemIds = itemsAsync.value!.map((item) => item.id);
+        unawaited(
+          ref.read(itemApiTierPricesProvider.notifier).preloadForItemIds(itemIds),
+        );
+      }
+      unawaited(
+        ref.read(localItemTierPricesProvider.notifier).ensureInitialized(),
+      );
       _showOverlay();
     }
   }
 
-  void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-  }
-
-  List<SaleItemOption> get _filteredItems {
-    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+  List<SaleItemOption> _buildItemOptions(List<InventoryItem> inventory) {
+    final localStore = ref.read(localItemTierPricesProvider);
+    final apiStore = ref.read(itemApiTierPricesProvider);
     final options = inventory
-        .where((item) => item.type == ItemType.product)
-        .map(saleItemOptionFromInventory)
+        .map(
+          (item) => saleItemOptionFromInventory(
+            item,
+            tierPrices: mergedTierPricesForItem(
+              apiStore: apiStore,
+              localStore: localStore,
+              itemId: item.id,
+            ),
+          ),
+        )
         .toList();
 
     final query = _controller.text.trim();
     if (query.isEmpty) return options;
     return options.where((item) => item.matchesSearchQuery(query)).toList();
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 
   void _showOverlay() {
@@ -140,8 +180,79 @@ class ItemNameAutocompleteFieldState
     _overlayEntry = OverlayEntry(
       builder: (overlayContext) {
         final itemsAsync = ref.watch(inventoryItemsProvider);
-        final items = _filteredItems;
-        return Stack(
+        ref.watch(localItemTierPricesProvider);
+        ref.watch(itemApiTierPricesProvider);
+        return itemsAsync.when(
+          loading: () => Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    _removeOverlay();
+                    _focusNode.unfocus();
+                  },
+                ),
+              ),
+              CompositedTransformFollower(
+                link: _layerLink,
+                showWhenUnlinked: false,
+                offset: const Offset(0, 38),
+                child: Material(
+                  elevation: 4,
+                  shadowColor: Colors.black26,
+                  borderRadius: AppRadius.mdBorder,
+                  clipBehavior: Clip.antiAlias,
+                  color: AppColors.surface,
+                  child: SizedBox(
+                    width: triggerWidth < 420 ? 420 : triggerWidth,
+                    child: const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          error: (error, _) => Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    _removeOverlay();
+                    _focusNode.unfocus();
+                  },
+                ),
+              ),
+              CompositedTransformFollower(
+                link: _layerLink,
+                showWhenUnlinked: false,
+                offset: const Offset(0, 38),
+                child: Material(
+                  elevation: 4,
+                  shadowColor: Colors.black26,
+                  borderRadius: AppRadius.mdBorder,
+                  clipBehavior: Clip.antiAlias,
+                  color: AppColors.surface,
+                  child: SizedBox(
+                    width: triggerWidth < 420 ? 420 : triggerWidth,
+                    child: const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Text(
+                        'Failed to load items',
+                        style: TextStyle(color: AppColors.error),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          data: (inventory) {
+            final items = _buildItemOptions(inventory);
+            return Stack(
           children: [
             Positioned.fill(
               child: GestureDetector(
@@ -251,19 +362,7 @@ class ItemNameAutocompleteFieldState
                           ],
                         ),
                       ),
-                      itemsAsync.when(
-                        loading: () => const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Center(child: CircularProgressIndicator()),
-                        ),
-                        error: (error, _) => const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: Text(
-                            'Failed to load items',
-                            style: TextStyle(color: AppColors.error),
-                          ),
-                        ),
-                        data: (_) => ConstrainedBox(
+                      ConstrainedBox(
                           constraints: const BoxConstraints(maxHeight: 200),
                           child: items.isEmpty
                               ? const Padding(
@@ -279,10 +378,46 @@ class ItemNameAutocompleteFieldState
                                     final isSelected =
                                         item.name == widget.value;
                                     return InkWell(
-                                      onTap: () {
-                                        _controller.text = item.name;
-                                        widget.onChanged(item.name);
-                                        widget.onItemSelected(item);
+                                      onTap: () async {
+                                        await ref
+                                            .read(
+                                              itemApiTierPricesProvider.notifier,
+                                            )
+                                            .preloadForItemIds([item.id]);
+                                        await ref
+                                            .read(
+                                              localItemTierPricesProvider
+                                                  .notifier,
+                                            )
+                                            .ensureInitialized();
+                                        if (!mounted) return;
+
+                                        final localStore = ref.read(
+                                          localItemTierPricesProvider,
+                                        );
+                                        final apiStore = ref.read(
+                                          itemApiTierPricesProvider,
+                                        );
+                                        final resolved = saleItemOptionFromInventory(
+                                          inventory.firstWhere(
+                                            (entry) => entry.id == item.id,
+                                            orElse: () => InventoryItem(
+                                              id: item.id,
+                                              name: item.name,
+                                              type: ItemType.product,
+                                              salePrice: item.salePrice,
+                                              purchasePrice: item.purchasePrice,
+                                            ),
+                                          ),
+                                          tierPrices: mergedTierPricesForItem(
+                                            apiStore: apiStore,
+                                            localStore: localStore,
+                                            itemId: item.id,
+                                          ),
+                                        );
+                                        _controller.text = resolved.name;
+                                        widget.onChanged(resolved.name);
+                                        widget.onItemSelected(resolved);
                                         _removeOverlay();
                                         _focusNode.unfocus();
                                       },
@@ -363,13 +498,14 @@ class ItemNameAutocompleteFieldState
                                   },
                                 ),
                         ),
-                      ),
                     ],
                   ),
                 ),
               ),
             ),
           ],
+        );
+          },
         );
       },
     );

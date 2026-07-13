@@ -1,5 +1,6 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import { InventoryServiceBase } from './inventory.base-service';
 import { normalizeMoney, parseMoney } from './inventory.utils';
 import {
@@ -22,7 +23,6 @@ import type {
   ItemListRecord,
   ItemPriceHistoryRecord,
   ItemTierPriceRecord,
-  PricingTier,
 } from './item.types';
 
 export class ItemService extends InventoryServiceBase {
@@ -307,6 +307,18 @@ export class ItemService extends InventoryServiceBase {
       throw new AppError('NOT_FOUND', 'Item not found', 404);
     }
 
+    if (input.tier_prices !== undefined) {
+      await this.syncItemTierPrices(
+        businessId,
+        itemId,
+        userId,
+        input.tier_prices.map((tier) => ({
+          pricingTier: tier.pricing_tier,
+          price: normalizeMoney(tier.price),
+        })),
+      );
+    }
+
     if (
       input.sale_price !== undefined &&
       normalizeMoney(input.sale_price) !== existing.salePrice
@@ -460,28 +472,7 @@ export class ItemService extends InventoryServiceBase {
       price: normalizeMoney(tier.price),
     }));
 
-    const existing = await this.repository.getTierPrices(businessId, itemId);
-    const result = await this.repository.replaceTierPrices(
-      businessId,
-      itemId,
-      tierPrices,
-      userId ?? null,
-    );
-
-    for (const tier of tierPrices) {
-      const previous = existing.find(
-        (entry) => entry.pricing_tier === tier.pricingTier,
-      );
-      if (!previous || previous.price !== tier.price) {
-        await this.repository.insertPriceHistory(this.db, businessId, itemId, {
-          price: tier.price,
-          pricingTier: tier.pricingTier,
-          changedBy: userId ?? null,
-        });
-      }
-    }
-
-    return result;
+    return this.syncItemTierPrices(businessId, itemId, userId, tierPrices);
   }
 
   async deleteItemTierPrice(
@@ -533,6 +524,36 @@ export class ItemService extends InventoryServiceBase {
         total: result.total,
       },
     };
+  }
+
+  private async syncItemTierPrices(
+    businessId: string,
+    itemId: string,
+    userId: string | undefined,
+    tierPrices: { pricingTier: PricingTier; price: string }[],
+  ): Promise<ItemTierPriceRecord[]> {
+    const existing = await this.repository.getTierPrices(businessId, itemId);
+    const result = await this.repository.replaceTierPrices(
+      businessId,
+      itemId,
+      tierPrices,
+      userId ?? null,
+    );
+
+    for (const tier of tierPrices) {
+      const previous = existing.find(
+        (entry) => entry.pricing_tier === tier.pricingTier,
+      );
+      if (!previous || previous.price !== tier.price) {
+        await this.repository.insertPriceHistory(this.db, businessId, itemId, {
+          price: tier.price,
+          pricingTier: tier.pricingTier,
+          changedBy: userId ?? null,
+        });
+      }
+    }
+
+    return result;
   }
 
   private async assertItemExists(

@@ -6,6 +6,7 @@ import { users } from '../../db/schema/identity/tables';
 import { expenses, purchaseDocuments } from '../../db/schema/purchases/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
 import { OutstandingRepository } from '../accounting/outstanding.repository';
+import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import type {
   ListPartiesParams,
   PartyInsertValues,
@@ -27,7 +28,7 @@ type PartyRow = {
     | 'manufacturer'
     | 'custom'
     | null;
-  pricingTier: 'tier_1' | 'tier_2' | 'tier_3';
+  pricingTier: PricingTier;
   gstin: string | null;
   stateCode: string | null;
   areaId: string | null;
@@ -475,6 +476,7 @@ export class PartyRepository {
       party_type: row.partyType,
       party_category: row.partyCategory,
       pricing_tier: row.pricingTier,
+      default_price_tier: row.pricingTier,
       gstin: row.gstin,
       state_code: row.stateCode,
       state: row.stateCode ? resolveStateName(row.stateCode) : null,

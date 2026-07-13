@@ -226,7 +226,7 @@ export function buildInventoryPaths() {
         tags: ['Pricing'],
         summary: 'Get Item Tier Prices',
         description:
-          'Returns tier-1/2/3 sale prices for an item. Used for party pricing tiers.',
+          'Returns retail/wholesale/dealer/distributor sale prices for an item (tier_1–tier_4). Used for party pricing tiers.',
         operationId: 'getItemTierPrices',
         parameters: [idParam],
         responses: {

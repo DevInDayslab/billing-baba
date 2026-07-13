@@ -26,6 +26,7 @@ class SaleLineItem {
     this.discountPercent = 0,
     this.taxPercent = 0,
     this.isConfirmed = false,
+    this.priceManuallyOverridden = false,
   });
 
   factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
@@ -49,6 +50,7 @@ class SaleLineItem {
   final double discountPercent;
   final double taxPercent;
   final bool isConfirmed;
+  final bool priceManuallyOverridden;
 
   double get _discountedUnitPrice =>
       pricePerUnit * (1 - discountPercent / 100);
@@ -90,6 +92,7 @@ class SaleLineItem {
     double? discountPercent,
     double? taxPercent,
     bool? isConfirmed,
+    bool? priceManuallyOverridden,
     bool clearExpDate = false,
     bool clearMfgDate = false,
   }) {
@@ -113,6 +116,8 @@ class SaleLineItem {
       discountPercent: discountPercent ?? this.discountPercent,
       taxPercent: taxPercent ?? this.taxPercent,
       isConfirmed: isConfirmed ?? this.isConfirmed,
+      priceManuallyOverridden:
+          priceManuallyOverridden ?? this.priceManuallyOverridden,
     );
   }
 }
@@ -176,6 +181,7 @@ class AddSaleFormState {
     this.saveError,
     this.isSaving = false,
     this.attachedSaleOrderIds = const [],
+    this.partyPriceTier,
   });
 
   final String? documentId;
@@ -218,6 +224,7 @@ class AddSaleFormState {
   final String? saveError;
   final bool isSaving;
   final List<String> attachedSaleOrderIds;
+  final String? partyPriceTier;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -323,6 +330,8 @@ class AddSaleFormState {
     bool? isSaving,
     List<String>? attachedSaleOrderIds,
     bool clearAttachedSaleOrderIds = false,
+    String? partyPriceTier,
+    bool clearPartyPriceTier = false,
   }) {
     return AddSaleFormState(
       documentId: clearDocumentId ? null : (documentId ?? this.documentId),
@@ -367,6 +376,9 @@ class AddSaleFormState {
       attachedSaleOrderIds: clearAttachedSaleOrderIds
           ? const []
           : (attachedSaleOrderIds ?? this.attachedSaleOrderIds),
+      partyPriceTier: clearPartyPriceTier
+          ? null
+          : (partyPriceTier ?? this.partyPriceTier),
     );
   }
 }
