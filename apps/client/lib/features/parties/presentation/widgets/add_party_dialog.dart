@@ -8,6 +8,7 @@ import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/parties/providers/party_groups_provider.dart';
+import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
@@ -19,7 +20,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 export 'package:billing_baba/features/parties/models/add_party_result.dart';
 
 const _dialogMaxWidth = 900.0;
-const _tabContentMaxHeight = 360.0;
 const _cardBorder = Color(0xFFE0E0E0);
 const _gstLeftColumnWidth = 220.0;
 const _defaultDecimal = '0.00';
@@ -162,6 +162,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   String? _creditLimitError;
   String? _loyaltyBalanceError;
   String _partyType = 'customer';
+  String _defaultPriceTier = PriceTier.retail;
 
   String _savedBillingAddressLine = '';
   String _savedBillingCity = '';
@@ -305,6 +306,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _additionalField1Controller.text = party.additionalField1;
     _additionalField2Enabled = party.additionalField2.isNotEmpty;
     _additionalField2Controller.text = party.additionalField2;
+    _defaultPriceTier = party.defaultPriceTier;
   }
 
   @override
@@ -370,6 +372,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       additionalField2: _additionalField2Enabled
           ? _additionalField2Controller.text.trim()
           : '',
+      defaultPriceTier: _defaultPriceTier,
     );
   }
 
@@ -707,41 +710,46 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       borderRadius: AppRadius.lgBorder,
       clipBehavior: Clip.antiAlias,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildHeader(),
           const Divider(height: 1, color: _cardBorder),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              FormSpacing.page,
-              FormSpacing.section,
-              FormSpacing.page,
-              FormSpacing.section,
-            ),
-            child: _buildTopFields(),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: FormSpacing.page),
-            child: _buildTabBar(),
-          ),
-          const Divider(height: 1, color: _cardBorder),
-          ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxHeight: _tabContentMaxHeight,
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(FormSpacing.page),
-              child: AnimatedBuilder(
-                animation: _tabController,
-                builder: (context, _) {
-                  return switch (_tabController.index) {
-                    0 => _buildGstAddressTab(),
-                    1 => _buildCreditBalanceTab(),
-                    _ => _buildAdditionalFieldsTab(),
-                  };
-                },
-              ),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    FormSpacing.page,
+                    FormSpacing.section,
+                    FormSpacing.page,
+                    FormSpacing.section,
+                  ),
+                  child: _buildTopFields(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: FormSpacing.page,
+                  ),
+                  child: _buildTabBar(),
+                ),
+                const Divider(height: 1, color: _cardBorder),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(FormSpacing.page),
+                    child: AnimatedBuilder(
+                      animation: _tabController,
+                      builder: (context, _) {
+                        return switch (_tabController.index) {
+                          0 => _buildGstAddressTab(),
+                          1 => _buildCreditBalanceTab(),
+                          _ => _buildAdditionalFieldsTab(),
+                        };
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const Divider(height: 1, color: _cardBorder),
@@ -865,8 +873,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           rowGap: FormSpacing.section,
           cells: [
             ...rowOneCells,
-            FormGridCell(span: 6, child: phoneField),
-            FormGridCell(span: 6, child: _buildPartyGroupControls()),
+            FormGridCell(span: 4, child: phoneField),
+            FormGridCell(span: 4, child: _buildPartyGroupControls()),
+            FormGridCell(span: 4, child: _buildDefaultPriceTierField()),
           ],
         ),
         const SizedBox(height: 4),
@@ -885,6 +894,17 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildDefaultPriceTierField() {
+    return SaleGenericSelectDropdown(
+      value: PriceTier.labelFor(_defaultPriceTier),
+      options: PriceTier.dropdownOptions,
+      hintText: 'Default Price Tier',
+      onSelected: (label) => setState(
+        () => _defaultPriceTier = PriceTier.keyFromLabel(label),
+      ),
     );
   }
 

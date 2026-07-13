@@ -24,6 +24,7 @@ class PartyLocalExtension {
     this.loyaltyPointsAsOfDate,
     this.additionalField1 = '',
     this.additionalField2 = '',
+    this.defaultPriceTier = '',
   });
 
   factory PartyLocalExtension.fromJson(Map<String, dynamic> json) {
@@ -50,6 +51,7 @@ class PartyLocalExtension {
           : null,
       additionalField1: json['additional_field_1'] as String? ?? '',
       additionalField2: json['additional_field_2'] as String? ?? '',
+      defaultPriceTier: json['default_price_tier'] as String? ?? '',
     );
   }
 
@@ -76,6 +78,7 @@ class PartyLocalExtension {
       additionalField2: result.additionalField2Enabled
           ? result.additionalField2
           : '',
+      defaultPriceTier: result.defaultPriceTier,
     );
   }
 
@@ -96,6 +99,7 @@ class PartyLocalExtension {
   final DateTime? loyaltyPointsAsOfDate;
   final String additionalField1;
   final String additionalField2;
+  final String defaultPriceTier;
 
   Map<String, dynamic> toJson() => {
     'gst_type': gstType,
@@ -117,6 +121,7 @@ class PartyLocalExtension {
       'loyalty_points_as_of_date': loyaltyPointsAsOfDate!.toIso8601String(),
     'additional_field_1': additionalField1,
     'additional_field_2': additionalField2,
+    'default_price_tier': defaultPriceTier,
   };
 }
 

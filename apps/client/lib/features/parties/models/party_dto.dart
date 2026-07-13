@@ -13,6 +13,10 @@ class PartyDto {
     this.notes,
   });
   factory PartyDto.fromJson(Map<String, dynamic> json) {
+    final pricingTier =
+        json['default_price_tier'] as String? ??
+        json['pricing_tier'] as String? ??
+        'tier_1';
     return PartyDto(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -20,7 +24,7 @@ class PartyDto {
       email: json['email'] as String?,
       partyType: json['party_type'] as String? ?? 'customer',
       partyCategory: json['party_category'] as String?,
-      pricingTier: json['pricing_tier'] as String? ?? 'tier_1',
+      pricingTier: pricingTier,
       gstin: json['gstin'] as String?,
       stateCode: json['state_code'] as String?,
       state: json['state'] as String?,

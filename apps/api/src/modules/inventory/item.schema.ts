@@ -1,9 +1,12 @@
 import { z } from 'zod';
+import {
+  PRICING_TIER_INPUT_VALUES,
+  normalizePricingTier,
+} from '../../shared/pricing/pricing-tier';
 
 const sortFieldValues = ['name', 'created_at'] as const;
 const sortOrderValues = ['asc', 'desc'] as const;
 const itemTypeValues = ['product', 'service'] as const;
-const pricingTierValues = ['tier_1', 'tier_2', 'tier_3'] as const;
 
 const moneyField = z
   .union([z.string(), z.number()])
@@ -28,9 +31,23 @@ const optionalMoneyField = z
   );
 
 const tierPriceSchema = z.object({
-  pricing_tier: z.enum(pricingTierValues),
+  pricing_tier: z
+    .enum(PRICING_TIER_INPUT_VALUES)
+    .transform((value) => normalizePricingTier(value)),
   price: moneyField,
 });
+
+const tierPricesArraySchema = z
+  .array(tierPriceSchema)
+  .refine(
+    (tierPrices) => {
+      const tiers = tierPrices.map((tier) => tier.pricing_tier);
+      return new Set(tiers).size === tiers.length;
+    },
+    {
+      message: 'Each pricing tier may only appear once',
+    },
+  );
 
 const locationSchema = z.object({
   godown_id: z.uuid('Invalid godown ID'),
@@ -100,7 +117,7 @@ export const createItemBodySchema = z.object({
   market_price: optionalMoneyField,
   reorder_level: optionalMoneyField,
   has_stock_tracking: z.boolean().optional().default(true),
-  tier_prices: z.array(tierPriceSchema).optional().default([]),
+  tier_prices: tierPricesArraySchema.optional().default([]),
   primary_image_url: z
     .string()
     .trim()
@@ -145,6 +162,7 @@ export const updateItemBodySchema = z
     market_price: optionalMoneyField.nullable(),
     reorder_level: optionalMoneyField.nullable(),
     has_stock_tracking: z.boolean().optional(),
+    tier_prices: tierPricesArraySchema.optional(),
     primary_image_url: z
       .string()
       .trim()
@@ -191,26 +209,17 @@ export const updateItemImageBodySchema = z
 
 export type UpdateItemImageBody = z.infer<typeof updateItemImageBodySchema>;
 
-export const putItemTierPricesBodySchema = z
-  .object({
-    tier_prices: z.array(tierPriceSchema),
-  })
-  .refine(
-    (body) => {
-      const tiers = body.tier_prices.map((tier) => tier.pricing_tier);
-      return new Set(tiers).size === tiers.length;
-    },
-    {
-      message: 'Each pricing tier may only appear once',
-      path: ['tier_prices'],
-    },
-  );
+export const putItemTierPricesBodySchema = z.object({
+  tier_prices: tierPricesArraySchema,
+});
 
 export type PutItemTierPricesBody = z.infer<typeof putItemTierPricesBodySchema>;
 
 export const itemTierParamSchema = z.object({
   id: z.uuid('Invalid item ID'),
-  tier: z.enum(pricingTierValues),
+  tier: z
+    .enum(PRICING_TIER_INPUT_VALUES)
+    .transform((value) => normalizePricingTier(value)),
 });
 
 export type ItemTierParam = z.infer<typeof itemTierParamSchema>;

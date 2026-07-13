@@ -105,6 +105,7 @@ class SaleItemOption {
     this.itemCode,
     this.sku,
     this.barcode,
+    this.tierPrices = const {},
   });
 
   final String id;
@@ -118,6 +119,7 @@ class SaleItemOption {
   final String? itemCode;
   final String? sku;
   final String? barcode;
+  final Map<String, double> tierPrices;
 
   bool matchesSearchQuery(String query) {
     final q = query.trim().toLowerCase();

@@ -13,11 +13,14 @@ import 'package:billing_baba/features/inventory/presentation/widgets/add_item/ma
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item/online_store_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item/pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item/stock_section.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/add_item/tier_pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/select_unit_dialog.dart';
 import 'package:billing_baba/features/inventory/providers/add_item_form_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
+import 'package:billing_baba/features/pricing/models/price_tier.dart';
+import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:collection/collection.dart';
@@ -26,6 +29,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _tabActiveColor = Color(0xFFD32F2F);
+
+int _tierRowCounter = 0;
+
+String _nextTierRowId() {
+  _tierRowCounter += 1;
+  return 'tier_row_$_tierRowCounter';
+}
 
 Future<InventoryItem?> showAddItemDialog(
   BuildContext context, {
@@ -76,6 +86,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final _onlineStoreDescriptionController = TextEditingController();
   final Map<String, TextEditingController> _rawMaterialControllers = {};
   final Map<String, TextEditingController> _additionalCostControllers = {};
+  final Map<String, TextEditingController> _tierPriceControllers = {};
   final _primaryImageUrlController = TextEditingController();
   bool _isSaving = false;
 
@@ -146,6 +157,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       final detail = await service.getItem(item.id);
       final tiers = await service.fetchItemTierPrices(item.id);
 
+      await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
+
       if (detail.purchasePrice != null) {
         notifier.updateAtPrice(detail.purchasePrice!);
         _atPriceController.text = detail.purchasePrice!.toString();
@@ -166,6 +179,28 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       if (wholesale != null) {
         notifier.updateWholesalePrice(wholesale);
         _wholesalePriceController.text = wholesale.toString();
+      }
+
+      final localTiers = ref.read(localItemTierPricesProvider)[item.id];
+      if (localTiers != null && localTiers.isNotEmpty) {
+        final rows = localTiers.entries
+            .map(
+              (entry) => ItemTierPriceRow(
+                id: _nextTierRowId(),
+                tierKey: entry.key,
+                price: entry.value,
+              ),
+            )
+            .toList();
+        notifier.setTierPrices(rows);
+      } else if (wholesale != null && wholesale > 0) {
+        notifier.setTierPrices([
+          ItemTierPriceRow(
+            id: _nextTierRowId(),
+            tierKey: PriceTier.wholesale,
+            price: wholesale,
+          ),
+        ]);
       }
 
       final units = ref.read(inventoryUnitsProvider).value ?? [];
@@ -239,6 +274,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     for (final controller in _additionalCostControllers.values) {
       controller.dispose();
     }
+    for (final controller in _tierPriceControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -266,10 +304,18 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             .updateItemFromForm(editItem.id, form);
         ref.invalidate(productDetailProvider(editItem.id));
         ref.invalidate(itemTierPricesProvider(editItem.id));
+        ref
+            .read(localItemTierPricesProvider.notifier)
+            .setTierPrices(editItem.id, form.tierPriceMap);
       } else {
         savedItem = await ref
             .read(inventoryItemsProvider.notifier)
             .addItemFromForm(form);
+        if (savedItem != null) {
+          ref
+              .read(localItemTierPricesProvider.notifier)
+              .setTierPrices(savedItem.id, form.tierPriceMap);
+        }
       }
 
       if (!mounted) return;
@@ -328,8 +374,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     for (final controller in _additionalCostControllers.values) {
       controller.dispose();
     }
+    for (final controller in _tierPriceControllers.values) {
+      controller.dispose();
+    }
     _rawMaterialControllers.clear();
     _additionalCostControllers.clear();
+    _tierPriceControllers.clear();
   }
 
   Future<void> _openUnitPicker() async {
@@ -568,32 +618,55 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     };
   }
 
+  TextEditingController _tierPriceController(String id, String initial) {
+    return _tierPriceControllers.putIfAbsent(
+      id,
+      () => TextEditingController(text: initial),
+    );
+  }
+
   Widget _buildPricingTab(
     AddItemFormState form,
     AddItemForm notifier, {
     required bool isService,
   }) {
-    return PricingSection(
-      isService: isService,
-      mrpController: _mrpController,
-      onMrpChanged: notifier.updateMrp,
-      salePriceController: _salePriceController,
-      salePriceTaxMode: form.salePriceTaxMode,
-      onSalePriceChanged: notifier.updateSalePrice,
-      onSalePriceTaxModeChanged: notifier.setSalePriceTaxMode,
-      wholesalePriceController: _wholesalePriceController,
-      wholesalePriceTaxMode: form.wholesalePriceTaxMode,
-      onWholesalePriceChanged: notifier.updateWholesalePrice,
-      onWholesalePriceTaxModeChanged: notifier.setWholesalePriceTaxMode,
-      minWholesaleQtyController: _minWholesaleQtyController,
-      onMinWholesaleQtyChanged: notifier.updateMinWholesaleQty,
-      purchasePriceController: _atPriceController,
-      purchasePriceTaxMode: form.purchasePriceTaxMode,
-      onPurchasePriceChanged: notifier.updateAtPrice,
-      onPurchasePriceTaxModeChanged: notifier.setPurchasePriceTaxMode,
-      taxRate: form.taxRate,
-      onTaxRateChanged: notifier.setTaxRate,
-      unitLabel: _displayUnitLabel(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PricingSection(
+          isService: isService,
+          mrpController: _mrpController,
+          onMrpChanged: notifier.updateMrp,
+          salePriceController: _salePriceController,
+          salePriceTaxMode: form.salePriceTaxMode,
+          onSalePriceChanged: notifier.updateSalePrice,
+          onSalePriceTaxModeChanged: notifier.setSalePriceTaxMode,
+          wholesalePriceController: _wholesalePriceController,
+          wholesalePriceTaxMode: form.wholesalePriceTaxMode,
+          onWholesalePriceChanged: notifier.updateWholesalePrice,
+          onWholesalePriceTaxModeChanged: notifier.setWholesalePriceTaxMode,
+          minWholesaleQtyController: _minWholesaleQtyController,
+          onMinWholesaleQtyChanged: notifier.updateMinWholesaleQty,
+          purchasePriceController: _atPriceController,
+          purchasePriceTaxMode: form.purchasePriceTaxMode,
+          onPurchasePriceChanged: notifier.updateAtPrice,
+          onPurchasePriceTaxModeChanged: notifier.setPurchasePriceTaxMode,
+          taxRate: form.taxRate,
+          onTaxRateChanged: notifier.setTaxRate,
+          unitLabel: _displayUnitLabel(),
+        ),
+        const SizedBox(height: FormSpacing.section),
+        TierPricingSection(
+          tierPrices: form.tierPrices,
+          priceControllerFor: _tierPriceController,
+          onUpdateTierPrice: notifier.updateTierPriceRow,
+          onRemoveTierPrice: (id) {
+            _tierPriceControllers.remove(id)?.dispose();
+            notifier.removeTierPriceRow(id);
+          },
+          onAddTierPrice: notifier.addTierPriceRow,
+        ),
+      ],
     );
   }
 

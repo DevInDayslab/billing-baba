@@ -1,5 +1,6 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { resolvePartyPricingTier } from '../../shared/pricing/pricing-tier';
 import { PartyRepository } from './party.repository';
 import type {
   CreatePartyBody,
@@ -114,7 +115,7 @@ export class PartyService {
       email: input.email?.trim() || null,
       partyType: input.party_type,
       partyCategory: input.party_category ?? null,
-      pricingTier: input.pricing_tier,
+      pricingTier: resolvePartyPricingTier(input) ?? 'tier_1',
       gstin,
       stateCode: resolveStateCode(input.state, input.state_code),
       areaId: input.area_id ?? null,
@@ -167,6 +168,8 @@ export class PartyService {
       await this.assertGstinAvailable(businessId, gstin, partyId);
     }
 
+    const resolvedPricingTier = resolvePartyPricingTier(input);
+
     const updated = await this.repository.update(businessId, partyId, {
       ...(input.name !== undefined ? { name: input.name.trim() } : {}),
       ...(mobile !== undefined ? { mobile } : {}),
@@ -179,8 +182,8 @@ export class PartyService {
       ...(input.party_category !== undefined
         ? { partyCategory: input.party_category ?? null }
         : {}),
-      ...(input.pricing_tier !== undefined
-        ? { pricingTier: input.pricing_tier }
+      ...(resolvedPricingTier !== undefined
+        ? { pricingTier: resolvedPricingTier }
         : {}),
       ...(gstin !== undefined ? { gstin } : {}),
       ...(input.state !== undefined || input.state_code !== undefined

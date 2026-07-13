@@ -1004,6 +1004,38 @@ Defer sales document attachment persistence to post-MVP. Phase 1 sales backend w
 
 ---
 
+## ADR-012: Tier-Based Pricing API (tier_4 + default_price_tier alias)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-13 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+#### Context
+
+Frontend tier pricing uses four tiers (Retail, Wholesale, Dealer, Distributor) mapped to `tier_1`–`tier_4`. The API already stored party `pricing_tier` and `item_tier_prices` but only supported three enum values and lacked a `default_price_tier` alias on party responses.
+
+#### Decision
+
+- Extend PostgreSQL `pricing_tier` enum with `tier_4` (migration `0012`).
+- Centralize tier normalization and price resolution in `apps/api/src/shared/pricing/pricing-tier.ts`.
+- Expose `default_price_tier` on party API responses as an alias of stored `pricing_tier`; accept either `pricing_tier` or `default_price_tier` (plus human labels) on create/update.
+- Accept `tier_prices` on item PATCH; include `tier_label` on tier price records.
+- Fall back to `sale_price` when resolving a tier price that is missing or zero (`resolveTierPrice`).
+
+#### Consequences
+
+- Existing clients using `pricing_tier` continue to work unchanged.
+- New clients can use semantic labels (`retail`, `wholesale`, etc.) in requests.
+- Invoice line pricing remains client-resolved; backend stores explicit `unit_price` on documents.
+
+#### Alternatives Considered
+
+- Separate `default_price_tier` DB column — rejected; duplicates `pricing_tier` with no independent lifecycle.
+
+---
+
 ## ADR Template
 
 Use for future decisions. Do not remove.

@@ -1,8 +1,14 @@
+import type {
+  PricingTier,
+  PricingTierLabel,
+} from '../../shared/pricing/pricing-tier';
+
 export type ItemType = 'product' | 'service';
-export type PricingTier = 'tier_1' | 'tier_2' | 'tier_3';
+export type { PricingTier, PricingTierLabel };
 
 export type ItemTierPriceRecord = {
   pricing_tier: PricingTier;
+  tier_label: PricingTierLabel;
   price: string;
 };
 

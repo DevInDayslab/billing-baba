@@ -2,6 +2,26 @@ import 'package:billing_baba/features/inventory/models/item_model.dart';
 
 enum PriceTaxMode { withoutTax, withTax }
 
+class ItemTierPriceRow {
+  const ItemTierPriceRow({
+    required this.id,
+    required this.tierKey,
+    this.price = 0,
+  });
+
+  final String id;
+  final String tierKey;
+  final double price;
+
+  ItemTierPriceRow copyWith({String? tierKey, double? price}) {
+    return ItemTierPriceRow(
+      id: id,
+      tierKey: tierKey ?? this.tierKey,
+      price: price ?? this.price,
+    );
+  }
+}
+
 class RawMaterialRow {
   const RawMaterialRow({
     required this.id,
@@ -89,6 +109,7 @@ class AddItemFormState {
     this.onlineStoreDescription = '',
     this.rawMaterials = const [],
     this.additionalCosts = const [],
+    this.tierPrices = const [],
     this.itemNameError = false,
     this.isDirty = false,
   });
@@ -123,6 +144,7 @@ class AddItemFormState {
   final String onlineStoreDescription;
   final List<RawMaterialRow> rawMaterials;
   final List<AdditionalCostRow> additionalCosts;
+  final List<ItemTierPriceRow> tierPrices;
   final bool itemNameError;
   final bool isDirty;
 
@@ -133,6 +155,11 @@ class AddItemFormState {
       additionalCosts.fold(0, (sum, row) => sum + row.amount);
 
   double get totalEstimatedCost => rawMaterialTotal + additionalCostTotal;
+
+  Map<String, double> get tierPriceMap => {
+    for (final row in tierPrices)
+      if (row.price > 0) row.tierKey: row.price,
+  };
 
   AddItemFormState copyWith({
     ItemType? itemType,
@@ -170,6 +197,7 @@ class AddItemFormState {
     String? onlineStoreDescription,
     List<RawMaterialRow>? rawMaterials,
     List<AdditionalCostRow>? additionalCosts,
+    List<ItemTierPriceRow>? tierPrices,
     bool? itemNameError,
     bool? isDirty,
   }) {
@@ -208,6 +236,7 @@ class AddItemFormState {
           onlineStoreDescription ?? this.onlineStoreDescription,
       rawMaterials: rawMaterials ?? this.rawMaterials,
       additionalCosts: additionalCosts ?? this.additionalCosts,
+      tierPrices: tierPrices ?? this.tierPrices,
       itemNameError: itemNameError ?? this.itemNameError,
       isDirty: isDirty ?? this.isDirty,
     );

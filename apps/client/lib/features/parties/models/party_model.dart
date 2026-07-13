@@ -3,6 +3,7 @@ import 'package:billing_baba/features/parties/data/party_cache.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/create_party_request.dart';
 import 'package:billing_baba/features/parties/models/party_dto.dart';
+import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:intl/intl.dart';
 
 class PartyModel {
@@ -37,6 +38,7 @@ class PartyModel {
     this.creditLimit = '',
     this.additionalField1 = '',
     this.additionalField2 = '',
+    this.defaultPriceTier = PriceTier.retail,
     this.createdAt,
     this.updatedAt,
   });
@@ -80,6 +82,9 @@ class PartyModel {
       creditLimit: dto.creditLimit,
       additionalField1: extension.additionalField1,
       additionalField2: extension.additionalField2,
+      defaultPriceTier: extension.defaultPriceTier.isNotEmpty
+          ? PriceTier.normalizeTierKey(extension.defaultPriceTier)
+          : PriceTier.normalizeTierKey(dto.pricingTier),
       createdAt: DateTime.tryParse(dto.createdAt),
       updatedAt: DateTime.tryParse(dto.updatedAt),
     );
@@ -154,6 +159,7 @@ class PartyModel {
       additionalField2: result.additionalField2Enabled
           ? result.additionalField2.trim()
           : '',
+      defaultPriceTier: result.defaultPriceTier,
     );
   }
 
@@ -189,6 +195,7 @@ class PartyModel {
   final String creditLimit;
   final String additionalField1;
   final String additionalField2;
+  final String defaultPriceTier;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -273,6 +280,7 @@ class PartyModel {
     String? creditLimit,
     String? additionalField1,
     String? additionalField2,
+    String? defaultPriceTier,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -310,6 +318,7 @@ class PartyModel {
       creditLimit: creditLimit ?? this.creditLimit,
       additionalField1: additionalField1 ?? this.additionalField1,
       additionalField2: additionalField2 ?? this.additionalField2,
+      defaultPriceTier: defaultPriceTier ?? this.defaultPriceTier,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -355,6 +364,7 @@ class PartyModel {
           ? Validators.normalizeDecimalString(result.creditLimit)
           : null,
       openingBalance: Validators.normalizeDecimalString(result.openingBalance),
+      pricingTier: PriceTier.toApiTier(result.defaultPriceTier),
     );
   }
 

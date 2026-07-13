@@ -1,3 +1,4 @@
+import { pricingTierLabel } from '../../shared/pricing/pricing-tier';
 import type {
   BaseUnitSummary,
   BrandSummary,
@@ -74,6 +75,7 @@ export function toItemTierPriceRecord(
 ): ItemTierPriceRecord {
   return {
     pricing_tier: row.pricingTier,
+    tier_label: pricingTierLabel(row.pricingTier),
     price: row.price,
   };
 }
