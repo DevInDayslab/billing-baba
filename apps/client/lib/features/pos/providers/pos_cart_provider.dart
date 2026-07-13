@@ -1,7 +1,14 @@
+import 'dart:async';
+
+import 'package:billing_baba/core/database/app_database_provider.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/pos/data/pos_local_data_source.dart';
 import 'package:billing_baba/features/pos/models/cart_item.dart';
 import 'package:billing_baba/features/pos/models/held_bill.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
+import 'package:billing_baba/features/pos/models/pos_sale.dart';
+import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:billing_baba/features/pos/providers/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/providers/pos_repository_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -10,8 +17,19 @@ part 'pos_cart_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class PosCart extends _$PosCart {
+  late final PosLocalDataSource _localDataSource;
+
   @override
-  PosCartState build() => const PosCartState();
+  PosCartState build() {
+    _localDataSource = PosLocalDataSource(ref.watch(appDatabaseProvider));
+    unawaited(_loadHeldBills());
+    return const PosCartState();
+  }
+
+  Future<void> _loadHeldBills() async {
+    final bills = await _localDataSource.getHeldBills();
+    state = state.copyWith(heldBills: bills);
+  }
 
   void addItem(PosItem item) {
     final index = state.items.indexWhere((c) => c.item.id == item.id);
@@ -111,32 +129,52 @@ class PosCart extends _$PosCart {
     state = state.copyWith(payments: []);
   }
 
-  void holdBill() {
+  Future<void> holdBill() async {
     if (state.items.isEmpty) return;
     final bill = HeldBill(
       id: 'HOLD-${DateTime.now().millisecondsSinceEpoch}',
       items: List<CartItem>.from(state.items),
       heldAt: DateTime.now(),
+      payments: List<PaymentEntry>.from(state.payments),
+      customerName: state.customerName,
     );
+    await _localDataSource.saveHeldBill(bill);
     state = state.copyWith(
       heldBills: [...state.heldBills, bill],
       items: [],
       payments: [],
+      billDiscountPercent: 0,
+      clearCustomerName: true,
     );
   }
 
-  void resumeBill(String heldBillId) {
-    final bill = state.heldBills.firstWhere((b) => b.id == heldBillId);
+  void resumeBill(HeldBill bill) {
     state = state.copyWith(
       items: List<CartItem>.from(bill.items),
-      heldBills: state.heldBills.where((b) => b.id != heldBillId).toList(),
-      payments: [],
+      heldBills: state.heldBills.where((b) => b.id != bill.id).toList(),
+      payments: List<PaymentEntry>.from(bill.payments),
+      customerName: bill.customerName,
+      clearCustomerName: bill.customerName == null,
     );
+    unawaited(_localDataSource.deleteHeldBill(bill.id));
+    _syncSinglePaymentAmount();
+  }
+
+  Future<void> discardHeldBill(String id) async {
+    await _localDataSource.deleteHeldBill(id);
+    state = state.copyWith(
+      heldBills: state.heldBills.where((b) => b.id != id).toList(),
+    );
+  }
+
+  void updateBillDiscount(double percent) {
+    final clamped = percent.clamp(0, 100).toDouble();
+    state = state.copyWith(billDiscountPercent: clamped);
     _syncSinglePaymentAmount();
   }
 
   void clearCart() {
-    state = state.copyWith(items: [], payments: []);
+    state = state.copyWith(items: [], payments: [], billDiscountPercent: 0);
   }
 
   void setCustomerName(String? name) {
@@ -146,17 +184,30 @@ class PosCart extends _$PosCart {
     );
   }
 
-  Future<String> completeSale() async {
-    final repository = ref.read(posRepositoryProvider);
+  Future<PosSale> completeSale() async {
+    if (state.items.isEmpty) {
+      throw const PosRepositoryException(message: 'Cart is empty');
+    }
+
+    final businessId = ref.read(currentBusinessProvider)?.id;
+    if (businessId == null || businessId.isEmpty) {
+      throw const PosRepositoryException(
+        message: 'No active business selected. Open a business first.',
+      );
+    }
+
+    final repository = await ref.read(posRepositoryProvider.future);
     try {
-      final saleId = await repository.submitSale(
+      final sale = await repository.submitSale(
         cart: state,
-        businessId: 'mock-business-id', // TODO: read from active business provider
+        businessId: businessId,
       );
       clearCart();
-      return saleId;
-    } catch (e) {
+      return sale;
+    } on PosRepositoryException {
       rethrow;
+    } catch (error) {
+      throw PosRepositoryException(message: error.toString());
     }
   }
 

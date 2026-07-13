@@ -19,13 +19,18 @@ class PosLandingContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sales = ref.watch(posSalesListProvider);
+    final salesAsync = ref.watch(posSalesListProvider);
 
-    if (sales.isEmpty) {
-      return _EmptyState(onStartSale: onStartSale);
-    }
-
-    return _SalesList(sales: sales, onStartSale: onStartSale);
+    return salesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => _EmptyState(onStartSale: onStartSale),
+      data: (sales) {
+        if (sales.isEmpty) {
+          return _EmptyState(onStartSale: onStartSale);
+        }
+        return _SalesList(sales: sales, onStartSale: onStartSale);
+      },
+    );
   }
 }
 
