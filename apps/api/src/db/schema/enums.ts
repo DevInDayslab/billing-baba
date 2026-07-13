@@ -20,6 +20,7 @@ export const pricingTierEnum = pgEnum('pricing_tier', [
   'tier_1',
   'tier_2',
   'tier_3',
+  'tier_4',
 ]);
 
 export const itemTypeEnum = pgEnum('item_type', ['product', 'service']);

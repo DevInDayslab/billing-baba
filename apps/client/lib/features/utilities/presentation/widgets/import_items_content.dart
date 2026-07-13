@@ -89,44 +89,47 @@ class _ImportItemsContentState extends ConsumerState<ImportItemsContent> {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xl),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: _MethodCard(
-                                isSelected:
-                                    _selectedMethod ==
-                                    ImportItemsMethod.barcode,
-                                showRecommended: true,
-                                icon: Icons.qr_code_scanner_outlined,
-                                title: 'Import From Barcode',
-                                description:
-                                    'Import item details by scanning barcodes. '
-                                    'Billing Baba uses a library of 100 Mn+ '
-                                    'standard barcodes to fetch all details of '
-                                    'your items in seconds.',
-                                onTap: () => setState(
-                                  () => _selectedMethod =
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: _MethodCard(
+                                  isSelected:
+                                      _selectedMethod ==
                                       ImportItemsMethod.barcode,
+                                  showRecommended: true,
+                                  icon: Icons.qr_code_scanner_outlined,
+                                  title: 'Import From Barcode',
+                                  description:
+                                      'Import item details by scanning barcodes. '
+                                      'Billing Baba uses a library of 100 Mn+ '
+                                      'standard barcodes to fetch all details of '
+                                      'your items in seconds.',
+                                  onTap: () => setState(
+                                    () => _selectedMethod =
+                                        ImportItemsMethod.barcode,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: _MethodCard(
-                                isSelected:
-                                    _selectedMethod == ImportItemsMethod.excel,
-                                icon: Icons.table_chart_outlined,
-                                title: 'Import From Excel',
-                                description:
-                                    'Import item data from excel files in your system',
-                                onTap: () => setState(
-                                  () => _selectedMethod =
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: _MethodCard(
+                                  isSelected:
+                                      _selectedMethod ==
                                       ImportItemsMethod.excel,
+                                  icon: Icons.table_chart_outlined,
+                                  title: 'Import From Excel',
+                                  description:
+                                      'Import item data from excel files in your system',
+                                  onTap: () => setState(
+                                    () => _selectedMethod =
+                                        ImportItemsMethod.excel,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.xl),
                         const _OrDivider(),
@@ -222,6 +225,7 @@ class _MethodCard extends StatelessWidget {
   static const _iconBackground = Color(0xFFE3F2FD);
   static const _recommendedGreen = Color(0xFF2E7D32);
   static const _recommendedBackground = Color(0xFFE8F5E9);
+  static const _recommendedBadgeHeight = 20.0;
 
   @override
   Widget build(BuildContext context) {
@@ -232,6 +236,8 @@ class _MethodCard extends StatelessWidget {
         borderRadius: AppRadius.mdBorder,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
+          width: double.infinity,
+          height: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: AppColors.surface,
@@ -242,32 +248,39 @@ class _MethodCard extends StatelessWidget {
             ),
           ),
           child: Stack(
+            fit: StackFit.expand,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (showRecommended) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _recommendedBackground,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'RECOMMENDED',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: _recommendedGreen,
-                          letterSpacing: 0.4,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
+                  SizedBox(
+                    height: _recommendedBadgeHeight,
+                    child: showRecommended
+                        ? Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _recommendedBackground,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'RECOMMENDED',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: _recommendedGreen,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   Container(
                     width: 48,
                     height: 48,

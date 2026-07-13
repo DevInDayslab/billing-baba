@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
+import 'package:billing_baba/features/pricing/providers/item_api_tier_prices_provider.dart';
+import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
+import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -47,10 +53,13 @@ class AddSaleForm extends _$AddSaleForm {
 
     state = state.copyWith(isLoading: true, clearSaveError: true);
     try {
+      await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
       final service = await ref.read(salesServiceProvider.future);
       final loaded = await service.loadSaleForm(documentId);
       final items = await _resolveItemNames(loaded.items);
-      state = loaded.copyWith(items: items, isLoading: false);
+      state = _withResolvedPartyTier(
+        loaded.copyWith(items: items, isLoading: false),
+      );
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
@@ -62,23 +71,26 @@ class AddSaleForm extends _$AddSaleForm {
   Future<void> duplicateDocument(String sourceDocumentId) async {
     state = state.copyWith(isLoading: true, clearSaveError: true);
     try {
+      await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
       final service = await ref.read(salesServiceProvider.future);
       final loaded = await service.loadSaleForm(sourceDocumentId);
       final items = await _resolveItemNames(loaded.items);
       final now = DateTime.now();
-      state = loaded.copyWith(
-        clearDocumentId: true,
-        invoiceNumber: 'Auto',
-        invoiceNumberMode: InvoiceNumberMode.auto,
-        invoiceDate: DateTime(now.year, now.month, now.day),
-        invoiceTime: TimeOfDay.fromDateTime(now),
-        items: _cloneLineItemsForDuplicate(items),
-        attachedImages: const [],
-        attachedDocuments: const [],
-        clearAttachedSaleOrderIds: true,
-        isLoading: false,
-        isDirty: false,
-        showValidationErrors: false,
+      state = _withResolvedPartyTier(
+        loaded.copyWith(
+          clearDocumentId: true,
+          invoiceNumber: 'Auto',
+          invoiceNumberMode: InvoiceNumberMode.auto,
+          invoiceDate: DateTime(now.year, now.month, now.day),
+          invoiceTime: TimeOfDay.fromDateTime(now),
+          items: _cloneLineItemsForDuplicate(items),
+          attachedImages: const [],
+          attachedDocuments: const [],
+          clearAttachedSaleOrderIds: true,
+          isLoading: false,
+          isDirty: false,
+          showValidationErrors: false,
+        ),
       );
     } catch (error) {
       state = state.copyWith(
@@ -93,6 +105,7 @@ class AddSaleForm extends _$AddSaleForm {
 
     state = state.copyWith(isLoading: true, clearSaveError: true);
     try {
+      await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
       final service = await ref.read(salesServiceProvider.future);
       final loadedForms = <AddSaleFormState>[];
       for (final orderId in orderIds) {
@@ -113,19 +126,21 @@ class AddSaleForm extends _$AddSaleForm {
 
       final first = loadedForms.first;
       final now = DateTime.now();
-      state = first.copyWith(
-        clearDocumentId: true,
-        invoiceNumber: 'Auto',
-        invoiceNumberMode: InvoiceNumberMode.auto,
-        invoiceDate: DateTime(now.year, now.month, now.day),
-        invoiceTime: TimeOfDay.fromDateTime(now),
-        items: items,
-        attachedImages: const [],
-        attachedDocuments: const [],
-        attachedSaleOrderIds: orderIds,
-        isLoading: false,
-        isDirty: false,
-        showValidationErrors: false,
+      state = _withResolvedPartyTier(
+        first.copyWith(
+          clearDocumentId: true,
+          invoiceNumber: 'Auto',
+          invoiceNumberMode: InvoiceNumberMode.auto,
+          invoiceDate: DateTime(now.year, now.month, now.day),
+          invoiceTime: TimeOfDay.fromDateTime(now),
+          items: items,
+          attachedImages: const [],
+          attachedDocuments: const [],
+          attachedSaleOrderIds: orderIds,
+          isLoading: false,
+          isDirty: false,
+          showValidationErrors: false,
+        ),
       );
     } catch (error) {
       state = state.copyWith(
@@ -173,6 +188,7 @@ class AddSaleForm extends _$AddSaleForm {
           discountPercent: line.discountPercent,
           taxPercent: line.taxPercent,
           isConfirmed: true,
+          priceManuallyOverridden: line.priceManuallyOverridden,
         ),
     ];
   }
@@ -193,6 +209,23 @@ class AddSaleForm extends _$AddSaleForm {
   Map<String, String> _itemNameToId() {
     final items = ref.read(inventoryItemsProvider).value ?? [];
     return {for (final item in items) item.name.trim(): item.id};
+  }
+
+  String? _partyTierForId(String? partyId) {
+    if (partyId == null || partyId.isEmpty) return null;
+    return ref
+        .read(partiesListProvider)
+        .where((party) => party.id == partyId)
+        .map((party) => party.defaultPriceTier)
+        .firstOrNull;
+  }
+
+  AddSaleFormState _withResolvedPartyTier(AddSaleFormState form) {
+    final tier = _partyTierForId(form.partyId);
+    return form.copyWith(
+      partyPriceTier: tier,
+      clearPartyPriceTier: tier == null,
+    );
   }
 
   void updateBillingName(String value) {
@@ -252,9 +285,11 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(
       partyId: partyId,
       billingName: partyName,
+      clearPartyPriceTier: true,
       isDirty: true,
       clearSaveError: true,
     );
+    unawaited(_repriceLineItemsForPartyTierAsync());
   }
 
   void applyPartyDetails(PartyModel party) {
@@ -279,9 +314,54 @@ class AddSaleForm extends _$AddSaleForm {
         creditLimit: party.creditLimit,
       ),
       outstanding: PartyModel.displayOutstanding(party.balance),
+      partyPriceTier: party.defaultPriceTier,
       isDirty: true,
       clearSaveError: true,
     );
+    unawaited(_repriceLineItemsForPartyTierAsync());
+  }
+
+  Future<void> _repriceLineItemsForPartyTierAsync() async {
+    await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
+    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    if (inventory.isNotEmpty) {
+      await ref
+          .read(itemApiTierPricesProvider.notifier)
+          .preloadForItemIds(inventory.map((item) => item.id));
+    }
+    _repriceLineItemsForPartyTier();
+  }
+
+  void _repriceLineItemsForPartyTier() {
+    final partyTier = state.partyPriceTier;
+    final localStore = ref.read(localItemTierPricesProvider);
+    final apiStore = ref.read(itemApiTierPricesProvider);
+    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final inventoryById = {for (final item in inventory) item.id: item};
+
+    final items = state.items.map((line) {
+      if (line.priceManuallyOverridden || line.itemId == null) return line;
+
+      final inventoryItem = inventoryById[line.itemId];
+      if (inventoryItem == null) return line;
+
+      final catalogItem = saleItemOptionFromInventory(
+        inventoryItem,
+        tierPrices: mergedTierPricesForItem(
+          apiStore: apiStore,
+          localStore: localStore,
+          itemId: line.itemId!,
+        ),
+      );
+      return applyCatalogItemToLine(
+        line,
+        catalogItem,
+        partyPriceTier: partyTier,
+        resetQtyWhenEmpty: false,
+      );
+    }).toList();
+
+    state = state.copyWith(items: items);
   }
 
   void clearPartyLink() {
@@ -291,8 +371,10 @@ class AddSaleForm extends _$AddSaleForm {
       businessName: '',
       creditLimit: '',
       outstanding: '',
+      clearPartyPriceTier: true,
       isDirty: true,
     );
+    unawaited(_repriceLineItemsForPartyTierAsync());
   }
 
   void updateAddresses({String? billing, String? shipping}) {

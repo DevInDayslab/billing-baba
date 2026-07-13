@@ -1,3 +1,5 @@
+import 'package:billing_baba/features/pricing/models/price_tier.dart';
+
 /// Data captured from the Add Party dialog on save.
 class AddPartyResult {
   const AddPartyResult({
@@ -29,6 +31,7 @@ class AddPartyResult {
     this.additionalField1 = '',
     this.additionalField2Enabled = false,
     this.additionalField2 = '',
+    this.defaultPriceTier = PriceTier.retail,
   });
 
   final String partyName;
@@ -59,4 +62,5 @@ class AddPartyResult {
   final String additionalField1;
   final bool additionalField2Enabled;
   final String additionalField2;
+  final String defaultPriceTier;
 }

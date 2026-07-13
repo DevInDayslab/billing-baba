@@ -1,3 +1,5 @@
+import type { PricingTier } from '../../shared/pricing/pricing-tier';
+
 export type PartyRecord = {
   id: string;
   name: string;
@@ -11,7 +13,8 @@ export type PartyRecord = {
     | 'manufacturer'
     | 'custom'
     | null;
-  pricing_tier: 'tier_1' | 'tier_2' | 'tier_3';
+  pricing_tier: PricingTier;
+  default_price_tier: PricingTier;
   gstin: string | null;
   state_code: string | null;
   state: string | null;
@@ -48,7 +51,7 @@ export type PartyInsertValues = {
     | 'manufacturer'
     | 'custom'
     | null;
-  pricingTier: 'tier_1' | 'tier_2' | 'tier_3';
+  pricingTier: PricingTier;
   gstin: string | null;
   stateCode: string | null;
   areaId?: string | null;

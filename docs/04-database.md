@@ -178,7 +178,7 @@ Applied to every **synced business table**. Server-only tables (`refresh_tokens`
 | `user_role` | `owner`, `manager`, `staff` | `users` |
 | `party_type` | `customer`, `supplier`, `both` | `parties` |
 | `party_category` | `customer`, `retailer`, `wholesaler`, `manufacturer`, `custom` | `parties` |
-| `pricing_tier` | `tier_1`, `tier_2`, `tier_3` | `parties`, `item_tier_prices` |
+| `pricing_tier` | `tier_1`, `tier_2`, `tier_3`, `tier_4` | `parties`, `item_tier_prices` |
 | `item_type` | `product`, `service` | `items` |
 | `document_status` | `draft`, `finalized`, `cancelled`, `converted` | documents |
 | `sales_document_type` | `estimate`, `sale_order`, `delivery_challan`, `tax_invoice`, `bill_of_supply`, `normal_invoice`, `pos`, `sales_return` | `sales_documents` |

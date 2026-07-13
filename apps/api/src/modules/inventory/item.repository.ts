@@ -19,6 +19,7 @@ import {
   toItemPriceHistoryRecord,
   toItemTierPriceRecord,
 } from './item.mapper';
+import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import type {
   CreateItemImageInput,
   CreateItemLocationInput,
@@ -33,7 +34,6 @@ import type {
   ItemUpdateValues,
   ListItemsParams,
   OpeningStockGodownSummary,
-  PricingTier,
   RecordPriceHistoryInput,
   UpdateItemImageInput,
 } from './item.types';
@@ -541,7 +541,7 @@ export class ItemRepository {
   async loadTierPrices(
     businessId: string,
     itemId: string,
-  ): Promise<{ pricingTier: 'tier_1' | 'tier_2' | 'tier_3'; price: string }[]> {
+  ): Promise<{ pricingTier: PricingTier; price: string }[]> {
     return this.db
       .select({
         pricingTier: itemTierPrices.pricingTier,

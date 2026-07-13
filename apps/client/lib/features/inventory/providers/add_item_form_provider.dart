@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -250,6 +251,48 @@ class AddItemForm extends Notifier<AddItemFormState> {
           .toList(),
       isDirty: true,
     );
+  }
+
+  void addTierPriceRow() {
+    final used = state.tierPrices.map((row) => row.tierKey).toSet();
+    final available = PriceTier.availableTiersExcept(used);
+    if (available.isEmpty) return;
+
+    state = state.copyWith(
+      tierPrices: [
+        ...state.tierPrices,
+        ItemTierPriceRow(id: _nextRowId(), tierKey: available.first),
+      ],
+      isDirty: true,
+    );
+  }
+
+  void updateTierPriceRow(
+    String id, {
+    String? tierKey,
+    double? price,
+  }) {
+    state = state.copyWith(
+      tierPrices: state.tierPrices
+          .map(
+            (row) => row.id == id
+                ? row.copyWith(tierKey: tierKey, price: price)
+                : row,
+          )
+          .toList(),
+      isDirty: true,
+    );
+  }
+
+  void removeTierPriceRow(String id) {
+    state = state.copyWith(
+      tierPrices: state.tierPrices.where((row) => row.id != id).toList(),
+      isDirty: true,
+    );
+  }
+
+  void setTierPrices(List<ItemTierPriceRow> rows) {
+    state = state.copyWith(tierPrices: rows, isDirty: true);
   }
 
   bool validate() {

@@ -7,6 +7,7 @@ import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
+import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -121,7 +122,6 @@ class InventoryItems extends _$InventoryItems {
     ItemType? type,
     String? categoryId,
   }) async {
-    state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       try {
         final service = await ref.read(inventoryServiceProvider.future);
@@ -195,6 +195,7 @@ class InventoryItems extends _$InventoryItems {
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.deleteItem(id);
+      ref.read(localItemTierPricesProvider.notifier).removeItem(id);
       return null;
     } on InventoryException catch (error) {
       state = previous;

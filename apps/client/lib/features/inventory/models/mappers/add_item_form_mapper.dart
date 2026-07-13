@@ -3,6 +3,7 @@ import 'package:billing_baba/features/inventory/models/add_item_form_model.dart'
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
 import 'package:billing_baba/features/inventory/models/requests/item_requests.dart';
+import 'package:billing_baba/features/pricing/models/price_tier.dart';
 
 abstract final class AddItemFormMapper {
   static CreateItemRequest toCreateRequest(
@@ -87,24 +88,29 @@ abstract final class AddItemFormMapper {
   static List<CreateItemTierPriceRequest> _tierPricesFromForm(
     AddItemFormState form,
   ) {
-    final tierPrices = <CreateItemTierPriceRequest>[];
-    if (form.salePrice > 0) {
-      tierPrices.add(
-        CreateItemTierPriceRequest(
-          pricingTier: 'tier_1',
-          price: _formatMoney(form.salePrice),
-        ),
-      );
+    final byApiTier = <String, String>{};
+
+    void addTier(String apiTier, double price) {
+      if (price <= 0) return;
+      byApiTier[apiTier] = _formatMoney(price);
     }
+
+    addTier('tier_1', form.salePrice);
     if (form.wholesalePrice > 0) {
-      tierPrices.add(
-        CreateItemTierPriceRequest(
-          pricingTier: 'tier_2',
-          price: _formatMoney(form.wholesalePrice),
-        ),
-      );
+      addTier('tier_2', form.wholesalePrice);
     }
-    return tierPrices;
+    for (final row in form.tierPrices) {
+      addTier(PriceTier.toApiTier(row.tierKey), row.price);
+    }
+
+    return byApiTier.entries
+        .map(
+          (entry) => CreateItemTierPriceRequest(
+            pricingTier: entry.key,
+            price: entry.value,
+          ),
+        )
+        .toList();
   }
 
   static String _formatMoney(double value) {

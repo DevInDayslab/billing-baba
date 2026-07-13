@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PRICING_TIER_INPUT_VALUES } from '../../shared/pricing/pricing-tier';
 
 const partyTypeValues = ['customer', 'supplier', 'both'] as const;
 const partyCategoryValues = [
@@ -8,7 +9,7 @@ const partyCategoryValues = [
   'manufacturer',
   'custom',
 ] as const;
-const pricingTierValues = ['tier_1', 'tier_2', 'tier_3'] as const;
+const pricingTierInput = z.enum(PRICING_TIER_INPUT_VALUES);
 const sortFieldValues = ['name', 'created_at', 'opening_balance'] as const;
 const sortOrderValues = ['asc', 'desc'] as const;
 
@@ -90,7 +91,8 @@ export const createPartyBodySchema = z.object({
   gstin: optionalGstin,
   party_type: z.enum(partyTypeValues).default('customer'),
   party_category: z.enum(partyCategoryValues).optional(),
-  pricing_tier: z.enum(pricingTierValues).default('tier_1'),
+  pricing_tier: pricingTierInput.optional(),
+  default_price_tier: pricingTierInput.optional(),
   state_code: z
     .string()
     .trim()
