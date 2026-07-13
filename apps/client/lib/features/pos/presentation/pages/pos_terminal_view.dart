@@ -163,8 +163,8 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
                 final isCompact = width < PosBreakpoints.laptop;
 
                 const itemGrid = PosPanel(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  child: const ItemGrid(),
+                  padding: EdgeInsets.all(AppSpacing.sm),
+                  child: ItemGrid(),
                 );
                 final cartPanel = CartPanel(onHoldBill: _holdBill);
                 final paymentPanel = PaymentPanel(
@@ -201,7 +201,7 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Expanded(flex: 4, child: itemGrid),
+                              const Expanded(flex: 4, child: itemGrid),
                               SizedBox(width: gap),
                               Expanded(flex: 5, child: cartPanel),
                             ],
@@ -223,7 +223,7 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(flex: 4, child: itemGrid),
+                      const Expanded(flex: 4, child: itemGrid),
                       SizedBox(width: gap),
                       Expanded(flex: 5, child: cartPanel),
                       SizedBox(width: gap),
@@ -538,7 +538,7 @@ class _PosSearchField extends StatelessWidget {
                   ],
                 ),
               ),
-        suffixIconConstraints: const BoxConstraints(minHeight: 0),
+        suffixIconConstraints: const BoxConstraints(),
       ),
     );
   }

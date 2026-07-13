@@ -12,8 +12,8 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_field_deco
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_line_items_table.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_page_title_bar.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_tabs_bar.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_tabs_bar.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropdown.dart';
 import 'package:billing_baba/features/sales/providers/add_sale_form_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_tabs_provider.dart';
