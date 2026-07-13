@@ -24,6 +24,9 @@ class PartyLocalExtension {
     this.loyaltyPointsAsOfDate,
     this.additionalField1 = '',
     this.additionalField2 = '',
+    this.additionalField3 = '',
+    this.additionalField4 = '',
+    this.additionalField4DateFormat = 'dd/mm/yy',
   });
 
   factory PartyLocalExtension.fromJson(Map<String, dynamic> json) {
@@ -50,6 +53,10 @@ class PartyLocalExtension {
           : null,
       additionalField1: json['additional_field_1'] as String? ?? '',
       additionalField2: json['additional_field_2'] as String? ?? '',
+      additionalField3: json['additional_field_3'] as String? ?? '',
+      additionalField4: json['additional_field_4'] as String? ?? '',
+      additionalField4DateFormat:
+          json['additional_field_4_date_format'] as String? ?? 'dd/mm/yy',
     );
   }
 
@@ -76,6 +83,15 @@ class PartyLocalExtension {
       additionalField2: result.additionalField2Enabled
           ? result.additionalField2
           : '',
+      additionalField3: result.additionalField3Enabled
+          ? result.additionalField3
+          : '',
+      additionalField4: result.additionalField4Enabled
+          ? result.additionalField4
+          : '',
+      additionalField4DateFormat: result.additionalField4Enabled
+          ? result.additionalField4DateFormat
+          : 'dd/mm/yy',
     );
   }
 
@@ -96,6 +112,9 @@ class PartyLocalExtension {
   final DateTime? loyaltyPointsAsOfDate;
   final String additionalField1;
   final String additionalField2;
+  final String additionalField3;
+  final String additionalField4;
+  final String additionalField4DateFormat;
 
   Map<String, dynamic> toJson() => {
     'gst_type': gstType,
@@ -117,6 +136,9 @@ class PartyLocalExtension {
       'loyalty_points_as_of_date': loyaltyPointsAsOfDate!.toIso8601String(),
     'additional_field_1': additionalField1,
     'additional_field_2': additionalField2,
+    'additional_field_3': additionalField3,
+    'additional_field_4': additionalField4,
+    'additional_field_4_date_format': additionalField4DateFormat,
   };
 }
 

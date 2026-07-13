@@ -11,7 +11,7 @@ final partySearchQueryProvider = NotifierProvider<PartySearchQuery, String>(
 );
 
 final partyListFilterProvider =
-    NotifierProvider<PartyListFilterNotifier, PartyListFilter>(
+    NotifierProvider<PartyListFilterNotifier, PartyListFilters>(
       PartyListFilterNotifier.new,
     );
 
@@ -36,12 +36,17 @@ class PartySearchQuery extends Notifier<String> {
   set query(String value) => state = value;
 }
 
-class PartyListFilterNotifier extends Notifier<PartyListFilter> {
+class PartyListFilterNotifier extends Notifier<PartyListFilters> {
   @override
-  PartyListFilter build() => PartyListFilter.all;
+  PartyListFilters build() => PartyListFilters.all;
 
-  PartyListFilter get filter => state;
-  set filter(PartyListFilter value) => state = value;
+  PartyListFilters get filters => state;
+  set filters(PartyListFilters value) => state = value;
+
+  /// Single-filter setter for deep links (e.g. dashboard shortcuts).
+  set filter(PartyListFilter value) => state = state.withSingle(value);
+
+  void toggle(PartyListFilter filter) => state = state.toggle(filter);
 }
 
 class PartyTypeFilterNotifier extends Notifier<PartyTypeFilter> {

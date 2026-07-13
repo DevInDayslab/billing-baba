@@ -14,6 +14,7 @@ import 'package:billing_baba/features/reports/models/transaction_report_subsecti
 import 'package:billing_baba/features/reports/presentation/widgets/report_content_panel.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/reports_nav_panel.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -42,6 +43,37 @@ class _ReportsPageState extends State<ReportsPage> {
       OtherIncomeReportSubSection.otherIncome;
   LoanAccountsReportSubSection _selectedLoanAccountsSub =
       LoanAccountsReportSubSection.loanStatement;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _applyRouteParams();
+  }
+
+  void _applyRouteParams() {
+    final params = GoRouterState.of(context).uri.queryParameters;
+    final group = params['group'];
+    final sub = params['sub'];
+    if (group != 'party') return;
+
+    final partySub = _partySubFromQuery(sub) ?? PartyReportSubSection.partyStatement;
+    if (_navGroup == ReportNavGroup.party && _selectedPartySub == partySub) {
+      return;
+    }
+
+    setState(() {
+      _navGroup = ReportNavGroup.party;
+      _selectedPartySub = partySub;
+    });
+  }
+
+  PartyReportSubSection? _partySubFromQuery(String? sub) {
+    if (sub == null || sub.isEmpty) return null;
+    for (final value in PartyReportSubSection.values) {
+      if (value.name == sub) return value;
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {

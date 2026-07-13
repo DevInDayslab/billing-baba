@@ -95,9 +95,9 @@ class _PartyDetailsPageState extends ConsumerState<PartyDetailsPage> {
     if (remembered != null && mounted) {
       ref.read(selectedPartyIdProvider.notifier).selected = remembered;
     }
-    final filter = service.readRememberedListFilter();
-    if (filter != null && mounted) {
-      ref.read(partyListFilterProvider.notifier).filter = filter;
+    final filters = service.readRememberedListFilter();
+    if (mounted) {
+      ref.read(partyListFilterProvider.notifier).filters = filters;
     }
   }
 
@@ -121,65 +121,81 @@ class _PartyDetailsPageState extends ConsumerState<PartyDetailsPage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              PartyPageTitleBar(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < _compactBreakpoint;
+
+              if (isCompact) {
+                if (selectedId == null) {
+                  return _buildListShell(
+                    onAddParty: () => _openAddPartyDialog(context, ref),
+                  );
+                }
+                return _buildListShell(
+                  onAddParty: () => _openAddPartyDialog(context, ref),
+                  detailPanel: PartyDetailPanel(
+                    partyId: selectedId,
+                    onBack: _clearSelection,
+                  ),
+                  showListPanel: false,
+                );
+              }
+
+              return _buildListShell(
                 onAddParty: () => _openAddPartyDialog(context, ref),
-                onSettingsTap: () {},
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isCompact = constraints.maxWidth < _compactBreakpoint;
-
-                    if (isCompact) {
-                      if (selectedId == null) {
-                        return _buildListShell();
-                      }
-                      return PartyDetailPanel(
-                        partyId: selectedId,
-                        onBack: _clearSelection,
-                      );
-                    }
-
-                    return _buildListShell(
-                      detailPanel: selectedId == null
-                          ? const MasterDetailPlaceholder(
-                              message: 'Select a party to view details',
-                            )
-                          : PartyDetailPanel(partyId: selectedId),
-                    );
-                  },
-                ),
-              ),
-            ],
+                detailPanel: selectedId == null
+                    ? const MasterDetailPlaceholder(
+                        message: 'Select a party to view details',
+                      )
+                    : PartyDetailPanel(partyId: selectedId),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildListShell({Widget? detailPanel}) {
+  Widget _buildListShell({
+    required VoidCallback onAddParty,
+    Widget? detailPanel,
+    bool showListPanel = true,
+  }) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: const Color(0xFFE0E0E0)),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: detailPanel == null
-            ? const PartyListPanel()
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(width: 360, child: PartyListPanel()),
-                  const VerticalDivider(width: 1, color: Color(0xFFE0E0E0)),
-                  Expanded(child: detailPanel),
-                ],
-              ),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PartyPageTitleBar(
+              onAddParty: onAddParty,
+              onSettingsTap: () {},
+            ),
+            const Divider(height: 1, color: Color(0xFFE0E0E0)),
+            Expanded(
+              child: detailPanel == null
+                  ? const PartyListPanel()
+                  : showListPanel
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(width: 320, child: PartyListPanel()),
+                        const VerticalDivider(
+                          width: 1,
+                          color: Color(0xFFE0E0E0),
+                        ),
+                        Expanded(child: detailPanel),
+                      ],
+                    )
+                  : detailPanel,
+            ),
+          ],
+        ),
       ),
     );
   }

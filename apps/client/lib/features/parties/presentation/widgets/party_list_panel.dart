@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/core/widgets/filter_icon.dart';
 import 'package:billing_baba/core/widgets/list_panel_header.dart';
 import 'package:billing_baba/core/widgets/list_search_field.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
@@ -12,6 +13,9 @@ import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
+
+const _tableHeaderBg = Color(0xFFF5F7FA);
+const _zebraRowBg = Color(0xFFFAFAFA);
 
 class PartyListPanel extends ConsumerStatefulWidget {
   const PartyListPanel({super.key});
@@ -40,19 +44,21 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
     });
   }
 
-  Future<void> _onFilterSelected(PartyListFilter filter) async {
-    ref.read(partyListFilterProvider.notifier).filter = filter;
-    final service = await ref.read(partyServiceProvider.future);
-    await service.rememberListFilter(filter);
-    await ref.read(partyListProvider.notifier).refresh(filter: filter);
+  void _onFiltersChanged(PartyListFilters filters) {
+    ref.read(partyListFilterProvider.notifier).filters = filters;
+    unawaited(
+      ref
+          .read(partyServiceProvider.future)
+          .then((service) => service.rememberListFilter(filters)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final partiesAsync = ref.watch(partyListProvider);
-    final parties = ref.watch(partiesListProvider);
+    final parties = ref.watch(filteredPartiesListProvider);
     final selectedId = ref.watch(selectedPartyIdProvider);
-    final activeFilter = ref.watch(partyListFilterProvider);
+    final activeFilters = ref.watch(partyListFilterProvider);
     final searchQuery = ref.watch(partySearchQueryProvider);
     final usingCache = ref.watch(partiesUsingCacheProvider);
 
@@ -82,17 +88,14 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
           ),
         ),
         _PartyListHeader(
-          activeFilter: activeFilter,
-          onFilterSelected: _onFilterSelected,
+          activeFilters: activeFilters,
+          onFiltersChanged: _onFiltersChanged,
         ),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () => ref
                 .read(partyListProvider.notifier)
-                .refresh(
-                  searchQuery: searchQuery.trim(),
-                  filter: activeFilter,
-                ),
+                .refresh(searchQuery: searchQuery.trim()),
             child: partiesAsync.when(
               loading: () => const _PartyListSkeleton(),
               error: (error, _) {
@@ -131,10 +134,7 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
                               FilledButton(
                                 onPressed: () => ref
                                     .read(partyListProvider.notifier)
-                                    .refresh(
-                                      searchQuery: searchQuery.trim(),
-                                      filter: activeFilter,
-                                    ),
+                                    .refresh(searchQuery: searchQuery.trim()),
                                 child: const Text('Retry'),
                               ),
                             ],
@@ -154,8 +154,7 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
                         height: 200,
                         child: ListPanelEmptyState(
                           message:
-                              searchQuery.isNotEmpty ||
-                                  activeFilter != PartyListFilter.all
+                              searchQuery.isNotEmpty || activeFilters.isFiltered
                               ? 'No parties found'
                               : 'No parties yet. Add your first party.',
                         ),
@@ -172,18 +171,7 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
                         selectedId: selectedId,
                       ),
                     ),
-                    if (parties.length > 20)
-                      Padding(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        child: Text(
-                          'Showing ${parties.length} parties',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
+                    const _ContactsImportBanner(),
                   ],
                 );
               },
@@ -206,6 +194,7 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
         return _PartyListTile(
           party: party,
           isSelected: party.id == selectedId,
+          isEvenRow: index.isEven,
           onTap: () async {
             ref.read(selectedPartyIdProvider.notifier).selected = party.id;
             final service = await ref.read(partyServiceProvider.future);
@@ -266,69 +255,178 @@ class _OfflineBanner extends StatelessWidget {
   }
 }
 
-class _PartyListHeader extends StatelessWidget {
+const _filterMenuWidth = 172.0;
+const _filterTriggerSize = 32.0;
+const _filterCheckboxSize = 18.0;
+
+class _PartyListHeader extends StatefulWidget {
   const _PartyListHeader({
-    required this.activeFilter,
-    required this.onFilterSelected,
+    required this.activeFilters,
+    required this.onFiltersChanged,
   });
 
-  final PartyListFilter activeFilter;
-  final ValueChanged<PartyListFilter> onFilterSelected;
+  final PartyListFilters activeFilters;
+  final ValueChanged<PartyListFilters> onFiltersChanged;
+
+  @override
+  State<_PartyListHeader> createState() => _PartyListHeaderState();
+}
+
+class _PartyListHeaderState extends State<_PartyListHeader> {
+  final _menuController = MenuController();
+
+  void _setFilters(PartyListFilters filters) {
+    widget.onFiltersChanged(filters);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isFiltered = activeFilter != PartyListFilter.all;
+    final isFiltered = widget.activeFilters.isFiltered;
 
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
+        vertical: AppSpacing.sm,
       ),
       decoration: const BoxDecoration(
+        color: _tableHeaderBg,
         border: Border(bottom: BorderSide(color: listPanelCardBorder)),
       ),
       child: Row(
         children: [
           const Expanded(
-            child: Text('PARTY NAME', style: ListPanelStyles.listHeaderStyle),
+            child: Text('Party Name', style: ListPanelStyles.listHeaderStyle),
           ),
           const SizedBox(
             width: 88,
             child: Text(
-              'OUTSTANDING',
+              'Amount',
               textAlign: TextAlign.right,
               overflow: TextOverflow.ellipsis,
               style: ListPanelStyles.listHeaderStyle,
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
-          PopupMenuButton<PartyListFilter>(
-            tooltip: 'Filter parties',
-            icon: Icon(
-              Icons.filter_list,
-              size: 20,
-              color: isFiltered ? AppColors.primary : AppColors.textSecondary,
+          MenuAnchor(
+            controller: _menuController,
+            alignmentOffset: Offset(
+              -_filterMenuWidth + _filterTriggerSize,
+              4,
             ),
-            onSelected: onFilterSelected,
-            itemBuilder: (context) => PartyListFilter.values
-                .map(
-                  (filter) => PopupMenuItem(
-                    value: filter,
-                    child: Row(
-                      children: [
-                        if (filter == activeFilter)
-                          const Icon(Icons.check, size: 16)
-                        else
-                          const SizedBox(width: 16),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(filter.label),
-                      ],
+            crossAxisUnconstrained: false,
+            style: MenuStyle(
+              padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+              elevation: const WidgetStatePropertyAll(4),
+              shadowColor: const WidgetStatePropertyAll(Colors.black26),
+              surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+              backgroundColor: const WidgetStatePropertyAll(Colors.white),
+              shape: WidgetStatePropertyAll(listPanelPopupMenuShape),
+              minimumSize: const WidgetStatePropertyAll(
+                Size(_filterMenuWidth, 0),
+              ),
+            ),
+            menuChildren: [
+              SizedBox(
+                width: _filterMenuWidth,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _PartyFilterToggleTile(
+                      label: PartyListFilter.all.label,
+                      value: !isFiltered,
+                      onChanged: (checked) {
+                        if (checked) _setFilters(PartyListFilters.all);
+                      },
                     ),
-                  ),
-                )
-                .toList(),
+                    for (final filter in PartyListFilter.selectableValues)
+                      _PartyFilterToggleTile(
+                        label: filter.label,
+                        value: widget.activeFilters.selected.contains(filter),
+                        onChanged: (_) {
+                          _setFilters(widget.activeFilters.toggle(filter));
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ],
+            builder: (context, controller, child) {
+              return IconButton(
+                tooltip: 'Filter parties',
+                constraints: const BoxConstraints(
+                  minWidth: _filterTriggerSize,
+                  minHeight: _filterTriggerSize,
+                ),
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+                icon: AppFilterIcon(
+                  color: isFiltered
+                      ? AppColors.primary
+                      : AppColors.textSecondary,
+                  size: 20,
+                ),
+                onPressed: () {
+                  if (controller.isOpen) {
+                    controller.close();
+                  } else {
+                    controller.open();
+                  }
+                },
+              );
+            },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PartyFilterToggleTile extends StatelessWidget {
+  const _PartyFilterToggleTile({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: 6,
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: _filterCheckboxSize,
+              height: _filterCheckboxSize,
+              child: Checkbox(
+                value: value,
+                onChanged: (checked) {
+                  if (checked != null) onChanged(checked);
+                },
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+                side: const BorderSide(color: Color(0xFFBDBDBD)),
+                activeColor: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                label,
+                style: listPanelPopupMenuItemStyle,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -338,11 +436,13 @@ class _PartyListTile extends StatelessWidget {
   const _PartyListTile({
     required this.party,
     required this.isSelected,
+    required this.isEvenRow,
     required this.onTap,
   });
 
   final PartyModel party;
   final bool isSelected;
+  final bool isEvenRow;
   final VoidCallback onTap;
 
   @override
@@ -351,11 +451,16 @@ class _PartyListTile extends StatelessWidget {
         ? listPanelPositiveColor
         : party.hasPayable
         ? listPanelNegativeColor
-        : AppColors.textSecondary;
+        : AppColors.primary;
     final amountText = PartyModel.displayOutstanding(party.balance);
+    final rowColor = isSelected
+        ? listPanelSelectedRowColor
+        : isEvenRow
+        ? AppColors.surface
+        : _zebraRowBg;
 
     return Material(
-      color: isSelected ? listPanelSelectedRowColor : Colors.transparent,
+      color: rowColor,
       child: InkWell(
         onTap: onTap,
         child: Container(
@@ -364,53 +469,26 @@ class _PartyListTile extends StatelessWidget {
           ),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: 12,
+            vertical: 10,
           ),
           child: Row(
             children: [
               Expanded(
-                flex: 3,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.person_outline,
-                      size: 16,
-                      color: party.isActive
-                          ? Colors.grey.shade500
-                          : Colors.grey.shade400,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            party.name,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: party.isActive
-                                  ? AppColors.textPrimary
-                                  : AppColors.textSecondary,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (party.partyType != 'customer')
-                            Text(
-                              party.partyTypeLabel,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  party.name,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: party.isActive
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                flex: 2,
+              SizedBox(
+                width: 88,
                 child: Text(
                   amountText,
                   style: TextStyle(
@@ -418,9 +496,59 @@ class _PartyListTile extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: amountColor,
                   ),
-                  textAlign: TextAlign.end,
+                  textAlign: TextAlign.right,
                   overflow: TextOverflow.ellipsis,
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContactsImportBanner extends StatelessWidget {
+  const _ContactsImportBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFE8F5E9),
+      child: InkWell(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Import from contacts coming soon'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: listPanelCardBorder)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Easily convert your Phone contacts into parties',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: listPanelPositiveColor.withValues(alpha: 0.9),
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: listPanelPositiveColor.withValues(alpha: 0.9),
               ),
             ],
           ),

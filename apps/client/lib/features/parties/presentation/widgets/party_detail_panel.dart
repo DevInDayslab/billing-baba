@@ -1,14 +1,11 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
-import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
-import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
-import 'package:billing_baba/features/parties/presentation/widgets/party_ledger_summary_cards.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_ledger_transactions_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,230 +46,25 @@ class PartyDetailPanel extends ConsumerWidget {
               ),
               child: _OfflineBanner(),
             ),
+          _PartyDetailHeader(
+            party: party,
+            onBack: onBack,
+            onEdit: () => _editParty(context, ref, party),
+            onDelete: () => _confirmDeleteParty(context, ref, party),
+          ),
           Expanded(
-            child: _PartyDetailContent(
-              party: party,
-              onBack: onBack,
-            ),
+            child: _PartyTransactionsBody(partyId: party.id),
           ),
         ],
       ),
     );
   }
-}
 
-class _PartyDetailContent extends ConsumerStatefulWidget {
-  const _PartyDetailContent({
-    required this.party,
-    this.onBack,
-  });
-
-  final PartyModel party;
-  final VoidCallback? onBack;
-
-  @override
-  ConsumerState<_PartyDetailContent> createState() =>
-      _PartyDetailContentState();
-}
-
-class _PartyDetailContentState extends ConsumerState<_PartyDetailContent> {
-  PartyLedgerFilter _filter = PartyLedgerFilter.all;
-
-  @override
-  Widget build(BuildContext context) {
-    final ledgerAsync = ref.watch(partyLedgerProvider(widget.party.id));
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final useFlexibleSummary = constraints.maxHeight < 520;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (useFlexibleSummary)
-              Flexible(
-                flex: 2,
-                child: SingleChildScrollView(
-                  child: _PartySummaryHeader(
-                    party: widget.party,
-                    ledgerAsync: ledgerAsync,
-                    onBack: widget.onBack,
-                  ),
-                ),
-              )
-            else
-              SingleChildScrollView(
-                child: _PartySummaryHeader(
-                  party: widget.party,
-                  ledgerAsync: ledgerAsync,
-                  onBack: widget.onBack,
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.sm,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'TRANSACTIONS',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  PartyLedgerFilterBar(
-                    selected: _filter,
-                    onSelected: (filter) => setState(() => _filter = filter),
-                  ),
-                ],
-              ),
-            ),
-            const PartyLedgerTableHeader(),
-            Expanded(
-              flex: 3,
-              child: ledgerAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, _) => _PartyDetailError(
-                  message: PartyErrorMapper.messageFor(error),
-                  onRetry: () =>
-                      ref.invalidate(partyLedgerProvider(widget.party.id)),
-                ),
-                data: (ledger) => PartyLedgerTransactionsTable(
-                  transactions: ledger.transactions
-                      .where(_filter.matches)
-                      .toList(),
-                  isFiltered: _filter != PartyLedgerFilter.all,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _PartySummaryHeader extends ConsumerWidget {
-  const _PartySummaryHeader({
-    required this.party,
-    required this.ledgerAsync,
-    this.onBack,
-  });
-
-  final PartyModel party;
-  final AsyncValue<PartyLedgerModel> ledgerAsync;
-  final VoidCallback? onBack;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final businessName = ref.watch(sidebarBusinessProvider).name;
-    final detailRows = _buildDetailRows(businessName);
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: listPanelCardBorder)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (onBack != null) ...[
-                IconButton(
-                  onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back),
-                  tooltip: 'Back to list',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-              ],
-              Expanded(
-                child: Text(
-                  party.name,
-                  style: ListPanelStyles.panelTitleStyle,
-                ),
-              ),
-              IconButton(
-                onPressed: () => _editParty(context, ref),
-                icon: const Icon(Icons.edit_outlined, size: 20),
-                color: AppColors.primary,
-                tooltip: 'Edit party',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              ),
-              IconButton(
-                onPressed: () => _confirmDeleteParty(context, ref),
-                icon: const Icon(Icons.delete_outline, size: 20),
-                color: AppColors.error,
-                tooltip: 'Delete party',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          ledgerAsync.when(
-            loading: () => _SummaryCards(party: party),
-            error: (_, _) => _SummaryCards(party: party),
-            data: (ledger) => PartyLedgerSummaryCards(
-              summary: ledger.summary,
-              party: party,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _PartyDetailsTable(rows: detailRows),
-        ],
-      ),
-    );
-  }
-
-  List<_PartyDetailItem> _buildDetailRows(String businessName) {
-    return [
-      _PartyDetailItem(
-        label: 'Phone',
-        value: PartyModel.displayOrDash(party.phone),
-      ),
-      _PartyDetailItem(
-        label: 'Email',
-        value: PartyModel.displayOrDash(party.email),
-      ),
-      _PartyDetailItem(
-        label: 'GSTIN',
-        value: PartyModel.displayOrDash(party.gstin),
-      ),
-      _PartyDetailItem(label: 'Type', value: party.partyTypeLabel),
-      _PartyDetailItem(
-        label: 'Notes',
-        value: PartyModel.displayOrDash(party.notes),
-      ),
-      _PartyDetailItem(
-        label: 'Created Date',
-        value: PartyModel.displayDate(party.createdAt),
-      ),
-      _PartyDetailItem(
-        label: 'Updated Date',
-        value: PartyModel.displayDate(party.updatedAt),
-      ),
-      _PartyDetailItem(
-        label: 'Business Name',
-        value: PartyModel.displayOrDash(businessName),
-      ),
-    ];
-  }
-
-  Future<void> _editParty(BuildContext context, WidgetRef ref) async {
+  Future<void> _editParty(
+    BuildContext context,
+    WidgetRef ref,
+    PartyModel party,
+  ) async {
     final result = await showEditPartyDialog(context, party: party);
     if (result == null || !context.mounted) return;
 
@@ -331,7 +123,11 @@ class _PartySummaryHeader extends ConsumerWidget {
     }
   }
 
-  Future<void> _confirmDeleteParty(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmDeleteParty(
+    BuildContext context,
+    WidgetRef ref,
+    PartyModel party,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -377,7 +173,7 @@ class _PartySummaryHeader extends ConsumerWidget {
       );
     } on PartyHasDependenciesException {
       if (!context.mounted) return;
-      await _offerDeactivateParty(context, ref, messenger);
+      await _offerDeactivateParty(context, ref, party, messenger);
     } on PartyOfflineException {
       if (!context.mounted) return;
       messenger?.showSnackBar(
@@ -412,6 +208,7 @@ class _PartySummaryHeader extends ConsumerWidget {
   Future<void> _offerDeactivateParty(
     BuildContext context,
     WidgetRef ref,
+    PartyModel party,
     ScaffoldMessengerState? messenger,
   ) async {
     final deactivate = await showDialog<bool>(
@@ -487,133 +284,164 @@ class _PartySummaryHeader extends ConsumerWidget {
   }
 }
 
-class _SummaryCards extends StatelessWidget {
-  const _SummaryCards({required this.party});
+class _PartyDetailHeader extends StatelessWidget {
+  const _PartyDetailHeader({
+    required this.party,
+    required this.onEdit,
+    required this.onDelete,
+    this.onBack,
+  });
 
   final PartyModel party;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: [
-        _SummaryCard(
-          label: 'Opening Balance',
-          value: PartyModel.displayCurrency(party.openingBalance),
-        ),
-        _SummaryCard(
-          label: 'Outstanding',
-          value: PartyModel.displayOutstanding(party.balance),
-        ),
-        _SummaryCard(
-          label: 'Credit Limit',
-          value: PartyModel.displayCreditLimit(
-            hasCustomCreditLimit: party.hasCustomCreditLimit,
-            creditLimit: party.creditLimit,
-          ),
-        ),
-        _SummaryCard(
-          label: 'Status',
-          value: party.statusLabel,
-        ),
-      ],
-    );
-  }
-}
-
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.label, required this.value});
-
-  final String label;
-  final String value;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 150,
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: listPanelCardBorder),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.sm,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: listPanelCardBorder)),
+      ),
+      child: Row(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+          if (onBack != null) ...[
+            IconButton(
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back, size: 20),
+              tooltip: 'Back to list',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               color: AppColors.textSecondary,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+            const SizedBox(width: AppSpacing.xs),
+          ],
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    party.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                IconButton(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  color: AppColors.textSecondary,
+                  tooltip: 'Edit party',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
+                ),
+              ],
             ),
+          ),
+          _HeaderActionIcon(
+            icon: Icons.chat_bubble_outline,
+            tooltip: 'Message',
+            onTap: () => _showComingSoon(context, 'Messaging'),
+          ),
+          _HeaderActionIcon(
+            icon: Icons.phone_in_talk_outlined,
+            tooltip: 'WhatsApp',
+            onTap: () => _showComingSoon(context, 'WhatsApp'),
+          ),
+          _HeaderActionIcon(
+            icon: Icons.schedule_outlined,
+            tooltip: 'Reminders',
+            onTap: () => _showComingSoon(context, 'Reminders'),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'More actions',
+            padding: EdgeInsets.zero,
+            icon: const Icon(
+              Icons.more_vert,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
+            onSelected: (value) {
+              if (value == 'delete') onDelete();
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'delete', child: Text('Delete party')),
+            ],
           ),
         ],
       ),
     );
   }
+
+  void _showComingSoon(BuildContext context, String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$feature coming soon'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 }
 
-class _PartyDetailItem {
-  const _PartyDetailItem({required this.label, required this.value});
+class _HeaderActionIcon extends StatelessWidget {
+  const _HeaderActionIcon({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
 
-  final String label;
-  final String value;
-}
-
-class _PartyDetailsTable extends StatelessWidget {
-  const _PartyDetailsTable({required this.rows});
-
-  final List<_PartyDetailItem> rows;
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Table(
-      columnWidths: const {
-        0: FixedColumnWidth(140),
-        1: FlexColumnWidth(),
-      },
-      children: [
-        for (final row in rows)
-          TableRow(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(
-                  right: AppSpacing.sm,
-                  bottom: AppSpacing.sm,
-                ),
-                child: Text(
-                  row.label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: Text(
-                  row.value,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-      ],
+    return IconButton(
+      onPressed: onTap,
+      icon: Icon(icon, size: 18),
+      color: AppColors.textSecondary,
+      tooltip: tooltip,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+    );
+  }
+}
+
+class _PartyTransactionsBody extends ConsumerWidget {
+  const _PartyTransactionsBody({required this.partyId});
+
+  final String partyId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ledgerAsync = ref.watch(partyLedgerProvider(partyId));
+
+    return ledgerAsync.when(
+      loading: () => const PartyLedgerTransactionsSection(
+        transactions: [],
+        isLoading: true,
+      ),
+      error: (error, _) => PartyLedgerTransactionsSection(
+        transactions: const [],
+        errorMessage: PartyErrorMapper.messageFor(error),
+        onRetry: () => ref.invalidate(partyLedgerProvider(partyId)),
+      ),
+      data: (ledger) => PartyLedgerTransactionsSection(
+        transactions: ledger.transactions,
+      ),
     );
   }
 }

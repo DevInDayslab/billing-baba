@@ -14,19 +14,13 @@ class PartyListQuery {
 
   factory PartyListQuery.fromFilter({
     String? search,
-    PartyListFilter filter = PartyListFilter.all,
+    PartyListFilters filters = PartyListFilters.all,
     int page = 1,
   }) {
-    final isActive = switch (filter) {
-      PartyListFilter.active => true,
-      PartyListFilter.inactive => false,
-      _ => null,
-    };
-
     return PartyListQuery(
       page: page,
       q: search,
-      isActive: isActive,
+      isActive: filters.apiIsActive,
       sort: 'opening_balance',
       order: 'desc',
     );

@@ -52,7 +52,7 @@ class PartyService {
 
   Future<List<PartyModel>> fetchParties({
     String? searchQuery,
-    PartyListFilter filter = PartyListFilter.all,
+    PartyListFilters filters = PartyListFilters.all,
     PartyTypeFilter typeFilter = PartyTypeFilter.all,
   }) async {
     final businessId = _businessId;
@@ -65,7 +65,7 @@ class PartyService {
     try {
       final remote = await _fetchRemoteParties(
         searchQuery: searchQuery,
-        filter: filter,
+        filters: filters,
         typeFilter: typeFilter,
       );
       await _persistParties(businessId, remote);
@@ -73,7 +73,7 @@ class PartyService {
       return _applyClientFilters(
         merged,
         searchQuery,
-        filter,
+        filters,
         typeFilter,
       );
     } on DioException catch (e) {
@@ -83,7 +83,7 @@ class PartyService {
         return _applyClientFilters(
           cached,
           searchQuery,
-          filter,
+          filters,
           typeFilter,
         );
       }
@@ -317,20 +317,17 @@ class PartyService {
     return _cache.readSelectedPartyId(businessId);
   }
 
-  Future<void> rememberListFilter(PartyListFilter filter) async {
+  Future<void> rememberListFilter(PartyListFilters filters) async {
     final businessId = _businessId;
     if (businessId == null) return;
-    await _cache.saveListFilter(businessId, filter.name);
+    await _cache.saveListFilter(businessId, filters.toStorage());
   }
 
-  PartyListFilter? readRememberedListFilter() {
+  PartyListFilters readRememberedListFilter() {
     final businessId = _businessId;
-    if (businessId == null) return null;
+    if (businessId == null) return PartyListFilters.all;
     final value = _cache.readListFilter(businessId);
-    if (value == null) return null;
-    return PartyListFilter.values
-        .where((filter) => filter.name == value)
-        .firstOrNull;
+    return PartyListFilters.fromStorage(value);
   }
 
   Future<List<String>> readPartyGroupNames() async {
@@ -359,7 +356,7 @@ class PartyService {
 
   Future<List<PartyDto>> _fetchRemoteParties({
     String? searchQuery,
-    PartyListFilter filter = PartyListFilter.all,
+    PartyListFilters filters = PartyListFilters.all,
     PartyTypeFilter typeFilter = PartyTypeFilter.all,
   }) async {
     final allParties = <PartyDto>[];
@@ -371,7 +368,7 @@ class PartyService {
       final response = await _repository.listParties(
         PartyListQuery.fromFilter(
           search: searchQuery,
-          filter: filter,
+          filters: filters,
           page: page,
         ).copyWith(limit: limit),
       );
@@ -386,7 +383,7 @@ class PartyService {
   List<PartyModel> _applyClientFilters(
     List<PartyModel> parties,
     String? searchQuery,
-    PartyListFilter filter,
+    PartyListFilters filters,
     PartyTypeFilter typeFilter,
   ) {
     final query = searchQuery?.trim().toLowerCase() ?? '';
@@ -401,13 +398,7 @@ class PartyService {
         if (!matchesName && !matchesPhone && !matchesGstin) return false;
       }
 
-      return switch (filter) {
-        PartyListFilter.all => true,
-        PartyListFilter.toReceive => party.hasReceivable,
-        PartyListFilter.toPay => party.hasPayable,
-        PartyListFilter.active => party.isActive,
-        PartyListFilter.inactive => !party.isActive,
-      };
+      return filters.matches(party);
     }).toList()
       ..sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
     return filtered;
@@ -582,15 +573,11 @@ class PartyList extends _$PartyList {
   Future<List<PartyModel>> build() async {
     ref
       ..watch(partySearchQueryProvider)
-      ..watch(partyListFilterProvider)
-      ..watch(partyTypeFilterProvider)
       ..watch(partyBackendSearchProvider);
 
     final service = await ref.watch(partyServiceProvider.future);
     final parties = await service.fetchParties(
       searchQuery: ref.read(partyBackendSearchProvider),
-      filter: ref.read(partyListFilterProvider),
-      typeFilter: ref.read(partyTypeFilterProvider),
     );
 
     return parties;
@@ -598,7 +585,7 @@ class PartyList extends _$PartyList {
 
   Future<void> refresh({
     String? searchQuery,
-    PartyListFilter? filter,
+    PartyListFilters? filters,
     PartyTypeFilter? typeFilter,
   }) async {
     state = const AsyncLoading();
@@ -606,7 +593,7 @@ class PartyList extends _$PartyList {
       final service = await ref.read(partyServiceProvider.future);
       return service.fetchParties(
         searchQuery: searchQuery ?? ref.read(partyBackendSearchProvider),
-        filter: filter ?? ref.read(partyListFilterProvider),
+        filters: filters ?? ref.read(partyListFilterProvider),
         typeFilter: typeFilter ?? ref.read(partyTypeFilterProvider),
       );
     });
@@ -673,8 +660,8 @@ class PartyList extends _$PartyList {
     final service = await ref.read(partyServiceProvider.future);
     try {
       final updated = await service.setPartyActive(partyId, isActive: false);
-      final filter = ref.read(partyListFilterProvider);
-      if (filter == PartyListFilter.active) {
+      final filters = ref.read(partyListFilterProvider);
+      if (filters.isActiveOnly) {
         _removeFromState(partyId);
         if (ref.read(selectedPartyIdProvider) == partyId) {
           ref.read(selectedPartyIdProvider.notifier).selected = null;

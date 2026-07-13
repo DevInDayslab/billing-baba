@@ -29,6 +29,11 @@ class AddPartyResult {
     this.additionalField1 = '',
     this.additionalField2Enabled = false,
     this.additionalField2 = '',
+    this.additionalField3Enabled = false,
+    this.additionalField3 = '',
+    this.additionalField4Enabled = false,
+    this.additionalField4 = '',
+    this.additionalField4DateFormat = 'dd/mm/yy',
   });
 
   final String partyName;
@@ -59,4 +64,9 @@ class AddPartyResult {
   final String additionalField1;
   final bool additionalField2Enabled;
   final String additionalField2;
+  final bool additionalField3Enabled;
+  final String additionalField3;
+  final bool additionalField4Enabled;
+  final String additionalField4;
+  final String additionalField4DateFormat;
 }

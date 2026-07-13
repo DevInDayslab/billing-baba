@@ -23,6 +23,8 @@ const _gstLeftColumnWidth = 220.0;
 const _defaultDecimal = '0.00';
 const _defaultState = 'Andhra Pradesh';
 const _successSnackBarColor = Color(0xFF2E7D32);
+const _additionalField4DateFormats = ['dd/mm/yy', 'mm/yyyy'];
+const _defaultAdditionalField4DateFormat = 'dd/mm/yy';
 
 /// Shows the Add Party modal from sale forms and party pickers.
 Future<AddPartyResult?> showAddPartyDialog(BuildContext context) {
@@ -115,13 +117,21 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   final _creditLimitController = TextEditingController();
   final _additionalField1Controller = TextEditingController();
   final _additionalField2Controller = TextEditingController();
+  final _additionalField3Controller = TextEditingController();
+  final _additionalField4Controller = TextEditingController();
   final _openingBalanceAsOfDatePickerKey =
+      GlobalKey<SaleSingleDatePickerAnchorState>();
+  final _loyaltyAsOfDatePickerKey =
       GlobalKey<SaleSingleDatePickerAnchorState>();
 
   DateTime _openingBalanceAsOfDate = DateTime.now();
+  DateTime _loyaltyPointsAsOfDate = DateTime.now();
   bool _useCustomCreditLimit = false;
   bool _additionalField1Enabled = false;
   bool _additionalField2Enabled = false;
+  bool _additionalField3Enabled = false;
+  bool _additionalField4Enabled = false;
+  String _additionalField4DateFormat = _defaultAdditionalField4DateFormat;
 
   String _gstType = 'Unregistered/Consumer';
   String _state = _defaultState;
@@ -262,6 +272,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     );
     _openingBalanceAsOfDate =
         party.openingBalanceAsOfDate ?? DateTime.now();
+    _loyaltyPointsAsOfDate =
+        party.loyaltyPointsAsOfDate ??
+        party.openingBalanceAsOfDate ??
+        DateTime.now();
 
     _loyaltyPointsOpeningBalanceController.text =
         party.loyaltyPointsOpeningBalance.trim().isEmpty
@@ -279,6 +293,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _additionalField1Controller.text = party.additionalField1;
     _additionalField2Enabled = party.additionalField2.isNotEmpty;
     _additionalField2Controller.text = party.additionalField2;
+    _additionalField3Enabled = party.additionalField3.isNotEmpty;
+    _additionalField3Controller.text = party.additionalField3;
+    _additionalField4Enabled =
+        party.additionalField4.isNotEmpty ||
+        party.additionalField4DateFormat != _defaultAdditionalField4DateFormat;
+    _additionalField4Controller.text = party.additionalField4;
+    _additionalField4DateFormat = party.additionalField4DateFormat;
   }
 
   @override
@@ -301,6 +322,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _creditLimitController.dispose();
     _additionalField1Controller.dispose();
     _additionalField2Controller.dispose();
+    _additionalField3Controller.dispose();
+    _additionalField4Controller.dispose();
     super.dispose();
   }
 
@@ -331,7 +354,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       loyaltyPointsOpeningBalance: _normalizedDecimal(
         _loyaltyPointsOpeningBalanceController.text,
       ),
-      loyaltyPointsAsOfDate: _openingBalanceAsOfDate,
+      loyaltyPointsAsOfDate: _loyaltyPointsAsOfDate,
       hasCustomCreditLimit: _useCustomCreditLimit,
       creditLimit: _useCustomCreditLimit
           ? _normalizedDecimal(_creditLimitController.text)
@@ -344,6 +367,17 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       additionalField2: _additionalField2Enabled
           ? _additionalField2Controller.text.trim()
           : '',
+      additionalField3Enabled: _additionalField3Enabled,
+      additionalField3: _additionalField3Enabled
+          ? _additionalField3Controller.text.trim()
+          : '',
+      additionalField4Enabled: _additionalField4Enabled,
+      additionalField4: _additionalField4Enabled
+          ? _additionalField4Controller.text.trim()
+          : '',
+      additionalField4DateFormat: _additionalField4Enabled
+          ? _additionalField4DateFormat
+          : _defaultAdditionalField4DateFormat,
     );
   }
 
@@ -635,6 +669,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _creditLimitController.clear();
     _additionalField1Controller.clear();
     _additionalField2Controller.clear();
+    _additionalField3Controller.clear();
+    _additionalField4Controller.clear();
     setState(() {
       final defaultState = _resolvedBusinessState();
       _gstType = 'Unregistered/Consumer';
@@ -645,9 +681,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       _billingCountry = 'India';
       _shippingCountry = 'India';
       _openingBalanceAsOfDate = DateTime.now();
+      _loyaltyPointsAsOfDate = DateTime.now();
       _useCustomCreditLimit = false;
       _additionalField1Enabled = false;
       _additionalField2Enabled = false;
+      _additionalField3Enabled = false;
+      _additionalField4Enabled = false;
+      _additionalField4DateFormat = _defaultAdditionalField4DateFormat;
       _showShippingAddress = false;
       _showDetailedBillingAddress = false;
       _showDetailedShippingAddress = false;
@@ -981,30 +1021,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       ),
       tabs: [
         const Tab(text: 'GST & Address'),
-        Tab(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Credit & Balance'),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(
-                  color: AppColors.error,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                child: const Text(
-                  'New',
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        const Tab(text: 'Credit & Balance'),
         const Tab(text: 'Additional Fields'),
       ],
     );
@@ -1428,7 +1445,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildBalanceWithDateRow(
+        _buildCreditBalanceAmountDateRow(
           amountLabel: 'Opening Balance',
           amountController: _openingBalanceController,
           amountError: _openingBalanceError,
@@ -1437,46 +1454,27 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               setState(() => _openingBalanceError = null);
             }
           },
+          dateLabel: 'As Of Date',
           selectedDate: _openingBalanceAsOfDate,
           datePickerKey: _openingBalanceAsOfDatePickerKey,
           onDateSelected: (date) =>
               setState(() => _openingBalanceAsOfDate = _dateOnly(date)),
         ),
-        const SizedBox(height: AppSpacing.lg),
-        _LabeledField(
-          label: 'Loyalty Points Opening Balance',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _loyaltyPointsOpeningBalanceController,
-                style: saleFieldTextStyle,
-                decoration: buildSaleFieldDecoration(
-                  hint: _defaultDecimal,
-                  hasError: _loyaltyBalanceError != null,
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                onChanged: (_) {
-                  if (_loyaltyBalanceError != null) {
-                    setState(() => _loyaltyBalanceError = null);
-                  }
-                },
-              ),
-              if (_loyaltyBalanceError != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, left: 2),
-                  child: Text(
-                    _loyaltyBalanceError!,
-                    style: const TextStyle(
-                      color: AppColors.error,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-            ],
-          ),
+        const SizedBox(height: AppSpacing.md),
+        _buildCreditBalanceAmountDateRow(
+          amountLabel: 'Loyalty Points Opening Balance',
+          amountController: _loyaltyPointsOpeningBalanceController,
+          amountError: _loyaltyBalanceError,
+          onAmountChanged: () {
+            if (_loyaltyBalanceError != null) {
+              setState(() => _loyaltyBalanceError = null);
+            }
+          },
+          dateLabel: 'Loyalty Balance As of Date',
+          selectedDate: _loyaltyPointsAsOfDate,
+          datePickerKey: _loyaltyAsOfDatePickerKey,
+          onDateSelected: (date) =>
+              setState(() => _loyaltyPointsAsOfDate = _dateOnly(date)),
         ),
         const SizedBox(height: AppSpacing.xl),
         _buildCreditLimitSection(),
@@ -1484,9 +1482,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     );
   }
 
-  Widget _buildBalanceWithDateRow({
+  Widget _buildCreditBalanceAmountDateRow({
     required String amountLabel,
     required TextEditingController amountController,
+    required String dateLabel,
     required DateTime selectedDate,
     required GlobalKey<SaleSingleDatePickerAnchorState> datePickerKey,
     required ValueChanged<DateTime> onDateSelected,
@@ -1497,72 +1496,29 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 560;
 
-        final asOfDateField = _LabeledField(
-          label: 'As of Date',
-          child: SaleSingleDatePickerAnchor(
-            key: datePickerKey,
-            selectedDate: selectedDate,
-            onDateSelected: onDateSelected,
-            child: SaleFieldTrigger(
-              onTap: () => datePickerKey.currentState?.toggle(),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      formatSaleSingleDate(selectedDate),
-                      style: saleFieldTextStyle,
-                    ),
-                  ),
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 16,
-                    color: Colors.grey.shade600,
-                  ),
-                ],
-              ),
-            ),
-          ),
+        final amountField = _buildOutlinedAmountField(
+          label: amountLabel,
+          controller: amountController,
+          hasError: amountError != null,
+          errorText: amountError,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          onChanged: (_) => onAmountChanged?.call(),
         );
 
-        final amountField = _LabeledField(
-          label: amountLabel,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: amountController,
-                style: saleFieldTextStyle,
-                decoration: buildSaleFieldDecoration(
-                  hint: _defaultDecimal,
-                  hasError: amountError != null,
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                onChanged: (_) => onAmountChanged?.call(),
-              ),
-              if (amountError != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4, left: 2),
-                  child: Text(
-                    amountError,
-                    style: const TextStyle(
-                      color: AppColors.error,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-            ],
-          ),
+        final dateField = _buildOutlinedDateField(
+          label: dateLabel,
+          selectedDate: selectedDate,
+          datePickerKey: datePickerKey,
+          onDateSelected: onDateSelected,
         );
 
         if (isNarrow) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              asOfDateField,
-              const SizedBox(height: AppSpacing.md),
               amountField,
+              const SizedBox(height: AppSpacing.md),
+              dateField,
             ],
           );
         }
@@ -1570,12 +1526,123 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(flex: 2, child: asOfDateField),
-            const SizedBox(width: AppSpacing.lg),
-            Expanded(flex: 3, child: amountField),
+            Expanded(child: amountField),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(child: dateField),
           ],
         );
       },
+    );
+  }
+
+  InputDecoration _outlinedFieldDecoration({
+    required String label,
+    bool hasError = false,
+  }) {
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(6),
+      borderSide: BorderSide(
+        color: hasError ? saleFieldErrorColor : saleFieldBorderColor,
+      ),
+    );
+
+    return InputDecoration(
+      labelText: label,
+      floatingLabelBehavior: FloatingLabelBehavior.always,
+      labelStyle: TextStyle(
+        fontSize: 12,
+        color: hasError ? saleFieldErrorColor : AppColors.textSecondary,
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 10,
+      ),
+      isDense: true,
+      border: border,
+      enabledBorder: border,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(6),
+        borderSide: BorderSide(
+          color: hasError ? saleFieldErrorColor : saleFieldFocusColor,
+          width: 1.5,
+        ),
+      ),
+      errorBorder: border,
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(6),
+        borderSide: const BorderSide(
+          color: saleFieldErrorColor,
+          width: 1.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOutlinedAmountField({
+    required String label,
+    required TextEditingController controller,
+    bool hasError = false,
+    String? errorText,
+    TextInputType? keyboardType,
+    ValueChanged<String>? onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: controller,
+          style: saleFieldTextStyle,
+          keyboardType: keyboardType,
+          decoration: _outlinedFieldDecoration(
+            label: label,
+            hasError: hasError,
+          ),
+          onChanged: onChanged,
+        ),
+        if (hasError && errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 2),
+            child: Text(
+              errorText,
+              style: const TextStyle(fontSize: 11, color: saleFieldErrorColor),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildOutlinedDateField({
+    required String label,
+    required DateTime selectedDate,
+    required GlobalKey<SaleSingleDatePickerAnchorState> datePickerKey,
+    required ValueChanged<DateTime> onDateSelected,
+  }) {
+    return SaleSingleDatePickerAnchor(
+      key: datePickerKey,
+      selectedDate: selectedDate,
+      onDateSelected: onDateSelected,
+      child: GestureDetector(
+        onTap: () => datePickerKey.currentState?.toggle(),
+        behavior: HitTestBehavior.opaque,
+        child: InputDecorator(
+          decoration: _outlinedFieldDecoration(label: label),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  formatSaleSingleDate(selectedDate),
+                  style: saleFieldTextStyle,
+                ),
+              ),
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 16,
+                color: Colors.grey.shade600,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1583,128 +1650,77 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Credit Limit', style: saleFieldLabelStyle),
+        Row(
+          children: [
+            const Text('Credit Limit', style: saleFieldLabelStyle),
+            const SizedBox(width: 4),
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.info_outline, size: 16),
+              color: AppColors.textSecondary,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+              tooltip: 'Set a maximum credit amount for this party',
+            ),
+          ],
+        ),
         const SizedBox(height: AppSpacing.sm),
-        _buildCreditLimitToggleBar(),
+        Row(
+          children: [
+            Text(
+              'No Limit',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: !_useCustomCreditLimit
+                    ? AppColors.primary
+                    : AppColors.textSecondary,
+              ),
+            ),
+            Switch(
+              value: _useCustomCreditLimit,
+              onChanged: (value) => setState(() {
+                _useCustomCreditLimit = value;
+                if (value && _creditLimitController.text.trim().isEmpty) {
+                  _creditLimitController.text = _defaultDecimal;
+                }
+              }),
+              activeThumbColor: Colors.white,
+              activeTrackColor: AppColors.primary,
+            ),
+            Text(
+              'Custom Limit',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: _useCustomCreditLimit
+                    ? AppColors.primary
+                    : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
         if (_useCustomCreditLimit) ...[
           const SizedBox(height: AppSpacing.md),
           SizedBox(
-            width: 200,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextField(
-                  controller: _creditLimitController,
-                  style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(
-                    hint: _defaultDecimal,
-                    hasError: _creditLimitError != null,
-                  ).copyWith(prefixText: '₹ '),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  onChanged: (_) {
-                    if (_creditLimitError != null) {
-                      setState(() => _creditLimitError = null);
-                    }
-                  },
-                ),
-                if (_creditLimitError != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, left: 2),
-                    child: Text(
-                      _creditLimitError!,
-                      style: const TextStyle(
-                        color: AppColors.error,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-              ],
+            width: 220,
+            child: _buildInlineTextField(
+              controller: _creditLimitController,
+              hint: _defaultDecimal,
+              hasError: _creditLimitError != null,
+              errorText: _creditLimitError,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              onChanged: (_) {
+                if (_creditLimitError != null) {
+                  setState(() => _creditLimitError = null);
+                }
+              },
             ),
           ),
         ],
       ],
-    );
-  }
-
-  Widget _buildCreditLimitToggleBar() {
-    return Container(
-      height: 32,
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: _cardBorder),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildCreditLimitToggleSegment(
-            label: 'No limit',
-            isSelected: !_useCustomCreditLimit,
-            borderRadius: const BorderRadius.horizontal(
-              left: Radius.circular(4),
-            ),
-            onTap: () => setState(() => _useCustomCreditLimit = false),
-          ),
-          _buildCreditLimitToggleSegment(
-            label: 'Custom limit',
-            isSelected: _useCustomCreditLimit,
-            borderRadius: const BorderRadius.horizontal(
-              right: Radius.circular(4),
-            ),
-            onTap: () => setState(() {
-              _useCustomCreditLimit = true;
-              if (_creditLimitController.text.trim().isEmpty) {
-                _creditLimitController.text = _defaultDecimal;
-              }
-            }),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCreditLimitToggleSegment({
-    required String label,
-    required bool isSelected,
-    required BorderRadius borderRadius,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: borderRadius,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            borderRadius: borderRadius,
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -1713,7 +1729,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildAdditionalFieldRow(
-          label: 'Additional Field 1',
+          hint: 'Additional Field 1 Name',
           enabled: _additionalField1Enabled,
           controller: _additionalField1Controller,
           onEnabledChanged: (value) =>
@@ -1721,23 +1737,43 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         ),
         const SizedBox(height: AppSpacing.md),
         _buildAdditionalFieldRow(
-          label: 'Additional Field 2',
+          hint: 'Additional Field 2 Name',
           enabled: _additionalField2Enabled,
           controller: _additionalField2Controller,
           onEnabledChanged: (value) =>
               setState(() => _additionalField2Enabled = value),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildAdditionalFieldRow(
+          hint: 'Additional Field 3 Name',
+          enabled: _additionalField3Enabled,
+          controller: _additionalField3Controller,
+          onEnabledChanged: (value) =>
+              setState(() => _additionalField3Enabled = value),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildAdditionalFieldNameDateRow(
+          nameHint: 'Additional Field 4 Name',
+          enabled: _additionalField4Enabled,
+          nameController: _additionalField4Controller,
+          dateFormat: _additionalField4DateFormat,
+          onEnabledChanged: (value) =>
+              setState(() => _additionalField4Enabled = value),
+          onDateFormatSelected: (format) =>
+              setState(() => _additionalField4DateFormat = format),
         ),
       ],
     );
   }
 
   Widget _buildAdditionalFieldRow({
-    required String label,
+    required String hint,
     required bool enabled,
     required TextEditingController controller,
     required ValueChanged<bool> onEnabledChanged,
   }) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Checkbox(
           value: enabled,
@@ -1752,7 +1788,55 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             controller: controller,
             enabled: enabled,
             style: saleFieldTextStyle,
-            decoration: buildSaleFieldDecoration(hint: label),
+            decoration: buildSaleFieldDecoration(hint: hint),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdditionalFieldNameDateRow({
+    required String nameHint,
+    required bool enabled,
+    required TextEditingController nameController,
+    required String dateFormat,
+    required ValueChanged<bool> onEnabledChanged,
+    required ValueChanged<String> onDateFormatSelected,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Checkbox(
+          value: enabled,
+          onChanged: (value) => onEnabledChanged(value ?? false),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+          activeColor: AppColors.primary,
+        ),
+        const SizedBox(width: AppSpacing.xs),
+        Expanded(
+          flex: 3,
+          child: TextField(
+            controller: nameController,
+            enabled: enabled,
+            style: saleFieldTextStyle,
+            decoration: buildSaleFieldDecoration(hint: nameHint),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          flex: 2,
+          child: IgnorePointer(
+            ignoring: !enabled,
+            child: Opacity(
+              opacity: enabled ? 1 : 0.5,
+              child: SaleGenericSelectDropdown(
+                value: dateFormat,
+                options: _additionalField4DateFormats,
+                hintText: _defaultAdditionalField4DateFormat,
+                onSelected: onDateFormatSelected,
+              ),
+            ),
           ),
         ),
       ],

@@ -37,6 +37,9 @@ class PartyModel {
     this.creditLimit = '',
     this.additionalField1 = '',
     this.additionalField2 = '',
+    this.additionalField3 = '',
+    this.additionalField4 = '',
+    this.additionalField4DateFormat = 'dd/mm/yy',
     this.createdAt,
     this.updatedAt,
   });
@@ -80,6 +83,9 @@ class PartyModel {
       creditLimit: dto.creditLimit,
       additionalField1: extension.additionalField1,
       additionalField2: extension.additionalField2,
+      additionalField3: extension.additionalField3,
+      additionalField4: extension.additionalField4,
+      additionalField4DateFormat: extension.additionalField4DateFormat,
       createdAt: DateTime.tryParse(dto.createdAt),
       updatedAt: DateTime.tryParse(dto.updatedAt),
     );
@@ -154,6 +160,15 @@ class PartyModel {
       additionalField2: result.additionalField2Enabled
           ? result.additionalField2.trim()
           : '',
+      additionalField3: result.additionalField3Enabled
+          ? result.additionalField3.trim()
+          : '',
+      additionalField4: result.additionalField4Enabled
+          ? result.additionalField4.trim()
+          : '',
+      additionalField4DateFormat: result.additionalField4Enabled
+          ? result.additionalField4DateFormat
+          : 'dd/mm/yy',
     );
   }
 
@@ -189,6 +204,9 @@ class PartyModel {
   final String creditLimit;
   final String additionalField1;
   final String additionalField2;
+  final String additionalField3;
+  final String additionalField4;
+  final String additionalField4DateFormat;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -273,6 +291,9 @@ class PartyModel {
     String? creditLimit,
     String? additionalField1,
     String? additionalField2,
+    String? additionalField3,
+    String? additionalField4,
+    String? additionalField4DateFormat,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -310,6 +331,10 @@ class PartyModel {
       creditLimit: creditLimit ?? this.creditLimit,
       additionalField1: additionalField1 ?? this.additionalField1,
       additionalField2: additionalField2 ?? this.additionalField2,
+      additionalField3: additionalField3 ?? this.additionalField3,
+      additionalField4: additionalField4 ?? this.additionalField4,
+      additionalField4DateFormat:
+          additionalField4DateFormat ?? this.additionalField4DateFormat,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

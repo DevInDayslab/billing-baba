@@ -395,7 +395,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.reportsParty,
-            redirect: (context, state) => AppRoutes.reports,
+            redirect: (context, state) {
+              final sub = state.uri.queryParameters['sub'];
+              if (sub != null && sub.isNotEmpty) {
+                return '${AppRoutes.reports}?group=party&sub=$sub';
+              }
+              return '${AppRoutes.reports}?group=party';
+            },
           ),
           GoRoute(
             path: AppRoutes.reportsGst,

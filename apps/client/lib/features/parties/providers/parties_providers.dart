@@ -28,6 +28,21 @@ final partiesListProvider = Provider<List<PartyModel>>((ref) {
       );
 });
 
+/// Parties list with the Parties page filters applied — instant, client-side.
+final filteredPartiesListProvider = Provider<List<PartyModel>>((ref) {
+  final filters = ref.watch(partyListFilterProvider);
+  final typeFilter = ref.watch(partyTypeFilterProvider);
+  final parties = ref.watch(partiesListProvider);
+
+  return parties
+      .where((party) {
+        if (!typeFilter.matches(party.partyType)) return false;
+        return filters.matches(party);
+      })
+      .toList()
+    ..sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
+});
+
 class PartyBalanceSummary {
   const PartyBalanceSummary({
     required this.totalReceivable,
