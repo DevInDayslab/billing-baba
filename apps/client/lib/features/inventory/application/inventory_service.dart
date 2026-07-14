@@ -609,7 +609,7 @@ class InventoryService {
 
   Future<InventoryItem> getItem(String id) async {
     try {
-      final dto = await _repository.getItem(id);
+      final dto = await fetchItemDetailDto(id);
       final stockLevels = await _fetchAllPages<StockLevelDto>(
         fetchPage: (page) async {
           final response = await _repository.getStockLevels(
@@ -624,6 +624,14 @@ class InventoryService {
         quantity: stock?.quantity,
         stockValue: stock?.stockValue,
       );
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<ItemDetailDto> fetchItemDetailDto(String id) async {
+    try {
+      return await _repository.getItem(id);
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }
@@ -672,9 +680,12 @@ class InventoryService {
       throw const InventoryException('Please select a base unit.');
     }
 
+    final defaultGodown = form.godownId == null ? await getDefaultGodown() : null;
     final request = AddItemFormMapper.toUpdateRequest(
       form,
       baseUnitShortName: baseUnit.shortName,
+      openingGodownId: form.godownId ?? defaultGodown?.id,
+      godownIdForLocation: form.godownId ?? defaultGodown?.id,
     );
 
     try {

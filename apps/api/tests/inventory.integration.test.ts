@@ -315,6 +315,87 @@ describe.skipIf(!canRun)('Inventory API integration', () => {
   );
 
   test(
+    'product update can set opening stock when no prior transactions',
+    async () => {
+      const config = loadAppConfig();
+      const godowns = await app.inject({
+        method: 'GET',
+        url: `${config.apiPrefix}/inventory/godowns`,
+        headers: getAuthHeaders(token),
+      });
+      const defaultGodown = (
+        godowns.json() as {
+          data: { id: string; is_default: boolean }[];
+        }
+      ).data.find((row) => row.is_default);
+      expect(defaultGodown).toBeDefined();
+
+      const unitRes = await app.inject({
+        method: 'POST',
+        url: `${config.apiPrefix}/inventory/units`,
+        headers: jsonAuthHeaders(token),
+        payload: {
+          name: `EditBox-${suffix}`,
+          short_name: `EBOX${suffix}`,
+        },
+      });
+      expect(unitRes.statusCode).toBe(201);
+
+      const itemRes = await app.inject({
+        method: 'POST',
+        url: `${config.apiPrefix}/inventory/items`,
+        headers: jsonAuthHeaders(token),
+        payload: {
+          name: `EditProduct-${suffix}`,
+          item_type: 'product',
+          base_unit: `EBOX${suffix}`,
+          sale_price: '143',
+        },
+      });
+      expect(itemRes.statusCode).toBe(201);
+      const itemId = (itemRes.json() as { data: { id: string } }).data.id;
+
+      const updateRes = await app.inject({
+        method: 'PATCH',
+        url: `${config.apiPrefix}/inventory/items/${itemId}`,
+        headers: jsonAuthHeaders(token),
+        payload: {
+          opening_quantity: '11',
+          opening_cost_per_unit: '100',
+          opening_godown_id: defaultGodown?.id,
+        },
+      });
+      expect(updateRes.statusCode).toBe(200);
+
+      const stock = await app.inject({
+        method: 'GET',
+        url: `${config.apiPrefix}/inventory/stock-levels?item_id=${itemId}`,
+        headers: getAuthHeaders(token),
+      });
+      expect(stock.statusCode).toBe(200);
+      const stockBody = stock.json() as {
+        data: { quantity: string }[];
+      };
+      expect(stockBody.data.length).toBeGreaterThan(0);
+      expect(Number(stockBody.data[0]?.quantity ?? 0)).toBe(11);
+
+      const movements = await app.inject({
+        method: 'GET',
+        url: `${config.apiPrefix}/inventory/movements?item_id=${itemId}`,
+        headers: getAuthHeaders(token),
+      });
+      expect(movements.statusCode).toBe(200);
+      const movementBody = movements.json() as {
+        data: { movement_type: string }[];
+      };
+      expect(
+        movementBody.data.some((row) => row.movement_type === 'opening'),
+      ).toBe(true);
+    },
+    testTimeout,
+  );
+
+  test(
     'item images tier prices and price history',
     async () => {
       const config = loadAppConfig();
@@ -363,6 +444,26 @@ describe.skipIf(!canRun)('Inventory API integration', () => {
         payload: { sort_order: 1 },
       });
       expect(imagePatch.statusCode).toBe(200);
+
+      const tierReplace = await app.inject({
+        method: 'PUT',
+        url: `${config.apiPrefix}/inventory/items/${itemId}/tier-prices`,
+        headers: jsonAuthHeaders(token),
+        payload: {
+          tier_prices: [
+            { pricing_tier: 'tier_1', price: '143' },
+            { pricing_tier: 'tier_2', price: '10' },
+          ],
+        },
+      });
+      expect(tierReplace.statusCode).toBe(200);
+      const tierBody = tierReplace.json() as {
+        data: { pricing_tier: string; price: string }[];
+      };
+      expect(tierBody.data).toHaveLength(2);
+      expect(
+        tierBody.data.find((tier) => tier.pricing_tier === 'tier_1')?.price,
+      ).toMatch(/^143(\.0+)?$/);
 
       const tierDelete = await app.inject({
         method: 'DELETE',

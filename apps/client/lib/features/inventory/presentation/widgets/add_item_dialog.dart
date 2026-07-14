@@ -154,22 +154,51 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
     try {
       final service = await ref.read(inventoryServiceProvider.future);
-      final detail = await service.getItem(item.id);
+      final detailDto = await service.fetchItemDetailDto(item.id);
       final tiers = await service.fetchItemTierPrices(item.id);
 
       await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
 
-      if (detail.purchasePrice != null) {
-        notifier.updateAtPrice(detail.purchasePrice!);
-        _atPriceController.text = detail.purchasePrice!.toString();
+      if (detailDto.purchasePrice.isNotEmpty) {
+        final purchasePrice = double.tryParse(detailDto.purchasePrice);
+        if (purchasePrice != null) {
+          notifier.updateAtPrice(purchasePrice);
+          _atPriceController.text = purchasePrice.toString();
+        }
       }
-      if (detail.mrp != null) {
-        notifier.updateMrp(detail.mrp!);
-        _mrpController.text = detail.mrp!.toString();
+      if (detailDto.mrp != null && detailDto.mrp!.isNotEmpty) {
+        final mrp = double.tryParse(detailDto.mrp!);
+        if (mrp != null) {
+          notifier.updateMrp(mrp);
+          _mrpController.text = mrp.toString();
+        }
       }
-      if (detail.reorderLevel != null) {
-        notifier.updateMinStock(detail.reorderLevel!);
-        _minStockController.text = detail.reorderLevel!.toString();
+      if (detailDto.reorderLevel != null && detailDto.reorderLevel!.isNotEmpty) {
+        final reorderLevel = double.tryParse(detailDto.reorderLevel!);
+        if (reorderLevel != null) {
+          notifier.updateMinStock(reorderLevel);
+          _minStockController.text = reorderLevel.toString();
+        }
+      }
+
+      final openingQty =
+          double.tryParse(detailDto.openingStock?.totalQuantity ?? '') ??
+          item.quantity ??
+          0;
+      if (openingQty > 0) {
+        notifier.updateOpeningQty(openingQty);
+        _openingQtyController.text = openingQty.toString();
+      }
+
+      final openingGodown = detailDto.openingStock?.godowns.firstOrNull;
+      final location = detailDto.locations.firstOrNull;
+      final godownId = openingGodown?.godownId ?? location?.godownId;
+      if (godownId != null) {
+        notifier.setGodown(godownId);
+      }
+      if (location?.rack != null && location!.rack!.isNotEmpty) {
+        notifier.updateLocation(location.rack!);
+        _locationController.text = location.rack!;
       }
 
       final wholesale = tiers
@@ -205,7 +234,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
       final units = ref.read(inventoryUnitsProvider).value ?? [];
       final unit = units
-          .where((u) => u.shortName == detail.baseUnitShortName)
+          .where((u) => u.shortName == detailDto.baseUnit)
           .firstOrNull;
       if (unit != null) {
         notifier.setUnits(baseUnitId: unit.id);

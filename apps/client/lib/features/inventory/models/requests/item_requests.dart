@@ -186,6 +186,10 @@ class UpdateItemRequest {
     this.reorderLevel,
     this.hasStockTracking,
     this.primaryImageUrl,
+    this.openingQuantity,
+    this.openingCostPerUnit,
+    this.openingGodownId,
+    this.location,
   });
 
   final String? name;
@@ -205,6 +209,10 @@ class UpdateItemRequest {
   final String? reorderLevel;
   final bool? hasStockTracking;
   final String? primaryImageUrl;
+  final String? openingQuantity;
+  final String? openingCostPerUnit;
+  final String? openingGodownId;
+  final CreateItemLocationRequest? location;
 
   Map<String, dynamic> toJson() {
     final json = <String, dynamic>{};
@@ -233,6 +241,12 @@ class UpdateItemRequest {
       json['has_stock_tracking'] = hasStockTracking;
     }
     if (primaryImageUrl != null) json['primary_image_url'] = primaryImageUrl;
+    if (openingQuantity != null) json['opening_quantity'] = openingQuantity;
+    if (openingCostPerUnit != null) {
+      json['opening_cost_per_unit'] = openingCostPerUnit;
+    }
+    if (openingGodownId != null) json['opening_godown_id'] = openingGodownId;
+    if (location != null) json['location'] = location!.toJson();
     return json;
   }
 }

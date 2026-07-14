@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, ilike, ne, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, ne, notInArray, or, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import {
   brands,
@@ -9,6 +9,7 @@ import {
   itemPriceHistory,
   items,
   itemTierPrices,
+  inventoryMovements,
   stockLevels,
   unitDefinitions,
 } from '../../db/schema/inventory/tables';
@@ -20,6 +21,7 @@ import {
   toItemTierPriceRecord,
 } from './item.mapper';
 import type { PricingTier } from '../../shared/pricing/pricing-tier';
+import { parseMoney } from './inventory.utils';
 import type {
   CreateItemImageInput,
   CreateItemLocationInput,
@@ -416,6 +418,28 @@ export class ItemRepository {
     });
   }
 
+  async hasItemLocation(
+    tx: DbTransaction,
+    businessId: string,
+    itemId: string,
+    godownId: string,
+  ): Promise<boolean> {
+    const [row] = await tx
+      .select({ id: itemLocations.id })
+      .from(itemLocations)
+      .where(
+        and(
+          eq(itemLocations.businessId, businessId),
+          eq(itemLocations.itemId, itemId),
+          eq(itemLocations.godownId, godownId),
+          eq(itemLocations.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return Boolean(row);
+  }
+
   async insertPriceHistory(
     dbOrTx: DbOrTransaction,
     businessId: string,
@@ -595,6 +619,44 @@ export class ItemRepository {
           eq(itemLocations.isDeleted, false),
         ),
       );
+  }
+
+  async hasNonOpeningMovements(
+    businessId: string,
+    itemId: string,
+  ): Promise<boolean> {
+    const [row] = await this.db
+      .select({ total: count() })
+      .from(inventoryMovements)
+      .where(
+        and(
+          eq(inventoryMovements.businessId, businessId),
+          eq(inventoryMovements.itemId, itemId),
+          ne(inventoryMovements.movementType, 'opening'),
+        ),
+      );
+
+    return Number(row?.total ?? 0) > 0;
+  }
+
+  async getTotalStockQuantity(
+    businessId: string,
+    itemId: string,
+  ): Promise<number> {
+    const [row] = await this.db
+      .select({
+        total: sql<string>`COALESCE(SUM(${stockLevels.quantity}::numeric), 0)`,
+      })
+      .from(stockLevels)
+      .where(
+        and(
+          eq(stockLevels.businessId, businessId),
+          eq(stockLevels.itemId, itemId),
+          eq(stockLevels.isDeleted, false),
+        ),
+      );
+
+    return parseMoney(row?.total ?? '0');
   }
 
   async loadOpeningStock(
@@ -879,34 +941,75 @@ export class ItemRepository {
     userId?: string | null,
   ): Promise<ItemTierPriceRecord[]> {
     return this.db.transaction(async (tx) => {
-      await tx
-        .update(itemTierPrices)
-        .set({
-          isDeleted: true,
-          deletedAt: new Date(),
-          updatedAt: new Date(),
-          updatedBy: userId ?? null,
-          syncVersion: sql`${itemTierPrices.syncVersion} + 1`,
-        })
-        .where(
-          and(
-            eq(itemTierPrices.businessId, businessId),
-            eq(itemTierPrices.itemId, itemId),
-            eq(itemTierPrices.isDeleted, false),
-          ),
-        );
+      const incomingTiers = tierPrices.map((tier) => tier.pricingTier);
+      const now = new Date();
 
-      if (tierPrices.length > 0) {
-        await tx.insert(itemTierPrices).values(
-          tierPrices.map((tier) => ({
-            businessId,
-            itemId,
-            pricingTier: tier.pricingTier,
-            price: tier.price,
-            createdBy: userId ?? null,
+      const activeTierFilter = and(
+        eq(itemTierPrices.businessId, businessId),
+        eq(itemTierPrices.itemId, itemId),
+        eq(itemTierPrices.isDeleted, false),
+      );
+
+      if (incomingTiers.length === 0) {
+        await tx
+          .update(itemTierPrices)
+          .set({
+            isDeleted: true,
+            deletedAt: now,
+            updatedAt: now,
             updatedBy: userId ?? null,
-          })),
-        );
+            syncVersion: sql`${itemTierPrices.syncVersion} + 1`,
+          })
+          .where(activeTierFilter);
+      } else {
+        await tx
+          .update(itemTierPrices)
+          .set({
+            isDeleted: true,
+            deletedAt: now,
+            updatedAt: now,
+            updatedBy: userId ?? null,
+            syncVersion: sql`${itemTierPrices.syncVersion} + 1`,
+          })
+          .where(and(activeTierFilter, notInArray(itemTierPrices.pricingTier, incomingTiers)));
+      }
+
+      for (const tier of tierPrices) {
+        const [existing] = await tx
+          .select({ id: itemTierPrices.id })
+          .from(itemTierPrices)
+          .where(
+            and(
+              eq(itemTierPrices.businessId, businessId),
+              eq(itemTierPrices.itemId, itemId),
+              eq(itemTierPrices.pricingTier, tier.pricingTier),
+            ),
+          )
+          .limit(1);
+
+        if (existing) {
+          await tx
+            .update(itemTierPrices)
+            .set({
+              price: tier.price,
+              isDeleted: false,
+              deletedAt: null,
+              updatedAt: now,
+              updatedBy: userId ?? null,
+              syncVersion: sql`${itemTierPrices.syncVersion} + 1`,
+            })
+            .where(eq(itemTierPrices.id, existing.id));
+          continue;
+        }
+
+        await tx.insert(itemTierPrices).values({
+          businessId,
+          itemId,
+          pricingTier: tier.pricingTier,
+          price: tier.price,
+          createdBy: userId ?? null,
+          updatedBy: userId ?? null,
+        });
       }
 
       const rows = await tx
