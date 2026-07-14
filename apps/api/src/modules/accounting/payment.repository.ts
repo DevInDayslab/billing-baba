@@ -117,6 +117,7 @@ export class PaymentRepository {
           | 'unrecovered'
           | null
           | undefined,
+        source: values.source ?? 'manual',
         createdBy: values.createdBy ?? null,
         updatedBy: values.updatedBy ?? null,
       })

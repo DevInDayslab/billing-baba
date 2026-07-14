@@ -76,6 +76,9 @@ export type ItemListRecord = {
   market_price: string | null;
   reorder_level: string | null;
   primary_image_url: string | null;
+  quantity?: string;
+  reserved_quantity?: string;
+  available_for_sale?: string;
   created_at: string;
   updated_at: string;
 };

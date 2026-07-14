@@ -372,7 +372,16 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
       );
       ref.invalidate(salesDocumentsListProvider(deliveryChallanListScope()));
       ref.invalidate(deliveryChallansProvider);
-      refreshAfterSaleMutation(ref);
+      refreshAfterSaleMutation(
+        ref,
+        context: (
+          partyId: state.partyId,
+          itemIds: state.items
+              .map((line) => line.itemId)
+              .whereType<String>()
+              .where((id) => id.isNotEmpty),
+        ),
+      );
       resetForm();
       return null;
     } catch (error) {

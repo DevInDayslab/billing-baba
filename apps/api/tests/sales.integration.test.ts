@@ -315,11 +315,22 @@ describe.skipIf(!canRun)('Sales API integration', () => {
         headers: getAuthHeaders(token),
       });
       const movementBody = movements.json() as {
-        data: { movement_type: string }[];
+        data: {
+          movement_type: string;
+          cost_per_unit: string | null;
+          unit: string | null;
+          reference_number: string | null;
+          party_name: string | null;
+        }[];
       };
-      expect(
-        movementBody.data.some((row) => row.movement_type === 'sale'),
-      ).toBe(true);
+      const saleMovement = movementBody.data.find(
+        (row) => row.movement_type === 'sale',
+      );
+      expect(saleMovement).toBeDefined();
+      expect(saleMovement?.cost_per_unit).toBe('100.0000');
+      expect(saleMovement?.unit).toBe(unitShortName);
+      expect(saleMovement?.reference_number).toBe(finBody.data.document_number);
+      expect(saleMovement?.party_name).toContain(`Customer-${suffix}-fin`);
     },
     testTimeout,
   );
@@ -583,6 +594,101 @@ describe.skipIf(!canRun)('Sales API integration', () => {
         },
       });
       expect(invalidConvert.statusCode).toBe(422);
+    },
+    testTimeout,
+  );
+
+  test(
+    'finalized sale order reserves stock until invoiced',
+    async () => {
+      const config = loadAppConfig();
+      const prefix = `${config.apiPrefix}/sales/sales-documents`;
+      const { itemId, partyId, unitShortName } = await createSalesFixtures(
+        app,
+        token,
+        `${suffix}-so`,
+      );
+
+      const created = await app.inject({
+        method: 'POST',
+        url: prefix,
+        headers: jsonAuthHeaders(token),
+        payload: {
+          document_type: 'sale_order',
+          document_series: `SO${suffix}`,
+          party_id: partyId,
+        },
+      });
+      const orderId = (created.json() as { data: { id: string } }).data.id;
+
+      await app.inject({
+        method: 'POST',
+        url: `${prefix}/${orderId}/lines`,
+        headers: jsonAuthHeaders(token),
+        payload: {
+          item_id: itemId,
+          quantity: '1',
+          unit: unitShortName,
+          unit_price: '100',
+        },
+      });
+
+      const finalizedOrder = await app.inject({
+        method: 'POST',
+        url: `${prefix}/${orderId}/finalize`,
+        headers: jsonAuthHeaders(token),
+        payload: {},
+      });
+      expect(finalizedOrder.statusCode).toBe(200);
+
+      const itemAfterOrder = await app.inject({
+        method: 'GET',
+        url: `${config.apiPrefix}/inventory/items/${itemId}`,
+        headers: getAuthHeaders(token),
+      });
+      const orderItemBody = itemAfterOrder.json() as {
+        data: {
+          quantity: string;
+          reserved_quantity: string;
+          available_for_sale: string;
+        };
+      };
+      expect(orderItemBody.data.quantity).toBe('10.0000');
+      expect(orderItemBody.data.reserved_quantity).toBe('1.0000');
+      expect(orderItemBody.data.available_for_sale).toBe('9.0000');
+
+      const invoice = await app.inject({
+        method: 'POST',
+        url: `${prefix}/${orderId}/convert`,
+        headers: jsonAuthHeaders(token),
+        payload: { target_type: 'tax_invoice' },
+      });
+      expect(invoice.statusCode).toBe(201);
+      const invoiceId = (invoice.json() as { data: { id: string } }).data.id;
+
+      const finalizedInvoice = await app.inject({
+        method: 'POST',
+        url: `${prefix}/${invoiceId}/finalize`,
+        headers: jsonAuthHeaders(token),
+        payload: {},
+      });
+      expect(finalizedInvoice.statusCode).toBe(200);
+
+      const itemAfterInvoice = await app.inject({
+        method: 'GET',
+        url: `${config.apiPrefix}/inventory/items/${itemId}`,
+        headers: getAuthHeaders(token),
+      });
+      const invoiceItemBody = itemAfterInvoice.json() as {
+        data: {
+          quantity: string;
+          reserved_quantity: string;
+          available_for_sale: string;
+        };
+      };
+      expect(invoiceItemBody.data.quantity).toBe('9.0000');
+      expect(invoiceItemBody.data.reserved_quantity).toBe('0.0000');
+      expect(invoiceItemBody.data.available_for_sale).toBe('9.0000');
     },
     testTimeout,
   );

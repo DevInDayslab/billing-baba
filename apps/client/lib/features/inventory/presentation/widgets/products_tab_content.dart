@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_header.dart';
@@ -35,15 +36,16 @@ class ProductsTabContent extends ConsumerWidget {
       primaryColumnLabel: 'ITEM',
       secondaryColumnLabel: 'QUANTITY',
       trailingValueBuilder: (item) {
-        final quantity = item.quantity;
-        return quantity != null
-            ? formatQuantityValue(quantity)
-            : inventoryEmDash;
+        final metrics = InventoryStockCalculator.metricsFromItem(item);
+        return formatQuantityValue(metrics.physicalQuantity);
       },
-      trailingColorBuilder: (item) => listQuantityColor(
-        item.quantity,
-        reorderLevel: item.reorderLevel,
-      ),
+      trailingColorBuilder: (item) {
+        final metrics = InventoryStockCalculator.metricsFromItem(item);
+        return listQuantityColor(
+          metrics.physicalQuantity,
+          reorderLevel: item.reorderLevel,
+        );
+      },
       onLocalSearchChanged: (query) {
         ref.read(productSearchQueryProvider.notifier).query = query;
       },

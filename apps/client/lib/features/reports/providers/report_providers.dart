@@ -1,18 +1,22 @@
 import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_refresh_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'report_providers.g.dart';
 
-ReportQuery _currentQuery(Ref ref) =>
-    ref.watch(reportFiltersProvider).toQuery();
+ReportQuery _currentQuery(Ref ref) {
+  ref.watch(reportDataEpochProvider);
+  return ref.watch(reportFiltersProvider).toQuery();
+}
 
 @riverpod
 class BillWiseProfitReport extends _$BillWiseProfitReport {
   @override
   Future<BillWiseProfitReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -38,6 +42,7 @@ class CashFlowReport extends _$CashFlowReport {
   @override
   Future<CashFlowReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -57,6 +62,7 @@ class PartyWiseProfitLossReport extends _$PartyWiseProfitLossReport {
   @override
   Future<PartyWiseProfitLossReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -112,6 +118,7 @@ class SalePurchaseByPartyReport extends _$SalePurchaseByPartyReport {
   @override
   Future<SalePurchaseByPartyReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -137,6 +144,7 @@ class SalePurchaseByPartyGroupReport extends _$SalePurchaseByPartyGroupReport {
   @override
   Future<SalePurchaseByPartyGroupReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -162,6 +170,7 @@ class Gstr9Report extends _$Gstr9Report {
   @override
   Future<Gstr9ReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -181,6 +190,7 @@ class SaleSummaryByHsnReport extends _$SaleSummaryByHsnReport {
   @override
   Future<SaleSummaryByHsnReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -200,6 +210,7 @@ class SacReportReport extends _$SacReportReport {
   @override
   Future<SacReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -219,6 +230,7 @@ class ItemReportByPartyReport extends _$ItemReportByPartyReport {
   @override
   Future<ItemReportByPartyReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -244,6 +256,7 @@ class ItemWiseProfitLossReport extends _$ItemWiseProfitLossReport {
   @override
   Future<ItemWiseProfitLossReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -269,6 +282,7 @@ class StockDetailReport extends _$StockDetailReport {
   @override
   Future<StockDetailReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -324,6 +338,7 @@ class SalePurchaseByItemCategoryReport extends _$SalePurchaseByItemCategoryRepor
   @override
   Future<CategoryAmountReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -343,6 +358,7 @@ class StockSummaryByItemCategoryReport extends _$StockSummaryByItemCategoryRepor
   @override
   Future<CategoryAmountReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -362,6 +378,7 @@ class ItemCategoryWiseProfitLossReport extends _$ItemCategoryWiseProfitLossRepor
   @override
   Future<CategoryAmountReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -381,6 +398,7 @@ class ItemWiseDiscountReport extends _$ItemWiseDiscountReport {
   @override
   Future<ItemWiseDiscountReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -406,6 +424,7 @@ class ManufacturingReport extends _$ManufacturingReport {
   @override
   Future<ManufacturingReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -431,6 +450,7 @@ class ConsumptionReport extends _$ConsumptionReport {
   @override
   Future<ConsumptionReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -456,6 +476,7 @@ class StockTransferReport extends _$StockTransferReport {
   @override
   Future<StockTransferReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -505,6 +526,7 @@ class GstTaxReport extends _$GstTaxReport {
   @override
   Future<GstTaxReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -530,6 +552,7 @@ class GstTaxRateReport extends _$GstTaxRateReport {
   @override
   Future<GstTaxRateReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -549,6 +572,7 @@ class Form27eqReport extends _$Form27eqReport {
   @override
   Future<TaxInvoiceReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -574,6 +598,7 @@ class TcsReceivableReport extends _$TcsReceivableReport {
   @override
   Future<TaxInvoiceReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -599,6 +624,7 @@ class TdsPayableReport extends _$TdsPayableReport {
   @override
   Future<TaxInvoiceReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -624,6 +650,7 @@ class TdsReceivableReport extends _$TdsReceivableReport {
   @override
   Future<TaxInvoiceReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -649,6 +676,7 @@ class ExpensesReport extends _$ExpensesReport {
   @override
   Future<ExpensesReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -674,6 +702,7 @@ class ExpenseByCategoryReport extends _$ExpenseByCategoryReport {
   @override
   Future<ExpenseByCategoryReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -693,6 +722,7 @@ class ExpenseByItemReport extends _$ExpenseByItemReport {
   @override
   Future<ExpenseByItemReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -712,6 +742,7 @@ class SalePurchaseOrdersReport extends _$SalePurchaseOrdersReport {
   @override
   Future<SalePurchaseOrdersReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -737,6 +768,7 @@ class SalePurchaseOrderItemsReport extends _$SalePurchaseOrderItemsReport {
   @override
   Future<SalePurchaseOrderItemsReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -762,6 +794,7 @@ class OtherIncomeReport extends _$OtherIncomeReport {
   @override
   Future<OtherIncomeReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -787,6 +820,7 @@ class OtherIncomeByCategoryReport extends _$OtherIncomeByCategoryReport {
   @override
   Future<OtherIncomeByCategoryReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 
@@ -806,6 +840,7 @@ class OtherIncomeByItemReport extends _$OtherIncomeByItemReport {
   @override
   Future<OtherIncomeByItemReportData> build() async {
     ref.watch(reportFiltersProvider);
+    ref.watch(reportDataEpochProvider);
     return _load();
   }
 

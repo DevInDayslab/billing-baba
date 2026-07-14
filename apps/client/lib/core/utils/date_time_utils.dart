@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 /// Shared date/time helpers for API persistence and local display.
 abstract final class DateTimeUtils {
+  static final displayDateTime = DateFormat('dd/MM/yyyy, hh:mm a');
+  static final displayDate = DateFormat('dd/MM/yyyy');
+
   /// Combines a calendar date with an optional time-of-day in local time.
   static DateTime mergeDateAndTime({
     required DateTime? date,
@@ -34,4 +38,16 @@ abstract final class DateTimeUtils {
 
   /// Serializes a local [dateTime] to UTC ISO-8601 for API writes.
   static String toApiIso(DateTime dateTime) => dateTime.toUtc().toIso8601String();
+
+  static String formatDisplayDateTime(DateTime dateTime) =>
+      displayDateTime.format(dateTime.toLocal());
+
+  static String formatDisplayDate(DateTime dateTime) =>
+      displayDate.format(dateTime.toLocal());
+
+  static String? formatDisplayDateTimeOrNull(DateTime? dateTime) =>
+      dateTime == null ? null : formatDisplayDateTime(dateTime);
+
+  static String? formatDisplayDateOrNull(DateTime? dateTime) =>
+      dateTime == null ? null : formatDisplayDate(dateTime);
 }

@@ -486,6 +486,25 @@ describe.skipIf(!canRun)('Purchases API integration', () => {
       const stockQty = (stock.json() as { data: { quantity: string }[] })
         .data[0]?.quantity;
       expect(stockQty).toBe('8.0000');
+
+      const movements = await app.inject({
+        method: 'GET',
+        url: `${config.apiPrefix}/inventory/movements?item_id=${itemId}`,
+        headers: getAuthHeaders(token),
+      });
+      const movementBody = movements.json() as {
+        data: {
+          movement_type: string;
+          cost_per_unit: string | null;
+          unit: string | null;
+        }[];
+      };
+      const returnMovement = movementBody.data.find(
+        (row) => row.movement_type === 'purchase_return',
+      );
+      expect(returnMovement).toBeDefined();
+      expect(returnMovement?.cost_per_unit).toBe('100.0000');
+      expect(returnMovement?.unit).toBe(unitShortName);
     },
     testTimeout,
   );

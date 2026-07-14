@@ -32,11 +32,18 @@ export class MovementRepository {
       movementType: inventoryMovements.movementType,
       quantityDelta: inventoryMovements.quantityDelta,
       costPerUnit: inventoryMovements.costPerUnit,
+      unit: inventoryMovements.unit,
       referenceId: inventoryMovements.referenceId,
       referenceType: inventoryMovements.referenceType,
       referenceNumber: sql<string | null>`COALESCE(
         ${salesDocuments.documentNumber},
-        ${purchaseDocuments.documentNumber}
+        ${purchaseDocuments.documentNumber},
+        CASE
+          WHEN ${inventoryMovements.referenceType} = 'items'
+            AND ${inventoryMovements.movementType} = 'opening'
+          THEN COALESCE(NULLIF(${items.barcode}, ''), 'Opening')
+          ELSE NULL
+        END
       )`,
       partyName: sql<string | null>`COALESCE(
         ${salesParty.name},

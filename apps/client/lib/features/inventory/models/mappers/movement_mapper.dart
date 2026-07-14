@@ -34,6 +34,7 @@ abstract final class MovementMapper {
           : partyName,
       date: DateTimeUtils.parseApiDateTime(dto.createdAt),
       quantity: qty.abs(),
+      unit: dto.unit,
       pricePerUnit: double.tryParse(dto.costPerUnit ?? '') ?? 0,
       status: 'Completed',
       isInbound: isInbound,

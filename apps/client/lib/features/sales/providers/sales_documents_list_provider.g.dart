@@ -158,7 +158,7 @@ final class SalesDocumentFiltersProvider
 }
 
 String _$salesDocumentFiltersHash() =>
-    r'1e8487a6d4269ff00582834b03f6cac64ada1995';
+    r'bb562c9b8cb9be20b5f74650dd38e4c0a0d0933d';
 
 final class SalesDocumentFiltersFamily extends $Family
     with
@@ -250,7 +250,7 @@ final class SalesDocumentsListProvider
 }
 
 String _$salesDocumentsListHash() =>
-    r'ba1a156f751dd1f5828edcb79f0dcda558737628';
+    r'61dd7c18b070ea9230e0f30176f48e1881161dd0';
 
 final class SalesDocumentsListFamily extends $Family
     with
@@ -302,6 +302,95 @@ abstract class _$SalesDocumentsList
             >;
     return element.handleCreate(ref, () => build(_$args));
   }
+}
+
+@ProviderFor(filteredSalesDocuments)
+final filteredSalesDocumentsProvider = FilteredSalesDocumentsFamily._();
+
+final class FilteredSalesDocumentsProvider
+    extends
+        $FunctionalProvider<
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>
+        >
+    with $Provider<List<SaleInvoiceModel>> {
+  FilteredSalesDocumentsProvider._({
+    required FilteredSalesDocumentsFamily super.from,
+    required SalesDocumentListScope super.argument,
+  }) : super(
+         retry: null,
+         name: r'filteredSalesDocumentsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredSalesDocumentsHash();
+
+  @override
+  String toString() {
+    return r'filteredSalesDocumentsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<List<SaleInvoiceModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<SaleInvoiceModel> create(Ref ref) {
+    final argument = this.argument as SalesDocumentListScope;
+    return filteredSalesDocuments(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<SaleInvoiceModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<SaleInvoiceModel>>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is FilteredSalesDocumentsProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$filteredSalesDocumentsHash() =>
+    r'c17af9f9f04c0861e344728c1a90086421052a86';
+
+final class FilteredSalesDocumentsFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          List<SaleInvoiceModel>,
+          SalesDocumentListScope
+        > {
+  FilteredSalesDocumentsFamily._()
+    : super(
+        retry: null,
+        name: r'filteredSalesDocumentsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  FilteredSalesDocumentsProvider call(SalesDocumentListScope scope) =>
+      FilteredSalesDocumentsProvider._(argument: scope, from: this);
+
+  @override
+  String toString() => r'filteredSalesDocumentsProvider';
 }
 
 @ProviderFor(paginatedSalesDocuments)
@@ -369,7 +458,7 @@ final class PaginatedSalesDocumentsProvider
 }
 
 String _$paginatedSalesDocumentsHash() =>
-    r'265c4fde05e0148fc165f49f71c800bfad211d62';
+    r'29b9bac20b015633c171436782037cdc62cca179';
 
 final class PaginatedSalesDocumentsFamily extends $Family
     with
@@ -433,4 +522,4 @@ final class SalesOrderStatusSummaryProvider
 }
 
 String _$salesOrderStatusSummaryHash() =>
-    r'dd2a96973d3a4a46f8dd10d19c376cb1164eb999';
+    r'21c920b79f3f414d9ec94f2aa2bcc142273f4c5e';

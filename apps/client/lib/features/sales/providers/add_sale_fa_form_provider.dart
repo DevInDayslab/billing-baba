@@ -244,7 +244,10 @@ class AddSaleFaForm extends _$AddSaleFaForm {
       }
 
       ref.invalidate(saleFaProvider);
-      refreshAfterSaleFaMutation(ref);
+      refreshAfterSaleFaMutation(
+        ref,
+        context: (partyId: state.partyId, itemIds: const []),
+      );
       state = state.copyWith(isSaving: false, isDirty: false);
       ref.invalidateSelf();
       return null;

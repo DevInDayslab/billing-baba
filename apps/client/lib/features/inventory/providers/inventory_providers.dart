@@ -324,11 +324,22 @@ class ProductStockSummary {
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
+final itemStockMetricsProvider =
+    Provider.family<ItemStockMetrics, String>((ref, itemId) {
+      final item = (ref.watch(inventoryItemsProvider).value ?? [])
+          .where((entry) => entry.id == itemId)
+          .firstOrNull;
+      return InventoryStockCalculator.metricsFromItem(item);
+    });
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
 final productStockSummaryProvider =
     Provider.family<ProductStockSummary, String>((ref, itemId) {
       final item = (ref.watch(inventoryItemsProvider).value ?? [])
           .where((entry) => entry.id == itemId)
           .firstOrNull;
+      final metrics = ref.watch(itemStockMetricsProvider(itemId));
       final stockLevels =
           ref.watch(itemStockLevelsProvider(itemId)).value ?? [];
       final transactions =
@@ -350,8 +361,8 @@ final productStockSummaryProvider =
           InventoryStockCalculator.lastPurchasePrice(transactions) ??
           item?.purchasePrice;
 
-      final available = item?.availableForSale ?? item?.quantity;
-      final reserved = item?.reservedQuantity;
+      final available = metrics.availableForSale;
+      final reserved = metrics.reservedQuantity;
       final stockValue =
           item?.stockValue ??
           stockLevels.fold<double>(
@@ -368,10 +379,10 @@ final productStockSummaryProvider =
 
       final isLowStock =
           hasLowStock ||
-          (available != null &&
+          (metrics.physicalQuantity > 0 &&
               reorder != null &&
-              available > 0 &&
-              available <= reorder);
+              metrics.availableForSale > 0 &&
+              metrics.availableForSale <= reorder);
 
       return ProductStockSummary(
         availableStock: available,

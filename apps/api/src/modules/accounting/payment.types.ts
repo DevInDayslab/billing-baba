@@ -31,6 +31,7 @@ export type PaymentInsertValues = {
   referenceNumber?: string | null;
   notes?: string | null;
   shortPaymentHandling?: string | null;
+  source?: 'manual' | 'document_finalize';
   createdBy?: string | null;
   updatedBy?: string | null;
 };

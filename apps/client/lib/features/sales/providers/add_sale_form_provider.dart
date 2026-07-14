@@ -627,14 +627,27 @@ class AddSaleForm extends _$AddSaleForm {
         isSaving: false,
         isDirty: false,
       );
-      ref.invalidate(saleInvoicesProvider);
-      refreshAfterSaleMutation(ref);
+      _refreshAfterSaleMutation();
       return null;
     } catch (error) {
       final message = SalesErrorMapper.messageFor(error);
       state = state.copyWith(isSaving: false, saveError: message);
       return message;
     }
+  }
+
+  void _refreshAfterSaleMutation() {
+    final itemIds = state.items
+        .map((line) => line.itemId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty);
+    refreshAfterSaleMutation(
+      ref,
+      context: (
+        partyId: state.partyId,
+        itemIds: itemIds,
+      ),
+    );
   }
 
   Future<String?> saveInvoice({bool finalize = true}) async {
@@ -677,8 +690,7 @@ class AddSaleForm extends _$AddSaleForm {
         );
       }
 
-      ref.invalidate(saleInvoicesProvider);
-      refreshAfterSaleMutation(ref);
+      _refreshAfterSaleMutation();
       if (state.attachedSaleOrderIds.isNotEmpty) {
         ref.invalidate(saleOrdersProvider);
       }

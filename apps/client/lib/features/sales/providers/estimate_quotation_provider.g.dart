@@ -269,7 +269,7 @@ final class EstimateQuotationsProvider
 }
 
 String _$estimateQuotationsHash() =>
-    r'2b37dcf9e8d0d4f749d01312bee8855ab942b44e';
+    r'2992541bcf8c83b77f365ab946b1d99895fd2995';
 
 abstract class _$EstimateQuotations
     extends $AsyncNotifier<PaginatedSaleInvoices> {
@@ -363,6 +363,55 @@ abstract class _$EstimateQuotationFilters
   }
 }
 
+@ProviderFor(filteredEstimateQuotations)
+final filteredEstimateQuotationsProvider =
+    FilteredEstimateQuotationsProvider._();
+
+final class FilteredEstimateQuotationsProvider
+    extends
+        $FunctionalProvider<
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>
+        >
+    with $Provider<List<SaleInvoiceModel>> {
+  FilteredEstimateQuotationsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'filteredEstimateQuotationsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredEstimateQuotationsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<SaleInvoiceModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<SaleInvoiceModel> create(Ref ref) {
+    return filteredEstimateQuotations(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<SaleInvoiceModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<SaleInvoiceModel>>(value),
+    );
+  }
+}
+
+String _$filteredEstimateQuotationsHash() =>
+    r'73457b8610b39a75a09506bbbb4a1fef43296eb5';
+
 @ProviderFor(paginatedEstimateQuotations)
 final paginatedEstimateQuotationsProvider =
     PaginatedEstimateQuotationsProvider._();
@@ -410,7 +459,7 @@ final class PaginatedEstimateQuotationsProvider
 }
 
 String _$paginatedEstimateQuotationsHash() =>
-    r'804fa6db4e385804d0f56716bb23afdbb26241c8';
+    r'5b99e0caba89aa739fe7ed57e4cb593810b2eeed';
 
 @ProviderFor(estimateQuotationSummary)
 final estimateQuotationSummaryProvider = EstimateQuotationSummaryProvider._();
@@ -458,4 +507,4 @@ final class EstimateQuotationSummaryProvider
 }
 
 String _$estimateQuotationSummaryHash() =>
-    r'e04033846ae766e4f8d32da7ae06ff3477528039';
+    r'da50adcf1c7b51edd83743b368072edd8b303483';

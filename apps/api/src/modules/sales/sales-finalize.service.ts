@@ -181,6 +181,8 @@ export async function finalizeSalesDocument(
           godownId: godown.id,
           movementType,
           quantityDelta: delta,
+          costPerUnit: line.unitPrice,
+          unit: line.unit,
           referenceId: params.documentId,
           referenceType: 'sales_documents',
           createdBy: params.userId ?? null,

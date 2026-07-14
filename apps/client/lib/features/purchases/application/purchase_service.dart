@@ -698,6 +698,7 @@ class PurchaseService {
           direction: 'paid',
           amount: amount.toStringAsFixed(4),
           paymentMode: PurchasePaymentModes.toApi(paymentModeUi),
+          source: 'document_finalize',
           paymentDate: paymentDate?.toUtc().toIso8601String(),
           referenceNumber: referenceNumber,
           allocations: [

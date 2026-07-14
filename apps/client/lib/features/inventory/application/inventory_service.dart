@@ -598,8 +598,10 @@ class InventoryService {
         final stock = stockByItem[dto.id];
         return ItemMapper.fromListDto(
           dto,
-          quantity: stock?.quantity,
+          quantity: _parseDecimal(dto.quantity) ?? stock?.quantity,
           stockValue: stock?.stockValue,
+          reservedQuantity: _parseDecimal(dto.reservedQuantity),
+          availableForSale: _parseDecimal(dto.availableForSale),
         );
       }).toList();
     } on DioException catch (error) {
@@ -621,8 +623,10 @@ class InventoryService {
       final stock = StockLevelMapper.aggregateByItem(stockLevels)[id];
       return ItemMapper.fromDetailDto(
         dto,
-        quantity: stock?.quantity,
+        quantity: _parseDecimal(dto.quantity) ?? stock?.quantity,
         stockValue: stock?.stockValue,
+        reservedQuantity: _parseDecimal(dto.reservedQuantity),
+        availableForSale: _parseDecimal(dto.availableForSale),
       );
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
@@ -787,6 +791,11 @@ class InventoryService {
       if (unit.id == unitId) return unit;
     }
     return null;
+  }
+
+  double? _parseDecimal(String? value) {
+    if (value == null || value.isEmpty) return null;
+    return double.tryParse(value);
   }
 
   String _formatDecimal(double value) {

@@ -68,7 +68,7 @@ class _PartyDetailContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ledgerAsync = ref.watch(partyLedgerProvider(party.id));
+    final ledgerAsync = ref.watch(partyTimelineProvider(party.id));
     final businessName = ref.watch(sidebarBusinessProvider).name;
     final transactionsAsync = ledgerAsync.whenData(
       (ledger) => ledger.transactions,
@@ -90,12 +90,12 @@ class _PartyDetailContent extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => _PartyDetailError(
               message: PartyErrorMapper.messageFor(error),
-              onRetry: () => ref.invalidate(partyLedgerProvider(party.id)),
+              onRetry: () => ref.invalidate(partyTimelineProvider(party.id)),
             ),
             data: (_) => PartyLedgerTransactionsSection(
               transactionsAsync: transactionsAsync,
               onRefresh: () async =>
-                  ref.invalidate(partyLedgerProvider(party.id)),
+                  ref.invalidate(partyTimelineProvider(party.id)),
             ),
           ),
         ),

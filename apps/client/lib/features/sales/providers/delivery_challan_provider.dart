@@ -10,6 +10,7 @@ import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dar
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'delivery_challan_provider.g.dart';
@@ -349,54 +350,55 @@ class SelectedDeliveryChallanIds extends _$SelectedDeliveryChallanIds {
 class DeliveryChallans extends _$DeliveryChallans {
   @override
   Future<PaginatedSaleInvoices> build() async {
-    ref.watch(deliveryChallanFiltersProvider);
+    ref.watch(
+      deliveryChallanFiltersProvider.select(
+        (filters) => (filters.timeRangeOption, filters.customDateRange),
+      ),
+    );
     ref.watch(deliveryChallanSearchQueryProvider);
-    return _fetchPage();
+    final allItems = await _fetchAllChallans();
+    return PaginatedSaleInvoices(
+      items: allItems,
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: allItems.length,
+    );
   }
 
-  Future<PaginatedSaleInvoices> _fetchPage() async {
+  Future<List<SaleInvoiceModel>> _fetchAllChallans() async {
     final filters = ref.read(deliveryChallanFiltersProvider);
     final search = ref.read(deliveryChallanSearchQueryProvider);
     final service = await ref.read(salesServiceProvider.future);
 
-    if (needsChallanClientSideFiltering(filters)) {
-      final allItems = await PaginatedFetch.fetchAll<SaleInvoiceModel>(
-        fetchPage: (page) async {
-          final result = await service.fetchInvoicesPage(
-            _buildChallanListQuery(
-              filters,
-              search,
-              page: page,
-              limit: PaginatedFetch.defaultPageSize,
-            ),
-          );
-          return (
-            items: _filterChallanSeries(result.items),
-            totalPages: result.totalPages,
-          );
-        },
-      );
-
-      final filteredItems = applyChallanClientFilters(allItems, filters);
-      return paginateChallanItems(filteredItems, filters);
-    }
-
-    final page = await service.fetchInvoicesPage(
-      _buildChallanListQuery(filters, search),
-    );
-
-    final seriesFiltered = _filterChallanSeries(page.items);
-    return PaginatedSaleInvoices(
-      items: seriesFiltered,
-      currentPage: page.currentPage,
-      totalPages: page.totalPages,
-      totalItems: seriesFiltered.length,
+    return PaginatedFetch.fetchAll<SaleInvoiceModel>(
+      fetchPage: (page) async {
+        final result = await service.fetchInvoicesPage(
+          _buildChallanListQuery(
+            filters,
+            search,
+            page: page,
+            limit: PaginatedFetch.defaultPageSize,
+          ),
+        );
+        return (
+          items: _filterChallanSeries(result.items),
+          totalPages: result.totalPages,
+        );
+      },
     );
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchPage);
+    state = await AsyncValue.guard(() async {
+      final allItems = await _fetchAllChallans();
+      return PaginatedSaleInvoices(
+        items: allItems,
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: allItems.length,
+      );
+    });
   }
 
   Future<String?> deleteChallan(String documentId) async {
@@ -560,23 +562,22 @@ class DeliveryChallanFilters extends _$DeliveryChallanFilters {
 }
 
 @riverpod
+List<SaleInvoiceModel> filteredDeliveryChallans(Ref ref) {
+  final allChallans = ref.watch(deliveryChallansProvider).value?.items ?? [];
+  final filters = ref.watch(deliveryChallanFiltersProvider);
+  return applyChallanClientFilters(allChallans, filters);
+}
+
+@riverpod
 PaginatedSaleInvoices paginatedDeliveryChallans(Ref ref) {
-  final challansAsync = ref.watch(deliveryChallansProvider);
-  return challansAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedSaleInvoices(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
-  );
+  final filtered = ref.watch(filteredDeliveryChallansProvider);
+  final filters = ref.watch(deliveryChallanFiltersProvider);
+  return paginateChallanItems(filtered, filters);
 }
 
 @riverpod
 DeliveryChallanSummaryData deliveryChallanSummary(Ref ref) {
-  final page = ref.watch(paginatedDeliveryChallansProvider);
-  final challans = page.items;
+  final challans = ref.watch(filteredDeliveryChallansProvider);
 
   var totalAmount = 0.0;
   var convertedAmount = 0.0;

@@ -106,7 +106,6 @@ InventoryItem _itemFromForm(
     salePrice: form.salePrice,
     purchasePrice: form.atPrice,
     quantity: form.openingQty,
-    availableForSale: form.openingQty,
     stockValue: form.openingQty * form.atPrice,
     categoryId: form.categoryId,
     hsnCode: form.hsn.isEmpty ? null : form.hsn,
@@ -264,7 +263,10 @@ class InventoryItems extends _$InventoryItems {
   }
 
   Future<void> refreshAfterStockAdjustment(String itemId) async {
-    invalidateItemCaches(ref, itemId, refreshDashboard: true);
+    refreshAfterItemMutation(
+      ref,
+      context: (partyId: null, itemIds: [itemId]),
+    );
     await refresh();
   }
 }

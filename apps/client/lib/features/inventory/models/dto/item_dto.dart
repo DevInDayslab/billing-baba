@@ -22,6 +22,9 @@ abstract class ItemListDto with _$ItemListDto {
     @JsonKey(name: 'market_price') String? marketPrice,
     @JsonKey(name: 'reorder_level') String? reorderLevel,
     @JsonKey(name: 'primary_image_url') String? primaryImageUrl,
+    String? quantity,
+    @JsonKey(name: 'reserved_quantity') String? reservedQuantity,
+    @JsonKey(name: 'available_for_sale') String? availableForSale,
   }) = _ItemListDto;
 
   factory ItemListDto.fromJson(Map<String, dynamic> json) =>
@@ -45,6 +48,9 @@ abstract class ItemDetailDto with _$ItemDetailDto {
     @JsonKey(name: 'market_price') String? marketPrice,
     @JsonKey(name: 'reorder_level') String? reorderLevel,
     @JsonKey(name: 'primary_image_url') String? primaryImageUrl,
+    String? quantity,
+    @JsonKey(name: 'reserved_quantity') String? reservedQuantity,
+    @JsonKey(name: 'available_for_sale') String? availableForSale,
     @JsonKey(name: 'tier_prices') @Default([]) List<TierPriceDto> tierPrices,
     @Default([]) List<ItemImageDto> images,
     @Default([]) List<ItemLocationSummaryDto> locations,

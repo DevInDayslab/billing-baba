@@ -1,4 +1,9 @@
 import { getDb } from '../../db/client';
+import {
+  enrichItemDetailRecord,
+  enrichItemListRecord,
+  loadStockSummariesForItems,
+} from './inventory-item-stock';
 import { AppError } from '../../shared/errors/app-error';
 import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import { InventoryServiceBase } from './inventory.base-service';
@@ -67,8 +72,20 @@ export class ItemService extends InventoryServiceBase {
       order: query.order,
     });
 
+    const stockTrackedIds = result.rows
+      .filter((row) => row.has_stock_tracking)
+      .map((row) => row.id);
+    const { physicalByItem, reservedByItem } =
+      await loadStockSummariesForItems(
+        this.db,
+        businessId,
+        stockTrackedIds,
+      );
+
     return {
-      data: result.rows,
+      data: result.rows.map((row) =>
+        enrichItemListRecord(row, physicalByItem, reservedByItem),
+      ),
       meta: {
         page: query.page,
         limit: query.limit,
@@ -89,7 +106,14 @@ export class ItemService extends InventoryServiceBase {
       throw new AppError('NOT_FOUND', 'Item not found', 404);
     }
 
-    return item;
+    if (!item.has_stock_tracking) {
+      return item;
+    }
+
+    const { physicalByItem, reservedByItem } =
+      await loadStockSummariesForItems(this.db, businessId, [itemId]);
+
+    return enrichItemDetailRecord(item, physicalByItem, reservedByItem);
   }
 
   async createItem(
@@ -215,6 +239,7 @@ export class ItemService extends InventoryServiceBase {
           movementType: 'opening',
           quantityDelta: normalizeMoney(openingQty),
           costPerUnit: openingCost,
+          unit: baseUnit,
           referenceType: 'items',
           referenceId: item.id,
           createdBy: userId ?? null,
@@ -438,6 +463,9 @@ export class ItemService extends InventoryServiceBase {
       return;
     }
 
+    const itemRow = await this.repository.findRowById(businessId, itemId);
+    const baseUnit = itemRow?.baseUnit ?? null;
+
     await this.repository.runTransaction(async (tx) => {
       const movementType =
         currentStock === 0 && delta > 0 ? 'opening' : 'adjustment';
@@ -449,6 +477,7 @@ export class ItemService extends InventoryServiceBase {
         movementType,
         quantityDelta: normalizeMoney(delta),
         costPerUnit: delta > 0 ? openingCost : null,
+        unit: baseUnit,
         referenceType: 'items',
         referenceId: itemId,
         createdBy: userId ?? null,

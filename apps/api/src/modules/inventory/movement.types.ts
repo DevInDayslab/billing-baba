@@ -16,6 +16,7 @@ export type MovementRecord = {
   movement_type: MovementType;
   quantity_delta: string;
   cost_per_unit: string | null;
+  unit: string | null;
   reference_id: string | null;
   reference_type: string | null;
   reference_number: string | null;
@@ -50,6 +51,7 @@ export type MovementRow = {
   movementType: MovementType;
   quantityDelta: string;
   costPerUnit: string | null;
+  unit: string | null;
   referenceId: string | null;
   referenceType: string | null;
   referenceNumber: string | null;

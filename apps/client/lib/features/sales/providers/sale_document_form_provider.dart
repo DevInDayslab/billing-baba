@@ -369,7 +369,16 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
       ref.invalidate(salesDocumentsListProvider(_listScopeFor(documentType)));
       _invalidateDocumentLists(ref, documentType);
       if (finalize) {
-        refreshAfterSaleMutation(ref);
+        refreshAfterSaleMutation(
+          ref,
+          context: (
+            partyId: state.partyId,
+            itemIds: state.items
+                .map((line) => line.itemId)
+                .whereType<String>()
+                .where((id) => id.isNotEmpty),
+          ),
+        );
       }
       resetForm();
       return null;

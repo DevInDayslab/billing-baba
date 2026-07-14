@@ -311,7 +311,16 @@ class DebitNoteForm extends _$DebitNoteForm {
       }
 
       ref.invalidate(purchaseReturnsProvider);
-      refreshAfterPurchaseReturn(ref);
+      refreshAfterPurchaseReturn(
+        ref,
+        context: (
+          partyId: state.partyId,
+          itemIds: state.items
+              .map((line) => line.itemId)
+              .whereType<String>()
+              .where((id) => id.isNotEmpty),
+        ),
+      );
       await ref.read(purchaseReturnsProvider.notifier).refresh();
       ref
           .read(purchaseReturnSaveSuccessMessageProvider.notifier)

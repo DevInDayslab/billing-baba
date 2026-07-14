@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
@@ -23,7 +24,7 @@ class DashboardRecentTransactionsSection extends StatelessWidget {
     decimalDigits: 0,
   );
 
-  static final _dateFormat = DateFormat('d MMM, h:mm a');
+  static final _dateFormat = DateTimeUtils.displayDateTime;
 
   @override
   Widget build(BuildContext context) {

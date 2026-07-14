@@ -36,6 +36,9 @@ _ItemListDto _$ItemListDtoFromJson(Map<String, dynamic> json) => _ItemListDto(
   marketPrice: json['market_price'] as String?,
   reorderLevel: json['reorder_level'] as String?,
   primaryImageUrl: json['primary_image_url'] as String?,
+  quantity: json['quantity'] as String?,
+  reservedQuantity: json['reserved_quantity'] as String?,
+  availableForSale: json['available_for_sale'] as String?,
 );
 
 Map<String, dynamic> _$ItemListDtoToJson(_ItemListDto instance) =>
@@ -61,6 +64,9 @@ Map<String, dynamic> _$ItemListDtoToJson(_ItemListDto instance) =>
       'market_price': instance.marketPrice,
       'reorder_level': instance.reorderLevel,
       'primary_image_url': instance.primaryImageUrl,
+      'quantity': instance.quantity,
+      'reserved_quantity': instance.reservedQuantity,
+      'available_for_sale': instance.availableForSale,
     };
 
 _ItemDetailDto _$ItemDetailDtoFromJson(
@@ -95,6 +101,9 @@ _ItemDetailDto _$ItemDetailDtoFromJson(
   marketPrice: json['market_price'] as String?,
   reorderLevel: json['reorder_level'] as String?,
   primaryImageUrl: json['primary_image_url'] as String?,
+  quantity: json['quantity'] as String?,
+  reservedQuantity: json['reserved_quantity'] as String?,
+  availableForSale: json['available_for_sale'] as String?,
   tierPrices:
       (json['tier_prices'] as List<dynamic>?)
           ?.map((e) => TierPriceDto.fromJson(e as Map<String, dynamic>))
@@ -140,6 +149,9 @@ Map<String, dynamic> _$ItemDetailDtoToJson(_ItemDetailDto instance) =>
       'market_price': instance.marketPrice,
       'reorder_level': instance.reorderLevel,
       'primary_image_url': instance.primaryImageUrl,
+      'quantity': instance.quantity,
+      'reserved_quantity': instance.reservedQuantity,
+      'available_for_sale': instance.availableForSale,
       'tier_prices': instance.tierPrices,
       'images': instance.images,
       'locations': instance.locations,

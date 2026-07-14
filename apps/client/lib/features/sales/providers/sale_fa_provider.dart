@@ -2,6 +2,7 @@ import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_fa_service.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
@@ -9,6 +10,7 @@ import 'package:billing_baba/features/sales/models/requests/sale_fa_requests.dar
 import 'package:billing_baba/features/sales/models/sale_fa_model.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_fa_provider.g.dart';
@@ -182,6 +184,50 @@ List<SaleFaModel> _applyClientFilters(
   }).toList();
 }
 
+PaginatedSaleFaRecords _paginateSaleFaRecords(
+  List<SaleFaModel> records,
+  int currentPage,
+) {
+  if (records.isEmpty) {
+    return const PaginatedSaleFaRecords(
+      items: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+    );
+  }
+
+  final totalItems = records.length;
+  final totalPages = (totalItems / saleFaPageSize).ceil();
+  final page = currentPage.clamp(1, totalPages);
+  final start = (page - 1) * saleFaPageSize;
+  final end = (start + saleFaPageSize).clamp(0, totalItems);
+
+  return PaginatedSaleFaRecords(
+    items: records.sublist(start, end),
+    currentPage: page,
+    totalPages: totalPages,
+    totalItems: totalItems,
+  );
+}
+
+PaginatedSaleFaRecords _allSaleFaPage(List<SaleFaModel> records) {
+  return PaginatedSaleFaRecords(
+    items: records,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: records.length,
+  );
+}
+
+List<SaleFaModel> _allSaleFaFromAsync(AsyncValue<PaginatedSaleFaRecords> faAsync) {
+  return faAsync.when(
+    data: (page) => page.items,
+    loading: () => const [],
+    error: (_, _) => const [],
+  );
+}
+
 @riverpod
 class SaleFaSearchQuery extends _$SaleFaSearchQuery {
   Debouncer? _debouncer;
@@ -202,36 +248,58 @@ class SaleFaSearchQuery extends _$SaleFaSearchQuery {
 class SaleFa extends _$SaleFa {
   @override
   Future<PaginatedSaleFaRecords> build() async {
-    ref.watch(saleFaFiltersProvider);
+    ref.watch(
+      saleFaFiltersProvider.select(
+        (filters) => (filters.timeRangeOption, filters.customDateRange),
+      ),
+    );
     ref.watch(saleFaSearchQueryProvider);
-    return _fetchPage();
+    final allRecords = await _fetchAllRecords();
+    return _allSaleFaPage(allRecords);
   }
 
-  Future<PaginatedSaleFaRecords> _fetchPage() async {
+  Future<List<SaleFaModel>> _fetchAllRecords() async {
     final filters = ref.read(saleFaFiltersProvider);
     final search = ref.read(saleFaSearchQueryProvider);
     final service = await ref.read(saleFaServiceProvider.future);
-    final page = await service.fetchBatchesPage(
-      _buildListQuery(filters, search),
-    );
 
-    final filteredItems = _applyClientFilters(page.items, filters);
-    return PaginatedSaleFaRecords(
-      items: filteredItems,
-      currentPage: page.currentPage,
-      totalPages: page.totalPages,
-      totalItems: page.totalItems,
+    return PaginatedFetch.fetchAll<SaleFaModel>(
+      fetchPage: (page) async {
+        final baseQuery = _buildListQuery(filters, search);
+        final pageResult = await service.fetchBatchesPage(
+          SaleFaListQuery(
+            page: page,
+            limit: PaginatedFetch.defaultPageSize,
+            q: baseQuery.q,
+            partyId: baseQuery.partyId,
+            status: baseQuery.status,
+            from: baseQuery.from,
+            to: baseQuery.to,
+            sort: baseQuery.sort,
+            order: baseQuery.order,
+          ),
+        );
+        return (items: pageResult.items, totalPages: pageResult.totalPages);
+      },
     );
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchPage);
+    state = await AsyncValue.guard(() async {
+      final allRecords = await _fetchAllRecords();
+      return _allSaleFaPage(allRecords);
+    });
   }
 
   Future<String?> deleteBatch(String batchId) async {
     final previous = state;
     final current = state.value;
+    final partyId = current?.items
+        .where((item) => item.batchId == batchId)
+        .map((item) => item.partyId)
+        .firstOrNull;
+
     if (current != null) {
       state = AsyncData(
         PaginatedSaleFaRecords(
@@ -246,8 +314,10 @@ class SaleFa extends _$SaleFa {
     try {
       final service = await ref.read(saleFaServiceProvider.future);
       await service.deleteBatch(batchId);
-      await refresh();
-      refreshAfterSaleFaMutation(ref);
+      refreshAfterSaleFaMutation(
+        ref,
+        context: (partyId: partyId, itemIds: const []),
+      );
       return null;
     } catch (error) {
       state = previous;
@@ -266,7 +336,6 @@ class SaleFaFilters extends _$SaleFaFilters {
       timeRangeOption: TimeRangeOptionX.fromLabel(label),
       currentPage: 1,
     );
-    ref.invalidate(saleFaProvider);
   }
 
   void setCustomDateRange(
@@ -280,53 +349,46 @@ class SaleFaFilters extends _$SaleFaFilters {
       customDateRange: range,
       currentPage: 1,
     );
-    ref.invalidate(saleFaProvider);
   }
 
   void setFirm(String firm) {
     state = state.copyWith(selectedFirm: firm, currentPage: 1);
-    ref.invalidate(saleFaProvider);
   }
 
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
-    ref.invalidate(saleFaProvider);
   }
 
   void setGodown(String godown) {
     state = state.copyWith(selectedGodown: godown, currentPage: 1);
-    ref.invalidate(saleFaProvider);
   }
 
   void setStatus(String status) {
     state = state.copyWith(selectedStatus: status, currentPage: 1);
-    ref.invalidate(saleFaProvider);
   }
 
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
-    ref.invalidate(saleFaProvider);
   }
 }
 
 @riverpod
+List<SaleFaModel> filteredSaleFaRecords(Ref ref) {
+  final allRecords = _allSaleFaFromAsync(ref.watch(saleFaProvider));
+  final filters = ref.watch(saleFaFiltersProvider);
+  return _applyClientFilters(allRecords, filters);
+}
+
+@riverpod
 PaginatedSaleFaRecords paginatedSaleFaRecords(Ref ref) {
-  final faAsync = ref.watch(saleFaProvider);
-  return faAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedSaleFaRecords(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
-  );
+  final filtered = ref.watch(filteredSaleFaRecordsProvider);
+  final filters = ref.watch(saleFaFiltersProvider);
+  return _paginateSaleFaRecords(filtered, filters.currentPage);
 }
 
 @riverpod
 SaleFaSummaryData saleFaSummary(Ref ref) {
-  final page = ref.watch(paginatedSaleFaRecordsProvider);
-  final records = page.items;
+  final records = ref.watch(filteredSaleFaRecordsProvider);
 
   var paidAmount = 0.0;
   var unpaidAmount = 0.0;

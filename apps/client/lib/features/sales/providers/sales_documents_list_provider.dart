@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
@@ -6,9 +7,11 @@ import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_order_summary_cards.dart';
 import 'package:billing_baba/features/sales/providers/estimate_quotation_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_return_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sales_documents_list_provider.g.dart';
@@ -110,7 +113,7 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-SalesDocumentListQuery _buildListQuery(
+SalesDocumentListQuery _buildFetchAllQuery(
   SalesDocumentListScope scope,
   SalesDocumentFiltersState filters,
   String searchQuery,
@@ -121,13 +124,32 @@ SalesDocumentListQuery _buildListQuery(
   );
 
   return SalesDocumentListQuery(
-    page: filters.currentPage,
-    limit: salesDocumentsPageSize,
+    limit: PaginatedFetch.defaultPageSize,
     documentType: scope.documentType.apiValue,
     status: _documentStatusFromFilterLabel(filters.selectedStatus),
     from: dateRange?.start.toUtc().toIso8601String(),
     to: dateRange?.end.toUtc().toIso8601String(),
     q: searchQuery.trim().isEmpty ? null : searchQuery.trim(),
+  );
+}
+
+PaginatedSaleInvoices paginateSalesDocuments(
+  List<SaleInvoiceModel> items,
+  int currentPage,
+) {
+  final totalItems = items.length;
+  final totalPages = totalItems == 0
+      ? 1
+      : (totalItems / salesDocumentsPageSize).ceil();
+  final page = currentPage.clamp(1, totalPages);
+  final start = (page - 1) * salesDocumentsPageSize;
+  final pageItems = items.skip(start).take(salesDocumentsPageSize).toList();
+
+  return PaginatedSaleInvoices(
+    items: pageItems,
+    currentPage: page,
+    totalPages: totalPages,
+    totalItems: totalItems,
   );
 }
 
@@ -160,7 +182,6 @@ class SalesDocumentFilters extends _$SalesDocumentFilters {
       timeRangeOption: TimeRangeOptionX.fromLabel(label),
       currentPage: 1,
     );
-    ref.invalidate(salesDocumentsListProvider(scope));
   }
 
   void setCustomDateRange(
@@ -174,17 +195,14 @@ class SalesDocumentFilters extends _$SalesDocumentFilters {
       customDateRange: range,
       currentPage: 1,
     );
-    ref.invalidate(salesDocumentsListProvider(scope));
   }
 
   void setStatus(String status) {
     state = state.copyWith(selectedStatus: status, currentPage: 1);
-    ref.invalidate(salesDocumentsListProvider(scope));
   }
 
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
-    ref.invalidate(salesDocumentsListProvider(scope));
   }
 }
 
@@ -192,32 +210,59 @@ class SalesDocumentFilters extends _$SalesDocumentFilters {
 class SalesDocumentsList extends _$SalesDocumentsList {
   @override
   Future<PaginatedSaleInvoices> build(SalesDocumentListScope scope) async {
-    ref.watch(salesDocumentFiltersProvider(scope));
+    ref.watch(
+      salesDocumentFiltersProvider(scope).select(
+        (filters) => (filters.timeRangeOption, filters.customDateRange),
+      ),
+    );
     ref.watch(salesDocumentSearchQueryProvider(scope));
-    return _fetchPage(scope);
+    final allItems = await _fetchAllDocuments(scope);
+    return PaginatedSaleInvoices(
+      items: allItems,
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: allItems.length,
+    );
   }
 
-  Future<PaginatedSaleInvoices> _fetchPage(SalesDocumentListScope scope) async {
+  Future<List<SaleInvoiceModel>> _fetchAllDocuments(
+    SalesDocumentListScope scope,
+  ) async {
     final filters = ref.read(salesDocumentFiltersProvider(scope));
     final search = ref.read(salesDocumentSearchQueryProvider(scope));
     final service = await ref.read(salesServiceProvider.future);
-    final page = await service.fetchInvoicesPage(
-      _buildListQuery(scope, filters, search),
-    );
+    final baseQuery = _buildFetchAllQuery(scope, filters, search);
 
-    final filteredItems = _applySeriesFilter(page.items, scope);
-    return PaginatedSaleInvoices(
-      items: filteredItems,
-      currentPage: page.currentPage,
-      totalPages: page.totalPages,
-      totalItems: page.totalItems,
-      summary: page.summary,
+    final allItems = await PaginatedFetch.fetchAll<SaleInvoiceModel>(
+      fetchPage: (page) async {
+        final result = await service.fetchInvoicesPage(
+          SalesDocumentListQuery(
+            page: page,
+            limit: baseQuery.limit,
+            documentType: baseQuery.documentType,
+            status: baseQuery.status,
+            from: baseQuery.from,
+            to: baseQuery.to,
+            q: baseQuery.q,
+          ),
+        );
+        return (items: result.items, totalPages: result.totalPages);
+      },
     );
+    return _applySeriesFilter(allItems, scope);
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _fetchPage(scope));
+    state = await AsyncValue.guard(() async {
+      final allItems = await _fetchAllDocuments(scope);
+      return PaginatedSaleInvoices(
+        items: allItems,
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: allItems.length,
+      );
+    });
   }
 
   Future<String?> deleteDraft(String documentId) async {
@@ -310,21 +355,42 @@ void _invalidateRelatedLists(
   }
 }
 
+List<SaleInvoiceModel> _filterSalesDocumentsByStatus(
+  List<SaleInvoiceModel> items,
+  SalesDocumentFiltersState filters,
+) {
+  final status = _documentStatusFromFilterLabel(filters.selectedStatus);
+  if (status == null) return items;
+  return items
+      .where((item) => item.documentStatus.apiValue == status)
+      .toList();
+}
+
+@riverpod
+List<SaleInvoiceModel> filteredSalesDocuments(
+  Ref ref,
+  SalesDocumentListScope scope,
+) {
+  final allItems =
+      ref.watch(salesDocumentsListProvider(scope)).value?.items ?? [];
+  final filters = ref.watch(salesDocumentFiltersProvider(scope));
+  return _filterSalesDocumentsByStatus(allItems, filters);
+}
+
 @riverpod
 PaginatedSaleInvoices paginatedSalesDocuments(
   Ref ref,
   SalesDocumentListScope scope,
 ) {
-  final documentsAsync = ref.watch(salesDocumentsListProvider(scope));
-  return documentsAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedSaleInvoices(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
-  );
+  final filtered = ref.watch(filteredSalesDocumentsProvider(scope));
+  final filters = ref.watch(salesDocumentFiltersProvider(scope));
+  return paginateSalesDocuments(filtered, filters.currentPage);
+}
+
+@Riverpod(keepAlive: true)
+Future<SalesOrderSummaryData> salesOrderStatusSummary(Ref ref) async {
+  final items = ref.watch(filteredSaleOrdersProvider);
+  return summarizeSaleOrders(items);
 }
 
 SalesDocumentListScope estimateListScope() => const SalesDocumentListScope(
@@ -345,17 +411,6 @@ SalesDocumentListScope deliveryChallanListScope() =>
     const SalesDocumentListScope(
       documentType: SalesDocumentType.deliveryChallan,
     );
-
-@Riverpod(keepAlive: true)
-Future<SalesOrderSummaryData> salesOrderStatusSummary(Ref ref) async {
-  ref.watch(salesDocumentsListProvider(saleOrderListScope()));
-  final service = await ref.read(salesServiceProvider.future);
-  final items = await service.fetchDocumentsByType(
-    SalesDocumentType.saleOrder,
-    limit: 500,
-  );
-  return summarizeSaleOrders(items);
-}
 
 SalesDocumentListScope salesReturnListScope() => const SalesDocumentListScope(
   documentType: SalesDocumentType.salesReturn,

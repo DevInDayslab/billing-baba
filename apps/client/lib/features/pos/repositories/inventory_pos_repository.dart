@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
@@ -37,7 +38,8 @@ class InventoryPosRepository implements PosRepository {
     return items
         .where((item) => item.type == ItemType.product)
         .map((item) {
-          final stock = item.availableForSale ?? item.quantity ?? 0;
+          final stock =
+              InventoryStockCalculator.metricsFromItem(item).availableForSale;
           return PosItem(
             id: item.id,
             name: item.name,
@@ -79,7 +81,9 @@ class InventoryPosRepository implements PosRepository {
             sku: item.barcode ?? item.id,
             category: categoryById[item.categoryId] ?? 'Uncategorized',
             price: item.salePrice ?? 0,
-            stock: (item.availableForSale ?? item.quantity ?? 0).round(),
+            stock: InventoryStockCalculator.metricsFromItem(item)
+                .availableForSale
+                .round(),
           ),
         )
         .toList();

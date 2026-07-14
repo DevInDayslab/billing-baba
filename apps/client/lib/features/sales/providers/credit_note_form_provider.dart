@@ -305,7 +305,16 @@ class CreditNoteForm extends _$CreditNoteForm {
         godownId: state.godownId,
       );
       ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
-      refreshAfterSaleReturn(ref);
+      refreshAfterSaleReturn(
+        ref,
+        context: (
+          partyId: state.partyId,
+          itemIds: state.items
+              .map((line) => line.itemId)
+              .whereType<String>()
+              .where((id) => id.isNotEmpty),
+        ),
+      );
       state = state.copyWith(
         documentId: document.id,
         isSaving: false,

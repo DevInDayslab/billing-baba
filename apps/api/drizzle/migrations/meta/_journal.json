@@ -92,6 +92,20 @@
       "when": 1783900000000,
       "tag": "0012_pricing_tier_tier_4",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1784000000000,
+      "tag": "0013_inventory_movement_unit",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1784100000000,
+      "tag": "0014_payments_source",
+      "breakpoints": true
     }
   ]
 }

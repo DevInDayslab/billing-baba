@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
@@ -7,6 +9,7 @@ import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dar
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'payment_in_provider.g.dart';
@@ -250,38 +253,119 @@ List<PaymentInModel> _applyClientFilters(
   }).toList();
 }
 
+PaginatedPaymentIn _paginatePaymentInRecords(
+  List<PaymentInModel> records,
+  int currentPage,
+) {
+  if (records.isEmpty) {
+    return const PaginatedPaymentIn(
+      items: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+    );
+  }
+
+  final totalItems = records.length;
+  final totalPages = (totalItems / paymentInPageSize).ceil();
+  final page = currentPage.clamp(1, totalPages);
+  final start = (page - 1) * paymentInPageSize;
+  final end = (start + paymentInPageSize).clamp(0, totalItems);
+
+  return PaginatedPaymentIn(
+    items: records.sublist(start, end),
+    currentPage: page,
+    totalPages: totalPages,
+    totalItems: totalItems,
+  );
+}
+
+PaginatedPaymentIn _allPaymentInPage(List<PaymentInModel> records) {
+  return PaginatedPaymentIn(
+    items: records,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: records.length,
+  );
+}
+
+List<PaymentInModel> _allPaymentInFromAsync(
+  AsyncValue<PaginatedPaymentIn> recordsAsync,
+) {
+  return recordsAsync.when(
+    data: (page) => page.items,
+    loading: () => const [],
+    error: (_, _) => const [],
+  );
+}
+
+PaymentListQuery _buildFetchAllQuery(PaymentInFiltersState filters) {
+  final dateRange = _resolveTimeRange(
+    filters.timeRangeOption,
+    filters.customDateRange,
+  );
+
+  return PaymentListQuery(
+    limit: PaginatedFetch.defaultPageSize,
+    direction: 'received',
+    partyId: filters.partyId,
+    from: dateRange?.start.toUtc().toIso8601String(),
+    to: dateRange?.end.toUtc().toIso8601String(),
+  );
+}
+
 @Riverpod(keepAlive: true)
 class PaymentInRecords extends _$PaymentInRecords {
   @override
   Future<PaginatedPaymentIn> build() async {
-    ref.watch(paymentInFiltersProvider);
-    return _fetchPage();
+    ref.watch(
+      paymentInFiltersProvider.select(
+        (filters) => (
+          filters.timeRangeOption,
+          filters.customDateRange,
+          filters.partyId,
+        ),
+      ),
+    );
+    final allRecords = await _fetchAllRecords();
+    return _allPaymentInPage(allRecords);
   }
 
-  Future<PaginatedPaymentIn> _fetchPage() async {
+  Future<List<PaymentInModel>> _fetchAllRecords() async {
     final filters = ref.read(paymentInFiltersProvider);
     final service = await ref.read(salesServiceProvider.future);
-    final page = await service.fetchPaymentsPage(_buildPaymentListQuery(filters));
+    final baseQuery = _buildFetchAllQuery(filters);
 
-    return PaginatedPaymentIn(
-      items: _applyClientFilters(page.items, filters),
-      currentPage: page.currentPage,
-      totalPages: page.totalPages,
-      totalItems: page.totalItems,
+    return PaginatedFetch.fetchAll<PaymentInModel>(
+      fetchPage: (page) async {
+        final pageResult = await service.fetchPaymentsPage(
+          PaymentListQuery(
+            page: page,
+            limit: baseQuery.limit,
+            direction: baseQuery.direction,
+            partyId: baseQuery.partyId,
+            from: baseQuery.from,
+            to: baseQuery.to,
+          ),
+        );
+        return (items: pageResult.items, totalPages: pageResult.totalPages);
+      },
     );
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchPage);
+    state = await AsyncValue.guard(() async {
+      final allRecords = await _fetchAllRecords();
+      return _allPaymentInPage(allRecords);
+    });
   }
 
   Future<String?> deletePayment(String paymentId) async {
     try {
       final service = await ref.read(salesServiceProvider.future);
       await service.deletePayment(paymentId);
-      ref.invalidate(saleInvoicesProvider);
-      await refresh();
+      refreshAfterPaymentIn(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
@@ -291,15 +375,19 @@ class PaymentInRecords extends _$PaymentInRecords {
 
 @riverpod
 class PaymentInFilters extends _$PaymentInFilters {
+  Debouncer? _searchDebouncer;
+
   @override
-  PaymentInFiltersState build() => const PaymentInFiltersState();
+  PaymentInFiltersState build() {
+    ref.onDispose(() => _searchDebouncer?.dispose());
+    return const PaymentInFiltersState();
+  }
 
   void setTimeRange(String label) {
     state = state.copyWith(
       timeRangeOption: TimeRangeOptionX.fromLabel(label),
       currentPage: 1,
     );
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setCustomDateRange(
@@ -313,32 +401,29 @@ class PaymentInFilters extends _$PaymentInFilters {
       customDateRange: range,
       currentPage: 1,
     );
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setFirm(String firm) {
     state = state.copyWith(selectedFirm: firm, currentPage: 1);
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setStatus(String status) {
     state = state.copyWith(selectedStatus: status, currentPage: 1);
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setSearchQuery(String query) {
-    state = state.copyWith(searchQuery: query, currentPage: 1);
-    ref.invalidate(paymentInRecordsProvider);
+    _searchDebouncer ??= Debouncer();
+    _searchDebouncer!.run(() {
+      state = state.copyWith(searchQuery: query, currentPage: 1);
+    });
   }
 
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setPartyFilter({String? partyId, String? partyName}) {
@@ -347,70 +432,62 @@ class PaymentInFilters extends _$PaymentInFilters {
       clearPartyId: partyId == null,
       currentPage: 1,
     );
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setDateColumnFilter(DateColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearDateColumnFilter: true, currentPage: 1)
         : state.copyWith(dateColumnFilter: filter, currentPage: 1);
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setRefNoColumnFilter(TextColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearRefNoColumnFilter: true, currentPage: 1)
         : state.copyWith(refNoColumnFilter: filter, currentPage: 1);
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setPartyNameColumnFilter(TextColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearPartyNameColumnFilter: true, currentPage: 1)
         : state.copyWith(partyNameColumnFilter: filter, currentPage: 1);
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setTotalAmountColumnFilter(AmountColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearTotalAmountColumnFilter: true, currentPage: 1)
         : state.copyWith(totalAmountColumnFilter: filter, currentPage: 1);
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setReceivedAmountColumnFilter(AmountColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearReceivedAmountColumnFilter: true, currentPage: 1)
         : state.copyWith(receivedAmountColumnFilter: filter, currentPage: 1);
-    ref.invalidate(paymentInRecordsProvider);
   }
 
   void setPaymentTypeColumnFilter(SelectColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearPaymentTypeColumnFilter: true, currentPage: 1)
         : state.copyWith(paymentTypeColumnFilter: filter, currentPage: 1);
-    ref.invalidate(paymentInRecordsProvider);
   }
 }
 
 @riverpod
+List<PaymentInModel> filteredPaymentInRecords(Ref ref) {
+  final allRecords = _allPaymentInFromAsync(ref.watch(paymentInRecordsProvider));
+  final filters = ref.watch(paymentInFiltersProvider);
+  return _applyClientFilters(allRecords, filters);
+}
+
+@riverpod
 PaginatedPaymentIn paginatedPaymentInRecords(Ref ref) {
-  final recordsAsync = ref.watch(paymentInRecordsProvider);
-  return recordsAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedPaymentIn(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
-  );
+  final filtered = ref.watch(filteredPaymentInRecordsProvider);
+  final filters = ref.watch(paymentInFiltersProvider);
+  return _paginatePaymentInRecords(filtered, filters.currentPage);
 }
 
 @riverpod
 PaymentInSummaryData paymentInSummary(Ref ref) {
-  final page = ref.watch(paginatedPaymentInRecordsProvider);
-  final records = page.items;
+  final records = ref.watch(filteredPaymentInRecordsProvider);
   final totalAmount = records.fold<double>(
     0,
     (sum, record) => sum + record.totalAmount,
@@ -638,7 +715,10 @@ class PaymentInForm extends _$PaymentInForm {
 
       ref.invalidate(paymentInRecordsProvider);
       ref.invalidate(saleInvoicesProvider);
-      refreshAfterPaymentIn(ref);
+      refreshAfterPaymentIn(
+        ref,
+        context: (partyId: payment.partyId, itemIds: const []),
+      );
       final paymentId = created.id;
       reset();
       return (error: null, paymentId: paymentId);

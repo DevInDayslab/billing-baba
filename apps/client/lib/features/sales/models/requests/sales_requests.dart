@@ -122,6 +122,7 @@ class CreatePaymentRequest {
     this.notes,
     this.shortPaymentHandling,
     this.allocations = const [],
+    this.source = 'manual',
   });
 
   final String partyId;
@@ -133,6 +134,7 @@ class CreatePaymentRequest {
   final String? notes;
   final String? shortPaymentHandling;
   final List<PaymentAllocationRequest> allocations;
+  final String source;
 
   Map<String, dynamic> toJson() => {
     'party_id': partyId,
@@ -144,6 +146,7 @@ class CreatePaymentRequest {
     if (notes != null) 'notes': notes,
     if (shortPaymentHandling != null)
       'short_payment_handling': shortPaymentHandling,
+    'source': source,
     'allocations': allocations.map((a) => a.toJson()).toList(),
   };
 }

@@ -5,8 +5,8 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_o
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/providers/add_sale_fa_form_provider.dart';
+import 'package:billing_baba/features/sales/utils/sale_quantity_input.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -362,11 +362,12 @@ class _LineItemRow extends ConsumerWidget {
             ),
           ),
           _CompactNumberField(
-            initialValue: item.qty == 0 ? '' : item.qty.toString(),
+            initialValue: SaleQuantityInput.format(item.qty),
             hintText: '0',
+            integerOnly: true,
             onChanged: (value) => notifier.updateLineItem(
               index,
-              item.copyWith(qty: double.tryParse(value) ?? 0),
+              item.copyWith(qty: SaleQuantityInput.parse(value)),
             ),
           ),
           Row(
@@ -533,11 +534,13 @@ class _CompactNumberField extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.hintText,
+    this.integerOnly = false,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
+  final bool integerOnly;
 
   @override
   State<_CompactNumberField> createState() => _CompactNumberFieldState();
@@ -576,10 +579,12 @@ class _CompactNumberFieldState extends State<_CompactNumberField> {
         hint: widget.hintText,
         compact: true,
       ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-      ],
+      keyboardType: widget.integerOnly
+          ? SaleQuantityInput.integerKeyboardType
+          : SaleQuantityInput.decimalKeyboardType,
+      inputFormatters: widget.integerOnly
+          ? SaleQuantityInput.integerFormatters
+          : SaleQuantityInput.decimalFormatters,
       onChanged: widget.onChanged,
     );
   }

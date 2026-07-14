@@ -247,7 +247,7 @@ abstract final class PartyActions {
     WidgetRef ref,
     PartyModel party,
   ) async {
-    await ref.read(partyLedgerProvider(party.id).notifier).refresh();
+    await ref.read(partyTimelineProvider(party.id).notifier).refresh();
   }
 
   static Future<void> _offerDeactivateParty(

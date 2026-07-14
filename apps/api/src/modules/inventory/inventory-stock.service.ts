@@ -28,6 +28,7 @@ export type RecordMovementParams = {
     | 'adjustment';
   quantityDelta: string;
   costPerUnit?: string | null;
+  unit?: string | null;
   referenceId?: string | null;
   referenceType?: string | null;
   createdBy?: string | null;
@@ -131,6 +132,7 @@ export async function recordMovementAndUpdateStock(
       movementType: params.movementType,
       quantityDelta,
       costPerUnit,
+      unit: params.unit ?? null,
       referenceId: params.referenceId ?? null,
       referenceType: params.referenceType ?? null,
       createdBy: params.createdBy ?? null,

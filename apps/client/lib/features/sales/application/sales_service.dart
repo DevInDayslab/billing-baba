@@ -433,6 +433,7 @@ class SalesService {
             direction: 'received',
             amount: receivedAmount.toStringAsFixed(4),
             paymentMode: paymentMode,
+            source: 'document_finalize',
             paymentDate: DateTimeUtils.toApiIso(
               DateTimeUtils.mergeDateAndTime(
                 date: form.invoiceDate,

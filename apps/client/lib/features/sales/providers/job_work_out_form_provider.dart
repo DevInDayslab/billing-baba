@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/job_work_service.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
@@ -246,6 +247,10 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
       final service = await ref.read(jobWorkServiceProvider.future);
       await service.saveOrder(state, itemNameToId: _itemNameToId());
       ref.invalidate(jobWorkOrdersListProvider);
+      refreshAfterJobWorkMutation(
+        ref,
+        context: (partyId: state.partyId, itemIds: const []),
+      );
       resetForm();
       return null;
     } catch (error) {

@@ -81,7 +81,11 @@ abstract final class PartyLedgerTransactionResolver {
 
     final api = await ref.read(apiClientProvider.future);
 
-    switch (transaction.referenceType) {
+    final source = transaction.source.isNotEmpty
+        ? transaction.source
+        : (transaction.referenceType ?? '');
+
+    switch (source) {
       case 'sales_documents':
         return _resolveSalesDocument(
           api.dio,
@@ -124,7 +128,7 @@ abstract final class PartyLedgerTransactionResolver {
         SalesDocumentType.fromApiValue(dto.documentType) ??
         SalesDocumentType.taxInvoice;
 
-    if (transaction.entryType == 'return' ||
+    if (transaction.sourceType == 'sales_return' ||
         documentType == SalesDocumentType.salesReturn) {
       return PartyLedgerSalesDocumentTarget(
         document: invoice,

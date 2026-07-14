@@ -356,7 +356,7 @@ final class SaleInvoicesProvider
   SaleInvoices create() => SaleInvoices();
 }
 
-String _$saleInvoicesHash() => r'bb8b7a45ee564cc2d8064714ab5651a435f49f06';
+String _$saleInvoicesHash() => r'485f51293bfe7a8608f78aa23a96dbca7e199dad';
 
 abstract class _$SaleInvoices extends $AsyncNotifier<PaginatedSaleInvoices> {
   FutureOr<PaginatedSaleInvoices> build();
@@ -435,6 +435,54 @@ abstract class _$SaleInvoiceFilters extends $Notifier<SaleInvoiceFiltersState> {
   }
 }
 
+@ProviderFor(filteredSaleInvoices)
+final filteredSaleInvoicesProvider = FilteredSaleInvoicesProvider._();
+
+final class FilteredSaleInvoicesProvider
+    extends
+        $FunctionalProvider<
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>
+        >
+    with $Provider<List<SaleInvoiceModel>> {
+  FilteredSaleInvoicesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'filteredSaleInvoicesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredSaleInvoicesHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<SaleInvoiceModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<SaleInvoiceModel> create(Ref ref) {
+    return filteredSaleInvoices(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<SaleInvoiceModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<SaleInvoiceModel>>(value),
+    );
+  }
+}
+
+String _$filteredSaleInvoicesHash() =>
+    r'935ef7c82a3b5f25235d51165113eba50f3e7f1a';
+
 @ProviderFor(paginatedSaleInvoices)
 final paginatedSaleInvoicesProvider = PaginatedSaleInvoicesProvider._();
 
@@ -481,7 +529,7 @@ final class PaginatedSaleInvoicesProvider
 }
 
 String _$paginatedSaleInvoicesHash() =>
-    r'7fddab20340e09bf021534d5be2f4f999d39ca25';
+    r'c17cb7c90b2fea8df7cbc2a3d1b8964aa5fb68f9';
 
 @ProviderFor(saleInvoiceSummary)
 final saleInvoiceSummaryProvider = SaleInvoiceSummaryProvider._();
@@ -529,4 +577,4 @@ final class SaleInvoiceSummaryProvider
 }
 
 String _$saleInvoiceSummaryHash() =>
-    r'a7150fc9e1ed54e1170ec9bb69c505752ace56da';
+    r'1dbf3cb93b3932e2895ce018396c1c1a124bd897';
