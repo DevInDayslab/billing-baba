@@ -1,10 +1,11 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:flutter/material.dart';
 
 const inventoryCardBorder = Color(0xFFE0E0E0);
 const inventoryTabActiveColor = Color(0xFF1565C0);
 const inventoryPrimaryOrange = Color(0xFFFF9800);
-const inventorySelectedRowColor = Color(0xFFE3F2FD);
+const Color inventorySelectedRowColor = listPanelSelectedRowColor;
 const inventoryNegativeColor = Color(0xFFD32F2F);
 const inventoryPositiveColor = Color(0xFF2E7D32);
 const inventoryButtonHeight = 48.0;

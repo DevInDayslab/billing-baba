@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 
 const listPanelCardBorder = Color(0xFFE0E0E0);
 const listPanelSelectedRowColor = Color(0xFFE3F2FD);
+const listPanelSelectedRowPressedColor = Color(0xFFBBDEFB);
+const listPanelZebraRowColor = Color(0xFFFAFAFA);
+const listPanelRowHoverColor = Color(0xFFF5F9FF);
+const listPanelRowFocusColor = Color(0xFFF5F9FF);
+const listPanelRowPressedColor = Color(0xFFE8F0FE);
 const listPanelNegativeColor = Color(0xFFD32F2F);
 const listPanelPositiveColor = Color(0xFF2E7D32);
 

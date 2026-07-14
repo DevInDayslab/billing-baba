@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_highlighted_text.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_row_menu.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
@@ -39,35 +40,61 @@ class InventoryItemListTile extends StatefulWidget {
 
 class _InventoryItemListTileState extends State<InventoryItemListTile> {
   var _isHovered = false;
+  var _isPressed = false;
+
+  @override
+  void didUpdateWidget(InventoryItemListTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isSelected != oldWidget.isSelected && widget.isSelected) {
+      _isHovered = false;
+      _isPressed = false;
+    }
+  }
+
+  Color get _backgroundColor {
+    if (widget.isSelected) {
+      return _isPressed
+          ? listPanelSelectedRowPressedColor
+          : listPanelSelectedRowColor;
+    }
+    if (_isPressed) return listPanelRowPressedColor;
+    if (_isHovered) return listPanelRowHoverColor;
+    if (widget.isFocused) return listPanelRowFocusColor;
+    return Colors.transparent;
+  }
+
+  static const _transparentOverlay = WidgetStatePropertyAll<Color?>(
+    Colors.transparent,
+  );
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = widget.isSelected
-        ? inventorySelectedRowColor
-        : _isHovered
-        ? const Color(0xFFF5F5F5)
-        : widget.isFocused
-        ? const Color(0xFFFAFAFA)
-        : Colors.transparent;
-
     return MouseRegion(
       onEnter: (_) {
         setState(() => _isHovered = true);
         widget.onHover();
       },
-      onExit: (_) => setState(() => _isHovered = false),
+      onExit: (_) => setState(() {
+        _isHovered = false;
+        _isPressed = false;
+      }),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 120),
         height: inventoryItemListRowHeight,
         decoration: BoxDecoration(
-          color: backgroundColor,
+          color: _backgroundColor,
           border: const Border(bottom: BorderSide(color: inventoryCardBorder)),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onTap,
+            onHighlightChanged: (pressed) => setState(() => _isPressed = pressed),
             hoverColor: Colors.transparent,
+            focusColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            splashColor: Colors.transparent,
+            overlayColor: _transparentOverlay,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Row(
