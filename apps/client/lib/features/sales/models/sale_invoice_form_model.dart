@@ -165,6 +165,7 @@ class AddSaleFormState {
     this.attachedImages = const [],
     this.attachedDocuments = const [],
     this.roundOff = true,
+    this.loyaltyPointsAvailable = 0,
     this.loyaltyPointsUsed = 0,
     this.loyaltyPointsEnabled = false,
     this.receivedAmount = 0,
@@ -207,6 +208,7 @@ class AddSaleFormState {
   final List<SaleFormAttachment> attachedImages;
   final List<SaleFormAttachment> attachedDocuments;
   final bool roundOff;
+  final double loyaltyPointsAvailable;
   final double loyaltyPointsUsed;
   final bool loyaltyPointsEnabled;
   final double receivedAmount;
@@ -243,18 +245,35 @@ class AddSaleFormState {
   }
 
   /// 1 loyalty point = ₹1 (placeholder until loyalty module exists).
-  double get loyaltyPointsValue => loyaltyPointsEnabled ? loyaltyPointsUsed : 0;
+  double get maxRedeemablePoints {
+    if (loyaltyPointsAvailable <= 0 || grandTotal <= 0) return 0;
+    return loyaltyPointsAvailable < grandTotal
+        ? loyaltyPointsAvailable
+        : grandTotal;
+  }
 
-  double get remainingAmount =>
-      (grandTotal - loyaltyPointsValue).clamp(0, double.infinity);
+  double get loyaltyDiscount =>
+      loyaltyPointsUsed.clamp(0, maxRedeemablePoints).toDouble();
+
+  double get loyaltyPointsValue => loyaltyDiscount;
+
+  double get invoiceTotal =>
+      (grandTotal - loyaltyDiscount).clamp(0, double.infinity);
+
+  double get remainingAmount => invoiceTotal;
 
   double get balanceAmount {
     if (saleType == SaleType.cash) {
-      return (grandTotal - paymentAmount).clamp(0, double.infinity);
+      return (invoiceTotal - paymentAmount).clamp(0, double.infinity);
     }
     final received = receivedEnabled ? receivedAmount : 0;
-    return (remainingAmount - received).clamp(0, double.infinity);
+    return (invoiceTotal - received).clamp(0, double.infinity);
   }
+
+  bool get showLoyaltySection =>
+      partyId != null &&
+      partyId!.isNotEmpty &&
+      loyaltyPointsAvailable > 0;
 
   double get displayReceivedAmount {
     if (saleType == SaleType.cash) return paymentAmount;
@@ -309,6 +328,7 @@ class AddSaleFormState {
     List<SaleFormAttachment>? attachedImages,
     List<SaleFormAttachment>? attachedDocuments,
     bool? roundOff,
+    double? loyaltyPointsAvailable,
     double? loyaltyPointsUsed,
     bool? loyaltyPointsEnabled,
     double? receivedAmount,
@@ -354,6 +374,8 @@ class AddSaleFormState {
       attachedImages: attachedImages ?? this.attachedImages,
       attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       roundOff: roundOff ?? this.roundOff,
+      loyaltyPointsAvailable:
+          loyaltyPointsAvailable ?? this.loyaltyPointsAvailable,
       loyaltyPointsUsed: loyaltyPointsUsed ?? this.loyaltyPointsUsed,
       loyaltyPointsEnabled: loyaltyPointsEnabled ?? this.loyaltyPointsEnabled,
       receivedAmount: receivedAmount ?? this.receivedAmount,

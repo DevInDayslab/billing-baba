@@ -152,6 +152,11 @@ export type FinalizeSalesDocumentResponse = {
   message: string;
   document_number: string | null;
   status: DocumentStatus;
+  loyalty?: {
+    earned_points: string;
+    redeemed_points: string;
+    points_available: string;
+  };
 };
 
 export type PosSessionRecord = {

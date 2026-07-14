@@ -378,7 +378,7 @@ final class SaleOrderFiltersProvider
   }
 }
 
-String _$saleOrderFiltersHash() => r'5c22123460dd4a39942bca855f3697b846dc4ff6';
+String _$saleOrderFiltersHash() => r'b7bf3224767db7fef3174accebb9345ad9a11fa5';
 
 abstract class _$SaleOrderFilters extends $Notifier<SaleOrderFiltersState> {
   SaleOrderFiltersState build();

@@ -758,15 +758,21 @@ class _BottomActionBar extends ConsumerWidget {
     final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
     if (form.isSaving) return;
 
-    final error = await notifier.saveInvoice();
+    final result = await notifier.saveInvoice();
     if (!context.mounted) return;
-    if (error != null) {
+    if (!result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(content: Text(result.error!)),
       );
       return;
     }
-    _showSaveSuccessSnackBar(context, isEditing);
+    await _showSaveSuccessDialog(
+      context,
+      isEditing: isEditing,
+      earnedLoyaltyPoints: result.earnedLoyaltyPoints,
+      pointsAvailable: result.pointsAvailable,
+    );
+    if (!context.mounted) return;
     final saved = ref.read(addSaleFormProvider(sessionKey: sessionKey));
     final docId = saved.documentId;
     if (docId == null) {
@@ -782,12 +788,91 @@ class _BottomActionBar extends ConsumerWidget {
     if (context.mounted) _afterSave(context, ref);
   }
 
-  void _showSaveSuccessSnackBar(BuildContext context, bool editing) {
-    final message = editing
-        ? 'Sale updated successfully.'
-        : 'Sale created successfully.';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+  Future<void> _showSaveSuccessDialog(
+    BuildContext context, {
+    required bool isEditing,
+    int earnedLoyaltyPoints = 0,
+    double pointsAvailable = 0,
+  }) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(isEditing ? 'Sale Updated' : 'Sale Created'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isEditing
+                  ? 'Sale updated successfully.'
+                  : 'Sale created successfully.',
+            ),
+            if (earnedLoyaltyPoints > 0) ...[
+              const SizedBox(height: 16),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF8E7),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFFFFE082).withValues(alpha: 0.7),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '⭐',
+                            style: AppTypography.inter(fontSize: 16),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Loyalty Points Earned',
+                            style: AppTypography.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '$earnedLoyaltyPoints',
+                        style: AppTypography.inter(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      if (pointsAvailable > 0) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Total available: ${pointsAvailable == pointsAvailable.roundToDouble() ? pointsAvailable.toInt() : pointsAvailable.toStringAsFixed(0)} points',
+                          style: AppTypography.inter(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -799,17 +884,23 @@ class _BottomActionBar extends ConsumerWidget {
     final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
     if (form.isSaving) return;
 
-    final error = await notifier.saveInvoice();
+    final result = await notifier.saveInvoice();
     if (!context.mounted) return;
 
-    if (error != null) {
+    if (!result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(content: Text(result.error!)),
       );
       return;
     }
 
-    _showSaveSuccessSnackBar(context, isEditing);
+    await _showSaveSuccessDialog(
+      context,
+      isEditing: isEditing,
+      earnedLoyaltyPoints: result.earnedLoyaltyPoints,
+      pointsAvailable: result.pointsAvailable,
+    );
+    if (!context.mounted) return;
     _afterSave(context, ref);
   }
 

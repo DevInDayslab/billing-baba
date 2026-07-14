@@ -8,8 +8,9 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { businesses } from '../business/tables';
-import { money, syncedBusinessColumns, timestamptz } from '../columns';
+import { money, syncedBusinessColumns, timestamptz, uuidPrimaryKey } from '../columns';
 import {
+  loyaltyTransactionTypeEnum,
   partyCategoryEnum,
   partyTypeEnum,
   pricingTierEnum,
@@ -141,5 +142,35 @@ export const partyLoyaltyBalances = pgTable(
       table.businessId,
       table.partyId,
     ),
+    sql`CHECK (${table.pointsEarned} >= 0)`,
+    sql`CHECK (${table.pointsAvailable} >= 0)`,
+  ],
+);
+
+/** Immutable earn/redeem audit ledger for loyalty points */
+export const loyaltyTransactions = pgTable(
+  'loyalty_transactions',
+  {
+    id: uuidPrimaryKey(),
+    businessId: uuid('business_id')
+      .notNull()
+      .references(() => businesses.id),
+    partyId: uuid('party_id')
+      .notNull()
+      .references(() => parties.id),
+    transactionType: loyaltyTransactionTypeEnum('transaction_type').notNull(),
+    points: money('points').notNull(),
+    balanceAfter: money('balance_after').notNull(),
+    referenceId: uuid('reference_id'),
+    referenceType: text('reference_type'),
+    spendAmount: money('spend_amount'),
+    rupeesPerPoint: money('rupees_per_point'),
+    description: text('description'),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    createdBy: uuid('created_by'),
+  },
+  (table) => [
+    sql`CHECK (${table.points} > 0)`,
+    sql`CHECK (${table.balanceAfter} >= 0)`,
   ],
 );

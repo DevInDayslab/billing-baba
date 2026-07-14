@@ -614,7 +614,7 @@ final class ExpenseFiltersProvider
   }
 }
 
-String _$expenseFiltersHash() => r'1a707defbf9b66ca7bd36b4fe1b3495d42a1d30a';
+String _$expenseFiltersHash() => r'b9d900ed7958fa6d6623f4e49f6d86d9d5f0363e';
 
 abstract class _$ExpenseFilters extends $Notifier<ExpenseFiltersState> {
   ExpenseFiltersState build();

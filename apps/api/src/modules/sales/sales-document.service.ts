@@ -400,6 +400,7 @@ export class SalesDocumentService extends SalesServiceBase {
       documentId,
       userId,
       godownId: input.godown_id,
+      loyaltyPointsRedeemed: input.loyalty_points_redeemed ?? '0',
     });
 
     return {
@@ -407,6 +408,7 @@ export class SalesDocumentService extends SalesServiceBase {
       message: 'Document finalized',
       document_number: result.documentNumber,
       status: 'finalized',
+      ...(result.loyalty ? { loyalty: result.loyalty } : {}),
     };
   }
 

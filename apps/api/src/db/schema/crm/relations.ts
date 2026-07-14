@@ -7,6 +7,7 @@ import {
   partyAttachments,
   partyLinks,
   partyLoyaltyBalances,
+  loyaltyTransactions,
   partyTagAssignments,
   partyTags,
   partyVisits,
@@ -26,6 +27,7 @@ export const partiesRelations = relations(parties, ({ one, many }) => ({
   links: many(partyLinks),
   tagAssignments: many(partyTagAssignments),
   loyaltyBalance: one(partyLoyaltyBalances),
+  loyaltyTransactions: many(loyaltyTransactions),
 }));
 
 export const partyVisitsRelations = relations(partyVisits, ({ one }) => ({
@@ -83,6 +85,16 @@ export const partyLoyaltyBalancesRelations = relations(
   ({ one }) => ({
     party: one(parties, {
       fields: [partyLoyaltyBalances.partyId],
+      references: [parties.id],
+    }),
+  }),
+);
+
+export const loyaltyTransactionsRelations = relations(
+  loyaltyTransactions,
+  ({ one }) => ({
+    party: one(parties, {
+      fields: [loyaltyTransactions.partyId],
       references: [parties.id],
     }),
   }),

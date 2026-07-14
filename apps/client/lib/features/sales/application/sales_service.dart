@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
@@ -20,6 +21,18 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 export 'sales_error_mapper.dart' show SalesException, SalesOfflineException;
 
 part 'sales_service.g.dart';
+
+class CreateAndFinalizeSaleResult {
+  const CreateAndFinalizeSaleResult({
+    required this.document,
+    this.loyalty,
+    this.earnedLoyaltyPoints = 0,
+  });
+
+  final SalesDocumentDto document;
+  final SaleLoyaltyResultDto? loyalty;
+  final int earnedLoyaltyPoints;
+}
 
 @Riverpod(keepAlive: true)
 Future<SalesService> salesService(Ref ref) async {
@@ -249,10 +262,11 @@ class SalesService {
     }
 
     final draft = await saveDocumentDraft(input, itemNameToId: itemNameToId);
-    return _repository.finalizeDocument(
+    await _repository.finalizeDocument(
       draft.id,
       godownId: godownId ?? input.godownId,
     );
+    return _repository.getDocument(draft.id);
   }
 
   Future<SaleDocumentFormState> loadSaleDocumentForm(String documentId) async {
@@ -387,12 +401,13 @@ class SalesService {
   }
 
 
-  Future<SalesDocumentDto> createAndFinalizeSale(
+  Future<CreateAndFinalizeSaleResult> createAndFinalizeSale(
     AddSaleFormState form, {
     required String? partyId,
     required Map<String, String> itemNameToId,
     String? godownId,
     bool isGstFormal = true,
+    double loyaltyPointsRedeemed = 0,
   }) async {
     if (partyId == null || partyId.isEmpty) {
       throw const SalesException('Party is required');
@@ -403,13 +418,16 @@ class SalesService {
         form.copyWith(partyId: partyId, godownId: godownId),
         itemNameToId: itemNameToId,
       );
-      final finalized = await _repository.finalizeDocument(
+      final finalizeResult = await _repository.finalizeDocument(
         draft.id,
         godownId: godownId ?? form.godownId,
+        loyaltyPointsRedeemed: loyaltyPointsRedeemed,
       );
+      final finalized = await _repository.getDocument(draft.id);
 
+      final payableTotal = form.invoiceTotal;
       final receivedAmount = form.saleType == SaleType.cash
-          ? form.grandTotal
+          ? payableTotal
           : (form.receivedEnabled ? form.receivedAmount : 0);
 
       if (receivedAmount > 0) {
@@ -433,7 +451,12 @@ class SalesService {
         );
       }
 
-      return finalized;
+      return CreateAndFinalizeSaleResult(
+        document: finalized,
+        loyalty: finalizeResult.loyalty,
+        earnedLoyaltyPoints:
+            finalizeResult.loyalty?.earnedPointsInt ?? 0,
+      );
     } on DioException catch (error) {
       throw mapSalesError(error);
     }
@@ -478,7 +501,8 @@ class SalesService {
     String? godownId,
   }) async {
     try {
-      return _repository.finalizeDocument(documentId, godownId: godownId);
+      await _repository.finalizeDocument(documentId, godownId: godownId);
+      return _repository.getDocument(documentId);
     } on DioException catch (error) {
       throw mapSalesError(error);
     }
