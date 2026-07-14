@@ -57,6 +57,19 @@ class ItemApiTierPrices extends Notifier<Map<String, Map<String, double>>> {
       tiers.map((tier) => (pricingTier: tier.pricingTier, price: tier.price)),
     );
   }
+
+  void removeItem(String itemId) {
+    if (!state.containsKey(itemId)) return;
+    final next = Map<String, Map<String, double>>.from(state);
+    next.remove(itemId);
+    state = next;
+    _loading.remove(itemId);
+  }
+
+  Future<void> refreshItem(String itemId) async {
+    removeItem(itemId);
+    await preloadForItemIds([itemId]);
+  }
 }
 
 Map<String, double> mergedTierPricesForItem({

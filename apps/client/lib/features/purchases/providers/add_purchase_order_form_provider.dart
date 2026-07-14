@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
@@ -310,6 +311,9 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
 
       ref.invalidate(purchaseOrdersProvider);
       await ref.read(purchaseOrdersProvider.notifier).refresh();
+      if (finalize) {
+        refreshAfterPurchaseMutation(ref);
+      }
       ref
           .read(purchaseOrderSaveSuccessMessageProvider.notifier)
           .setMessage('Purchase order saved successfully');

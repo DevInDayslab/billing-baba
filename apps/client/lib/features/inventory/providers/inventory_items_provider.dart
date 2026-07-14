@@ -6,7 +6,9 @@ import 'package:billing_baba/features/inventory/models/add_item_form_model.dart'
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
+import 'package:billing_baba/features/pricing/providers/item_api_tier_prices_provider.dart';
 import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +16,15 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
 part 'inventory_items_provider.g.dart';
+
+/// Clears cached detail/tier data for a single item after mutations.
+void invalidateItemCaches(Ref ref, String itemId) {
+  ref.invalidate(productDetailProvider(itemId));
+  ref.invalidate(itemTierPricesProvider(itemId));
+  ref.invalidate(itemStockLevelsProvider(itemId));
+  ref.invalidate(productTransactionsProvider(itemId));
+  ref.read(itemApiTierPricesProvider.notifier).removeItem(itemId);
+}
 
 const _uuid = Uuid();
 
@@ -177,6 +188,8 @@ class InventoryItems extends _$InventoryItems {
         for (final existing in current)
           if (existing.id == itemId) item else existing,
       ]);
+      invalidateItemCaches(ref, itemId);
+      refreshAfterItemMutation(ref);
       return item;
     } on ApiValidationException {
       rethrow;
@@ -196,6 +209,8 @@ class InventoryItems extends _$InventoryItems {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.deleteItem(id);
       ref.read(localItemTierPricesProvider.notifier).removeItem(id);
+      invalidateItemCaches(ref, id);
+      refreshAfterItemMutation(ref);
       return null;
     } on InventoryException catch (error) {
       state = previous;
@@ -219,11 +234,18 @@ class InventoryItems extends _$InventoryItems {
         removeFromExistingCategory: removeFromExistingCategory,
       );
       await refresh(searchQuery: ref.read(productBackendSearchProvider));
+      refreshAfterItemMutation(ref);
       return null;
     } on InventoryException catch (error) {
       return error.message;
     } catch (error) {
       return InventoryErrorMapper.messageFor(error);
     }
+  }
+
+  Future<void> refreshAfterStockAdjustment(String itemId) async {
+    invalidateItemCaches(ref, itemId);
+    await refresh();
+    refreshAfterItemMutation(ref);
   }
 }

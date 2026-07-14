@@ -6,7 +6,6 @@ import 'package:billing_baba/features/inventory/models/requests/movement_request
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -95,10 +94,9 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
         ),
       );
 
-      ref.invalidate(productDetailProvider(widget.item.id));
-      ref.invalidate(itemStockLevelsProvider(widget.item.id));
-      ref.invalidate(productTransactionsProvider(widget.item.id));
-      await ref.read(inventoryItemsProvider.notifier).refresh();
+      await ref
+          .read(inventoryItemsProvider.notifier)
+          .refreshAfterStockAdjustment(widget.item.id);
 
       if (!mounted) return;
       Navigator.of(context).pop();

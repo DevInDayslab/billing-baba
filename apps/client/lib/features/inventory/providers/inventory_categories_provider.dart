@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
@@ -109,6 +110,8 @@ class InventoryCategories extends _$InventoryCategories {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.deleteCategory(id);
       await refresh();
+      invalidateInventoryLists(ref);
+      invalidateDashboard(ref);
       return null;
     } on InventoryException catch (error) {
       state = previous;

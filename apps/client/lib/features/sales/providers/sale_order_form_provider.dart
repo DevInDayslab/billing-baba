@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
@@ -325,6 +326,7 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
       );
       ref.invalidate(salesDocumentsListProvider(saleOrderListScope()));
       ref.invalidate(saleOrdersProvider);
+      refreshAfterSaleMutation(ref);
       resetForm();
       return null;
     } catch (error) {

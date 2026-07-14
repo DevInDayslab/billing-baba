@@ -302,8 +302,6 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         savedItem = await ref
             .read(inventoryItemsProvider.notifier)
             .updateItemFromForm(editItem.id, form);
-        ref.invalidate(productDetailProvider(editItem.id));
-        ref.invalidate(itemTierPricesProvider(editItem.id));
         ref
             .read(localItemTierPricesProvider.notifier)
             .setTierPrices(editItem.id, form.tierPriceMap);

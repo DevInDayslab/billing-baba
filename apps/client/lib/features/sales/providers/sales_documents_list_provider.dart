@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
@@ -250,6 +251,7 @@ class SalesDocumentsList extends _$SalesDocumentsList {
       await service.finalizeDraft(documentId, godownId: godownId);
       await refresh();
       _invalidateRelatedLists(ref);
+      refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
@@ -262,6 +264,7 @@ class SalesDocumentsList extends _$SalesDocumentsList {
       await service.cancelSale(documentId);
       await refresh();
       _invalidateRelatedLists(ref);
+      refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);

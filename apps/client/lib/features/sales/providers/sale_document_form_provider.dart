@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
@@ -366,6 +367,9 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
       }
       ref.invalidate(salesDocumentsListProvider(_listScopeFor(documentType)));
       _invalidateDocumentLists(ref, documentType);
+      if (finalize) {
+        refreshAfterSaleMutation(ref);
+      }
       resetForm();
       return null;
     } catch (error) {

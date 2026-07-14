@@ -1,3 +1,5 @@
+import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/providers/pos_repository_provider.dart';
 import 'package:billing_baba/features/pos/repositories/pos_repository.dart';
@@ -15,12 +17,16 @@ class PosItemSearchQuery extends _$PosItemSearchQuery {
 
 @riverpod
 Future<List<PosItem>> posItems(Ref ref) async {
+  ref.watch(inventoryItemsProvider);
+  ref.watch(inventoryCategoriesProvider);
   final repository = ref.watch(posRepositoryProvider);
   return repository.getItems();
 }
 
 @riverpod
 Future<List<PosItem>> posItemSearch(Ref ref, String query) async {
+  ref.watch(inventoryItemsProvider);
+  ref.watch(inventoryCategoriesProvider);
   final repository = ref.watch(posRepositoryProvider);
   if (query.isEmpty) return repository.getItems();
   return repository.searchItems(query);

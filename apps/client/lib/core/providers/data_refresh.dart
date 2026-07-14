@@ -49,6 +49,7 @@ void invalidateInventoryLists(Ref ref) {
 void refreshAfterSaleMutation(Ref ref) {
   invalidateSaleLists(ref);
   invalidatePaymentInLists(ref);
+  invalidateInventoryLists(ref);
   invalidateDashboard(ref);
   invalidatePartyBalances(ref);
 }
@@ -57,6 +58,7 @@ void refreshAfterSaleMutation(Ref ref) {
 void refreshAfterPurchaseMutation(Ref ref) {
   invalidatePurchaseLists(ref);
   invalidatePaymentOutLists(ref);
+  invalidateInventoryLists(ref);
   invalidateDashboard(ref);
   invalidatePartyBalances(ref);
 }
@@ -86,6 +88,7 @@ void refreshAfterExpense(Ref ref) {
 /// After sale return / credit note affecting receivables.
 void refreshAfterSaleReturn(Ref ref) {
   invalidateSaleLists(ref);
+  invalidateInventoryLists(ref);
   invalidateDashboard(ref);
   invalidatePartyBalances(ref);
 }
@@ -93,6 +96,7 @@ void refreshAfterSaleReturn(Ref ref) {
 /// After purchase return / debit note.
 void refreshAfterPurchaseReturn(Ref ref) {
   invalidatePurchaseLists(ref);
+  invalidateInventoryLists(ref);
   invalidateDashboard(ref);
   invalidatePartyBalances(ref);
 }

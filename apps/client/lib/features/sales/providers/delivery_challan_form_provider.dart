@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
@@ -370,6 +371,7 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
       );
       ref.invalidate(salesDocumentsListProvider(deliveryChallanListScope()));
       ref.invalidate(deliveryChallansProvider);
+      refreshAfterSaleMutation(ref);
       resetForm();
       return null;
     } catch (error) {
