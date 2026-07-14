@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:flutter/material.dart';
 
@@ -33,36 +34,46 @@ class InventoryHighlightedText extends StatelessWidget {
       );
     }
 
-    final lowerText = text.toLowerCase();
-    final lowerQuery = trimmedQuery.toLowerCase();
+    final ranges = InventorySearchEngine.highlightRanges(
+      text: text,
+      query: trimmedQuery,
+    );
+
+    if (ranges.isEmpty) {
+      return Text(
+        text,
+        style: baseStyle,
+        maxLines: maxLines,
+        overflow: overflow,
+      );
+    }
+
+    final effectiveHighlightStyle =
+        highlightStyle ??
+        baseStyle.copyWith(
+          fontWeight: FontWeight.w700,
+          backgroundColor: const Color(0xFFFFF59D),
+        );
+
     final spans = <TextSpan>[];
-    var start = 0;
-
-    while (true) {
-      final index = lowerText.indexOf(lowerQuery, start);
-      if (index < 0) {
-        if (start < text.length) {
-          spans.add(TextSpan(text: text.substring(start), style: baseStyle));
-        }
-        break;
+    var cursor = 0;
+    for (final range in ranges) {
+      if (range.start > cursor) {
+        spans.add(
+          TextSpan(text: text.substring(cursor, range.start), style: baseStyle),
+        );
       }
-
-      if (index > start) {
-        spans.add(TextSpan(text: text.substring(start, index), style: baseStyle));
-      }
-
       spans.add(
         TextSpan(
-          text: text.substring(index, index + trimmedQuery.length),
-          style:
-              highlightStyle ??
-              baseStyle.copyWith(
-                fontWeight: FontWeight.w700,
-                backgroundColor: const Color(0xFFFFF59D),
-              ),
+          text: text.substring(range.start, range.end),
+          style: effectiveHighlightStyle,
         ),
       );
-      start = index + trimmedQuery.length;
+      cursor = range.end;
+    }
+
+    if (cursor < text.length) {
+      spans.add(TextSpan(text: text.substring(cursor), style: baseStyle));
     }
 
     return Text.rich(

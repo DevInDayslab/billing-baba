@@ -61,9 +61,7 @@ class ServicesTabContent extends ConsumerWidget {
         ref.read(productTransactionFiltersProvider.notifier).reset();
         ref.read(selectedProductTransactionIdProvider.notifier).select(null);
       },
-      onRefresh: () => ref.read(inventoryItemsProvider.notifier).refresh(
-            searchQuery: ref.read(serviceBackendSearchProvider),
-          ),
+      onRefresh: () => ref.read(inventoryItemsProvider.notifier).refresh(),
       onAddPressed: () => unawaited(
         showAddItemDialog(
           context,

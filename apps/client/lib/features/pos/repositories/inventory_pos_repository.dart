@@ -2,6 +2,7 @@ import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_search_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/providers/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/repositories/mock_pos_repository.dart';
@@ -58,13 +59,28 @@ class InventoryPosRepository implements PosRepository {
 
   @override
   Future<List<PosItem>> searchItems(String query) async {
-    final items = await getItems();
-    final lower = query.toLowerCase();
-    return items
-        .where(
-          (item) =>
-              item.name.toLowerCase().contains(lower) ||
-              item.sku.toLowerCase().contains(lower),
+    final inventoryItems = await _loadItems();
+    final categories = await _loadCategories();
+    final categoryById = {
+      for (final category in categories) category.id: category.name,
+    };
+
+    final engine = _ref.read(inventorySearchEngineProvider);
+    final matchedItems = engine.searchItems(
+      inventoryItems.where((item) => item.type == ItemType.product),
+      query: query,
+    );
+
+    return matchedItems
+        .map(
+          (item) => PosItem(
+            id: item.id,
+            name: item.name,
+            sku: item.barcode ?? item.id,
+            category: categoryById[item.categoryId] ?? 'Uncategorized',
+            price: item.salePrice ?? 0,
+            stock: (item.availableForSale ?? item.quantity ?? 0).round(),
+          ),
         )
         .toList();
   }

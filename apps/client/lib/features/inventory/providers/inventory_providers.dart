@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/inventory/application/inventory_item_filter_service.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_search_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/application/inventory_transaction_table_service.dart';
@@ -25,11 +26,13 @@ import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final productsProvider = Provider<List<InventoryItem>>((ref) {
-  final query = ref.watch(productSearchQueryProvider).toLowerCase();
+  final query = ref.watch(productSearchQueryProvider);
   final filters = ref.watch(inventoryItemFiltersProvider);
-  return (ref.watch(inventoryItemsProvider).value ?? [])
-      .where((item) => item.type == ItemType.product)
-      .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
+  final engine = ref.watch(inventorySearchEngineProvider);
+  final products = (ref.watch(inventoryItemsProvider).value ?? [])
+      .where((item) => item.type == ItemType.product);
+
+  return searchInventoryItems(engine, products, query: query)
       .where(
         (item) => InventoryItemFilterService.matches(item, filters: filters),
       )
@@ -37,11 +40,13 @@ final productsProvider = Provider<List<InventoryItem>>((ref) {
 });
 
 final servicesProvider = Provider<List<InventoryItem>>((ref) {
-  final query = ref.watch(serviceSearchQueryProvider).toLowerCase();
+  final query = ref.watch(serviceSearchQueryProvider);
   final filters = ref.watch(inventoryItemFiltersProvider);
-  return (ref.watch(inventoryItemsProvider).value ?? [])
-      .where((item) => item.type == ItemType.service)
-      .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
+  final engine = ref.watch(inventorySearchEngineProvider);
+  final services = (ref.watch(inventoryItemsProvider).value ?? [])
+      .where((item) => item.type == ItemType.service);
+
+  return searchInventoryItems(engine, services, query: query)
       .where(
         (item) => InventoryItemFilterService.matches(item, filters: filters),
       )
@@ -76,7 +81,7 @@ final categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
   ref,
   categoryId,
 ) {
-  final query = ref.watch(categoryItemSearchQueryProvider).toLowerCase();
+  final query = ref.watch(categoryItemSearchQueryProvider);
   final filters = ref.watch(categoryItemFiltersProvider);
   final sort = ref.watch(categoryItemSortProvider);
   final items = ref.watch(inventoryItemsProvider).value ?? [];
@@ -89,8 +94,8 @@ final categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
         )
       : items.where((item) => item.categoryId == categoryId);
 
-  final result = filteredItems
-      .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
+  final engine = ref.watch(inventorySearchEngineProvider);
+  final result = searchInventoryItems(engine, filteredItems, query: query)
       .where(
         (item) => InventoryItemFilterService.matches(item, filters: filters),
       )

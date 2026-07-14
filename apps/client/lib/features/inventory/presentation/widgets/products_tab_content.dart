@@ -57,9 +57,7 @@ class ProductsTabContent extends ConsumerWidget {
         ref.read(productTransactionFiltersProvider.notifier).reset();
         ref.read(selectedProductTransactionIdProvider.notifier).select(null);
       },
-      onRefresh: () => ref.read(inventoryItemsProvider.notifier).refresh(
-            searchQuery: ref.read(productBackendSearchProvider),
-          ),
+      onRefresh: () => ref.read(inventoryItemsProvider.notifier).refresh(),
       onAddPressed: () => unawaited(showAddItemDialog(context)),
       onMenuSelected: (value, item) {
         switch (value) {

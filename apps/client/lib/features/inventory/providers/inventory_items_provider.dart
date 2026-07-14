@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
+import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
@@ -40,11 +41,14 @@ List<InventoryItem> _catalogItems({
   if (categoryId != null) {
     items = items.where((item) => item.categoryId == categoryId).toList();
   }
-  final query = searchQuery?.trim().toLowerCase();
+  final query = searchQuery?.trim();
   if (query != null && query.isNotEmpty) {
-    items = items
-        .where((item) => item.name.toLowerCase().contains(query))
-        .toList();
+    final engine = InventorySearchEngine.build(
+      items: items.map(
+        (item) => InventorySearchableFields.fromInventoryItem(item),
+      ),
+    );
+    items = engine.searchItems(items, query: query);
   }
   return items;
 }
