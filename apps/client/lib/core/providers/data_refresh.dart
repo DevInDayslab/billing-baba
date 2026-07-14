@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/dashboard/providers/dashboard_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
@@ -43,6 +44,7 @@ void invalidateExpenseLists(Ref ref) {
 
 void invalidateInventoryLists(Ref ref) {
   ref.invalidate(inventoryItemsProvider);
+  ref.invalidate(productTransactionsProvider);
 }
 
 /// After sale invoice create/edit/delete/finalize or sale return.

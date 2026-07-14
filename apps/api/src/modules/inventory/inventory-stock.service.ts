@@ -31,6 +31,7 @@ export type RecordMovementParams = {
   referenceId?: string | null;
   referenceType?: string | null;
   createdBy?: string | null;
+  occurredAt?: Date | null;
 };
 
 export type GodownRow = {
@@ -133,6 +134,7 @@ export async function recordMovementAndUpdateStock(
       referenceId: params.referenceId ?? null,
       referenceType: params.referenceType ?? null,
       createdBy: params.createdBy ?? null,
+      createdAt: params.occurredAt ?? new Date(),
     })
     .returning({ id: inventoryMovements.id });
 

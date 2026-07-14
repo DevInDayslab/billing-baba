@@ -306,6 +306,7 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
       documentType: documentType.backendType,
       documentSeries: documentType.documentSeries,
       documentDate: state.invoiceDate,
+      documentTime: state.invoiceTime,
       notes: _buildNotes(),
       godownId: state.godownId,
       items: state.items,

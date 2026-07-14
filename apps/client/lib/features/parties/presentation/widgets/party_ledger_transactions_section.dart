@@ -179,7 +179,7 @@ class _PartyLedgerTransactionsSectionState
         final haystack = [
           tx.type,
           tx.referenceNumber ?? '',
-          _dateFormat.format(tx.date),
+          _dateFormat.format(tx.createdAt.toLocal()),
           _currencyFormat.format(_transactionTotal(tx)),
           _currencyFormat.format(tx.balanceAfter),
           _transactionStatus(tx),
@@ -499,7 +499,7 @@ class _PartyLedgerTransactionsSectionState
                       ),
                     ),
                     InventoryListValueText(
-                      value: _dateFormat.format(transaction.date),
+                      value: _dateFormat.format(transaction.createdAt.toLocal()),
                     ),
                     InventoryListValueText(
                       value: _currencyFormat.format(total),

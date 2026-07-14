@@ -12,6 +12,8 @@ export function toMovementRecord(row: MovementRow): MovementRecord {
     cost_per_unit: row.costPerUnit,
     reference_id: row.referenceId,
     reference_type: row.referenceType,
+    reference_number: row.referenceNumber,
+    party_name: row.partyName,
     created_by: row.createdBy,
     created_at: row.createdAt.toISOString(),
   };

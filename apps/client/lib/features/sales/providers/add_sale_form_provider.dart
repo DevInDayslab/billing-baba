@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
@@ -622,6 +623,7 @@ class AddSaleForm extends _$AddSaleForm {
       );
       state = state.copyWith(
         documentId: document.id,
+        items: bindSaleServerLineIds(state.items, document.lines),
         isSaving: false,
         isDirty: false,
       );
@@ -658,6 +660,7 @@ class AddSaleForm extends _$AddSaleForm {
         );
         state = state.copyWith(
           documentId: document.id,
+          items: bindSaleServerLineIds(state.items, document.lines),
           isSaving: false,
           isDirty: false,
         );
@@ -668,6 +671,7 @@ class AddSaleForm extends _$AddSaleForm {
         );
         state = state.copyWith(
           documentId: document.id,
+          items: bindSaleServerLineIds(state.items, document.lines),
           isSaving: false,
           isDirty: false,
         );

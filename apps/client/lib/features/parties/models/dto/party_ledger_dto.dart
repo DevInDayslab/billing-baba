@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 
 class PartyLedgerSummaryDto {
@@ -144,8 +145,8 @@ class PartyLedgerMapper {
   ) {
     return PartyLedgerTransactionModel(
       id: dto.id,
-      date: DateTime.tryParse(dto.date) ?? DateTime.now(),
-      createdAt: DateTime.tryParse(dto.createdAt) ?? DateTime.now(),
+      date: DateTimeUtils.parseApiDateTime(dto.date),
+      createdAt: DateTimeUtils.parseApiDateTime(dto.createdAt),
       type: dto.type,
       entryType: dto.entryType,
       referenceId: dto.referenceId,

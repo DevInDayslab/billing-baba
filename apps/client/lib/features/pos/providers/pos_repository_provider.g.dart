@@ -48,4 +48,4 @@ final class PosRepositoryProvider
   }
 }
 
-String _$posRepositoryHash() => r'bb91f6804253ff602a02d331b4c7abe7b024adfb';
+String _$posRepositoryHash() => r'823d8431a42b0c1a82c4e44b8f9b6df75186bb89';

@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
@@ -25,7 +26,7 @@ class SalesDocumentMapper {
     return SaleInvoiceModel(
       id: dto.id,
       invoiceNo: dto.documentNumber ?? 'Draft',
-      date: DateTime.tryParse(dto.documentDate) ?? DateTime.now(),
+      date: DateTimeUtils.parseApiDateTime(dto.documentDate),
       partyName: partyName,
       partyId: dto.partyId,
       documentSeries: dto.documentSeries,
@@ -59,7 +60,7 @@ class SalesDocumentMapper {
     return PaymentInModel(
       id: dto.id,
       receiptNo: dto.referenceNumber ?? dto.id.substring(0, 8),
-      date: DateTime.tryParse(dto.paymentDate) ?? DateTime.now(),
+      date: DateTimeUtils.parseApiDateTime(dto.paymentDate),
       partyName: partyName,
       partyId: dto.partyId,
       paymentType: SalesPaymentModes.toUi(dto.paymentMode),

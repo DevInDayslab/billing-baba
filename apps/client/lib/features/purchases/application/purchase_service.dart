@@ -1,4 +1,6 @@
+import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
@@ -310,7 +312,7 @@ class PurchaseService {
                 documentSeries: input.documentSeries,
                 partyId: input.partyId!,
                 isGstFormal: input.isGstFormal,
-                documentDate: input.documentDate?.toUtc().toIso8601String(),
+                documentDate: _apiDocumentDate(input),
                 dueDate: input.dueDate != null
                     ? PurchaseConstants.formatApiDate(input.dueDate!)
                     : null,
@@ -758,6 +760,17 @@ class PurchaseService {
     return page.items.fold<double>(0, (sum, bill) => sum + bill.balanceDue);
   }
 
+  String? _apiDocumentDate(PurchaseDocumentDraftInput input) {
+    final date = input.documentDate;
+    if (date == null) return null;
+    return DateTimeUtils.toApiIso(
+      DateTimeUtils.mergeDateAndTime(
+        date: date,
+        time: input.documentTime,
+      ),
+    );
+  }
+
   PurchaseDocumentDraftInput draftInputFromBillForm(
     AddPurchaseFormState form, {
     required PurchaseDocumentType documentType,
@@ -768,6 +781,7 @@ class PurchaseService {
       documentType: documentType,
       documentSeries: PurchaseDocumentMapper.seriesForType(documentType),
       documentDate: form.billDate,
+      documentTime: form.billTime,
       dueDate: form.dueDate,
       supplierInvoiceNumber: form.eWayBillNo.trim().isEmpty
           ? null
@@ -785,7 +799,7 @@ class PurchaseService {
       input.documentId!,
       UpdatePurchaseDocumentRequest(
         partyId: input.partyId,
-        documentDate: input.documentDate?.toUtc().toIso8601String(),
+        documentDate: _apiDocumentDate(input),
         dueDate: input.dueDate != null
             ? PurchaseConstants.formatApiDate(input.dueDate!)
             : null,
@@ -826,11 +840,19 @@ class PurchaseService {
         sortOrder: i,
       );
 
-      if (line.serverLineId != null) {
-        keptServerIds.add(line.serverLineId!);
+      final serverLineId = resolvePurchaseServerLineId(
+        localServerLineId: line.serverLineId,
+        sortOrder: i,
+        itemId: itemId,
+        existingLines: existingLines,
+        keptServerIds: keptServerIds,
+      );
+
+      if (serverLineId != null) {
+        keptServerIds.add(serverLineId);
         await _repository.updateLine(
           documentId,
-          line.serverLineId!,
+          serverLineId,
           UpdatePurchaseLineRequest(
             itemId: itemId,
             quantity: request.quantity,

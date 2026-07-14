@@ -132,6 +132,7 @@ export async function finalizePurchaseDocument(
           referenceId: params.documentId,
           referenceType: 'purchase_documents',
           createdBy: params.userId ?? null,
+          occurredAt: document.documentDate,
         });
       }
     }

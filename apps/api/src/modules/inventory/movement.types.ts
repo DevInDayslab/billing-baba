@@ -18,6 +18,8 @@ export type MovementRecord = {
   cost_per_unit: string | null;
   reference_id: string | null;
   reference_type: string | null;
+  reference_number: string | null;
+  party_name: string | null;
   created_by: string | null;
   created_at: string;
 };
@@ -50,6 +52,8 @@ export type MovementRow = {
   costPerUnit: string | null;
   referenceId: string | null;
   referenceType: string | null;
+  referenceNumber: string | null;
+  partyName: string | null;
   createdBy: string | null;
   createdAt: Date;
 };

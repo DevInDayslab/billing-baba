@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -293,6 +294,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       );
       state = state.copyWith(
         documentId: document.id,
+        items: bindPurchaseServerLineIds(state.items, document.lines),
         isSaving: false,
         isDirty: false,
       );
@@ -338,6 +340,13 @@ class AddPurchaseForm extends _$AddPurchaseForm {
           itemNameToId: _itemNameToId(),
         );
       }
+
+      state = state.copyWith(
+        documentId: document.id,
+        items: bindPurchaseServerLineIds(state.items, document.lines),
+        isSaving: false,
+        isDirty: false,
+      );
 
       if (finalize &&
           state.partyId != null &&

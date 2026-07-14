@@ -250,7 +250,7 @@ final class SalesDocumentsListProvider
 }
 
 String _$salesDocumentsListHash() =>
-    r'fe68fadeecae7871501ec568851822abaf098333';
+    r'ba1a156f751dd1f5828edcb79f0dcda558737628';
 
 final class SalesDocumentsListFamily extends $Family
     with

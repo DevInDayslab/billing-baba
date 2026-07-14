@@ -318,6 +318,7 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     documentType: SalesDocumentType.deliveryChallan,
     documentSeries: SalesConstants.challanSeries,
     documentDate: state.invoiceDate,
+    documentTime: state.invoiceTime,
     notes: _buildNotes(),
     godownId: state.godownId,
     items: state.items,

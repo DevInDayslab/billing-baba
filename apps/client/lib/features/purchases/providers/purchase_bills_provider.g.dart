@@ -86,7 +86,7 @@ final class PurchaseBillsProvider
   PurchaseBills create() => PurchaseBills();
 }
 
-String _$purchaseBillsHash() => r'2d4a84356fbc1516d2d2257461b266b5ff6ee253';
+String _$purchaseBillsHash() => r'9f69d88b50992c604ea195c2e4e1d16af3fef938';
 
 abstract class _$PurchaseBills extends $AsyncNotifier<PaginatedPurchaseBills> {
   FutureOr<PaginatedPurchaseBills> build();
@@ -144,7 +144,7 @@ final class PurchaseBillFiltersProvider
 }
 
 String _$purchaseBillFiltersHash() =>
-    r'4ab2fb5a88e6be89f62e667f687d734a0c1b54bb';
+    r'd63e323c069a03015601b097d6b4b2068b4461f8';
 
 abstract class _$PurchaseBillFilters
     extends $Notifier<PurchaseBillFiltersState> {
