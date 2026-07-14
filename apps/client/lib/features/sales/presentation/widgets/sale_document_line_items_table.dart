@@ -317,16 +317,7 @@ class _LineItemRow extends ConsumerWidget {
                               item.copyWith(itemName: value),
                             ),
                             onItemSelected: (catalogItem) =>
-                                notifier.updateLineItem(
-                              index,
-                              item.copyWith(
-                                itemId: catalogItem.id,
-                                itemName: catalogItem.name,
-                                pricePerUnit: catalogItem.salePrice,
-                                unit: catalogItem.unit ?? item.unit,
-                                mrp: catalogItem.salePrice,
-                              ),
-                            ),
+                                notifier.selectCatalogItem(index, catalogItem),
                           ),
                         ),
                       ),

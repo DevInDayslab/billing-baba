@@ -9,8 +9,10 @@ import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.
 import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
+import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -161,6 +163,19 @@ class AddPurchaseForm extends _$AddPurchaseForm {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
+    state = state.copyWith(items: items, isDirty: true);
+  }
+
+  void selectCatalogItem(int index, SaleItemOption catalogItem) {
+    if (index < 0 || index >= state.items.length) return;
+    final line = state.items[index];
+    final applied = applyCatalogItemToPurchaseLine(line, catalogItem);
+    final items = selectCatalogItemOnPurchaseLines(
+      items: state.items,
+      targetIndex: index,
+      appliedLine: applied,
+      nextLineId: _nextPurchaseLineItemId,
+    );
     state = state.copyWith(items: items, isDirty: true);
   }
 

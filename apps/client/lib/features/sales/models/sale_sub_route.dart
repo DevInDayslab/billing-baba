@@ -21,10 +21,6 @@ abstract final class SaleSubRoutes {
       route: AppRoutes.saleEstimateQuotation,
       label: 'Estimate/Quotation',
     ),
-    SaleSubRoute(
-      route: AppRoutes.saleProformaInvoice,
-      label: 'Proforma Invoice',
-    ),
     SaleSubRoute(route: AppRoutes.salePaymentIn, label: 'Payment-In'),
     SaleSubRoute(route: AppRoutes.saleOrder, label: 'Sale Order'),
     SaleSubRoute(

@@ -61,7 +61,7 @@ ExportSheet _paymentInSheet(List<PaymentInModel> items) {
           else if (record.status == PaymentInStatus.partial)
             'Partial'
           else
-            'Unused',
+            'Unpaid',
           record.totalAmount,
           record.receivedAmount,
         ]),
@@ -76,7 +76,7 @@ List<PaymentInModel> _applyClientFilters(
   final statusFilter = switch (filters.selectedStatus) {
     'Paid' => PaymentInStatus.paid,
     'Partial' => PaymentInStatus.partial,
-    'Unused' => PaymentInStatus.unused,
+    'Unpaid' => PaymentInStatus.unused,
     _ => null,
   };
 

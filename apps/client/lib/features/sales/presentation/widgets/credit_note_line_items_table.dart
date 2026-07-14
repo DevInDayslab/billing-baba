@@ -10,7 +10,6 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_line_item_
 import 'package:billing_baba/features/sales/presentation/widgets/sale_line_items_table_layout.dart';
 import 'package:billing_baba/features/sales/providers/credit_note_form_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_line_item_column_visibility_provider.dart';
-import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/features/sales/utils/sale_quantity_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -392,16 +391,8 @@ class _LineItemRow extends ConsumerWidget {
                               index,
                               item.copyWith(itemName: value),
                             ),
-                            onItemSelected: (catalogItem) {
-                              final updated = applyCatalogItemToLine(
-                                item,
-                                catalogItem,
-                              );
-                              notifier.updateLineItem(
-                                index,
-                                updated.copyWith(mrp: catalogItem.salePrice),
-                              );
-                            },
+                            onItemSelected: (catalogItem) =>
+                                notifier.selectCatalogItem(index, catalogItem),
                           ),
                         ),
                       ),

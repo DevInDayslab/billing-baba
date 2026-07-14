@@ -12,7 +12,7 @@ import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
-import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:collection/collection.dart';
@@ -475,6 +475,23 @@ class AddSaleForm extends _$AddSaleForm {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
+    state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
+  }
+
+  void selectCatalogItem(int index, SaleItemOption catalogItem) {
+    if (index < 0 || index >= state.items.length) return;
+    final line = state.items[index];
+    final applied = applyCatalogItemToLine(
+      line,
+      catalogItem,
+      partyPriceTier: state.partyPriceTier,
+    ).copyWith(mrp: catalogItem.salePrice);
+    final items = selectCatalogItemOnSaleLines(
+      items: state.items,
+      targetIndex: index,
+      appliedLine: applied,
+      nextLineId: _nextLineItemId,
+    );
     state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
   }
 

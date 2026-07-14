@@ -46,12 +46,8 @@ class _SaleOrderFooterState extends ConsumerState<SaleOrderFooter> {
     final notifier = ref.read(
       saleOrderFormProvider(sessionKey: widget.sessionKey).notifier,
     );
-    final totalTax = ref.watch(
-      saleOrderTotalTaxProvider(sessionKey: widget.sessionKey),
-    );
-    final grandTotal = ref.watch(
-      saleOrderGrandTotalProvider(sessionKey: widget.sessionKey),
-    );
+    final totalTax = form.taxAmount;
+    final grandTotal = form.total;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

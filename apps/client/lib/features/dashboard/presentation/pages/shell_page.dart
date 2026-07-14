@@ -93,6 +93,10 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   ];
 
   static final List<_NavSubItem> _saleSubItems = SaleSubRoutes.items
+      .where(
+        (item) =>
+            !ShellSidebarVisibility.hiddenSaleSubRoutes.contains(item.route),
+      )
       .map((item) => _NavSubItem(route: item.route, label: item.label))
       .toList();
 
@@ -141,11 +145,12 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       routePrefix: AppRoutes.sale,
       subItems: _saleSubItems,
     ),
-    const _NavItem(
-      route: AppRoutes.pos,
-      icon: Icons.point_of_sale_outlined,
-      label: 'POS',
-    ),
+    if (!ShellSidebarVisibility.hidePos)
+      const _NavItem(
+        route: AppRoutes.pos,
+        icon: Icons.point_of_sale_outlined,
+        label: 'POS',
+      ),
     _NavItem(
       icon: Icons.shopping_cart_outlined,
       label: 'Purchase & Expense',
@@ -158,14 +163,15 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       icon: Icons.bar_chart_outlined,
       label: 'Reports',
     ),
-    _NavItem(
-      icon: Icons.build_outlined,
-      label: 'Utilities',
-      isExpandable: true,
-      routePrefix: AppRoutes.utilities,
-      subItems: _utilitiesSubItems,
-    ),
-    if (AppConfig.showDeveloperMenu)
+    if (!ShellSidebarVisibility.hideUtilities)
+      _NavItem(
+        icon: Icons.build_outlined,
+        label: 'Utilities',
+        isExpandable: true,
+        routePrefix: AppRoutes.utilities,
+        subItems: _utilitiesSubItems,
+      ),
+    if (!ShellSidebarVisibility.hideDeveloper && AppConfig.showDeveloperMenu)
       _NavItem(
         icon: Icons.code_outlined,
         label: 'Developer',
@@ -173,11 +179,12 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         routePrefix: AppRoutes.developer,
         subItems: _developerSubItems,
       ),
-    const _NavItem(
-      route: AppRoutes.settings,
-      icon: Icons.settings_outlined,
-      label: 'Settings',
-    ),
+    if (!ShellSidebarVisibility.hideSettings)
+      const _NavItem(
+        route: AppRoutes.settings,
+        icon: Icons.settings_outlined,
+        label: 'Settings',
+      ),
     const _NavItem(
       route: AppRoutes.plansPricing,
       icon: Icons.workspace_premium_outlined,

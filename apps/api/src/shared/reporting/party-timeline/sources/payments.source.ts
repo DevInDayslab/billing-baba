@@ -91,7 +91,7 @@ export const paymentsTimelineSource: PartyTimelineSource = {
           total: normalizeTimelineMoney(total),
           balance: normalizeTimelineMoney(unused),
           dueDate: null,
-          status: unused > 0 ? 'Unused' : 'Paid',
+          status: unused > 0 ? 'Unpaid' : 'Paid',
           direction,
           paymentStatus: unused > 0 ? 'Unpaid' : 'Paid',
         };

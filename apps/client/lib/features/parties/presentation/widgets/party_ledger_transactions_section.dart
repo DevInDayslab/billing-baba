@@ -1,5 +1,5 @@
-import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_list_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_list_table.dart';
@@ -160,7 +160,7 @@ class _PartyLedgerTransactionsSectionState
     }
 
     return switch (transaction.entryType) {
-      'payment' => transaction.isPayment ? 'Unused' : 'Paid',
+      'payment' => transaction.isPayment ? 'Unpaid' : 'Paid',
       'return' => 'Returned',
       _ => '—',
     };

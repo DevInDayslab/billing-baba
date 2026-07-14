@@ -9,6 +9,8 @@ import 'package:billing_baba/features/purchases/providers/purchase_return_provid
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -210,6 +212,22 @@ class DebitNoteForm extends _$DebitNoteForm {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
+    state = state.copyWith(items: items, isDirty: true);
+  }
+
+  void selectCatalogItem(int index, SaleItemOption catalogItem) {
+    if (index < 0 || index >= state.items.length) return;
+    final line = state.items[index];
+    final applied = applyCatalogItemToLine(
+      line,
+      catalogItem,
+    ).copyWith(mrp: catalogItem.salePrice);
+    final items = selectCatalogItemOnSaleLines(
+      items: state.items,
+      targetIndex: index,
+      appliedLine: applied,
+      nextLineId: _nextDebitNoteLineItemId,
+    );
     state = state.copyWith(items: items, isDirty: true);
   }
 

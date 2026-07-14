@@ -145,7 +145,7 @@ class PaymentInSummaryData {
 PaymentInStatus? _statusFromFilterLabel(String label) => switch (label) {
   'Paid' => PaymentInStatus.paid,
   'Partial' => PaymentInStatus.partial,
-  'Unused' => PaymentInStatus.unused,
+  'Unpaid' => PaymentInStatus.unused,
   _ => null,
 };
 

@@ -187,14 +187,14 @@ class ActionCenterTasksSection extends ConsumerWidget {
                   value: _OverflowAction.deleteCompleted,
                   child: Text('Delete Completed'),
                 ),
-                PopupMenuItem(
-                  value: _OverflowAction.viewAll,
-                  child: Text('View All Tasks'),
-                ),
-                PopupMenuItem(
-                  value: _OverflowAction.settings,
-                  child: Text('Settings'),
-                ),
+                // PopupMenuItem(
+                //   value: _OverflowAction.viewAll,
+                //   child: Text('View All Tasks'),
+                // ),
+                // PopupMenuItem(
+                //   value: _OverflowAction.settings,
+                //   child: Text('Settings'),
+                // ),
               ],
             ),
           ],

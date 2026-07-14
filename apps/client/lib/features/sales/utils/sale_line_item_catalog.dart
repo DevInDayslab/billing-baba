@@ -25,3 +25,77 @@ SaleLineItem applyCatalogItemToLine(
     qty: qty,
   );
 }
+
+bool isEmptySaleLineDraft(SaleLineItem line) =>
+    line.itemName.trim().isEmpty && line.qty <= 0;
+
+bool canClubSaleLineItem(SaleLineItem line) =>
+    line.itemId != null &&
+    line.serialNo.trim().isEmpty &&
+    line.batchNo.trim().isEmpty;
+
+void ensureTrailingEmptySaleLine(
+  List<SaleLineItem> items,
+  String Function() nextLineId,
+) {
+  if (items.isEmpty) {
+    items.add(SaleLineItem.empty(id: nextLineId()));
+    return;
+  }
+  final last = items.last;
+  if (!isEmptySaleLineDraft(last)) {
+    items.add(SaleLineItem.empty(id: nextLineId()));
+  }
+}
+
+/// Selects a catalog item on [targetIndex], clubbing qty into an existing row
+/// with the same [itemId] when allowed (POS-style).
+List<SaleLineItem> selectCatalogItemOnSaleLines({
+  required List<SaleLineItem> items,
+  required int targetIndex,
+  required SaleLineItem appliedLine,
+  required String Function() nextLineId,
+}) {
+  if (targetIndex < 0 || targetIndex >= items.length) return items;
+
+  final itemId = appliedLine.itemId;
+  if (itemId == null) {
+    final updated = [...items];
+    updated[targetIndex] = appliedLine;
+    ensureTrailingEmptySaleLine(updated, nextLineId);
+    return updated;
+  }
+
+  var clubIndex = -1;
+  for (var i = 0; i < items.length; i++) {
+    if (i == targetIndex) continue;
+    final line = items[i];
+    if (line.itemId == itemId && canClubSaleLineItem(line)) {
+      clubIndex = i;
+      break;
+    }
+  }
+
+  if (clubIndex < 0) {
+    final updated = [...items];
+    updated[targetIndex] = appliedLine;
+    ensureTrailingEmptySaleLine(updated, nextLineId);
+    return updated;
+  }
+
+  final qtyToAdd = appliedLine.qty > 0 ? appliedLine.qty : 1.0;
+  final updated = [...items];
+  updated[clubIndex] = updated[clubIndex].copyWith(
+    qty: updated[clubIndex].qty + qtyToAdd,
+  );
+
+  final target = items[targetIndex];
+  if (isEmptySaleLineDraft(target)) {
+    updated.removeAt(targetIndex);
+  } else {
+    updated[targetIndex] = SaleLineItem.empty(id: target.id);
+  }
+
+  ensureTrailingEmptySaleLine(updated, nextLineId);
+  return updated;
+}
