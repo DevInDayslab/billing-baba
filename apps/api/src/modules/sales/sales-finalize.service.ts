@@ -8,9 +8,9 @@ import {
   getDefaultGodown,
   recordMovementAndUpdateStock,
 } from '../inventory/inventory-stock.service';
-import { assignDocumentNumber } from './sales-numbering.service';
-import { SalesDocumentRepository } from './sales-document.repository';
+import type { SalesDocumentRepository } from './sales-document.repository';
 import type { SalesDocumentType } from './sales-document.types';
+import { assignDocumentNumber } from './sales-numbering.service';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
@@ -108,7 +108,10 @@ export async function finalizeSalesDocument(
     );
   }
 
-  const lines = await repository.listLines(params.businessId, params.documentId);
+  const lines = await repository.listLines(
+    params.businessId,
+    params.documentId,
+  );
   if (lines.length === 0) {
     throw new AppError(
       'VALIDATION_ERROR',
@@ -287,4 +290,4 @@ export async function findConvertedChainRoot(
   return currentId;
 }
 
-export { STOCK_ON_FINALIZE_TYPES, LEDGER_ON_FINALIZE_TYPES };
+export { LEDGER_ON_FINALIZE_TYPES, STOCK_ON_FINALIZE_TYPES };

@@ -108,7 +108,10 @@ export class OrderReportsRepository {
   async getSalePurchaseOrderItems(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<ReportOrderItemRow>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<ReportOrderItemRow>;
+    total: number;
+  }> {
     const range = resolveRange(query);
 
     const saleRows = await this.db

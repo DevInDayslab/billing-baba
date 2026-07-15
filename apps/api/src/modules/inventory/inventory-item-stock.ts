@@ -164,10 +164,7 @@ export async function loadReservedQuantitiesByItem(
       const fulfilledQty = fulfilled.get(line.itemId) ?? 0;
       const remaining = Math.max(0, orderQty - fulfilledQty);
       if (remaining > 0) {
-        reserved.set(
-          line.itemId,
-          (reserved.get(line.itemId) ?? 0) + remaining,
-        );
+        reserved.set(line.itemId, (reserved.get(line.itemId) ?? 0) + remaining);
       }
     }
   }
@@ -200,7 +197,11 @@ export function enrichItemListRecord(
     return item;
   }
 
-  const summary = buildItemStockSummary(item.id, physicalByItem, reservedByItem);
+  const summary = buildItemStockSummary(
+    item.id,
+    physicalByItem,
+    reservedByItem,
+  );
   return {
     ...item,
     ...summary,
@@ -216,7 +217,11 @@ export function enrichItemDetailRecord(
     return item;
   }
 
-  const summary = buildItemStockSummary(item.id, physicalByItem, reservedByItem);
+  const summary = buildItemStockSummary(
+    item.id,
+    physicalByItem,
+    reservedByItem,
+  );
   return {
     ...item,
     ...summary,

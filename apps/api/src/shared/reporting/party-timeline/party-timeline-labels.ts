@@ -18,15 +18,13 @@ export function resolveTimelineTypeLabel(
         : 'Estimate / Quotation';
     }
     return (
-      SALES_DOCUMENT_LABELS[sourceType] ??
-      formatSourceTypeLabel(sourceType)
+      SALES_DOCUMENT_LABELS[sourceType] ?? formatSourceTypeLabel(sourceType)
     );
   }
 
   if (source === 'purchase_documents') {
     return (
-      PURCHASE_DOCUMENT_LABELS[sourceType] ??
-      formatSourceTypeLabel(sourceType)
+      PURCHASE_DOCUMENT_LABELS[sourceType] ?? formatSourceTypeLabel(sourceType)
     );
   }
 

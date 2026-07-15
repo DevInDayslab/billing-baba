@@ -1,7 +1,6 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { paymentAllocations } from '../../../../db/schema/accounting/tables';
 import { purchaseDocuments } from '../../../../db/schema/purchases/tables';
-import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 import type {
   PartyTimelineContext,
   PartyTimelineSource,
@@ -14,6 +13,7 @@ import {
   resolveInvoicePaymentStatus,
   resolveOverdueStatus,
 } from '../party-timeline.utils';
+import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 
 function purchaseAllocationSubquery(
   db: PartyTimelineContext['db'],
@@ -22,9 +22,10 @@ function purchaseAllocationSubquery(
   return db
     .select({
       purchaseDocumentId: paymentAllocations.purchaseDocumentId,
-      allocated: sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
-        'purchase_allocated',
-      ),
+      allocated:
+        sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+          'purchase_allocated',
+        ),
     })
     .from(paymentAllocations)
     .where(
@@ -77,15 +78,12 @@ export const purchaseDocumentsTimelineSource: PartyTimelineSource = {
       const paid = parseTimelineMoney(row.allocated);
       const isBill = isPayablePurchaseDocument(row.documentType);
       const isReturn = row.documentType === 'purchase_return';
-      const balance = isBill || isReturn
-        ? Math.max(0, total - paid)
-        : total;
+      const balance = isBill || isReturn ? Math.max(0, total - paid) : total;
 
-      const paymentStatus = isBill || isReturn
-        ? resolveInvoicePaymentStatus(total, paid)
-        : null;
+      const paymentStatus =
+        isBill || isReturn ? resolveInvoicePaymentStatus(total, paid) : null;
 
-      let status = paymentStatus;
+      let status: string | null = paymentStatus;
       if (isBill && paymentStatus === 'Unpaid' && row.dueDate) {
         status = resolveOverdueStatus(row.dueDate) ?? paymentStatus;
       }

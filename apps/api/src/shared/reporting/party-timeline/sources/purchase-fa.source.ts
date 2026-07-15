@@ -1,6 +1,5 @@
 import { and, eq, ne } from 'drizzle-orm';
 import { purchaseFaBatches } from '../../../../db/schema/purchases/tables';
-import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 import type {
   PartyTimelineContext,
   PartyTimelineSource,
@@ -12,6 +11,7 @@ import {
   resolveFaStatusLabel,
   resolveOverdueStatus,
 } from '../party-timeline.utils';
+import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 
 export const purchaseFaTimelineSource: PartyTimelineSource = {
   id: 'purchase_fa_batches',

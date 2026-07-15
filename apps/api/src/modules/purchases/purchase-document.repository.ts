@@ -41,9 +41,10 @@ export class PurchaseDocumentRepository {
     return this.db
       .select({
         purchaseDocumentId: paymentAllocations.purchaseDocumentId,
-        allocated: sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
-          'allocated',
-        ),
+        allocated:
+          sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+            'allocated',
+          ),
       })
       .from(paymentAllocations)
       .where(
@@ -68,10 +69,7 @@ export class PurchaseDocumentRepository {
         )`.as('row_num'),
       })
       .from(paymentAllocations)
-      .innerJoin(
-        payments,
-        eq(paymentAllocations.paymentId, payments.id),
-      )
+      .innerJoin(payments, eq(paymentAllocations.paymentId, payments.id))
       .where(
         and(
           eq(paymentAllocations.businessId, businessId),

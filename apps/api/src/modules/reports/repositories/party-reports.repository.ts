@@ -1,19 +1,8 @@
-import {
-  and,
-  desc,
-  eq,
-  gte,
-  ilike,
-  inArray,
-  lt,
-  sql,
-} from 'drizzle-orm';
+import { and, desc, eq, gte, ilike, inArray, lt, sql } from 'drizzle-orm';
 import type { Database } from '../../../db/client';
 import { parties } from '../../../db/schema/crm/tables';
 import { items } from '../../../db/schema/inventory/tables';
-import {
-  purchaseDocuments,
-} from '../../../db/schema/purchases/tables';
+import { purchaseDocuments } from '../../../db/schema/purchases/tables';
 import {
   salesDocumentLines,
   salesDocuments,
@@ -53,12 +42,14 @@ export class PartyReportsRepository {
     const saleAgg = this.db
       .select({
         partyId: salesDocuments.partyId,
-        saleAmount: sql<string>`COALESCE(SUM(${salesDocuments.totalAmount}::numeric), 0)`.as(
-          'sale_amount',
-        ),
-        purchaseCost: sql<string>`COALESCE(SUM(${salesDocumentLines.quantity}::numeric * ${items.purchasePrice}::numeric), 0)`.as(
-          'purchase_cost',
-        ),
+        saleAmount:
+          sql<string>`COALESCE(SUM(${salesDocuments.totalAmount}::numeric), 0)`.as(
+            'sale_amount',
+          ),
+        purchaseCost:
+          sql<string>`COALESCE(SUM(${salesDocumentLines.quantity}::numeric * ${items.purchasePrice}::numeric), 0)`.as(
+            'purchase_cost',
+          ),
       })
       .from(salesDocuments)
       .leftJoin(
@@ -85,9 +76,10 @@ export class PartyReportsRepository {
     const purchaseAgg = this.db
       .select({
         partyId: purchaseDocuments.partyId,
-        purchaseAmount: sql<string>`COALESCE(SUM(${purchaseDocuments.totalAmount}::numeric), 0)`.as(
-          'purchase_amount',
-        ),
+        purchaseAmount:
+          sql<string>`COALESCE(SUM(${purchaseDocuments.totalAmount}::numeric), 0)`.as(
+            'purchase_amount',
+          ),
       })
       .from(purchaseDocuments)
       .where(
@@ -142,9 +134,15 @@ export class PartyReportsRepository {
           profit: String(sale - purchase - cost),
         };
       })
-      .filter((row) => Number(row.sale_amount) > 0 || Number(row.purchase_amount) > 0);
+      .filter(
+        (row) => Number(row.sale_amount) > 0 || Number(row.purchase_amount) > 0,
+      );
 
-    const { rows: pageRows, total } = paginateSlice(mapped, query.page, query.limit);
+    const { rows: pageRows, total } = paginateSlice(
+      mapped,
+      query.page,
+      query.limit,
+    );
 
     return {
       total,
@@ -198,7 +196,9 @@ export class PartyReportsRepository {
       .innerJoin(parties, eq(salesDocuments.partyId, parties.id))
       .where(and(...filters))
       .groupBy(parties.id, parties.name)
-      .orderBy(desc(sql`COALESCE(SUM(${salesDocumentLines.lineTotal}::numeric), 0)`));
+      .orderBy(
+        desc(sql`COALESCE(SUM(${salesDocumentLines.lineTotal}::numeric), 0)`),
+      );
 
     const mapped = grouped.map((row) => ({
       party_name: row.partyName ?? '',
@@ -226,9 +226,10 @@ export class PartyReportsRepository {
     const saleAgg = this.db
       .select({
         partyId: salesDocuments.partyId,
-        saleAmount: sql<string>`COALESCE(SUM(${salesDocuments.totalAmount}::numeric), 0)`.as(
-          'sale_amount',
-        ),
+        saleAmount:
+          sql<string>`COALESCE(SUM(${salesDocuments.totalAmount}::numeric), 0)`.as(
+            'sale_amount',
+          ),
       })
       .from(salesDocuments)
       .where(
@@ -247,9 +248,10 @@ export class PartyReportsRepository {
     const purchaseAgg = this.db
       .select({
         partyId: purchaseDocuments.partyId,
-        purchaseAmount: sql<string>`COALESCE(SUM(${purchaseDocuments.totalAmount}::numeric), 0)`.as(
-          'purchase_amount',
-        ),
+        purchaseAmount:
+          sql<string>`COALESCE(SUM(${purchaseDocuments.totalAmount}::numeric), 0)`.as(
+            'purchase_amount',
+          ),
       })
       .from(purchaseDocuments)
       .where(
@@ -294,7 +296,11 @@ export class PartyReportsRepository {
         (row) => Number(row.sale_amount) > 0 || Number(row.purchase_amount) > 0,
       );
 
-    const { rows: pageRows, total } = paginateSlice(mapped, query.page, query.limit);
+    const { rows: pageRows, total } = paginateSlice(
+      mapped,
+      query.page,
+      query.limit,
+    );
 
     return {
       total,
@@ -336,7 +342,9 @@ export class PartyReportsRepository {
     }));
 
     if (query.party_group) {
-      const filtered = mapped.filter((row) => row.party_group === query.party_group);
+      const filtered = mapped.filter(
+        (row) => row.party_group === query.party_group,
+      );
       const { rows, total: filteredTotal } = paginateSlice(
         filtered,
         query.page,

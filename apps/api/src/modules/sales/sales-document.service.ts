@@ -1,6 +1,7 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { SalesServiceBase } from './sales.base-service';
+import { assertValidConversion } from './sales-convert.rules';
 import { SalesDocumentRepository } from './sales-document.repository';
 import type {
   BrandSwapBody,
@@ -11,16 +12,11 @@ import type {
   FinalizeSalesDocumentBody,
   ListPosSessionsQuery,
   ListSalesDocumentsQuery,
+  UpdateDocumentSequenceBody,
   UpdatePosSessionBody,
   UpdateSalesDocumentBody,
   UpdateSalesLineBody,
-  UpdateDocumentSequenceBody,
 } from './sales-document.schema';
-import { assertValidConversion } from './sales-convert.rules';
-import {
-  currentFiscalYear,
-  ensureDocumentSequence,
-} from './sales-numbering.service';
 import type {
   FinalizeSalesDocumentResponse,
   PosSessionRecord,
@@ -29,6 +25,10 @@ import type {
   SalesDocumentType,
 } from './sales-document.types';
 import { finalizeSalesDocument } from './sales-finalize.service';
+import {
+  currentFiscalYear,
+  ensureDocumentSequence,
+} from './sales-numbering.service';
 import {
   calculateLineTax,
   resolveTaxType,
@@ -453,11 +453,7 @@ export class SalesDocumentService extends SalesServiceBase {
   ): Promise<SalesDocumentRecord> {
     await this.assertBusinessAccess(businessId, accountId);
 
-    const source = await this.repository.findById(
-      businessId,
-      documentId,
-      true,
-    );
+    const source = await this.repository.findById(businessId, documentId, true);
     if (!source) {
       throw new AppError('NOT_FOUND', 'Sales document not found', 404);
     }
@@ -535,12 +531,16 @@ export class SalesDocumentService extends SalesServiceBase {
           let lineTotal = line.line_total;
 
           if (shouldRecalculateGst) {
-            const tax = await this.computeLineTax(businessId, newDocumentRecord, {
-              quantity: line.quantity,
-              unit_price: line.unit_price,
-              discount_amount: line.discount_amount,
-              tax_rate: line.tax_rate,
-            });
+            const tax = await this.computeLineTax(
+              businessId,
+              newDocumentRecord,
+              {
+                quantity: line.quantity,
+                unit_price: line.unit_price,
+                discount_amount: line.discount_amount,
+                tax_rate: line.tax_rate,
+              },
+            );
             taxType = tax.taxType;
             taxRate = line.tax_rate;
             cgstAmount = tax.cgstAmount;
@@ -814,7 +814,8 @@ export class SalesDocumentService extends SalesServiceBase {
       tax_rate?: string;
     },
   ) {
-    const businessState = await this.repository.getBusinessStateCode(businessId);
+    const businessState =
+      await this.repository.getBusinessStateCode(businessId);
     const taxType = resolveTaxType(
       document.is_gst_formal,
       businessState,

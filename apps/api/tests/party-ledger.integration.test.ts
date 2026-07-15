@@ -358,7 +358,10 @@ describe.skipIf(!canRun)('Party ledger API integration', () => {
       }
 
       await createFinalizedSalesDoc('estimate', `EST${suffix}`);
-      const orderId = await createFinalizedSalesDoc('sale_order', `SO${suffix}`);
+      const orderId = await createFinalizedSalesDoc(
+        'sale_order',
+        `SO${suffix}`,
+      );
       await createFinalizedSalesDoc('delivery_challan', `DC${suffix}`);
       await createFinalizedSalesDoc('sales_return', `CN${suffix}`);
 
@@ -453,9 +456,8 @@ describe.skipIf(!canRun)('Party ledger API integration', () => {
         url: `${config.apiPrefix}/purchases/expense-categories`,
         headers: getAuthHeaders(token),
       });
-      const categoryId = (
-        categories.json() as { data: { id: string }[] }
-      ).data[0]?.id;
+      const categoryId = (categories.json() as { data: { id: string }[] })
+        .data[0]?.id;
       expect(categoryId).toBeDefined();
 
       async function createFinalizedPurchaseDoc(

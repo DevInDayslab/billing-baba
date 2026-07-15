@@ -7,11 +7,11 @@ import {
   type PartyLedgerFilter,
 } from '../../shared/reporting/party-ledger';
 import { buildPartyTimeline } from '../../shared/reporting/party-timeline';
+import type { PartyTimelineRow } from '../../shared/reporting/party-timeline/party-timeline.types';
 import {
   mapTimelineDebitCredit,
   mapTimelineEntryType,
 } from '../../shared/reporting/party-timeline/party-timeline.utils';
-import type { PartyTimelineRow } from '../../shared/reporting/party-timeline/party-timeline.types';
 import type {
   PartyLedgerPayload,
   PartyLedgerSummaryRecord,

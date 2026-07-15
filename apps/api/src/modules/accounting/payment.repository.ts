@@ -451,9 +451,7 @@ export class PaymentRepository {
         updatedAt: new Date(),
         syncVersion: sql`${parties.syncVersion} + 1`,
       })
-      .where(
-        and(eq(parties.id, partyId), eq(parties.businessId, businessId)),
-      );
+      .where(and(eq(parties.id, partyId), eq(parties.businessId, businessId)));
   }
 
   async createLedgerEntry(values: {

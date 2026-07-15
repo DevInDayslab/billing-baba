@@ -1,19 +1,11 @@
 import { eq } from 'drizzle-orm';
-import type { Database } from '../client';
-import { businesses } from '../schema/business/tables';
-import { expenseCategories } from '../schema/purchases/tables';
-import {
-  businessSettings,
-  documentNumberSequences,
-} from '../schema/settings/tables';
-import { godowns } from '../schema/inventory/tables';
-import { users } from '../schema/identity/tables';
 import { PaymentService } from '../../modules/accounting/payment.service';
+import { AuthRepository } from '../../modules/auth/auth.repository';
 import { BusinessService } from '../../modules/business/business.service';
-import { PartyService } from '../../modules/parties/party.service';
 import { CategoryService } from '../../modules/inventory/category.service';
 import { ItemService } from '../../modules/inventory/item.service';
 import { UnitService } from '../../modules/inventory/unit.service';
+import { PartyService } from '../../modules/parties/party.service';
 import { ExpenseService } from '../../modules/purchases/expense.service';
 import { PurchaseDocumentService } from '../../modules/purchases/purchase-document.service';
 import { SalesDocumentService } from '../../modules/sales/sales-document.service';
@@ -28,7 +20,15 @@ import {
   DEV_BUSINESS_STATE_CODE,
   DEV_LOGIN_PHONE,
 } from '../../shared/dev-demo.constants';
-import { AuthRepository } from '../../modules/auth/auth.repository';
+import type { Database } from '../client';
+import { businesses } from '../schema/business/tables';
+import { users } from '../schema/identity/tables';
+import { godowns } from '../schema/inventory/tables';
+import { expenseCategories } from '../schema/purchases/tables';
+import {
+  businessSettings,
+  documentNumberSequences,
+} from '../schema/settings/tables';
 import {
   DEMO_CATEGORIES,
   DEMO_CUSTOMERS,
@@ -696,6 +696,7 @@ async function seedPayments(
         payment_mode: paymentModes[i % paymentModes.length] ?? 'cash',
         payment_date: daysAgoIso(30 - i * 2),
         reference_number: `RCPT-${1001 + i}`,
+        source: 'manual',
         allocations:
           invoice && i < 8
             ? [
@@ -732,6 +733,7 @@ async function seedPayments(
         payment_mode: paymentModes[(i + 1) % paymentModes.length] ?? 'upi',
         payment_date: daysAgoIso(40 - i * 3),
         reference_number: `PAY-${2001 + i}`,
+        source: 'manual',
         allocations:
           purchase && i < 8
             ? [

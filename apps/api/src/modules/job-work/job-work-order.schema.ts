@@ -37,7 +37,13 @@ export const createJobWorkOrderBodySchema = z.object({
   delivery_date: z.iso.datetime().optional().nullable(),
   finished_good_name: z.string().trim().min(1).max(200),
   finished_good_quantity: moneyString.optional().default('1'),
-  finished_good_unit: z.string().trim().min(1).max(50).optional().default('PCS'),
+  finished_good_unit: z
+    .string()
+    .trim()
+    .min(1)
+    .max(50)
+    .optional()
+    .default('PCS'),
   notes: z.string().trim().max(2000).optional().nullable(),
   raw_materials: z.array(rawMaterialSchema).optional().default([]),
   additional_costs: z.array(additionalCostSchema).optional().default([]),

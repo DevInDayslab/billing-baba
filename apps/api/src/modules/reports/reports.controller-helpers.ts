@@ -2,8 +2,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError, type z } from 'zod';
 import { AppError } from '../../shared/errors/app-error';
 import type { PaginationMeta } from '../../shared/http/pagination';
-import { sendCsv } from '../../shared/reporting/csv-export';
 import { sendData } from '../../shared/http/response';
+import { sendCsv } from '../../shared/reporting/csv-export';
 import {
   formatZodError,
   requireAuthContext,
@@ -60,11 +60,7 @@ export async function handleDataReport<T extends Record<string, unknown>>(
   request: FastifyRequest,
   reply: FastifyReply,
   schema: z.ZodTypeAny,
-  fetch: (
-    businessId: string,
-    accountId: string,
-    query: any,
-  ) => Promise<T>,
+  fetch: (businessId: string, accountId: string, query: any) => Promise<T>,
 ): Promise<FastifyReply> {
   try {
     const { accountId, businessId } = requireAuthContext(request);

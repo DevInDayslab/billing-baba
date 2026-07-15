@@ -1,6 +1,8 @@
 export { buildPartyTimeline } from './party-timeline.builder';
-export { resolveTimelineTypeLabel } from './party-timeline-labels';
-export { registerTimelineSource, getTimelineSources } from './party-timeline.registry';
+export {
+  getTimelineSources,
+  registerTimelineSource,
+} from './party-timeline.registry';
 export type {
   PartyKind,
   PartyTimelineContext,
@@ -8,3 +10,4 @@ export type {
   PartyTimelineSource,
   PartyTimelineSourceId,
 } from './party-timeline.types';
+export { resolveTimelineTypeLabel } from './party-timeline-labels';

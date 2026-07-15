@@ -1,18 +1,31 @@
-import { and, asc, count, desc, eq, ilike, ne, notInArray, or, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  ilike,
+  ne,
+  notInArray,
+  or,
+  sql,
+} from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import {
   brands,
   categories,
   godowns,
+  inventoryMovements,
   itemImages,
   itemLocations,
   itemPriceHistory,
   items,
   itemTierPrices,
-  inventoryMovements,
   stockLevels,
   unitDefinitions,
 } from '../../db/schema/inventory/tables';
+import type { PricingTier } from '../../shared/pricing/pricing-tier';
+import { parseMoney } from './inventory.utils';
 import {
   toItemDetailRecord,
   toItemImageRecord,
@@ -20,8 +33,6 @@ import {
   toItemPriceHistoryRecord,
   toItemTierPriceRecord,
 } from './item.mapper';
-import type { PricingTier } from '../../shared/pricing/pricing-tier';
-import { parseMoney } from './inventory.utils';
 import type {
   CreateItemImageInput,
   CreateItemLocationInput,
@@ -971,7 +982,12 @@ export class ItemRepository {
             updatedBy: userId ?? null,
             syncVersion: sql`${itemTierPrices.syncVersion} + 1`,
           })
-          .where(and(activeTierFilter, notInArray(itemTierPrices.pricingTier, incomingTiers)));
+          .where(
+            and(
+              activeTierFilter,
+              notInArray(itemTierPrices.pricingTier, incomingTiers),
+            ),
+          );
       }
 
       for (const tier of tierPrices) {

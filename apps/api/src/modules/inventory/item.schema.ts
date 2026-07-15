@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import {
-  PRICING_TIER_INPUT_VALUES,
   normalizePricingTier,
+  PRICING_TIER_INPUT_VALUES,
 } from '../../shared/pricing/pricing-tier';
 
 const sortFieldValues = ['name', 'created_at'] as const;
@@ -37,17 +37,15 @@ const tierPriceSchema = z.object({
   price: moneyField,
 });
 
-const tierPricesArraySchema = z
-  .array(tierPriceSchema)
-  .refine(
-    (tierPrices) => {
-      const tiers = tierPrices.map((tier) => tier.pricing_tier);
-      return new Set(tiers).size === tiers.length;
-    },
-    {
-      message: 'Each pricing tier may only appear once',
-    },
-  );
+const tierPricesArraySchema = z.array(tierPriceSchema).refine(
+  (tierPrices) => {
+    const tiers = tierPrices.map((tier) => tier.pricing_tier);
+    return new Set(tiers).size === tiers.length;
+  },
+  {
+    message: 'Each pricing tier may only appear once',
+  },
+);
 
 const locationSchema = z.object({
   godown_id: z.uuid('Invalid godown ID'),

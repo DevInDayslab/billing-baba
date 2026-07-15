@@ -8,12 +8,14 @@ import {
 import { parties } from '../../db/schema/crm/tables';
 import { expenses, purchaseDocuments } from '../../db/schema/purchases/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
-import {
-  PURCHASE_BILL_TYPE,
-  REVENUE_SALES_TYPES,
-} from './constants';
+import { PURCHASE_BILL_TYPE, REVENUE_SALES_TYPES } from './constants';
 
-export type PartyLedgerFilter = 'all' | 'sales' | 'purchases' | 'payments' | 'returns';
+export type PartyLedgerFilter =
+  | 'all'
+  | 'sales'
+  | 'purchases'
+  | 'payments'
+  | 'returns';
 
 export type PartyLedgerEntryRow = {
   id: string;
@@ -161,9 +163,10 @@ function salesAllocationSubquery(db: Database, businessId: string) {
   return db
     .select({
       salesDocumentId: paymentAllocations.salesDocumentId,
-      allocated: sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
-        'sales_allocated',
-      ),
+      allocated:
+        sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+          'sales_allocated',
+        ),
     })
     .from(paymentAllocations)
     .where(
@@ -180,9 +183,10 @@ function purchaseAllocationSubquery(db: Database, businessId: string) {
   return db
     .select({
       purchaseDocumentId: paymentAllocations.purchaseDocumentId,
-      allocated: sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
-        'purchase_allocated',
-      ),
+      allocated:
+        sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+          'purchase_allocated',
+        ),
     })
     .from(paymentAllocations)
     .where(
@@ -213,7 +217,10 @@ export async function loadHiddenAutoPaymentBalanceEntryIds(
         eq(ledgerEntries.referenceId, payments.id),
       ),
     )
-    .innerJoin(paymentAllocations, eq(paymentAllocations.paymentId, payments.id))
+    .innerJoin(
+      paymentAllocations,
+      eq(paymentAllocations.paymentId, payments.id),
+    )
     .where(
       and(
         eq(payments.businessId, businessId),
@@ -694,7 +701,10 @@ export function computePartyLedgerSummary(
       totalSales += debit;
     } else if (entry.entryType === 'purchase') {
       totalPurchases += credit;
-    } else if (entry.entryType === 'payment' && entry.paymentDirection === 'received') {
+    } else if (
+      entry.entryType === 'payment' &&
+      entry.paymentDirection === 'received'
+    ) {
       totalPayments += credit;
     }
 
@@ -734,7 +744,8 @@ export function logPartyLedgerDebug(
   );
 
   for (const entry of chronological) {
-    const balance = report.runningBalances.get(entry.id) ?? report.openingBalance;
+    const balance =
+      report.runningBalances.get(entry.id) ?? report.openingBalance;
     const delta = Number(entry.debit) - Number(entry.credit);
     const sign = delta >= 0 ? '+' : '';
     console.log(
@@ -744,7 +755,13 @@ export function logPartyLedgerDebug(
   }
 
   console.log(`Final Outstanding: ${report.summary.outstanding.toFixed(2)}`);
-  console.log(`Total Sales (documents): ${report.summary.totalSales.toFixed(2)}`);
-  console.log(`Total Payments (receipts): ${report.summary.totalPayments.toFixed(2)}`);
-  console.log(`Total Purchases (documents): ${report.summary.totalPurchases.toFixed(2)}`);
+  console.log(
+    `Total Sales (documents): ${report.summary.totalSales.toFixed(2)}`,
+  );
+  console.log(
+    `Total Payments (receipts): ${report.summary.totalPayments.toFixed(2)}`,
+  );
+  console.log(
+    `Total Purchases (documents): ${report.summary.totalPurchases.toFixed(2)}`,
+  );
 }

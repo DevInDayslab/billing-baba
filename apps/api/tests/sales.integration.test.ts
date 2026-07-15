@@ -304,9 +304,8 @@ describe.skipIf(!canRun)('Sales API integration', () => {
         url: `${config.apiPrefix}/inventory/stock-levels?item_id=${itemId}`,
         headers: getAuthHeaders(token),
       });
-      const stockQty = (
-        stock.json() as { data: { quantity: string }[] }
-      ).data[0]?.quantity;
+      const stockQty = (stock.json() as { data: { quantity: string }[] })
+        .data[0]?.quantity;
       expect(stockQty).toBe('8.0000');
 
       const movements = await app.inject({
@@ -387,9 +386,9 @@ describe.skipIf(!canRun)('Sales API integration', () => {
       const seqBody = sequences.json() as {
         data: { document_series: string }[];
       };
-      expect(
-        seqBody.data.some((row) => row.document_series === series),
-      ).toBe(true);
+      expect(seqBody.data.some((row) => row.document_series === series)).toBe(
+        true,
+      );
     },
     testTimeout,
   );
@@ -543,15 +542,19 @@ describe.skipIf(!canRun)('Sales API integration', () => {
         },
       });
       expect(converted.statusCode).toBe(201);
-      const newDoc = (converted.json() as {
-        data: {
-          id: string;
-          is_gst_formal: boolean;
-          lines: { tax_amount?: string; cgst_amount: string }[];
-        };
-      }).data;
+      const newDoc = (
+        converted.json() as {
+          data: {
+            id: string;
+            is_gst_formal: boolean;
+            lines: { tax_amount?: string; cgst_amount: string }[];
+          };
+        }
+      ).data;
       expect(newDoc.is_gst_formal).toBe(true);
-      expect(parseFloat(newDoc.lines[0]?.cgst_amount ?? '0')).toBeGreaterThan(0);
+      expect(parseFloat(newDoc.lines[0]?.cgst_amount ?? '0')).toBeGreaterThan(
+        0,
+      );
 
       const salesReturn = await app.inject({
         method: 'POST',

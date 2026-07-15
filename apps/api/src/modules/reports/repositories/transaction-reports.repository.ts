@@ -54,7 +54,9 @@ export class TransactionReportsRepository {
       filters.push(eq(salesDocuments.partyId, query.party_id));
     }
     if (query.document_type) {
-      filters.push(eq(salesDocuments.documentType, query.document_type as never));
+      filters.push(
+        eq(salesDocuments.documentType, query.document_type as never),
+      );
     }
     if (query.q) {
       filters.push(

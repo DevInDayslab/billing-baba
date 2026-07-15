@@ -27,7 +27,10 @@ export class OtherIncomeReportsRepository {
   async getOtherIncome(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<ReportOtherIncomeRow>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<ReportOtherIncomeRow>;
+    total: number;
+  }> {
     return this.emptyPaginated(query);
   }
 

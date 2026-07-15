@@ -150,7 +150,8 @@ export const standardErrorResponses = {
     },
   },
   403: {
-    description: 'Forbidden — no access to this business or insufficient permissions',
+    description:
+      'Forbidden — no access to this business or insufficient permissions',
     content: {
       'application/json': {
         schema: errorResponseSchema,
@@ -203,7 +204,10 @@ export const standardErrorResponses = {
       'application/json': {
         schema: errorResponseSchema,
         example: {
-          error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'An unexpected error occurred',
+          },
           requestId: 'req-abc123',
         },
       },
@@ -379,7 +383,9 @@ export function createdResponse(
   };
 }
 
-export function noContentResponse(description: string): Record<string, unknown> {
+export function noContentResponse(
+  description: string,
+): Record<string, unknown> {
   return { description };
 }
 

@@ -1,6 +1,5 @@
 import { and, eq, ne } from 'drizzle-orm';
 import { jobWorkOrders } from '../../../../db/schema/job-work/tables';
-import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 import type {
   PartyTimelineContext,
   PartyTimelineSource,
@@ -11,6 +10,7 @@ import {
   partyKindMatches,
   resolveJobWorkStatusLabel,
 } from '../party-timeline.utils';
+import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 
 export const jobWorkTimelineSource: PartyTimelineSource = {
   id: 'job_work_orders',

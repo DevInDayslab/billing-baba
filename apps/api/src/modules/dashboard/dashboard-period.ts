@@ -1,6 +1,6 @@
 import {
-  resolveReportPeriod,
   type ResolvedReportPeriod,
+  resolveReportPeriod,
 } from '../../shared/reporting/report-period';
 
 export type ResolvedDashboardPeriod = ResolvedReportPeriod;

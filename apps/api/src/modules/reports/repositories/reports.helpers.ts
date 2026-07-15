@@ -1,3 +1,7 @@
+import {
+  type ResolvedReportPeriod,
+  resolveReportPeriod,
+} from '../../../shared/reporting/report-period';
 import type {
   PartyStatementQuery,
   ReportBaseQuery,
@@ -5,10 +9,6 @@ import type {
   ReportExtendedQuery,
 } from '../reports.schema';
 import type { ReportPeriodMeta } from '../reports.types';
-import {
-  resolveReportPeriod,
-  type ResolvedReportPeriod,
-} from '../../../shared/reporting/report-period';
 
 export function toPeriodMeta(range: ResolvedReportPeriod): ReportPeriodMeta {
   return {

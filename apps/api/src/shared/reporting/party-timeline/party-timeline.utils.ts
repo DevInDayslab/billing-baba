@@ -37,7 +37,9 @@ export function normalizeTimelineMoney(value: number): string {
   return value.toFixed(2);
 }
 
-export function parseTimelineMoney(value: string | number | null | undefined): number {
+export function parseTimelineMoney(
+  value: string | number | null | undefined,
+): number {
   return Number(value ?? 0);
 }
 
@@ -112,18 +114,18 @@ function timelineRowMatchesFilter(
   switch (filter) {
     case 'sales':
       return (
-        row.source === 'sales_documents' &&
-        row.sourceType !== 'sales_return'
-      ) ||
+        (row.source === 'sales_documents' &&
+          row.sourceType !== 'sales_return') ||
         row.source === 'sale_fa_batches' ||
-        row.source === 'job_work_orders';
+        row.source === 'job_work_orders'
+      );
     case 'purchases':
       return (
-        row.source === 'purchase_documents' &&
-        row.sourceType !== 'purchase_return'
-      ) ||
+        (row.source === 'purchase_documents' &&
+          row.sourceType !== 'purchase_return') ||
         row.source === 'purchase_fa_batches' ||
-        row.source === 'expenses';
+        row.source === 'expenses'
+      );
     case 'payments':
       return row.source === 'payments';
     case 'returns':
@@ -153,16 +155,17 @@ export function applyTimelineDateFilter(
   });
 }
 
-export function mapTimelineEntryType(
-  row: PartyTimelineRow,
-): string {
+export function mapTimelineEntryType(row: PartyTimelineRow): string {
   if (row.source === 'payments') {
     return 'payment';
   }
   if (row.source === 'expenses') {
     return 'expense';
   }
-  if (row.sourceType === 'sales_return' || row.sourceType === 'purchase_return') {
+  if (
+    row.sourceType === 'sales_return' ||
+    row.sourceType === 'purchase_return'
+  ) {
     return 'return';
   }
   if (row.source === 'purchase_documents') {

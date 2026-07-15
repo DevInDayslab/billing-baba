@@ -1,13 +1,13 @@
 import { getDb } from '../../db/client';
+import { AppError } from '../../shared/errors/app-error';
+import type { PricingTier } from '../../shared/pricing/pricing-tier';
+import { InventoryServiceBase } from './inventory.base-service';
+import { normalizeMoney, parseMoney } from './inventory.utils';
 import {
   enrichItemDetailRecord,
   enrichItemListRecord,
   loadStockSummariesForItems,
 } from './inventory-item-stock';
-import { AppError } from '../../shared/errors/app-error';
-import type { PricingTier } from '../../shared/pricing/pricing-tier';
-import { InventoryServiceBase } from './inventory.base-service';
-import { normalizeMoney, parseMoney } from './inventory.utils';
 import {
   getDefaultGodown,
   recordMovementAndUpdateStock,
@@ -75,12 +75,11 @@ export class ItemService extends InventoryServiceBase {
     const stockTrackedIds = result.rows
       .filter((row) => row.has_stock_tracking)
       .map((row) => row.id);
-    const { physicalByItem, reservedByItem } =
-      await loadStockSummariesForItems(
-        this.db,
-        businessId,
-        stockTrackedIds,
-      );
+    const { physicalByItem, reservedByItem } = await loadStockSummariesForItems(
+      this.db,
+      businessId,
+      stockTrackedIds,
+    );
 
     return {
       data: result.rows.map((row) =>
@@ -110,8 +109,11 @@ export class ItemService extends InventoryServiceBase {
       return item;
     }
 
-    const { physicalByItem, reservedByItem } =
-      await loadStockSummariesForItems(this.db, businessId, [itemId]);
+    const { physicalByItem, reservedByItem } = await loadStockSummariesForItems(
+      this.db,
+      businessId,
+      [itemId],
+    );
 
     return enrichItemDetailRecord(item, physicalByItem, reservedByItem);
   }

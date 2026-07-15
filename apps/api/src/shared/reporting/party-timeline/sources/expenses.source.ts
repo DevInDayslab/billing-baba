@@ -1,6 +1,5 @@
 import { and, eq } from 'drizzle-orm';
 import { expenses } from '../../../../db/schema/purchases/tables';
-import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 import type {
   PartyTimelineContext,
   PartyTimelineSource,
@@ -10,6 +9,7 @@ import {
   parseTimelineMoney,
   partyKindMatches,
 } from '../party-timeline.utils';
+import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 
 export const expensesTimelineSource: PartyTimelineSource = {
   id: 'expenses',

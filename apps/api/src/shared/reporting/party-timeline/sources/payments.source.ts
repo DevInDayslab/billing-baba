@@ -3,7 +3,6 @@ import {
   paymentAllocations,
   payments,
 } from '../../../../db/schema/accounting/tables';
-import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 import type {
   PartyTimelineContext,
   PartyTimelineSource,
@@ -12,6 +11,7 @@ import {
   normalizeTimelineMoney,
   parseTimelineMoney,
 } from '../party-timeline.utils';
+import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 
 function paymentAllocationSubquery(
   db: PartyTimelineContext['db'],
@@ -20,9 +20,10 @@ function paymentAllocationSubquery(
   return db
     .select({
       paymentId: paymentAllocations.paymentId,
-      allocated: sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
-        'payment_allocated',
-      ),
+      allocated:
+        sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+          'payment_allocated',
+        ),
     })
     .from(paymentAllocations)
     .where(

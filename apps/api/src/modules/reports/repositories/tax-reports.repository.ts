@@ -283,28 +283,40 @@ export class TaxReportsRepository {
   async getForm27eq(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<Record<string, never>>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<Record<string, never>>;
+    total: number;
+  }> {
     return this.emptyPaginated(query);
   }
 
   async getTcsReceivable(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<Record<string, never>>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<Record<string, never>>;
+    total: number;
+  }> {
     return this.emptyPaginated(query);
   }
 
   async getTdsPayable(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<Record<string, never>>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<Record<string, never>>;
+    total: number;
+  }> {
     return this.emptyPaginated(query);
   }
 
   async getTdsReceivable(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<Record<string, never>>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<Record<string, never>>;
+    total: number;
+  }> {
     return this.emptyPaginated(query);
   }
 }

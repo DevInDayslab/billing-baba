@@ -20,7 +20,10 @@ export class ExpenseReportsRepository {
   async getExpenses(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<ReportExpenseRow>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<ReportExpenseRow>;
+    total: number;
+  }> {
     const range = resolveRange(query);
 
     const filters = [
@@ -76,7 +79,11 @@ export class ExpenseReportsRepository {
       status: row.paymentMode ? 'paid' : 'unpaid',
     }));
 
-    const { rows: pageRows, total } = paginateSlice(mapped, query.page, query.limit);
+    const { rows: pageRows, total } = paginateSlice(
+      mapped,
+      query.page,
+      query.limit,
+    );
     return { total, payload: { period: toPeriodMeta(range), rows: pageRows } };
   }
 

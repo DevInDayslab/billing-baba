@@ -7,15 +7,20 @@ import {
 } from '../schema/accounting/tables';
 import { branches } from '../schema/business/tables';
 import {
+  parties,
   partyAttachments,
   partyLinks,
   partyLoyaltyBalances,
-  parties,
   partyTagAssignments,
   partyTags,
   partyVisits,
 } from '../schema/crm/tables';
-import { attendanceRecords, devices, refreshTokens, users } from '../schema/identity/tables';
+import {
+  attendanceRecords,
+  devices,
+  refreshTokens,
+  users,
+} from '../schema/identity/tables';
 import {
   brands,
   categories,
@@ -154,7 +159,9 @@ export async function resetBusinessData(
     await tx.delete(godowns).where(eq(godowns.businessId, businessId));
     await tx.delete(alerts).where(eq(alerts.businessId, businessId));
     await tx.delete(todos).where(eq(todos.businessId, businessId));
-    await tx.delete(onlineOrders).where(eq(onlineOrders.businessId, businessId));
+    await tx
+      .delete(onlineOrders)
+      .where(eq(onlineOrders.businessId, businessId));
     await tx
       .delete(attendanceRecords)
       .where(eq(attendanceRecords.businessId, businessId));

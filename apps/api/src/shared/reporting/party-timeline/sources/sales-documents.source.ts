@@ -1,7 +1,6 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { paymentAllocations } from '../../../../db/schema/accounting/tables';
 import { salesDocuments } from '../../../../db/schema/sales/tables';
-import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 import type {
   PartyTimelineContext,
   PartyTimelineSource,
@@ -14,14 +13,19 @@ import {
   resolveInvoicePaymentStatus,
   resolveOverdueStatus,
 } from '../party-timeline.utils';
+import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 
-function salesAllocationSubquery(db: PartyTimelineContext['db'], businessId: string) {
+function salesAllocationSubquery(
+  db: PartyTimelineContext['db'],
+  businessId: string,
+) {
   return db
     .select({
       salesDocumentId: paymentAllocations.salesDocumentId,
-      allocated: sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
-        'sales_allocated',
-      ),
+      allocated:
+        sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+          'sales_allocated',
+        ),
     })
     .from(paymentAllocations)
     .where(
@@ -71,15 +75,12 @@ export const salesDocumentsTimelineSource: PartyTimelineSource = {
       const paid = parseTimelineMoney(row.allocated);
       const isInvoice = isReceivableSalesDocument(row.documentType);
       const isReturn = row.documentType === 'sales_return';
-      const balance = isInvoice || isReturn
-        ? Math.max(0, total - paid)
-        : total;
+      const balance = isInvoice || isReturn ? Math.max(0, total - paid) : total;
 
-      const paymentStatus = isInvoice || isReturn
-        ? resolveInvoicePaymentStatus(total, paid)
-        : null;
+      const paymentStatus =
+        isInvoice || isReturn ? resolveInvoicePaymentStatus(total, paid) : null;
 
-      let status = paymentStatus;
+      let status: string | null = paymentStatus;
       if (isInvoice && paymentStatus === 'Unpaid') {
         const overdue = resolveOverdueStatus(null);
         if (overdue) {
