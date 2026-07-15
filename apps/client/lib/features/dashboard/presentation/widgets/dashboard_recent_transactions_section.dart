@@ -24,7 +24,7 @@ class DashboardRecentTransactionsSection extends StatelessWidget {
     decimalDigits: 0,
   );
 
-  static final _dateFormat = DateTimeUtils.displayDateTime;
+  static final DateFormat _dateFormat = DateTimeUtils.displayDateTime;
 
   @override
   Widget build(BuildContext context) {

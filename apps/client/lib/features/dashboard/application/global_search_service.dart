@@ -11,8 +11,7 @@ Future<GlobalSearchService> globalSearchService(Ref ref) async {
 }
 
 class GlobalSearchService {
-  GlobalSearchService({required PartyService partyService})
-    : _partyService = partyService;
+  GlobalSearchService({required this._partyService});
 
   final PartyService _partyService;
 

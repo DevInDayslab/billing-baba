@@ -3,6 +3,26 @@ import 'package:flutter/foundation.dart';
 
 /// Metadata used to build a searchable index entry for one inventory item.
 class InventorySearchableFields {
+
+  factory InventorySearchableFields.fromInventoryItem(
+    InventoryItem item, {
+    String? categoryName,
+    String? brandName,
+    String? unitName,
+    List<String> aliases = const [],
+  }) {
+    return InventorySearchableFields(
+      id: item.id,
+      name: item.name,
+      sku: item.barcode,
+      barcode: item.barcode,
+      hsn: item.hsnCode,
+      categoryName: categoryName,
+      unitName: unitName ?? item.baseUnitShortName,
+      brandName: brandName,
+      aliases: aliases,
+    );
+  }
   const InventorySearchableFields({
     required this.id,
     required this.name,
@@ -24,26 +44,6 @@ class InventorySearchableFields {
   final String? unitName;
   final String? brandName;
   final List<String> aliases;
-
-  factory InventorySearchableFields.fromInventoryItem(
-    InventoryItem item, {
-    String? categoryName,
-    String? brandName,
-    String? unitName,
-    List<String> aliases = const [],
-  }) {
-    return InventorySearchableFields(
-      id: item.id,
-      name: item.name,
-      sku: item.barcode,
-      barcode: item.barcode,
-      hsn: item.hsnCode,
-      categoryName: categoryName,
-      unitName: unitName ?? item.baseUnitShortName,
-      brandName: brandName,
-      aliases: aliases,
-    );
-  }
 }
 
 /// Precomputed searchable representation of one item.
@@ -79,15 +79,6 @@ class InventorySearchHighlightRange {
 
 /// Token-based fuzzy search with precomputed indexes.
 class InventorySearchEngine {
-  InventorySearchEngine._(this._entriesByItemId);
-
-  final Map<String, InventorySearchIndexEntry> _entriesByItemId;
-
-  static final _punctuationPattern = RegExp(r'[^\w\s]');
-  static final _whitespacePattern = RegExp(r'\s+');
-  static final _wordPattern = RegExp(r'\S+');
-  static final _numericPattern = RegExp(r'\d+');
-  static final _alphaPattern = RegExp(r'[a-z]+');
 
   factory InventorySearchEngine.build({
     required Iterable<InventorySearchableFields> items,
@@ -98,6 +89,15 @@ class InventorySearchEngine {
     }
     return InventorySearchEngine._(entries);
   }
+  InventorySearchEngine._(this._entriesByItemId);
+
+  final Map<String, InventorySearchIndexEntry> _entriesByItemId;
+
+  static final _punctuationPattern = RegExp(r'[^\w\s]');
+  static final _whitespacePattern = RegExp(r'\s+');
+  static final _wordPattern = RegExp(r'\S+');
+  static final _numericPattern = RegExp(r'\d+');
+  static final _alphaPattern = RegExp('[a-z]+');
 
   bool get isEmpty => _entriesByItemId.isEmpty;
 

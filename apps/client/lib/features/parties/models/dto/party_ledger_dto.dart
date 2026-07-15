@@ -182,10 +182,10 @@ class PartyLedgerMapper {
       referenceNumber: dto.referenceNumber,
       description: dto.description,
       documentDate: dto.documentDate != null
-          ? DateTimeUtils.parseApiDateTime(dto.documentDate!)
+          ? DateTimeUtils.parseApiDateTime(dto.documentDate)
           : null,
       dueDate: dto.dueDate != null
-          ? DateTimeUtils.parseApiDateTime(dto.dueDate!)
+          ? DateTimeUtils.parseApiDateTime(dto.dueDate)
           : null,
       total: total,
       balance: balance,

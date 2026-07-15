@@ -5,11 +5,11 @@ abstract final class PriceTier {
   static const dealer = 'dealer';
   static const distributor = 'distributor';
 
-  static const defaultTier = retail;
+  static const String defaultTier = retail;
 
-  static const all = [retail, wholesale, dealer, distributor];
+  static const List<String> all = [retail, wholesale, dealer, distributor];
 
-  static const labels = {
+  static const Map<String, String> labels = {
     retail: 'Retail',
     wholesale: 'Wholesale',
     dealer: 'Dealer',

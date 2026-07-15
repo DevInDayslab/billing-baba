@@ -1,5 +1,4 @@
 import 'package:billing_baba/features/inventory/application/inventory_item_filter_service.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_search_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/application/inventory_transaction_table_service.dart';
@@ -20,6 +19,7 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_s
 import 'package:billing_baba/features/inventory/providers/inventory_brands_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_search_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:collection/collection.dart';
