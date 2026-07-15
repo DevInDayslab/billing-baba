@@ -11,6 +11,10 @@ import {
   partyTagAssignments,
   partyTags,
   partyVisits,
+  leads,
+  leadActivities,
+  contacts,
+  contactActivities,
 } from './tables';
 
 export const partiesRelations = relations(parties, ({ one, many }) => ({
@@ -96,6 +100,47 @@ export const loyaltyTransactionsRelations = relations(
     party: one(parties, {
       fields: [loyaltyTransactions.partyId],
       references: [parties.id],
+    }),
+  }),
+);
+
+export const leadsRelations = relations(leads, ({ one, many }) => ({
+  business: one(businesses, {
+    fields: [leads.businessId],
+    references: [businesses.id],
+  }),
+  activities: many(leadActivities),
+}));
+
+export const leadActivitiesRelations = relations(leadActivities, ({ one }) => ({
+  lead: one(leads, {
+    fields: [leadActivities.leadId],
+    references: [leads.id],
+  }),
+  business: one(businesses, {
+    fields: [leadActivities.businessId],
+    references: [businesses.id],
+  }),
+}));
+
+export const contactsRelations = relations(contacts, ({ one, many }) => ({
+  business: one(businesses, {
+    fields: [contacts.businessId],
+    references: [businesses.id],
+  }),
+  activities: many(contactActivities),
+}));
+
+export const contactActivitiesRelations = relations(
+  contactActivities,
+  ({ one }) => ({
+    contact: one(contacts, {
+      fields: [contactActivities.contactId],
+      references: [contacts.id],
+    }),
+    business: one(businesses, {
+      fields: [contactActivities.businessId],
+      references: [businesses.id],
     }),
   }),
 );

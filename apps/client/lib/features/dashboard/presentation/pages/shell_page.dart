@@ -58,7 +58,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     if (!_expandInitialized) {
       _expandInitialized = true;
       final location = GoRouterState.of(context).uri.path;
-      if (location.startsWith(AppRoutes.sale)) {
+      if (location.startsWith(AppRoutes.sale) ||
+          location.startsWith(AppRoutes.crm)) {
         _isSaleExpanded = true;
       }
       if (location.startsWith(AppRoutes.purchase)) {
@@ -461,7 +462,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       final routePrefix = item.routePrefix ?? item.route!;
 
       final isParentActive = isSale
-          ? currentLocation.startsWith(AppRoutes.sale)
+          ? currentLocation.startsWith(AppRoutes.sale) ||
+              currentLocation.startsWith(AppRoutes.crm)
           : isPurchase
           ? currentLocation.startsWith(AppRoutes.purchase)
           : isParties
@@ -620,7 +622,10 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     if (location.startsWith(AppRoutes.parties)) return 'Parties';
     if (location.startsWith(AppRoutes.items)) return 'Items';
     if (location == AppRoutes.pos) return 'POS';
-    if (location.startsWith(AppRoutes.sale)) return 'Sale';
+    if (location.startsWith(AppRoutes.sale) ||
+        location.startsWith(AppRoutes.crm)) {
+      return SaleSubRoutes.labelForRoute(location);
+    }
     if (location.startsWith(AppRoutes.purchase)) return 'Purchase & Expense';
     if (location.startsWith(AppRoutes.reports)) return 'Reports';
     if (location.startsWith(AppRoutes.utilities)) {

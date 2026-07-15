@@ -99,6 +99,27 @@
       "when": 1784000000000,
       "tag": "0013_loyalty_transactions",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1784100000000,
+      "tag": "0014_crm_leads",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1784200000000,
+      "tag": "0015_crm_contacts",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1784300000000,
+      "tag": "0016_crm_deals",
+      "breakpoints": true
     }
   ]
 }

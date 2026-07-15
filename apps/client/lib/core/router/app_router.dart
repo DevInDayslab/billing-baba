@@ -5,6 +5,9 @@ import 'package:billing_baba/features/auth/presentation/pages/verify_otp_page.da
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/presentation/pages/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/pages/edit_profile_page.dart';
+import 'package:billing_baba/features/crm/presentation/screens/contacts_screen.dart';
+import 'package:billing_baba/features/crm/presentation/screens/deals_screen.dart';
+import 'package:billing_baba/features/crm/presentation/screens/leads_screen.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/coming_soon_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/home_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.dart';
@@ -121,6 +124,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.partyDetails,
             builder: (context, state) => const PartyDetailsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.crm,
+            redirect: (_, _) => AppRoutes.crmLeads,
+          ),
+          GoRoute(
+            path: AppRoutes.crmLeads,
+            builder: (context, state) => const LeadsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.crmContacts,
+            builder: (context, state) => const ContactsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.crmDeals,
+            builder: (context, state) => const DealsScreen(),
           ),
           GoRoute(
             path: AppRoutes.items,
