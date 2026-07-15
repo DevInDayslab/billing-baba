@@ -146,7 +146,7 @@ final class PurchaseFaFiltersProvider
   }
 }
 
-String _$purchaseFaFiltersHash() => r'3fcd60ce8ea628c3e3ab1c4b1fd9d4c5249ebd0e';
+String _$purchaseFaFiltersHash() => r'cbf0a65252c7a343c86fa2fdc5c3633540f1b77e';
 
 abstract class _$PurchaseFaFilters extends $Notifier<PurchaseFaFiltersState> {
   PurchaseFaFiltersState build();

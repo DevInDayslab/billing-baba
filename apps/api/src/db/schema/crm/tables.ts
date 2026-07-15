@@ -13,6 +13,11 @@ import {
   partyCategoryEnum,
   partyTypeEnum,
   pricingTierEnum,
+  contactActivityTypeEnum,
+  dealStageEnum,
+  leadActivityTypeEnum,
+  leadSourceEnum,
+  leadStatusEnum,
   visitPurposeEnum,
 } from '../enums';
 import { users } from '../identity/tables';
@@ -143,3 +148,65 @@ export const partyLoyaltyBalances = pgTable(
     ),
   ],
 );
+
+export const leads = pgTable('leads', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  name: text('name').notNull(),
+  company: text('company'),
+  phone: text('phone'),
+  email: text('email'),
+  leadSource: leadSourceEnum('lead_source'),
+  status: leadStatusEnum('status').notNull().default('new'),
+  assignedTo: text('assigned_to'),
+  notes: text('notes'),
+});
+
+export const leadActivities = pgTable('lead_activities', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  leadId: uuid('lead_id')
+    .notNull()
+    .references(() => leads.id),
+  type: leadActivityTypeEnum('type').notNull(),
+  notes: text('notes'),
+  addedBy: text('added_by'),
+});
+
+export const contacts = pgTable('contacts', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  name: text('name').notNull(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  salutation: text('salutation'),
+  accountName: text('account_name'),
+  phone: text('phone'),
+  email: text('email'),
+  assignedTo: text('assigned_to'),
+  title: text('title'),
+  description: text('description'),
+});
+
+export const contactActivities = pgTable('contact_activities', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  contactId: uuid('contact_id')
+    .notNull()
+    .references(() => contacts.id),
+  type: contactActivityTypeEnum('type').notNull(),
+  notes: text('notes'),
+  addedBy: text('added_by'),
+});
+
+export const deals = pgTable('deals', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  name: text('name').notNull(),
+  stage: dealStageEnum('stage').notNull().default('qualification'),
+  accountName: text('account_name'),
+  assignedTo: text('assigned_to'),
+  amount: money('amount').notNull().default('0'),
+  expectedCloseDate: date('expected_close_date'),
+  description: text('description'),
+});

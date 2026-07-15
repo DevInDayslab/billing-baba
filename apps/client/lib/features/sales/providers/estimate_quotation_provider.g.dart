@@ -334,7 +334,7 @@ final class EstimateQuotationFiltersProvider
 }
 
 String _$estimateQuotationFiltersHash() =>
-    r'7ff0188f6cd0abe74963ec9d0a4192fbe40de7e8';
+    r'8db462db61baa5234f74fde32bf5a79d33ed66a5';
 
 abstract class _$EstimateQuotationFilters
     extends $Notifier<EstimateQuotationFiltersState> {

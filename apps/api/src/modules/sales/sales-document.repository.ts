@@ -710,7 +710,7 @@ export class SalesDocumentRepository {
   }
 
   async getBusinessStateCode(businessId: string): Promise<string | null> {
-    const { businesses } = await import('../../db/schema/business/tables');
+    const { businesses } = await import('../../db/schema/business/tables.js');
     const [row] = await this.db
       .select({ stateCode: businesses.stateCode })
       .from(businesses)
