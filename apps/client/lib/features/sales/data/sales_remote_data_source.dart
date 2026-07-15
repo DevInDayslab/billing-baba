@@ -66,17 +66,32 @@ class SalesRemoteDataSource {
     );
   }
 
-  Future<SalesDocumentDto> finalizeDocument(
+  Future<FinalizeSalesDocumentResult> finalizeDocument(
     String id, {
     String? godownId,
+    double loyaltyPointsRedeemed = 0,
   }) async {
-    await _dio.post<Map<String, dynamic>>(
+    final payload = <String, dynamic>{
+      'godown_id': ?godownId,
+      if (loyaltyPointsRedeemed > 0)
+        'loyalty_points_redeemed': _formatPoints(loyaltyPointsRedeemed),
+    };
+
+    final response = await _dio.post<Map<String, dynamic>>(
       ApiEndpoints.salesDocumentFinalize(id),
-      data: {'godown_id': ?godownId},
+      data: payload,
     );
-    return getDocument(id);
+    return FinalizeSalesDocumentResult.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
   }
 
+  String _formatPoints(double value) {
+    if (value == value.roundToDouble()) {
+      return value.round().toString();
+    }
+    return value.toStringAsFixed(4);
+  }
   Future<SalesDocumentLineDto> addLine(
     String documentId,
     CreateSalesLineRequest request,

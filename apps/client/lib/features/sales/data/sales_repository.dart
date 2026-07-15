@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_remote_data_source.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
@@ -32,10 +33,15 @@ class SalesRepository {
   Future<SalesDocumentDto> cancelDocument(String id) =>
       _remote.cancelDocument(id);
 
-  Future<SalesDocumentDto> finalizeDocument(
+  Future<FinalizeSalesDocumentResult> finalizeDocument(
     String id, {
     String? godownId,
-  }) => _remote.finalizeDocument(id, godownId: godownId);
+    double loyaltyPointsRedeemed = 0,
+  }) => _remote.finalizeDocument(
+    id,
+    godownId: godownId,
+    loyaltyPointsRedeemed: loyaltyPointsRedeemed,
+  );
 
   Future<SalesDocumentLineDto> addLine(
     String documentId,

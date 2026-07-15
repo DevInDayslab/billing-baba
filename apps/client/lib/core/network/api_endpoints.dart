@@ -7,6 +7,11 @@ abstract final class ApiEndpoints {
   static const parties = '/api/v1/parties';
   static String party(String id) => '/api/v1/parties/$id';
   static String partyLedger(String id) => '/api/v1/parties/$id/ledger';
+  static String partyLoyalty(String id) => '/api/v1/parties/$id/loyalty';
+  static String partyLoyaltyTransactions(String id) =>
+      '/api/v1/parties/$id/loyalty/transactions';
+  static const settings = '/api/v1/settings';
+  static const loyaltyRules = '$settings/loyalty-rules';
   static const sync = '/api/v1/sync';
   static const health = '/api/v1/health';
 

@@ -165,3 +165,8 @@ export const visitPurposeEnum = pgEnum('visit_purpose', [
   'payment_collection',
   'casual',
 ]);
+
+export const loyaltyTransactionTypeEnum = pgEnum('loyalty_transaction_type', [
+  'earn',
+  'redeem',
+]);

@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
+import 'package:billing_baba/features/loyalty/loyalty_points_calculator.dart';
+import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/pricing/providers/item_api_tier_prices_provider.dart';
 import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
+import 'package:billing_baba/features/sales/models/add_sale_save_result.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
@@ -206,6 +210,55 @@ class AddSaleForm extends _$AddSaleForm {
     ];
   }
 
+  Future<PartyModel?> _resolveParty(String partyId) async {
+    final fromList = ref
+        .read(partiesListProvider)
+        .where((party) => party.id == partyId)
+        .firstOrNull;
+    if (fromList != null) return fromList;
+
+    return (await ref.read(partyPickerListProvider.future))
+        .where((party) => party.id == partyId)
+        .firstOrNull;
+  }
+
+  SaleLoyaltyResultDto? _resolveSaleLoyalty({
+    required PartyModel? party,
+    required SaleLoyaltyResultDto? apiLoyalty,
+    required double invoiceTotal,
+    required double loyaltyPointsUsed,
+    required double loyaltyPointsAvailable,
+  }) {
+    if (!LoyaltyRules.isEligibleParty(party)) return apiLoyalty;
+
+    if (apiLoyalty != null) return apiLoyalty;
+
+    final earned = LoyaltyPointsCalculator.earnedForSpend(invoiceTotal);
+    if (earned <= 0) return null;
+
+    final available =
+        loyaltyPointsAvailable - loyaltyPointsUsed + earned;
+    return SaleLoyaltyResultDto(
+      earnedPoints: earned.toString(),
+      redeemedPoints: loyaltyPointsUsed.toStringAsFixed(0),
+      pointsAvailable: available.toStringAsFixed(0),
+    );
+  }
+
+  Future<void> _applyLoyaltyAfterSale({
+    required String partyId,
+    required SaleLoyaltyResultDto loyalty,
+  }) async {
+    applySaleLoyaltyToCache(
+      ref,
+      partyId: partyId,
+      loyalty: loyalty,
+    );
+    ref.invalidate(partyLoyaltyBalanceProvider(partyId));
+    unawaited(ref.read(partyLoyaltyBalanceProvider(partyId).future));
+    await _refreshLoyaltyAvailable(partyId);
+  }
+
   Map<String, String> _itemNameToId() {
     final items = ref.read(inventoryItemsProvider).value ?? [];
     return {for (final item in items) item.name.trim(): item.id};
@@ -259,6 +312,57 @@ class AddSaleForm extends _$AddSaleForm {
 
     if (match != null) {
       applyPartyDetails(match);
+      unawaited(_refreshLoyaltyAvailable(match.id, party: match));
+    }
+  }
+
+  double _cachedLoyaltyAvailable(String partyId) {
+    return ref
+            .read(partyLoyaltyBalanceCacheProvider)[partyId]
+            ?.availablePoints ??
+        0;
+  }
+
+  Future<void> _refreshLoyaltyAvailable(
+    String partyId, {
+    PartyModel? party,
+  }) async {
+    try {
+      final resolvedParty =
+          party ??
+          ref
+              .read(partiesListProvider)
+              .where((item) => item.id == partyId)
+              .firstOrNull ??
+          (await ref.read(partyPickerListProvider.future))
+              .where((item) => item.id == partyId)
+              .firstOrNull;
+
+      if (resolvedParty != null && !LoyaltyRules.isEligibleParty(resolvedParty)) {
+        if (!ref.mounted) return;
+        state = state.copyWith(
+          loyaltyPointsAvailable: 0,
+          loyaltyPointsUsed: 0,
+          loyaltyPointsEnabled: false,
+        );
+        return;
+      }
+
+      final cachedAvailable = _cachedLoyaltyAvailable(partyId);
+      if (cachedAvailable > 0 && ref.mounted) {
+        state = state.copyWith(loyaltyPointsAvailable: cachedAvailable);
+      }
+
+      final balance =
+          await ref.read(partyLoyaltyBalanceProvider(partyId).future);
+      if (!ref.mounted) return;
+      state = state.copyWith(loyaltyPointsAvailable: balance.availablePoints);
+    } on Object {
+      final cachedAvailable = _cachedLoyaltyAvailable(partyId);
+      if (!ref.mounted) return;
+      if (cachedAvailable > 0) {
+        state = state.copyWith(loyaltyPointsAvailable: cachedAvailable);
+      }
     }
   }
 
@@ -279,6 +383,7 @@ class AddSaleForm extends _$AddSaleForm {
     final party = parties.where((item) => item.id == partyId).firstOrNull;
     if (party != null) {
       applyPartyDetails(party);
+      unawaited(_refreshLoyaltyAvailable(party.id, party: party));
       return;
     }
 
@@ -286,13 +391,21 @@ class AddSaleForm extends _$AddSaleForm {
       partyId: partyId,
       billingName: partyName,
       clearPartyPriceTier: true,
+      loyaltyPointsAvailable: _cachedLoyaltyAvailable(partyId),
+      loyaltyPointsUsed: 0,
+      loyaltyPointsEnabled: false,
       isDirty: true,
       clearSaveError: true,
     );
     unawaited(_repriceLineItemsForPartyTierAsync());
+    unawaited(_refreshLoyaltyAvailable(partyId));
   }
 
   void applyPartyDetails(PartyModel party) {
+    final loyaltyAvailable = LoyaltyRules.isEligibleParty(party)
+        ? _cachedLoyaltyAvailable(party.id)
+        : 0.0;
+
     state = state.copyWith(
       partyId: party.id,
       billingName: party.name,
@@ -315,10 +428,14 @@ class AddSaleForm extends _$AddSaleForm {
       ),
       outstanding: PartyModel.displayOutstanding(party.balance),
       partyPriceTier: party.defaultPriceTier,
+      loyaltyPointsAvailable: loyaltyAvailable,
+      loyaltyPointsUsed: 0,
+      loyaltyPointsEnabled: false,
       isDirty: true,
       clearSaveError: true,
     );
     unawaited(_repriceLineItemsForPartyTierAsync());
+    unawaited(_refreshLoyaltyAvailable(party.id, party: party));
   }
 
   Future<void> _repriceLineItemsForPartyTierAsync() async {
@@ -372,6 +489,9 @@ class AddSaleForm extends _$AddSaleForm {
       creditLimit: '',
       outstanding: '',
       clearPartyPriceTier: true,
+      loyaltyPointsAvailable: 0,
+      loyaltyPointsUsed: 0,
+      loyaltyPointsEnabled: false,
       isDirty: true,
     );
     unawaited(_repriceLineItemsForPartyTierAsync());
@@ -395,10 +515,8 @@ class AddSaleForm extends _$AddSaleForm {
       saleType: type,
       dueDate: type == SaleType.cash ? null : state.dueDate,
       receivedEnabled: type == SaleType.credit && state.receivedEnabled,
-      loyaltyPointsEnabled:
-          type == SaleType.credit && state.loyaltyPointsEnabled,
       payments: type == SaleType.cash
-          ? [payments.first.copyWith(type: 'Cash', amount: state.grandTotal)]
+          ? [payments.first.copyWith(type: 'Cash', amount: state.invoiceTotal)]
           : payments,
       isDirty: true,
     );
@@ -596,7 +714,22 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   void updateLoyaltyPointsUsed(double value) {
-    state = state.copyWith(loyaltyPointsUsed: value, isDirty: true);
+    final max = state.maxRedeemablePoints;
+    final clamped = value.clamp(0, max).toDouble();
+    state = state.copyWith(
+      loyaltyPointsUsed: clamped,
+      loyaltyPointsEnabled: clamped > 0,
+      isDirty: true,
+    );
+  }
+
+  void useMaxLoyaltyPoints() {
+    final max = state.maxRedeemablePoints;
+    state = state.copyWith(
+      loyaltyPointsUsed: max,
+      loyaltyPointsEnabled: max > 0,
+      isDirty: true,
+    );
   }
 
   bool validate({bool finalize = false}) {
@@ -635,32 +768,61 @@ class AddSaleForm extends _$AddSaleForm {
     }
   }
 
-  Future<String?> saveInvoice({bool finalize = true}) async {
-    if (state.isSaving) return null;
+  Future<AddSaleSaveResult> saveInvoice({bool finalize = true}) async {
+    if (state.isSaving) return const AddSaleSaveResult();
 
     if (!validate(finalize: finalize)) {
       if (state.partyId == null || state.partyId!.isEmpty) {
-        return 'Party is required';
+        return const AddSaleSaveResult(error: 'Party is required');
       }
-      return 'Add at least one item with name and quantity';
+      return const AddSaleSaveResult(
+        error: 'Add at least one item with name and quantity',
+      );
     }
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
       final service = await ref.read(salesServiceProvider.future);
+      final partyId = state.partyId;
 
+      var earnedLoyaltyPoints = 0;
+      var pointsAvailable = 0.0;
       if (finalize) {
-        final document = await service.createAndFinalizeSale(
+        final invoiceTotal = state.invoiceTotal;
+        final loyaltyPointsUsed = state.loyaltyPointsUsed;
+        final loyaltyPointsAvailable = state.loyaltyPointsAvailable;
+        final party = partyId != null ? await _resolveParty(partyId) : null;
+
+        final result = await service.createAndFinalizeSale(
           state,
-          partyId: state.partyId,
+          partyId: partyId,
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
+          loyaltyPointsRedeemed: loyaltyPointsUsed,
         );
+
+        final loyalty = _resolveSaleLoyalty(
+          party: party,
+          apiLoyalty: result.loyalty,
+          invoiceTotal: invoiceTotal,
+          loyaltyPointsUsed: loyaltyPointsUsed,
+          loyaltyPointsAvailable: loyaltyPointsAvailable,
+        );
+
+        earnedLoyaltyPoints = loyalty?.earnedPointsInt ??
+            result.earnedLoyaltyPoints;
+        pointsAvailable =
+            loyalty?.availablePoints ?? result.loyalty?.availablePoints ?? 0;
+
         state = state.copyWith(
-          documentId: document.id,
+          documentId: result.document.id,
           isSaving: false,
           isDirty: false,
         );
+
+        if (partyId != null && partyId.isNotEmpty && loyalty != null) {
+          await _applyLoyaltyAfterSale(partyId: partyId, loyalty: loyalty);
+        }
       } else {
         final document = await service.saveDraft(
           state,
@@ -679,11 +841,14 @@ class AddSaleForm extends _$AddSaleForm {
         ref.invalidate(saleOrdersProvider);
       }
       ref.invalidateSelf();
-      return null;
+      return AddSaleSaveResult(
+        earnedLoyaltyPoints: earnedLoyaltyPoints,
+        pointsAvailable: pointsAvailable,
+      );
     } catch (error) {
       final message = SalesErrorMapper.messageFor(error);
       state = state.copyWith(isSaving: false, saveError: message);
-      return message;
+      return AddSaleSaveResult(error: message);
     }
   }
 }
@@ -703,5 +868,5 @@ double addSaleTotalTax(Ref ref, {String sessionKey = 'default'}) {
 @riverpod
 double addSaleGrandTotal(Ref ref, {String sessionKey = 'default'}) {
   final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
-  return form.grandTotal;
+  return form.invoiceTotal;
 }

@@ -7,6 +7,7 @@ import {
 } from '../schema/accounting/tables';
 import { branches } from '../schema/business/tables';
 import {
+  loyaltyTransactions,
   partyAttachments,
   partyLinks,
   partyLoyaltyBalances,
@@ -123,6 +124,9 @@ export async function resetBusinessData(
     await tx
       .delete(partyTagAssignments)
       .where(eq(partyTagAssignments.businessId, businessId));
+    await tx
+      .delete(loyaltyTransactions)
+      .where(eq(loyaltyTransactions.businessId, businessId));
     await tx
       .delete(partyLoyaltyBalances)
       .where(eq(partyLoyaltyBalances.businessId, businessId));
