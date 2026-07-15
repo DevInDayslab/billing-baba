@@ -414,7 +414,7 @@ final class SaleInvoiceFiltersProvider
 }
 
 String _$saleInvoiceFiltersHash() =>
-    r'7fc6c8dfa7db1f9f9a7441b170ffb70cd8d125b3';
+    r'7db02b45a2bdc4fec2d004a72aac9018b36cb395';
 
 abstract class _$SaleInvoiceFilters extends $Notifier<SaleInvoiceFiltersState> {
   SaleInvoiceFiltersState build();

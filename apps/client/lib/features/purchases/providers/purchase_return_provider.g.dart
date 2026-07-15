@@ -96,7 +96,7 @@ final class PurchaseReturnFiltersProvider
 }
 
 String _$purchaseReturnFiltersHash() =>
-    r'7d36f6efeee5190fe36befe0567a537e67ad8ae6';
+    r'a3978ad611835848fec58c73b47876b30bcbff31';
 
 abstract class _$PurchaseReturnFilters
     extends $Notifier<PurchaseReturnFiltersState> {

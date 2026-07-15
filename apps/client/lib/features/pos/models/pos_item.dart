@@ -6,6 +6,7 @@ class PosItem {
     required this.category,
     required this.price,
     required this.stock,
+    this.unit = 'pcs',
   });
 
   final String id;
@@ -14,4 +15,5 @@ class PosItem {
   final String category;
   final double price;
   final int stock;
+  final String unit;
 }

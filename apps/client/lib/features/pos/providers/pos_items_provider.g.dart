@@ -99,7 +99,7 @@ final class PosItemsProvider
   }
 }
 
-String _$posItemsHash() => r'3a555c9374eb909c163bf033bd999d27848fb17c';
+String _$posItemsHash() => r'afcfa143376e268af844aa861ccc0ecc212c16e8';
 
 @ProviderFor(posItemSearch)
 final posItemSearchProvider = PosItemSearchFamily._();
@@ -156,7 +156,7 @@ final class PosItemSearchProvider
   }
 }
 
-String _$posItemSearchHash() => r'9ac8bc776c363301f1f0de8e1f44a81a52cf2caa';
+String _$posItemSearchHash() => r'3c09dcb95978021ebf1c4da0948161a11f914e17';
 
 final class PosItemSearchFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<PosItem>>, String> {
@@ -233,7 +233,7 @@ final class PosCustomerSearchProvider
   }
 }
 
-String _$posCustomerSearchHash() => r'a3040fc3555907713725286ff82428ecee04093b';
+String _$posCustomerSearchHash() => r'a04224be43b94aac937bbaba2673b3ea9661d859';
 
 final class PosCustomerSearchFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<PosCustomer>>, String> {

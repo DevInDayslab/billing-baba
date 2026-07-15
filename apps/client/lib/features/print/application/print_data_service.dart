@@ -552,6 +552,7 @@ class PrintDataService {
       case PrintableDocumentKind.expense:
       case PrintableDocumentKind.fixedAssetPurchase:
       case PrintableDocumentKind.jobWorkOrder:
+      case PrintableDocumentKind.posReceipt:
         throw PrintException('Unexpected sales document kind: $kind');
     }
   }
@@ -593,6 +594,7 @@ class PrintDataService {
       case PrintableDocumentKind.expense:
       case PrintableDocumentKind.fixedAssetPurchase:
       case PrintableDocumentKind.jobWorkOrder:
+      case PrintableDocumentKind.posReceipt:
         throw PrintException('Unexpected purchase document kind: $kind');
     }
   }

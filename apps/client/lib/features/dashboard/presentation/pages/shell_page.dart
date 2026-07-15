@@ -229,7 +229,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         _wasOverlaySidebar = useOverlaySidebar;
 
         final showTopBar =
-            currentLocation != AppRoutes.pos || !ref.watch(posSessionProvider);
+            currentLocation != AppRoutes.pos ||
+            !ref.watch(posSessionProvider).isTerminalOpen;
         final pageTitle = _pageTitleFor(currentLocation);
         final mainContent = ColoredBox(
           color: AppColors.background,

@@ -144,7 +144,7 @@ final class PurchaseBillFiltersProvider
 }
 
 String _$purchaseBillFiltersHash() =>
-    r'4ab2fb5a88e6be89f62e667f687d734a0c1b54bb';
+    r'd63e323c069a03015601b097d6b4b2068b4461f8';
 
 abstract class _$PurchaseBillFilters
     extends $Notifier<PurchaseBillFiltersState> {

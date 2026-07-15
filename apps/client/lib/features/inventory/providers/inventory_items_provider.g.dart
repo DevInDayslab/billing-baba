@@ -33,7 +33,7 @@ final class InventoryItemsProvider
   InventoryItems create() => InventoryItems();
 }
 
-String _$inventoryItemsHash() => r'bf4d426d39604839ec873a77e0df8c964b04fd2f';
+String _$inventoryItemsHash() => r'206efe9ecf285ee131453a269b778c8434f84bf4';
 
 abstract class _$InventoryItems extends $AsyncNotifier<List<InventoryItem>> {
   FutureOr<List<InventoryItem>> build();

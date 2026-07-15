@@ -5,6 +5,7 @@ abstract final class SalesConstants {
   static const challanSeries = 'DC';
   static const creditNoteSeries = 'CN';
   static const proformaSeries = 'PI';
+  static const posSeries = 'POS';
 }
 
 enum SalesDocumentType {
