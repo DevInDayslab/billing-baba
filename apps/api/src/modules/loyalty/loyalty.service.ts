@@ -134,9 +134,9 @@ export class LoyaltyService {
     const existing = await this.repository.findActiveRules(businessId);
     if (!existing) {
       const created = await this.repository.createRules(businessId, {
-        rupeesPerPoint: input.rupees_per_point ?? formatLoyaltyPoints(
-          DEFAULT_RUPEES_PER_POINT,
-        ),
+        rupeesPerPoint:
+          input.rupees_per_point ??
+          formatLoyaltyPoints(DEFAULT_RUPEES_PER_POINT),
         isActive: input.is_active ?? true,
         userId,
       });
@@ -257,8 +257,7 @@ export class LoyaltyService {
     const spendAmount = Math.max(documentTotal - redemptionValue, 0);
     const earnedPoints = pointsEarnedForSpend(spendAmount, rupeesPerPoint);
     const newAvailable = availablePoints - pointsToRedeem + earnedPoints;
-    const newEarned =
-      parseLoyaltyPoints(balance.pointsEarned) + earnedPoints;
+    const newEarned = parseLoyaltyPoints(balance.pointsEarned) + earnedPoints;
 
     balance = await this.repository.updateBalance(tx, balance.id, {
       pointsEarned: formatLoyaltyPoints(newEarned),

@@ -148,15 +148,24 @@ export class ReportsRepository {
     return this.item.getItemDetail(businessId, query);
   }
 
-  getSalePurchaseByItemCategory(businessId: string, query: ReportExtendedQuery) {
+  getSalePurchaseByItemCategory(
+    businessId: string,
+    query: ReportExtendedQuery,
+  ) {
     return this.item.getSalePurchaseByItemCategory(businessId, query);
   }
 
-  getStockSummaryByItemCategory(businessId: string, query: ReportExtendedQuery) {
+  getStockSummaryByItemCategory(
+    businessId: string,
+    query: ReportExtendedQuery,
+  ) {
     return this.item.getStockSummaryByItemCategory(businessId, query);
   }
 
-  getItemCategoryWiseProfitLoss(businessId: string, query: ReportExtendedQuery) {
+  getItemCategoryWiseProfitLoss(
+    businessId: string,
+    query: ReportExtendedQuery,
+  ) {
     return this.item.getItemCategoryWiseProfitLoss(businessId, query);
   }
 

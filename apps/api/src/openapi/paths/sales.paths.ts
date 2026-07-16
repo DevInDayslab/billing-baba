@@ -122,7 +122,10 @@ export function buildSalesPaths() {
         operationId: 'listPosSessionDocuments',
         parameters: [idParam],
         responses: {
-          200: okPaginatedResponse('POS documents', Schema.SalesDocumentResponse),
+          200: okPaginatedResponse(
+            'POS documents',
+            Schema.SalesDocumentResponse,
+          ),
           ...standardErrorResponses,
         },
       }),

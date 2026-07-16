@@ -89,7 +89,9 @@ export class GstReportsRepository {
       .innerJoin(items, eq(salesDocumentLines.itemId, items.id))
       .where(and(...filters))
       .groupBy(items.hsnCode, items.name, salesDocumentLines.unit)
-      .orderBy(desc(sql`COALESCE(SUM(${salesDocumentLines.lineTotal}::numeric), 0)`));
+      .orderBy(
+        desc(sql`COALESCE(SUM(${salesDocumentLines.lineTotal}::numeric), 0)`),
+      );
 
     const mapped: ReportHsnRow[] = grouped.map((row) => ({
       hsn: row.hsn ?? '',
@@ -146,7 +148,9 @@ export class GstReportsRepository {
         ),
       )
       .groupBy(items.hsnCode, salesDocuments.isGstFormal)
-      .orderBy(desc(sql`COALESCE(SUM(${salesDocumentLines.lineTotal}::numeric), 0)`));
+      .orderBy(
+        desc(sql`COALESCE(SUM(${salesDocumentLines.lineTotal}::numeric), 0)`),
+      );
 
     const mapped: ReportSacRow[] = grouped.map((row) => ({
       sac: row.sac ?? '',

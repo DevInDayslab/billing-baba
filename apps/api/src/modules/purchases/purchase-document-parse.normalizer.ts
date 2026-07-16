@@ -36,7 +36,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function pickString(record: Record<string, unknown>, keys: string[]): string | null {
+function pickString(
+  record: Record<string, unknown>,
+  keys: string[],
+): string | null {
   for (const key of keys) {
     const value = record[key];
     if (typeof value === 'string' && value.trim()) {
@@ -49,7 +52,10 @@ function pickString(record: Record<string, unknown>, keys: string[]): string | n
   return null;
 }
 
-function pickNumber(record: Record<string, unknown>, keys: string[]): number | null {
+function pickNumber(
+  record: Record<string, unknown>,
+  keys: string[],
+): number | null {
   for (const key of keys) {
     const normalized = normalizeNumber(record[key]);
     if (normalized != null) {
@@ -59,7 +65,10 @@ function pickNumber(record: Record<string, unknown>, keys: string[]): number | n
   return null;
 }
 
-function pickBoolean(record: Record<string, unknown>, keys: string[]): boolean | null {
+function pickBoolean(
+  record: Record<string, unknown>,
+  keys: string[],
+): boolean | null {
   for (const key of keys) {
     const normalized = normalizeBoolean(record[key]);
     if (normalized != null) {
@@ -100,7 +109,11 @@ export function normalizeBoolean(value: unknown): boolean | null {
 export function normalizeDate(value: unknown): string | null {
   if (value == null || value === '') return null;
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return formatDateParts(value.getFullYear(), value.getMonth() + 1, value.getDate());
+    return formatDateParts(
+      value.getFullYear(),
+      value.getMonth() + 1,
+      value.getDate(),
+    );
   }
 
   const text = String(value).trim();
@@ -133,8 +146,16 @@ export function normalizeDate(value: unknown): string | null {
   );
 }
 
-function formatDateParts(year: number, month: number, day: number): string | null {
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+function formatDateParts(
+  year: number,
+  month: number,
+  day: number,
+): string | null {
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day)
+  ) {
     return null;
   }
   const date = new Date(Date.UTC(year, month - 1, day));
@@ -170,13 +191,28 @@ function normalizeLineTaxRate(raw: Record<string, unknown>): number | null {
   ]);
   if (direct != null && direct > 0) return direct;
 
-  const cgst = pickNumber(raw, ['cgst_rate', 'cgstRate', 'cgst_percent', 'cgst']);
-  const sgst = pickNumber(raw, ['sgst_rate', 'sgstRate', 'sgst_percent', 'sgst']);
+  const cgst = pickNumber(raw, [
+    'cgst_rate',
+    'cgstRate',
+    'cgst_percent',
+    'cgst',
+  ]);
+  const sgst = pickNumber(raw, [
+    'sgst_rate',
+    'sgstRate',
+    'sgst_percent',
+    'sgst',
+  ]);
   if (cgst != null && sgst != null) return cgst + sgst;
   if (cgst != null && cgst > 0) return cgst * 2;
   if (sgst != null && sgst > 0) return sgst * 2;
 
-  const igst = pickNumber(raw, ['igst_rate', 'igstRate', 'igst_percent', 'igst']);
+  const igst = pickNumber(raw, [
+    'igst_rate',
+    'igstRate',
+    'igst_percent',
+    'igst',
+  ]);
   if (igst != null && igst > 0) return igst;
 
   return null;
@@ -198,7 +234,11 @@ function normalizeLine(raw: unknown): Record<string, unknown> | null {
   return {
     item_name: itemName,
     item_id: pickString(raw, ['item_id', 'itemId']),
-    description: pickString(raw, ['description', 'item_description', 'details']),
+    description: pickString(raw, [
+      'description',
+      'item_description',
+      'details',
+    ]),
     quantity: pickNumber(raw, ['quantity', 'qty', 'qnty']),
     unit: pickString(raw, ['unit', 'uom']),
     unit_price: pickNumber(raw, [

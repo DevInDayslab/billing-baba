@@ -60,11 +60,7 @@ export async function handleDataReport<T extends Record<string, unknown>>(
   request: FastifyRequest,
   reply: FastifyReply,
   schema: z.ZodTypeAny,
-  fetch: (
-    businessId: string,
-    accountId: string,
-    query: any,
-  ) => Promise<T>,
+  fetch: (businessId: string, accountId: string, query: any) => Promise<T>,
 ): Promise<FastifyReply> {
   try {
     const { accountId, businessId } = requireAuthContext(request);

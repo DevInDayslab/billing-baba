@@ -44,7 +44,8 @@ function maskHeaders(headers) {
     if (k.toLowerCase() === 'x-goog-api-key') {
       out[k] = `<masked len=${String(v).length}>`;
     } else if (k.toLowerCase() === 'authorization') {
-      out[k] = `<masked bearer=${String(v).toLowerCase().startsWith('bearer ')}>`;
+      out[k] =
+        `<masked bearer=${String(v).toLowerCase().startsWith('bearer ')}>`;
     } else {
       out[k] = v;
     }
@@ -54,7 +55,12 @@ function maskHeaders(headers) {
 
 const originalFetch = globalThis.fetch.bind(globalThis);
 globalThis.fetch = async (input, init) => {
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+  const url =
+    typeof input === 'string'
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url;
   let bodyText = null;
   if (init?.body) {
     bodyText =
@@ -87,7 +93,10 @@ globalThis.fetch = async (input, init) => {
   }
 };
 
-const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY, vertexai: false });
+const client = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  vertexai: false,
+});
 const model = process.env.GEMINI_MODEL?.trim() || 'gemini-flash-latest';
 const pngBase64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';

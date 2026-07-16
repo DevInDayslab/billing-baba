@@ -116,7 +116,10 @@ export async function finalizeSalesDocument(
     );
   }
 
-  const lines = await repository.listLines(params.businessId, params.documentId);
+  const lines = await repository.listLines(
+    params.businessId,
+    params.documentId,
+  );
   if (lines.length === 0) {
     throw new AppError(
       'VALIDATION_ERROR',

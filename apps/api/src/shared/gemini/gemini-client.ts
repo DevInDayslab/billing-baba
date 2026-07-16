@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import type { GoogleGenAI } from '@google/genai' with { 'resolution-mode': 'import' };
+import type { GoogleGenAI } from '@google/genai' with {
+  'resolution-mode': 'import',
+};
 
 const resolveFromHere = createRequire(__filename);
 
@@ -132,7 +134,9 @@ function maskOutgoingHeaders(
           return entries;
         })()
       : Array.isArray(headers)
-        ? headers.filter((entry): entry is [string, string] => entry[1] !== undefined)
+        ? headers.filter(
+            (entry): entry is [string, string] => entry[1] !== undefined,
+          )
         : Object.entries(headers).filter(
             (entry): entry is [string, string] => entry[1] !== undefined,
           );
@@ -169,7 +173,10 @@ export function auditGeminiAuthEnvironment(): GeminiAuthEnvironmentAudit {
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim()) {
     conflictingEnvVars.push('GOOGLE_APPLICATION_CREDENTIALS');
   }
-  if (process.env.GCLOUD_PROJECT?.trim() && !process.env.GEMINI_API_KEY?.trim()) {
+  if (
+    process.env.GCLOUD_PROJECT?.trim() &&
+    !process.env.GEMINI_API_KEY?.trim()
+  ) {
     conflictingEnvVars.push('GCLOUD_PROJECT (without GEMINI_API_KEY)');
   }
 
@@ -226,7 +233,9 @@ export function describeGeminiKeyForLog(): GeminiKeyDiagnostics {
   };
 }
 
-export function formatGeminiKeyLogLine(diagnostics: GeminiKeyDiagnostics): string {
+export function formatGeminiKeyLogLine(
+  diagnostics: GeminiKeyDiagnostics,
+): string {
   if (!diagnostics.loaded) {
     return 'Gemini Developer API: key not loaded';
   }
@@ -296,7 +305,9 @@ function logOutgoingGeminiRequest(
   init: RequestInit | undefined,
 ): void {
   const maskedHeaders = maskOutgoingHeaders(init?.headers);
-  const headerNames = Object.keys(maskedHeaders).map((name) => name.toLowerCase());
+  const headerNames = Object.keys(maskedHeaders).map((name) =>
+    name.toLowerCase(),
+  );
   const hasApiKeyHeader = headerNames.includes('x-goog-api-key');
   const hasAuthorizationHeader = headerNames.includes('authorization');
 
@@ -339,29 +350,36 @@ function installGeminiFetchLogging(): void {
   fetchLoggingInstalled = true;
   const originalFetch = globalThis.fetch.bind(globalThis);
 
-  globalThis.fetch = async (input, init) => {
-    const url =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.href
-          : input.url;
+  // Preserve Bun/Node static fetch members (e.g. preconnect) for typeof fetch compatibility.
+  globalThis.fetch = Object.assign(
+    async (
+      input: Parameters<typeof fetch>[0],
+      init?: Parameters<typeof fetch>[1],
+    ) => {
+      const url =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
 
-    if (url.includes(GEMINI_DEVELOPER_API_HOST)) {
-      logOutgoingGeminiRequest(url, init);
-    }
+      if (url.includes(GEMINI_DEVELOPER_API_HOST)) {
+        logOutgoingGeminiRequest(url, init);
+      }
 
-    const response = await originalFetch(input, init);
+      const response = await originalFetch(input, init);
 
-    if (url.includes(GEMINI_DEVELOPER_API_HOST) && !response.ok) {
-      const body = await response.clone().text();
-      console.error(
-        `[Gemini] HTTP response: status=${response.status} statusText=${response.statusText} body=${body}`,
-      );
-    }
+      if (url.includes(GEMINI_DEVELOPER_API_HOST) && !response.ok) {
+        const body = await response.clone().text();
+        console.error(
+          `[Gemini] HTTP response: status=${response.status} statusText=${response.statusText} body=${body}`,
+        );
+      }
 
-    return response;
-  };
+      return response;
+    },
+    originalFetch,
+  );
 }
 
 /** Gemini Developer API client (API key only — not Vertex AI). */

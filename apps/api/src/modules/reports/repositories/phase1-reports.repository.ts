@@ -65,7 +65,11 @@ import type {
   ReportDateQuery,
   ReportExtendedQuery,
 } from '../reports.schema';
-import { resolveRange, resolveSingleDate, toPeriodMeta } from './reports.helpers';
+import {
+  resolveRange,
+  resolveSingleDate,
+  toPeriodMeta,
+} from './reports.helpers';
 
 export class Phase1ReportsRepository {
   private readonly dashboardRepository: DashboardRepository;
@@ -113,9 +117,10 @@ export class Phase1ReportsRepository {
     const allocatedSubquery = this.db
       .select({
         salesDocumentId: paymentAllocations.salesDocumentId,
-        allocated: sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
-          'allocated',
-        ),
+        allocated:
+          sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+            'allocated',
+          ),
       })
       .from(paymentAllocations)
       .where(
@@ -172,7 +177,8 @@ export class Phase1ReportsRepository {
             party_name: row.partyName,
             document_type: row.documentType,
             payment_mode: null,
-            status: balance <= 0 ? 'paid' : allocated > 0 ? 'partial' : 'unpaid',
+            status:
+              balance <= 0 ? 'paid' : allocated > 0 ? 'partial' : 'unpaid',
             total_amount: row.totalAmount ?? '0',
             balance_amount: String(balance),
           };
@@ -218,9 +224,10 @@ export class Phase1ReportsRepository {
     const allocatedSubquery = this.db
       .select({
         purchaseDocumentId: paymentAllocations.purchaseDocumentId,
-        allocated: sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
-          'allocated',
-        ),
+        allocated:
+          sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+            'allocated',
+          ),
       })
       .from(paymentAllocations)
       .where(
@@ -285,7 +292,8 @@ export class Phase1ReportsRepository {
             party_id: row.partyId,
             party_name: row.partyName ?? '',
             payment_mode: null,
-            status: balance <= 0 ? 'paid' : allocated > 0 ? 'partial' : 'unpaid',
+            status:
+              balance <= 0 ? 'paid' : allocated > 0 ? 'partial' : 'unpaid',
             total_amount: row.totalAmount ?? '0',
             balance_amount: String(balance),
           };
@@ -322,10 +330,7 @@ export class Phase1ReportsRepository {
             })
             .from(items)
             .where(
-              and(
-                eq(items.businessId, businessId),
-                inArray(items.id, itemIds),
-              ),
+              and(eq(items.businessId, businessId), inArray(items.id, itemIds)),
             );
 
     const salePriceMap = new Map(
@@ -497,7 +502,11 @@ export class Phase1ReportsRepository {
     const fromKey = range.from.toISOString().slice(0, 10);
     const toKey = range.to.toISOString().slice(0, 10);
 
-    const report = await buildPartyLedgerReport(this.db, businessId, query.party_id);
+    const report = await buildPartyLedgerReport(
+      this.db,
+      businessId,
+      query.party_id,
+    );
 
     const periodEntries = await fetchPartyLedgerEntries(this.db, {
       businessId,
@@ -515,7 +524,9 @@ export class Phase1ReportsRepository {
       description: entry.description,
       debit: entry.debit,
       credit: entry.credit,
-      balance: String(report.runningBalances.get(entry.id) ?? report.openingBalance),
+      balance: String(
+        report.runningBalances.get(entry.id) ?? report.openingBalance,
+      ),
     }));
 
     return {
@@ -536,10 +547,7 @@ export class Phase1ReportsRepository {
                 (e.entryType === 'payment' && Number(e.debit) > 0) ||
                 e.entryType === 'expense',
             )
-            .reduce(
-              (sum, e) => sum + Number(e.debit) + Number(e.credit),
-              0,
-            ),
+            .reduce((sum, e) => sum + Number(e.debit) + Number(e.credit), 0),
         ),
         total_receivable: String(report.summary.receiveAmount),
       },
@@ -649,10 +657,10 @@ export class Phase1ReportsRepository {
           category: 'Payment',
           type: isIn ? 'Payment In' : 'Payment Out',
           total: row.amount ?? '0',
-          received: isIn ? row.amount ?? '0' : '0',
+          received: isIn ? (row.amount ?? '0') : '0',
           balance: '0',
-          money_in: isIn ? row.amount ?? '0' : '0',
-          money_out: isIn ? '0' : row.amount ?? '0',
+          money_in: isIn ? (row.amount ?? '0') : '0',
+          money_out: isIn ? '0' : (row.amount ?? '0'),
           status: 'paid',
           payment_type: row.paymentMode,
         };
@@ -853,10 +861,10 @@ export class Phase1ReportsRepository {
           category: 'Payment',
           type: isIn ? 'Payment In' : 'Payment Out',
           total: row.total ?? '0',
-          received: isIn ? row.total ?? '0' : '0',
+          received: isIn ? (row.total ?? '0') : '0',
           balance: '0',
-          money_in: isIn ? row.total ?? '0' : '0',
-          money_out: isIn ? '0' : row.total ?? '0',
+          money_in: isIn ? (row.total ?? '0') : '0',
+          money_out: isIn ? '0' : (row.total ?? '0'),
           status: 'paid',
           payment_type: row.paymentMode,
         };
@@ -892,14 +900,19 @@ export class Phase1ReportsRepository {
   ): Promise<ProfitLossPayload> {
     const range = resolveRange(query);
 
-    const [salesTotal, salesReturnTotal, purchaseTotal, purchaseReturnTotal, expenseTotal] =
-      await Promise.all([
-        this.sumSales(businessId, range, REVENUE_SALES_TYPES),
-        this.sumSales(businessId, range, [SALES_RETURN_TYPE] as const),
-        this.sumPurchases(businessId, range, PURCHASE_BILL_TYPE),
-        this.sumPurchases(businessId, range, PURCHASE_RETURN_TYPE),
-        this.sumExpenses(businessId, range),
-      ]);
+    const [
+      salesTotal,
+      salesReturnTotal,
+      purchaseTotal,
+      purchaseReturnTotal,
+      expenseTotal,
+    ] = await Promise.all([
+      this.sumSales(businessId, range, REVENUE_SALES_TYPES),
+      this.sumSales(businessId, range, [SALES_RETURN_TYPE] as const),
+      this.sumPurchases(businessId, range, PURCHASE_BILL_TYPE),
+      this.sumPurchases(businessId, range, PURCHASE_RETURN_TYPE),
+      this.sumExpenses(businessId, range),
+    ]);
 
     const grossProfit =
       salesTotal - salesReturnTotal - (purchaseTotal - purchaseReturnTotal);
@@ -910,7 +923,12 @@ export class Phase1ReportsRepository {
       net_profit: String(netProfit),
       items: [
         { particular: 'Sales', amount: '0', is_header: true, indent: 0 },
-        { particular: 'Sale', amount: String(salesTotal), is_header: false, indent: 1 },
+        {
+          particular: 'Sale',
+          amount: String(salesTotal),
+          is_header: false,
+          indent: 1,
+        },
         {
           particular: 'Sale Return',
           amount: String(-salesReturnTotal),
@@ -961,7 +979,9 @@ export class Phase1ReportsRepository {
   private async sumSales(
     businessId: string,
     range: ResolvedReportPeriod,
-    documentTypes: typeof REVENUE_SALES_TYPES | readonly [typeof SALES_RETURN_TYPE],
+    documentTypes:
+      | typeof REVENUE_SALES_TYPES
+      | readonly [typeof SALES_RETURN_TYPE],
   ): Promise<number> {
     const [row] = await this.db
       .select({

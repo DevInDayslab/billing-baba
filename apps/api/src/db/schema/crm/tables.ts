@@ -8,7 +8,12 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { businesses } from '../business/tables';
-import { money, syncedBusinessColumns, timestamptz, uuidPrimaryKey } from '../columns';
+import {
+  money,
+  syncedBusinessColumns,
+  timestamptz,
+  uuidPrimaryKey,
+} from '../columns';
 import {
   loyaltyTransactionTypeEnum,
   partyCategoryEnum,

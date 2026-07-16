@@ -19,7 +19,11 @@ import {
 } from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
 import { users } from '../../db/schema/identity/tables';
-import { godowns, inventoryMovements, items } from '../../db/schema/inventory/tables';
+import {
+  godowns,
+  inventoryMovements,
+  items,
+} from '../../db/schema/inventory/tables';
 import { documentNumberSequences } from '../../db/schema/settings/tables';
 import {
   posSessions,
@@ -81,9 +85,10 @@ export class SalesDocumentRepository {
     return this.db
       .select({
         salesDocumentId: paymentAllocations.salesDocumentId,
-        allocated: sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
-          'allocated',
-        ),
+        allocated:
+          sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+            'allocated',
+          ),
       })
       .from(paymentAllocations)
       .where(
@@ -108,10 +113,7 @@ export class SalesDocumentRepository {
         )`.as('row_num'),
       })
       .from(paymentAllocations)
-      .innerJoin(
-        payments,
-        eq(paymentAllocations.paymentId, payments.id),
-      )
+      .innerJoin(payments, eq(paymentAllocations.paymentId, payments.id))
       .where(
         and(
           eq(paymentAllocations.businessId, businessId),
@@ -319,7 +321,9 @@ export class SalesDocumentRepository {
     return row ?? null;
   }
 
-  async create(values: SalesDocumentInsertValues): Promise<SalesDocumentRecord> {
+  async create(
+    values: SalesDocumentInsertValues,
+  ): Promise<SalesDocumentRecord> {
     const [row] = await this.db
       .insert(salesDocuments)
       .values({
@@ -525,14 +529,13 @@ export class SalesDocumentRepository {
           eq(salesDocumentLines.isDeleted, false),
         ),
       )
-      .orderBy(asc(salesDocumentLines.sortOrder), asc(salesDocumentLines.createdAt));
+      .orderBy(
+        asc(salesDocumentLines.sortOrder),
+        asc(salesDocumentLines.createdAt),
+      );
   }
 
-  async findLineById(
-    businessId: string,
-    documentId: string,
-    lineId: string,
-  ) {
+  async findLineById(businessId: string, documentId: string, lineId: string) {
     const [row] = await this.db
       .select()
       .from(salesDocumentLines)
@@ -666,7 +669,11 @@ export class SalesDocumentRepository {
   async findParty(
     businessId: string,
     partyId: string,
-  ): Promise<{ id: string; stateCode: string | null; creditLimit: string } | null> {
+  ): Promise<{
+    id: string;
+    stateCode: string | null;
+    creditLimit: string;
+  } | null> {
     const [row] = await this.db
       .select({
         id: parties.id,

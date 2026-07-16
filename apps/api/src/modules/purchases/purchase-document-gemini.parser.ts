@@ -139,7 +139,9 @@ function isAuthError(message: string): boolean {
 
 function mapGeminiError(error: unknown): AppError {
   const message =
-    error instanceof Error ? error.message : 'Gemini failed to parse the document';
+    error instanceof Error
+      ? error.message
+      : 'Gemini failed to parse the document';
 
   if (message.toLowerCase().includes('timeout')) {
     return new AppError(
@@ -245,8 +247,7 @@ export async function parsePurchaseDocumentWithGemini(
     try {
       return await requestGemini(model, mimeType, base64Data);
     } catch (error) {
-      const mapped =
-        error instanceof AppError ? error : mapGeminiError(error);
+      const mapped = error instanceof AppError ? error : mapGeminiError(error);
 
       if (mapped.code !== 'PARSE_FAILED') {
         throw mapped;

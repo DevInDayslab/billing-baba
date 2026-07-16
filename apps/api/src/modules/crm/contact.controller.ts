@@ -50,11 +50,7 @@ export function createContactController() {
         const { accountId, businessId } = requireAuthContext(request);
         const query = listContactsQuerySchema.parse(request.query);
         const service = new ContactService();
-        const result = await service.listContacts(
-          businessId,
-          accountId,
-          query,
-        );
+        const result = await service.listContacts(businessId, accountId, query);
         return sendPaginated(reply, result.data, result.meta);
       } catch (error) {
         if (error instanceof ZodError) {

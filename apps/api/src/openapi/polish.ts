@@ -75,9 +75,7 @@ const HTTP_METHODS = new Set([
 ]);
 
 /** Normalize paths — collapse /path and /path/ duplicates; prefer no trailing slash. */
-export function normalizePaths(
-  paths: OpenApiPathItem,
-): OpenApiPathItem {
+export function normalizePaths(paths: OpenApiPathItem): OpenApiPathItem {
   const normalized: OpenApiPathItem = {};
 
   for (const [rawPath, methods] of Object.entries(paths)) {

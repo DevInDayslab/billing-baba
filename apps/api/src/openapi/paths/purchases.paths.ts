@@ -1,9 +1,5 @@
-import {
-  listExpensesQuerySchema,
-} from '../../modules/purchases/expense.schema';
-import {
-  listExpenseCategoriesQuerySchema,
-} from '../../modules/purchases/expense-category.schema';
+import { listExpensesQuerySchema } from '../../modules/purchases/expense.schema';
+import { listExpenseCategoriesQuerySchema } from '../../modules/purchases/expense-category.schema';
 import {
   listPurchaseDocumentsQuerySchema,
   purchaseLineIdParamSchema,

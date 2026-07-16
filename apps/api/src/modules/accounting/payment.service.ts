@@ -76,11 +76,7 @@ export class PaymentService {
   ): Promise<PaymentRecord> {
     await this.assertBusinessAccess(businessId, accountId);
 
-    const payment = await this.repository.findById(
-      businessId,
-      paymentId,
-      true,
-    );
+    const payment = await this.repository.findById(businessId, paymentId, true);
     if (!payment) {
       throw new AppError('NOT_FOUND', 'Payment not found', 404);
     }

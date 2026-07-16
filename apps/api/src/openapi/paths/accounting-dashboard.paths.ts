@@ -111,7 +111,10 @@ export function buildDashboardPaths() {
         description:
           'Returns KPI summary for the active business: sales, purchases, receivables, payables, and stock alerts for the selected period.',
         operationId: 'getDashboard',
-        parameters: queryParamsFromZod(dashboardQuerySchema, Schema.DashboardQuery),
+        parameters: queryParamsFromZod(
+          dashboardQuerySchema,
+          Schema.DashboardQuery,
+        ),
         responses: {
           200: okResponse('Dashboard summary', Schema.DashboardResponse),
           ...standardErrorResponses,

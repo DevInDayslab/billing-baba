@@ -30,15 +30,11 @@ export class PartyLedgerService {
   ): Promise<PartyLedgerPayload> {
     await this.assertBusinessAccess(businessId, accountId);
 
-    const payload = await this.repository.getPartyLedger(
-      businessId,
-      partyId,
-      {
-        filter: query.filter,
-        from: query.from,
-        to: query.to,
-      },
-    );
+    const payload = await this.repository.getPartyLedger(businessId, partyId, {
+      filter: query.filter,
+      from: query.from,
+      to: query.to,
+    });
 
     if (!payload) {
       throw new AppError('NOT_FOUND', 'Party not found', 404);

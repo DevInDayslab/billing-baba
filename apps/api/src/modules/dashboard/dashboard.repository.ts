@@ -6,10 +6,7 @@ import {
   payments,
 } from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
-import {
-  expenses,
-  purchaseDocuments,
-} from '../../db/schema/purchases/tables';
+import { expenses, purchaseDocuments } from '../../db/schema/purchases/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
 import {
   PURCHASE_BILL_TYPE,
@@ -92,10 +89,7 @@ export class DashboardRepository {
     const totalAmount = totals?.totalAmount ?? '0';
     const receivedAmount = received?.amount ?? '0';
     const balanceAmount = String(
-      Math.max(
-        0,
-        Number(totalAmount) - Number(receivedAmount),
-      ),
+      Math.max(0, Number(totalAmount) - Number(receivedAmount)),
     );
 
     return {
@@ -349,18 +343,12 @@ export class DashboardRepository {
           eq(ledgerEntries.referenceId, expenses.id),
         ),
       )
-      .where(
-        and(
-          eq(ledgerEntries.businessId, businessId),
-          validLedgerEntrySql,
-        ),
-      )
+      .where(and(eq(ledgerEntries.businessId, businessId), validLedgerEntrySql))
       .orderBy(desc(ledgerEntries.createdAt))
       .limit(limit);
 
     return rows.map((row) => {
-      const amount =
-        Number(row.debit) > 0 ? row.debit : (row.credit ?? '0');
+      const amount = Number(row.debit) > 0 ? row.debit : (row.credit ?? '0');
 
       let type: DashboardRecentTransaction['type'] = 'sale';
       if (row.entryType === 'sale') {
@@ -368,8 +356,7 @@ export class DashboardRepository {
       } else if (row.entryType === 'purchase') {
         type = 'purchase';
       } else if (row.entryType === 'payment') {
-        type =
-          row.paymentDirection === 'paid' ? 'payment_out' : 'payment_in';
+        type = row.paymentDirection === 'paid' ? 'payment_out' : 'payment_in';
       } else if (row.entryType === 'expense') {
         type = 'expense';
       } else if (row.entryType === 'opening') {

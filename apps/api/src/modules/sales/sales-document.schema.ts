@@ -98,7 +98,10 @@ export const salesLineIdParamSchema = z.object({
 
 export const createSalesLineBodySchema = z.object({
   item_id: z.uuid(),
-  quantity: moneyString.refine((v) => parseFloat(v) > 0, 'Quantity must be > 0'),
+  quantity: moneyString.refine(
+    (v) => parseFloat(v) > 0,
+    'Quantity must be > 0',
+  ),
   unit: z.string().trim().min(1).max(50),
   unit_price: moneyString,
   market_price: moneyString.optional().nullable(),

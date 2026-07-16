@@ -1,6 +1,9 @@
 const LOG_PREFIX = '[PurchaseParse]';
 
-function formatError(error: unknown): { message: string; stack: string | undefined } {
+function formatError(error: unknown): {
+  message: string;
+  stack: string | undefined;
+} {
   if (error instanceof Error) {
     return { message: error.message, stack: error.stack };
   }
@@ -23,7 +26,9 @@ export function logGeminiGenerateContentEnd(
   );
 }
 
-export function logGeminiRawResponseText(text: string | undefined | null): void {
+export function logGeminiRawResponseText(
+  text: string | undefined | null,
+): void {
   if (text == null || text.trim() === '') {
     console.warn(`${LOG_PREFIX} Gemini response.text is empty or missing`);
     return;
@@ -60,9 +65,7 @@ export function logGeminiParsedJson(parsed: unknown): void {
 }
 
 export function logNormalizationInput(raw: unknown): void {
-  console.info(
-    `${LOG_PREFIX} Normalization input: ${JSON.stringify(raw)}`,
-  );
+  console.info(`${LOG_PREFIX} Normalization input: ${JSON.stringify(raw)}`);
 }
 
 export function logFlattenedDocument(flattened: unknown): void {
@@ -83,15 +86,11 @@ export function logValidationOrMappingError(
   context?: unknown,
 ): void {
   const { message, stack } = formatError(error);
-  console.error(
-    `${LOG_PREFIX} ${stage} failed error=${message}`,
-  );
+  console.error(`${LOG_PREFIX} ${stage} failed error=${message}`);
   if (stack) {
     console.error(`${LOG_PREFIX} ${stage} stack:\n${stack}`);
   }
   if (context !== undefined) {
-    console.error(
-      `${LOG_PREFIX} ${stage} context: ${JSON.stringify(context)}`,
-    );
+    console.error(`${LOG_PREFIX} ${stage} context: ${JSON.stringify(context)}`);
   }
 }
