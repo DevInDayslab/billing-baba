@@ -29,19 +29,6 @@ CREATE TABLE "unit_definitions" (
 	"short_name" text NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "businesses" ADD COLUMN "business_type" text;--> statement-breakpoint
-ALTER TABLE "businesses" ADD COLUMN "business_category" text;--> statement-breakpoint
-ALTER TABLE "businesses" ADD COLUMN "pincode" text;--> statement-breakpoint
-ALTER TABLE "businesses" ADD COLUMN "currency" text DEFAULT 'INR' NOT NULL;--> statement-breakpoint
-ALTER TABLE "businesses" ADD COLUMN "timezone" text DEFAULT 'Asia/Kolkata' NOT NULL;--> statement-breakpoint
-ALTER TABLE "businesses" ADD COLUMN "language" text DEFAULT 'en' NOT NULL;--> statement-breakpoint
-ALTER TABLE "businesses" ADD COLUMN "logo_url" text;--> statement-breakpoint
-ALTER TABLE "businesses" ADD COLUMN "signature_url" text;--> statement-breakpoint
-ALTER TABLE "parties" ADD COLUMN "is_active" boolean DEFAULT true NOT NULL;--> statement-breakpoint
-ALTER TABLE "accounts" ADD COLUMN "email" text;--> statement-breakpoint
-ALTER TABLE "accounts" ADD COLUMN "avatar_url" text;--> statement-breakpoint
-ALTER TABLE "accounts" ADD COLUMN "timezone" text DEFAULT 'Asia/Kolkata' NOT NULL;--> statement-breakpoint
-ALTER TABLE "accounts" ADD COLUMN "language" text DEFAULT 'en' NOT NULL;--> statement-breakpoint
 ALTER TABLE "unit_conversions" ADD CONSTRAINT "unit_conversions_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "unit_conversions" ADD CONSTRAINT "unit_conversions_base_unit_id_unit_definitions_id_fk" FOREIGN KEY ("base_unit_id") REFERENCES "public"."unit_definitions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "unit_conversions" ADD CONSTRAINT "unit_conversions_secondary_unit_id_unit_definitions_id_fk" FOREIGN KEY ("secondary_unit_id") REFERENCES "public"."unit_definitions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

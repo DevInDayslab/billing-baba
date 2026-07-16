@@ -1,11 +1,32 @@
 name: Setup Flutter environment
-description: Generate and validate apps/client .env from GitHub Variables and Secrets.
+description: Generate and validate apps/client .env from workflow inputs.
 
 inputs:
   working-directory:
     description: Flutter app directory relative to the repository root.
     required: false
     default: apps/client
+  app_env:
+    description: APP_ENV value for the Flutter client.
+    required: true
+  debug:
+    description: DEBUG value for the Flutter client.
+    required: true
+  enable_dev_login:
+    description: ENABLE_DEV_LOGIN value for the Flutter client.
+    required: true
+  dev_otp:
+    description: DEV_OTP value for the Flutter client.
+    required: true
+  api_base_url:
+    description: API_BASE_URL value for the Flutter client.
+    required: true
+  msg91_widget_id:
+    description: MSG91_WIDGET_ID value for the Flutter client.
+    required: true
+  msg91_widget_auth_token:
+    description: MSG91_WIDGET_AUTH_TOKEN value for the Flutter client.
+    required: true
 
 runs:
   using: composite
@@ -14,13 +35,13 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       env:
-        APP_ENV: ${{ vars.APP_ENV }}
-        DEBUG: ${{ vars.DEBUG }}
-        ENABLE_DEV_LOGIN: ${{ vars.ENABLE_DEV_LOGIN }}
-        DEV_OTP: ${{ vars.DEV_OTP }}
-        API_BASE_URL: ${{ vars.API_BASE_URL }}
-        MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
-        MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
+        APP_ENV: ${{ inputs.app_env }}
+        DEBUG: ${{ inputs.debug }}
+        ENABLE_DEV_LOGIN: ${{ inputs.enable_dev_login }}
+        DEV_OTP: ${{ inputs.dev_otp }}
+        API_BASE_URL: ${{ inputs.api_base_url }}
+        MSG91_WIDGET_ID: ${{ inputs.msg91_widget_id }}
+        MSG91_WIDGET_AUTH_TOKEN: ${{ inputs.msg91_widget_auth_token }}
       run: |
         set -euo pipefail
         cat > .env <<EOF

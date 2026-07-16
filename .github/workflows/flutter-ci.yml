@@ -36,6 +36,14 @@ jobs:
 
       - name: Generate Flutter .env
         uses: ./.github/actions/setup-flutter-env
+        with:
+          app_env: ${{ vars.APP_ENV }}
+          debug: ${{ vars.DEBUG }}
+          enable_dev_login: ${{ vars.ENABLE_DEV_LOGIN }}
+          dev_otp: ${{ vars.DEV_OTP }}
+          api_base_url: ${{ vars.API_BASE_URL }}
+          msg91_widget_id: ${{ vars.MSG91_WIDGET_ID }}
+          msg91_widget_auth_token: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2

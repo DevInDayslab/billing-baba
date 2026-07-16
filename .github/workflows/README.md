@@ -46,12 +46,12 @@ Set repository **Variables**:
 | `ENABLE_DEV_LOGIN` | Flutter CI, Release |
 | `DEV_OTP` | Flutter CI, Release |
 | `API_BASE_URL` | Flutter CI, Release |
+| `MSG91_WIDGET_ID` | Flutter CI, Release |
 
 Set repository **Secrets**:
 
 | Secret | Used by |
 |--------|---------|
-| `MSG91_WIDGET_ID` | Flutter CI, Release |
 | `MSG91_WIDGET_AUTH_TOKEN` | Flutter CI, Release |
 
 macOS DMG signing/notarization can replace the ZIP packaging step in `release.yml` when certificates are configured.
