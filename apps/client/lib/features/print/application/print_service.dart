@@ -4,6 +4,7 @@ import 'package:billing_baba/features/print/application/print_data_service.dart'
 import 'package:billing_baba/features/print/application/print_output_service.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/models/printable_document.dart';
+import 'package:billing_baba/features/print/models/printable_pdf.dart';
 import 'package:billing_baba/features/print/templates/template_registry.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
 import 'package:billing_baba/features/settings/repositories/print_settings_repository.dart';
@@ -13,6 +14,8 @@ import 'package:flutter/material.dart';
 
 export 'package:billing_baba/features/print/application/print_exception.dart'
     show PrintException;
+export 'package:billing_baba/features/print/models/printable_pdf.dart'
+    show PrintablePdf;
 
 /// Orchestrates data loading, template rendering, and PDF output.
 class PrintService {
@@ -36,6 +39,12 @@ class PrintService {
   Future<Uint8List> generatePdf(PrintRequest request) async {
     final settings = await _loadSettings();
     return _renderPdf(request, settings: settings);
+  }
+
+  Future<PrintablePdf> prepare(PrintRequest request, {String? name}) async {
+    final settings = await _loadSettings();
+    final bytes = await _renderPdf(request, settings: settings);
+    return PrintablePdf(bytes: bytes, name: name ?? _defaultFilename(request));
   }
 
   Future<Uint8List> _renderPdf(

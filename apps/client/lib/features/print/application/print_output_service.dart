@@ -1,29 +1,38 @@
 import 'package:billing_baba/core/utils/platform_file_output.dart';
+import 'package:billing_baba/features/print/models/printable_pdf.dart';
+import 'package:billing_baba/features/settings/utils/thermal_pdf_page_format.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 
-import 'package:billing_baba/features/settings/utils/thermal_pdf_page_format.dart';
-
 enum _ThermalOutputAction { savePdf, saveImage, printToPrinter }
 
 /// Native print, preview, share, and save for generated PDF bytes.
 class PrintOutputService {
+  /// Opens the PDF in the system's default PDF viewer.
+  ///
+  /// `context` is accepted for call-site compatibility but is not used.
   Future<void> preview({
     required BuildContext context,
     required Uint8List bytes,
     String name = 'document',
     PdfPageFormat? format,
-  }) async {
-    await print(
-      context: context,
-      bytes: bytes,
-      name: name,
-      format: format,
+  }) {
+    return previewDocument(
+      PrintablePdf(bytes: bytes, name: name),
     );
   }
 
+  /// Opens a pre-rendered PDF in the system's default PDF viewer.
+  Future<void> previewDocument(PrintablePdf document) {
+    return PlatformFileOutput.openInDefaultViewer(
+      bytes: document.bytes,
+      filename: document.filename,
+    );
+  }
+
+  /// Shows the platform-native print dialog for [bytes].
   Future<void> print({
     required BuildContext context,
     required Uint8List bytes,
@@ -40,11 +49,44 @@ class PrintOutputService {
       return;
     }
 
-    await Printing.layoutPdf(
-      onLayout: (_) async => bytes,
-      name: name,
-      format: format ?? PdfPageFormat.standard,
-      dynamicLayout: false,
+    await printDocument(
+      PrintablePdf(bytes: bytes, name: name),
+      format: format,
+    );
+  }
+
+  /// Shows the platform-native print dialog for a pre-rendered PDF.
+  ///
+  /// Uses [Printing.layoutPdf] when the platform supports printing. Falls back
+  /// to the native share sheet, then to the default PDF viewer so the user can
+  /// print from there on unsupported or constrained devices.
+  Future<void> printDocument(
+    PrintablePdf document, {
+    PdfPageFormat? format,
+  }) async {
+    final info = await Printing.info();
+
+    if (info.canPrint) {
+      await Printing.layoutPdf(
+        onLayout: (_) async => document.bytes,
+        name: document.name,
+        format: format ?? PdfPageFormat.standard,
+        dynamicLayout: false,
+      );
+      return;
+    }
+
+    if (info.canShare) {
+      final shared = await Printing.sharePdf(
+        bytes: document.bytes,
+        filename: document.filename,
+      );
+      if (shared) return;
+    }
+
+    await PlatformFileOutput.openInDefaultViewer(
+      bytes: document.bytes,
+      filename: document.filename,
     );
   }
 
