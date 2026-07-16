@@ -101,7 +101,7 @@ abstract final class InvoicePrintDocumentService {
     );
 
     final doc = await buildDocument(
-      settings: settings,
+      settings: settings.copyWith(printerType: PrinterType.thermal),
       business: business,
       preview: preview,
       logoBytes: logoBytes,

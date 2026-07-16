@@ -6,6 +6,7 @@ import 'package:billing_baba/features/print/application/print_output_service.dar
 import 'package:billing_baba/features/print/presentation/providers/print_providers.dart';
 import 'package:billing_baba/features/settings/providers/print_settings_provider.dart';
 import 'package:billing_baba/features/settings/services/invoice_print_document_service.dart';
+import 'package:billing_baba/features/settings/utils/thermal_pdf_page_format.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -46,15 +47,22 @@ class PosReceiptPrinter {
   }
 
   Future<void> print({
+    required BuildContext context,
     required PosSale sale,
     required WidgetRef ref,
   }) async {
     final settings = await ref.read(printSettingsNotifierProvider.future);
     final bytes = await generatePdf(sale: sale, ref: ref);
     final name = 'pos_${sale.docNumber}';
+    final format = posReceiptPdfFormat(settings: settings, sale: sale);
 
     for (var copy = 0; copy < settings.numberOfCopies; copy++) {
-      await _outputService.print(bytes: bytes, name: name);
+      await _outputService.print(
+        context: context,
+        bytes: bytes,
+        name: name,
+        format: format,
+      );
     }
   }
 
@@ -63,12 +71,6 @@ class PosReceiptPrinter {
     required PosSale sale,
     required WidgetRef ref,
   }) async {
-    final bytes = await generatePdf(sale: sale, ref: ref);
-    if (!context.mounted) return;
-    await _outputService.preview(
-      context: context,
-      bytes: bytes,
-      name: 'pos_${sale.docNumber}',
-    );
+    await print(context: context, sale: sale, ref: ref);
   }
 }

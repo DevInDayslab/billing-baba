@@ -17,6 +17,7 @@ import 'package:billing_baba/features/settings/models/print_settings.dart';
 import 'package:billing_baba/features/settings/services/invoice_print_document_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pdf/pdf.dart';
 
 PrintableDocument _commercialFixture() {
   const line = SalesDocumentLineDto(
@@ -208,6 +209,27 @@ void main() {
 
       expect(bytes, isNotEmpty);
       expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
+
+    test('thermal print settings produce a narrow PDF page width', () async {
+      const settings = PrintSettings.defaults();
+      final bytes =
+          await InvoicePrintDocumentService.buildBytesFromPrintableDocument(
+        settings: settings,
+        document: _commercialFixture(),
+      );
+
+      final pdfText = String.fromCharCodes(bytes);
+      final mediaBoxMatch =
+          RegExp(r'/MediaBox\s*\[\s*0\s+0\s+([\d.]+)').firstMatch(pdfText);
+      expect(mediaBoxMatch, isNotNull);
+
+      final pageWidth = double.parse(mediaBoxMatch!.group(1)!);
+      expect(
+        pageWidth,
+        lessThan(PdfPageFormat.a4.width * 0.6),
+        reason: 'Thermal PDF width should be much narrower than A4',
+      );
     });
   });
 }

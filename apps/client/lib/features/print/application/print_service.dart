@@ -8,6 +8,7 @@ import 'package:billing_baba/features/print/templates/template_registry.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
 import 'package:billing_baba/features/settings/repositories/print_settings_repository.dart';
 import 'package:billing_baba/features/settings/services/invoice_print_document_service.dart';
+import 'package:billing_baba/features/settings/utils/thermal_pdf_page_format.dart';
 import 'package:flutter/material.dart';
 
 export 'package:billing_baba/features/print/application/print_exception.dart'
@@ -69,16 +70,26 @@ class PrintService {
       context: context,
       bytes: bytes,
       name: name ?? _defaultFilename(request),
+      format: layoutPdfFormatFor(settings),
     );
   }
 
-  Future<void> print(PrintRequest request, {String? name}) async {
+  Future<void> print({
+    required BuildContext context,
+    required PrintRequest request,
+    String? name,
+  }) async {
     final settings = await _loadSettings();
     final bytes = await _renderPdf(request, settings: settings);
     final resolvedName = name ?? _defaultFilename(request);
 
     for (var copy = 0; copy < settings.numberOfCopies; copy++) {
-      await _outputService.print(bytes: bytes, name: resolvedName);
+      await _outputService.print(
+        context: context,
+        bytes: bytes,
+        name: resolvedName,
+        format: layoutPdfFormatFor(settings),
+      );
     }
   }
 

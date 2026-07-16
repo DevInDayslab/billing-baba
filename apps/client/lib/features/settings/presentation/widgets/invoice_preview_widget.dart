@@ -193,18 +193,18 @@ class _ThermalPreview extends StatelessWidget {
   final InvoicePreviewData data;
 
   double get _widthMm => switch (settings.thermalPageSize) {
-        ThermalPageSize.twoInch => 58,
-        ThermalPageSize.threeInch => 68,
-        ThermalPageSize.fourInch => 88,
+        ThermalPageSize.twoInch => 62,
+        ThermalPageSize.threeInch => 80,
+        ThermalPageSize.fourInch => 92,
       };
 
   double get _baseFontSize {
     final scale = switch (settings.thermalPageSize) {
-      ThermalPageSize.twoInch => 0.85,
+      ThermalPageSize.twoInch => 0.9,
       ThermalPageSize.threeInch => 1.0,
-      ThermalPageSize.fourInch => 1.1,
+      ThermalPageSize.fourInch => 1.12,
     };
-    return 9 * scale;
+    return 9.5 * scale;
   }
 
   TextStyle _style({
@@ -233,7 +233,10 @@ class _ThermalPreview extends StatelessWidget {
     final content = Container(
       width: width,
       color: AppColors.surface,
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
@@ -279,27 +282,33 @@ class _ThermalPreview extends StatelessWidget {
               data.phone != null &&
               data.phone!.isNotEmpty)
             Text(
-              data.phone!,
+              'Phone: ${data.phone!}',
               style: _style(),
               textAlign: TextAlign.center,
             ),
           const Divider(height: AppSpacing.md),
-          Text(
-            data.invoiceNumber,
-            style: _style(emphasized: true),
-            textAlign: TextAlign.center,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  'No: ${data.invoiceNumber}',
+                  style: _style(emphasized: true),
+                ),
+              ),
+              Text(
+                dateFormat.format(data.date),
+                style: _style(scale: 0.95),
+                textAlign: TextAlign.right,
+              ),
+            ],
           ),
-          Text(
-            dateFormat.format(data.date),
-            style: _style(),
-            textAlign: TextAlign.center,
-          ),
-          if (data.customerName != null && data.customerName!.isNotEmpty)
-            Text(
-              data.customerName!,
-              style: _style(),
-              textAlign: TextAlign.center,
-            ),
+          if (data.customerName != null && data.customerName!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text('BILL TO:', style: _style(emphasized: true)),
+            const SizedBox(height: AppSpacing.xs),
+            Text(data.customerName!, style: _style()),
+          ],
           const Divider(height: AppSpacing.md),
           _ThermalItemsTable(
             items: data.items,
@@ -309,7 +318,7 @@ class _ThermalPreview extends StatelessWidget {
           ),
           const Divider(height: AppSpacing.sm),
           _TotalLine(
-            label: 'Subtotal',
+            label: 'Sub Total',
             value: currency.format(data.subtotal),
             style: _style(),
           ),
@@ -318,8 +327,9 @@ class _ThermalPreview extends StatelessWidget {
             value: currency.format(data.tax),
             style: _style(),
           ),
+          const Divider(height: AppSpacing.sm),
           _TotalLine(
-            label: 'Grand Total',
+            label: 'Total Amount',
             value: currency.format(data.total),
             style: _style(emphasized: true),
           ),
@@ -583,7 +593,7 @@ class _ThermalItemsTable extends StatelessWidget {
         TableRow(
           children: [
             Text('Item', style: headerStyle),
-            Text('Qty', style: headerStyle, textAlign: TextAlign.right),
+            Text('Qty', style: headerStyle, textAlign: TextAlign.center),
             Text('Rate', style: headerStyle, textAlign: TextAlign.right),
             Text('Total', style: headerStyle, textAlign: TextAlign.right),
           ],
@@ -592,7 +602,7 @@ class _ThermalItemsTable extends StatelessWidget {
           TableRow(
             children: [
               Text(item.name, style: style, maxLines: 2),
-              Text('${item.qty}', style: style, textAlign: TextAlign.right),
+              Text('${item.qty}', style: style, textAlign: TextAlign.center),
               Text(
                 currency.format(item.rate),
                 style: style,
@@ -685,10 +695,10 @@ class _TotalLine extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: style),
-          Text(value, style: style),
+          Expanded(child: Text(label, style: style)),
+          Text(value, style: style, textAlign: TextAlign.right),
         ],
       ),
     );
