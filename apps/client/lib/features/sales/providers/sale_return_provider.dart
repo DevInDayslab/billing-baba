@@ -203,15 +203,19 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-SalesDocumentListQuery _buildListQuery(SaleReturnFiltersState filters) {
+SalesDocumentListQuery buildSaleReturnListQuery(
+  SaleReturnFiltersState filters, {
+  int? page,
+  int? limit,
+}) {
   final dateRange = _resolveTimeRange(
     filters.timeRangeOption,
     filters.customDateRange,
   );
 
   return SalesDocumentListQuery(
-    page: filters.currentPage,
-    limit: saleReturnPageSize,
+    page: page ?? filters.currentPage,
+    limit: limit ?? saleReturnPageSize,
     documentType: SalesDocumentType.salesReturn.apiValue,
     status: _documentStatusFromFilterLabel(filters.selectedStatus),
     from: dateRange?.start.toUtc().toIso8601String(),
@@ -220,7 +224,7 @@ SalesDocumentListQuery _buildListQuery(SaleReturnFiltersState filters) {
   );
 }
 
-List<SaleInvoiceModel> _applyClientFilters(
+List<SaleInvoiceModel> applySaleReturnClientFilters(
   List<SaleInvoiceModel> returns,
   SaleReturnFiltersState filters,
 ) {
@@ -296,10 +300,10 @@ class SaleReturns extends _$SaleReturns {
   Future<PaginatedSaleInvoices> _fetchPage() async {
     final filters = ref.read(saleReturnFiltersProvider);
     final service = await ref.read(salesServiceProvider.future);
-    final page = await service.fetchInvoicesPage(_buildListQuery(filters));
+    final page = await service.fetchInvoicesPage(buildSaleReturnListQuery(filters));
 
     return PaginatedSaleInvoices(
-      items: _applyClientFilters(page.items, filters),
+      items: applySaleReturnClientFilters(page.items, filters),
       currentPage: page.currentPage,
       totalPages: page.totalPages,
       totalItems: page.totalItems,

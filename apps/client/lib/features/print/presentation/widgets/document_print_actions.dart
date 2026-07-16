@@ -38,7 +38,11 @@ abstract final class DocumentPrintActions {
     return _run(
       context,
       ref,
-      (service) => service.print(request, name: filename),
+      (service) => service.print(
+        context: context,
+        request: request,
+        name: filename,
+      ),
     );
   }
 

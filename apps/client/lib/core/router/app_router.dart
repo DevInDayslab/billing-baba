@@ -45,6 +45,8 @@ import 'package:billing_baba/features/sales/presentation/pages/sale_fa_page.dart
 import 'package:billing_baba/features/sales/presentation/pages/sale_invoices_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_return_page.dart';
+import 'package:billing_baba/features/settings/presentation/screens/print_settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/screens/settings_screen.dart';
 import 'package:billing_baba/features/utilities/presentation/pages/barcode_generator_page.dart';
 import 'package:billing_baba/features/utilities/presentation/pages/import_items_page.dart';
 import 'package:flutter/material.dart';
@@ -476,8 +478,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.settingsPreferences,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Preferences'),
+            builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsPrint,
+            builder: (context, state) => const PrintSettingsScreen(),
           ),
           GoRoute(
             path: AppRoutes.settingsBackup,

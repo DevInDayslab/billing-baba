@@ -21,6 +21,7 @@ import 'package:billing_baba/features/purchases/data/purchase_fa_repository.dart
 import 'package:billing_baba/features/purchases/data/purchase_repository.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
 import 'package:billing_baba/features/sales/data/job_work_repository.dart';
+import 'package:billing_baba/features/sales/data/sale_fa_repository.dart';
 import 'package:billing_baba/features/sales/data/sales_repository.dart';
 import 'package:billing_baba/features/sales/models/dto/job_work_order_dto.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
@@ -36,6 +37,7 @@ class PrintDataService {
     required this._partyRepository,
     required this._expenseRepository,
     required this._purchaseFaRepository,
+    required this._saleFaRepository,
     required this._jobWorkRepository,
     required this._imageCache,
   });
@@ -48,6 +50,7 @@ class PrintDataService {
   final PartyRepository _partyRepository;
   final ExpenseRepository _expenseRepository;
   final PurchaseFaRepository _purchaseFaRepository;
+  final SaleFaRepository _saleFaRepository;
   final JobWorkRepository _jobWorkRepository;
   final PrintImageCache _imageCache;
   final Map<String, ItemDetailDto> _itemCache = {};
@@ -73,6 +76,7 @@ class PrintDataService {
       ),
       ExpensePrintRequest() => _loadExpense(request),
       FixedAssetPurchasePrintRequest() => _loadFixedAssetPurchase(request),
+      SaleFaPrintRequest() => _loadSaleFa(request),
       JobWorkOrderPrintRequest() => _loadJobWorkOrder(request),
     };
   }
@@ -306,6 +310,49 @@ class PrintDataService {
       taxSummary: PrintableTaxSummary.zero,
       assets: assets,
       purchaseFaBatch: batch,
+    );
+  }
+
+  Future<PrintableDocument> _loadSaleFa(PrintRequest request) async {
+    final batch = await _saleFaRepository.getBatch(request.id);
+    final profile = await _businessService.fetchBusinessProfile();
+    final company = PrintableCompany(profile: profile);
+
+    final partyFuture = _loadParty(batch.partyId);
+    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+
+    late final PrintableParty? party;
+    late final PrintableAssets assets;
+
+    await Future.wait<void>([
+      partyFuture.then((value) => party = value),
+      assetsFuture.then((value) => assets = value),
+    ]);
+
+    return PrintableDocument(
+      kind: request.kind,
+      request: request,
+      company: company,
+      party: party,
+      metadata: PrintableMetadata(
+        documentNumber: batch.referenceNumber ?? batch.id,
+        documentSeries: null,
+        documentDate: batch.saleDate,
+        status: batch.status,
+        paymentMode: batch.paymentMode,
+        paymentReference: batch.referenceNumber,
+        notes: batch.notes,
+        dueDate: batch.dueDate,
+      ),
+      totals: _totalsFromDocument(
+        subtotal: batch.subtotal,
+        discountTotal: '0',
+        taxAmount: batch.taxAmount,
+        totalAmount: batch.totalAmount,
+      ),
+      taxSummary: PrintableTaxSummary.zero,
+      assets: assets,
+      saleFaBatch: batch,
     );
   }
 
@@ -557,6 +604,7 @@ class PrintDataService {
       case PrintableDocumentKind.paymentOut:
       case PrintableDocumentKind.expense:
       case PrintableDocumentKind.fixedAssetPurchase:
+      case PrintableDocumentKind.saleFa:
       case PrintableDocumentKind.jobWorkOrder:
       case PrintableDocumentKind.posReceipt:
         throw PrintException('Unexpected sales document kind: $kind');
@@ -599,6 +647,7 @@ class PrintDataService {
       case PrintableDocumentKind.paymentOut:
       case PrintableDocumentKind.expense:
       case PrintableDocumentKind.fixedAssetPurchase:
+      case PrintableDocumentKind.saleFa:
       case PrintableDocumentKind.jobWorkOrder:
       case PrintableDocumentKind.posReceipt:
         throw PrintException('Unexpected purchase document kind: $kind');

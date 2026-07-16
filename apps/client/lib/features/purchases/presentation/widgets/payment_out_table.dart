@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/presentation/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/payment_out_status_badge.dart';
@@ -82,7 +83,8 @@ class PaymentOutTable extends ConsumerWidget {
                   tooltip: 'Excel Report',
                 ),
                 IconButton(
-                  onPressed: () => debugPrint('Print tapped'),
+                  onPressed: () =>
+                      ModulePrintActions.printPaymentOut(context, ref),
                   icon: const Icon(Icons.print_outlined, size: 20),
                   color: AppColors.textSecondary,
                   tooltip: 'Print',

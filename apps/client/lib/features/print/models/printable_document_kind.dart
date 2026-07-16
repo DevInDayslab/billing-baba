@@ -13,6 +13,7 @@ enum PrintableDocumentKind {
   paymentOut,
   expense,
   fixedAssetPurchase,
+  saleFa,
   jobWorkOrder,
   posReceipt;
 
@@ -30,6 +31,7 @@ enum PrintableDocumentKind {
     PrintableDocumentKind.paymentOut => 'Payment Out',
     PrintableDocumentKind.expense => 'Expense',
     PrintableDocumentKind.fixedAssetPurchase => 'Fixed Asset Purchase',
+    PrintableDocumentKind.saleFa => 'Sale FA',
     PrintableDocumentKind.jobWorkOrder => 'Job Work Order',
     PrintableDocumentKind.posReceipt => 'POS Receipt',
   };
@@ -49,6 +51,7 @@ enum PrintableDocumentKind {
     paymentOut ||
     expense ||
     fixedAssetPurchase ||
+    saleFa ||
     jobWorkOrder ||
     posReceipt => false,
   };
@@ -59,7 +62,9 @@ enum PrintableDocumentKind {
     paymentOut ||
     expense ||
     fixedAssetPurchase ||
-    jobWorkOrder => true,
+    saleFa ||
+    jobWorkOrder =>
+      true,
     saleInvoice ||
     purchaseBill ||
     estimate ||

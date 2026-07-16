@@ -12,6 +12,7 @@ import 'package:billing_baba/features/purchases/models/dto/expense_dto.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_fa_dto.dart';
 import 'package:billing_baba/features/sales/models/dto/job_work_order_dto.dart';
+import 'package:billing_baba/features/sales/models/dto/sale_fa_dto.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
 
 /// Unified domain model for all printable document types.
@@ -32,6 +33,7 @@ class PrintableDocument {
     this.payment,
     this.expense,
     this.purchaseFaBatch,
+    this.saleFaBatch,
     this.jobWorkOrder,
     this.jobWorkMaterialNames = const {},
   });
@@ -61,6 +63,9 @@ class PrintableDocument {
 
   /// Raw fixed asset batch when loaded from the purchases API.
   final PurchaseFaBatchDto? purchaseFaBatch;
+
+  /// Raw sale FA batch when loaded from the sales FA API.
+  final SaleFaBatchDto? saleFaBatch;
 
   /// Raw job work order when loaded from the job work API.
   final JobWorkOrderDto? jobWorkOrder;

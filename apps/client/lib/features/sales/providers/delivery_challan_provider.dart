@@ -151,7 +151,7 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-SalesDocumentListQuery _buildChallanListQuery(
+SalesDocumentListQuery buildChallanListQuery(
   DeliveryChallanFiltersState filters,
   String searchQuery, {
   int? page,
@@ -185,7 +185,7 @@ bool needsChallanClientSideFiltering(DeliveryChallanFiltersState filters) {
       filters.selectedFirm != 'All Firms';
 }
 
-List<SaleInvoiceModel> _filterChallanSeries(List<SaleInvoiceModel> items) {
+List<SaleInvoiceModel> filterChallanSeries(List<SaleInvoiceModel> items) {
   return items
       .where(
         (item) => item.documentSeries == SalesConstants.challanSeries,
@@ -367,7 +367,7 @@ class DeliveryChallans extends _$DeliveryChallans {
       final allItems = await PaginatedFetch.fetchAll<SaleInvoiceModel>(
         fetchPage: (page) async {
           final result = await service.fetchInvoicesPage(
-            _buildChallanListQuery(
+            buildChallanListQuery(
               filters,
               search,
               page: page,
@@ -375,7 +375,7 @@ class DeliveryChallans extends _$DeliveryChallans {
             ),
           );
           return (
-            items: _filterChallanSeries(result.items),
+            items: filterChallanSeries(result.items),
             totalPages: result.totalPages,
           );
         },
@@ -386,10 +386,10 @@ class DeliveryChallans extends _$DeliveryChallans {
     }
 
     final page = await service.fetchInvoicesPage(
-      _buildChallanListQuery(filters, search),
+      buildChallanListQuery(filters, search),
     );
 
-    final seriesFiltered = _filterChallanSeries(page.items);
+    final seriesFiltered = filterChallanSeries(page.items);
     return PaginatedSaleInvoices(
       items: seriesFiltered,
       currentPage: page.currentPage,

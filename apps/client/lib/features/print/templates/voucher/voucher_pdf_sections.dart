@@ -88,11 +88,14 @@ abstract final class VoucherPdfSections {
     VoucherLayoutConfig config,
   ) {
     final party = document.party;
-    final batch = document.purchaseFaBatch;
+    final purchaseBatch = document.purchaseFaBatch;
+    final saleBatch = document.saleFaBatch;
     final expense = document.expense;
 
-    final displayName =
-        party?.dto.name ?? expense?.partyName ?? batch?.partyName;
+    final displayName = party?.dto.name ??
+        expense?.partyName ??
+        purchaseBatch?.partyName ??
+        saleBatch?.partyName;
 
     if (displayName == null || displayName.trim().isEmpty) {
       return pw.SizedBox();
@@ -125,7 +128,8 @@ abstract final class VoucherPdfSections {
     final meta = document.metadata;
     final payment = document.payment;
     final expense = document.expense;
-    final batch = document.purchaseFaBatch;
+    final purchaseBatch = document.purchaseFaBatch;
+    final saleBatch = document.saleFaBatch;
     final order = document.jobWorkOrder;
 
     final rows = <(String, String)>[];
@@ -160,16 +164,30 @@ abstract final class VoucherPdfSections {
       if (expense.notes != null && expense.notes!.trim().isNotEmpty) {
         rows.add(('Notes', expense.notes!.trim()));
       }
-    } else if (batch != null) {
-      if (batch.referenceNumber != null && batch.referenceNumber!.isNotEmpty) {
-        rows.add(('Reference', batch.referenceNumber!));
+    } else if (purchaseBatch != null) {
+      if (purchaseBatch.referenceNumber != null &&
+          purchaseBatch.referenceNumber!.isNotEmpty) {
+        rows.add(('Reference', purchaseBatch.referenceNumber!));
       }
-      if (batch.paymentMode != null && batch.paymentMode!.isNotEmpty) {
-        rows.add(('Payment Method', batch.paymentMode!));
+      if (purchaseBatch.paymentMode != null &&
+          purchaseBatch.paymentMode!.isNotEmpty) {
+        rows.add(('Payment Method', purchaseBatch.paymentMode!));
       }
-      rows.add(('Purchase Value', _format(batch.totalAmount)));
-      if (batch.notes != null && batch.notes!.trim().isNotEmpty) {
-        rows.add(('Notes', batch.notes!.trim()));
+      rows.add(('Purchase Value', _format(purchaseBatch.totalAmount)));
+      if (purchaseBatch.notes != null && purchaseBatch.notes!.trim().isNotEmpty) {
+        rows.add(('Notes', purchaseBatch.notes!.trim()));
+      }
+    } else if (saleBatch != null) {
+      if (saleBatch.referenceNumber != null &&
+          saleBatch.referenceNumber!.isNotEmpty) {
+        rows.add(('Reference', saleBatch.referenceNumber!));
+      }
+      if (saleBatch.paymentMode != null && saleBatch.paymentMode!.isNotEmpty) {
+        rows.add(('Payment Method', saleBatch.paymentMode!));
+      }
+      rows.add(('Sale Value', _format(saleBatch.totalAmount)));
+      if (saleBatch.notes != null && saleBatch.notes!.trim().isNotEmpty) {
+        rows.add(('Notes', saleBatch.notes!.trim()));
       }
     } else if (order != null) {
       if (order.finishedGoodName.isNotEmpty) {
@@ -276,9 +294,52 @@ abstract final class VoucherPdfSections {
   }
 
   static pw.Widget assetTable(PrintableDocument document) {
-    final batch = document.purchaseFaBatch;
-    if (batch == null || batch.assets.isEmpty) return pw.SizedBox();
+    final purchaseBatch = document.purchaseFaBatch;
+    final saleBatch = document.saleFaBatch;
+    if (purchaseBatch != null && purchaseBatch.assets.isNotEmpty) {
+      return _assetTable(
+        assets: [
+          for (final asset in purchaseBatch.assets)
+            (
+              name: asset.assetCategory != null &&
+                      asset.assetCategory!.isNotEmpty
+                  ? '${asset.assetName}\n${asset.assetCategory}'
+                  : asset.assetName,
+              qty: asset.qty,
+              rate: asset.purchasePrice,
+              total: asset.lineTotal,
+            ),
+        ],
+      );
+    }
+    if (saleBatch != null && saleBatch.assets.isNotEmpty) {
+      return _assetTable(
+        assets: [
+          for (final asset in saleBatch.assets)
+            (
+              name: asset.assetCategory != null &&
+                      asset.assetCategory!.isNotEmpty
+                  ? '${asset.assetName}\n${asset.assetCategory}'
+                  : asset.assetName,
+              qty: asset.qty,
+              rate: asset.salePrice,
+              total: asset.lineTotal,
+            ),
+        ],
+      );
+    }
+    return pw.SizedBox();
+  }
 
+  static pw.Widget _assetTable({
+    required List<
+        ({
+          String name,
+          String qty,
+          String rate,
+          String total,
+        })> assets,
+  }) {
     return pw.Container(
       margin: const pw.EdgeInsets.only(bottom: InvoicePdfTheme.spacingMd),
       child: pw.Column(
@@ -320,26 +381,21 @@ abstract final class VoucherPdfSections {
                   ),
                 ],
               ),
-              for (final asset in batch.assets)
+              for (final asset in assets)
                 pw.TableRow(
                   verticalAlignment: pw.TableCellVerticalAlignment.middle,
                   children: [
-                    InvoicePdfWidgets.tableBodyCell(
-                      asset.assetCategory != null &&
-                              asset.assetCategory!.isNotEmpty
-                          ? '${asset.assetName}\n${asset.assetCategory}'
-                          : asset.assetName,
-                    ),
+                    InvoicePdfWidgets.tableBodyCell(asset.name),
                     InvoicePdfWidgets.tableBodyCell(
                       asset.qty,
                       align: pw.TextAlign.right,
                     ),
                     InvoicePdfWidgets.tableBodyCell(
-                      _format(asset.purchasePrice),
+                      _format(asset.rate),
                       align: pw.TextAlign.right,
                     ),
                     InvoicePdfWidgets.tableBodyCell(
-                      _format(asset.lineTotal),
+                      _format(asset.total),
                       align: pw.TextAlign.right,
                     ),
                   ],

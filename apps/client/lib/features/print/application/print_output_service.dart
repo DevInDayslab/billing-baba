@@ -1,8 +1,12 @@
 import 'package:billing_baba/core/utils/platform_file_output.dart';
 import 'package:billing_baba/features/print/models/printable_pdf.dart';
+import 'package:billing_baba/features/settings/utils/thermal_pdf_page_format.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
+
+enum _ThermalOutputAction { savePdf, saveImage, printToPrinter }
 
 /// Native print, preview, share, and save for generated PDF bytes.
 class PrintOutputService {
@@ -13,6 +17,7 @@ class PrintOutputService {
     required BuildContext context,
     required Uint8List bytes,
     String name = 'document',
+    PdfPageFormat? format,
   }) {
     return previewDocument(
       PrintablePdf(bytes: bytes, name: name),
@@ -29,10 +34,25 @@ class PrintOutputService {
 
   /// Shows the platform-native print dialog for [bytes].
   Future<void> print({
+    required BuildContext context,
     required Uint8List bytes,
     String name = 'document',
-  }) {
-    return printDocument(PrintablePdf(bytes: bytes, name: name));
+    PdfPageFormat? format,
+  }) async {
+    if (format != null && isThermalRollFormat(format)) {
+      await _printThermalReceipt(
+        context: context,
+        bytes: bytes,
+        format: format,
+        name: name,
+      );
+      return;
+    }
+
+    await printDocument(
+      PrintablePdf(bytes: bytes, name: name),
+      format: format,
+    );
   }
 
   /// Shows the platform-native print dialog for a pre-rendered PDF.
@@ -40,13 +60,17 @@ class PrintOutputService {
   /// Uses [Printing.layoutPdf] when the platform supports printing. Falls back
   /// to the native share sheet, then to the default PDF viewer so the user can
   /// print from there on unsupported or constrained devices.
-  Future<void> printDocument(PrintablePdf document) async {
+  Future<void> printDocument(
+    PrintablePdf document, {
+    PdfPageFormat? format,
+  }) async {
     final info = await Printing.info();
 
     if (info.canPrint) {
       await Printing.layoutPdf(
         onLayout: (_) async => document.bytes,
         name: document.name,
+        format: format ?? PdfPageFormat.standard,
         dynamicLayout: false,
       );
       return;
@@ -66,6 +90,179 @@ class PrintOutputService {
     );
   }
 
+  Future<void> _printThermalReceipt({
+    required BuildContext context,
+    required Uint8List bytes,
+    required PdfPageFormat format,
+    required String name,
+  }) async {
+    if (!context.mounted) return;
+    final action = await showDialog<_ThermalOutputAction>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Thermal receipt'),
+        content: const Text(
+          'Save the receipt as PDF or image to keep the correct roll size.\n\n'
+          'Do not use "Microsoft Print to PDF" — it always outputs Letter/A4.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, _ThermalOutputAction.savePdf),
+            child: const Text('Save PDF'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, _ThermalOutputAction.saveImage),
+            child: const Text('Save image'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(
+              dialogContext,
+              _ThermalOutputAction.printToPrinter,
+            ),
+            child: const Text('Print to printer'),
+          ),
+        ],
+      ),
+    );
+
+    if (action == null || !context.mounted) return;
+
+    switch (action) {
+      case _ThermalOutputAction.savePdf:
+        await _saveThermalPdf(context: context, bytes: bytes, name: name);
+      case _ThermalOutputAction.saveImage:
+        await _saveThermalImage(context: context, bytes: bytes, name: name);
+      case _ThermalOutputAction.printToPrinter:
+        await _sendThermalToPrinter(
+          context: context,
+          bytes: bytes,
+          format: format,
+          name: name,
+        );
+    }
+  }
+
+  Future<void> _saveThermalPdf({
+    required BuildContext context,
+    required Uint8List bytes,
+    required String name,
+  }) async {
+    if (PlatformFileOutput.isDesktop) {
+      final path = await PlatformFileOutput.saveViaDialog(
+        filename: name,
+        bytes: bytes,
+        extension: 'pdf',
+      );
+      if (path != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Receipt saved to $path')),
+        );
+      }
+      return;
+    }
+
+    await PlatformFileOutput.shareFromTemp(
+      filename: name,
+      bytes: bytes,
+      mimeType: 'application/pdf',
+      extension: 'pdf',
+    );
+  }
+
+  Future<void> _saveThermalImage({
+    required BuildContext context,
+    required Uint8List bytes,
+    required String name,
+  }) async {
+    final pngBytes = await _pdfToPng(bytes);
+    if (pngBytes == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not convert receipt to image on this device.'),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (PlatformFileOutput.isDesktop) {
+      final path = await PlatformFileOutput.saveViaDialog(
+        filename: name,
+        bytes: pngBytes,
+        extension: 'png',
+      );
+      if (path != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Image saved to $path')),
+        );
+      }
+      return;
+    }
+
+    await PlatformFileOutput.shareFromTemp(
+      filename: name,
+      bytes: pngBytes,
+      mimeType: 'image/png',
+      extension: 'png',
+    );
+  }
+
+  Future<Uint8List?> _pdfToPng(Uint8List pdfBytes) async {
+    final info = await Printing.info();
+    if (!info.canRaster) return null;
+
+    await for (final page in Printing.raster(pdfBytes, dpi: 203)) {
+      return page.toPng();
+    }
+    return null;
+  }
+
+  Future<void> _sendThermalToPrinter({
+    required BuildContext context,
+    required Uint8List bytes,
+    required PdfPageFormat format,
+    required String name,
+  }) async {
+    if (PlatformFileOutput.isDesktop) {
+      final info = await Printing.info();
+      if (!info.canListPrinters) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No printers found. Use Save PDF instead.'),
+          ),
+        );
+        return;
+      }
+
+      if (!context.mounted) return;
+      final printer = await Printing.pickPrinter(
+        context: context,
+        title: 'Select thermal printer',
+      );
+      if (printer == null) return;
+
+      await Printing.directPrintPdf(
+        printer: printer,
+        onLayout: (_) async => bytes,
+        name: name,
+        format: format,
+        dynamicLayout: false,
+      );
+      return;
+    }
+
+    await Printing.layoutPdf(
+      onLayout: (_) async => bytes,
+      name: name,
+      format: format,
+      dynamicLayout: false,
+    );
+  }
+
   Future<void> share({
     required Uint8List bytes,
     required String filename,
@@ -78,8 +275,6 @@ class PrintOutputService {
       return;
     }
 
-    // Desktop: native share UI via the printing plugin. share_plus cannot read
-    // sandboxed temp files on macOS/Windows.
     if (PlatformFileOutput.isDesktop) {
       try {
         await Printing.sharePdf(bytes: bytes, filename: basename);
