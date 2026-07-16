@@ -35,7 +35,10 @@ bun test tests               # full suite (needs DATABASE_URL + JWT secrets)
 ## Release configuration
 
 Flutter workflows generate `apps/client/.env` at runtime via
-[setup-flutter-env](../actions/setup-flutter-env/action.yml). Never commit `.env`.
+[setup-flutter-env.sh](../scripts/setup-flutter-env.sh). Never commit `.env`.
+
+Workflow steps set repository variables/secrets in `env:` and call the script
+from the repository root (`working-directory: .`).
 
 Set repository **Variables**:
 
@@ -46,12 +49,12 @@ Set repository **Variables**:
 | `ENABLE_DEV_LOGIN` | Flutter CI, Release |
 | `DEV_OTP` | Flutter CI, Release |
 | `API_BASE_URL` | Flutter CI, Release |
-| `MSG91_WIDGET_ID` | Flutter CI, Release |
 
 Set repository **Secrets**:
 
 | Secret | Used by |
 |--------|---------|
+| `MSG91_WIDGET_ID` | Flutter CI, Release |
 | `MSG91_WIDGET_AUTH_TOKEN` | Flutter CI, Release |
 
 macOS DMG signing/notarization can replace the ZIP packaging step in `release.yml` when certificates are configured.

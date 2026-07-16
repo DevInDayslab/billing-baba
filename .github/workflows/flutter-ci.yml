@@ -35,15 +35,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate Flutter .env
-        uses: ./.github/actions/setup-flutter-env
-        with:
-          app_env: ${{ vars.APP_ENV }}
-          debug: ${{ vars.DEBUG }}
-          enable_dev_login: ${{ vars.ENABLE_DEV_LOGIN }}
-          dev_otp: ${{ vars.DEV_OTP }}
-          api_base_url: ${{ vars.API_BASE_URL }}
-          msg91_widget_id: ${{ vars.MSG91_WIDGET_ID }}
-          msg91_widget_auth_token: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
+        working-directory: .
+        env:
+          FLUTTER_ENV_DIR: apps/client
+          APP_ENV: ${{ vars.APP_ENV }}
+          DEBUG: ${{ vars.DEBUG }}
+          ENABLE_DEV_LOGIN: ${{ vars.ENABLE_DEV_LOGIN }}
+          DEV_OTP: ${{ vars.DEV_OTP }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
+          MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
+        run: bash .github/scripts/setup-flutter-env.sh
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
