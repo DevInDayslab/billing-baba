@@ -85,6 +85,7 @@ class PosSaleService {
       }
 
       final _ = await _remote.finalizeDocument(docDto.id);
+      await _remote.finalizeDocument(docDto.id);
       final finalizedDto = await _remote.getDocument(docDto.id);
 
       final paymentPartyId = partyId ?? PosConstants.walkInPartyId;
