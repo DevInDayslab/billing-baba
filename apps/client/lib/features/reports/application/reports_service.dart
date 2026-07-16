@@ -398,7 +398,10 @@ class SalePurchaseOrdersReportData {
 }
 
 class SalePurchaseOrderItemsReportData {
-  const SalePurchaseOrderItemsReportData({required this.rows, required this.meta});
+  const SalePurchaseOrderItemsReportData({
+    required this.rows,
+    required this.meta,
+  });
 
   final List<ReportOrderItemRow> rows;
   final ReportPaginationMeta meta;
@@ -524,7 +527,9 @@ class ReportsService {
     try {
       final payload = await _repository.getPartyStatement(query);
       return PartyStatementReportData(
-        entries: payload.entries.map(ReportMapper.toPartyStatementEntry).toList(),
+        entries: payload.entries
+            .map(ReportMapper.toPartyStatementEntry)
+            .toList(),
         summary: ReportMapper.toPartyStatementSummary(payload.summary),
       );
     } on DioException catch (error) {
@@ -592,8 +597,9 @@ class ReportsService {
       final payload = await _repository.getBalanceSheet(query);
       return BalanceSheetReportData(
         assets: payload.assets.map(ReportMapper.toBalanceSheetItem).toList(),
-        liabilities:
-            payload.liabilities.map(ReportMapper.toBalanceSheetItem).toList(),
+        liabilities: payload.liabilities
+            .map(ReportMapper.toBalanceSheetItem)
+            .toList(),
         assetsTotal: _amount(payload.assetsTotal),
         liabilitiesTotal: _amount(payload.liabilitiesTotal),
         netProfit: _amount(payload.netProfit),
@@ -644,7 +650,9 @@ class ReportsService {
     }
   }
 
-  Future<BillWiseProfitReportData> fetchBillWiseProfit(ReportQuery query) async {
+  Future<BillWiseProfitReportData> fetchBillWiseProfit(
+    ReportQuery query,
+  ) async {
     try {
       final response = await _repository.getBillWiseProfit(query);
       return BillWiseProfitReportData(
@@ -838,7 +846,9 @@ class ReportsService {
     try {
       final payload = await _repository.getSalePurchaseByItemCategory(query);
       return CategoryAmountReportData(
-        rows: payload.rows.map(ReportExtendedMapper.toCategoryAmountRow).toList(),
+        rows: payload.rows
+            .map(ReportExtendedMapper.toCategoryAmountRow)
+            .toList(),
       );
     } on DioException catch (error) {
       throw mapReportsError(error);
@@ -851,7 +861,9 @@ class ReportsService {
     try {
       final payload = await _repository.getStockSummaryByItemCategory(query);
       return CategoryAmountReportData(
-        rows: payload.rows.map(ReportExtendedMapper.toCategoryAmountRow).toList(),
+        rows: payload.rows
+            .map(ReportExtendedMapper.toCategoryAmountRow)
+            .toList(),
       );
     } on DioException catch (error) {
       throw mapReportsError(error);
@@ -864,7 +876,9 @@ class ReportsService {
     try {
       final payload = await _repository.getItemCategoryWiseProfitLoss(query);
       return CategoryAmountReportData(
-        rows: payload.rows.map(ReportExtendedMapper.toCategoryAmountRow).toList(),
+        rows: payload.rows
+            .map(ReportExtendedMapper.toCategoryAmountRow)
+            .toList(),
       );
     } on DioException catch (error) {
       throw mapReportsError(error);
@@ -933,7 +947,9 @@ class ReportsService {
     try {
       final payload = await _repository.getBankStatement(query);
       return BankStatementReportData(
-        rows: payload.rows.map(ReportExtendedMapper.toBankStatementRow).toList(),
+        rows: payload.rows
+            .map(ReportExtendedMapper.toBankStatementRow)
+            .toList(),
       );
     } on DioException catch (error) {
       throw mapReportsError(error);
@@ -1025,7 +1041,9 @@ class ReportsService {
     try {
       final response = await _repository.getExpenses(query);
       return ExpensesReportData(
-        rows: response.data.rows.map(ReportExtendedMapper.toExpenseRow).toList(),
+        rows: response.data.rows
+            .map(ReportExtendedMapper.toExpenseRow)
+            .toList(),
         totalAmount: _amount(response.data.totalAmount),
         meta: response.meta,
       );
@@ -1140,7 +1158,9 @@ class ReportsService {
     try {
       final payload = await _repository.getLoanStatement(query);
       return LoanStatementReportData(
-        rows: payload.rows.map(ReportExtendedMapper.toLoanStatementRow).toList(),
+        rows: payload.rows
+            .map(ReportExtendedMapper.toLoanStatementRow)
+            .toList(),
       );
     } on DioException catch (error) {
       throw mapReportsError(error);

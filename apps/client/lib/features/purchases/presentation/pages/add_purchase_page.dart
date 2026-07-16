@@ -156,8 +156,9 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
   @override
   Widget build(BuildContext context) {
     final form = ref.watch(addPurchaseFormProvider(billId: widget.billId));
-    final notifier =
-        ref.read(addPurchaseFormProvider(billId: widget.billId).notifier);
+    final notifier = ref.read(
+      addPurchaseFormProvider(billId: widget.billId).notifier,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -330,9 +331,9 @@ class _BottomActionBar extends ConsumerWidget {
             onPressed: isSaving
                 ? null
                 : () => runPurchaseDocumentDesktopImport(
-                      context: context,
-                      billId: billId,
-                    ),
+                    context: context,
+                    billId: billId,
+                  ),
             icon: const Icon(Icons.upload_file_outlined, size: 16),
             label: const Text('Upload Bill', style: TextStyle(fontSize: 13)),
             style: OutlinedButton.styleFrom(
@@ -356,15 +357,23 @@ class _BottomActionBar extends ConsumerWidget {
                   ? null
                   : () => _handlePrintPreview(context, ref, form),
               icon: const Icon(Icons.print_outlined, size: 16),
-              label: const Text('Print / Preview', style: TextStyle(fontSize: 13)),
+              label: const Text(
+                'Print / Preview',
+                style: TextStyle(fontSize: 13),
+              ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 side: const BorderSide(color: _cardBorder),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             IconButton(
-              onPressed: isSaving ? null : () => _handleShare(context, ref, form),
+              onPressed: isSaving
+                  ? null
+                  : () => _handleShare(context, ref, form),
               icon: const Icon(Icons.share_outlined, size: 20),
               color: AppColors.textSecondary,
               tooltip: 'Share PDF',
@@ -372,7 +381,9 @@ class _BottomActionBar extends ConsumerWidget {
             const SizedBox(width: AppSpacing.sm),
           ],
           FilledButton(
-            onPressed: isSaving ? null : () => _handleSave(context, ref, notifier),
+            onPressed: isSaving
+                ? null
+                : () => _handleSave(context, ref, notifier),
             style: FilledButton.styleFrom(
               backgroundColor: _addPurchaseRed,
               foregroundColor: Colors.white,
@@ -445,11 +456,13 @@ class _BottomActionBar extends ConsumerWidget {
       return;
     }
 
-    ref.read(purchaseBillSaveSuccessMessageProvider.notifier).setMessage(
-      billId == null
-          ? 'Purchase bill saved successfully.'
-          : 'Purchase bill updated successfully.',
-    );
+    ref
+        .read(purchaseBillSaveSuccessMessageProvider.notifier)
+        .setMessage(
+          billId == null
+              ? 'Purchase bill saved successfully.'
+              : 'Purchase bill updated successfully.',
+        );
     context.go(AppRoutes.purchaseBills);
   }
 

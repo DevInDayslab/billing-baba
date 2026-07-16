@@ -61,7 +61,9 @@ class SaleDocumentForm extends ConsumerWidget {
       SaleDocumentType.estimate => estimateTableConfig(),
       SaleDocumentType.proforma => proformaTableConfig(),
     };
-    final formNotifier = ref.read(saleDocumentFormProvider(documentType).notifier);
+    final formNotifier = ref.read(
+      saleDocumentFormProvider(documentType).notifier,
+    );
 
     return ColoredBox(
       color: AppColors.background,
@@ -323,8 +325,9 @@ class _EmptyState extends ConsumerWidget {
                                         .deleteDraft(saved.id);
                                     if (!context.mounted) return;
                                     if (error != null) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(content: Text(error)),
                                       );
                                     }
@@ -752,9 +755,15 @@ class _BottomActionBar extends ConsumerWidget {
             OutlinedButton.icon(
               onPressed: () => _handlePrintPreview(context, ref, form),
               icon: const Icon(Icons.print_outlined, size: 16),
-              label: const Text('Print / Preview', style: TextStyle(fontSize: 13)),
+              label: const Text(
+                'Print / Preview',
+                style: TextStyle(fontSize: 13),
+              ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 side: const BorderSide(color: _cardBorder),
               ),
             ),

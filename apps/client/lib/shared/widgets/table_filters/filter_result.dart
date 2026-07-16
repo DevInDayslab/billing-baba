@@ -1,5 +1,6 @@
 import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
-import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart' show FilterController, FilterState;
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart'
+    show FilterController, FilterState;
 
 /// Typed filter value stored in [FilterState] / [FilterController].
 sealed class FilterResult {
@@ -28,8 +29,7 @@ final class NumberFilterResult extends FilterResult {
   bool get isActive => filter.isActive;
 
   @override
-  String get displayLabel =>
-      '${filter.operator.label}: ${filter.value}';
+  String get displayLabel => '${filter.operator.label}: ${filter.value}';
 }
 
 final class DateFilterResult extends FilterResult {
@@ -81,10 +81,10 @@ final class BooleanFilterResult extends FilterResult {
 
   @override
   String get displayLabel => switch (filter.value) {
-        true => 'Yes',
-        false => 'No',
-        null => 'All',
-      };
+    true => 'Yes',
+    false => 'No',
+    null => 'All',
+  };
 }
 
 final class RangeSliderFilterResult extends FilterResult {
@@ -95,8 +95,7 @@ final class RangeSliderFilterResult extends FilterResult {
   bool get isActive => filter.isActive;
 
   @override
-  String get displayLabel =>
-      '${filter.min.round()} – ${filter.max.round()}';
+  String get displayLabel => '${filter.min.round()} – ${filter.max.round()}';
 }
 
 /// @deprecated Use [NumberFilterResult].

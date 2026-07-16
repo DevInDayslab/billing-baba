@@ -149,12 +149,16 @@ class JobWorkOutActionsMenuButton extends ConsumerWidget {
         Overlay.of(context, rootOverlay: true).context.findRenderObject()!
             as RenderBox;
 
-    final buttonOrigin =
-        buttonBox.localToGlobal(Offset.zero, ancestor: overlayBox);
+    final buttonOrigin = buttonBox.localToGlobal(
+      Offset.zero,
+      ancestor: overlayBox,
+    );
     final buttonSize = buttonBox.size;
 
-    final menuLeft = (buttonOrigin.dx + buttonSize.width - _menuMinWidth)
-        .clamp(0.0, overlayBox.size.width - _menuMinWidth);
+    final menuLeft = (buttonOrigin.dx + buttonSize.width - _menuMinWidth).clamp(
+      0.0,
+      overlayBox.size.width - _menuMinWidth,
+    );
     final menuTop = buttonOrigin.dy + buttonSize.height + 4;
 
     return RelativeRect.fromLTRB(

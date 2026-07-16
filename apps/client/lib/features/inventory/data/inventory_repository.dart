@@ -160,8 +160,7 @@ class InventoryRepository {
     UpdateItemLocationRecordRequest request,
   ) => _remote.updateItemLocation(id, request);
 
-  Future<void> deleteItemLocation(String id) =>
-      _remote.deleteItemLocation(id);
+  Future<void> deleteItemLocation(String id) => _remote.deleteItemLocation(id);
 
   Future<PaginatedStockLevelsDto> getStockLevels(StockLevelListQuery query) =>
       _remote.listStockLevels(query);

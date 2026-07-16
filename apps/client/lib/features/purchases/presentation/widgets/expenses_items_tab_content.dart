@@ -254,9 +254,14 @@ class _ItemDetailPanel extends ConsumerWidget {
               Expanded(
                 child: InventorySearchField(
                   hint: 'Search',
-                  onChanged: (query) => ref
-                      .read(expenseItemTransactionSearchQueryProvider.notifier)
-                      .query = query,
+                  onChanged: (query) =>
+                      ref
+                              .read(
+                                expenseItemTransactionSearchQueryProvider
+                                    .notifier,
+                              )
+                              .query =
+                          query,
                 ),
               ),
               if (filters.hasTransactionFilters ||
@@ -288,9 +293,10 @@ class _ItemDetailPanel extends ConsumerWidget {
                         Expanded(
                           child: ListView.builder(
                             itemCount: transactions.length,
-                            itemBuilder: (context, index) => _ItemTransactionRow(
-                              transaction: transactions[index],
-                            ),
+                            itemBuilder: (context, index) =>
+                                _ItemTransactionRow(
+                                  transaction: transactions[index],
+                                ),
                           ),
                         ),
                       ],

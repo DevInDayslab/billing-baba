@@ -37,11 +37,14 @@ class SaleFaMapper {
 
   static AddSaleFaFormState toFormState(SaleFaBatchDto dto) {
     final saleDate = DateTime.tryParse(dto.saleDate) ?? DateTime.now();
-    final dueDate = dto.dueDate != null ? DateTime.tryParse(dto.dueDate!) : null;
+    final dueDate = dto.dueDate != null
+        ? DateTime.tryParse(dto.dueDate!)
+        : null;
     final totalAmount = double.tryParse(dto.totalAmount) ?? 0;
     final balanceDue = double.tryParse(dto.balanceDue) ?? 0;
-    final paidAmount =
-        (totalAmount - balanceDue).clamp(0, totalAmount).toDouble();
+    final paidAmount = (totalAmount - balanceDue)
+        .clamp(0, totalAmount)
+        .toDouble();
 
     final items = dto.assets.isEmpty
         ? [SaleFixedAssetLineItem.empty(id: 'line_1')]
@@ -126,7 +129,9 @@ class SaleFaMapper {
     );
   }
 
-  static List<CreateSaleFaAssetRequest> _assetRequests(AddSaleFaFormState form) {
+  static List<CreateSaleFaAssetRequest> _assetRequests(
+    AddSaleFaFormState form,
+  ) {
     final assets = <CreateSaleFaAssetRequest>[];
     for (var i = 0; i < form.items.length; i++) {
       final item = form.items[i];

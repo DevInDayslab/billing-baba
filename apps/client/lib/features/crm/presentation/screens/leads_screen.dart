@@ -240,15 +240,14 @@ class _LeadsScreenState extends ConsumerState<LeadsScreen> {
         (_fieldFilterValues['Lead Source']?.isNotEmpty ?? false)) {
       results = results
           .where(
-            (lead) => _fieldFilterValues['Lead Source']!
-                .contains(lead.displayLeadSource),
+            (lead) => _fieldFilterValues['Lead Source']!.contains(
+              lead.displayLeadSource,
+            ),
           )
           .toList();
     }
     if (_activeFieldFilters.contains('Company')) {
-      results = results
-          .where((lead) => lead.displayCompany != '—')
-          .toList();
+      results = results.where((lead) => lead.displayCompany != '—').toList();
     }
 
     for (final column in _allColumns) {
@@ -504,7 +503,9 @@ class _LeadsScreenState extends ConsumerState<LeadsScreen> {
     final filtersNotifier = ref.read(leadFiltersProvider.notifier);
     final sortedLeads = ref.watch(sortedLeadsListProvider);
     final locallyFiltered = _applyLocalFilters(sortedLeads);
-    final tableLeads = _hasActiveLocalFilters ? locallyFiltered : paginated.items;
+    final tableLeads = _hasActiveLocalFilters
+        ? locallyFiltered
+        : paginated.items;
     final tablePagination = _hasActiveLocalFilters
         ? PaginatedLeads(
             items: locallyFiltered,
@@ -872,7 +873,8 @@ class _LeadsFilterSidePanel extends StatelessWidget {
                         checked:
                             fieldFilterValues['Lead Source']?.contains(value) ??
                             false,
-                        onChanged: () => onFieldValueToggle('Lead Source', value),
+                        onChanged: () =>
+                            onFieldValueToggle('Lead Source', value),
                       ),
                   if (activeFieldFilters.contains(option) && option == 'Status')
                     for (final value in _statusOptions)
@@ -1206,7 +1208,8 @@ class _LeadsTableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final keys = leads.map(leadKey).toList();
-    final allSelected = keys.isNotEmpty && keys.every(selectedLeadKeys.contains);
+    final allSelected =
+        keys.isNotEmpty && keys.every(selectedLeadKeys.contains);
     final someSelected = keys.any(selectedLeadKeys.contains) && !allSelected;
     final headerCheckboxValue = allSelected
         ? true
@@ -1531,7 +1534,9 @@ class _ColumnHeaderMenuState extends State<_ColumnHeaderMenu> {
               backgroundColor: const WidgetStatePropertyAll(AppColors.surface),
               elevation: const WidgetStatePropertyAll(4),
               shadowColor: const WidgetStatePropertyAll(Colors.black26),
-              surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+              surfaceTintColor: const WidgetStatePropertyAll(
+                Colors.transparent,
+              ),
               shape: WidgetStatePropertyAll(
                 RoundedRectangleBorder(
                   borderRadius: AppRadius.mdBorder,

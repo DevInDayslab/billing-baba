@@ -8,11 +8,14 @@ abstract final class TableFilterTheme {
   static const popoverShadowColor = Color(0x1A000000);
   static const clearButtonBg = Color(0xFFEEEEEE);
   static const hoverColor = Color(0xFFF5F5F5);
+
   /// Soft blue tint for dropdown option hover / selected states.
-  static final Color optionHoverColor =
-      AppColors.primary.withValues(alpha: 0.08);
-  static final Color optionSelectedColor =
-      AppColors.primary.withValues(alpha: 0.12);
+  static final Color optionHoverColor = AppColors.primary.withValues(
+    alpha: 0.08,
+  );
+  static final Color optionSelectedColor = AppColors.primary.withValues(
+    alpha: 0.12,
+  );
   static const fieldHeight = 36.0;
   static const popoverWidth = 260.0;
   static const amountPopoverWidth = 280.0;

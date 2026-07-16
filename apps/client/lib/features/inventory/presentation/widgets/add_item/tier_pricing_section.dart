@@ -194,7 +194,9 @@ class _TierPricingRow extends StatelessWidget {
               controller: priceController,
               style: saleFieldTextStyle,
               decoration: buildSaleFieldDecoration(hint: '0.00'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: formatters,
               onChanged: onPriceChanged,
             ),

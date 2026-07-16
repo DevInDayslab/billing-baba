@@ -25,7 +25,8 @@ class ReportPeriodDto {
 class ReportAmountSummaryDto {
   const ReportAmountSummaryDto({
     required this.totalAmount,
-    required this.count, this.receivedAmount,
+    required this.count,
+    this.receivedAmount,
     this.balanceAmount,
     this.paidAmount,
   });
@@ -52,7 +53,11 @@ class ReportSaleRowDto {
     required this.id,
     required this.documentNumber,
     required this.documentDate,
-    required this.documentType, required this.status, required this.totalAmount, required this.balanceAmount, this.partyId,
+    required this.documentType,
+    required this.status,
+    required this.totalAmount,
+    required this.balanceAmount,
+    this.partyId,
     this.partyName,
     this.paymentMode,
   });
@@ -91,7 +96,10 @@ class ReportPurchaseRowDto {
     required this.documentDate,
     required this.partyId,
     required this.partyName,
-    required this.status, required this.totalAmount, required this.balanceAmount, this.paymentMode,
+    required this.status,
+    required this.totalAmount,
+    required this.balanceAmount,
+    this.paymentMode,
   });
 
   factory ReportPurchaseRowDto.fromJson(Map<String, dynamic> json) {
@@ -175,7 +183,10 @@ class ReportStockSummaryRowDto {
   const ReportStockSummaryRowDto({
     required this.itemId,
     required this.itemName,
-    required this.stockQty, required this.averageCost, required this.stockValue, this.categoryId,
+    required this.stockQty,
+    required this.averageCost,
+    required this.stockValue,
+    this.categoryId,
     this.salePrice,
   });
 
@@ -294,7 +305,9 @@ class ReportPartyOutstandingRowDto {
   const ReportPartyOutstandingRowDto({
     required this.partyId,
     required this.partyName,
-    required this.balance, required this.balanceType, this.phone,
+    required this.balance,
+    required this.balanceType,
+    this.phone,
     this.email,
   });
 
@@ -330,8 +343,9 @@ class PartyOutstandingPayloadDto {
       ),
       rows: (json['rows'] as List<dynamic>? ?? [])
           .map(
-            (e) =>
-                ReportPartyOutstandingRowDto.fromJson(e as Map<String, dynamic>),
+            (e) => ReportPartyOutstandingRowDto.fromJson(
+              e as Map<String, dynamic>,
+            ),
           )
           .toList(),
     );
@@ -347,7 +361,10 @@ class ReportPartyStatementEntryDto {
     required this.date,
     required this.type,
     required this.refNo,
-    required this.debit, required this.credit, required this.balance, this.description,
+    required this.debit,
+    required this.credit,
+    required this.balance,
+    this.description,
   });
 
   factory ReportPartyStatementEntryDto.fromJson(Map<String, dynamic> json) {
@@ -418,8 +435,9 @@ class PartyStatementPayloadDto {
       ),
       entries: (json['entries'] as List<dynamic>? ?? [])
           .map(
-            (e) =>
-                ReportPartyStatementEntryDto.fromJson(e as Map<String, dynamic>),
+            (e) => ReportPartyStatementEntryDto.fromJson(
+              e as Map<String, dynamic>,
+            ),
           )
           .toList(),
     );
@@ -436,7 +454,15 @@ class ReportTransactionRowDto {
     required this.id,
     required this.date,
     required this.refNo,
-    required this.category, required this.type, required this.total, required this.received, required this.balance, required this.moneyIn, required this.moneyOut, required this.status, this.partyId,
+    required this.category,
+    required this.type,
+    required this.total,
+    required this.received,
+    required this.balance,
+    required this.moneyIn,
+    required this.moneyOut,
+    required this.status,
+    this.partyId,
     this.partyName,
     this.paymentType,
   });
@@ -580,7 +606,16 @@ class ProfitLossPayloadDto {
 
 class ReportGstrRowDto {
   const ReportGstrRowDto({
-    required this.invoiceNo, required this.date, required this.value, required this.taxRate, required this.taxableValue, required this.integratedTax, required this.centralTax, required this.stateTax, required this.cess, this.gstin,
+    required this.invoiceNo,
+    required this.date,
+    required this.value,
+    required this.taxRate,
+    required this.taxableValue,
+    required this.integratedTax,
+    required this.centralTax,
+    required this.stateTax,
+    required this.cess,
+    this.gstin,
     this.partyName,
   });
 
@@ -728,7 +763,9 @@ class TrialBalancePayloadDto {
         (json['period'] as Map<String, dynamic>?) ?? {},
       ),
       rows: (json['rows'] as List<dynamic>? ?? [])
-          .map((e) => ReportTrialBalanceRowDto.fromJson(e as Map<String, dynamic>))
+          .map(
+            (e) => ReportTrialBalanceRowDto.fromJson(e as Map<String, dynamic>),
+          )
           .toList(),
       totalDebit: json['total_debit'] as String? ?? '0',
       totalCredit: json['total_credit'] as String? ?? '0',
@@ -791,10 +828,16 @@ class BalanceSheetPayloadDto {
       ),
       asOn: json['as_on'] as String? ?? '',
       assets: (json['assets'] as List<dynamic>? ?? [])
-          .map((e) => ReportBalanceSheetItemDto.fromJson(e as Map<String, dynamic>))
+          .map(
+            (e) =>
+                ReportBalanceSheetItemDto.fromJson(e as Map<String, dynamic>),
+          )
           .toList(),
       liabilities: (json['liabilities'] as List<dynamic>? ?? [])
-          .map((e) => ReportBalanceSheetItemDto.fromJson(e as Map<String, dynamic>))
+          .map(
+            (e) =>
+                ReportBalanceSheetItemDto.fromJson(e as Map<String, dynamic>),
+          )
           .toList(),
       assetsTotal: json['assets_total'] as String? ?? '0',
       liabilitiesTotal: json['liabilities_total'] as String? ?? '0',

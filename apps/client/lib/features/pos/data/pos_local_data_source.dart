@@ -26,7 +26,9 @@ class PosLocalDataSource {
     final taxAmount = double.tryParse(dto.taxAmount) ?? 0;
     final finalAmount = double.tryParse(dto.totalAmount) ?? 0;
 
-    await _db.into(_db.salesLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.salesLocal)
+        .insertOnConflictUpdate(
           SalesLocalCompanion(
             id: Value(dto.id),
             docNumber: Value(dto.documentNumber ?? dto.id),
@@ -42,14 +44,16 @@ class PosLocalDataSource {
           ),
         );
 
-    await (_db.delete(_db.salesLineLocal)
-          ..where((line) => line.saleId.equals(dto.id)))
-        .go();
+    await (_db.delete(
+      _db.salesLineLocal,
+    )..where((line) => line.saleId.equals(dto.id))).go();
 
     for (var i = 0; i < items.length; i++) {
       final cartItem = items[i];
       final lineDto = i < lineDtos.length ? lineDtos[i] : null;
-      await _db.into(_db.salesLineLocal).insert(
+      await _db
+          .into(_db.salesLineLocal)
+          .insert(
             SalesLineLocalCompanion(
               id: Value(lineDto?.id ?? _uuid.v4()),
               saleId: Value(dto.id),
@@ -79,27 +83,28 @@ class PosLocalDataSource {
   Future<(SaleLocal, List<SaleLineLocal>)?> getSaleWithLines(
     String saleId,
   ) async {
-    final sale = await (_db.select(_db.salesLocal)
-          ..where((row) => row.id.equals(saleId)))
-        .getSingleOrNull();
+    final sale = await (_db.select(
+      _db.salesLocal,
+    )..where((row) => row.id.equals(saleId))).getSingleOrNull();
     if (sale == null) return null;
 
-    final lines = await (_db.select(_db.salesLineLocal)
-          ..where((row) => row.saleId.equals(saleId)))
-        .get();
+    final lines = await (_db.select(
+      _db.salesLineLocal,
+    )..where((row) => row.saleId.equals(saleId))).get();
     return (sale, lines);
   }
 
   Future<List<SaleLocal>> getAllSales() {
-    return (_db.select(_db.salesLocal)
-          ..orderBy([
-            (row) => OrderingTerm.desc(row.createdAt),
-          ]))
+    return (_db.select(_db.salesLocal)..orderBy([
+          (row) => OrderingTerm.desc(row.createdAt),
+        ]))
         .get();
   }
 
   Future<void> saveHeldBill(HeldBill bill) async {
-    await _db.into(_db.heldBillsLocal).insertOnConflictUpdate(
+    await _db
+        .into(_db.heldBillsLocal)
+        .insertOnConflictUpdate(
           HeldBillsLocalCompanion(
             id: Value(bill.id),
             itemsJson: Value(jsonEncode(_cartItemsToJson(bill.items))),
@@ -112,17 +117,18 @@ class PosLocalDataSource {
   }
 
   Future<List<HeldBill>> getHeldBills() async {
-    final rows = await (_db.select(_db.heldBillsLocal)
-          ..orderBy([
-            (row) => OrderingTerm.desc(row.heldAt),
-          ]))
-        .get();
+    final rows =
+        await (_db.select(_db.heldBillsLocal)..orderBy([
+              (row) => OrderingTerm.desc(row.heldAt),
+            ]))
+            .get();
     return rows.map(_heldBillFromRow).toList();
   }
 
   Future<void> deleteHeldBill(String id) async {
-    await (_db.delete(_db.heldBillsLocal)..where((row) => row.id.equals(id)))
-        .go();
+    await (_db.delete(
+      _db.heldBillsLocal,
+    )..where((row) => row.id.equals(id))).go();
   }
 
   HeldBill _heldBillFromRow(HeldBillsLocalData row) {
@@ -147,18 +153,18 @@ class PosLocalDataSource {
   }
 
   Map<String, dynamic> _cartItemToJson(CartItem item) => {
-        'item': {
-          'id': item.item.id,
-          'name': item.item.name,
-          'sku': item.item.sku,
-          'category': item.item.category,
-          'price': item.item.price,
-          'stock': item.item.stock,
-          'unit': item.item.unit,
-        },
-        'quantity': item.quantity,
-        'discountPercent': item.discountPercent,
-      };
+    'item': {
+      'id': item.item.id,
+      'name': item.item.name,
+      'sku': item.item.sku,
+      'category': item.item.category,
+      'price': item.item.price,
+      'stock': item.item.stock,
+      'unit': item.item.unit,
+    },
+    'quantity': item.quantity,
+    'discountPercent': item.discountPercent,
+  };
 
   CartItem _cartItemFromJson(Map<String, dynamic> json) {
     final itemJson = json['item'] as Map<String, dynamic>;
@@ -182,9 +188,9 @@ class PosLocalDataSource {
   }
 
   Map<String, dynamic> _paymentToJson(PaymentEntry payment) => {
-        'mode': payment.mode.name,
-        'amount': payment.amount,
-      };
+    'mode': payment.mode.name,
+    'amount': payment.amount,
+  };
 
   PaymentEntry _paymentFromJson(Map<String, dynamic> json) {
     final modeName = json['mode'] as String;
@@ -221,9 +227,9 @@ class PosLocalDataSource {
   }
 
   String _paymentModeToApi(PaymentMode mode) => switch (mode) {
-        PaymentMode.cash => 'cash',
-        PaymentMode.upi => 'upi',
-        PaymentMode.card => 'card',
-        PaymentMode.bank => 'bank_transfer',
-      };
+    PaymentMode.cash => 'cash',
+    PaymentMode.upi => 'upi',
+    PaymentMode.card => 'card',
+    PaymentMode.bank => 'bank_transfer',
+  };
 }

@@ -11,7 +11,13 @@ abstract class UnitListDto with _$UnitListDto {
     required String id,
     required String name,
     @JsonKey(name: 'short_name') required String shortName,
-    @JsonKey(name: 'decimal_places') required int decimalPlaces, @JsonKey(name: 'is_system') required bool isSystem, @JsonKey(name: 'is_active') required bool isActive, @JsonKey(name: 'conversion_count') required int conversionCount, @JsonKey(name: 'created_at') required String createdAt, @JsonKey(name: 'updated_at') required String updatedAt, String? symbol,
+    @JsonKey(name: 'decimal_places') required int decimalPlaces,
+    @JsonKey(name: 'is_system') required bool isSystem,
+    @JsonKey(name: 'is_active') required bool isActive,
+    @JsonKey(name: 'conversion_count') required int conversionCount,
+    @JsonKey(name: 'created_at') required String createdAt,
+    @JsonKey(name: 'updated_at') required String updatedAt,
+    String? symbol,
   }) = _UnitListDto;
 
   factory UnitListDto.fromJson(Map<String, dynamic> json) =>
@@ -24,7 +30,12 @@ abstract class UnitDetailDto with _$UnitDetailDto {
     required String id,
     required String name,
     @JsonKey(name: 'short_name') required String shortName,
-    @JsonKey(name: 'decimal_places') required int decimalPlaces, @JsonKey(name: 'is_system') required bool isSystem, @JsonKey(name: 'is_active') required bool isActive, @JsonKey(name: 'created_at') required String createdAt, @JsonKey(name: 'updated_at') required String updatedAt, String? symbol,
+    @JsonKey(name: 'decimal_places') required int decimalPlaces,
+    @JsonKey(name: 'is_system') required bool isSystem,
+    @JsonKey(name: 'is_active') required bool isActive,
+    @JsonKey(name: 'created_at') required String createdAt,
+    @JsonKey(name: 'updated_at') required String updatedAt,
+    String? symbol,
     @Default([]) List<UnitConversionDto> conversions,
   }) = _UnitDetailDto;
 

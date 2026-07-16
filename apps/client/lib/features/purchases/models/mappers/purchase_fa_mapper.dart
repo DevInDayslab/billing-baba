@@ -13,8 +13,7 @@ class PurchaseFaMapper {
   }) {
     final amount = double.tryParse(dto.totalAmount) ?? 0;
     final balanceDue = double.tryParse(dto.balanceDue) ?? 0;
-    final purchaseDate =
-        DateTime.tryParse(dto.purchaseDate) ?? DateTime.now();
+    final purchaseDate = DateTime.tryParse(dto.purchaseDate) ?? DateTime.now();
     final dueDate = dto.dueDate != null
         ? DateTime.tryParse(dto.dueDate!) ?? purchaseDate
         : purchaseDate;
@@ -35,15 +34,15 @@ class PurchaseFaMapper {
   }
 
   static AddPurchaseFaFormState toFormState(PurchaseFaBatchDto dto) {
-    final purchaseDate =
-        DateTime.tryParse(dto.purchaseDate) ?? DateTime.now();
+    final purchaseDate = DateTime.tryParse(dto.purchaseDate) ?? DateTime.now();
     final dueDate = dto.dueDate != null
         ? DateTime.tryParse(dto.dueDate!)
         : null;
     final totalAmount = double.tryParse(dto.totalAmount) ?? 0;
     final balanceDue = double.tryParse(dto.balanceDue) ?? 0;
-    final paidAmount =
-        (totalAmount - balanceDue).clamp(0, totalAmount).toDouble();
+    final paidAmount = (totalAmount - balanceDue)
+        .clamp(0, totalAmount)
+        .toDouble();
 
     final items = dto.assets.isEmpty
         ? [FixedAssetLineItem.empty(id: 'line_1')]
@@ -115,9 +114,7 @@ class PurchaseFaMapper {
       referenceNumber: form.billNumber.trim().isEmpty
           ? null
           : form.billNumber.trim(),
-      purchaseDate: form.billDate != null
-          ? _formatDate(form.billDate!)
-          : null,
+      purchaseDate: form.billDate != null ? _formatDate(form.billDate!) : null,
       dueDate: form.dueDate != null ? _formatDate(form.dueDate!) : null,
       paymentMode: PurchasePaymentModes.toApi(form.paymentType),
       status: _statusApiValue(form),

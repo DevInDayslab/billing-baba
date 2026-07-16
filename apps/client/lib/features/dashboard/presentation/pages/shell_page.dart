@@ -36,6 +36,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   static bool _useCompactSidebarLayout(bool collapsed, double width) {
     return collapsed || width < _sidebarCompactLayoutMaxWidth;
   }
+
   static const _sidebarColor = Color(0xFF1C2333);
   static const _sidebarText = Color(0xFFB0BEC5);
   static const _sidebarTextActive = Color(0xFFFFFFFF);
@@ -187,9 +188,11 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   ];
 
   void _navigateTo(String route) {
-    ref.read(shellSidebarProvider.notifier).closeOnNavigation(
-      overlayLayout: _useOverlaySidebar,
-    );
+    ref
+        .read(shellSidebarProvider.notifier)
+        .closeOnNavigation(
+          overlayLayout: _useOverlaySidebar,
+        );
     setState(() {
       _isSaleExpanded = false;
       _isPurchaseExpanded = false;
@@ -218,9 +221,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         final useOverlaySidebar = constraints.maxWidth < _overlayBreakpoint;
         _useOverlaySidebar = useOverlaySidebar;
 
-        if (_wasOverlaySidebar == true &&
-            !useOverlaySidebar &&
-            isDrawerOpen) {
+        if (_wasOverlaySidebar == true && !useOverlaySidebar && isDrawerOpen) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               ref.read(shellSidebarProvider.notifier).closeDrawer();
@@ -302,8 +303,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                 color: _sidebarColor,
                 child: GestureDetector(
                   onTap: isCollapsed
-                      ? () =>
-                          ref.read(shellSidebarProvider.notifier).expand()
+                      ? () => ref.read(shellSidebarProvider.notifier).expand()
                       : null,
                   behavior: HitTestBehavior.translucent,
                   child: _buildSidebarPanel(
@@ -463,7 +463,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
 
       final isParentActive = isSale
           ? currentLocation.startsWith(AppRoutes.sale) ||
-              currentLocation.startsWith(AppRoutes.crm)
+                currentLocation.startsWith(AppRoutes.crm)
           : isPurchase
           ? currentLocation.startsWith(AppRoutes.purchase)
           : isParties

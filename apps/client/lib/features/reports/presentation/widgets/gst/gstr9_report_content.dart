@@ -84,123 +84,123 @@ class _Gstr9ReportContentState extends ConsumerState<Gstr9ReportContent> {
         ];
 
         return ColoredBox(
-      color: AppColors.background,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ReportCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Row(
-                children: [
-                  const Text(
-                    'Financial Year',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
+          color: AppColors.background,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ReportCard(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'Financial Year',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      SaleFilterDropdown(
+                        label: _financialYear,
+                        options: _financialYearOptions,
+                        selected: _financialYear,
+                        onSelected: (value) =>
+                            setState(() => _financialYear = value),
+                      ),
+                      const Spacer(),
+                      ReportTextActionButton(
+                        label: 'Excel',
+                        icon: Icons.table_chart_outlined,
+                        onTap: () => reportExportTable(
+                          context: context,
+                          title: 'GSTR-9',
+                          filename: 'gstr9-report',
+                          headers: exportHeaders,
+                          rows: exportRows,
+                        ),
+                      ),
+                      ReportTextActionButton(
+                        label: 'Print',
+                        icon: Icons.print_outlined,
+                        onTap: () => reportPrintTable(
+                          context: context,
+                          title: 'GSTR-9',
+                          headers: exportHeaders,
+                          rows: exportRows,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  SaleFilterDropdown(
-                    label: _financialYear,
-                    options: _financialYearOptions,
-                    selected: _financialYear,
-                    onSelected: (value) =>
-                        setState(() => _financialYear = value),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ReportCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md,
+                          AppSpacing.md,
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                        ),
+                        child: Row(
+                          children: [
+                            const Text(
+                              'GSTR9 REPORT',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                            const Spacer(),
+                            Checkbox(
+                              value: _considerNonTaxExempted,
+                              onChanged: (value) => setState(
+                                () => _considerNonTaxExempted = value ?? false,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            const Text(
+                              'CONSIDER NON-TAX AS EXEMPTED',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1, color: reportCardBorder),
+                      const _SectionBanner(title: 'Pt. I Basic Details'),
+                      _BasicDetailsTable(
+                        financialYear: _financialYear,
+                        borderColor: _gstr9Border,
+                      ),
+                      const _SectionBanner(
+                        title:
+                            'Pt. II Details Of Outward And Inward Supplies '
+                            'Declared During The Financial Year',
+                        trailing: '(Amount in Rupees in All Tables)',
+                      ),
+                      _OutwardSuppliesTable(
+                        borderColor: _gstr9Border,
+                        supplyRows: supplyRows,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
                   ),
-                  const Spacer(),
-                  ReportTextActionButton(
-                    label: 'Excel',
-                    icon: Icons.table_chart_outlined,
-                    onTap: () => reportExportTable(
-                      context: context,
-                      title: 'GSTR-9',
-                      filename: 'gstr9-report',
-                      headers: exportHeaders,
-                      rows: exportRows,
-                    ),
-                  ),
-                  ReportTextActionButton(
-                    label: 'Print',
-                    icon: Icons.print_outlined,
-                    onTap: () => reportPrintTable(
-                      context: context,
-                      title: 'GSTR-9',
-                      headers: exportHeaders,
-                      rows: exportRows,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.md),
-            ReportCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.sm,
-                    ),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'GSTR9 REPORT',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            letterSpacing: 0.4,
-                          ),
-                        ),
-                        const Spacer(),
-                        Checkbox(
-                          value: _considerNonTaxExempted,
-                          onChanged: (value) => setState(
-                            () => _considerNonTaxExempted = value ?? false,
-                          ),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        const Text(
-                          'CONSIDER NON-TAX AS EXEMPTED',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1, color: reportCardBorder),
-                  const _SectionBanner(title: 'Pt. I Basic Details'),
-                  _BasicDetailsTable(
-                    financialYear: _financialYear,
-                    borderColor: _gstr9Border,
-                  ),
-                  const _SectionBanner(
-                    title:
-                        'Pt. II Details Of Outward And Inward Supplies '
-                        'Declared During The Financial Year',
-                    trailing: '(Amount in Rupees in All Tables)',
-                  ),
-                  _OutwardSuppliesTable(
-                    borderColor: _gstr9Border,
-                    supplyRows: supplyRows,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
       },
     );
   }
@@ -264,7 +264,10 @@ class _BasicDetailsTable extends StatelessWidget {
 
   static const _codeWidth = 48.0;
   static const _labelWidth = 180.0;
-  static const _cellStyle = TextStyle(fontSize: 12, color: AppColors.textPrimary);
+  static const _cellStyle = TextStyle(
+    fontSize: 12,
+    color: AppColors.textPrimary,
+  );
 
   @override
   Widget build(BuildContext context) {

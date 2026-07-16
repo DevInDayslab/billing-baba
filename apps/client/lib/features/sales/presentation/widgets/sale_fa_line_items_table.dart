@@ -46,8 +46,9 @@ class SaleFaLineItemsTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addSaleFaFormProvider(sessionKey: sessionKey));
-    final notifier =
-        ref.read(addSaleFaFormProvider(sessionKey: sessionKey).notifier);
+    final notifier = ref.read(
+      addSaleFaFormProvider(sessionKey: sessionKey).notifier,
+    );
 
     final tableContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -198,7 +199,11 @@ class _LineItemsHeader extends StatelessWidget {
           Text('#', style: _headerStyle),
           SizedBox.shrink(),
           Text('ASSETS', style: _headerStyle),
-          Text('ITEM CODE', style: _headerStyle, overflow: TextOverflow.ellipsis),
+          Text(
+            'ITEM CODE',
+            style: _headerStyle,
+            overflow: TextOverflow.ellipsis,
+          ),
           Text('DESCRIPTION', style: _headerStyle),
           Text('QTY', style: _headerStyle),
           Text(
@@ -308,8 +313,9 @@ class _LineItemRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier =
-        ref.read(addSaleFaFormProvider(sessionKey: sessionKey).notifier);
+    final notifier = ref.read(
+      addSaleFaFormProvider(sessionKey: sessionKey).notifier,
+    );
 
     return SizedBox(
       height: _rowHeight,

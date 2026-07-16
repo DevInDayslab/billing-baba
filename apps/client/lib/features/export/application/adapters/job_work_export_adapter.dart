@@ -13,7 +13,10 @@ Future<ExportSheet> buildJobWorkExportSheet(WidgetRef ref) async {
   final items = await PaginatedFetch.fetchAll(
     fetchPage: (page) async {
       final result = await service.fetchOrdersPage(
-        JobWorkOrderListQuery(page: page, limit: PaginatedFetch.defaultPageSize),
+        JobWorkOrderListQuery(
+          page: page,
+          limit: PaginatedFetch.defaultPageSize,
+        ),
       );
       return (items: result.items, totalPages: result.totalPages);
     },

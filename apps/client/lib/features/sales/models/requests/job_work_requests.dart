@@ -167,7 +167,9 @@ class UpdateJobWorkOrderRequest {
       json['notes'] = notes;
     }
     if (rawMaterials != null) {
-      json['raw_materials'] = rawMaterials!.map((item) => item.toJson()).toList();
+      json['raw_materials'] = rawMaterials!
+          .map((item) => item.toJson())
+          .toList();
     }
     if (additionalCosts != null) {
       json['additional_costs'] = additionalCosts!

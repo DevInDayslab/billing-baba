@@ -261,9 +261,7 @@ abstract final class InvoicePdfWidgets {
           style: InvoicePdfTheme.tableCell(),
           maxLines: maxLines,
           softWrap: allowWrap,
-          overflow: maxLines > 1
-              ? pw.TextOverflow.clip
-              : pw.TextOverflow.clip,
+          overflow: maxLines > 1 ? pw.TextOverflow.clip : pw.TextOverflow.clip,
         ),
       ),
     );

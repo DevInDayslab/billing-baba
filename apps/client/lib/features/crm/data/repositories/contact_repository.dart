@@ -35,7 +35,10 @@ class ContactRepository {
     String contactId,
   ) => _local.watchActivities(businessId, contactId);
 
-  Future<Contact> saveContact(Contact contact, {required String operation}) async {
+  Future<Contact> saveContact(
+    Contact contact, {
+    required String operation,
+  }) async {
     await _local.upsertContact(contact);
     await _enqueue(
       businessId: contact.businessId,

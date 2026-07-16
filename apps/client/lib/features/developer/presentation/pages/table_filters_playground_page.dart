@@ -11,7 +11,8 @@ class TableFiltersPlaygroundPage extends StatefulWidget {
       _TableFiltersPlaygroundPageState();
 }
 
-class _TableFiltersPlaygroundPageState extends State<TableFiltersPlaygroundPage> {
+class _TableFiltersPlaygroundPageState
+    extends State<TableFiltersPlaygroundPage> {
   late final FilterController _controller = FilterController();
 
   @override
@@ -39,8 +40,7 @@ class _TableFiltersPlaygroundPageState extends State<TableFiltersPlaygroundPage>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
-        final configs =
-            FilterWidgetSpecs.all.map((s) => s.config).toList();
+        final configs = FilterWidgetSpecs.all.map((s) => s.config).toList();
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -50,9 +50,9 @@ class _TableFiltersPlaygroundPageState extends State<TableFiltersPlaygroundPage>
               Text(
                 'Table Filters',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
               const SizedBox(height: AppSpacing.xs),
               const Text(
@@ -117,23 +117,24 @@ class _TableFiltersPlaygroundPageState extends State<TableFiltersPlaygroundPage>
               ),
               const SizedBox(height: AppSpacing.lg),
               _SectionTitle(
-                _controller.hasActiveFilters
-                    ? 'Active filters'
-                    : 'Empty state',
+                _controller.hasActiveFilters ? 'Active filters' : 'Empty state',
               ),
               const SizedBox(height: AppSpacing.sm),
-              if (_controller.hasActiveFilters) ActiveFilterChips(
-                      filters: _controller.filters,
-                      configs: configs,
-                      onRemove: _controller.removeFilter,
-                      onClearAll: _controller.clearAll,
-                    ) else const Text(
-                      'No active filters — open a filter above and click Apply.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
+              if (_controller.hasActiveFilters)
+                ActiveFilterChips(
+                  filters: _controller.filters,
+                  configs: configs,
+                  onRemove: _controller.removeFilter,
+                  onClearAll: _controller.clearAll,
+                )
+              else
+                const Text(
+                  'No active filters — open a filter above and click Apply.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
             ],
           ),
         );

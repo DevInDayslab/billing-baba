@@ -91,12 +91,16 @@ void main() {
             const ExportSheet(
               name: 'SheetA',
               columns: [ExportColumn(header: 'A')],
-              rows: [ExportRow(['1'])],
+              rows: [
+                ExportRow(['1']),
+              ],
             ),
             const ExportSheet(
               name: 'SheetB',
               columns: [ExportColumn(header: 'B')],
-              rows: [ExportRow(['2'])],
+              rows: [
+                ExportRow(['2']),
+              ],
             ),
           ],
         ),

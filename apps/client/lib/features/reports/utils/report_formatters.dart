@@ -14,7 +14,8 @@ final reportCurrencyFormatCompact = NumberFormat.currency(
 
 final reportDateFormat = DateFormat('dd/MM/yyyy');
 
-String formatReportCurrency(double amount) => reportCurrencyFormat.format(amount);
+String formatReportCurrency(double amount) =>
+    reportCurrencyFormat.format(amount);
 
 String formatReportCurrencyCompact(double amount) =>
     reportCurrencyFormatCompact.format(amount);

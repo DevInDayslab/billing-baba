@@ -109,7 +109,8 @@ class _AddDealDialogState extends State<AddDealDialog> {
   double get _amount => double.tryParse(_amountController.text.trim()) ?? 0;
 
   int get _probability =>
-      int.tryParse(_probabilityController.text.trim()) ?? _selectedStage.probability;
+      int.tryParse(_probabilityController.text.trim()) ??
+      _selectedStage.probability;
 
   String get _expectedRevenueDisplay {
     final revenue = _amount * _probability / 100;
@@ -450,7 +451,9 @@ class _AddDealDialogState extends State<AddDealDialog> {
                                 child: AppFormField(
                                   label: 'Expected Revenue',
                                   child: _ReadOnlyField(
-                                    value: _amount > 0 ? _expectedRevenueDisplay : '',
+                                    value: _amount > 0
+                                        ? _expectedRevenueDisplay
+                                        : '',
                                     hint: 'Rs.',
                                     suffixIcon: const Icon(
                                       Icons.lock_outline,

@@ -151,20 +151,20 @@ class _CreateBusinessSheetState extends ConsumerState<_CreateBusinessSheet> {
   void _showGenericErrorDialog() {
     unawaited(
       showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Could not create business'),
-        content: const Text(
-          'Something went wrong. Please try again.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('OK'),
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Could not create business'),
+          content: const Text(
+            'Something went wrong. Please try again.',
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -516,7 +516,9 @@ class _CreateBusinessFormContent extends StatelessWidget {
                     disabledBackgroundColor: AppColors.primary.withValues(
                       alpha: 0.5,
                     ),
-                    disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+                    disabledForegroundColor: Colors.white.withValues(
+                      alpha: 0.8,
+                    ),
                     minimumSize: const Size(0, 48),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

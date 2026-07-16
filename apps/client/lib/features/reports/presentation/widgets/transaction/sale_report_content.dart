@@ -37,18 +37,18 @@ class SaleReportContent extends ConsumerWidget {
         final rows = report.rows;
 
         List<List<String>> exportRows() => [
-              for (final invoice in rows)
-                [
-                  formatReportDate(invoice.date),
-                  invoice.invoiceNo,
-                  invoice.partyName,
-                  invoice.transactionType,
-                  invoice.paymentType,
-                  _saleInvoiceStatusLabel(invoice.status),
-                  formatReportCurrency(invoice.amount),
-                  formatReportCurrency(invoice.balance),
-                ],
-            ];
+          for (final invoice in rows)
+            [
+              formatReportDate(invoice.date),
+              invoice.invoiceNo,
+              invoice.partyName,
+              invoice.transactionType,
+              invoice.paymentType,
+              _saleInvoiceStatusLabel(invoice.status),
+              formatReportCurrency(invoice.amount),
+              formatReportCurrency(invoice.balance),
+            ],
+        ];
 
         void exportExcel() {
           reportExportTable(
@@ -109,9 +109,9 @@ class SaleReportContent extends ConsumerWidget {
 }
 
 String _saleInvoiceStatusLabel(SaleInvoiceStatus status) => switch (status) {
-      SaleInvoiceStatus.paid => 'Paid',
-      SaleInvoiceStatus.unpaid => 'Unpaid',
-      SaleInvoiceStatus.partiallyPaid => 'Partial',
-      SaleInvoiceStatus.overdue => 'Overdue',
-      SaleInvoiceStatus.cancelled => 'Cancelled',
-    };
+  SaleInvoiceStatus.paid => 'Paid',
+  SaleInvoiceStatus.unpaid => 'Unpaid',
+  SaleInvoiceStatus.partiallyPaid => 'Partial',
+  SaleInvoiceStatus.overdue => 'Overdue',
+  SaleInvoiceStatus.cancelled => 'Cancelled',
+};

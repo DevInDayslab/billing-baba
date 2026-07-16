@@ -65,7 +65,8 @@ class PaymentOutTable extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.md),
                 const _PaymentOutSearchField(),
-                if (filters.hasActiveFilters || searchQuery.trim().isNotEmpty) ...[
+                if (filters.hasActiveFilters ||
+                    searchQuery.trim().isNotEmpty) ...[
                   const SizedBox(width: AppSpacing.sm),
                   TextButton(
                     onPressed: filtersNotifier.clearAllFilters,
@@ -280,7 +281,8 @@ class _PaymentOutSearchField extends ConsumerStatefulWidget {
       _PaymentOutSearchFieldState();
 }
 
-class _PaymentOutSearchFieldState extends ConsumerState<_PaymentOutSearchField> {
+class _PaymentOutSearchFieldState
+    extends ConsumerState<_PaymentOutSearchField> {
   late final TextEditingController _controller;
 
   @override
@@ -485,7 +487,9 @@ class _TableHeaderRow extends ConsumerWidget {
             label: 'Status',
             kind: PurchaseColumnFilterKind.status,
             headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnStatusFilterIsActive(filters.selectedStatus),
+            isActive: purchaseColumnStatusFilterIsActive(
+              filters.selectedStatus,
+            ),
             columns: columns,
             actions: actions,
             partyOptions: partyOptions,
@@ -594,7 +598,9 @@ class _PageNumber extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFFEEEEEE) : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.sm),
-          border: isActive ? null : Border.all(color: purchaseTransactionTableCardBorder),
+          border: isActive
+              ? null
+              : Border.all(color: purchaseTransactionTableCardBorder),
         ),
         child: Text(
           '$page',

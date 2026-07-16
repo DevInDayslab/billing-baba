@@ -51,8 +51,7 @@ class _AddEstimatePageState extends ConsumerState<AddEstimatePage> {
   }
 
   Future<void> _initializeForm() async {
-    final notifier =
-        ref.read(saleDocumentFormProvider(_documentType).notifier);
+    final notifier = ref.read(saleDocumentFormProvider(_documentType).notifier);
     if (widget.duplicateFromId != null) {
       await notifier.duplicateDocument(widget.duplicateFromId!);
     } else if (widget.estimateId != null) {
@@ -78,8 +77,7 @@ class _AddEstimatePageState extends ConsumerState<AddEstimatePage> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(
-      saleDocumentFormProvider(_documentType)
-          .select((form) => form.isLoading),
+      saleDocumentFormProvider(_documentType).select((form) => form.isLoading),
     );
 
     if (!_initialized || isLoading) {
@@ -161,7 +159,8 @@ class _AddEstimatePageState extends ConsumerState<AddEstimatePage> {
                       const Divider(height: 1, color: _cardBorder),
                       _EstimateBottomActionBar(
                         isEditing: _isEditing,
-                        onSaved: () => context.go(AppRoutes.saleEstimateQuotation),
+                        onSaved: () =>
+                            context.go(AppRoutes.saleEstimateQuotation),
                       ),
                     ],
                   ),

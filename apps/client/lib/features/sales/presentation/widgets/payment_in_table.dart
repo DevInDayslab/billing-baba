@@ -68,7 +68,8 @@ class PaymentInTable extends ConsumerWidget {
                       .setSearchQuery,
                 ),
                 _XlsChip(
-                  onTap: () => ModuleExportActions.exportPaymentIn(context, ref),
+                  onTap: () =>
+                      ModuleExportActions.exportPaymentIn(context, ref),
                 ),
                 IconButton(
                   onPressed: () {},

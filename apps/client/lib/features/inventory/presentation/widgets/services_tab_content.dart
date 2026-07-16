@@ -61,7 +61,9 @@ class ServicesTabContent extends ConsumerWidget {
         ref.read(productTransactionFiltersProvider.notifier).reset();
         ref.read(selectedProductTransactionIdProvider.notifier).select(null);
       },
-      onRefresh: () => ref.read(inventoryItemsProvider.notifier).refresh(
+      onRefresh: () => ref
+          .read(inventoryItemsProvider.notifier)
+          .refresh(
             searchQuery: ref.read(serviceBackendSearchProvider),
           ),
       onAddPressed: () => unawaited(
@@ -113,8 +115,9 @@ Future<void> _confirmDelete(
 
   if (confirmed != true || !context.mounted) return;
 
-  final error =
-      await ref.read(inventoryItemsProvider.notifier).deleteItem(item.id);
+  final error = await ref
+      .read(inventoryItemsProvider.notifier)
+      .deleteItem(item.id);
   if (!context.mounted) return;
   if (error != null) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));

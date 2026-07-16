@@ -37,7 +37,9 @@ class _PurchaseReturnPageState extends ConsumerState<PurchaseReturnPage> {
         backgroundColor: _successSnackBarColor,
       ),
     );
-    ref.read(purchaseReturnSaveSuccessMessageProvider.notifier).setMessage(null);
+    ref
+        .read(purchaseReturnSaveSuccessMessageProvider.notifier)
+        .setMessage(null);
   }
 
   @override

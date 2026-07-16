@@ -106,8 +106,7 @@ class _SaleInvoiceReportOptionsDialogState
                         _ReportOptionCheckbox(
                           label: 'Date',
                           value: _options.includeDate,
-                          onChanged: (value) =>
-                              _setOption(includeDate: value),
+                          onChanged: (value) => _setOption(includeDate: value),
                         ),
                         _ReportOptionCheckbox(
                           label: 'Invoice No.',
@@ -124,8 +123,7 @@ class _SaleInvoiceReportOptionsDialogState
                         _ReportOptionCheckbox(
                           label: 'Total',
                           value: _options.includeTotal,
-                          onChanged: (value) =>
-                              _setOption(includeTotal: value),
+                          onChanged: (value) => _setOption(includeTotal: value),
                         ),
                         _ReportOptionCheckbox(
                           label: 'Payment Type',

@@ -77,213 +77,221 @@ class _OtherIncomeReportContentState
         }
 
         return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: ReportTitleActionsRow(
-              title: 'Other Income',
-              actions: [
-                ReportTextActionButton(
-                  label: 'Excel Report',
-                  icon: Icons.table_chart_outlined,
-                  onTap: exportCsv,
+          color: AppColors.background,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.md,
                 ),
-                ReportTextActionButton(
-                  label: 'Print',
-                  icon: Icons.print_outlined,
-                  onTap: () => ReportExportService.showPrintPreview(
-                    context: context,
-                    title: 'Other Income',
-                    content: ReportExportService.toCsv(
-                      headers: const [
-                        'Date',
-                        'Inc No',
-                        'Party',
-                        'Category',
-                        'Payment Type',
-                        'Amount',
-                        'Due Date',
-                        'Status',
-                      ],
-                      rows: [
-                        for (final row in rows)
-                          [
-                            formatReportDate(row.date),
-                            row.incomeNo,
-                            row.partyName,
-                            row.category,
-                            row.paymentType,
-                            formatReportCurrency(row.amount),
-                            formatReportDate(row.dueDate),
-                            row.status,
+                child: ReportTitleActionsRow(
+                  title: 'Other Income',
+                  actions: [
+                    ReportTextActionButton(
+                      label: 'Excel Report',
+                      icon: Icons.table_chart_outlined,
+                      onTap: exportCsv,
+                    ),
+                    ReportTextActionButton(
+                      label: 'Print',
+                      icon: Icons.print_outlined,
+                      onTap: () => ReportExportService.showPrintPreview(
+                        context: context,
+                        title: 'Other Income',
+                        content: ReportExportService.toCsv(
+                          headers: const [
+                            'Date',
+                            'Inc No',
+                            'Party',
+                            'Category',
+                            'Payment Type',
+                            'Amount',
+                            'Due Date',
+                            'Status',
                           ],
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: ReportCard(
-              backgroundColor: const Color(0xFFF5F7FA),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: _DateRangeFilter(
-                datePickerKey: _datePickerKey,
-                dateRange: _dateRange,
-                dateFormat: _dateFormat,
-                onRangeSelected: (range) => setState(() => _dateRange = range),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                0,
-                AppSpacing.lg,
-                AppSpacing.lg,
-              ),
-              child: ReportCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.sm,
+                          rows: [
+                            for (final row in rows)
+                              [
+                                formatReportDate(row.date),
+                                row.incomeNo,
+                                row.partyName,
+                                row.category,
+                                row.paymentType,
+                                formatReportCurrency(row.amount),
+                                formatReportDate(row.dueDate),
+                                row.status,
+                              ],
+                          ],
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          const Text(
-                            'TRANSACTIONS',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textSecondary,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: ReportSearchField(
-                              hintText: 'Search other income...',
-                              onChanged: ref
-                                  .read(reportFiltersProvider.notifier)
-                                  .setSearchQuery,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: rows.isEmpty
-                          ? _emptyTable(
-                              message:
-                                  'No other income records found for the selected period.',
-                            )
-                          : SingleChildScrollView(
-                              child: ReportSyncScrollTable(
-                                headerChildren: _incomeHeaders,
-                                rows: [
-                                  for (var i = 0; i < rows.length; i++)
-                                    ReportAlignedRowStrip(
-                                      index: i,
-                                      child: ReportAlignedDataRow(
-                                        cells: [
-                                          ReportAlignedCell.fixed(
-                                            100,
-                                            child: Text(
-                                              formatReportDate(rows[i].date),
-                                            ),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            100,
-                                            child: Text(rows[i].incomeNo),
-                                          ),
-                                          ReportAlignedCell.flex(
-                                            child: Text(rows[i].partyName),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            130,
-                                            child: Text(rows[i].category),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            120,
-                                            child: Text(rows[i].paymentType),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            100,
-                                            alignment: Alignment.centerRight,
-                                            child: Text(
-                                              formatReportCurrency(
-                                                rows[i].amount,
-                                              ),
-                                            ),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            100,
-                                            child: Text(
-                                              formatReportDate(rows[i].dueDate),
-                                            ),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            90,
-                                            child: Text(rows[i].status),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                    ),
-                    _TotalFooter(
-                      label: 'Total Amount: ',
-                      amount: formatReportCurrency(totalAmount),
-                      amountColor: reportTeal,
-                    ),
-                    ReportPaginationBar(
-                      page: report.meta.page,
-                      totalPages: report.meta.totalPages,
-                      onPrevious: report.meta.page > 1
-                          ? () => ref
-                                .read(otherIncomeReportProvider.notifier)
-                                .goToPage(report.meta.page - 1)
-                          : null,
-                      onNext: report.meta.page < report.meta.totalPages
-                          ? () => ref
-                                .read(otherIncomeReportProvider.notifier)
-                                .goToPage(report.meta.page + 1)
-                          : null,
                     ),
                   ],
                 ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  0,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
+                child: ReportCard(
+                  backgroundColor: const Color(0xFFF5F7FA),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: _DateRangeFilter(
+                    datePickerKey: _datePickerKey,
+                    dateRange: _dateRange,
+                    dateFormat: _dateFormat,
+                    onRangeSelected: (range) =>
+                        setState(() => _dateRange = range),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: ReportCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.sm,
+                          ),
+                          child: Row(
+                            children: [
+                              const Text(
+                                'TRANSACTIONS',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textSecondary,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.lg),
+                              Expanded(
+                                child: ReportSearchField(
+                                  hintText: 'Search other income...',
+                                  onChanged: ref
+                                      .read(reportFiltersProvider.notifier)
+                                      .setSearchQuery,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: rows.isEmpty
+                              ? _emptyTable(
+                                  message:
+                                      'No other income records found for the selected period.',
+                                )
+                              : SingleChildScrollView(
+                                  child: ReportSyncScrollTable(
+                                    headerChildren: _incomeHeaders,
+                                    rows: [
+                                      for (var i = 0; i < rows.length; i++)
+                                        ReportAlignedRowStrip(
+                                          index: i,
+                                          child: ReportAlignedDataRow(
+                                            cells: [
+                                              ReportAlignedCell.fixed(
+                                                100,
+                                                child: Text(
+                                                  formatReportDate(
+                                                    rows[i].date,
+                                                  ),
+                                                ),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                100,
+                                                child: Text(rows[i].incomeNo),
+                                              ),
+                                              ReportAlignedCell.flex(
+                                                child: Text(rows[i].partyName),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                130,
+                                                child: Text(rows[i].category),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                120,
+                                                child: Text(
+                                                  rows[i].paymentType,
+                                                ),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                100,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text(
+                                                  formatReportCurrency(
+                                                    rows[i].amount,
+                                                  ),
+                                                ),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                100,
+                                                child: Text(
+                                                  formatReportDate(
+                                                    rows[i].dueDate,
+                                                  ),
+                                                ),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                90,
+                                                child: Text(rows[i].status),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                        ),
+                        _TotalFooter(
+                          label: 'Total Amount: ',
+                          amount: formatReportCurrency(totalAmount),
+                          amountColor: reportTeal,
+                        ),
+                        ReportPaginationBar(
+                          page: report.meta.page,
+                          totalPages: report.meta.totalPages,
+                          onPrevious: report.meta.page > 1
+                              ? () => ref
+                                    .read(otherIncomeReportProvider.notifier)
+                                    .goToPage(report.meta.page - 1)
+                              : null,
+                          onNext: report.meta.page < report.meta.totalPages
+                              ? () => ref
+                                    .read(otherIncomeReportProvider.notifier)
+                                    .goToPage(report.meta.page + 1)
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
       },
     );
   }
@@ -355,8 +363,10 @@ class _OtherIncomeCategoryReportContentState
           ref.read(otherIncomeByCategoryReportProvider.notifier).refresh(),
       data: (report) {
         final rows = report.rows;
-        final totalIncome =
-            rows.fold<double>(0, (sum, row) => sum + row.amount);
+        final totalIncome = rows.fold<double>(
+          0,
+          (sum, row) => sum + row.amount,
+        );
 
         void exportCsv() {
           reportExportTable(
@@ -376,147 +386,150 @@ class _OtherIncomeCategoryReportContentState
         }
 
         return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: ReportTitleActionsRow(
-              title: 'Other Income Category Report',
-              actions: [
-                ReportTextActionButton(
-                  label: 'Excel',
-                  icon: Icons.table_chart_outlined,
-                  onTap: exportCsv,
+          color: AppColors.background,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.md,
                 ),
-                ReportTextActionButton(
-                  label: 'Print',
-                  icon: Icons.print_outlined,
-                  onTap: () => ReportExportService.showPrintPreview(
-                    context: context,
-                    title: 'Other Income Category Report',
-                    content: ReportExportService.toCsv(
-                      headers: const ['Income Category', 'Count', 'Amount'],
-                      rows: [
-                        for (final row in rows)
-                          [
-                            row.category,
-                            '${row.count}',
-                            formatReportCurrency(row.amount),
-                          ],
-                      ],
+                child: ReportTitleActionsRow(
+                  title: 'Other Income Category Report',
+                  actions: [
+                    ReportTextActionButton(
+                      label: 'Excel',
+                      icon: Icons.table_chart_outlined,
+                      onTap: exportCsv,
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: ReportCard(
-              backgroundColor: const Color(0xFFF5F7FA),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: _DateRangeFilter(
-                datePickerKey: _datePickerKey,
-                dateRange: _dateRange,
-                dateFormat: _dateFormat,
-                onRangeSelected: (range) => setState(() => _dateRange = range),
-                fromLabel: 'From',
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                0,
-                AppSpacing.lg,
-                AppSpacing.lg,
-              ),
-              child: ReportCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.sm,
-                      ),
-                      child: Text(
-                        'OTHER INCOME',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 0.6,
+                    ReportTextActionButton(
+                      label: 'Print',
+                      icon: Icons.print_outlined,
+                      onTap: () => ReportExportService.showPrintPreview(
+                        context: context,
+                        title: 'Other Income Category Report',
+                        content: ReportExportService.toCsv(
+                          headers: const ['Income Category', 'Count', 'Amount'],
+                          rows: [
+                            for (final row in rows)
+                              [
+                                row.category,
+                                '${row.count}',
+                                formatReportCurrency(row.amount),
+                              ],
+                          ],
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: rows.isEmpty
-                          ? _categoryEmptyTable()
-                          : SingleChildScrollView(
-                              child: ReportSyncScrollTable(
-                                headerChildren: _categoryHeaders,
-                                rows: [
-                                  for (var i = 0; i < rows.length; i++)
-                                    ReportAlignedRowStrip(
-                                      index: i,
-                                      child: ReportAlignedDataRow(
-                                        cells: [
-                                          ReportAlignedCell.flex(
-                                            child: Text(rows[i].category),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            120,
-                                            alignment: Alignment.centerRight,
-                                            child: Text('${rows[i].count}'),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            140,
-                                            alignment: Alignment.centerRight,
-                                            child: Text(
-                                              formatReportCurrency(
-                                                rows[i].amount,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                    ),
-                    _TotalFooter(
-                      label: 'Total Income: ',
-                      amount: formatReportCurrency(totalIncome),
-                      amountColor: reportTeal,
                     ),
                   ],
                 ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  0,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
+                child: ReportCard(
+                  backgroundColor: const Color(0xFFF5F7FA),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: _DateRangeFilter(
+                    datePickerKey: _datePickerKey,
+                    dateRange: _dateRange,
+                    dateFormat: _dateFormat,
+                    onRangeSelected: (range) =>
+                        setState(() => _dateRange = range),
+                    fromLabel: 'From',
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: ReportCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.sm,
+                          ),
+                          child: Text(
+                            'OTHER INCOME',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: rows.isEmpty
+                              ? _categoryEmptyTable()
+                              : SingleChildScrollView(
+                                  child: ReportSyncScrollTable(
+                                    headerChildren: _categoryHeaders,
+                                    rows: [
+                                      for (var i = 0; i < rows.length; i++)
+                                        ReportAlignedRowStrip(
+                                          index: i,
+                                          child: ReportAlignedDataRow(
+                                            cells: [
+                                              ReportAlignedCell.flex(
+                                                child: Text(rows[i].category),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                120,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text('${rows[i].count}'),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                140,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text(
+                                                  formatReportCurrency(
+                                                    rows[i].amount,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                        ),
+                        _TotalFooter(
+                          label: 'Total Income: ',
+                          amount: formatReportCurrency(totalIncome),
+                          amountColor: reportTeal,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
       },
     );
   }
@@ -589,8 +602,10 @@ class _OtherIncomeItemReportContentState
           ref.read(otherIncomeByItemReportProvider.notifier).refresh(),
       data: (report) {
         final rows = report.rows;
-        final totalIncome =
-            rows.fold<double>(0, (sum, row) => sum + row.amount);
+        final totalIncome = rows.fold<double>(
+          0,
+          (sum, row) => sum + row.amount,
+        );
 
         void exportCsv() {
           reportExportTable(
@@ -610,146 +625,148 @@ class _OtherIncomeItemReportContentState
         }
 
         return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: ReportTitleActionsRow(
-              title: 'Other Income Item Report',
-              actions: [
-                ReportTextActionButton(
-                  label: 'Excel',
-                  icon: Icons.table_chart_outlined,
-                  onTap: exportCsv,
+          color: AppColors.background,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.md,
                 ),
-                ReportTextActionButton(
-                  label: 'Print',
-                  icon: Icons.print_outlined,
-                  onTap: () => ReportExportService.showPrintPreview(
-                    context: context,
-                    title: 'Other Income Item Report',
-                    content: ReportExportService.toCsv(
-                      headers: const ['Income Item', 'Category', 'Amount'],
-                      rows: [
-                        for (final row in rows)
-                          [
-                            row.itemName,
-                            row.category,
-                            formatReportCurrency(row.amount),
-                          ],
-                      ],
+                child: ReportTitleActionsRow(
+                  title: 'Other Income Item Report',
+                  actions: [
+                    ReportTextActionButton(
+                      label: 'Excel',
+                      icon: Icons.table_chart_outlined,
+                      onTap: exportCsv,
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: ReportCard(
-              backgroundColor: const Color(0xFFF5F7FA),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: _DateRangeFilter(
-                datePickerKey: _datePickerKey,
-                dateRange: _dateRange,
-                dateFormat: _dateFormat,
-                onRangeSelected: (range) => setState(() => _dateRange = range),
-                fromLabel: 'From',
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                0,
-                AppSpacing.lg,
-                AppSpacing.lg,
-              ),
-              child: ReportCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.sm,
-                      ),
-                      child: Text(
-                        'OTHER INCOME',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 0.6,
+                    ReportTextActionButton(
+                      label: 'Print',
+                      icon: Icons.print_outlined,
+                      onTap: () => ReportExportService.showPrintPreview(
+                        context: context,
+                        title: 'Other Income Item Report',
+                        content: ReportExportService.toCsv(
+                          headers: const ['Income Item', 'Category', 'Amount'],
+                          rows: [
+                            for (final row in rows)
+                              [
+                                row.itemName,
+                                row.category,
+                                formatReportCurrency(row.amount),
+                              ],
+                          ],
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: rows.isEmpty
-                          ? _itemEmptyTable()
-                          : SingleChildScrollView(
-                              child: ReportSyncScrollTable(
-                                headerChildren: _itemHeaders,
-                                rows: [
-                                  for (var i = 0; i < rows.length; i++)
-                                    ReportAlignedRowStrip(
-                                      index: i,
-                                      child: ReportAlignedDataRow(
-                                        cells: [
-                                          ReportAlignedCell.flex(
-                                            child: Text(rows[i].itemName),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            180,
-                                            child: Text(rows[i].category),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            140,
-                                            alignment: Alignment.centerRight,
-                                            child: Text(
-                                              formatReportCurrency(
-                                                rows[i].amount,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                    ),
-                    _TotalFooter(
-                      label: 'Total Income: ',
-                      amount: formatReportCurrency(totalIncome),
-                      amountColor: reportTeal,
                     ),
                   ],
                 ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  0,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
+                child: ReportCard(
+                  backgroundColor: const Color(0xFFF5F7FA),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: _DateRangeFilter(
+                    datePickerKey: _datePickerKey,
+                    dateRange: _dateRange,
+                    dateFormat: _dateFormat,
+                    onRangeSelected: (range) =>
+                        setState(() => _dateRange = range),
+                    fromLabel: 'From',
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: ReportCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.sm,
+                          ),
+                          child: Text(
+                            'OTHER INCOME',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: rows.isEmpty
+                              ? _itemEmptyTable()
+                              : SingleChildScrollView(
+                                  child: ReportSyncScrollTable(
+                                    headerChildren: _itemHeaders,
+                                    rows: [
+                                      for (var i = 0; i < rows.length; i++)
+                                        ReportAlignedRowStrip(
+                                          index: i,
+                                          child: ReportAlignedDataRow(
+                                            cells: [
+                                              ReportAlignedCell.flex(
+                                                child: Text(rows[i].itemName),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                180,
+                                                child: Text(rows[i].category),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                140,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text(
+                                                  formatReportCurrency(
+                                                    rows[i].amount,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                        ),
+                        _TotalFooter(
+                          label: 'Total Income: ',
+                          amount: formatReportCurrency(totalIncome),
+                          amountColor: reportTeal,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
       },
     );
   }

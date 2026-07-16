@@ -77,201 +77,202 @@ class _PartyReportByItemContentState
         }
 
         return ColoredBox(
-      color: AppColors.background,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ReportCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const ReportPeriodFilterBar(),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
+          color: AppColors.background,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ReportCard(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ReportTextActionButton(
-                        label: 'Excel Report',
-                        icon: Icons.table_chart_outlined,
-                        onTap: exportCsv,
-                      ),
-                      ReportTextActionButton(
-                        label: 'Print',
-                        icon: Icons.print_outlined,
-                        onTap: () => ReportExportService.showPrintPreview(
-                          context: context,
-                          title: 'Party Report By Item',
-                          content: ReportExportService.toCsv(
-                            headers: const [
-                              'Party Name',
-                              'Sale Quantity',
-                              'Sale Amount',
-                            ],
-                            rows: [
-                              for (final row in rows)
-                                [
-                                  row.partyName,
-                                  row.quantity.toStringAsFixed(0),
-                                  formatReportCurrency(row.amount),
+                      const ReportPeriodFilterBar(),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        children: [
+                          ReportTextActionButton(
+                            label: 'Excel Report',
+                            icon: Icons.table_chart_outlined,
+                            onTap: exportCsv,
+                          ),
+                          ReportTextActionButton(
+                            label: 'Print',
+                            icon: Icons.print_outlined,
+                            onTap: () => ReportExportService.showPrintPreview(
+                              context: context,
+                              title: 'Party Report By Item',
+                              content: ReportExportService.toCsv(
+                                headers: const [
+                                  'Party Name',
+                                  'Sale Quantity',
+                                  'Sale Amount',
                                 ],
-                            ],
+                                rows: [
+                                  for (final row in rows)
+                                    [
+                                      row.partyName,
+                                      row.quantity.toStringAsFixed(0),
+                                      formatReportCurrency(row.amount),
+                                    ],
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.sm,
+                        children: [
+                          const ReportCategoryFilter(),
+                          SaleFilterDropdown(
+                            label: selectedItemName,
+                            options: ['All Items', ...itemNames],
+                            selected: selectedItemName,
+                            onSelected: (value) {
+                              if (value == 'All Items') {
+                                ref
+                                    .read(reportFiltersProvider.notifier)
+                                    .setItemId(null);
+                                return;
+                              }
+                              final item = items.firstWhere(
+                                (entry) => entry.name == value,
+                              );
+                              ref
+                                  .read(reportFiltersProvider.notifier)
+                                  .setItemId(item.id);
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ReportSearchField(
+                  hintText: 'Search Party...',
+                  onChanged: ref
+                      .read(reportFiltersProvider.notifier)
+                      .setSearchQuery,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ReportCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const ReportCategoryFilter(),
-                      SaleFilterDropdown(
-                        label: selectedItemName,
-                        options: ['All Items', ...itemNames],
-                        selected: selectedItemName,
-                        onSelected: (value) {
-                          if (value == 'All Items') {
-                            ref
-                                .read(reportFiltersProvider.notifier)
-                                .setItemId(null);
-                            return;
-                          }
-                          final item = items.firstWhere(
-                            (entry) => entry.name == value,
-                          );
-                          ref
-                              .read(reportFiltersProvider.notifier)
-                              .setItemId(item.id);
-                        },
+                      ReportSyncScrollTable(
+                        minWidth: 700,
+                        emptyState: SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: Text(
+                              selectedItemId == null || selectedItemId.isEmpty
+                                  ? 'Select an item to view the report.'
+                                  : 'No data available for the selected period.',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ),
+                        headerChildren: const [
+                          ReportAlignedHeaderCell(label: '#', width: 40),
+                          Expanded(
+                            child: ReportAlignedHeaderCell(label: 'PARTY NAME'),
+                          ),
+                          ReportAlignedHeaderCell(
+                            label: 'SALE QUANTITY',
+                            width: 120,
+                            alignment: Alignment.centerRight,
+                          ),
+                          ReportAlignedHeaderCell(
+                            label: 'SALE AMOUNT',
+                            width: 120,
+                            alignment: Alignment.centerRight,
+                          ),
+                          ReportAlignedHeaderCell(
+                            label: 'PURCHASE QUANTITY',
+                            width: 140,
+                            alignment: Alignment.centerRight,
+                          ),
+                          ReportAlignedHeaderCell(
+                            label: 'PURCHASE AMOUNT',
+                            width: 140,
+                            alignment: Alignment.centerRight,
+                          ),
+                        ],
+                        rows: [
+                          for (var i = 0; i < rows.length; i++)
+                            ReportAlignedRowStrip(
+                              index: i,
+                              child: ReportAlignedDataRow(
+                                cells: [
+                                  ReportAlignedCell.fixed(
+                                    40,
+                                    child: Text('${i + 1}'),
+                                  ),
+                                  ReportAlignedCell.flex(
+                                    child: Text(
+                                      rows[i].partyName,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  ReportAlignedCell.fixed(
+                                    120,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      rows[i].quantity.toStringAsFixed(0),
+                                    ),
+                                  ),
+                                  ReportAlignedCell.fixed(
+                                    120,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      formatReportCurrency(rows[i].amount),
+                                    ),
+                                  ),
+                                  const ReportAlignedCell.fixed(
+                                    140,
+                                    alignment: Alignment.centerRight,
+                                    child: Text('—'),
+                                  ),
+                                  const ReportAlignedCell.fixed(
+                                    140,
+                                    alignment: Alignment.centerRight,
+                                    child: Text('—'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ReportSearchField(
-              hintText: 'Search Party...',
-              onChanged:
-                  ref.read(reportFiltersProvider.notifier).setSearchQuery,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ReportCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ReportSyncScrollTable(
-                    minWidth: 700,
-                    emptyState: SizedBox(
-                      height: 200,
-                      child: Center(
-                        child: Text(
-                          selectedItemId == null || selectedItemId.isEmpty
-                              ? 'Select an item to view the report.'
-                              : 'No data available for the selected period.',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    headerChildren: const [
-                      ReportAlignedHeaderCell(label: '#', width: 40),
-                      Expanded(
-                        child: ReportAlignedHeaderCell(label: 'PARTY NAME'),
-                      ),
-                      ReportAlignedHeaderCell(
-                        label: 'SALE QUANTITY',
-                        width: 120,
-                        alignment: Alignment.centerRight,
-                      ),
-                      ReportAlignedHeaderCell(
-                        label: 'SALE AMOUNT',
-                        width: 120,
-                        alignment: Alignment.centerRight,
-                      ),
-                      ReportAlignedHeaderCell(
-                        label: 'PURCHASE QUANTITY',
-                        width: 140,
-                        alignment: Alignment.centerRight,
-                      ),
-                      ReportAlignedHeaderCell(
-                        label: 'PURCHASE AMOUNT',
-                        width: 140,
-                        alignment: Alignment.centerRight,
-                      ),
-                    ],
-                    rows: [
-                      for (var i = 0; i < rows.length; i++)
-                        ReportAlignedRowStrip(
-                          index: i,
-                          child: ReportAlignedDataRow(
-                            cells: [
-                              ReportAlignedCell.fixed(
-                                40,
-                                child: Text('${i + 1}'),
-                              ),
-                              ReportAlignedCell.flex(
-                                child: Text(
-                                  rows[i].partyName,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              ReportAlignedCell.fixed(
-                                120,
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  rows[i].quantity.toStringAsFixed(0),
-                                ),
-                              ),
-                              ReportAlignedCell.fixed(
-                                120,
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  formatReportCurrency(rows[i].amount),
-                                ),
-                              ),
-                              const ReportAlignedCell.fixed(
-                                140,
-                                alignment: Alignment.centerRight,
-                                child: Text('—'),
-                              ),
-                              const ReportAlignedCell.fixed(
-                                140,
-                                alignment: Alignment.centerRight,
-                                child: Text('—'),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
+                ),
+                if (report != null)
+                  ReportPaginationBar(
+                    page: report.meta.page,
+                    totalPages: report.meta.totalPages,
+                    onPrevious: report.meta.page > 1
+                        ? () => ref
+                              .read(partyReportByItemReportProvider.notifier)
+                              .goToPage(report.meta.page - 1)
+                        : null,
+                    onNext: report.meta.page < report.meta.totalPages
+                        ? () => ref
+                              .read(partyReportByItemReportProvider.notifier)
+                              .goToPage(report.meta.page + 1)
+                        : null,
                   ),
-                ],
-              ),
+              ],
             ),
-            if (report != null)
-              ReportPaginationBar(
-                page: report.meta.page,
-                totalPages: report.meta.totalPages,
-                onPrevious: report.meta.page > 1
-                    ? () => ref
-                          .read(partyReportByItemReportProvider.notifier)
-                          .goToPage(report.meta.page - 1)
-                    : null,
-                onNext: report.meta.page < report.meta.totalPages
-                    ? () => ref
-                          .read(partyReportByItemReportProvider.notifier)
-                          .goToPage(report.meta.page + 1)
-                    : null,
-              ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
       },
     );
   }

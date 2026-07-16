@@ -276,9 +276,9 @@ class PosReceiptTemplate implements PrintTemplate {
   }
 
   String _paymentModeLabel(PaymentMode mode) => switch (mode) {
-        PaymentMode.cash => 'Cash',
-        PaymentMode.upi => 'UPI',
-        PaymentMode.card => 'Card',
-        PaymentMode.bank => 'Bank',
-      };
+    PaymentMode.cash => 'Cash',
+    PaymentMode.upi => 'UPI',
+    PaymentMode.card => 'Card',
+    PaymentMode.bank => 'Bank',
+  };
 }

@@ -31,8 +31,9 @@ class InventoryListHeader extends StatelessWidget {
       fixedWidths: [for (final column in columns) column.fixedWidth],
       alignEnds: [for (final column in columns) column.alignEnd],
       showColumnSeparators: showColumnSeparators,
-      dividerAfterColumnIndex:
-          showColumnSeparators ? null : dividerAfterColumnIndex,
+      dividerAfterColumnIndex: showColumnSeparators
+          ? null
+          : dividerAfterColumnIndex,
       cellVerticalPadding: showColumnSeparators
           ? const EdgeInsets.symmetric(vertical: 12)
           : EdgeInsets.zero,

@@ -23,7 +23,8 @@ class ExpandableTableSearchField extends StatefulWidget {
       _ExpandableTableSearchFieldState();
 }
 
-class _ExpandableTableSearchFieldState extends State<ExpandableTableSearchField> {
+class _ExpandableTableSearchFieldState
+    extends State<ExpandableTableSearchField> {
   static const _borderColor = Color(0xFFE0E0E0);
   static const _focusedBorderColor = Color(0xFF90CAF9);
 

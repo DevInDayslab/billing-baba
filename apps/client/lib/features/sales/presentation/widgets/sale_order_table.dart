@@ -76,17 +76,20 @@ class SaleOrderTable extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.sm),
                 OutlinedButton(
                   onPressed: () => _handleBulkConvert(context),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ).copyWith(
-                    foregroundColor: const WidgetStatePropertyAll(_bulkConvertColor),
-                    side: const WidgetStatePropertyAll(
-                      BorderSide(color: _bulkConvertColor),
-                    ),
-                  ),
+                  style:
+                      OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ).copyWith(
+                        foregroundColor: const WidgetStatePropertyAll(
+                          _bulkConvertColor,
+                        ),
+                        side: const WidgetStatePropertyAll(
+                          BorderSide(color: _bulkConvertColor),
+                        ),
+                      ),
                   child: const Text(
                     'Bulk Convert To Sale',
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
@@ -706,4 +709,3 @@ class _PaginationRow extends ConsumerWidget {
     );
   }
 }
-

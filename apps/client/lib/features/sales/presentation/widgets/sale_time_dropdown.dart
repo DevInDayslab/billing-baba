@@ -81,9 +81,8 @@ class SaleTimeDropdownState extends State<SaleTimeDropdown> {
     ).clamp(0, _options.length - 1);
 
     final maxScroll = _scrollController.position.maxScrollExtent;
-    final targetOffset = (index * _itemHeight) -
-        (widget.maxMenuHeight / 2) +
-        (_itemHeight / 2);
+    final targetOffset =
+        (index * _itemHeight) - (widget.maxMenuHeight / 2) + (_itemHeight / 2);
     _scrollController.jumpTo(targetOffset.clamp(0.0, maxScroll));
   }
 
@@ -105,7 +104,10 @@ class SaleTimeDropdownState extends State<SaleTimeDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    final displayText = formatSaleTime(widget.value, placeholder: widget.placeholder);
+    final displayText = formatSaleTime(
+      widget.value,
+      placeholder: widget.placeholder,
+    );
     final isPlaceholder = widget.value == null;
 
     return LayoutBuilder(

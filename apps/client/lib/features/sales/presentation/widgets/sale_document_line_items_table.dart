@@ -53,8 +53,7 @@ class _SaleDocumentLineItemsTableState
 
     final totalQty = items.fold<double>(0, (sum, item) => sum + item.qty);
     final totalTax = items.fold<double>(0, (sum, item) => sum + item.lineTax);
-    final totalAmount =
-        items.fold<double>(0, (sum, item) => sum + item.amount);
+    final totalAmount = items.fold<double>(0, (sum, item) => sum + item.amount);
 
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -119,7 +118,10 @@ class _SaleDocumentLineItemsTableState
               style: OutlinedButton.styleFrom(
                 foregroundColor: _addRowColor,
                 side: const BorderSide(color: _addRowColor),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -214,7 +216,10 @@ class _LineItemsHeader extends StatelessWidget {
               width: widths.amount,
               alignRight: true,
             ),
-            SaleLineItemGridCell(width: widths.actions, child: const SizedBox()),
+            SaleLineItemGridCell(
+              width: widths.actions,
+              child: const SizedBox(),
+            ),
           ],
         ),
       ),
@@ -267,7 +272,9 @@ class _LineItemRow extends ConsumerWidget {
         child: DecoratedBox(
           decoration: const BoxDecoration(
             border: Border(
-              bottom: BorderSide(color: SaleLineItemTableLayout.gridBorderColor),
+              bottom: BorderSide(
+                color: SaleLineItemTableLayout.gridBorderColor,
+              ),
             ),
           ),
           child: SizedBox(
@@ -318,15 +325,15 @@ class _LineItemRow extends ConsumerWidget {
                             ),
                             onItemSelected: (catalogItem) =>
                                 notifier.updateLineItem(
-                              index,
-                              item.copyWith(
-                                itemId: catalogItem.id,
-                                itemName: catalogItem.name,
-                                pricePerUnit: catalogItem.salePrice,
-                                unit: catalogItem.unit ?? item.unit,
-                                mrp: catalogItem.salePrice,
-                              ),
-                            ),
+                                  index,
+                                  item.copyWith(
+                                    itemId: catalogItem.id,
+                                    itemName: catalogItem.name,
+                                    pricePerUnit: catalogItem.salePrice,
+                                    unit: catalogItem.unit ?? item.unit,
+                                    mrp: catalogItem.salePrice,
+                                  ),
+                                ),
                           ),
                         ),
                       ),
@@ -516,7 +523,9 @@ class _LineItemRow extends ConsumerWidget {
                 SaleLineItemGridCell(
                   width: widths.taxAmount,
                   child: Text(
-                    SaleDocumentLineItemsTable._amountFormat.format(item.lineTax),
+                    SaleDocumentLineItemsTable._amountFormat.format(
+                      item.lineTax,
+                    ),
                     style: TextStyle(
                       fontSize: 12,
                       color: item.taxPercent > 0
@@ -530,7 +539,9 @@ class _LineItemRow extends ConsumerWidget {
                   width: widths.amount,
                   alignment: Alignment.centerRight,
                   child: Text(
-                    SaleDocumentLineItemsTable._amountFormat.format(item.amount),
+                    SaleDocumentLineItemsTable._amountFormat.format(
+                      item.amount,
+                    ),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -633,8 +644,14 @@ class _TotalsRow extends StatelessWidget {
             ),
             SaleLineItemGridCell(width: widths.batch, child: const SizedBox()),
             SaleLineItemGridCell(width: widths.model, child: const SizedBox()),
-            SaleLineItemGridCell(width: widths.expDate, child: const SizedBox()),
-            SaleLineItemGridCell(width: widths.mfgDate, child: const SizedBox()),
+            SaleLineItemGridCell(
+              width: widths.expDate,
+              child: const SizedBox(),
+            ),
+            SaleLineItemGridCell(
+              width: widths.mfgDate,
+              child: const SizedBox(),
+            ),
             SaleLineItemGridCell(width: widths.mrp, child: const SizedBox()),
             SaleLineItemGridCell(width: widths.size, child: const SizedBox()),
             SaleLineItemGridCell(
@@ -671,7 +688,10 @@ class _TotalsRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            SaleLineItemGridCell(width: widths.actions, child: const SizedBox()),
+            SaleLineItemGridCell(
+              width: widths.actions,
+              child: const SizedBox(),
+            ),
           ],
         ),
       ),

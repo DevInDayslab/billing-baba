@@ -113,8 +113,9 @@ class _PageHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(debitNoteFormProvider(debitNoteId: debitNoteId));
-    final notifier =
-        ref.read(debitNoteFormProvider(debitNoteId: debitNoteId).notifier);
+    final notifier = ref.read(
+      debitNoteFormProvider(debitNoteId: debitNoteId).notifier,
+    );
 
     return Row(
       children: [
@@ -151,8 +152,9 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
 
   @override
   Widget build(BuildContext context) {
-    final form =
-        ref.watch(debitNoteFormProvider(debitNoteId: widget.debitNoteId));
+    final form = ref.watch(
+      debitNoteFormProvider(debitNoteId: widget.debitNoteId),
+    );
     final notifier = ref.read(
       debitNoteFormProvider(debitNoteId: widget.debitNoteId).notifier,
     );
@@ -265,8 +267,9 @@ class _BottomActionBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(debitNoteFormProvider(debitNoteId: debitNoteId));
-    final notifier =
-        ref.read(debitNoteFormProvider(debitNoteId: debitNoteId).notifier);
+    final notifier = ref.read(
+      debitNoteFormProvider(debitNoteId: debitNoteId).notifier,
+    );
 
     final isSaving = form.isSaving;
 
@@ -291,9 +294,15 @@ class _BottomActionBar extends ConsumerWidget {
             OutlinedButton.icon(
               onPressed: () => _handlePrintPreview(context, ref, form),
               icon: const Icon(Icons.print_outlined, size: 16),
-              label: const Text('Print / Preview', style: TextStyle(fontSize: 13)),
+              label: const Text(
+                'Print / Preview',
+                style: TextStyle(fontSize: 13),
+              ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 side: const BorderSide(color: _cardBorder),
               ),
             ),
@@ -307,7 +316,9 @@ class _BottomActionBar extends ConsumerWidget {
             const SizedBox(width: AppSpacing.sm),
           ],
           FilledButton(
-            onPressed: isSaving ? null : () => _handleSave(context, ref, notifier),
+            onPressed: isSaving
+                ? null
+                : () => _handleSave(context, ref, notifier),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,

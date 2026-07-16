@@ -217,9 +217,9 @@ class AddSaleForm extends _$AddSaleForm {
         .firstOrNull;
     if (fromList != null) return fromList;
 
-    return (await ref.read(partyPickerListProvider.future))
-        .where((party) => party.id == partyId)
-        .firstOrNull;
+    return (await ref.read(
+      partyPickerListProvider.future,
+    )).where((party) => party.id == partyId).firstOrNull;
   }
 
   SaleLoyaltyResultDto? _resolveSaleLoyalty({
@@ -236,8 +236,7 @@ class AddSaleForm extends _$AddSaleForm {
     final earned = LoyaltyPointsCalculator.earnedForSpend(invoiceTotal);
     if (earned <= 0) return null;
 
-    final available =
-        loyaltyPointsAvailable - loyaltyPointsUsed + earned;
+    final available = loyaltyPointsAvailable - loyaltyPointsUsed + earned;
     return SaleLoyaltyResultDto(
       earnedPoints: earned.toString(),
       redeemedPoints: loyaltyPointsUsed.toStringAsFixed(0),
@@ -334,11 +333,12 @@ class AddSaleForm extends _$AddSaleForm {
               .read(partiesListProvider)
               .where((item) => item.id == partyId)
               .firstOrNull ??
-          (await ref.read(partyPickerListProvider.future))
-              .where((item) => item.id == partyId)
-              .firstOrNull;
+          (await ref.read(
+            partyPickerListProvider.future,
+          )).where((item) => item.id == partyId).firstOrNull;
 
-      if (resolvedParty != null && !LoyaltyRules.isEligibleParty(resolvedParty)) {
+      if (resolvedParty != null &&
+          !LoyaltyRules.isEligibleParty(resolvedParty)) {
         if (!ref.mounted) return;
         state = state.copyWith(
           loyaltyPointsAvailable: 0,
@@ -353,8 +353,9 @@ class AddSaleForm extends _$AddSaleForm {
         state = state.copyWith(loyaltyPointsAvailable: cachedAvailable);
       }
 
-      final balance =
-          await ref.read(partyLoyaltyBalanceProvider(partyId).future);
+      final balance = await ref.read(
+        partyLoyaltyBalanceProvider(partyId).future,
+      );
       if (!ref.mounted) return;
       state = state.copyWith(loyaltyPointsAvailable: balance.availablePoints);
     } on Object {
@@ -809,8 +810,8 @@ class AddSaleForm extends _$AddSaleForm {
           loyaltyPointsAvailable: loyaltyPointsAvailable,
         );
 
-        earnedLoyaltyPoints = loyalty?.earnedPointsInt ??
-            result.earnedLoyaltyPoints;
+        earnedLoyaltyPoints =
+            loyalty?.earnedPointsInt ?? result.earnedLoyaltyPoints;
         pointsAvailable =
             loyalty?.availablePoints ?? result.loyalty?.availablePoints ?? 0;
 

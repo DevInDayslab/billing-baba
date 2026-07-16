@@ -39,8 +39,7 @@ class _NumberFilterWidgetState extends State<NumberFilterWidget> {
   @override
   void initState() {
     super.initState();
-    _operator =
-        widget.initialFilter?.operator ?? NumberColumnOperator.equalTo;
+    _operator = widget.initialFilter?.operator ?? NumberColumnOperator.equalTo;
     _controller = TextEditingController(
       text: widget.initialFilter != null
           ? _format(widget.initialFilter!.value)

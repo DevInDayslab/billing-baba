@@ -175,7 +175,10 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _DialogHeader(onClose: () => Navigator.of(context).pop()),
-            if (_showUpiBanner) _UpiBanner(onDismiss: () => setState(() => _showUpiBanner = false)),
+            if (_showUpiBanner)
+              _UpiBanner(
+                onDismiss: () => setState(() => _showUpiBanner = false),
+              ),
             Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(_sectionGap),
@@ -288,7 +291,9 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                             child: TextField(
                               controller: _receiptNoController,
                               style: saleFieldTextStyle,
-                              decoration: buildSaleFieldDecoration(compact: true),
+                              decoration: buildSaleFieldDecoration(
+                                compact: true,
+                              ),
                               onChanged: notifier.updateReceiptNo,
                             ),
                           ),
@@ -435,7 +440,12 @@ class _UpiBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(_sectionGap, _sectionGap, _sectionGap, 0),
+      margin: const EdgeInsets.fromLTRB(
+        _sectionGap,
+        _sectionGap,
+        _sectionGap,
+        0,
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFE3F2FD),

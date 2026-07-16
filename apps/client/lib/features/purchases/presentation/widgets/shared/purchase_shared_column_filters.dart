@@ -125,16 +125,14 @@ bool purchaseColumnFilterIsActive(
     PurchaseColumnFilterKind.categoryName =>
       columns.selectedCategory != 'All Categories',
     PurchaseColumnFilterKind.typeName => columns.selectedType != 'All Types',
-    PurchaseColumnFilterKind.receivedPaid =>
-      columns.receivedPaidFilter != null,
+    PurchaseColumnFilterKind.receivedPaid => columns.receivedPaidFilter != null,
   };
 }
 
 bool purchaseColumnStatusFilterIsActive(
   String selectedStatus, {
   String allLabel = 'All Status',
-}) =>
-    selectedStatus != allLabel;
+}) => selectedStatus != allLabel;
 
 List<String> purchasePartyOptionsFromNames(Iterable<String> names) {
   final parties = names.toSet().toList()..sort();
@@ -214,77 +212,77 @@ ColumnFilter _configForKind({
 }) {
   return switch (kind) {
     PurchaseColumnFilterKind.documentNo => ColumnFilter(
-        id: 'documentNo',
-        title: label,
-        type: FilterType.text,
-        hintText: documentNoHint,
-      ),
+      id: 'documentNo',
+      title: label,
+      type: FilterType.text,
+      hintText: documentNoHint,
+    ),
     PurchaseColumnFilterKind.partyName => ColumnFilter(
-        id: 'partyName',
-        title: label,
-        type: FilterType.singleSelect,
-        values: partyOptions,
-      ),
+      id: 'partyName',
+      title: label,
+      type: FilterType.singleSelect,
+      values: partyOptions,
+    ),
     PurchaseColumnFilterKind.paymentType => ColumnFilter(
-        id: 'paymentType',
-        title: label,
-        type: FilterType.multiSelect,
-        values: paymentOptions,
-        searchable: false,
-      ),
+      id: 'paymentType',
+      title: label,
+      type: FilterType.multiSelect,
+      values: paymentOptions,
+      searchable: false,
+    ),
     PurchaseColumnFilterKind.amount => ColumnFilter(
-        id: 'amount',
-        title: label,
-        type: FilterType.number,
-      ),
+      id: 'amount',
+      title: label,
+      type: FilterType.number,
+    ),
     PurchaseColumnFilterKind.balanceDue => ColumnFilter(
-        id: 'balanceDue',
-        title: label,
-        type: FilterType.number,
-      ),
+      id: 'balanceDue',
+      title: label,
+      type: FilterType.number,
+    ),
     PurchaseColumnFilterKind.totalAmount => ColumnFilter(
-        id: 'totalAmount',
-        title: label,
-        type: FilterType.number,
-      ),
+      id: 'totalAmount',
+      title: label,
+      type: FilterType.number,
+    ),
     PurchaseColumnFilterKind.paidAmount => ColumnFilter(
-        id: 'paidAmount',
-        title: label,
-        type: FilterType.number,
-      ),
+      id: 'paidAmount',
+      title: label,
+      type: FilterType.number,
+    ),
     PurchaseColumnFilterKind.receivedPaid => ColumnFilter(
-        id: 'receivedPaid',
-        title: label,
-        type: FilterType.number,
-      ),
+      id: 'receivedPaid',
+      title: label,
+      type: FilterType.number,
+    ),
     PurchaseColumnFilterKind.status => ColumnFilter(
-        id: 'status',
-        title: label,
-        type: FilterType.singleSelect,
-        values: statusOptions,
-      ),
+      id: 'status',
+      title: label,
+      type: FilterType.singleSelect,
+      values: statusOptions,
+    ),
     PurchaseColumnFilterKind.categoryName => ColumnFilter(
-        id: 'categoryName',
-        title: label,
-        type: FilterType.singleSelect,
-        values: categoryOptions,
-      ),
+      id: 'categoryName',
+      title: label,
+      type: FilterType.singleSelect,
+      values: categoryOptions,
+    ),
     PurchaseColumnFilterKind.typeName => ColumnFilter(
-        id: 'typeName',
-        title: label,
-        type: FilterType.singleSelect,
-        values: typeOptions,
-      ),
+      id: 'typeName',
+      title: label,
+      type: FilterType.singleSelect,
+      values: typeOptions,
+    ),
     PurchaseColumnFilterKind.date => ColumnFilter(
-        id: 'date',
-        title: label,
-        type: FilterType.date,
-      ),
+      id: 'date',
+      title: label,
+      type: FilterType.date,
+    ),
     PurchaseColumnFilterKind.dueDate => ColumnFilter(
-        id: 'dueDate',
-        title: label,
-        type: FilterType.date,
-      ),
+      id: 'dueDate',
+      title: label,
+      type: FilterType.date,
+    ),
   };
 }
 
@@ -294,41 +292,49 @@ Object? _initialValueForKind({
   required String selectedStatus,
 }) {
   return switch (kind) {
-    PurchaseColumnFilterKind.documentNo => columns.documentNoFilter.trim().isEmpty
-        ? null
-        : TextColumnFilter(
-            operator: TextColumnOperator.contains,
-            value: columns.documentNoFilter,
-          ),
+    PurchaseColumnFilterKind.documentNo =>
+      columns.documentNoFilter.trim().isEmpty
+          ? null
+          : TextColumnFilter(
+              operator: TextColumnOperator.contains,
+              value: columns.documentNoFilter,
+            ),
     PurchaseColumnFilterKind.partyName =>
       columns.selectedParty == 'All Parties'
           ? null
           : SelectColumnFilter(value: columns.selectedParty),
-    PurchaseColumnFilterKind.paymentType => columns.selectedPaymentTypes.isEmpty
-        ? null
-        : MultiSelectColumnFilter(values: columns.selectedPaymentTypes),
-    PurchaseColumnFilterKind.amount =>
-      _numberFromPurchase(columns.amountFilter),
-    PurchaseColumnFilterKind.balanceDue =>
-      _numberFromPurchase(columns.balanceFilter),
-    PurchaseColumnFilterKind.totalAmount =>
-      _numberFromPurchase(columns.totalAmountFilter),
-    PurchaseColumnFilterKind.paidAmount =>
-      _numberFromPurchase(columns.paidAmountFilter),
-    PurchaseColumnFilterKind.receivedPaid =>
-      _numberFromPurchase(columns.receivedPaidFilter),
-    PurchaseColumnFilterKind.status => selectedStatus == 'All Status'
-        ? null
-        : SelectColumnFilter(value: selectedStatus),
+    PurchaseColumnFilterKind.paymentType =>
+      columns.selectedPaymentTypes.isEmpty
+          ? null
+          : MultiSelectColumnFilter(values: columns.selectedPaymentTypes),
+    PurchaseColumnFilterKind.amount => _numberFromPurchase(
+      columns.amountFilter,
+    ),
+    PurchaseColumnFilterKind.balanceDue => _numberFromPurchase(
+      columns.balanceFilter,
+    ),
+    PurchaseColumnFilterKind.totalAmount => _numberFromPurchase(
+      columns.totalAmountFilter,
+    ),
+    PurchaseColumnFilterKind.paidAmount => _numberFromPurchase(
+      columns.paidAmountFilter,
+    ),
+    PurchaseColumnFilterKind.receivedPaid => _numberFromPurchase(
+      columns.receivedPaidFilter,
+    ),
+    PurchaseColumnFilterKind.status =>
+      selectedStatus == 'All Status'
+          ? null
+          : SelectColumnFilter(value: selectedStatus),
     PurchaseColumnFilterKind.categoryName =>
       columns.selectedCategory == 'All Categories'
           ? null
           : SelectColumnFilter(value: columns.selectedCategory),
-    PurchaseColumnFilterKind.typeName => columns.selectedType == 'All Types'
-        ? null
-        : SelectColumnFilter(value: columns.selectedType),
-    PurchaseColumnFilterKind.date =>
-      _dateFromRange(columns.columnDateRange),
+    PurchaseColumnFilterKind.typeName =>
+      columns.selectedType == 'All Types'
+          ? null
+          : SelectColumnFilter(value: columns.selectedType),
+    PurchaseColumnFilterKind.date => _dateFromRange(columns.columnDateRange),
     PurchaseColumnFilterKind.dueDate => _dateFromRange(columns.dueDateRange),
   };
 }
@@ -367,8 +373,10 @@ void _applyResultForKind({
     case PurchaseColumnFilterKind.totalAmount:
       _applyNumeric(
         result,
-        onApply: actions.onApplyTotalAmountFilter ?? actions.onApplyAmountFilter,
-        onClear: actions.onClearTotalAmountFilter ?? actions.onClearAmountFilter,
+        onApply:
+            actions.onApplyTotalAmountFilter ?? actions.onApplyAmountFilter,
+        onClear:
+            actions.onClearTotalAmountFilter ?? actions.onClearAmountFilter,
       );
     case PurchaseColumnFilterKind.paidAmount:
       _applyNumeric(
@@ -469,21 +477,21 @@ DateTimeRange? _rangeFromDateResult(FilterResult? result) {
 
   return switch (filter.operator) {
     DateColumnOperator.equalTo => DateTimeRange(
-        start: _day(filter.date!),
-        end: _day(filter.date!),
-      ),
+      start: _day(filter.date!),
+      end: _day(filter.date!),
+    ),
     DateColumnOperator.lessThan => DateTimeRange(
-        start: DateTime(2000),
-        end: _day(filter.date!).subtract(const Duration(days: 1)),
-      ),
+      start: DateTime(2000),
+      end: _day(filter.date!).subtract(const Duration(days: 1)),
+    ),
     DateColumnOperator.greaterThan => DateTimeRange(
-        start: _day(filter.date!).add(const Duration(days: 1)),
-        end: DateTime(2100, 12, 31),
-      ),
+      start: _day(filter.date!).add(const Duration(days: 1)),
+      end: DateTime(2100, 12, 31),
+    ),
     DateColumnOperator.range => DateTimeRange(
-        start: _day(filter.startDate!),
-        end: _day(filter.endDate!),
-      ),
+      start: _day(filter.startDate!),
+      end: _day(filter.endDate!),
+    ),
   };
 }
 

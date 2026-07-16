@@ -78,7 +78,10 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
                 ),
                 decoration: InputDecoration(
                   hintText: 'Search items...',
-                  hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                  hintStyle: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 13,
+                  ),
                   filled: true,
                   fillColor: AppColors.background,
                   contentPadding: const EdgeInsets.symmetric(
@@ -183,13 +186,15 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         return GridView.builder(
-                          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent:
-                                _maxCrossAxisExtent(constraints.maxWidth),
-                            mainAxisExtent: _cardHeight,
-                            mainAxisSpacing: _gridSpacing,
-                            crossAxisSpacing: _gridSpacing,
-                          ),
+                          gridDelegate:
+                              SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: _maxCrossAxisExtent(
+                                  constraints.maxWidth,
+                                ),
+                                mainAxisExtent: _cardHeight,
+                                mainAxisSpacing: _gridSpacing,
+                                crossAxisSpacing: _gridSpacing,
+                              ),
                           itemCount: visibleItems.length,
                           itemBuilder: (context, index) =>
                               ItemCard(item: visibleItems[index]),

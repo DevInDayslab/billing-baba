@@ -63,7 +63,8 @@ abstract final class ApiErrorParser {
       case 'TOKEN_EXPIRED':
         return message ?? 'Your session expired. Please sign in again.';
       case 'VALIDATION_ERROR':
-        return message ?? 'Some fields are invalid. Please review and try again.';
+        return message ??
+            'Some fields are invalid. Please review and try again.';
       default:
         break;
     }

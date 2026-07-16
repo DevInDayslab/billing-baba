@@ -45,7 +45,9 @@ class _BusinessCardState extends State<BusinessCard> {
           color: Colors.white,
           borderRadius: AppRadius.lgBorder,
           border: Border.all(
-            color: _isHovered ? AppColors.primary.withValues(alpha: 0.35) : _borderColor,
+            color: _isHovered
+                ? AppColors.primary.withValues(alpha: 0.35)
+                : _borderColor,
           ),
           boxShadow: [
             BoxShadow(
@@ -144,7 +146,9 @@ class _BusinessCardState extends State<BusinessCard> {
                               ? Icons.cloud_done_outlined
                               : Icons.cloud_off_outlined,
                           size: 14,
-                          color: syncOn ? _syncOnColor : AppColors.textSecondary,
+                          color: syncOn
+                              ? _syncOnColor
+                              : AppColors.textSecondary,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -152,7 +156,9 @@ class _BusinessCardState extends State<BusinessCard> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: syncOn ? _syncOnColor : AppColors.textSecondary,
+                            color: syncOn
+                                ? _syncOnColor
+                                : AppColors.textSecondary,
                             letterSpacing: 0.2,
                           ),
                         ),
@@ -280,47 +286,47 @@ class _BusinessCardMenu extends StatelessWidget {
         ),
       ),
       child: PopupMenuButton<BusinessCardAction>(
-      tooltip: 'More options',
-      icon: Icon(
-        Icons.more_vert,
-        color: AppColors.textSecondary.withValues(alpha: 0.85),
-        size: 22,
+        tooltip: 'More options',
+        icon: Icon(
+          Icons.more_vert,
+          color: AppColors.textSecondary.withValues(alpha: 0.85),
+          size: 22,
+        ),
+        color: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
+        elevation: 8,
+        shadowColor: Colors.black.withValues(alpha: 0.12),
+        offset: const Offset(0, 8),
+        onSelected: onAction,
+        itemBuilder: (context) => [
+          if (canManage) ...[
+            const PopupMenuItem(
+              value: BusinessCardAction.edit,
+              child: _MenuRow(
+                icon: Icons.edit_outlined,
+                label: 'Edit Company',
+              ),
+            ),
+            const PopupMenuItem(
+              value: BusinessCardAction.delete,
+              child: _MenuRow(
+                icon: Icons.delete_outline_rounded,
+                label: 'Delete Company',
+                destructive: true,
+              ),
+            ),
+          ] else
+            const PopupMenuItem(
+              enabled: false,
+              child: _MenuRow(
+                icon: Icons.info_outline,
+                label: 'No actions available',
+                muted: true,
+              ),
+            ),
+        ],
       ),
-      color: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
-      elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.12),
-      offset: const Offset(0, 8),
-      onSelected: onAction,
-      itemBuilder: (context) => [
-        if (canManage) ...[
-          const PopupMenuItem(
-            value: BusinessCardAction.edit,
-            child: _MenuRow(
-              icon: Icons.edit_outlined,
-              label: 'Edit Company',
-            ),
-          ),
-          const PopupMenuItem(
-            value: BusinessCardAction.delete,
-            child: _MenuRow(
-              icon: Icons.delete_outline_rounded,
-              label: 'Delete Company',
-              destructive: true,
-            ),
-          ),
-        ] else
-          const PopupMenuItem(
-            enabled: false,
-            child: _MenuRow(
-              icon: Icons.info_outline,
-              label: 'No actions available',
-              muted: true,
-            ),
-          ),
-      ],
-    ),
     );
   }
 }

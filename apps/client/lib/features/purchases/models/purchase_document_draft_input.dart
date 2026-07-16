@@ -1,8 +1,11 @@
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
+
 class PurchaseDocumentDraftInput {
   const PurchaseDocumentDraftInput({
-    required this.documentType, required this.documentSeries, this.documentId,
+    required this.documentType,
+    required this.documentSeries,
+    this.documentId,
     this.partyId,
     this.documentDate,
     this.dueDate,

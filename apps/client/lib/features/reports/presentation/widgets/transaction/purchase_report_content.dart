@@ -42,17 +42,17 @@ class PurchaseReportContent extends ConsumerWidget {
         final rows = report.rows;
 
         List<List<String>> exportRows() => [
-              for (final purchase in rows)
-                [
-                  formatReportDate(purchase.date),
-                  purchase.invoiceNo,
-                  purchase.partyName,
-                  purchase.paymentType,
-                  _saleInvoiceStatusLabel(purchase.status),
-                  formatReportCurrency(purchase.amount),
-                  formatReportCurrency(purchase.balance),
-                ],
-            ];
+          for (final purchase in rows)
+            [
+              formatReportDate(purchase.date),
+              purchase.invoiceNo,
+              purchase.partyName,
+              purchase.paymentType,
+              _saleInvoiceStatusLabel(purchase.status),
+              formatReportCurrency(purchase.amount),
+              formatReportCurrency(purchase.balance),
+            ],
+        ];
 
         void exportExcel() {
           reportExportTable(
@@ -74,123 +74,130 @@ class PurchaseReportContent extends ConsumerWidget {
         }
 
         return ColoredBox(
-        color: AppColors.background,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _PurchaseTitleBar(onAdd: () => context.push(AppRoutes.purchase)),
-              const SizedBox(height: AppSpacing.md),
-              ReportCard(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const TransactionReportFilterBar(),
-                    const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ReportTextActionButton(
-                          label: 'Excel Report',
-                          icon: Icons.table_chart_outlined,
-                          onTap: exportExcel,
+          color: AppColors.background,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _PurchaseTitleBar(
+                  onAdd: () => context.push(AppRoutes.purchase),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ReportCard(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const TransactionReportFilterBar(),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ReportTextActionButton(
+                            label: 'Excel Report',
+                            icon: Icons.table_chart_outlined,
+                            onTap: exportExcel,
+                          ),
+                          ReportTextActionButton(
+                            label: 'Print',
+                            icon: Icons.print_outlined,
+                            onTap: printReport,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ReportSummaryCard(
+                  amountLabel: 'Total Purchase Amount',
+                  totalAmount: report.totalAmount,
+                  secondaryLabel:
+                      'Paid: ${formatReportCurrency(report.paidAmount)} | '
+                      'Balance: ${formatReportCurrency(report.balanceAmount)}',
+                  trendUp: false,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                if (report.rows.isEmpty)
+                  SaleEmptyStateCard(
+                    illustration: const SaleGeometricIllustration(
+                      circleColor: Color(0xFFE8F5E9),
+                      shapeColor: Color(0xFF81C784),
+                      shapeIcon: Icons.shopping_basket_outlined,
+                    ),
+                    title: 'No Transactions to show',
+                    description: "You haven't added any purchases yet.",
+                    buttonLabel: 'Add Purchase',
+                    buttonColor: reportAddRed,
+                    buttonIcon: Icons.add,
+                    onPressed: () => context.push(AppRoutes.purchase),
+                  )
+                else
+                  ReportCard(
+                    child: ReportSyncScrollTable(
+                      minWidth: 840,
+                      headerChildren: const [
+                        ReportAlignedHeaderCell(label: 'DATE', width: 100),
+                        ReportAlignedHeaderCell(
+                          label: 'INVOICE NO',
+                          width: 120,
                         ),
-                        ReportTextActionButton(
-                          label: 'Print',
-                          icon: Icons.print_outlined,
-                          onTap: printReport,
+                        Expanded(
+                          child: ReportAlignedHeaderCell(label: 'PARTY'),
+                        ),
+                        ReportAlignedHeaderCell(
+                          label: 'PAYMENT TYPE',
+                          width: 120,
+                        ),
+                        ReportAlignedHeaderCell(label: 'STATUS', width: 100),
+                        ReportAlignedHeaderCell(
+                          label: 'AMOUNT',
+                          width: 100,
+                          alignment: Alignment.centerRight,
+                        ),
+                        ReportAlignedHeaderCell(
+                          label: 'BALANCE',
+                          width: 100,
+                          alignment: Alignment.centerRight,
                         ),
                       ],
+                      rows: [
+                        for (var i = 0; i < report.rows.length; i++)
+                          _PurchaseRow(purchase: report.rows[i], index: i),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              ReportSummaryCard(
-                amountLabel: 'Total Purchase Amount',
-                totalAmount: report.totalAmount,
-                secondaryLabel:
-                    'Paid: ${formatReportCurrency(report.paidAmount)} | '
-                    'Balance: ${formatReportCurrency(report.balanceAmount)}',
-                trendUp: false,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              if (report.rows.isEmpty)
-                SaleEmptyStateCard(
-                  illustration: const SaleGeometricIllustration(
-                    circleColor: Color(0xFFE8F5E9),
-                    shapeColor: Color(0xFF81C784),
-                    shapeIcon: Icons.shopping_basket_outlined,
                   ),
-                  title: 'No Transactions to show',
-                  description: "You haven't added any purchases yet.",
-                  buttonLabel: 'Add Purchase',
-                  buttonColor: reportAddRed,
-                  buttonIcon: Icons.add,
-                  onPressed: () => context.push(AppRoutes.purchase),
-                )
-              else
-                ReportCard(
-                  child: ReportSyncScrollTable(
-                    minWidth: 840,
-                    headerChildren: const [
-                      ReportAlignedHeaderCell(label: 'DATE', width: 100),
-                      ReportAlignedHeaderCell(label: 'INVOICE NO', width: 120),
-                      Expanded(child: ReportAlignedHeaderCell(label: 'PARTY')),
-                      ReportAlignedHeaderCell(
-                        label: 'PAYMENT TYPE',
-                        width: 120,
-                      ),
-                      ReportAlignedHeaderCell(label: 'STATUS', width: 100),
-                      ReportAlignedHeaderCell(
-                        label: 'AMOUNT',
-                        width: 100,
-                        alignment: Alignment.centerRight,
-                      ),
-                      ReportAlignedHeaderCell(
-                        label: 'BALANCE',
-                        width: 100,
-                        alignment: Alignment.centerRight,
-                      ),
-                    ],
-                    rows: [
-                      for (var i = 0; i < report.rows.length; i++)
-                        _PurchaseRow(purchase: report.rows[i], index: i),
-                    ],
-                  ),
+                ReportPaginationBar(
+                  page: report.meta.page,
+                  totalPages: report.meta.totalPages,
+                  onPrevious: report.meta.page > 1
+                      ? () => ref
+                            .read(purchaseReportProvider.notifier)
+                            .goToPage(report.meta.page - 1)
+                      : null,
+                  onNext: report.meta.page < report.meta.totalPages
+                      ? () => ref
+                            .read(purchaseReportProvider.notifier)
+                            .goToPage(report.meta.page + 1)
+                      : null,
                 ),
-              ReportPaginationBar(
-                page: report.meta.page,
-                totalPages: report.meta.totalPages,
-                onPrevious: report.meta.page > 1
-                    ? () => ref
-                          .read(purchaseReportProvider.notifier)
-                          .goToPage(report.meta.page - 1)
-                    : null,
-                onNext: report.meta.page < report.meta.totalPages
-                    ? () => ref
-                          .read(purchaseReportProvider.notifier)
-                          .goToPage(report.meta.page + 1)
-                    : null,
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      );
+        );
       },
     );
   }
 }
 
 String _saleInvoiceStatusLabel(SaleInvoiceStatus status) => switch (status) {
-      SaleInvoiceStatus.paid => 'Paid',
-      SaleInvoiceStatus.unpaid => 'Unpaid',
-      SaleInvoiceStatus.partiallyPaid => 'Partial',
-      SaleInvoiceStatus.overdue => 'Overdue',
-      SaleInvoiceStatus.cancelled => 'Cancelled',
-    };
+  SaleInvoiceStatus.paid => 'Paid',
+  SaleInvoiceStatus.unpaid => 'Unpaid',
+  SaleInvoiceStatus.partiallyPaid => 'Partial',
+  SaleInvoiceStatus.overdue => 'Overdue',
+  SaleInvoiceStatus.cancelled => 'Cancelled',
+};
 
 class _PurchaseRow extends StatelessWidget {
   const _PurchaseRow({required this.purchase, required this.index});

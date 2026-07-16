@@ -12,9 +12,7 @@ enum PartyTypeFilter {
 
   bool matches(String partyType) => switch (this) {
     PartyTypeFilter.all => true,
-    PartyTypeFilter.customer =>
-      partyType == 'customer' || partyType == 'both',
-    PartyTypeFilter.supplier =>
-      partyType == 'supplier' || partyType == 'both',
+    PartyTypeFilter.customer => partyType == 'customer' || partyType == 'both',
+    PartyTypeFilter.supplier => partyType == 'supplier' || partyType == 'both',
   };
 }

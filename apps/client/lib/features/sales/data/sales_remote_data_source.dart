@@ -93,6 +93,7 @@ class SalesRemoteDataSource {
     }
     return value.toStringAsFixed(4);
   }
+
   Future<SalesDocumentLineDto> addLine(
     String documentId,
     CreateSalesLineRequest request,

@@ -1,6 +1,8 @@
-import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart' show ColumnFilter;
+import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart'
+    show ColumnFilter;
 import 'package:billing_baba/shared/widgets/table_filters/filter_result.dart';
-import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart' show ColumnFilter;
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart'
+    show ColumnFilter;
 
 /// Immutable snapshot of active column filters keyed by [ColumnFilter.id].
 class FilterState {

@@ -31,8 +31,9 @@ class PosSessionState {
   }) {
     return PosSessionState(
       isTerminalOpen: isTerminalOpen ?? this.isTerminalOpen,
-      backendSession:
-          clearBackendSession ? null : (backendSession ?? this.backendSession),
+      backendSession: clearBackendSession
+          ? null
+          : (backendSession ?? this.backendSession),
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );

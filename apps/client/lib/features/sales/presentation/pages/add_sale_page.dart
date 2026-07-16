@@ -49,7 +49,8 @@ class AddSalePage extends ConsumerStatefulWidget {
 
 class _AddSalePageState extends ConsumerState<AddSalePage> {
   var _initialized = false;
-  late final String _duplicateSessionKey = 'duplicate_${widget.duplicateFromId}';
+  late final String _duplicateSessionKey =
+      'duplicate_${widget.duplicateFromId}';
   late final String _attachSessionKey =
       'attach_${widget.attachOrderIds?.join('_') ?? ''}';
 
@@ -87,10 +88,14 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
       );
     });
     if (widget.invoiceId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeEditForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeEditForm(),
+      );
     } else if (widget.attachOrderIds != null &&
         widget.attachOrderIds!.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeAttachForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeAttachForm(),
+      );
     } else if (widget.duplicateFromId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _initializeForm());
     } else {
@@ -140,7 +145,9 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
               previous?.billingName == next.billingName) {
             return;
           }
-          ref.read(saleTabsProvider().notifier).updateTabLabel(
+          ref
+              .read(saleTabsProvider().notifier)
+              .updateTabLabel(
                 tabsState.activeIndex,
                 saleTabLabelForForm(
                   saleNumber: tabsState.activeTab.saleNumber,
@@ -153,8 +160,9 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
 
     final sessionKey = _sessionKey;
     final isLoading = ref.watch(
-      addSaleFormProvider(sessionKey: sessionKey)
-          .select((form) => form.isLoading),
+      addSaleFormProvider(
+        sessionKey: sessionKey,
+      ).select((form) => form.isLoading),
     );
 
     if (!_initialized ||
@@ -557,11 +565,10 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                 emptyPlaceholder: 'Billing Name (Optional)',
                 onSelected: notifier.updateBillingName,
                 onPartySelected: notifier.applyPartyDetails,
-                onPartySelectedWithId: (partyId, name) =>
-                    notifier.updateParty(
-                      partyId: partyId,
-                      partyName: name,
-                    ),
+                onPartySelectedWithId: (partyId, name) => notifier.updateParty(
+                  partyId: partyId,
+                  partyName: name,
+                ),
                 onPartyCreated: (party) {
                   notifier.updateBillingName(party.partyName);
                   if (party.phone.isNotEmpty) {
@@ -927,7 +934,9 @@ class _BottomActionBar extends ConsumerWidget {
       ref.invalidate(addSaleTotalTaxProvider(sessionKey: sessionKey));
       ref.invalidate(addSaleGrandTotalProvider(sessionKey: sessionKey));
       final tabsState = ref.read(saleTabsProvider());
-      ref.read(saleTabsProvider().notifier).updateTabLabel(
+      ref
+          .read(saleTabsProvider().notifier)
+          .updateTabLabel(
             tabsState.activeIndex,
             saleTabLabelForForm(
               saleNumber: tabsState.activeTab.saleNumber,

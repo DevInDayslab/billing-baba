@@ -27,7 +27,9 @@ Future<ExportSheet> buildPurchaseOrderExportSheet(WidgetRef ref) async {
         status: _documentStatusFromFilterLabel(filters.selectedStatus),
         from: dateRange?.start.toUtc().toIso8601String(),
         to: dateRange?.end.toUtc().toIso8601String(),
-        q: filters.searchQuery.trim().isEmpty ? null : filters.searchQuery.trim(),
+        q: filters.searchQuery.trim().isEmpty
+            ? null
+            : filters.searchQuery.trim(),
       );
       final result = await service.fetchOrdersPage(query);
       return (
@@ -75,10 +77,12 @@ List<PurchaseOrderModel> _applyClientFilters(
     if (statusFilter != null && order.status != statusFilter) {
       return false;
     }
-    if (filters.selectedUser != 'All Users' && order.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        order.user != filters.selectedUser) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && order.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        order.firm != filters.selectedFirm) {
       return false;
     }
     return true;

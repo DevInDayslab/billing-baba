@@ -30,9 +30,9 @@ class AllPartiesReportContent extends ConsumerWidget {
         final summary = report;
 
         List<List<String>> exportRows() => [
-              for (var i = 0; i < parties.length; i++)
-                _partyExportRow(i, parties[i]),
-            ];
+          for (var i = 0; i < parties.length; i++)
+            _partyExportRow(i, parties[i]),
+        ];
 
         void exportCsv() {
           reportExportTable(
@@ -151,7 +151,9 @@ class AllPartiesReportContent extends ConsumerWidget {
                           headerChildren: const [
                             ReportAlignedHeaderCell(label: '#', width: 40),
                             Expanded(
-                              child: ReportAlignedHeaderCell(label: 'PARTY NAME'),
+                              child: ReportAlignedHeaderCell(
+                                label: 'PARTY NAME',
+                              ),
                             ),
                             ReportAlignedHeaderCell(label: 'EMAIL', width: 140),
                             ReportAlignedHeaderCell(
@@ -246,10 +248,12 @@ class AllPartiesReportContent extends ConsumerWidget {
 
 List<String> _partyExportRow(int index, PartyModel party) {
   final email = party.email.isEmpty ? '—' : party.email;
-  final receivable =
-      party.balance > 0 ? formatReportCurrency(party.balance) : '—';
-  final payable =
-      party.balance < 0 ? formatReportCurrency(party.balance.abs()) : '—';
+  final receivable = party.balance > 0
+      ? formatReportCurrency(party.balance)
+      : '—';
+  final payable = party.balance < 0
+      ? formatReportCurrency(party.balance.abs())
+      : '—';
   final creditLimit = party.creditLimit.isEmpty
       ? '—'
       : formatReportCurrency(double.tryParse(party.creditLimit) ?? 0);
@@ -274,10 +278,12 @@ class _PartyRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final email = party.email.isEmpty ? '—' : party.email;
-    final receivable =
-        party.balance > 0 ? formatReportCurrency(party.balance) : '—';
-    final payable =
-        party.balance < 0 ? formatReportCurrency(party.balance.abs()) : '—';
+    final receivable = party.balance > 0
+        ? formatReportCurrency(party.balance)
+        : '—';
+    final payable = party.balance < 0
+        ? formatReportCurrency(party.balance.abs())
+        : '—';
     final creditLimit = party.creditLimit.isEmpty
         ? '—'
         : formatReportCurrency(double.tryParse(party.creditLimit) ?? 0);

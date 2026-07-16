@@ -142,9 +142,8 @@ class _EstimateTransactionsTableState
     final columns = _EstimateTableColumns.build(
       context: context,
       ref: ref,
-      onStatusFilter: (status) => ref
-          .read(estimateQuotationFiltersProvider.notifier)
-          .setStatus(status),
+      onStatusFilter: (status) =>
+          ref.read(estimateQuotationFiltersProvider.notifier).setStatus(status),
     );
 
     return Padding(
@@ -650,7 +649,6 @@ class _ActionsCell extends StatelessWidget {
     );
   }
 }
-
 
 class _PaginationRow extends ConsumerWidget {
   const _PaginationRow({

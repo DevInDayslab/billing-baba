@@ -24,8 +24,7 @@ class DealRepository {
   Stream<List<Deal>> watchDeals(String businessId) =>
       _local.watchDeals(businessId);
 
-  Future<List<Deal>> getDeals(String businessId) =>
-      _local.getDeals(businessId);
+  Future<List<Deal>> getDeals(String businessId) => _local.getDeals(businessId);
 
   Future<Deal?> getDealById(String businessId, String dealId) =>
       _local.getDealById(businessId, dealId);

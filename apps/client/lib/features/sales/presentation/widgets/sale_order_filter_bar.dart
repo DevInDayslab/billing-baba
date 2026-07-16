@@ -14,8 +14,7 @@ class SaleOrderFilterBar extends ConsumerStatefulWidget {
   const SaleOrderFilterBar({super.key});
 
   @override
-  ConsumerState<SaleOrderFilterBar> createState() =>
-      _SaleOrderFilterBarState();
+  ConsumerState<SaleOrderFilterBar> createState() => _SaleOrderFilterBarState();
 }
 
 class _SaleOrderFilterBarState extends ConsumerState<SaleOrderFilterBar> {

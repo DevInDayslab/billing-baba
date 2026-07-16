@@ -49,7 +49,9 @@ class SalesDocumentsTable extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final documentsAsync = ref.watch(salesDocumentsListProvider(config.scope));
     final paginated = ref.watch(paginatedSalesDocumentsProvider(config.scope));
-    final notifier = ref.read(salesDocumentsListProvider(config.scope).notifier);
+    final notifier = ref.read(
+      salesDocumentsListProvider(config.scope).notifier,
+    );
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -156,9 +158,11 @@ class SalesDocumentsTable extends ConsumerWidget {
     );
 
     if (query == null) return;
-    ref.read(salesDocumentSearchQueryProvider(config.scope).notifier).setQuery(
-      query,
-    );
+    ref
+        .read(salesDocumentSearchQueryProvider(config.scope).notifier)
+        .setQuery(
+          query,
+        );
     ref.invalidate(salesDocumentsListProvider(config.scope));
   }
 

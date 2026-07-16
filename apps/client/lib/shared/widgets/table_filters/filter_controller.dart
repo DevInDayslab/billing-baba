@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 /// developer playground and any table that opts into config-driven filters.
 class FilterController extends ChangeNotifier {
   FilterController({FilterState? initialState})
-      : _state = initialState ?? const FilterState();
+    : _state = initialState ?? const FilterState();
 
   FilterState _state;
 

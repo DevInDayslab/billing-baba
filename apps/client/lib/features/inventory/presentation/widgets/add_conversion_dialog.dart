@@ -329,7 +329,9 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       FilledButton(
-                        onPressed: _isLoading ? null : () => _save(saveAndNew: false),
+                        onPressed: _isLoading
+                            ? null
+                            : () => _save(saveAndNew: false),
                         style: buttonStyle,
                         child: const Text(
                           'SAVE',
@@ -342,7 +344,9 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       FilledButton(
-                        onPressed: _isLoading ? null : () => _save(saveAndNew: true),
+                        onPressed: _isLoading
+                            ? null
+                            : () => _save(saveAndNew: true),
                         style: buttonStyle,
                         child: const Text(
                           'SAVE & NEW',

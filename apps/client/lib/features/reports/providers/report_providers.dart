@@ -320,7 +320,8 @@ class ItemDetailReport extends _$ItemDetailReport {
 }
 
 @riverpod
-class SalePurchaseByItemCategoryReport extends _$SalePurchaseByItemCategoryReport {
+class SalePurchaseByItemCategoryReport
+    extends _$SalePurchaseByItemCategoryReport {
   @override
   Future<CategoryAmountReportData> build() async {
     ref.watch(reportFiltersProvider);
@@ -339,7 +340,8 @@ class SalePurchaseByItemCategoryReport extends _$SalePurchaseByItemCategoryRepor
 }
 
 @riverpod
-class StockSummaryByItemCategoryReport extends _$StockSummaryByItemCategoryReport {
+class StockSummaryByItemCategoryReport
+    extends _$StockSummaryByItemCategoryReport {
   @override
   Future<CategoryAmountReportData> build() async {
     ref.watch(reportFiltersProvider);
@@ -358,7 +360,8 @@ class StockSummaryByItemCategoryReport extends _$StockSummaryByItemCategoryRepor
 }
 
 @riverpod
-class ItemCategoryWiseProfitLossReport extends _$ItemCategoryWiseProfitLossReport {
+class ItemCategoryWiseProfitLossReport
+    extends _$ItemCategoryWiseProfitLossReport {
   @override
   Future<CategoryAmountReportData> build() async {
     ref.watch(reportFiltersProvider);
@@ -843,5 +846,3 @@ class LoanStatementReport extends _$LoanStatementReport {
     return service.fetchLoanStatement(filters.toQuery());
   }
 }
-
-

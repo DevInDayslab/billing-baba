@@ -100,7 +100,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     if (_hydratedProfileId == profile.id) return;
 
     _businessNameController.text = profile.name;
-    _phoneController.text = Validators.normalizeIndianPhone(profile.phone) ?? '';
+    _phoneController.text =
+        Validators.normalizeIndianPhone(profile.phone) ?? '';
     _gstinController.text = profile.gstin ?? '';
     _emailController.text = profile.email ?? '';
     _addressController.text = profile.address ?? '';
@@ -150,7 +151,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     }
 
     final formState = ref.read(editBusinessProfileFormProvider);
-    final message = formState.generalError ??
+    final message =
+        formState.generalError ??
         (formState.fieldErrors.isNotEmpty
             ? formState.fieldErrors.values.first
             : null);

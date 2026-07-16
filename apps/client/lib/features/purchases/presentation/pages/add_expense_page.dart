@@ -115,7 +115,9 @@ class _PageHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addExpenseFormProvider(expenseId: expenseId));
-    final notifier = ref.read(addExpenseFormProvider(expenseId: expenseId).notifier);
+    final notifier = ref.read(
+      addExpenseFormProvider(expenseId: expenseId).notifier,
+    );
 
     return Row(
       children: [
@@ -167,8 +169,9 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
   @override
   Widget build(BuildContext context) {
     final form = ref.watch(addExpenseFormProvider(expenseId: widget.expenseId));
-    final notifier =
-        ref.read(addExpenseFormProvider(expenseId: widget.expenseId).notifier);
+    final notifier = ref.read(
+      addExpenseFormProvider(expenseId: widget.expenseId).notifier,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -314,8 +317,9 @@ class _BottomActionBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addExpenseFormProvider(expenseId: expenseId));
-    final notifier =
-        ref.read(addExpenseFormProvider(expenseId: expenseId).notifier);
+    final notifier = ref.read(
+      addExpenseFormProvider(expenseId: expenseId).notifier,
+    );
     final resolvedId = expenseId ?? form.expenseId;
     final isSaving = form.isSaving;
     final filename = form.expenseNumber.trim().isNotEmpty
@@ -341,9 +345,15 @@ class _BottomActionBar extends ConsumerWidget {
                 filename: filename,
               ),
               icon: const Icon(Icons.print_outlined, size: 16),
-              label: const Text('Print / Preview', style: TextStyle(fontSize: 13)),
+              label: const Text(
+                'Print / Preview',
+                style: TextStyle(fontSize: 13),
+              ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 side: const BorderSide(color: _cardBorder),
               ),
             ),
@@ -374,7 +384,9 @@ class _BottomActionBar extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           FilledButton(
-            onPressed: isSaving ? null : () => _handleSave(context, ref, notifier),
+            onPressed: isSaving
+                ? null
+                : () => _handleSave(context, ref, notifier),
             style: FilledButton.styleFrom(
               backgroundColor: _addExpenseRed,
               foregroundColor: Colors.white,
@@ -443,9 +455,11 @@ class _BottomActionBar extends ConsumerWidget {
     }
 
     if (form.gstEnabled && expenseId == null) {
-      ref.read(purchaseBillSaveSuccessMessageProvider.notifier).setMessage(
-        'Purchase bill saved successfully.',
-      );
+      ref
+          .read(purchaseBillSaveSuccessMessageProvider.notifier)
+          .setMessage(
+            'Purchase bill saved successfully.',
+          );
       context.go(AppRoutes.purchaseBills);
       return;
     }

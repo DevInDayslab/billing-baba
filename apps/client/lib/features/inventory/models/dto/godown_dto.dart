@@ -9,7 +9,11 @@ abstract class GodownDto with _$GodownDto {
   const factory GodownDto({
     required String id,
     required String name,
-    @JsonKey(name: 'is_default') required bool isDefault, @JsonKey(name: 'stock_item_count') required int stockItemCount, @JsonKey(name: 'created_at') required String createdAt, @JsonKey(name: 'updated_at') required String updatedAt, String? address,
+    @JsonKey(name: 'is_default') required bool isDefault,
+    @JsonKey(name: 'stock_item_count') required int stockItemCount,
+    @JsonKey(name: 'created_at') required String createdAt,
+    @JsonKey(name: 'updated_at') required String updatedAt,
+    String? address,
   }) = _GodownDto;
 
   factory GodownDto.fromJson(Map<String, dynamic> json) =>

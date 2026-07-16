@@ -9,13 +9,15 @@ abstract final class FilterPopoverPositioner {
     Alignment targetAnchor,
     Alignment followerAnchor,
     Offset offset,
-  }) resolveFollower({
+  })
+  resolveFollower({
     required Rect triggerRect,
     required Size popoverSize,
     required Size viewportSize,
   }) {
     final overflowsRight =
-        triggerRect.left + popoverSize.width > viewportSize.width - screenPadding;
+        triggerRect.left + popoverSize.width >
+        viewportSize.width - screenPadding;
     final canAlignRight =
         triggerRect.right - popoverSize.width >= screenPadding;
     final useRightAnchor = overflowsRight && canAlignRight;

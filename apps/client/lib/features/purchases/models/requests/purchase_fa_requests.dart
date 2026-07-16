@@ -81,8 +81,7 @@ class CreatePurchaseFaAssetRequest {
     if (taxAmount != null) 'tax_amount': taxAmount,
     'line_total': lineTotal,
     if (sortOrder != null) 'sort_order': sortOrder,
-    if (purchaseDocumentId != null)
-      'purchase_document_id': purchaseDocumentId,
+    if (purchaseDocumentId != null) 'purchase_document_id': purchaseDocumentId,
   };
 }
 

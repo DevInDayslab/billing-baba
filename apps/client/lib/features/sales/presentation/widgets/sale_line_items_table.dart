@@ -33,8 +33,7 @@ class SaleLineItemsTable extends ConsumerStatefulWidget {
   static final _amountFormat = NumberFormat('#,##0.00', 'en_IN');
 
   @override
-  ConsumerState<SaleLineItemsTable> createState() =>
-      _SaleLineItemsTableState();
+  ConsumerState<SaleLineItemsTable> createState() => _SaleLineItemsTableState();
 }
 
 class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
@@ -48,7 +47,9 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
     final notifier = ref.read(
       addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
     );
-    final columnVisibility = ref.watch(saleLineItemColumnVisibilityStateProvider);
+    final columnVisibility = ref.watch(
+      saleLineItemColumnVisibilityStateProvider,
+    );
     final columnVisibilityNotifier = ref.read(
       saleLineItemColumnVisibilityStateProvider.notifier,
     );
@@ -60,8 +61,7 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
 
     final totalQty = items.fold<double>(0, (sum, item) => sum + item.qty);
     final totalTax = items.fold<double>(0, (sum, item) => sum + item.lineTax);
-    final totalAmount =
-        items.fold<double>(0, (sum, item) => sum + item.amount);
+    final totalAmount = items.fold<double>(0, (sum, item) => sum + item.amount);
 
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -133,7 +133,10 @@ class _SaleLineItemsTableState extends ConsumerState<SaleLineItemsTable> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: _addRowColor,
                 side: const BorderSide(color: _addRowColor),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -343,7 +346,9 @@ class _LineItemRow extends ConsumerWidget {
         child: DecoratedBox(
           decoration: const BoxDecoration(
             border: Border(
-              bottom: BorderSide(color: SaleLineItemTableLayout.gridBorderColor),
+              bottom: BorderSide(
+                color: SaleLineItemTableLayout.gridBorderColor,
+              ),
             ),
           ),
           child: SizedBox(
@@ -846,7 +851,10 @@ class _TotalsRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            SaleLineItemGridCell(width: widths.actions, child: const SizedBox()),
+            SaleLineItemGridCell(
+              width: widths.actions,
+              child: const SizedBox(),
+            ),
           ],
         ),
       ),

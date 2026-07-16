@@ -163,7 +163,8 @@ class AddPurchaseFormState {
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
-  bool get isValid => (partyId != null && partyId!.isNotEmpty) && hasValidLineItems;
+  bool get isValid =>
+      (partyId != null && partyId!.isNotEmpty) && hasValidLineItems;
 
   AddPurchaseFormState copyWith({
     String? documentId,

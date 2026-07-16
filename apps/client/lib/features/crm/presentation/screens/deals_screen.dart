@@ -28,17 +28,19 @@ class DealsScreen extends ConsumerStatefulWidget {
 class _DealsScreenState extends ConsumerState<DealsScreen> {
   Future<void> _saveDeal(AddDealInput input) async {
     try {
-      await ref.read(dealsProvider.notifier).addDeal(
-        AddDealServiceInput.fromDialogInput(
-          name: input.name,
-          stage: input.stage,
-          accountName: input.accountName,
-          owner: input.owner,
-          amount: input.amount,
-          expectedCloseDate: input.expectedCloseDate,
-          description: input.description,
-        ),
-      );
+      await ref
+          .read(dealsProvider.notifier)
+          .addDeal(
+            AddDealServiceInput.fromDialogInput(
+              name: input.name,
+              stage: input.stage,
+              accountName: input.accountName,
+              owner: input.owner,
+              amount: input.amount,
+              expectedCloseDate: input.expectedCloseDate,
+              description: input.description,
+            ),
+          );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -111,9 +113,8 @@ class _DealsScreenState extends ConsumerState<DealsScreen> {
                   _DealsToolbar(
                     viewMode: viewMode,
                     filterPanelOpen: filterPanelOpen,
-                    onToggleFilter: () => ref
-                        .read(dealFilterPanelOpenProvider.notifier)
-                        .toggle(),
+                    onToggleFilter: () =>
+                        ref.read(dealFilterPanelOpenProvider.notifier).toggle(),
                     onViewModeChanged: (mode) => ref
                         .read(dealsViewModeStateProvider.notifier)
                         .setMode(mode),

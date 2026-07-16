@@ -36,7 +36,9 @@ String purchaseBillMenuActionLabel(PurchaseBillMenuAction action) {
   };
 }
 
-List<PurchaseBillMenuAction> purchaseBillMenuActionsFor(PurchaseBillModel bill) {
+List<PurchaseBillMenuAction> purchaseBillMenuActionsFor(
+  PurchaseBillModel bill,
+) {
   return PurchaseBillMenuAction.values;
 }
 

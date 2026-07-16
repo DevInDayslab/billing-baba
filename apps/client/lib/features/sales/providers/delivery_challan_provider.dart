@@ -241,8 +241,7 @@ List<SaleInvoiceModel> applyChallanClientFilters(
         !filters.amountColumnFilter!.matches(challan.amount)) {
       return false;
     }
-    if (documentStatus != null &&
-        challan.documentStatus != documentStatus) {
+    if (documentStatus != null && challan.documentStatus != documentStatus) {
       return false;
     }
     if (filters.selectedUser != 'All Users' &&
@@ -262,10 +261,15 @@ List<SaleInvoiceModel> applyChallanClientFilters(
 }
 
 List<String> _withAllOption(String allLabel, Iterable<String> values) {
-  final unique = values.map((value) => value.trim()).where((value) {
-    return value.isNotEmpty && value != allLabel;
-  }).toSet().toList()
-    ..sort();
+  final unique =
+      values
+          .map((value) => value.trim())
+          .where((value) {
+            return value.isNotEmpty && value != allLabel;
+          })
+          .toSet()
+          .toList()
+        ..sort();
   return [allLabel, ...unique];
 }
 
@@ -483,9 +487,7 @@ class DeliveryChallans extends _$DeliveryChallans {
 class DeliveryChallanFilters extends _$DeliveryChallanFilters {
   @override
   DeliveryChallanFiltersState build() {
-    return const DeliveryChallanFiltersState(
-      
-    );
+    return const DeliveryChallanFiltersState();
   }
 
   void setTimeRange(String label) {

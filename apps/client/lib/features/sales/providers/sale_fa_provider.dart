@@ -98,16 +98,15 @@ String? _statusFromFilterLabel(String label) => switch (label) {
   _ => null,
 };
 
-SaleFaStatus? _paymentStatusFromFilterLabel(String label) =>
-    switch (label) {
-      'Paid' => SaleFaStatus.paid,
-      'Unpaid' => SaleFaStatus.unpaid,
-      'Partially Paid' => SaleFaStatus.partiallyPaid,
-      'Partial' => SaleFaStatus.partiallyPaid,
-      'Overdue' => SaleFaStatus.overdue,
-      'Cancelled' => SaleFaStatus.cancelled,
-      _ => null,
-    };
+SaleFaStatus? _paymentStatusFromFilterLabel(String label) => switch (label) {
+  'Paid' => SaleFaStatus.paid,
+  'Unpaid' => SaleFaStatus.unpaid,
+  'Partially Paid' => SaleFaStatus.partiallyPaid,
+  'Partial' => SaleFaStatus.partiallyPaid,
+  'Overdue' => SaleFaStatus.overdue,
+  'Cancelled' => SaleFaStatus.cancelled,
+  _ => null,
+};
 
 DateTime _startOfDay(DateTime date) =>
     DateTime(date.year, date.month, date.day);
@@ -172,10 +171,12 @@ List<SaleFaModel> _applyClientFilters(
     if (paymentStatus != null && record.status != paymentStatus) {
       return false;
     }
-    if (filters.selectedUser != 'All Users' && record.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        record.user != filters.selectedUser) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && record.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        record.firm != filters.selectedFirm) {
       return false;
     }
     return true;
@@ -235,7 +236,9 @@ class SaleFa extends _$SaleFa {
     if (current != null) {
       state = AsyncData(
         PaginatedSaleFaRecords(
-          items: current.items.where((item) => item.batchId != batchId).toList(),
+          items: current.items
+              .where((item) => item.batchId != batchId)
+              .toList(),
           currentPage: current.currentPage,
           totalPages: current.totalPages,
           totalItems: current.totalItems - 1,
@@ -396,9 +399,14 @@ List<String> saleFaGodownFilterOptions(Ref ref) {
 }
 
 List<String> _withAllOption(String allLabel, Iterable<String> values) {
-  final unique = values.map((value) => value.trim()).where((value) {
-    return value.isNotEmpty && value != allLabel;
-  }).toSet().toList()
-    ..sort();
+  final unique =
+      values
+          .map((value) => value.trim())
+          .where((value) {
+            return value.isNotEmpty && value != allLabel;
+          })
+          .toSet()
+          .toList()
+        ..sort();
   return [allLabel, ...unique];
 }
