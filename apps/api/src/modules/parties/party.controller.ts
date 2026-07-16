@@ -9,9 +9,9 @@ import {
   updatePartyBodySchema,
 } from './party.schema';
 import { PartyService } from './party.service';
+import type { PaginatedPartiesResponse } from './party.types';
 import { partyLedgerQuerySchema } from './party-ledger.schema';
 import { PartyLedgerService } from './party-ledger.service';
-import type { PaginatedPartiesResponse } from './party.types';
 
 function formatZodError(error: ZodError): Record<string, string[]> {
   const errors: Record<string, string[]> = {};

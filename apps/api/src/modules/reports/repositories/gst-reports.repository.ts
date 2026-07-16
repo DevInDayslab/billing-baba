@@ -2,17 +2,10 @@ import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import type { Database } from '../../../db/client';
 import { items } from '../../../db/schema/inventory/tables';
 import {
-  purchaseDocumentLines,
-  purchaseDocuments,
-} from '../../../db/schema/purchases/tables';
-import {
   salesDocumentLines,
   salesDocuments,
 } from '../../../db/schema/sales/tables';
-import {
-  PURCHASE_BILL_TYPE,
-  REVENUE_SALES_TYPES,
-} from '../../../shared/reporting/constants';
+import { REVENUE_SALES_TYPES } from '../../../shared/reporting/constants';
 import type { ReportExtendedQuery } from '../reports.schema';
 import type {
   Gstr9Payload,
@@ -20,8 +13,8 @@ import type {
   ReportHsnRow,
   ReportSacRow,
 } from '../reports.types';
-import { paginateSlice, resolveRange, toPeriodMeta } from './reports.helpers';
 import { Phase1ReportsRepository } from './phase1-reports.repository';
+import { paginateSlice, resolveRange, toPeriodMeta } from './reports.helpers';
 
 export class GstReportsRepository {
   private readonly phase1: Phase1ReportsRepository;

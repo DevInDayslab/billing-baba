@@ -19,9 +19,9 @@ import {
   salesDocumentTypeEnum,
   taxTypeEnum,
 } from '../enums';
-import { purchaseFixedAssets } from '../purchases/tables';
 import { users } from '../identity/tables';
 import { items } from '../inventory/tables';
+import { purchaseFixedAssets } from '../purchases/tables';
 
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);

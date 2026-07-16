@@ -2,8 +2,8 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError, type z } from 'zod';
 import { AppError } from '../../shared/errors/app-error';
 import type { PaginationMeta } from '../../shared/http/pagination';
-import { sendCsv } from '../../shared/reporting/csv-export';
 import { sendData } from '../../shared/http/response';
+import { sendCsv } from '../../shared/reporting/csv-export';
 import {
   formatZodError,
   requireAuthContext,

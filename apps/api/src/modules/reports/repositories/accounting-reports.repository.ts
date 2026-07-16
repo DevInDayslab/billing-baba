@@ -1,11 +1,4 @@
 import type { Database } from '../../../db/client';
-import type { ReportBaseQuery } from '../reports.schema';
-import type {
-  BalanceSheetPayload,
-  ReportBalanceSheetItem,
-  ReportTrialBalanceRow,
-  TrialBalancePayload,
-} from '../reports.types';
 import {
   calculateNetProfit,
   getCashBalanceAsOf,
@@ -23,6 +16,13 @@ import {
   REVENUE_SALES_TYPES,
   SALES_RETURN_TYPE,
 } from '../../../shared/reporting/constants';
+import type { ReportBaseQuery } from '../reports.schema';
+import type {
+  BalanceSheetPayload,
+  ReportBalanceSheetItem,
+  ReportTrialBalanceRow,
+  TrialBalancePayload,
+} from '../reports.types';
 import { resolveRange, toPeriodMeta } from './reports.helpers';
 
 function money(value: number): string {
@@ -169,7 +169,7 @@ export class AccountingReportsRepository {
       ),
     ].filter((row) => {
       if (query.q) {
-        return row.account_name.toLowerCase().includes(query.q!.toLowerCase());
+        return row.account_name.toLowerCase().includes(query.q?.toLowerCase());
       }
       return true;
     });

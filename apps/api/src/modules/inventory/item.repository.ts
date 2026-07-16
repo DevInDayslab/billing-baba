@@ -12,6 +12,7 @@ import {
   stockLevels,
   unitDefinitions,
 } from '../../db/schema/inventory/tables';
+import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import {
   toItemDetailRecord,
   toItemImageRecord,
@@ -19,7 +20,6 @@ import {
   toItemPriceHistoryRecord,
   toItemTierPriceRecord,
 } from './item.mapper';
-import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import type {
   CreateItemImageInput,
   CreateItemLocationInput,

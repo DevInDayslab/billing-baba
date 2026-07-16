@@ -1,6 +1,4 @@
 import type { ZodTypeAny } from 'zod';
-import type { ResourceOps } from './schema-names';
-import { crudOps } from './schema-names';
 import {
   createdResponse,
   jsonRequestBody,
@@ -15,6 +13,8 @@ import {
   standardErrorResponses,
   unsecuredOperation,
 } from './helpers';
+import type { ResourceOps } from './schema-names';
+import { crudOps } from './schema-names';
 
 const idParam = {
   name: 'id',

@@ -6,6 +6,8 @@ import {
   sumDocumentTotals,
 } from '../../shared/documents/document-tax.service';
 import { AppError } from '../../shared/errors/app-error';
+import { PaymentRepository } from '../accounting/payment.repository';
+import { DEFAULT_SERIES_BY_TYPE } from './purchase.constants';
 import { assertValidConversion } from './purchase-convert.rules';
 import { PurchaseDocumentRepository } from './purchase-document.repository';
 import type {
@@ -23,8 +25,6 @@ import type {
   PurchaseDocumentRecord,
   PurchaseDocumentType,
 } from './purchase-document.types';
-import { PaymentRepository } from '../accounting/payment.repository';
-import { DEFAULT_SERIES_BY_TYPE } from './purchase.constants';
 import { finalizePurchaseDocument } from './purchase-finalize.service';
 import { PurchasesServiceBase } from './purchases.base-service';
 

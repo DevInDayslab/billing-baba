@@ -1,6 +1,5 @@
 import { getDb } from '../../../db/client';
 import { AppError } from '../../../shared/errors/app-error';
-import { ContactRepository } from '../db/contact.repository';
 import type {
   CreateContactActivityBody,
   CreateContactBody,
@@ -12,6 +11,7 @@ import type {
   ContactRecord,
   ContactWithActivitiesRecord,
 } from '../contact.types';
+import { ContactRepository } from '../db/contact.repository';
 
 export class ContactService {
   private readonly repository: ContactRepository;

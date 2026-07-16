@@ -2,11 +2,12 @@
  * Gemini HTTP trace bypassing app key-prefix validation only.
  * Run: node scripts/gemini-trace-http.mjs
  */
-import { createRequire } from 'node:module';
+
 import { writeFileSync } from 'node:fs';
-import { config as loadEnv } from 'dotenv';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { config as loadEnv } from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 loadEnv({ path: path.resolve(__dirname, '../.env'), override: true });
@@ -32,11 +33,7 @@ function maskHeaders(headers) {
   if (!headers) return out;
   const pairs =
     headers instanceof Headers
-      ? (() => {
-          const p = [];
-          headers.forEach((v, k) => p.push([k, v]));
-          return p;
-        })()
+      ? Array.from(headers.entries())
       : Array.isArray(headers)
         ? headers
         : Object.entries(headers);

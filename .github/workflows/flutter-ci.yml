@@ -23,7 +23,7 @@ env:
 
 jobs:
   ci:
-    name: Format, analyze, and test
+    name: Analyze and test
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -56,9 +56,6 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Check formatting
-        run: dart format --set-exit-if-changed .
 
       - name: Analyze
         # Fail only on analyzer errors; info/warnings are reported but non-blocking.

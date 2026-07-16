@@ -4,16 +4,16 @@ import { ledgerEntries } from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
 import { AppError } from '../../shared/errors/app-error';
-import { LoyaltyService } from '../loyalty/loyalty.service';
-import type { SaleLoyaltyResult } from '../loyalty/loyalty.types';
 import { normalizeMoney } from '../inventory/inventory.utils';
 import {
   getDefaultGodown,
   recordMovementAndUpdateStock,
 } from '../inventory/inventory-stock.service';
-import { assignDocumentNumber } from './sales-numbering.service';
-import { SalesDocumentRepository } from './sales-document.repository';
+import { LoyaltyService } from '../loyalty/loyalty.service';
+import type { SaleLoyaltyResult } from '../loyalty/loyalty.types';
+import type { SalesDocumentRepository } from './sales-document.repository';
 import type { SalesDocumentType } from './sales-document.types';
+import { assignDocumentNumber } from './sales-numbering.service';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
@@ -336,4 +336,4 @@ export async function findConvertedChainRoot(
   return currentId;
 }
 
-export { STOCK_ON_FINALIZE_TYPES, LEDGER_ON_FINALIZE_TYPES };
+export { LEDGER_ON_FINALIZE_TYPES, STOCK_ON_FINALIZE_TYPES };

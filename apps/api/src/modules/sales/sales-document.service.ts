@@ -1,6 +1,7 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { SalesServiceBase } from './sales.base-service';
+import { assertValidConversion } from './sales-convert.rules';
 import { SalesDocumentRepository } from './sales-document.repository';
 import type {
   BrandSwapBody,
@@ -11,16 +12,11 @@ import type {
   FinalizeSalesDocumentBody,
   ListPosSessionsQuery,
   ListSalesDocumentsQuery,
+  UpdateDocumentSequenceBody,
   UpdatePosSessionBody,
   UpdateSalesDocumentBody,
   UpdateSalesLineBody,
-  UpdateDocumentSequenceBody,
 } from './sales-document.schema';
-import { assertValidConversion } from './sales-convert.rules';
-import {
-  currentFiscalYear,
-  ensureDocumentSequence,
-} from './sales-numbering.service';
 import type {
   FinalizeSalesDocumentResponse,
   PosSessionRecord,
@@ -29,6 +25,10 @@ import type {
   SalesDocumentType,
 } from './sales-document.types';
 import { finalizeSalesDocument } from './sales-finalize.service';
+import {
+  currentFiscalYear,
+  ensureDocumentSequence,
+} from './sales-numbering.service';
 import {
   calculateLineTax,
   resolveTaxType,
@@ -775,16 +775,6 @@ export class SalesDocumentService extends SalesServiceBase {
     const item = await this.repository.findItem(businessId, itemId);
     if (!item) {
       throw new AppError('NOT_FOUND', 'Item not found', 404);
-    }
-  }
-
-  private async assertGodownValid(
-    businessId: string,
-    godownId: string,
-  ): Promise<void> {
-    const exists = await this.repository.godownExists(businessId, godownId);
-    if (!exists) {
-      throw new AppError('NOT_FOUND', 'Godown not found', 404);
     }
   }
 

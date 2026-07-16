@@ -5,19 +5,19 @@ import {
 } from '../../modules/sales/sales-document.schema';
 import { salesExamples } from '../examples';
 import {
-  documentActionOperation,
-  documentCrudPaths,
-  getByIdOperation,
-  listOperation,
-  updateOperation,
-} from '../operations';
-import {
   jsonRequestBody,
   okPaginatedResponse,
   okResponse,
   securedOperation,
   standardErrorResponses,
 } from '../helpers';
+import {
+  documentActionOperation,
+  documentCrudPaths,
+  getByIdOperation,
+  listOperation,
+  updateOperation,
+} from '../operations';
 import { Schema } from '../schema-names';
 
 const idParam = {

@@ -1,15 +1,12 @@
 import { z } from 'zod';
 import {
-  parsedPurchaseDocumentLineSchema,
-  parsedPurchaseDocumentSchema,
-} from './purchase-document-parse.schema';
-import {
   logFlattenedDocument,
   logJsonParseError,
   logNormalizationInput,
   logNormalizedDocument,
   logValidationOrMappingError,
 } from './purchase-document-parse.debug';
+import { parsedPurchaseDocumentSchema } from './purchase-document-parse.schema';
 import type { ParsedPurchaseDocument } from './purchase-document-parse.types';
 
 const PAYMENT_MODE_ALIASES: Record<string, string> = {
@@ -87,7 +84,7 @@ export function normalizeNumber(value: unknown): number | null {
     .trim()
     .replace(/[₹$,]/g, '')
     .replace(/\s+/g, '')
-    .replace(/[^0-9.\-]/g, '');
+    .replace(/[^0-9.-]/g, '');
   if (!cleaned) return null;
 
   const parsed = Number.parseFloat(cleaned);
@@ -412,7 +409,7 @@ export function normalizeParsedDocument(raw: unknown): ParsedPurchaseDocument {
   const flattened = flattenDocumentPayload(raw);
   logFlattenedDocument(flattened);
 
-  let parsed;
+  let parsed: z.infer<typeof parsedPurchaseDocumentSchema>;
   try {
     parsed = parsedPurchaseDocumentSchema.parse(flattened);
   } catch (error) {

@@ -1,6 +1,5 @@
 import {
   and,
-  asc,
   count,
   desc,
   eq,
@@ -8,7 +7,6 @@ import {
   ilike,
   inArray,
   lt,
-  lte,
   or,
   sql,
 } from 'drizzle-orm';
@@ -29,8 +27,6 @@ import {
   salesDocumentLines,
   salesDocuments,
 } from '../../../db/schema/sales/tables';
-import { OutstandingRepository } from '../../accounting/outstanding.repository';
-import { DashboardRepository } from '../../dashboard/dashboard.repository';
 import {
   PURCHASE_BILL_TYPE,
   PURCHASE_RETURN_TYPE,
@@ -38,14 +34,22 @@ import {
   SALES_RETURN_TYPE,
 } from '../../../shared/reporting/constants';
 import {
-  listStockItemAggregates,
   getTotalStockValue,
+  listStockItemAggregates,
 } from '../../../shared/reporting/inventory-summary';
 import {
   buildPartyLedgerReport,
   fetchPartyLedgerEntries,
 } from '../../../shared/reporting/party-ledger';
 import type { ResolvedReportPeriod } from '../../../shared/reporting/report-period';
+import { OutstandingRepository } from '../../accounting/outstanding.repository';
+import { DashboardRepository } from '../../dashboard/dashboard.repository';
+import type {
+  PartyStatementQuery,
+  ReportBaseQuery,
+  ReportDateQuery,
+  ReportExtendedQuery,
+} from '../reports.schema';
 import type {
   AllTransactionsPayload,
   DayBookPayload,
@@ -59,12 +63,6 @@ import type {
   SaleReportPayload,
   StockSummaryPayload,
 } from '../reports.types';
-import type {
-  PartyStatementQuery,
-  ReportBaseQuery,
-  ReportDateQuery,
-  ReportExtendedQuery,
-} from '../reports.schema';
 import {
   resolveRange,
   resolveSingleDate,
@@ -647,7 +645,7 @@ export class Phase1ReportsRepository {
       }),
       ...paymentRows.map((row) => {
         const isIn = row.direction === 'received';
-        const amount = Number(row.amount ?? 0);
+        const _amount = Number(row.amount ?? 0);
         return {
           id: row.id,
           date: row.date.toISOString(),
@@ -706,7 +704,7 @@ export class Phase1ReportsRepository {
     query: ReportExtendedQuery,
   ): Promise<{ payload: AllTransactionsPayload; total: number }> {
     const range = resolveRange(query);
-    let dayBookStyle = await this.buildTransactionUnion(
+    const dayBookStyle = await this.buildTransactionUnion(
       businessId,
       range.from,
       range.to,

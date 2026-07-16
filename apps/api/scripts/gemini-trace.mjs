@@ -2,11 +2,12 @@
  * One-shot Gemini trace — writes evidence to gemini-trace-evidence.json
  * Run: node scripts/gemini-trace.mjs
  */
-import { createRequire } from 'node:module';
+
 import { writeFileSync } from 'node:fs';
-import { config as loadEnv } from 'dotenv';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { config as loadEnv } from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 loadEnv({ path: path.resolve(__dirname, '../.env'), override: true });
@@ -44,7 +45,7 @@ function looksLikeAiStudioApiKey(key) {
     key.startsWith('Bearer ')
   )
     return false;
-  return key.length >= 20 && /^[A-Za-z0-9_\-]+$/.test(key);
+  return key.length >= 20 && /^[A-Za-z0-9_-]+$/.test(key);
 }
 
 const trimmed = rawKey.trim();
@@ -65,11 +66,7 @@ function maskHeaders(headers) {
   if (!headers) return out;
   const pairs =
     headers instanceof Headers
-      ? (() => {
-          const p = [];
-          headers.forEach((v, k) => p.push([k, v]));
-          return p;
-        })()
+      ? Array.from(headers.entries())
       : Array.isArray(headers)
         ? headers
         : Object.entries(headers);

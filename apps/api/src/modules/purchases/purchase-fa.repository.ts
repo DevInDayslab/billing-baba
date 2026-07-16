@@ -17,7 +17,6 @@ import {
   purchaseFixedAssets,
 } from '../../db/schema/purchases/tables';
 import {
-  toPurchaseFaAssetRecord,
   toPurchaseFaBatchListRecord,
   toPurchaseFaBatchRecord,
 } from './purchase-fa.mapper';

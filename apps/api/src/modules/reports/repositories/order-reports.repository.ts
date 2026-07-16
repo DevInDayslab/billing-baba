@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ilike, lt, or } from 'drizzle-orm';
+import { and, desc, eq, gte, lt } from 'drizzle-orm';
 import type { Database } from '../../../db/client';
 import { parties } from '../../../db/schema/crm/tables';
 import { items } from '../../../db/schema/inventory/tables';

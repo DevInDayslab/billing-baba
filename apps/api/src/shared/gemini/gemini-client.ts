@@ -128,11 +128,7 @@ function maskOutgoingHeaders(
 
   const pairs: [string, string][] =
     headers instanceof Headers
-      ? (() => {
-          const entries: [string, string][] = [];
-          headers.forEach((value, key) => entries.push([key, value]));
-          return entries;
-        })()
+      ? Array.from(headers.entries())
       : Array.isArray(headers)
         ? headers.filter(
             (entry): entry is [string, string] => entry[1] !== undefined,

@@ -281,7 +281,7 @@ export class TaxReportsRepository {
   }
 
   async getForm27eq(
-    businessId: string,
+    _businessId: string,
     query: ReportExtendedQuery,
   ): Promise<{
     payload: PaginatedRowsPayload<Record<string, never>>;
@@ -291,7 +291,7 @@ export class TaxReportsRepository {
   }
 
   async getTcsReceivable(
-    businessId: string,
+    _businessId: string,
     query: ReportExtendedQuery,
   ): Promise<{
     payload: PaginatedRowsPayload<Record<string, never>>;
@@ -301,7 +301,7 @@ export class TaxReportsRepository {
   }
 
   async getTdsPayable(
-    businessId: string,
+    _businessId: string,
     query: ReportExtendedQuery,
   ): Promise<{
     payload: PaginatedRowsPayload<Record<string, never>>;
@@ -311,7 +311,7 @@ export class TaxReportsRepository {
   }
 
   async getTdsReceivable(
-    businessId: string,
+    _businessId: string,
     query: ReportExtendedQuery,
   ): Promise<{
     payload: PaginatedRowsPayload<Record<string, never>>;

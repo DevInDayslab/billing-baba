@@ -10,7 +10,6 @@ import type {
 import type { JobWorkOrderRecord } from './job-work-order.types';
 
 export class JobWorkOrderService {
-  private readonly db: NonNullable<ReturnType<typeof getDb>>;
   private readonly repository: JobWorkOrderRepository;
 
   constructor() {
@@ -22,7 +21,6 @@ export class JobWorkOrderService {
         503,
       );
     }
-    this.db = db;
     this.repository = new JobWorkOrderRepository(db);
   }
 

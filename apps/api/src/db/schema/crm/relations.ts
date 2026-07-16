@@ -3,18 +3,18 @@ import { businesses } from '../business/tables';
 import { users } from '../identity/tables';
 import { areas } from '../settings/tables';
 import {
+  contactActivities,
+  contacts,
+  leadActivities,
+  leads,
+  loyaltyTransactions,
   parties,
   partyAttachments,
   partyLinks,
   partyLoyaltyBalances,
-  loyaltyTransactions,
   partyTagAssignments,
   partyTags,
   partyVisits,
-  leads,
-  leadActivities,
-  contacts,
-  contactActivities,
 } from './tables';
 
 export const partiesRelations = relations(parties, ({ one, many }) => ({

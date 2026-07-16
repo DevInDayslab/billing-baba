@@ -8,10 +8,10 @@ import {
 import { branches } from '../schema/business/tables';
 import {
   loyaltyTransactions,
+  parties,
   partyAttachments,
   partyLinks,
   partyLoyaltyBalances,
-  parties,
   partyTagAssignments,
   partyTags,
   partyVisits,

@@ -24,17 +24,17 @@ import {
   inventoryMovements,
   items,
 } from '../../db/schema/inventory/tables';
-import { documentNumberSequences } from '../../db/schema/settings/tables';
 import {
   posSessions,
   salesDocumentLines,
   salesDocuments,
 } from '../../db/schema/sales/tables';
+import { documentNumberSequences } from '../../db/schema/settings/tables';
+import { normalizeMoney } from '../inventory/inventory.utils';
 import {
   toSalesDocumentLineRecord,
   toSalesDocumentRecord,
 } from './sales-document.mapper';
-import { normalizeMoney } from '../inventory/inventory.utils';
 import type {
   ListSalesDocumentsFilterParams,
   ListSalesDocumentsParams,

@@ -20,9 +20,7 @@ import {
   listStockItemAggregates,
 } from '../../shared/reporting/inventory-summary';
 import { validLedgerEntrySql } from '../../shared/reporting/party-ledger';
-import { resolveDashboardPeriod } from './dashboard-period';
 import { OutstandingRepository } from '../accounting/outstanding.repository';
-import type { ResolvedDashboardPeriod } from './dashboard-period';
 import type {
   DashboardCharts,
   DashboardFinanceSummary,
@@ -32,6 +30,8 @@ import type {
   DashboardRecentTransaction,
   DashboardSalesSummary,
 } from './dashboard.types';
+import type { ResolvedDashboardPeriod } from './dashboard-period';
+import { resolveDashboardPeriod } from './dashboard-period';
 
 export class DashboardRepository {
   private readonly outstandingRepository: OutstandingRepository;

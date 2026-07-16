@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import {
-  PRICING_TIER_INPUT_VALUES,
   normalizePricingTier,
+  PRICING_TIER_INPUT_VALUES,
 } from '../../shared/pricing/pricing-tier';
 
 const sortFieldValues = ['name', 'created_at'] as const;

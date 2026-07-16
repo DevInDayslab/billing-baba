@@ -1,10 +1,10 @@
 import type { FastifyPluginAsync } from 'fastify';
+import { createSaleFaRoutes } from './sale-fa.routes';
 import {
-  createPosSessionRoutes,
   createDocumentSequenceRoutes,
+  createPosSessionRoutes,
   createSalesDocumentRoutes,
 } from './sales-document.routes';
-import { createSaleFaRoutes } from './sale-fa.routes';
 
 export const salesModule: FastifyPluginAsync = async (app) => {
   await app.register(createSalesDocumentRoutes(), {

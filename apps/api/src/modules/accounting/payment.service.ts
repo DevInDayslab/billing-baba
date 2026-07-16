@@ -1,13 +1,13 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
-import { parseMoney, normalizeMoney } from '../inventory/inventory.utils';
+import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
+import { PaymentRepository } from './payment.repository';
 import type {
   CreateAllocationBody,
   CreatePaymentBody,
   ListPaymentsQuery,
   UpdatePaymentBody,
 } from './payment.schema';
-import { PaymentRepository } from './payment.repository';
 import type { PaymentRecord } from './payment.types';
 
 export class PaymentService {

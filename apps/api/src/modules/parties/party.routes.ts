@@ -1,8 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { authenticate } from '../../middleware/auth.middleware';
 import { requireBusiness } from '../../middleware/require-business.middleware';
-import { createPartyController } from './party.controller';
 import { createLoyaltyController } from '../loyalty/loyalty.controller';
+import { createPartyController } from './party.controller';
 
 export const createPartyRoutes = (): FastifyPluginAsync => {
   const controller = createPartyController();

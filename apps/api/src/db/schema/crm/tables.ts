@@ -15,15 +15,15 @@ import {
   uuidPrimaryKey,
 } from '../columns';
 import {
-  loyaltyTransactionTypeEnum,
-  partyCategoryEnum,
-  partyTypeEnum,
-  pricingTierEnum,
   contactActivityTypeEnum,
   dealStageEnum,
   leadActivityTypeEnum,
   leadSourceEnum,
   leadStatusEnum,
+  loyaltyTransactionTypeEnum,
+  partyCategoryEnum,
+  partyTypeEnum,
+  pricingTierEnum,
   visitPurposeEnum,
 } from '../enums';
 import { users } from '../identity/tables';

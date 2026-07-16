@@ -14,7 +14,6 @@ import type {
 import { PurchasesServiceBase } from './purchases.base-service';
 
 export class PurchaseFaService extends PurchasesServiceBase {
-  private readonly db: NonNullable<ReturnType<typeof getDb>>;
   private readonly repository: PurchaseFaRepository;
 
   constructor() {
@@ -27,7 +26,6 @@ export class PurchaseFaService extends PurchasesServiceBase {
         503,
       );
     }
-    this.db = db;
     this.repository = new PurchaseFaRepository(db);
   }
 

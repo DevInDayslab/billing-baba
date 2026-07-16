@@ -6,8 +6,8 @@ import {
   jobWorkRawMaterialLines,
 } from '../../db/schema/job-work/tables';
 import type {
-  JobWorkOrderRecord,
   JobWorkOrderInsertValues,
+  JobWorkOrderRecord,
 } from './job-work-order.types';
 
 export class JobWorkOrderRepository {
