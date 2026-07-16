@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/network/api_endpoints.dart';
+import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/sales/models/dto/pos_session_dto.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
@@ -72,7 +73,7 @@ class SalesRemoteDataSource {
     double loyaltyPointsRedeemed = 0,
   }) async {
     final payload = <String, dynamic>{
-      'godown_id': ?godownId,
+      if (godownId != null) 'godown_id': godownId,
       if (loyaltyPointsRedeemed > 0)
         'loyalty_points_redeemed': _formatPoints(loyaltyPointsRedeemed),
     };
@@ -92,6 +93,7 @@ class SalesRemoteDataSource {
     }
     return value.toStringAsFixed(4);
   }
+
   Future<SalesDocumentLineDto> addLine(
     String documentId,
     CreateSalesLineRequest request,

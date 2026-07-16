@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 
-enum ImportItemsMethod { barcode, excel, itemLibrary }
+enum ImportItemsMethod { barcode, excel }
 
 class ImportItemsContent extends ConsumerStatefulWidget {
   const ImportItemsContent({super.key});
@@ -131,17 +131,6 @@ class _ImportItemsContentState extends ConsumerState<ImportItemsContent> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xl),
-                        const _OrDivider(),
-                        const SizedBox(height: AppSpacing.xl),
-                        _LibraryMethodCard(
-                          isSelected:
-                              _selectedMethod == ImportItemsMethod.itemLibrary,
-                          onTap: () => setState(
-                            () => _selectedMethod =
-                                ImportItemsMethod.itemLibrary,
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -193,12 +182,6 @@ class _ImportItemsContentState extends ConsumerState<ImportItemsContent> {
       case ImportItemsMethod.excel:
         ref.read(importItemsExcelProvider.notifier).reset();
         setState(() => _showExcelFlow = true);
-      case ImportItemsMethod.itemLibrary:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Item library import is coming soon'),
-          ),
-        );
     }
   }
 }
@@ -323,73 +306,6 @@ class _MethodCard extends StatelessWidget {
   }
 }
 
-class _LibraryMethodCard extends StatelessWidget {
-  const _LibraryMethodCard({
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  static const _activeBlue = Color(0xFF1976D2);
-  static const _cardBorder = Color(0xFFE0E0E0);
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadius.mdBorder,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md + 4,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadius.mdBorder,
-            border: Border.all(
-              color: isSelected ? _activeBlue : _cardBorder,
-              width: isSelected ? 2 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Import From Item Library',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      "Import items from Billing Baba's database",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _SelectionRadio(isSelected: isSelected),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _SelectionRadio extends StatelessWidget {
   const _SelectionRadio({required this.isSelected});
 
@@ -423,32 +339,6 @@ class _SelectionRadio extends StatelessWidget {
               ),
             )
           : null,
-    );
-  }
-}
-
-class _OrDivider extends StatelessWidget {
-  const _OrDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        Expanded(child: Divider(color: Color(0xFFE0E0E0))),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: Text(
-            'OR',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-        Expanded(child: Divider(color: Color(0xFFE0E0E0))),
-      ],
     );
   }
 }

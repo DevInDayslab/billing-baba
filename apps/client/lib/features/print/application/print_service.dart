@@ -3,11 +3,14 @@ import 'dart:typed_data';
 import 'package:billing_baba/features/print/application/print_data_service.dart';
 import 'package:billing_baba/features/print/application/print_output_service.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/models/printable_pdf.dart';
 import 'package:billing_baba/features/print/templates/template_registry.dart';
 import 'package:flutter/material.dart';
 
 export 'package:billing_baba/features/print/application/print_exception.dart'
     show PrintException;
+export 'package:billing_baba/features/print/models/printable_pdf.dart'
+    show PrintablePdf;
 
 /// Orchestrates data loading, template rendering, and PDF output.
 class PrintService {
@@ -29,26 +32,24 @@ class PrintService {
     return template.render(document);
   }
 
+  Future<PrintablePdf> prepare(PrintRequest request, {String? name}) async {
+    final bytes = await _renderPdf(request);
+    return PrintablePdf(bytes: bytes, name: name ?? _defaultFilename(request));
+  }
+
   Future<void> preview({
     required BuildContext context,
     required PrintRequest request,
     String? name,
   }) async {
-    final bytes = await _renderPdf(request);
+    final document = await prepare(request, name: name);
     if (!context.mounted) return;
-    await _outputService.preview(
-      context: context,
-      bytes: bytes,
-      name: name ?? _defaultFilename(request),
-    );
+    await _outputService.previewDocument(document);
   }
 
   Future<void> print(PrintRequest request, {String? name}) async {
-    final bytes = await _renderPdf(request);
-    await _outputService.print(
-      bytes: bytes,
-      name: name ?? _defaultFilename(request),
-    );
+    final document = await prepare(request, name: name);
+    await _outputService.printDocument(document);
   }
 
   Future<void> share(PrintRequest request, {String? filename}) async {

@@ -7,6 +7,7 @@ import 'package:billing_baba/features/pos/pos_constants.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/data/sales_remote_data_source.dart';
+import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -62,7 +63,8 @@ class PosReturnService {
         );
       }
 
-      final finalizedDto = await _remote.finalizeDocument(returnDoc.id);
+      final _ = await _remote.finalizeDocument(returnDoc.id);
+      final finalizedDto = await _remote.getDocument(returnDoc.id);
 
       await _remote.createPayment(
         CreatePaymentRequest(

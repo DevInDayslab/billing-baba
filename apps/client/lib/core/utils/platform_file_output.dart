@@ -1,11 +1,14 @@
 import 'dart:io';
 
+import 'package:billing_baba/features/print/application/print_exception.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
-/// Platform-aware save and share for generated file bytes.
+/// Platform-aware save, share, and open for generated file bytes.
 abstract final class PlatformFileOutput {
   static bool get isDesktop =>
       !kIsWeb &&
@@ -25,6 +28,36 @@ abstract final class PlatformFileOutput {
       fileName: filename,
       bytes: bytes,
     );
+  }
+
+  /// Opens [bytes] with the platform default application for PDFs.
+  ///
+  /// On web, falls back to [Printing.sharePdf] because there is no local viewer.
+  static Future<void> openInDefaultViewer({
+    required Uint8List bytes,
+    required String filename,
+  }) async {
+    final safeName = _basename(
+      filename.endsWith('.pdf') ? filename : '$filename.pdf',
+    );
+
+    if (kIsWeb) {
+      await Printing.sharePdf(bytes: bytes, filename: safeName);
+      return;
+    }
+
+    final directory = await getTemporaryDirectory();
+    final output = File('${directory.path}/$safeName');
+    await output.writeAsBytes(bytes, flush: true);
+
+    final result = await OpenFilex.open(output.path);
+    if (result.type != ResultType.done) {
+      throw PrintException(
+        result.message.isNotEmpty
+            ? result.message
+            : 'Could not open the PDF preview.',
+      );
+    }
   }
 
   /// Mobile: write to temp and open the native share sheet.
