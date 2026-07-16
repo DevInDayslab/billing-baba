@@ -1,4 +1,7 @@
-export type { LineTaxInput, LineTaxResult } from '../../shared/documents/document-tax.service';
+export type {
+  LineTaxInput,
+  LineTaxResult,
+} from '../../shared/documents/document-tax.service';
 export {
   calculateLineTax,
   resolveTaxType,

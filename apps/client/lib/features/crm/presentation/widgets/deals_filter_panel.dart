@@ -127,8 +127,7 @@ class _DealsFilterPanelState extends State<DealsFilterPanel> {
                         (option) => _FilterCheckbox(
                           label: option,
                           checked: widget.systemFilters.contains(option),
-                          onChanged: () =>
-                              widget.onSystemFilterToggle(option),
+                          onChanged: () => widget.onSystemFilterToggle(option),
                         ),
                       )
                       .toList(),

@@ -53,7 +53,9 @@ class InventoryListTableRow extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          hoverColor: canHover ? inventoryListRowHoverColor : Colors.transparent,
+          hoverColor: canHover
+              ? inventoryListRowHoverColor
+              : Colors.transparent,
           focusColor: Colors.transparent,
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,

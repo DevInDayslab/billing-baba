@@ -16,8 +16,7 @@ abstract final class PriceTier {
     distributor: 'Distributor',
   };
 
-  static String labelFor(String tierKey) =>
-      labels[tierKey] ?? labels[retail]!;
+  static String labelFor(String tierKey) => labels[tierKey] ?? labels[retail]!;
 
   static const dropdownOptions = [
     'Retail',

@@ -39,127 +39,127 @@ class _BalanceSheetReportContentState
         final exportRows = _balanceSheetExportRows(report);
 
         return ColoredBox(
-        color: AppColors.background,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Spacer(),
-                  const Text(
-                    'Balance Sheet',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const Spacer(),
-                  ReportPdfChip(
-                    onTap: () => reportPrintTable(
-                      context: context,
-                      title: 'Balance Sheet',
-                      headers: exportHeaders,
-                      rows: exportRows,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  ReportXlsChip(
-                    onTap: () => reportExportTable(
-                      context: context,
-                      title: 'Balance Sheet',
-                      filename: 'balance-sheet',
-                      headers: exportHeaders,
-                      rows: exportRows,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              const ReportCard(
-                padding: EdgeInsets.all(AppSpacing.md),
-                child: ReportPeriodFilterBar(),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  const Text('Horizontal', style: TextStyle(fontSize: 13)),
-                  Switch(
-                    value: !_horizontalView,
-                    onChanged: (v) => setState(() => _horizontalView = !v),
-                  ),
-                  const Text('Vertical', style: TextStyle(fontSize: 13)),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                'Balance Sheet as on ${_asOnFormat.format(report.asOn)}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              ReportCard(
-                child: _horizontalView
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: _BalanceColumn(
-                                    title: 'Assets',
-                                    items: report.assets,
-                                  ),
-                                ),
-                                const VerticalDivider(
-                                  width: 1,
-                                  color: reportCardBorder,
-                                ),
-                                Expanded(
-                                  child: _BalanceColumn(
-                                    title: 'Equities & Liabilities',
-                                    items: report.liabilities,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          _BalanceFooter(
-                            assetsTotal: report.assetsTotal,
-                            liabilitiesTotal: report.liabilitiesTotal,
-                          ),
-                        ],
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _BalanceColumn(
-                            title: 'Assets',
-                            items: report.assets,
-                          ),
-                          const Divider(height: 1, color: reportCardBorder),
-                          _BalanceColumn(
-                            title: 'Equities & Liabilities',
-                            items: report.liabilities,
-                          ),
-                          _BalanceFooter(
-                            assetsTotal: report.assetsTotal,
-                            liabilitiesTotal: report.liabilitiesTotal,
-                          ),
-                        ],
+          color: AppColors.background,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    const Spacer(),
+                    const Text(
+                      'Balance Sheet',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
                       ),
-              ),
-            ],
+                    ),
+                    const Spacer(),
+                    ReportPdfChip(
+                      onTap: () => reportPrintTable(
+                        context: context,
+                        title: 'Balance Sheet',
+                        headers: exportHeaders,
+                        rows: exportRows,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    ReportXlsChip(
+                      onTap: () => reportExportTable(
+                        context: context,
+                        title: 'Balance Sheet',
+                        filename: 'balance-sheet',
+                        headers: exportHeaders,
+                        rows: exportRows,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                const ReportCard(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: ReportPeriodFilterBar(),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    const Text('Horizontal', style: TextStyle(fontSize: 13)),
+                    Switch(
+                      value: !_horizontalView,
+                      onChanged: (v) => setState(() => _horizontalView = !v),
+                    ),
+                    const Text('Vertical', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Balance Sheet as on ${_asOnFormat.format(report.asOn)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ReportCard(
+                  child: _horizontalView
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: _BalanceColumn(
+                                      title: 'Assets',
+                                      items: report.assets,
+                                    ),
+                                  ),
+                                  const VerticalDivider(
+                                    width: 1,
+                                    color: reportCardBorder,
+                                  ),
+                                  Expanded(
+                                    child: _BalanceColumn(
+                                      title: 'Equities & Liabilities',
+                                      items: report.liabilities,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _BalanceFooter(
+                              assetsTotal: report.assetsTotal,
+                              liabilitiesTotal: report.liabilitiesTotal,
+                            ),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _BalanceColumn(
+                              title: 'Assets',
+                              items: report.assets,
+                            ),
+                            const Divider(height: 1, color: reportCardBorder),
+                            _BalanceColumn(
+                              title: 'Equities & Liabilities',
+                              items: report.liabilities,
+                            ),
+                            _BalanceFooter(
+                              assetsTotal: report.assetsTotal,
+                              liabilitiesTotal: report.liabilitiesTotal,
+                            ),
+                          ],
+                        ),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+        );
       },
     );
   }
@@ -235,8 +235,9 @@ class _BalanceColumn extends StatelessWidget {
                     item.name,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight:
-                          item.isHeader ? FontWeight.w700 : FontWeight.w400,
+                      fontWeight: item.isHeader
+                          ? FontWeight.w700
+                          : FontWeight.w400,
                       color: AppColors.textPrimary,
                     ),
                   ),

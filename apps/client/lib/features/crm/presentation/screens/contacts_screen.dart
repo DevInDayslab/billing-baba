@@ -50,31 +50,33 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
 
   Future<void> _saveContact(AddContactInput input) async {
     try {
-      await ref.read(contactsProvider.notifier).addContact(
-        AddContactServiceInput.fromDialogInput(
-          name: input.name,
-          phone: input.phone,
-          email: input.email,
-          accountName: input.accountName,
-          owner: input.owner,
-          salutation: input.salutation,
-          firstName: input.firstName,
-          lastName: input.lastName,
-          title: input.title,
-          description: input.description,
-          leadSource: input.leadSource,
-          otherPhone: input.otherPhone,
-          mobile: input.mobile,
-          assistant: input.assistant,
-          vendorName: input.vendorName,
-          department: input.department,
-          homePhone: input.homePhone,
-          fax: input.fax,
-          dateOfBirth: input.dateOfBirth,
-          asstPhone: input.asstPhone,
-          emailOptOut: input.emailOptOut,
-        ),
-      );
+      await ref
+          .read(contactsProvider.notifier)
+          .addContact(
+            AddContactServiceInput.fromDialogInput(
+              name: input.name,
+              phone: input.phone,
+              email: input.email,
+              accountName: input.accountName,
+              owner: input.owner,
+              salutation: input.salutation,
+              firstName: input.firstName,
+              lastName: input.lastName,
+              title: input.title,
+              description: input.description,
+              leadSource: input.leadSource,
+              otherPhone: input.otherPhone,
+              mobile: input.mobile,
+              assistant: input.assistant,
+              vendorName: input.vendorName,
+              department: input.department,
+              homePhone: input.homePhone,
+              fax: input.fax,
+              dateOfBirth: input.dateOfBirth,
+              asstPhone: input.asstPhone,
+              emailOptOut: input.emailOptOut,
+            ),
+          );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

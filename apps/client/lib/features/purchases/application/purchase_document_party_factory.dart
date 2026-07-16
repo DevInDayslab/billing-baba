@@ -53,7 +53,8 @@ class PurchaseDocumentPartyFactory {
   }
 
   static String _sanitizeGstin(String? value) {
-    final normalized = value?.trim().toUpperCase().replaceAll(RegExp(r'\s+'), '') ?? '';
+    final normalized =
+        value?.trim().toUpperCase().replaceAll(RegExp(r'\s+'), '') ?? '';
     if (normalized.isEmpty) return '';
     if (Validators.gstin(normalized) != null) return '';
     return _gstinPattern.hasMatch(normalized) ? normalized : '';
@@ -71,6 +72,7 @@ class PurchaseDocumentPartyFactory {
     final normalized = PartyModel.normalizePhone(trimmed);
     return normalized.length == 10 ? normalized : '';
   }
+
   static String _resolveState(PurchaseDocumentParseDto parsed) {
     final vendorState = parsed.vendorState?.trim();
     if (vendorState != null && vendorState.isNotEmpty) {

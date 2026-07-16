@@ -113,7 +113,8 @@ class _BentoGrid extends StatelessWidget {
                     for (var j = 0; j < rows[i].cells.length; j++) ...[
                       if (j > 0) const SizedBox(width: _gap),
                       SizedBox(
-                        width: cellWidth * rows[i].cells[j].span +
+                        width:
+                            cellWidth * rows[i].cells[j].span +
                             _gap * (rows[i].cells[j].span - 1),
                         child: _BentoTile(
                           item: rows[i].cells[j].item,

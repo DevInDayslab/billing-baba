@@ -119,9 +119,10 @@ class StockSummaryReportContent extends ConsumerWidget {
                           children: [
                             Checkbox(
                               value: filters.inStockOnly,
-                              onChanged: (value) => filterNotifier.setInStockOnly(
-                                value ?? false,
-                              ),
+                              onChanged: (value) =>
+                                  filterNotifier.setInStockOnly(
+                                    value ?? false,
+                                  ),
                               visualDensity: VisualDensity.compact,
                             ),
                             const Text(

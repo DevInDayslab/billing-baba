@@ -32,15 +32,35 @@ class InventoryRemoteDataSource {
   }
 
   Future<CategoryDto> getCategory(String id) async {
-    return _parseSingle(response: await _dio.get<Map<String, dynamic>>(ApiEndpoints.inventoryCategory(id)), parser: CategoryDto.fromJson);
+    return _parseSingle(
+      response: await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.inventoryCategory(id),
+      ),
+      parser: CategoryDto.fromJson,
+    );
   }
 
   Future<CategoryDto> createCategory(CreateCategoryRequest request) async {
-    return _parseSingle(response: await _dio.post<Map<String, dynamic>>(ApiEndpoints.inventoryCategories, data: request.toJson()), parser: CategoryDto.fromJson);
+    return _parseSingle(
+      response: await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.inventoryCategories,
+        data: request.toJson(),
+      ),
+      parser: CategoryDto.fromJson,
+    );
   }
 
-  Future<CategoryDto> updateCategory(String id, UpdateCategoryRequest request) async {
-    return _parseSingle(response: await _dio.patch<Map<String, dynamic>>(ApiEndpoints.inventoryCategory(id), data: request.toJson()), parser: CategoryDto.fromJson);
+  Future<CategoryDto> updateCategory(
+    String id,
+    UpdateCategoryRequest request,
+  ) async {
+    return _parseSingle(
+      response: await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.inventoryCategory(id),
+        data: request.toJson(),
+      ),
+      parser: CategoryDto.fromJson,
+    );
   }
 
   Future<void> deleteCategory(String id) async {
@@ -56,15 +76,32 @@ class InventoryRemoteDataSource {
   }
 
   Future<BrandDto> getBrand(String id) async {
-    return _parseSingle(response: await _dio.get<Map<String, dynamic>>(ApiEndpoints.inventoryBrand(id)), parser: BrandDto.fromJson);
+    return _parseSingle(
+      response: await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.inventoryBrand(id),
+      ),
+      parser: BrandDto.fromJson,
+    );
   }
 
   Future<BrandDto> createBrand(CreateBrandRequest request) async {
-    return _parseSingle(response: await _dio.post<Map<String, dynamic>>(ApiEndpoints.inventoryBrands, data: request.toJson()), parser: BrandDto.fromJson);
+    return _parseSingle(
+      response: await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.inventoryBrands,
+        data: request.toJson(),
+      ),
+      parser: BrandDto.fromJson,
+    );
   }
 
   Future<BrandDto> updateBrand(String id, UpdateBrandRequest request) async {
-    return _parseSingle(response: await _dio.patch<Map<String, dynamic>>(ApiEndpoints.inventoryBrand(id), data: request.toJson()), parser: BrandDto.fromJson);
+    return _parseSingle(
+      response: await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.inventoryBrand(id),
+        data: request.toJson(),
+      ),
+      parser: BrandDto.fromJson,
+    );
   }
 
   Future<void> deleteBrand(String id) async {
@@ -80,15 +117,32 @@ class InventoryRemoteDataSource {
   }
 
   Future<UnitDetailDto> getUnit(String id) async {
-    return _parseSingle(response: await _dio.get<Map<String, dynamic>>(ApiEndpoints.inventoryUnit(id)), parser: UnitDetailDto.fromJson);
+    return _parseSingle(
+      response: await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.inventoryUnit(id),
+      ),
+      parser: UnitDetailDto.fromJson,
+    );
   }
 
   Future<UnitDetailDto> createUnit(CreateUnitRequest request) async {
-    return _parseSingle(response: await _dio.post<Map<String, dynamic>>(ApiEndpoints.inventoryUnits, data: request.toJson()), parser: UnitDetailDto.fromJson);
+    return _parseSingle(
+      response: await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.inventoryUnits,
+        data: request.toJson(),
+      ),
+      parser: UnitDetailDto.fromJson,
+    );
   }
 
   Future<UnitDetailDto> updateUnit(String id, UpdateUnitRequest request) async {
-    return _parseSingle(response: await _dio.patch<Map<String, dynamic>>(ApiEndpoints.inventoryUnit(id), data: request.toJson()), parser: UnitDetailDto.fromJson);
+    return _parseSingle(
+      response: await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.inventoryUnit(id),
+        data: request.toJson(),
+      ),
+      parser: UnitDetailDto.fromJson,
+    );
   }
 
   Future<void> deleteUnit(String id) async {
@@ -108,14 +162,26 @@ class InventoryRemoteDataSource {
   Future<UnitConversionDto> createUnitConversion(
     CreateUnitConversionRequest request,
   ) async {
-    return _parseSingle(response: await _dio.post<Map<String, dynamic>>(ApiEndpoints.inventoryUnitConversions, data: request.toJson()), parser: UnitConversionDto.fromJson);
+    return _parseSingle(
+      response: await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.inventoryUnitConversions,
+        data: request.toJson(),
+      ),
+      parser: UnitConversionDto.fromJson,
+    );
   }
 
   Future<UnitConversionDto> updateUnitConversion(
     String id,
     UpdateUnitConversionRequest request,
   ) async {
-    return _parseSingle(response: await _dio.patch<Map<String, dynamic>>(ApiEndpoints.inventoryUnitConversion(id), data: request.toJson()), parser: UnitConversionDto.fromJson);
+    return _parseSingle(
+      response: await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.inventoryUnitConversion(id),
+        data: request.toJson(),
+      ),
+      parser: UnitConversionDto.fromJson,
+    );
   }
 
   Future<void> deleteUnitConversion(String id) async {
@@ -131,15 +197,32 @@ class InventoryRemoteDataSource {
   }
 
   Future<GodownDto> getGodown(String id) async {
-    return _parseSingle(response: await _dio.get<Map<String, dynamic>>(ApiEndpoints.inventoryGodown(id)), parser: GodownDto.fromJson);
+    return _parseSingle(
+      response: await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.inventoryGodown(id),
+      ),
+      parser: GodownDto.fromJson,
+    );
   }
 
   Future<GodownDto> createGodown(CreateGodownRequest request) async {
-    return _parseSingle(response: await _dio.post<Map<String, dynamic>>(ApiEndpoints.inventoryGodowns, data: request.toJson()), parser: GodownDto.fromJson);
+    return _parseSingle(
+      response: await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.inventoryGodowns,
+        data: request.toJson(),
+      ),
+      parser: GodownDto.fromJson,
+    );
   }
 
   Future<GodownDto> updateGodown(String id, UpdateGodownRequest request) async {
-    return _parseSingle(response: await _dio.patch<Map<String, dynamic>>(ApiEndpoints.inventoryGodown(id), data: request.toJson()), parser: GodownDto.fromJson);
+    return _parseSingle(
+      response: await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.inventoryGodown(id),
+        data: request.toJson(),
+      ),
+      parser: GodownDto.fromJson,
+    );
   }
 
   Future<void> deleteGodown(String id) async {
@@ -155,15 +238,32 @@ class InventoryRemoteDataSource {
   }
 
   Future<ItemDetailDto> getItem(String id) async {
-    return _parseSingle(response: await _dio.get<Map<String, dynamic>>(ApiEndpoints.inventoryItem(id)), parser: ItemDetailDto.fromJson);
+    return _parseSingle(
+      response: await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.inventoryItem(id),
+      ),
+      parser: ItemDetailDto.fromJson,
+    );
   }
 
   Future<ItemDetailDto> createItem(CreateItemRequest request) async {
-    return _parseSingle(response: await _dio.post<Map<String, dynamic>>(ApiEndpoints.inventoryItems, data: request.toJson()), parser: ItemDetailDto.fromJson);
+    return _parseSingle(
+      response: await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.inventoryItems,
+        data: request.toJson(),
+      ),
+      parser: ItemDetailDto.fromJson,
+    );
   }
 
   Future<ItemDetailDto> updateItem(String id, UpdateItemRequest request) async {
-    return _parseSingle(response: await _dio.patch<Map<String, dynamic>>(ApiEndpoints.inventoryItem(id), data: request.toJson()), parser: ItemDetailDto.fromJson);
+    return _parseSingle(
+      response: await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.inventoryItem(id),
+        data: request.toJson(),
+      ),
+      parser: ItemDetailDto.fromJson,
+    );
   }
 
   Future<void> deleteItem(String id) async {
@@ -176,14 +276,23 @@ class InventoryRemoteDataSource {
     );
     final data = response.data?['data'];
     if (data is! List) return const [];
-    return data.whereType<Map<String, dynamic>>().map(ItemImageDto.fromJson).toList();
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(ItemImageDto.fromJson)
+        .toList();
   }
 
   Future<ItemImageDto> createItemImage(
     String itemId,
     CreateItemImageRequest request,
   ) async {
-    return _parseSingle(response: await _dio.post<Map<String, dynamic>>(ApiEndpoints.inventoryItemImages(itemId), data: request.toJson()), parser: ItemImageDto.fromJson);
+    return _parseSingle(
+      response: await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.inventoryItemImages(itemId),
+        data: request.toJson(),
+      ),
+      parser: ItemImageDto.fromJson,
+    );
   }
 
   Future<ItemImageDto> updateItemImage(
@@ -191,7 +300,13 @@ class InventoryRemoteDataSource {
     String imageId,
     UpdateItemImageRequest request,
   ) async {
-    return _parseSingle(response: await _dio.patch<Map<String, dynamic>>(ApiEndpoints.inventoryItemImage(itemId, imageId), data: request.toJson()), parser: ItemImageDto.fromJson);
+    return _parseSingle(
+      response: await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.inventoryItemImage(itemId, imageId),
+        data: request.toJson(),
+      ),
+      parser: ItemImageDto.fromJson,
+    );
   }
 
   Future<void> deleteItemImage(String itemId, String imageId) async {
@@ -204,7 +319,10 @@ class InventoryRemoteDataSource {
     );
     final data = response.data?['data'];
     if (data is! List) return const [];
-    return data.whereType<Map<String, dynamic>>().map(TierPriceDto.fromJson).toList();
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(TierPriceDto.fromJson)
+        .toList();
   }
 
   Future<List<TierPriceDto>> upsertItemTierPrices(
@@ -217,7 +335,10 @@ class InventoryRemoteDataSource {
     );
     final data = response.data?['data'];
     if (data is! List) return const [];
-    return data.whereType<Map<String, dynamic>>().map(TierPriceDto.fromJson).toList();
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(TierPriceDto.fromJson)
+        .toList();
   }
 
   Future<void> deleteItemTierPrice(String itemId, String tier) async {
@@ -247,21 +368,35 @@ class InventoryRemoteDataSource {
   Future<ItemLocationDto> createItemLocation(
     CreateItemLocationRecordRequest request,
   ) async {
-    return _parseSingle(response: await _dio.post<Map<String, dynamic>>(ApiEndpoints.inventoryItemLocations, data: request.toJson()), parser: ItemLocationDto.fromJson);
+    return _parseSingle(
+      response: await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.inventoryItemLocations,
+        data: request.toJson(),
+      ),
+      parser: ItemLocationDto.fromJson,
+    );
   }
 
   Future<ItemLocationDto> updateItemLocation(
     String id,
     UpdateItemLocationRecordRequest request,
   ) async {
-    return _parseSingle(response: await _dio.patch<Map<String, dynamic>>(ApiEndpoints.inventoryItemLocation(id), data: request.toJson()), parser: ItemLocationDto.fromJson);
+    return _parseSingle(
+      response: await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.inventoryItemLocation(id),
+        data: request.toJson(),
+      ),
+      parser: ItemLocationDto.fromJson,
+    );
   }
 
   Future<void> deleteItemLocation(String id) async {
     await _dio.delete<void>(ApiEndpoints.inventoryItemLocation(id));
   }
 
-  Future<PaginatedStockLevelsDto> listStockLevels(StockLevelListQuery query) async {
+  Future<PaginatedStockLevelsDto> listStockLevels(
+    StockLevelListQuery query,
+  ) async {
     final response = await _dio.get<Map<String, dynamic>>(
       ApiEndpoints.inventoryStockLevels,
       queryParameters: query.toQueryParameters(),
@@ -270,7 +405,12 @@ class InventoryRemoteDataSource {
   }
 
   Future<StockLevelDto> getStockLevel(String id) async {
-    return _parseSingle(response: await _dio.get<Map<String, dynamic>>(ApiEndpoints.inventoryStockLevel(id)), parser: StockLevelDto.fromJson);
+    return _parseSingle(
+      response: await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.inventoryStockLevel(id),
+      ),
+      parser: StockLevelDto.fromJson,
+    );
   }
 
   Future<PaginatedMovementsDto> listMovements(MovementListQuery query) async {
@@ -282,7 +422,12 @@ class InventoryRemoteDataSource {
   }
 
   Future<MovementDto> getMovement(String id) async {
-    return _parseSingle(response: await _dio.get<Map<String, dynamic>>(ApiEndpoints.inventoryMovement(id)), parser: MovementDto.fromJson);
+    return _parseSingle(
+      response: await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.inventoryMovement(id),
+      ),
+      parser: MovementDto.fromJson,
+    );
   }
 
   Future<MovementDto> createMovement(CreateMovementRequest request) async {
@@ -323,7 +468,12 @@ class InventoryRemoteDataSource {
   }
 
   Future<PriceHistoryDto> getPriceHistoryRecord(String id) async {
-    return _parseSingle(response: await _dio.get<Map<String, dynamic>>(ApiEndpoints.inventoryPriceHistoryRecord(id)), parser: PriceHistoryDto.fromJson);
+    return _parseSingle(
+      response: await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.inventoryPriceHistoryRecord(id),
+      ),
+      parser: PriceHistoryDto.fromJson,
+    );
   }
 
   T _parsePaginated<T>(

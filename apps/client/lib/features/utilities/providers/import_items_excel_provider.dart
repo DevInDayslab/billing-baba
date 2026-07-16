@@ -252,7 +252,9 @@ class ImportItemsExcelNotifier extends Notifier<ImportItemsExcelState> {
 
     if (units.isNotEmpty) return units;
 
-    final created = await ref.read(inventoryUnitsProvider.notifier).addUnit(
+    final created = await ref
+        .read(inventoryUnitsProvider.notifier)
+        .addUnit(
           fullName: 'Pieces',
           shortName: 'PCS',
         );

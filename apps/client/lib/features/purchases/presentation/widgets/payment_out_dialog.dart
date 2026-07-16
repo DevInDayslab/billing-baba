@@ -129,9 +129,11 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
 
     if (paymentId == null) {
       _syncAmountFieldsFromControllers();
-      final result = await ref.read(paymentOutFormProvider.notifier).savePayment(
-        showSuccessMessage: false,
-      );
+      final result = await ref
+          .read(paymentOutFormProvider.notifier)
+          .savePayment(
+            showSuccessMessage: false,
+          );
       if (!mounted) return;
       if (result.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -160,9 +162,11 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
 
     if (paymentId == null) {
       _syncAmountFieldsFromControllers();
-      final result = await ref.read(paymentOutFormProvider.notifier).savePayment(
-        showSuccessMessage: false,
-      );
+      final result = await ref
+          .read(paymentOutFormProvider.notifier)
+          .savePayment(
+            showSuccessMessage: false,
+          );
       if (!mounted) return;
       if (result.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -249,225 +253,229 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                       : AppColors.textSecondary,
                                 ),
                               ],
-                          const SizedBox(height: _sectionGap),
-                          _LabeledField(
-                            label: 'Payment Type',
-                            child: SizedBox(
-                              width: 160,
-                              child: SaleGenericSelectDropdown(
-                                value: form.paymentType,
-                                options: PaymentOutDropdownOptions.paymentTypes,
-                                compact: true,
-                                onSelected: notifier.updatePaymentType,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          TextButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.add, size: 16),
-                            label: const Text(
-                              'Add Payment type',
-                              style: TextStyle(fontSize: 13),
-                            ),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.primary,
-                              padding: EdgeInsets.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ),
-                          const SizedBox(height: _sectionGap),
-                          OutlinedButton.icon(
-                            onPressed: notifier.toggleDescriptionField,
-                            icon: const Icon(Icons.add, size: 16),
-                            label: const Text(
-                              'ADD DESCRIPTION',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.primary,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              side: const BorderSide(
-                                color: _cardBorder,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                          ),
-                          if (form.showDescriptionField) ...[
-                            const SizedBox(height: 8),
-                            TextField(
-                              onChanged: notifier.updateDescription,
-                              maxLines: 3,
-                              style: saleFieldTextStyle,
-                              decoration: buildSaleFieldDecoration(
-                                hint: 'Add description...',
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: AppSpacing.sm),
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.camera_alt_outlined),
-                            color: AppColors.textSecondary,
-                            tooltip: 'Attach image',
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: _sectionGap),
-                    SizedBox(
-                      width: 280,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _LabeledField(
-                            label: 'Receipt No',
-                            child: Text(
-                              form.receiptNo,
-                              style: saleFieldTextStyle.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: _sectionGap),
-                          _LabeledField(
-                            label: 'Date',
-                            child: SaleSingleDatePickerAnchor(
-                              key: _datePickerKey,
-                              selectedDate: form.date,
-                              onDateSelected: notifier.updateDate,
-                              child: _PickerField(
-                                value: formatSaleSingleDate(form.date),
-                                icon: Icons.calendar_today_outlined,
-                                onTap: () =>
-                                    _datePickerKey.currentState?.toggle(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: _sectionGap),
-                          _LabeledField(
-                            label: 'Time',
-                            child: SaleTimeDropdown(
-                              value: form.time,
-                              compact: true,
-                              onSelected: notifier.updateTime,
-                            ),
-                          ),
-                          const SizedBox(height: _sectionGap * 2),
-                          _AmountRow(
-                            label: 'Paid',
-                            child: SizedBox(
-                              width: 120,
-                              child: TextField(
-                                controller: _paidController,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                    RegExp(r'^\d*\.?\d{0,2}'),
+                              const SizedBox(height: _sectionGap),
+                              _LabeledField(
+                                label: 'Payment Type',
+                                child: SizedBox(
+                                  width: 160,
+                                  child: SaleGenericSelectDropdown(
+                                    value: form.paymentType,
+                                    options:
+                                        PaymentOutDropdownOptions.paymentTypes,
+                                    compact: true,
+                                    onSelected: notifier.updatePaymentType,
                                   ),
-                                ],
-                                style: saleFieldTextStyle,
-                                textAlign: TextAlign.right,
-                                decoration: buildSaleFieldDecoration(
-                                  compact: true,
-                                  hasError:
-                                      form.showValidationErrors &&
-                                      form.total <= 0,
                                 ),
-                                onChanged: (value) {
-                                  final amount = double.tryParse(value) ?? 0;
-                                  notifier.updatePaidAmount(amount);
-                                },
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          _AmountRow(
-                            label: 'Discount',
-                            child: SizedBox(
-                              width: 120,
-                              child: TextField(
-                                controller: _discountController,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                    RegExp(r'^\d*\.?\d{0,2}'),
+                              const SizedBox(height: AppSpacing.sm),
+                              TextButton.icon(
+                                onPressed: () {},
+                                icon: const Icon(Icons.add, size: 16),
+                                label: const Text(
+                                  'Add Payment type',
+                                  style: TextStyle(fontSize: 13),
+                                ),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.primary,
+                                  padding: EdgeInsets.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                              ),
+                              const SizedBox(height: _sectionGap),
+                              OutlinedButton.icon(
+                                onPressed: notifier.toggleDescriptionField,
+                                icon: const Icon(Icons.add, size: 16),
+                                label: const Text(
+                                  'ADD DESCRIPTION',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
                                   ),
-                                ],
-                                style: saleFieldTextStyle,
-                                textAlign: TextAlign.right,
-                                decoration: buildSaleFieldDecoration(
-                                  compact: true,
                                 ),
-                                onChanged: (value) {
-                                  final amount = double.tryParse(value) ?? 0;
-                                  notifier.updateDiscount(amount);
-                                },
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.primary,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  side: const BorderSide(
+                                    color: _cardBorder,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
                               ),
-                            ),
+                              if (form.showDescriptionField) ...[
+                                const SizedBox(height: 8),
+                                TextField(
+                                  onChanged: notifier.updateDescription,
+                                  maxLines: 3,
+                                  style: saleFieldTextStyle,
+                                  decoration: buildSaleFieldDecoration(
+                                    hint: 'Add description...',
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: AppSpacing.sm),
+                              IconButton(
+                                onPressed: () {},
+                                icon: const Icon(Icons.camera_alt_outlined),
+                                color: AppColors.textSecondary,
+                                tooltip: 'Attach image',
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: AppSpacing.sm),
-                          _AmountRow(
-                            label: 'Total',
-                            value: _amountFormat.format(form.total),
-                            isBold: true,
-                            valueColor: AppColors.primary,
+                        ),
+                        const SizedBox(width: _sectionGap),
+                        SizedBox(
+                          width: 280,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _LabeledField(
+                                label: 'Receipt No',
+                                child: Text(
+                                  form.receiptNo,
+                                  style: saleFieldTextStyle.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: _sectionGap),
+                              _LabeledField(
+                                label: 'Date',
+                                child: SaleSingleDatePickerAnchor(
+                                  key: _datePickerKey,
+                                  selectedDate: form.date,
+                                  onDateSelected: notifier.updateDate,
+                                  child: _PickerField(
+                                    value: formatSaleSingleDate(form.date),
+                                    icon: Icons.calendar_today_outlined,
+                                    onTap: () =>
+                                        _datePickerKey.currentState?.toggle(),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: _sectionGap),
+                              _LabeledField(
+                                label: 'Time',
+                                child: SaleTimeDropdown(
+                                  value: form.time,
+                                  compact: true,
+                                  onSelected: notifier.updateTime,
+                                ),
+                              ),
+                              const SizedBox(height: _sectionGap * 2),
+                              _AmountRow(
+                                label: 'Paid',
+                                child: SizedBox(
+                                  width: 120,
+                                  child: TextField(
+                                    controller: _paidController,
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                        RegExp(r'^\d*\.?\d{0,2}'),
+                                      ),
+                                    ],
+                                    style: saleFieldTextStyle,
+                                    textAlign: TextAlign.right,
+                                    decoration: buildSaleFieldDecoration(
+                                      compact: true,
+                                      hasError:
+                                          form.showValidationErrors &&
+                                          form.total <= 0,
+                                    ),
+                                    onChanged: (value) {
+                                      final amount =
+                                          double.tryParse(value) ?? 0;
+                                      notifier.updatePaidAmount(amount);
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              _AmountRow(
+                                label: 'Discount',
+                                child: SizedBox(
+                                  width: 120,
+                                  child: TextField(
+                                    controller: _discountController,
+                                    keyboardType:
+                                        const TextInputType.numberWithOptions(
+                                          decimal: true,
+                                        ),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                        RegExp(r'^\d*\.?\d{0,2}'),
+                                      ),
+                                    ],
+                                    style: saleFieldTextStyle,
+                                    textAlign: TextAlign.right,
+                                    decoration: buildSaleFieldDecoration(
+                                      compact: true,
+                                    ),
+                                    onChanged: (value) {
+                                      final amount =
+                                          double.tryParse(value) ?? 0;
+                                      notifier.updateDiscount(amount);
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              _AmountRow(
+                                label: 'Total',
+                                value: _amountFormat.format(form.total),
+                                isBold: true,
+                                valueColor: AppColors.primary,
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            const Divider(height: 1, color: _cardBorder),
-            Padding(
-              padding: const EdgeInsets.all(_sectionGap),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  _PaymentOutActionsMenu(
-                    enabled: !isSaving,
-                    onPrint: _handlePrintPreview,
-                    onSaveAndNew: () => _handleSave(saveAndNew: true),
-                    onChannelSelected: (_) => _handleShare(),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  FilledButton(
-                    onPressed: isSaving ? null : _handleSave,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
+                const Divider(height: 1, color: _cardBorder),
+                Padding(
+                  padding: const EdgeInsets.all(_sectionGap),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _PaymentOutActionsMenu(
+                        enabled: !isSaving,
+                        onPrint: _handlePrintPreview,
+                        onSaveAndNew: () => _handleSave(saveAndNew: true),
+                        onChannelSelected: (_) => _handleShare(),
                       ),
-                    ),
-                    child: isSaving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Save'),
+                      const SizedBox(width: AppSpacing.sm),
+                      FilledButton(
+                        onPressed: isSaving ? null : _handleSave,
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                          ),
+                        ),
+                        child: isSaving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Save'),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
               ],
             ),
           ),

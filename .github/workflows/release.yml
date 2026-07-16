@@ -14,7 +14,8 @@ on:
   push:
     branches:
       - main
-
+  workflow_dispatch:
+ 
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
@@ -58,7 +59,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate Flutter .env
-        uses: ./.github/actions/setup-flutter-env
+        working-directory: .
+        env:
+          FLUTTER_ENV_DIR: apps/client
+          APP_ENV: ${{ vars.APP_ENV }}
+          DEBUG: ${{ vars.DEBUG }}
+          ENABLE_DEV_LOGIN: ${{ vars.ENABLE_DEV_LOGIN }}
+          DEV_OTP: ${{ vars.DEV_OTP }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
+          MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
+        run: bash .github/scripts/setup-flutter-env.sh
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -109,7 +120,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate Flutter .env
-        uses: ./.github/actions/setup-flutter-env
+        working-directory: .
+        env:
+          FLUTTER_ENV_DIR: apps/client
+          APP_ENV: ${{ vars.APP_ENV }}
+          DEBUG: ${{ vars.DEBUG }}
+          ENABLE_DEV_LOGIN: ${{ vars.ENABLE_DEV_LOGIN }}
+          DEV_OTP: ${{ vars.DEV_OTP }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
+          MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
+        run: bash .github/scripts/setup-flutter-env.sh
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2

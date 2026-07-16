@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart' show SaleDateRangePickerAnchor;
+import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart'
+    show SaleDateRangePickerAnchor;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';

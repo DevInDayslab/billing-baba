@@ -74,7 +74,9 @@ class PartyLocalExtension {
       openingBalanceAsOfDate: result.openingBalanceAsOfDate,
       loyaltyPointsOpeningBalance: result.loyaltyPointsOpeningBalance,
       loyaltyPointsAsOfDate: result.loyaltyPointsAsOfDate,
-      loyaltyPointsBalance: _initialLoyaltyBalance(result.loyaltyPointsOpeningBalance),
+      loyaltyPointsBalance: _initialLoyaltyBalance(
+        result.loyaltyPointsOpeningBalance,
+      ),
       additionalField1: result.additionalField1Enabled
           ? result.additionalField1
           : '',

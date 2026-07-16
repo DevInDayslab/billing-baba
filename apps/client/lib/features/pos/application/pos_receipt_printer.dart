@@ -25,8 +25,8 @@ class PosReceiptPrinter {
   PosReceiptPrinter({
     required PrintOutputService outputService,
     required PosReceiptTemplate template,
-  })  : _outputService = outputService,
-        _template = template;
+  }) : _outputService = outputService,
+       _template = template;
 
   final PrintOutputService _outputService;
   final PosReceiptTemplate _template;

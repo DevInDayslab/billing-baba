@@ -121,11 +121,14 @@ void main() {
 
   setUpAll(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/path_provider'), (
-      methodCall,
-    ) async {
-      return '.';
-    });
+        .setMockMethodCallHandler(
+          const MethodChannel('plugins.flutter.io/path_provider'),
+          (
+            methodCall,
+          ) async {
+            return '.';
+          },
+        );
   });
 
   group('PDF template smoke tests', () {

@@ -71,14 +71,20 @@ class JobWorkOutRawMaterialTable extends ConsumerWidget {
                     icon: const Icon(Icons.add, size: 16),
                     label: const Text(
                       'Add Row',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ),
               Container(
                 color: _headerBackground,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     const Spacer(),

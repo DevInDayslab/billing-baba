@@ -82,7 +82,11 @@ class SalesXlsChip extends StatelessWidget {
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.table_chart_outlined, size: 16, color: Color(0xFF2E7D32)),
+            Icon(
+              Icons.table_chart_outlined,
+              size: 16,
+              color: Color(0xFF2E7D32),
+            ),
             SizedBox(width: 4),
             Text(
               'XLS',
@@ -111,7 +115,9 @@ class SalesPaginationRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final paginated = ref.watch(paginatedSalesDocumentsProvider(scope));
     final filters = ref.watch(salesDocumentFiltersProvider(scope));
-    final filtersNotifier = ref.read(salesDocumentFiltersProvider(scope).notifier);
+    final filtersNotifier = ref.read(
+      salesDocumentFiltersProvider(scope).notifier,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(

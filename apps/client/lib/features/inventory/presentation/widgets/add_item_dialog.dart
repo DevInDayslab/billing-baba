@@ -461,7 +461,13 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             _buildHeader(form),
             const Divider(height: 1, color: _cardBorder),
             if (isService)
-              buildFormBody(form, notifier, categories, categoryOptions, selectedCategory)
+              buildFormBody(
+                form,
+                notifier,
+                categories,
+                categoryOptions,
+                selectedCategory,
+              )
             else
               Flexible(
                 child: SingleChildScrollView(
@@ -583,7 +589,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                   const SnackBar(content: Text('Item settings coming soon')),
                 );
               },
-              icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary),
+              icon: const Icon(
+                Icons.settings_outlined,
+                color: AppColors.textSecondary,
+              ),
               tooltip: 'Settings',
               visualDensity: VisualDensity.compact,
             ),

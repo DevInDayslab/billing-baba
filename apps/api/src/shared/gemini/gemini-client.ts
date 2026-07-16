@@ -1,5 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import type { GoogleGenAI } from '@google/genai' with { 'resolution-mode': 'import' };
+import { dirname, join } from 'node:path';
+import type { GoogleGenAI } from '@google/genai' with {
+  'resolution-mode': 'import',
+};
 
 const resolveFromHere = createRequire(__filename);
 
@@ -13,16 +17,39 @@ const { GoogleGenAI: GoogleGenAIConstructor } = resolveFromHere(
   }) => GoogleGenAI;
 };
 
+function readGoogleGenAiSdkVersion(): string {
+  try {
+    const entry = resolveFromHere.resolve('@google/genai');
+    let dir = dirname(entry);
+
+    for (let depth = 0; depth < 5; depth += 1) {
+      try {
+        const pkg = JSON.parse(
+          readFileSync(join(dir, 'package.json'), 'utf8'),
+        ) as { name?: string; version?: string };
+
+        if (pkg.name === '@google/genai' && pkg.version) {
+          return pkg.version;
+        }
+      } catch {
+        // Keep walking up until the package root is found.
+      }
+
+      dir = dirname(dir);
+    }
+  } catch {
+    // Fall back when the SDK is not installed (e.g. partial test env).
+  }
+
+  return 'unknown';
+}
+
+export const GOOGLE_GENAI_SDK_VERSION = readGoogleGenAiSdkVersion();
+
 const AI_STUDIO_KEY_HINT =
   'Create a free API key at https://aistudio.google.com/apikey (not Vertex AI or OAuth).';
 
 const GEMINI_DEVELOPER_API_HOST = 'generativelanguage.googleapis.com';
-
-const googleGenAiPackage = resolveFromHere('@google/genai/package.json') as {
-  version: string;
-};
-
-export const GOOGLE_GENAI_SDK_VERSION = googleGenAiPackage.version;
 
 /** Google AI Studio key family shown in startup / request logs. */
 export type GeminiKeyType = 'Auth' | 'Standard' | 'Unknown';
@@ -101,13 +128,11 @@ function maskOutgoingHeaders(
 
   const pairs: [string, string][] =
     headers instanceof Headers
-      ? (() => {
-          const entries: [string, string][] = [];
-          headers.forEach((value, key) => entries.push([key, value]));
-          return entries;
-        })()
+      ? Array.from(headers.entries())
       : Array.isArray(headers)
-        ? headers.filter((entry): entry is [string, string] => entry[1] !== undefined)
+        ? headers.filter(
+            (entry): entry is [string, string] => entry[1] !== undefined,
+          )
         : Object.entries(headers).filter(
             (entry): entry is [string, string] => entry[1] !== undefined,
           );
@@ -144,7 +169,10 @@ export function auditGeminiAuthEnvironment(): GeminiAuthEnvironmentAudit {
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim()) {
     conflictingEnvVars.push('GOOGLE_APPLICATION_CREDENTIALS');
   }
-  if (process.env.GCLOUD_PROJECT?.trim() && !process.env.GEMINI_API_KEY?.trim()) {
+  if (
+    process.env.GCLOUD_PROJECT?.trim() &&
+    !process.env.GEMINI_API_KEY?.trim()
+  ) {
     conflictingEnvVars.push('GCLOUD_PROJECT (without GEMINI_API_KEY)');
   }
 
@@ -201,7 +229,9 @@ export function describeGeminiKeyForLog(): GeminiKeyDiagnostics {
   };
 }
 
-export function formatGeminiKeyLogLine(diagnostics: GeminiKeyDiagnostics): string {
+export function formatGeminiKeyLogLine(
+  diagnostics: GeminiKeyDiagnostics,
+): string {
   if (!diagnostics.loaded) {
     return 'Gemini Developer API: key not loaded';
   }
@@ -271,7 +301,9 @@ function logOutgoingGeminiRequest(
   init: RequestInit | undefined,
 ): void {
   const maskedHeaders = maskOutgoingHeaders(init?.headers);
-  const headerNames = Object.keys(maskedHeaders).map((name) => name.toLowerCase());
+  const headerNames = Object.keys(maskedHeaders).map((name) =>
+    name.toLowerCase(),
+  );
   const hasApiKeyHeader = headerNames.includes('x-goog-api-key');
   const hasAuthorizationHeader = headerNames.includes('authorization');
 
@@ -314,29 +346,36 @@ function installGeminiFetchLogging(): void {
   fetchLoggingInstalled = true;
   const originalFetch = globalThis.fetch.bind(globalThis);
 
-  globalThis.fetch = async (input, init) => {
-    const url =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.href
-          : input.url;
+  // Preserve Bun/Node static fetch members (e.g. preconnect) for typeof fetch compatibility.
+  globalThis.fetch = Object.assign(
+    async (
+      input: Parameters<typeof fetch>[0],
+      init?: Parameters<typeof fetch>[1],
+    ) => {
+      const url =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
 
-    if (url.includes(GEMINI_DEVELOPER_API_HOST)) {
-      logOutgoingGeminiRequest(url, init);
-    }
+      if (url.includes(GEMINI_DEVELOPER_API_HOST)) {
+        logOutgoingGeminiRequest(url, init);
+      }
 
-    const response = await originalFetch(input, init);
+      const response = await originalFetch(input, init);
 
-    if (url.includes(GEMINI_DEVELOPER_API_HOST) && !response.ok) {
-      const body = await response.clone().text();
-      console.error(
-        `[Gemini] HTTP response: status=${response.status} statusText=${response.statusText} body=${body}`,
-      );
-    }
+      if (url.includes(GEMINI_DEVELOPER_API_HOST) && !response.ok) {
+        const body = await response.clone().text();
+        console.error(
+          `[Gemini] HTTP response: status=${response.status} statusText=${response.statusText} body=${body}`,
+        );
+      }
 
-    return response;
-  };
+      return response;
+    },
+    originalFetch,
+  );
 }
 
 /** Gemini Developer API client (API key only — not Vertex AI). */

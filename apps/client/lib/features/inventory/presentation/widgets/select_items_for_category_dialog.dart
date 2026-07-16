@@ -59,22 +59,25 @@ class _SelectItemsForCategoryDialogState
 
   List<InventoryItem> _filteredItems(List<InventoryItem> allItems) {
     final query = _searchQuery.toLowerCase();
-    final items = allItems
-        .where((item) => !_isInTargetCategory(item))
-        .where(
-          (item) => query.isEmpty || item.name.toLowerCase().contains(query),
-        )
-        .toList()
-      ..sort((a, b) {
-        final comparison = switch (_sortField) {
-          _ItemSortField.name => a.name.toLowerCase().compareTo(
-            b.name.toLowerCase(),
-          ),
-          _ItemSortField.quantity =>
-            (a.quantity ?? 0).compareTo(b.quantity ?? 0),
-        };
-        return _sortAscending ? comparison : -comparison;
-      });
+    final items =
+        allItems
+            .where((item) => !_isInTargetCategory(item))
+            .where(
+              (item) =>
+                  query.isEmpty || item.name.toLowerCase().contains(query),
+            )
+            .toList()
+          ..sort((a, b) {
+            final comparison = switch (_sortField) {
+              _ItemSortField.name => a.name.toLowerCase().compareTo(
+                b.name.toLowerCase(),
+              ),
+              _ItemSortField.quantity => (a.quantity ?? 0).compareTo(
+                b.quantity ?? 0,
+              ),
+            };
+            return _sortAscending ? comparison : -comparison;
+          });
 
     return items;
   }
@@ -273,7 +276,9 @@ class _SelectItemsForCategoryDialogState
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   FilledButton(
-                    onPressed: _selectedIds.isEmpty || _isMoving ? null : _moveItems,
+                    onPressed: _selectedIds.isEmpty || _isMoving
+                        ? null
+                        : _moveItems,
                     style: FilledButton.styleFrom(
                       backgroundColor: inventoryNegativeColor,
                       disabledBackgroundColor: inventoryNegativeColor

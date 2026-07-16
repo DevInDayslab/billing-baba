@@ -70,9 +70,9 @@ class PurchaseDocumentParseDto {
     final rawLines = json['lines'];
     final lines = rawLines is List
         ? rawLines
-            .whereType<Map<String, dynamic>>()
-            .map(PurchaseDocumentParseLineDto.fromJson)
-            .toList()
+              .whereType<Map<String, dynamic>>()
+              .map(PurchaseDocumentParseLineDto.fromJson)
+              .toList()
         : const <PurchaseDocumentParseLineDto>[];
 
     return PurchaseDocumentParseDto(

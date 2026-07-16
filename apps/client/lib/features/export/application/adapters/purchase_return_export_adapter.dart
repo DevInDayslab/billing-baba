@@ -28,7 +28,9 @@ Future<ExportSheet> buildPurchaseReturnExportSheet(WidgetRef ref) async {
         status: _documentStatusFromFilterLabel(filters.selectedStatus),
         from: dateRange?.start.toUtc().toIso8601String(),
         to: dateRange?.end.toUtc().toIso8601String(),
-        q: filters.searchQuery.trim().isEmpty ? null : filters.searchQuery.trim(),
+        q: filters.searchQuery.trim().isEmpty
+            ? null
+            : filters.searchQuery.trim(),
       );
       final result = await service.fetchReturnsPage(query);
       return (
@@ -80,13 +82,16 @@ List<PurchaseReturnModel> _applyClientFilters(
     if (statusFilter != null && item.status != statusFilter) {
       return false;
     }
-    if (filters.selectedUser != 'All Users' && item.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        item.user != filters.selectedUser) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && item.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        item.firm != filters.selectedFirm) {
       return false;
     }
-    if (filters.selectedGodown != 'All Godown' && item.godown != filters.selectedGodown) {
+    if (filters.selectedGodown != 'All Godown' &&
+        item.godown != filters.selectedGodown) {
       return false;
     }
     if (filters.selectedPayment != 'All Payment' &&

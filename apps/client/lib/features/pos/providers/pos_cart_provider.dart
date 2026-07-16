@@ -41,7 +41,10 @@ class PosCart extends _$PosCart {
       state = state.copyWith(items: updated);
     } else {
       state = state.copyWith(
-        items: [...state.items, CartItem(item: item, quantity: 1)],
+        items: [
+          ...state.items,
+          CartItem(item: item, quantity: 1),
+        ],
       );
     }
     _syncSinglePaymentAmount();
@@ -113,7 +116,10 @@ class PosCart extends _$PosCart {
       return;
     }
 
-    final newPayments = [...state.payments, PaymentEntry(mode: mode, amount: 0)];
+    final newPayments = [
+      ...state.payments,
+      PaymentEntry(mode: mode, amount: 0),
+    ];
     state = state.copyWith(payments: newPayments);
 
     if (newPayments.length == 1) {

@@ -521,7 +521,8 @@ class _ContactsTableHeaderRow extends StatelessWidget {
   final Set<_ContactColumnId> pinnedColumns;
   final bool Function(_ContactColumnId id) columnHasFilter;
   final VoidCallback onToggleAll;
-  final void Function(_ContactColumnId column, {required bool ascending}) onSort;
+  final void Function(_ContactColumnId column, {required bool ascending})
+  onSort;
   final ValueChanged<_ContactColumnId> onSortToggle;
   final ValueChanged<_ContactColumnId> onPin;
   final ValueChanged<_ContactColumnId> onHide;
@@ -637,7 +638,9 @@ class _ColumnHeaderMenuState extends State<_ColumnHeaderMenu> {
               backgroundColor: const WidgetStatePropertyAll(AppColors.surface),
               elevation: const WidgetStatePropertyAll(4),
               shadowColor: const WidgetStatePropertyAll(Colors.black26),
-              surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+              surfaceTintColor: const WidgetStatePropertyAll(
+                Colors.transparent,
+              ),
               shape: WidgetStatePropertyAll(
                 RoundedRectangleBorder(
                   borderRadius: AppRadius.mdBorder,

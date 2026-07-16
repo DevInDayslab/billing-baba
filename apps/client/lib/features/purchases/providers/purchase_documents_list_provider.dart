@@ -208,7 +208,10 @@ class PurchaseDocumentsList extends _$PurchaseDocumentsList {
     }
   }
 
-  Future<String?> finalizeDocument(String documentId, {String? godownId}) async {
+  Future<String?> finalizeDocument(
+    String documentId, {
+    String? godownId,
+  }) async {
     try {
       final service = await ref.read(purchaseServiceProvider.future);
       await service.finalizeDraft(documentId, godownId: godownId);

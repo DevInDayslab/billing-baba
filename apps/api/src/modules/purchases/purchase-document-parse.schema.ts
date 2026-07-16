@@ -43,12 +43,7 @@ export const parsedPurchaseDocumentSchema = z.object({
   lines: z.array(parsedPurchaseDocumentLineSchema).optional().default([]),
 });
 
-export const ALLOWED_PARSE_EXTENSIONS = new Set([
-  'jpg',
-  'jpeg',
-  'png',
-  'pdf',
-]);
+export const ALLOWED_PARSE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'pdf']);
 
 export const ALLOWED_PARSE_MIME_TYPES = new Set([
   'image/jpeg',

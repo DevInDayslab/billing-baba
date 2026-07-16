@@ -13,7 +13,8 @@ abstract final class LeadErrorMapper {
       final statusCode = error.response?.statusCode;
       if (statusCode == 401) return 'Session expired. Please log in again.';
       if (statusCode == 403) return 'You do not have permission to view leads.';
-      if (statusCode != null) return 'Server error ($statusCode). Please try again.';
+      if (statusCode != null)
+        return 'Server error ($statusCode). Please try again.';
       return 'Network error. Please check your connection.';
     }
     return 'Unable to load leads. Please try again.';

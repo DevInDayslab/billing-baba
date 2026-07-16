@@ -83,11 +83,16 @@ class LoyaltyService {
 }
 
 @riverpod
-Future<PartyLoyaltyBalanceDto> partyLoyaltyBalance(Ref ref, String partyId) async {
+Future<PartyLoyaltyBalanceDto> partyLoyaltyBalance(
+  Ref ref,
+  String partyId,
+) async {
   final service = await ref.watch(loyaltyServiceProvider.future);
   try {
     final balance = await service.getPartyBalance(partyId);
-    ref.read(partyLoyaltyBalanceCacheProvider.notifier).upsert(partyId, balance);
+    ref
+        .read(partyLoyaltyBalanceCacheProvider.notifier)
+        .upsert(partyId, balance);
     return balance;
   } on Object {
     final cached = ref.watch(partyLoyaltyBalanceCacheProvider)[partyId];

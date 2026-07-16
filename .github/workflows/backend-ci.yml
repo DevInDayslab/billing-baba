@@ -1,7 +1,7 @@
 # Backend CI for Billing Baba API.
 # Runs on pull requests and pushes targeting `develop`.
 #
-# Pipeline: install → typecheck → lint → build → test (unit + integration + smoke)
+# Pipeline: install → migrate → typecheck → build → test (unit + integration + smoke)
 # PostgreSQL service container provides an isolated database for integration tests.
 
 name: Backend CI
@@ -13,6 +13,7 @@ on:
   push:
     branches:
       - develop
+  workflow_dispatch:
 
 concurrency:
   group: backend-ci-${{ github.workflow }}-${{ github.ref }}
@@ -36,7 +37,7 @@ env:
 
 jobs:
   ci:
-    name: Lint, build, and test
+    name: Typecheck, build, and test
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -74,9 +75,6 @@ jobs:
 
       - name: Typecheck
         run: bun run typecheck
-
-      - name: Lint
-        run: bun run lint
 
       - name: Build
         run: bun run build

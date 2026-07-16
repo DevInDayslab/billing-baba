@@ -11,7 +11,8 @@ abstract class PriceHistoryDto with _$PriceHistoryDto {
     @JsonKey(name: 'item_id') required String itemId,
     @JsonKey(name: 'item_name') required String itemName,
     required String price,
-    @JsonKey(name: 'created_at') required String createdAt, @JsonKey(name: 'pricing_tier') String? pricingTier,
+    @JsonKey(name: 'created_at') required String createdAt,
+    @JsonKey(name: 'pricing_tier') String? pricingTier,
     @JsonKey(name: 'changed_by') String? changedBy,
   }) = _PriceHistoryDto;
 

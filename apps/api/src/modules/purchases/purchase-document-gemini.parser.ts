@@ -5,7 +5,6 @@ import {
   logGeminiRequestStart,
   requireGeminiApiKey,
 } from '../../shared/gemini/gemini-client';
-import type { ParseDocumentInput } from './purchase-document-parse.types';
 import {
   logGeminiGenerateContentEnd,
   logGeminiGenerateContentStart,
@@ -14,6 +13,7 @@ import {
   logJsonParseError,
 } from './purchase-document-parse.debug';
 import { extractJsonFromText } from './purchase-document-parse.normalizer';
+import type { ParseDocumentInput } from './purchase-document-parse.types';
 
 const DEFAULT_MODEL = 'gemini-flash-latest';
 const FALLBACK_MODELS = ['gemini-flash-latest', 'gemini-2.5-flash'] as const;
@@ -139,7 +139,9 @@ function isAuthError(message: string): boolean {
 
 function mapGeminiError(error: unknown): AppError {
   const message =
-    error instanceof Error ? error.message : 'Gemini failed to parse the document';
+    error instanceof Error
+      ? error.message
+      : 'Gemini failed to parse the document';
 
   if (message.toLowerCase().includes('timeout')) {
     return new AppError(
@@ -171,7 +173,7 @@ async function requestGemini(
 
   const startedAt = logGeminiGenerateContentStart(model);
 
-  let response;
+  let response: { text?: string | null };
   try {
     response = await client.models.generateContent({
       model,
@@ -245,8 +247,7 @@ export async function parsePurchaseDocumentWithGemini(
     try {
       return await requestGemini(model, mimeType, base64Data);
     } catch (error) {
-      const mapped =
-        error instanceof AppError ? error : mapGeminiError(error);
+      const mapped = error instanceof AppError ? error : mapGeminiError(error);
 
       if (mapped.code !== 'PARSE_FAILED') {
         throw mapped;

@@ -12,13 +12,14 @@ void navigateToDashboardTransaction(
 
   final route = switch (transaction.referenceType) {
     'sales_documents' => '${AppRoutes.editSale}/$referenceId',
-    'purchase_documents' => transaction.type ==
-            DashboardTransactionType.purchaseReturn
-        ? '${AppRoutes.editDebitNote}/$referenceId'
-        : '${AppRoutes.editPurchase}/$referenceId',
-    'payments' => transaction.type == DashboardTransactionType.paymentOut
-        ? AppRoutes.purchasePaymentOut
-        : AppRoutes.salePaymentIn,
+    'purchase_documents' =>
+      transaction.type == DashboardTransactionType.purchaseReturn
+          ? '${AppRoutes.editDebitNote}/$referenceId'
+          : '${AppRoutes.editPurchase}/$referenceId',
+    'payments' =>
+      transaction.type == DashboardTransactionType.paymentOut
+          ? AppRoutes.purchasePaymentOut
+          : AppRoutes.salePaymentIn,
     'expenses' => '${AppRoutes.editExpense}/$referenceId',
     _ => null,
   };

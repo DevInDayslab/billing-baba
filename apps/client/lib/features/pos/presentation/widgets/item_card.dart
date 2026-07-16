@@ -20,8 +20,7 @@ class ItemCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stockColor =
-        item.stock <= 5 ? posNegativeColor : posPositiveColor;
+    final stockColor = item.stock <= 5 ? posNegativeColor : posPositiveColor;
 
     return Material(
       color: AppColors.surface,

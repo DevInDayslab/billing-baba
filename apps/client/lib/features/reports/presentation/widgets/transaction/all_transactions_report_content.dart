@@ -38,15 +38,14 @@ class AllTransactionsReportContent extends ConsumerWidget {
 
     return ReportAsyncBody(
       value: reportAsync,
-      onRetry: () =>
-          ref.read(allTransactionsReportProvider.notifier).refresh(),
+      onRetry: () => ref.read(allTransactionsReportProvider.notifier).refresh(),
       data: (report) {
         final rows = report.rows;
 
         List<List<String>> exportRows() => [
-              for (var i = 0; i < rows.length; i++)
-                _transactionExportRow(rows[i], i),
-            ];
+          for (var i = 0; i < rows.length; i++)
+            _transactionExportRow(rows[i], i),
+        ];
 
         void exportCsv() {
           reportExportTable(
@@ -229,18 +228,14 @@ class _AllTransactionsRow extends StatelessWidget {
             90,
             alignment: Alignment.centerRight,
             child: Text(
-              row.received > 0
-                  ? formatReportCurrencyCompact(row.received)
-                  : '',
+              row.received > 0 ? formatReportCurrencyCompact(row.received) : '',
             ),
           ),
           ReportAlignedCell.fixed(
             80,
             alignment: Alignment.centerRight,
             child: Text(
-              row.balance > 0
-                  ? formatReportCurrencyCompact(row.balance)
-                  : '',
+              row.balance > 0 ? formatReportCurrencyCompact(row.balance) : '',
             ),
           ),
           ReportAlignedCell.fixed(

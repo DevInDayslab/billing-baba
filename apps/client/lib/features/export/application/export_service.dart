@@ -10,8 +10,8 @@ class ExportService {
   ExportService({
     CsvExporter? csvExporter,
     ExcelExporter? excelExporter,
-  })  : _csvExporter = csvExporter ?? CsvExporter(),
-        _excelExporter = excelExporter ?? ExcelExporter();
+  }) : _csvExporter = csvExporter ?? CsvExporter(),
+       _excelExporter = excelExporter ?? ExcelExporter();
 
   final CsvExporter _csvExporter;
   final ExcelExporter _excelExporter;

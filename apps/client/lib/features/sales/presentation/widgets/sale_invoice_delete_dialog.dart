@@ -325,7 +325,8 @@ class _DeleteInvoiceIllustration extends StatelessWidget {
 
 class _DecorativeDot extends StatelessWidget {
   const _DecorativeDot({
-    required this.size, this.left,
+    required this.size,
+    this.left,
     this.right,
     this.top,
     this.bottom,

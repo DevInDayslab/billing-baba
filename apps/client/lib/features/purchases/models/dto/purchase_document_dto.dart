@@ -1,7 +1,7 @@
 import 'package:billing_baba/features/inventory/models/dto/pagination_meta_dto.dart';
 
 export 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart'
-  show PaginatedPaymentsDto, PaymentAllocationDto, PaymentDto;
+    show PaginatedPaymentsDto, PaymentAllocationDto, PaymentDto;
 
 class PurchaseDocumentLineDto {
   const PurchaseDocumentLineDto({
@@ -178,7 +178,8 @@ class PurchaseBillPaymentHistoryEntry {
       paymentDate: DateTime.parse(json['payment_date'] as String),
       paymentMode: json['payment_mode'] as String,
       referenceNumber: json['reference_number'] as String?,
-      paymentAmount: double.tryParse(json['payment_amount'] as String? ?? '0') ?? 0,
+      paymentAmount:
+          double.tryParse(json['payment_amount'] as String? ?? '0') ?? 0,
       allocatedAmount:
           double.tryParse(json['allocated_amount'] as String? ?? '0') ?? 0,
     );

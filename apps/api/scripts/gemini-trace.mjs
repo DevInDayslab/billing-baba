@@ -2,11 +2,12 @@
  * One-shot Gemini trace — writes evidence to gemini-trace-evidence.json
  * Run: node scripts/gemini-trace.mjs
  */
-import { createRequire } from 'node:module';
+
 import { writeFileSync } from 'node:fs';
-import { config as loadEnv } from 'dotenv';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { config as loadEnv } from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 loadEnv({ path: path.resolve(__dirname, '../.env'), override: true });
@@ -38,9 +39,13 @@ const trace = {
 // Mirror app requireGeminiApiKey / describeGeminiKeyForLog logic
 function looksLikeAiStudioApiKey(key) {
   if (key.startsWith('AIza') && key.length >= 35) return true;
-  if (key.startsWith('AQ.') || key.startsWith('ya29.') || key.startsWith('Bearer '))
+  if (
+    key.startsWith('AQ.') ||
+    key.startsWith('ya29.') ||
+    key.startsWith('Bearer ')
+  )
     return false;
-  return key.length >= 20 && /^[A-Za-z0-9_\-]+$/.test(key);
+  return key.length >= 20 && /^[A-Za-z0-9_-]+$/.test(key);
 }
 
 const trimmed = rawKey.trim();
@@ -51,18 +56,17 @@ else if (trimmed.startsWith('AQ.') || trimmed.startsWith('ya29.'))
 else if (!looksLikeAiStudioApiKey(trimmed))
   issue = 'GEMINI_API_KEY unusual format (app validation)';
 
-trace.prefixValidation = { looksLikeAiStudioApiKey: looksLikeAiStudioApiKey(trimmed), issue };
+trace.prefixValidation = {
+  looksLikeAiStudioApiKey: looksLikeAiStudioApiKey(trimmed),
+  issue,
+};
 
 function maskHeaders(headers) {
   const out = {};
   if (!headers) return out;
   const pairs =
     headers instanceof Headers
-      ? (() => {
-          const p = [];
-          headers.forEach((v, k) => p.push([k, v]));
-          return p;
-        })()
+      ? Array.from(headers.entries())
       : Array.isArray(headers)
         ? headers
         : Object.entries(headers);
@@ -70,7 +74,8 @@ function maskHeaders(headers) {
     if (k.toLowerCase() === 'x-goog-api-key') {
       out[k] = `<masked len=${String(v).length}>`;
     } else if (k.toLowerCase() === 'authorization') {
-      out[k] = `<masked bearer=${String(v).toLowerCase().startsWith('bearer ')}>`;
+      out[k] =
+        `<masked bearer=${String(v).toLowerCase().startsWith('bearer ')}>`;
     } else {
       out[k] = v;
     }
@@ -80,7 +85,12 @@ function maskHeaders(headers) {
 
 const originalFetch = globalThis.fetch.bind(globalThis);
 globalThis.fetch = async (input, init) => {
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+  const url =
+    typeof input === 'string'
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url;
   let bodyText = null;
   if (init?.body) {
     bodyText =
@@ -120,11 +130,16 @@ async function main() {
       path.resolve(__dirname, '../gemini-trace-evidence.json'),
       JSON.stringify(trace, null, 2),
     );
-    console.log('Trace written (no HTTP request made). See gemini-trace-evidence.json');
+    console.log(
+      'Trace written (no HTTP request made). See gemini-trace-evidence.json',
+    );
     return;
   }
 
-  const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY, vertexai: false });
+  const client = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY,
+    vertexai: false,
+  });
   const model = process.env.GEMINI_MODEL?.trim() || 'gemini-flash-latest';
 
   // 1x1 red PNG

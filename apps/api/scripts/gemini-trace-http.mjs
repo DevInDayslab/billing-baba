@@ -2,11 +2,12 @@
  * Gemini HTTP trace bypassing app key-prefix validation only.
  * Run: node scripts/gemini-trace-http.mjs
  */
-import { createRequire } from 'node:module';
+
 import { writeFileSync } from 'node:fs';
-import { config as loadEnv } from 'dotenv';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { config as loadEnv } from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 loadEnv({ path: path.resolve(__dirname, '../.env'), override: true });
@@ -32,11 +33,7 @@ function maskHeaders(headers) {
   if (!headers) return out;
   const pairs =
     headers instanceof Headers
-      ? (() => {
-          const p = [];
-          headers.forEach((v, k) => p.push([k, v]));
-          return p;
-        })()
+      ? Array.from(headers.entries())
       : Array.isArray(headers)
         ? headers
         : Object.entries(headers);
@@ -44,7 +41,8 @@ function maskHeaders(headers) {
     if (k.toLowerCase() === 'x-goog-api-key') {
       out[k] = `<masked len=${String(v).length}>`;
     } else if (k.toLowerCase() === 'authorization') {
-      out[k] = `<masked bearer=${String(v).toLowerCase().startsWith('bearer ')}>`;
+      out[k] =
+        `<masked bearer=${String(v).toLowerCase().startsWith('bearer ')}>`;
     } else {
       out[k] = v;
     }
@@ -54,7 +52,12 @@ function maskHeaders(headers) {
 
 const originalFetch = globalThis.fetch.bind(globalThis);
 globalThis.fetch = async (input, init) => {
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+  const url =
+    typeof input === 'string'
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url;
   let bodyText = null;
   if (init?.body) {
     bodyText =
@@ -87,7 +90,10 @@ globalThis.fetch = async (input, init) => {
   }
 };
 
-const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY, vertexai: false });
+const client = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  vertexai: false,
+});
 const model = process.env.GEMINI_MODEL?.trim() || 'gemini-flash-latest';
 const pngBase64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';

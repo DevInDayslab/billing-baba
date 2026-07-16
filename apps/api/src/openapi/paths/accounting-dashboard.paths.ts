@@ -1,9 +1,10 @@
-import { listPaymentsQuerySchema } from '../../modules/accounting/payment.schema';
-import { allocationIdParamSchema } from '../../modules/accounting/payment.schema';
-import { listJobWorkOrdersQuerySchema } from '../../modules/job-work/job-work-order.schema';
+import {
+  allocationIdParamSchema,
+  listPaymentsQuerySchema,
+} from '../../modules/accounting/payment.schema';
 import { dashboardQuerySchema } from '../../modules/dashboard/dashboard.schema';
+import { listJobWorkOrdersQuerySchema } from '../../modules/job-work/job-work-order.schema';
 import { jobWorkExamples, paymentExamples } from '../examples';
-import { crudPaths } from '../operations';
 import {
   okPaginatedResponse,
   okResponse,
@@ -13,6 +14,7 @@ import {
   securedOperation,
   standardErrorResponses,
 } from '../helpers';
+import { crudPaths } from '../operations';
 import { Schema } from '../schema-names';
 
 const paymentIdParam = {
@@ -111,7 +113,10 @@ export function buildDashboardPaths() {
         description:
           'Returns KPI summary for the active business: sales, purchases, receivables, payables, and stock alerts for the selected period.',
         operationId: 'getDashboard',
-        parameters: queryParamsFromZod(dashboardQuerySchema, Schema.DashboardQuery),
+        parameters: queryParamsFromZod(
+          dashboardQuerySchema,
+          Schema.DashboardQuery,
+        ),
         responses: {
           200: okResponse('Dashboard summary', Schema.DashboardResponse),
           ...standardErrorResponses,

@@ -32,7 +32,10 @@ class ContactRemoteSource {
     );
     final data = response.data?['data'];
     if (data is! List) return const [];
-    return data.whereType<Map<String, dynamic>>().map(Contact.fromJson).toList();
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(Contact.fromJson)
+        .toList();
   }
 
   Future<Contact> getContact(String id) async {

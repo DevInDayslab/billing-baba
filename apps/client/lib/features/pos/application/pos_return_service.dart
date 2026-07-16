@@ -31,7 +31,9 @@ class PosReturnService {
     required PaymentMode refundMode,
   }) async {
     if (returnItems.isEmpty) {
-      throw const PosRepositoryException(message: 'No items selected for return');
+      throw const PosRepositoryException(
+        message: 'No items selected for return',
+      );
     }
 
     final totalRefundAmount = returnItems.fold<double>(
@@ -120,9 +122,9 @@ class PosReturnService {
   }
 
   String _paymentModeToApi(PaymentMode mode) => switch (mode) {
-        PaymentMode.cash => 'cash',
-        PaymentMode.upi => 'upi',
-        PaymentMode.card => 'card',
-        PaymentMode.bank => 'bank_transfer',
-      };
+    PaymentMode.cash => 'cash',
+    PaymentMode.upi => 'upi',
+    PaymentMode.card => 'card',
+    PaymentMode.bank => 'bank_transfer',
+  };
 }

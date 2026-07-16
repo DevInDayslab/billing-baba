@@ -1,8 +1,5 @@
 export 'package:billing_baba/features/sales/models/requests/sales_requests.dart'
-  show
-      CreatePaymentRequest,
-      PaymentAllocationRequest,
-      PaymentListQuery;
+    show CreatePaymentRequest, PaymentAllocationRequest, PaymentListQuery;
 
 class PurchaseDocumentListQuery {
   const PurchaseDocumentListQuery({

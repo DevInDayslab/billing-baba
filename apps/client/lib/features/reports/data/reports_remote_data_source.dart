@@ -10,8 +10,11 @@ class ReportsRemoteDataSource {
 
   Future<PaginatedReportResponse<SaleReportPayloadDto>> getSaleReport(
     ReportQuery query,
-  ) =>
-      _getPaginated(ApiEndpoints.reportsSales, query, SaleReportPayloadDto.fromJson);
+  ) => _getPaginated(
+    ApiEndpoints.reportsSales,
+    query,
+    SaleReportPayloadDto.fromJson,
+  );
 
   Future<PaginatedReportResponse<PurchaseReportPayloadDto>> getPurchaseReport(
     ReportQuery query,
@@ -45,26 +48,40 @@ class ReportsRemoteDataSource {
   );
 
   Future<PartyStatementPayloadDto> getPartyStatement(ReportQuery query) =>
-      _getData(ApiEndpoints.reportsPartyStatement, query, PartyStatementPayloadDto.fromJson);
+      _getData(
+        ApiEndpoints.reportsPartyStatement,
+        query,
+        PartyStatementPayloadDto.fromJson,
+      );
 
   Future<DayBookPayloadDto> getDayBook(ReportQuery query) =>
       _getData(ApiEndpoints.reportsDayBook, query, DayBookPayloadDto.fromJson);
 
-  Future<PaginatedReportResponse<AllTransactionsPayloadDto>>
-  getAllTransactions(ReportQuery query) => _getPaginated(
+  Future<PaginatedReportResponse<AllTransactionsPayloadDto>> getAllTransactions(
+    ReportQuery query,
+  ) => _getPaginated(
     ApiEndpoints.reportsAllTransactions,
     query,
     AllTransactionsPayloadDto.fromJson,
   );
 
-  Future<ProfitLossPayloadDto> getProfitLoss(ReportQuery query) =>
-      _getData(ApiEndpoints.reportsProfitLoss, query, ProfitLossPayloadDto.fromJson);
+  Future<ProfitLossPayloadDto> getProfitLoss(ReportQuery query) => _getData(
+    ApiEndpoints.reportsProfitLoss,
+    query,
+    ProfitLossPayloadDto.fromJson,
+  );
 
-  Future<TrialBalancePayloadDto> getTrialBalance(ReportQuery query) =>
-      _getData(ApiEndpoints.reportsTrialBalance, query, TrialBalancePayloadDto.fromJson);
+  Future<TrialBalancePayloadDto> getTrialBalance(ReportQuery query) => _getData(
+    ApiEndpoints.reportsTrialBalance,
+    query,
+    TrialBalancePayloadDto.fromJson,
+  );
 
-  Future<BalanceSheetPayloadDto> getBalanceSheet(ReportQuery query) =>
-      _getData(ApiEndpoints.reportsBalanceSheet, query, BalanceSheetPayloadDto.fromJson);
+  Future<BalanceSheetPayloadDto> getBalanceSheet(ReportQuery query) => _getData(
+    ApiEndpoints.reportsBalanceSheet,
+    query,
+    BalanceSheetPayloadDto.fromJson,
+  );
 
   Future<GstrReportPayloadDto> getGstr1(ReportQuery query) =>
       _getData(ApiEndpoints.reportsGstr1, query, GstrReportPayloadDto.fromJson);
@@ -83,8 +100,11 @@ class ReportsRemoteDataSource {
     BillWiseProfitPayloadDto.fromJson,
   );
 
-  Future<CashFlowPayloadDto> getCashFlow(ReportQuery query) =>
-      _getData(ApiEndpoints.reportsCashFlow, query, CashFlowPayloadDto.fromJson);
+  Future<CashFlowPayloadDto> getCashFlow(ReportQuery query) => _getData(
+    ApiEndpoints.reportsCashFlow,
+    query,
+    CashFlowPayloadDto.fromJson,
+  );
 
   Future<PaginatedReportResponse<PartyWiseProfitLossPayloadDto>>
   getPartyWiseProfitLoss(ReportQuery query) => _getPaginated(
@@ -124,8 +144,11 @@ class ReportsRemoteDataSource {
         SaleSummaryByHsnPayloadDto.fromJson,
       );
 
-  Future<SacReportPayloadDto> getSacReport(ReportQuery query) =>
-      _getData(ApiEndpoints.reportsSacReport, query, SacReportPayloadDto.fromJson);
+  Future<SacReportPayloadDto> getSacReport(ReportQuery query) => _getData(
+    ApiEndpoints.reportsSacReport,
+    query,
+    SacReportPayloadDto.fromJson,
+  );
 
   Future<PaginatedReportResponse<ItemReportByPartyPayloadDto>>
   getItemReportByParty(ReportQuery query) => _getPaginated(

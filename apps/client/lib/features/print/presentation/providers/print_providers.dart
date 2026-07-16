@@ -99,7 +99,9 @@ Future<PrintService> printService(Ref ref) async {
 
 @riverpod
 Future<PrintableDocument> printableDocument(Ref ref, PrintRequest request) {
-  return ref.watch(printDataServiceProvider.future).then(
-    (service) => service.load(request),
-  );
+  return ref
+      .watch(printDataServiceProvider.future)
+      .then(
+        (service) => service.load(request),
+      );
 }

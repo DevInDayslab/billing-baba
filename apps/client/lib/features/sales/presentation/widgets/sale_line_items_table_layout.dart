@@ -19,7 +19,8 @@ class SaleLineItemTableLayout {
 
   static SaleLineItemColumnWidths columnWidthsFor(
     double availableWidth, {
-    SaleLineItemColumnVisibility visibility = SaleLineItemColumnVisibility.defaults,
+    SaleLineItemColumnVisibility visibility =
+        SaleLineItemColumnVisibility.defaults,
   }) {
     return _columnWidthsFor(availableWidth).applyVisibility(visibility);
   }
@@ -164,9 +165,7 @@ class SaleLineItemColumnWidths {
 
     final growWeights = <double>[
       item,
-      ...SaleLineItemColumn.values
-          .where(visibility.isVisible)
-          .map(widthFor),
+      ...SaleLineItemColumn.values.where(visibility.isVisible).map(widthFor),
     ];
     final growTotal = growWeights.fold<double>(0, (sum, value) => sum + value);
     if (growTotal <= 0) return this;
@@ -205,7 +204,10 @@ class SaleLineItemColumnWidths {
       mrp: grow(mrp, visible: visibility.isVisible(SaleLineItemColumn.mrp)),
       size: grow(size, visible: visibility.isVisible(SaleLineItemColumn.size)),
       unit: grow(unit, visible: visibility.isVisible(SaleLineItemColumn.unit)),
-      price: grow(price, visible: visibility.isVisible(SaleLineItemColumn.price)),
+      price: grow(
+        price,
+        visible: visibility.isVisible(SaleLineItemColumn.price),
+      ),
       discount: grow(
         discount,
         visible: visibility.isVisible(SaleLineItemColumn.discount),

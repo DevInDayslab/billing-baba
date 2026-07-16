@@ -150,7 +150,8 @@ class CreatePaymentRequest {
 
 class PaymentAllocationRequest {
   const PaymentAllocationRequest({
-    required this.allocatedAmount, this.salesDocumentId,
+    required this.allocatedAmount,
+    this.salesDocumentId,
     this.purchaseDocumentId,
   });
 

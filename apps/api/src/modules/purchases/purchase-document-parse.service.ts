@@ -1,15 +1,15 @@
 import { and, eq, ilike } from 'drizzle-orm';
-import { getDb, type Database } from '../../db/client';
+import { type Database, getDb } from '../../db/client';
 import { parties } from '../../db/schema/crm/tables';
 import { AppError } from '../../shared/errors/app-error';
 import { BusinessMembershipRepository } from '../../shared/repositories/business-membership.repository';
 import { parsePurchaseDocumentWithGemini } from './purchase-document-gemini.parser';
+import { logValidationOrMappingError } from './purchase-document-parse.debug';
+import { normalizeParsedDocument } from './purchase-document-parse.normalizer';
 import {
   ALLOWED_PARSE_EXTENSIONS,
   ALLOWED_PARSE_MIME_TYPES,
 } from './purchase-document-parse.schema';
-import { normalizeParsedDocument } from './purchase-document-parse.normalizer';
-import { logValidationOrMappingError } from './purchase-document-parse.debug';
 import type {
   ParseDocumentInput,
   ParsedPurchaseDocument,

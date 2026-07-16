@@ -48,7 +48,9 @@ type LineRow = {
   sortOrder: number;
 };
 
-export function toSalesDocumentLineRecord(row: LineRow): SalesDocumentLineRecord {
+export function toSalesDocumentLineRecord(
+  row: LineRow,
+): SalesDocumentLineRecord {
   return {
     id: row.id,
     item_id: row.itemId,
@@ -90,8 +92,7 @@ export function toSalesDocumentRecord(
     discount_total: row.discountTotal,
     tax_amount: row.taxAmount,
     total_amount: row.totalAmount,
-    paid_amount:
-      row.paidAmount == null ? '0' : String(row.paidAmount),
+    paid_amount: row.paidAmount == null ? '0' : String(row.paidAmount),
     payment_mode: row.paymentMode ?? null,
     document_date: row.documentDate.toISOString(),
     converted_from_id: row.convertedFromId,

@@ -14,7 +14,6 @@ import type {
 import { SalesServiceBase } from './sales.base-service';
 
 export class SaleFaService extends SalesServiceBase {
-  private readonly db: NonNullable<ReturnType<typeof getDb>>;
   private readonly repository: SaleFaRepository;
 
   constructor() {
@@ -27,7 +26,6 @@ export class SaleFaService extends SalesServiceBase {
         503,
       );
     }
-    this.db = db;
     this.repository = new SaleFaRepository(db);
   }
 

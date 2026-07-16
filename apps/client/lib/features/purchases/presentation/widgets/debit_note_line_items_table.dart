@@ -31,8 +31,9 @@ class DebitNoteLineItemsTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(debitNoteFormProvider(debitNoteId: debitNoteId));
-    final notifier =
-        ref.read(debitNoteFormProvider(debitNoteId: debitNoteId).notifier);
+    final notifier = ref.read(
+      debitNoteFormProvider(debitNoteId: debitNoteId).notifier,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -129,8 +130,9 @@ class _LineItemsHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier =
-        ref.read(debitNoteFormProvider(debitNoteId: debitNoteId).notifier);
+    final notifier = ref.read(
+      debitNoteFormProvider(debitNoteId: debitNoteId).notifier,
+    );
 
     return Container(
       color: _headerBackground,
@@ -197,8 +199,9 @@ class _LineItemRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier =
-        ref.read(debitNoteFormProvider(debitNoteId: debitNoteId).notifier);
+    final notifier = ref.read(
+      debitNoteFormProvider(debitNoteId: debitNoteId).notifier,
+    );
 
     return SizedBox(
       height: _rowHeight,

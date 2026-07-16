@@ -8,9 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 
-typedef RangeSliderFilterApplyCallback = void Function(
-  RangeSliderColumnFilter? filter,
-);
+typedef RangeSliderFilterApplyCallback =
+    void Function(
+      RangeSliderColumnFilter? filter,
+    );
 
 /// Continuous range slider — loyalty points, ratings, percentages, etc.
 /// Not for currency amounts.

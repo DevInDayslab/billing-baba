@@ -198,8 +198,8 @@ class SaleFieldTrigger extends StatelessWidget {
                 color: hasError
                     ? saleFieldErrorColor
                     : (compact
-                        ? saleCompactFieldBorderColor
-                        : saleFieldBorderColor),
+                          ? saleCompactFieldBorderColor
+                          : saleFieldBorderColor),
               ),
             ),
             child: Align(alignment: Alignment.centerLeft, child: child),

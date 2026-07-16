@@ -7,11 +7,13 @@ import 'package:billing_baba/features/print/templates/print_template.dart';
 
 class TemplateRegistry {
   TemplateRegistry({List<PrintTemplate>? templates})
-    : _templates = templates ?? [
-        A4CommercialDocumentTemplate(),
-        A4VoucherTemplate(),
-        PosReceiptTemplate(),
-      ];
+    : _templates =
+          templates ??
+          [
+            A4CommercialDocumentTemplate(),
+            A4VoucherTemplate(),
+            PosReceiptTemplate(),
+          ];
 
   final List<PrintTemplate> _templates;
 

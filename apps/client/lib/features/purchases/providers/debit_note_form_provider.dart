@@ -56,8 +56,9 @@ class DebitNoteForm extends _$DebitNoteForm {
     if (debitNoteId != null) {
       Future.microtask(() => _loadDocument(debitNoteId));
     }
-    return _initialDebitNoteFormState(documentId: debitNoteId)
-        .copyWith(isLoading: debitNoteId != null);
+    return _initialDebitNoteFormState(
+      documentId: debitNoteId,
+    ).copyWith(isLoading: debitNoteId != null);
   }
 
   Future<void> _loadDocument(String documentId) async {

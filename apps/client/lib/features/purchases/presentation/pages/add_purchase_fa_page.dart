@@ -143,8 +143,9 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
   @override
   Widget build(BuildContext context) {
     final form = ref.watch(addPurchaseFaFormProvider(batchId: widget.batchId));
-    final notifier =
-        ref.read(addPurchaseFaFormProvider(batchId: widget.batchId).notifier);
+    final notifier = ref.read(
+      addPurchaseFaFormProvider(batchId: widget.batchId).notifier,
+    );
 
     if (form.isLoading) {
       return const Padding(
@@ -309,8 +310,9 @@ class _BottomActionBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addPurchaseFaFormProvider(batchId: batchId));
-    final notifier =
-        ref.read(addPurchaseFaFormProvider(batchId: batchId).notifier);
+    final notifier = ref.read(
+      addPurchaseFaFormProvider(batchId: batchId).notifier,
+    );
     final showLinkPayment = form.party.trim().isNotEmpty;
     final resolvedBatchId = batchId ?? form.batchId;
     final filename = form.billNumber.trim().isNotEmpty
@@ -352,9 +354,15 @@ class _BottomActionBar extends ConsumerWidget {
                 filename: filename,
               ),
               icon: const Icon(Icons.print_outlined, size: 16),
-              label: const Text('Print / Preview', style: TextStyle(fontSize: 13)),
+              label: const Text(
+                'Print / Preview',
+                style: TextStyle(fontSize: 13),
+              ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 side: const BorderSide(color: _cardBorder),
               ),
             ),

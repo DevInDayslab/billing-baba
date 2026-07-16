@@ -1,11 +1,4 @@
-import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  sql,
-} from 'drizzle-orm';
+import { and, asc, count, desc, eq, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import {
   jobWorkAdditionalCosts,
@@ -13,8 +6,8 @@ import {
   jobWorkRawMaterialLines,
 } from '../../db/schema/job-work/tables';
 import type {
-  JobWorkOrderRecord,
   JobWorkOrderInsertValues,
+  JobWorkOrderRecord,
 } from './job-work-order.types';
 
 export class JobWorkOrderRepository {

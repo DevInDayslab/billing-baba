@@ -37,9 +37,10 @@ export function buildItemStockAggSubquery(
       itemId: items.id,
       itemName: items.name,
       categoryId: items.categoryId,
-      totalQty: sql<string>`COALESCE(SUM(${stockLevels.quantity}::numeric), 0)`.as(
-        'total_qty',
-      ),
+      totalQty:
+        sql<string>`COALESCE(SUM(${stockLevels.quantity}::numeric), 0)`.as(
+          'total_qty',
+        ),
       reorderLevel:
         sql<string>`MAX(COALESCE(${stockLevels.reorderLevel}, ${items.reorderLevel}))`.as(
           'reorder_level',

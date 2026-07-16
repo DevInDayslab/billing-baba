@@ -13,7 +13,11 @@ export const createReportsRoutes = (): FastifyPluginAsync => {
     app.get('/purchases', { preHandler }, controller.getPurchaseReport);
     app.get('/stock-summary', { preHandler }, controller.getStockSummary);
     app.get('/low-stock', { preHandler }, controller.getLowStock);
-    app.get('/party-outstanding', { preHandler }, controller.getPartyOutstanding);
+    app.get(
+      '/party-outstanding',
+      { preHandler },
+      controller.getPartyOutstanding,
+    );
     app.get('/party-statement', { preHandler }, controller.getPartyStatement);
     app.get('/day-book', { preHandler }, controller.getDayBook);
     app.get('/all-transactions', { preHandler }, controller.getAllTransactions);

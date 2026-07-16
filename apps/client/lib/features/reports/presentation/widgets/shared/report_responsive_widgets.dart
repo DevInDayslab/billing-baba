@@ -63,7 +63,8 @@ class ReportTitleActionsRow extends StatelessWidget {
       children: [
         Text(
           title,
-          style: titleStyle ??
+          style:
+              titleStyle ??
               const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,

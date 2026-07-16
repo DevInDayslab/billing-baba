@@ -46,9 +46,9 @@ class _TableColumnFilterTriggerState extends State<TableColumnFilterTrigger> {
   }
 
   bool get _isActive => FilterUtils.isFilterActive(
-        widget.config.type,
-        widget.initialValue,
-      );
+    widget.config.type,
+    widget.initialValue,
+  );
 
   void _togglePopover() {
     if (widget.config.disabled) return;

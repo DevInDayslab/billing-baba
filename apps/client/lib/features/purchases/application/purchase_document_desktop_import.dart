@@ -30,7 +30,9 @@ Future<void> runPurchaseDocumentDesktopImport({
   final container = ProviderScope.containerOf(context);
   final router = container.read(appRouterProvider);
 
-  debugPrint('$_logPrefix runPurchaseDocumentDesktopImport start billId=$billId');
+  debugPrint(
+    '$_logPrefix runPurchaseDocumentDesktopImport start billId=$billId',
+  );
 
   final picked = await FilePicker.pickFiles(
     type: FileType.custom,
@@ -88,7 +90,9 @@ Future<void> _parseAndApply({
     final dismissed = await hidePurchaseDocumentParsingDialog(rootNavigator);
     loadingDismissed = dismissed || loadingDismissed;
     if (!loadingDismissed && isPurchaseDocumentParsingDialogVisible) {
-      debugPrint('$_logPrefix warn: parsing dialog still visible after dismiss');
+      debugPrint(
+        '$_logPrefix warn: parsing dialog still visible after dismiss',
+      );
     }
   }
 
@@ -226,11 +230,15 @@ Future<void> _applyParsedDocument({
 
   try {
     if (onAddPurchase) {
-      debugPrint('$_logPrefix before addPurchaseFormProvider.applyParsedDocument');
+      debugPrint(
+        '$_logPrefix before addPurchaseFormProvider.applyParsedDocument',
+      );
       await container
           .read(addPurchaseFormProvider(billId: billId).notifier)
           .applyParsedDocument(parsed);
-      debugPrint('$_logPrefix after addPurchaseFormProvider.applyParsedDocument');
+      debugPrint(
+        '$_logPrefix after addPurchaseFormProvider.applyParsedDocument',
+      );
       return;
     }
 

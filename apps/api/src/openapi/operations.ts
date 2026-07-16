@@ -1,6 +1,4 @@
 import type { ZodTypeAny } from 'zod';
-import type { ResourceOps } from './schema-names';
-import { crudOps } from './schema-names';
 import {
   createdResponse,
   jsonRequestBody,
@@ -15,6 +13,8 @@ import {
   standardErrorResponses,
   unsecuredOperation,
 } from './helpers';
+import type { ResourceOps } from './schema-names';
+import { crudOps } from './schema-names';
 
 const idParam = {
   name: 'id',
@@ -183,7 +183,12 @@ export function crudPaths(opts: {
 }) {
   const ops =
     opts.ops ??
-    crudOps(opts.singular, opts.plural, opts.operationKeys, opts.listDescription);
+    crudOps(
+      opts.singular,
+      opts.plural,
+      opts.operationKeys,
+      opts.listDescription,
+    );
   const idPath =
     opts.paramName && opts.paramName !== 'id'
       ? `${opts.basePath}/{${opts.paramName}}`
@@ -298,7 +303,10 @@ export function documentActionOperation(opts: {
         }
       : {}),
     responses: {
-      200: okResponse('Action completed', opts.itemRef ?? 'SalesDocumentResponse'),
+      200: okResponse(
+        'Action completed',
+        opts.itemRef ?? 'SalesDocumentResponse',
+      ),
       ...standardErrorResponses,
     },
   });

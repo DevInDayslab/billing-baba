@@ -648,8 +648,7 @@ class ItemWiseDiscountPayloadDto {
     return ItemWiseDiscountPayloadDto(
       rows: (json['rows'] as List<dynamic>? ?? [])
           .map(
-            (e) =>
-                ReportItemDiscountRowDto.fromJson(e as Map<String, dynamic>),
+            (e) => ReportItemDiscountRowDto.fromJson(e as Map<String, dynamic>),
           )
           .toList(),
     );

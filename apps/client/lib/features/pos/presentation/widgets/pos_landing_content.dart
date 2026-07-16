@@ -167,12 +167,14 @@ class _SalesList extends StatelessWidget {
   static String _paymentLabel(List<PaymentEntry> payments) {
     if (payments.isEmpty) return 'Cash';
     return payments
-        .map((p) => switch (p.mode) {
-              PaymentMode.cash => 'Cash',
-              PaymentMode.upi => 'UPI',
-              PaymentMode.card => 'Card',
-              PaymentMode.bank => 'Bank',
-            })
+        .map(
+          (p) => switch (p.mode) {
+            PaymentMode.cash => 'Cash',
+            PaymentMode.upi => 'UPI',
+            PaymentMode.card => 'Card',
+            PaymentMode.bank => 'Bank',
+          },
+        )
         .join(', ');
   }
 }

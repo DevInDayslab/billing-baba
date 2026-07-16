@@ -41,8 +41,9 @@ class _InventoryItemsFilterTriggerState
   }
 
   void _togglePopover() {
-    final options =
-        inventoryListFilterOptions.map((o) => o.label).toList(growable: false);
+    final options = inventoryListFilterOptions
+        .map((o) => o.label)
+        .toList(growable: false);
     _anchor.toggle(
       context: context,
       estimatedSize: FilterPopoverSize.forType(FilterType.multiSelect),
@@ -104,8 +105,9 @@ class _InventoryItemsFilterTriggerState
           minWidth: widget.compact ? 24 : 36,
           minHeight: widget.compact ? 24 : 36,
         ),
-        visualDensity:
-            widget.compact ? VisualDensity.compact : VisualDensity.standard,
+        visualDensity: widget.compact
+            ? VisualDensity.compact
+            : VisualDensity.standard,
       ),
     );
   }

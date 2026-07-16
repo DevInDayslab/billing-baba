@@ -174,7 +174,9 @@ class SaleInvoiceTableActions {
   ) async {
     if (invoice.isDraft) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Only finalized invoices can be cancelled')),
+        const SnackBar(
+          content: Text('Only finalized invoices can be cancelled'),
+        ),
       );
       return;
     }

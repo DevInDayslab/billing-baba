@@ -35,7 +35,10 @@ bun test tests               # full suite (needs DATABASE_URL + JWT secrets)
 ## Release configuration
 
 Flutter workflows generate `apps/client/.env` at runtime via
-[setup-flutter-env](../actions/setup-flutter-env/action.yml). Never commit `.env`.
+[setup-flutter-env.sh](../scripts/setup-flutter-env.sh). Never commit `.env`.
+
+Workflow steps set repository variables/secrets in `env:` and call the script
+from the repository root (`working-directory: .`).
 
 Set repository **Variables**:
 

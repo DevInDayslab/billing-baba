@@ -38,8 +38,9 @@ class InventoryItemDetailPanel extends ConsumerWidget {
           mode: mode,
           stockSummary: stockSummary,
           categoryName: contextData.categoryName,
-          actionLabel:
-              mode == InventoryDetailHeaderMode.product ? 'Adjust Stock' : null,
+          actionLabel: mode == InventoryDetailHeaderMode.product
+              ? 'Adjust Stock'
+              : null,
           onAction: mode == InventoryDetailHeaderMode.product
               ? () => showAdjustStockDialog(context, item: displayItem)
               : null,

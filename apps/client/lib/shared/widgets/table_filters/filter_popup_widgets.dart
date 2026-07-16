@@ -323,7 +323,9 @@ class FilterDropdownItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isSelected ? TableFilterTheme.optionSelectedColor : Colors.transparent,
+      color: isSelected
+          ? TableFilterTheme.optionSelectedColor
+          : Colors.transparent,
       child: InkWell(
         onTap: onTap,
         hoverColor: TableFilterTheme.optionHoverColor,
@@ -341,7 +343,9 @@ class FilterDropdownItem extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textPrimary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),

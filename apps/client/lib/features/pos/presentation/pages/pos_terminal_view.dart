@@ -88,7 +88,9 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
     );
 
     try {
-      await ref.read(posReceiptPrinterProvider).preview(
+      await ref
+          .read(posReceiptPrinterProvider)
+          .preview(
             context: context,
             sale: previewSale,
             ref: ref,
@@ -208,7 +210,8 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
 
-    final isAltS = event.logicalKey == LogicalKeyboardKey.keyS &&
+    final isAltS =
+        event.logicalKey == LogicalKeyboardKey.keyS &&
         HardwareKeyboard.instance.isAltPressed;
     if (isAltS) {
       _searchFocusNode.requestFocus();
@@ -290,7 +293,8 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
               builder: (context, constraints) {
                 final width = constraints.maxWidth;
                 final isMobile = width < PosBreakpoints.mobile;
-                final isTablet = width >= PosBreakpoints.mobile &&
+                final isTablet =
+                    width >= PosBreakpoints.mobile &&
                     width < PosBreakpoints.tablet;
                 final isCompact = width < PosBreakpoints.laptop;
 
@@ -785,7 +789,10 @@ class _ShortcutHintsBar extends StatelessWidget {
                         children: [
                           for (var i = 0; i < hints.length; i++) ...[
                             if (i > 0)
-                              const Text('|', style: PosStyles.shortcutHintStyle),
+                              const Text(
+                                '|',
+                                style: PosStyles.shortcutHintStyle,
+                              ),
                             Text(hints[i], style: PosStyles.shortcutHintStyle),
                           ],
                         ],
@@ -809,7 +816,10 @@ class _ShortcutHintsBar extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                       activeColor: AppColors.primary,
                     ),
-                    const Text('Show Hints', style: PosStyles.shortcutHintStyle),
+                    const Text(
+                      'Show Hints',
+                      style: PosStyles.shortcutHintStyle,
+                    ),
                   ],
                 ),
         );

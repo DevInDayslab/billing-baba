@@ -78,12 +78,7 @@ export class BusinessRepository {
         name: users.name,
       })
       .from(users)
-      .where(
-        and(
-          eq(users.role, 'owner'),
-          eq(users.isDeleted, false),
-        ),
-      );
+      .where(and(eq(users.role, 'owner'), eq(users.isDeleted, false)));
 
     const map = new Map<string, string>();
     for (const owner of owners) {
@@ -94,10 +89,7 @@ export class BusinessRepository {
     return map;
   }
 
-  async softDelete(
-    businessId: string,
-    accountId: string,
-  ): Promise<boolean> {
+  async softDelete(businessId: string, accountId: string): Promise<boolean> {
     return this.db.transaction(async (tx) => {
       const [membership] = await tx
         .select({ role: users.role })

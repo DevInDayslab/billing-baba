@@ -1,9 +1,5 @@
 import type { AppConfig } from '../../config/app_config';
-import {
-  authExamples,
-  businessExamples,
-  responseExamples,
-} from '../examples';
+import { authExamples, businessExamples, responseExamples } from '../examples';
 import {
   dataResponseSchema,
   okResponse,
@@ -133,7 +129,10 @@ export function buildAuthPaths(config: AppConfig) {
           },
         },
         responses: {
-          200: okResponse('Logged out successfully', Schema.AuthSessionResponse),
+          200: okResponse(
+            'Logged out successfully',
+            Schema.AuthSessionResponse,
+          ),
           ...standardErrorResponses,
         },
       },

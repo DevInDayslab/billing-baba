@@ -37,7 +37,9 @@ class _GstrMonthFilterBarState extends ConsumerState<GstrMonthFilterBar> {
   }
 
   void _applyRange() {
-    ref.read(reportFiltersProvider.notifier).setCustomDateRange(
+    ref
+        .read(reportFiltersProvider.notifier)
+        .setCustomDateRange(
           DateTimeRange(
             start: DateTime(_fromMonth.year, _fromMonth.month),
             end: DateTime(_toMonth.year, _toMonth.month + 1, 0),

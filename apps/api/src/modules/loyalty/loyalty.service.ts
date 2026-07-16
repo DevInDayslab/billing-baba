@@ -3,8 +3,8 @@ import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { parseMoney } from '../inventory/inventory.utils';
 import { PartyRepository } from '../parties/party.repository';
-import type { ListLoyaltyTransactionsQuery } from './loyalty.schema';
 import { LoyaltyRepository } from './loyalty.repository';
+import type { ListLoyaltyTransactionsQuery } from './loyalty.schema';
 import type {
   LoyaltyRulesRecord,
   LoyaltyTransactionRecord,
@@ -14,12 +14,12 @@ import type {
 } from './loyalty.types';
 import {
   DEFAULT_RUPEES_PER_POINT,
-  RUPEES_PER_REDEEMED_POINT,
   formatLoyaltyPoints,
   isEligiblePartyType,
   isLoyaltyEarnDocumentType,
   parseLoyaltyPoints,
   pointsEarnedForSpend,
+  RUPEES_PER_REDEEMED_POINT,
 } from './loyalty.utils';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -134,9 +134,9 @@ export class LoyaltyService {
     const existing = await this.repository.findActiveRules(businessId);
     if (!existing) {
       const created = await this.repository.createRules(businessId, {
-        rupeesPerPoint: input.rupees_per_point ?? formatLoyaltyPoints(
-          DEFAULT_RUPEES_PER_POINT,
-        ),
+        rupeesPerPoint:
+          input.rupees_per_point ??
+          formatLoyaltyPoints(DEFAULT_RUPEES_PER_POINT),
         isActive: input.is_active ?? true,
         userId,
       });
@@ -153,7 +153,7 @@ export class LoyaltyService {
 
   async resolveRupeesPerPoint(businessId: string): Promise<number> {
     const rules = await this.repository.findActiveRules(businessId);
-    if (!rules || !rules.isActive) {
+    if (!rules?.isActive) {
       return DEFAULT_RUPEES_PER_POINT;
     }
     const value = parseLoyaltyPoints(rules.rupeesPerPoint);
@@ -257,8 +257,7 @@ export class LoyaltyService {
     const spendAmount = Math.max(documentTotal - redemptionValue, 0);
     const earnedPoints = pointsEarnedForSpend(spendAmount, rupeesPerPoint);
     const newAvailable = availablePoints - pointsToRedeem + earnedPoints;
-    const newEarned =
-      parseLoyaltyPoints(balance.pointsEarned) + earnedPoints;
+    const newEarned = parseLoyaltyPoints(balance.pointsEarned) + earnedPoints;
 
     balance = await this.repository.updateBalance(tx, balance.id, {
       pointsEarned: formatLoyaltyPoints(newEarned),

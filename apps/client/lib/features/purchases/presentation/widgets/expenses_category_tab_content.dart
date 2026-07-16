@@ -45,12 +45,10 @@ class ExpensesCategoryTabContent extends ConsumerWidget {
       listPanel: _CategoryListPanel(
         categories: categories,
         selectedId: selectedId,
-        onSearchChanged: (query) => ref
-            .read(expenseCategorySearchQueryProvider.notifier)
-            .query = query,
-        onCategorySelected: (id) => ref
-            .read(selectedExpenseCategoryIdProvider.notifier)
-            .selected = id,
+        onSearchChanged: (query) =>
+            ref.read(expenseCategorySearchQueryProvider.notifier).query = query,
+        onCategorySelected: (id) =>
+            ref.read(selectedExpenseCategoryIdProvider.notifier).selected = id,
         onAddExpense: () => context.push(AppRoutes.addExpense),
       ),
       detailPanel: selectedCategory != null
@@ -310,9 +308,13 @@ class _CategoryDetailPanel extends ConsumerWidget {
               Expanded(
                 child: InventorySearchField(
                   hint: 'Search',
-                  onChanged: (query) => ref
-                      .read(expenseTransactionSearchQueryProvider.notifier)
-                      .query = query,
+                  onChanged: (query) =>
+                      ref
+                              .read(
+                                expenseTransactionSearchQueryProvider.notifier,
+                              )
+                              .query =
+                          query,
                 ),
               ),
               if (filters.hasTransactionFilters ||
@@ -337,7 +339,8 @@ class _CategoryDetailPanel extends ConsumerWidget {
                     message: 'No transactions in this category',
                   )
                 : ExpenseTransactionTableViewport(
-                    minWidth: category.variant ==
+                    minWidth:
+                        category.variant ==
                             ExpenseCategoryVariant.loyaltyRedeemed
                         ? expenseTransactionLoyaltyMinTableWidth
                         : expenseTransactionStandardMinTableWidth,
@@ -345,7 +348,10 @@ class _CategoryDetailPanel extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (category.variant ==
-                                ExpenseCategoryVariant.loyaltyRedeemed) const ExpenseLoyaltyTransactionFilterHeader() else const ExpenseStandardTransactionFilterHeader(),
+                            ExpenseCategoryVariant.loyaltyRedeemed)
+                          const ExpenseLoyaltyTransactionFilterHeader()
+                        else
+                          const ExpenseStandardTransactionFilterHeader(),
                         Expanded(
                           child: ListView.builder(
                             itemCount: transactions.length,
@@ -676,7 +682,9 @@ class ExpenseStandardTransactionFilterHeader extends ConsumerWidget {
             label: 'STATUS',
             kind: PurchaseColumnFilterKind.status,
             headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnStatusFilterIsActive(filters.selectedStatus),
+            isActive: purchaseColumnStatusFilterIsActive(
+              filters.selectedStatus,
+            ),
             columns: columns,
             actions: actions,
             partyOptions: partyOptions,

@@ -11,6 +11,7 @@ typedef _LineTaxMapping = ({
   double taxPercent,
   bool withTax,
 });
+
 /// Maps a parse-document API response onto [AddPurchaseFormState].
 /// Only non-null parsed values are applied; nothing is guessed.
 class PurchaseDocumentParseMapper {
@@ -211,7 +212,11 @@ class PurchaseDocumentParseMapper {
       );
     }
 
-    return (unitPrice: inclusiveUnitPrice, taxPercent: taxPercent, withTax: true);
+    return (
+      unitPrice: inclusiveUnitPrice,
+      taxPercent: taxPercent,
+      withTax: true,
+    );
   }
 
   static double _normalizeToPurchaseTaxSlab(double rate) {
@@ -268,6 +273,7 @@ class PurchaseDocumentParseMapper {
     );
     return derived > 0 ? derived : fallbackPercent;
   }
+
   static DateTime? _parseDate(String? value) {
     if (value == null || value.trim().isEmpty) return null;
     final parsed = DateTime.tryParse(value);

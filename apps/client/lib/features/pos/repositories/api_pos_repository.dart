@@ -11,8 +11,8 @@ class ApiPosRepository implements PosRepository {
   ApiPosRepository({
     required PosSaleService posSaleService,
     required InventoryService inventoryService,
-  })  : _posSaleService = posSaleService,
-        _inventoryService = inventoryService;
+  }) : _posSaleService = posSaleService,
+       _inventoryService = inventoryService;
 
   final PosSaleService _posSaleService;
   final InventoryService _inventoryService;

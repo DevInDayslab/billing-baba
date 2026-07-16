@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ilike, inArray, lt, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lt, or, sql } from 'drizzle-orm';
 import type { Database } from '../../../db/client';
 import { parties } from '../../../db/schema/crm/tables';
 import {
@@ -45,7 +45,10 @@ export class ItemReportsRepository {
   async getItemReportByParty(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<ReportItemByPartyRow>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<ReportItemByPartyRow>;
+    total: number;
+  }> {
     const range = resolveRange(query);
     const filters = [
       eq(salesDocuments.businessId, businessId),
@@ -79,7 +82,9 @@ export class ItemReportsRepository {
       .leftJoin(parties, eq(salesDocuments.partyId, parties.id))
       .where(and(...filters))
       .groupBy(items.id, items.name, parties.id, parties.name)
-      .orderBy(desc(sql`COALESCE(SUM(${salesDocumentLines.lineTotal}::numeric), 0)`));
+      .orderBy(
+        desc(sql`COALESCE(SUM(${salesDocumentLines.lineTotal}::numeric), 0)`),
+      );
 
     const mapped = grouped.map((row) => ({
       item_name: row.itemName ?? '',
@@ -173,7 +178,10 @@ export class ItemReportsRepository {
   async getStockDetail(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<ReportStockDetailRow>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<ReportStockDetailRow>;
+    total: number;
+  }> {
     const range = resolveRange(query);
 
     const movementFilters = [
@@ -226,7 +234,10 @@ export class ItemReportsRepository {
       const outQty = Number(period?.outQty ?? 0);
       const opening = closing - inQty + outQty;
       return {
-        item_name: period?.itemName ?? stockResult.rows.find((r) => r.itemId === itemId)?.itemName ?? '',
+        item_name:
+          period?.itemName ??
+          stockResult.rows.find((r) => r.itemId === itemId)?.itemName ??
+          '',
         opening_qty: String(opening),
         in_qty: String(inQty),
         out_qty: String(outQty),
@@ -241,7 +252,10 @@ export class ItemReportsRepository {
   async getItemDetail(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<ReportItemDetailRow>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<ReportItemDetailRow>;
+    total: number;
+  }> {
     const range = resolveRange(query);
     if (!query.item_id) {
       return { total: 0, payload: { period: toPeriodMeta(range), rows: [] } };
@@ -305,7 +319,8 @@ export class ItemReportsRepository {
 
     const mapped = [...saleRows, ...purchaseRows]
       .map((row) => ({
-        date: row.date instanceof Date ? row.date.toISOString() : String(row.date),
+        date:
+          row.date instanceof Date ? row.date.toISOString() : String(row.date),
         type: String(row.type),
         ref_no: row.refNo ?? '',
         party_name: row.partyName,
@@ -347,7 +362,9 @@ export class ItemReportsRepository {
           eq(salesDocumentLines.isDeleted, false),
           gte(salesDocuments.documentDate, range.from),
           lt(salesDocuments.documentDate, range.to),
-          query.category_id ? eq(items.categoryId, query.category_id) : undefined,
+          query.category_id
+            ? eq(items.categoryId, query.category_id)
+            : undefined,
         ),
       )
       .groupBy(items.categoryId, categories.name);
@@ -372,7 +389,9 @@ export class ItemReportsRepository {
           eq(purchaseDocumentLines.isDeleted, false),
           gte(purchaseDocuments.documentDate, range.from),
           lt(purchaseDocuments.documentDate, range.to),
-          query.category_id ? eq(items.categoryId, query.category_id) : undefined,
+          query.category_id
+            ? eq(items.categoryId, query.category_id)
+            : undefined,
         ),
       )
       .groupBy(items.categoryId);
@@ -413,25 +432,37 @@ export class ItemReportsRepository {
       .select({ id: categories.id, name: categories.name })
       .from(categories)
       .where(
-        and(eq(categories.businessId, businessId), eq(categories.isDeleted, false)),
+        and(
+          eq(categories.businessId, businessId),
+          eq(categories.isDeleted, false),
+        ),
       );
     const categoryNameMap = new Map(
       categoryRows.map((row) => [row.id, row.name]),
     );
 
-    const grouped = new Map<string, { sale_amount: number; purchase_amount: number }>();
+    const grouped = new Map<
+      string,
+      { sale_amount: number; purchase_amount: number }
+    >();
     for (const row of stockResult.rows) {
       const key = row.categoryId
         ? (categoryNameMap.get(row.categoryId) ?? 'Uncategorized')
         : 'Uncategorized';
-      const existing = grouped.get(key) ?? { sale_amount: 0, purchase_amount: 0 };
+      const existing = grouped.get(key) ?? {
+        sale_amount: 0,
+        purchase_amount: 0,
+      };
       existing.purchase_amount += Number(row.stockValue);
       grouped.set(key, existing);
     }
 
     const amountRows = await this.getCategoryAmountRows(businessId, query);
     for (const row of amountRows) {
-      const existing = grouped.get(row.category) ?? { sale_amount: 0, purchase_amount: 0 };
+      const existing = grouped.get(row.category) ?? {
+        sale_amount: 0,
+        purchase_amount: 0,
+      };
       existing.sale_amount += Number(row.sale_amount);
       grouped.set(row.category, existing);
     }
@@ -460,14 +491,21 @@ export class ItemReportsRepository {
       purchase_amount: row.purchase_amount,
       profit: String(Number(row.sale_amount) - Number(row.purchase_amount)),
     }));
-    const { rows: pageRows, total } = paginateSlice(mapped, query.page, query.limit);
+    const { rows: pageRows, total } = paginateSlice(
+      mapped,
+      query.page,
+      query.limit,
+    );
     return { total, payload: { period: toPeriodMeta(range), rows: pageRows } };
   }
 
   async getItemWiseDiscount(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<ReportItemDiscountRow>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<ReportItemDiscountRow>;
+    total: number;
+  }> {
     const range = resolveRange(query);
 
     const grouped = await this.db
@@ -495,7 +533,9 @@ export class ItemReportsRepository {
         ),
       )
       .groupBy(items.id, items.name)
-      .having(sql`COALESCE(SUM(${salesDocumentLines.discountAmount}::numeric), 0) > 0`);
+      .having(
+        sql`COALESCE(SUM(${salesDocumentLines.discountAmount}::numeric), 0) > 0`,
+      );
 
     const mapped = grouped.map((row) => {
       const gross = Number(row.grossAmount ?? 0);
@@ -516,7 +556,10 @@ export class ItemReportsRepository {
   async getManufacturing(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<ReportManufacturingRow>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<ReportManufacturingRow>;
+    total: number;
+  }> {
     const range = resolveRange(query);
 
     const filters = [
@@ -549,14 +592,21 @@ export class ItemReportsRepository {
       cost: row.cost ?? '0',
     }));
 
-    const { rows: pageRows, total } = paginateSlice(mapped, query.page, query.limit);
+    const { rows: pageRows, total } = paginateSlice(
+      mapped,
+      query.page,
+      query.limit,
+    );
     return { total, payload: { period: toPeriodMeta(range), rows: pageRows } };
   }
 
   async getConsumption(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<ReportConsumptionRow>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<ReportConsumptionRow>;
+    total: number;
+  }> {
     const range = resolveRange(query);
 
     const rows = await this.db
@@ -592,14 +642,21 @@ export class ItemReportsRepository {
       value: row.value ?? '0',
     }));
 
-    const { rows: pageRows, total } = paginateSlice(mapped, query.page, query.limit);
+    const { rows: pageRows, total } = paginateSlice(
+      mapped,
+      query.page,
+      query.limit,
+    );
     return { total, payload: { period: toPeriodMeta(range), rows: pageRows } };
   }
 
   async getStockTransfer(
     businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<ReportStockTransferRow>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<ReportStockTransferRow>;
+    total: number;
+  }> {
     const range = resolveRange(query);
 
     const transferRows = await this.db

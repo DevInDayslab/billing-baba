@@ -17,7 +17,8 @@ final _currencyFormat = NumberFormat.currency(
 final _dateFormat = DateFormat('dd MMM yyyy');
 
 abstract final class VoucherPdfSections {
-  static pw.Widget? watermark(String status) => InvoicePdfWidgets.watermark(status);
+  static pw.Widget? watermark(String status) =>
+      InvoicePdfWidgets.watermark(status);
 
   static pw.Widget pageHeaderSection(
     PrintableDocument document,
@@ -90,9 +91,8 @@ abstract final class VoucherPdfSections {
     final batch = document.purchaseFaBatch;
     final expense = document.expense;
 
-    final displayName = party?.dto.name ??
-        expense?.partyName ??
-        batch?.partyName;
+    final displayName =
+        party?.dto.name ?? expense?.partyName ?? batch?.partyName;
 
     if (displayName == null || displayName.trim().isEmpty) {
       return pw.SizedBox();
@@ -222,7 +222,10 @@ abstract final class VoucherPdfSections {
           pw.Text('Allocation', style: InvoicePdfTheme.heading()),
           pw.SizedBox(height: InvoicePdfTheme.spacingSm),
           pw.Table(
-            border: pw.TableBorder.all(color: InvoicePdfTheme.border, width: 0.5),
+            border: pw.TableBorder.all(
+              color: InvoicePdfTheme.border,
+              width: 0.5,
+            ),
             columnWidths: const {
               0: pw.FlexColumnWidth(2),
               1: pw.FlexColumnWidth(1.5),
@@ -284,7 +287,10 @@ abstract final class VoucherPdfSections {
           pw.Text('Assets', style: InvoicePdfTheme.heading()),
           pw.SizedBox(height: InvoicePdfTheme.spacingSm),
           pw.Table(
-            border: pw.TableBorder.all(color: InvoicePdfTheme.border, width: 0.5),
+            border: pw.TableBorder.all(
+              color: InvoicePdfTheme.border,
+              width: 0.5,
+            ),
             columnWidths: const {
               0: pw.FlexColumnWidth(3),
               1: pw.FixedColumnWidth(48),
@@ -300,9 +306,18 @@ abstract final class VoucherPdfSections {
                 verticalAlignment: pw.TableCellVerticalAlignment.middle,
                 children: [
                   InvoicePdfWidgets.tableHeaderCell('Asset'),
-                  InvoicePdfWidgets.tableHeaderCell('Qty', align: pw.TextAlign.right),
-                  InvoicePdfWidgets.tableHeaderCell('Rate', align: pw.TextAlign.right),
-                  InvoicePdfWidgets.tableHeaderCell('Amount', align: pw.TextAlign.right),
+                  InvoicePdfWidgets.tableHeaderCell(
+                    'Qty',
+                    align: pw.TextAlign.right,
+                  ),
+                  InvoicePdfWidgets.tableHeaderCell(
+                    'Rate',
+                    align: pw.TextAlign.right,
+                  ),
+                  InvoicePdfWidgets.tableHeaderCell(
+                    'Amount',
+                    align: pw.TextAlign.right,
+                  ),
                 ],
               ),
               for (final asset in batch.assets)
@@ -350,7 +365,10 @@ abstract final class VoucherPdfSections {
           pw.Text('Materials', style: InvoicePdfTheme.heading()),
           pw.SizedBox(height: InvoicePdfTheme.spacingSm),
           pw.Table(
-            border: pw.TableBorder.all(color: InvoicePdfTheme.border, width: 0.5),
+            border: pw.TableBorder.all(
+              color: InvoicePdfTheme.border,
+              width: 0.5,
+            ),
             columnWidths: const {
               0: pw.FlexColumnWidth(3),
               1: pw.FixedColumnWidth(40),
@@ -366,9 +384,18 @@ abstract final class VoucherPdfSections {
                 verticalAlignment: pw.TableCellVerticalAlignment.middle,
                 children: [
                   InvoicePdfWidgets.tableHeaderCell('Item'),
-                  InvoicePdfWidgets.tableHeaderCell('Qty', align: pw.TextAlign.right),
-                  InvoicePdfWidgets.tableHeaderCell('Unit', align: pw.TextAlign.center),
-                  InvoicePdfWidgets.tableHeaderCell('Amount', align: pw.TextAlign.right),
+                  InvoicePdfWidgets.tableHeaderCell(
+                    'Qty',
+                    align: pw.TextAlign.right,
+                  ),
+                  InvoicePdfWidgets.tableHeaderCell(
+                    'Unit',
+                    align: pw.TextAlign.center,
+                  ),
+                  InvoicePdfWidgets.tableHeaderCell(
+                    'Amount',
+                    align: pw.TextAlign.right,
+                  ),
                 ],
               ),
               for (final line in order.rawMaterials)
@@ -411,7 +438,10 @@ abstract final class VoucherPdfSections {
           pw.Text('Additional Charges', style: InvoicePdfTheme.heading()),
           pw.SizedBox(height: InvoicePdfTheme.spacingSm),
           pw.Table(
-            border: pw.TableBorder.all(color: InvoicePdfTheme.border, width: 0.5),
+            border: pw.TableBorder.all(
+              color: InvoicePdfTheme.border,
+              width: 0.5,
+            ),
             columnWidths: const {
               0: pw.FlexColumnWidth(3),
               1: pw.FixedColumnWidth(72),
@@ -425,7 +455,10 @@ abstract final class VoucherPdfSections {
                 verticalAlignment: pw.TableCellVerticalAlignment.middle,
                 children: [
                   InvoicePdfWidgets.tableHeaderCell('Charge'),
-                  InvoicePdfWidgets.tableHeaderCell('Amount', align: pw.TextAlign.right),
+                  InvoicePdfWidgets.tableHeaderCell(
+                    'Amount',
+                    align: pw.TextAlign.right,
+                  ),
                 ],
               ),
               for (final cost in order.additionalCosts)

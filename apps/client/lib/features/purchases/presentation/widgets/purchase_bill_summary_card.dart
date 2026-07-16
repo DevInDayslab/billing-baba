@@ -66,7 +66,8 @@ class PurchaseBillSummaryCard extends ConsumerWidget {
         ),
         const SizedBox(width: AppSpacing.md),
         IconButton(
-          onPressed: () => ModuleExportActions.exportPurchaseBills(context, ref),
+          onPressed: () =>
+              ModuleExportActions.exportPurchaseBills(context, ref),
           icon: const Icon(Icons.table_chart_outlined, size: 20),
           color: AppColors.textSecondary,
           tooltip: 'Excel Report',

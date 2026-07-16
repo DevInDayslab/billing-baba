@@ -64,20 +64,23 @@ void main() {
       expect(result.gstType, 'Registered Business - Regular');
     });
 
-    test('drops invalid OCR contact fields instead of failing API validation', () {
-      const parsed = PurchaseDocumentParseDto(
-        vendorName: 'Acme Supplies',
-        gstin: 'INVALID-GSTIN',
-        vendorPhone: '12',
-        vendorEmail: 'not-an-email',
-      );
+    test(
+      'drops invalid OCR contact fields instead of failing API validation',
+      () {
+        const parsed = PurchaseDocumentParseDto(
+          vendorName: 'Acme Supplies',
+          gstin: 'INVALID-GSTIN',
+          vendorPhone: '12',
+          vendorEmail: 'not-an-email',
+        );
 
-      final result = PurchaseDocumentPartyFactory.toAddPartyResult(parsed);
+        final result = PurchaseDocumentPartyFactory.toAddPartyResult(parsed);
 
-      expect(result.gstin, '');
-      expect(result.phone, '');
-      expect(result.email, '');
-      expect(result.gstType, 'Unregistered/Consumer');
-    });
+        expect(result.gstin, '');
+        expect(result.phone, '');
+        expect(result.email, '');
+        expect(result.gstType, 'Unregistered/Consumer');
+      },
+    );
   });
 }

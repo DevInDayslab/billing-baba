@@ -8,17 +8,22 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { businesses } from '../business/tables';
-import { money, syncedBusinessColumns, timestamptz, uuidPrimaryKey } from '../columns';
 import {
-  loyaltyTransactionTypeEnum,
-  partyCategoryEnum,
-  partyTypeEnum,
-  pricingTierEnum,
+  money,
+  syncedBusinessColumns,
+  timestamptz,
+  uuidPrimaryKey,
+} from '../columns';
+import {
   contactActivityTypeEnum,
   dealStageEnum,
   leadActivityTypeEnum,
   leadSourceEnum,
   leadStatusEnum,
+  loyaltyTransactionTypeEnum,
+  partyCategoryEnum,
+  partyTypeEnum,
+  pricingTierEnum,
   visitPurposeEnum,
 } from '../enums';
 import { users } from '../identity/tables';

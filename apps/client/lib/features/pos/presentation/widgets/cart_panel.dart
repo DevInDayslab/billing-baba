@@ -144,7 +144,10 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: posSelectedBackground,
         borderRadius: AppRadius.smBorder,
@@ -167,7 +170,10 @@ class _BillSummary extends ConsumerWidget {
 
   final PosCartState cart;
 
-  Future<void> _showBillDiscountDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showBillDiscountDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final controller = TextEditingController(
       text: cart.billDiscountPercent > 0
           ? cart.billDiscountPercent.toStringAsFixed(0)
@@ -212,8 +218,9 @@ class _BillSummary extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final balanceColor =
-        cart.balance == 0 ? posPositiveColor : posNegativeColor;
+    final balanceColor = cart.balance == 0
+        ? posPositiveColor
+        : posNegativeColor;
 
     return LayoutBuilder(
       builder: (context, constraints) {

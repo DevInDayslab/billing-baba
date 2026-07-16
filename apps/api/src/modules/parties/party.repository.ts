@@ -5,8 +5,8 @@ import { parties } from '../../db/schema/crm/tables';
 import { users } from '../../db/schema/identity/tables';
 import { expenses, purchaseDocuments } from '../../db/schema/purchases/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
-import { OutstandingRepository } from '../accounting/outstanding.repository';
 import type { PricingTier } from '../../shared/pricing/pricing-tier';
+import { OutstandingRepository } from '../accounting/outstanding.repository';
 import type {
   ListPartiesParams,
   PartyInsertValues,

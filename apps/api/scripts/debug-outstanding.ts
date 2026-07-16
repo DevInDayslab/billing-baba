@@ -19,7 +19,9 @@ console.log('Total payments:', report.summary.totalPayments.toFixed(2));
 console.log('Entries:', report.entries.length);
 
 let running = report.openingBalance;
-for (const entry of [...report.entries].sort((a, b) => a.date.localeCompare(b.date))) {
+for (const entry of [...report.entries].sort((a, b) =>
+  a.date.localeCompare(b.date),
+)) {
   running += Number(entry.debit) - Number(entry.credit);
   console.log(
     entry.date,

@@ -114,7 +114,10 @@ class _InventoryErrorBanner extends StatelessWidget {
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(fontSize: 12, color: inventoryNegativeColor),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: inventoryNegativeColor,
+                ),
               ),
             ),
             TextButton(

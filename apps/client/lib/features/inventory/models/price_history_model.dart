@@ -4,7 +4,8 @@ class PriceHistoryModel {
     required this.itemId,
     required this.itemName,
     required this.price,
-    required this.createdAt, this.pricingTier,
+    required this.createdAt,
+    this.pricingTier,
     this.changedBy,
   });
 

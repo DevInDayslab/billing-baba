@@ -42,8 +42,9 @@ class InventoryTransactionsTable extends ConsumerWidget {
     final transactionsAsync = ref.watch(productTransactionsProvider(itemId));
     final paginated = ref.watch(paginatedProductTransactionsProvider(itemId));
     final filters = ref.watch(productTransactionFiltersProvider);
-    final hasSearch =
-        ref.watch(productTransactionSearchQueryProvider).isNotEmpty;
+    final hasSearch = ref
+        .watch(productTransactionSearchQueryProvider)
+        .isNotEmpty;
 
     ref.listen(productTransactionSearchQueryProvider, (previous, next) {
       if (previous != next) {
@@ -74,9 +75,13 @@ class InventoryTransactionsTable extends ConsumerWidget {
               ExpandableTableSearchField(
                 hint: 'Search transactions',
                 initialQuery: ref.read(productTransactionSearchQueryProvider),
-                onQueryChanged: (query) => ref
-                    .read(productTransactionSearchQueryProvider.notifier)
-                    .query = query,
+                onQueryChanged: (query) =>
+                    ref
+                            .read(
+                              productTransactionSearchQueryProvider.notifier,
+                            )
+                            .query =
+                        query,
               ),
             ],
           ),
@@ -292,10 +297,15 @@ class _InventoryTransactionTableColumns {
     required String itemId,
   }) {
     final filters = ref.watch(productTransactionFiltersProvider);
-    final filtersNotifier = ref.read(productTransactionFiltersProvider.notifier);
-    final typeOptions = ref.watch(productTransactionTypeOptionsProvider(itemId));
-    final statusOptions =
-        ref.watch(productTransactionStatusOptionsProvider(itemId));
+    final filtersNotifier = ref.read(
+      productTransactionFiltersProvider.notifier,
+    );
+    final typeOptions = ref.watch(
+      productTransactionTypeOptionsProvider(itemId),
+    );
+    final statusOptions = ref.watch(
+      productTransactionStatusOptionsProvider(itemId),
+    );
 
     return [
       const ResizableDataColumn(
@@ -668,8 +678,9 @@ class _PaginationRow extends ConsumerWidget {
           ],
           const SizedBox(width: AppSpacing.xs),
           TextButton(
-            onPressed:
-                canGoNext ? () => notifier.setPage(currentPage + 1) : null,
+            onPressed: canGoNext
+                ? () => notifier.setPage(currentPage + 1)
+                : null,
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               minimumSize: Size.zero,

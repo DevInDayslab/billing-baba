@@ -152,9 +152,12 @@ class UpdateBusinessProfileInput {
     phone: Validators.normalizeIndianPhone(phone),
     email: email?.trim().isEmpty ?? true ? null : email?.trim(),
     gstin: gstin?.trim().isEmpty ?? true ? null : gstin?.trim(),
-    businessType: businessType?.trim().isEmpty ?? true ? null : businessType?.trim(),
-    businessCategory:
-        businessCategory?.trim().isEmpty ?? true ? null : businessCategory?.trim(),
+    businessType: businessType?.trim().isEmpty ?? true
+        ? null
+        : businessType?.trim(),
+    businessCategory: businessCategory?.trim().isEmpty ?? true
+        ? null
+        : businessCategory?.trim(),
     state: state?.trim().isEmpty ?? true ? null : state?.trim(),
     pincode: Validators.normalizePincode(pincode),
     address: address?.trim().isEmpty ?? true ? null : address?.trim(),

@@ -55,7 +55,9 @@ class AddPurchaseForm extends _$AddPurchaseForm {
 
   Future<void> _consumePendingParse() async {
     if (billId != null) return;
-    final pending = ref.read(pendingPurchaseDocumentParseProvider.notifier).take();
+    final pending = ref
+        .read(pendingPurchaseDocumentParseProvider.notifier)
+        .take();
     if (pending == null) return;
     debugPrint('[PurchaseParse] consuming pending parse on Add Purchase mount');
     try {
@@ -71,7 +73,9 @@ class AddPurchaseForm extends _$AddPurchaseForm {
   }
 
   Future<void> applyParsedDocument(PurchaseDocumentParseDto parsed) async {
-    debugPrint('[PurchaseParse] applyParsedDocument start lines=${parsed.lines.length}');
+    debugPrint(
+      '[PurchaseParse] applyParsedDocument start lines=${parsed.lines.length}',
+    );
     try {
       final parties = await _partiesForParsedDocument(parsed);
 
@@ -83,12 +87,18 @@ class AddPurchaseForm extends _$AddPurchaseForm {
         nextLineId: _nextPurchaseLineItemId,
       );
       final items = await _resolveItemNames(mapped.items);
-      state = mapped.copyWith(items: items, isLoading: false, clearSaveError: true);
+      state = mapped.copyWith(
+        items: items,
+        isLoading: false,
+        clearSaveError: true,
+      );
       debugPrint(
         '[PurchaseParse] applyParsedDocument complete items=${items.length} partyId=${mapped.partyId}',
       );
     } on Object catch (error, stackTrace) {
-      debugPrint('[PurchaseParse] applyParsedDocument error: $error\n$stackTrace');
+      debugPrint(
+        '[PurchaseParse] applyParsedDocument error: $error\n$stackTrace',
+      );
       state = state.copyWith(
         isLoading: false,
         saveError: PurchaseErrorMapper.messageFor(error),
@@ -118,7 +128,9 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       final created = await partyService.createParty(partyResult);
       debugPrint('[PurchaseParse] supplier party created id=${created.id}');
 
-      final existingIndex = parties.indexWhere((party) => party.id == created.id);
+      final existingIndex = parties.indexWhere(
+        (party) => party.id == created.id,
+      );
       if (existingIndex >= 0) {
         parties = List<PartyModel>.from(parties);
         parties[existingIndex] = created;
@@ -138,7 +150,10 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       );
       try {
         final refreshed = await partyService.fetchParties();
-        final match = PurchaseDocumentParseMapper.resolveParty(parsed, refreshed);
+        final match = PurchaseDocumentParseMapper.resolveParty(
+          parsed,
+          refreshed,
+        );
         if (match != null) return refreshed;
       } on Object catch (refreshError, refreshStack) {
         debugPrint(
@@ -195,7 +210,11 @@ class AddPurchaseForm extends _$AddPurchaseForm {
   }
 
   void updateBillingName(String value) {
-    state = state.copyWith(billingName: value, isDirty: true, clearSaveError: true);
+    state = state.copyWith(
+      billingName: value,
+      isDirty: true,
+      clearSaveError: true,
+    );
   }
 
   void updateEWayBillNo(String value) {
@@ -455,8 +474,9 @@ class AddPurchaseForm extends _$AddPurchaseForm {
           billTime.hour,
           billTime.minute,
         );
-        final payAmount =
-            state.paymentAmount.clamp(0, state.grandTotal).toDouble();
+        final payAmount = state.paymentAmount
+            .clamp(0, state.grandTotal)
+            .toDouble();
         await service.recordPurchaseBillPayment(
           partyId: state.partyId!,
           purchaseDocumentId: document.id,

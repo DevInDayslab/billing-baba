@@ -36,18 +36,20 @@ class SaleTabsBar extends ConsumerWidget {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final addButtonSpace =
-                        tabsNotifier.canAddTab ? 36.0 : 0.0;
-                    final available =
-                        constraints.maxWidth - addButtonSpace;
+                    final addButtonSpace = tabsNotifier.canAddTab ? 36.0 : 0.0;
+                    final available = constraints.maxWidth - addButtonSpace;
                     final idealWidth = tabCount == 0
                         ? _tabMaxWidth
-                        : (available / tabCount)
-                            .clamp(_tabMinWidth, _tabMaxWidth);
+                        : (available / tabCount).clamp(
+                            _tabMinWidth,
+                            _tabMaxWidth,
+                          );
                     final totalIdealWidth = idealWidth * tabCount;
                     final tabWidth = totalIdealWidth > available
-                        ? (available / tabCount)
-                            .clamp(_tabMinWidth, _tabMaxWidth)
+                        ? (available / tabCount).clamp(
+                            _tabMinWidth,
+                            _tabMaxWidth,
+                          )
                         : idealWidth;
 
                     final tabsRow = Row(
@@ -123,8 +125,7 @@ class _SaleTabChipState extends State<_SaleTabChip> {
 
   @override
   Widget build(BuildContext context) {
-    final showCloseControl =
-        widget.showClose && (widget.isActive || _hovered);
+    final showCloseControl = widget.showClose && (widget.isActive || _hovered);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -146,19 +147,13 @@ class _SaleTabChipState extends State<_SaleTabChip> {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
             border: Border(
               top: BorderSide(
-                color: widget.isActive
-                    ? _tabBorderColor
-                    : Colors.transparent,
+                color: widget.isActive ? _tabBorderColor : Colors.transparent,
               ),
               left: BorderSide(
-                color: widget.isActive
-                    ? _tabBorderColor
-                    : Colors.transparent,
+                color: widget.isActive ? _tabBorderColor : Colors.transparent,
               ),
               right: BorderSide(
-                color: widget.isActive
-                    ? _tabBorderColor
-                    : Colors.transparent,
+                color: widget.isActive ? _tabBorderColor : Colors.transparent,
               ),
             ),
             boxShadow: widget.isActive
@@ -178,8 +173,9 @@ class _SaleTabChipState extends State<_SaleTabChip> {
                   widget.label,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight:
-                        widget.isActive ? FontWeight.w600 : FontWeight.w500,
+                    fontWeight: widget.isActive
+                        ? FontWeight.w600
+                        : FontWeight.w500,
                     color: widget.isActive
                         ? AppColors.textPrimary
                         : AppColors.textSecondary,

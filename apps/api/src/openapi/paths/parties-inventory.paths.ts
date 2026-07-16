@@ -1,33 +1,21 @@
-import {
-  listBrandsQuerySchema,
-} from '../../modules/inventory/brand.schema';
-import {
-  listCategoriesQuerySchema,
-} from '../../modules/inventory/category.schema';
-import {
-  listGodownsQuerySchema,
-} from '../../modules/inventory/godown.schema';
+import { listBrandsQuerySchema } from '../../modules/inventory/brand.schema';
+import { listCategoriesQuerySchema } from '../../modules/inventory/category.schema';
+import { listGodownsQuerySchema } from '../../modules/inventory/godown.schema';
 import {
   itemImageParamSchema,
   itemTierParamSchema,
   listItemPriceHistoryQuerySchema,
   listItemsQuerySchema,
 } from '../../modules/inventory/item.schema';
-import {
-  listItemLocationsQuerySchema,
-} from '../../modules/inventory/item-location.schema';
-import {
-  listMovementsQuerySchema,
-} from '../../modules/inventory/movement.schema';
+import { listItemLocationsQuerySchema } from '../../modules/inventory/item-location.schema';
+import { listMovementsQuerySchema } from '../../modules/inventory/movement.schema';
 import { listPriceHistoryQuerySchema } from '../../modules/inventory/price-history.schema';
 import { listStockLevelsQuerySchema } from '../../modules/inventory/stock-level.schema';
 import {
   listUnitConversionsQuerySchema,
   listUnitsQuerySchema,
 } from '../../modules/inventory/unit.schema';
-import {
-  listPartiesQuerySchema,
-} from '../../modules/parties/party.schema';
+import { listPartiesQuerySchema } from '../../modules/parties/party.schema';
 import { inventoryExamples, partyExamples } from '../examples';
 import {
   jsonRequestBody,
@@ -137,8 +125,7 @@ export function buildInventoryPaths() {
       createBodyRef: Schema.CreateGodownRequest,
       updateBodyRef: Schema.UpdateGodownRequest,
       itemRef: Schema.GodownResponse,
-      listDescription:
-        'Lists warehouses (godowns) where stock is stored.',
+      listDescription: 'Lists warehouses (godowns) where stock is stored.',
     }),
     ...crudPaths({
       basePath: '/inventory/item-locations',
@@ -202,7 +189,10 @@ export function buildInventoryPaths() {
         summary: 'Update Item Image',
         description: 'Updates image metadata (sort order, alt text).',
         operationId: 'updateItemImage',
-        parameters: pathParamsFromZod(itemImageParamSchema, Schema.ItemImageParams),
+        parameters: pathParamsFromZod(
+          itemImageParamSchema,
+          Schema.ItemImageParams,
+        ),
         requestBody: jsonRequestBody(Schema.UpdateItemImageRequest),
         responses: {
           200: okResponse('Image updated', Schema.ItemImageResponse),
@@ -214,7 +204,10 @@ export function buildInventoryPaths() {
         summary: 'Delete Item Image',
         description: 'Removes an image from an inventory item.',
         operationId: 'deleteItemImage',
-        parameters: pathParamsFromZod(itemImageParamSchema, Schema.ItemImageParams),
+        parameters: pathParamsFromZod(
+          itemImageParamSchema,
+          Schema.ItemImageParams,
+        ),
         responses: {
           204: { description: 'Image removed' },
           ...standardErrorResponses,
@@ -253,7 +246,10 @@ export function buildInventoryPaths() {
         summary: 'Delete Item Tier Price',
         description: 'Removes a specific pricing tier override.',
         operationId: 'deleteItemTierPrice',
-        parameters: pathParamsFromZod(itemTierParamSchema, Schema.ItemTierParams),
+        parameters: pathParamsFromZod(
+          itemTierParamSchema,
+          Schema.ItemTierParams,
+        ),
         responses: {
           204: { description: 'Tier price removed' },
           ...standardErrorResponses,
@@ -275,7 +271,10 @@ export function buildInventoryPaths() {
           ),
         ],
         responses: {
-          200: okPaginatedResponse('Price history', Schema.PriceHistoryResponse),
+          200: okPaginatedResponse(
+            'Price history',
+            Schema.PriceHistoryResponse,
+          ),
           ...standardErrorResponses,
         },
       }),

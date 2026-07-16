@@ -61,9 +61,13 @@ class _AddCreditNotePageState extends ConsumerState<AddCreditNotePage> {
   void initState() {
     super.initState();
     if (widget.fromInvoiceId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeFromInvoice());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeFromInvoice(),
+      );
     } else if (widget.creditNoteId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeEditForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeEditForm(),
+      );
     } else {
       _initialized = true;
     }
@@ -71,7 +75,9 @@ class _AddCreditNotePageState extends ConsumerState<AddCreditNotePage> {
 
   Future<void> _initializeFromInvoice() async {
     await ref
-        .read(creditNoteFormProvider(sessionKey: _fromInvoiceSessionKey).notifier)
+        .read(
+          creditNoteFormProvider(sessionKey: _fromInvoiceSessionKey).notifier,
+        )
         .loadFromInvoice(widget.fromInvoiceId!);
     if (mounted) {
       setState(() => _initialized = true);
@@ -97,7 +103,9 @@ class _AddCreditNotePageState extends ConsumerState<AddCreditNotePage> {
         creditNoteFormProvider(sessionKey: activeSessionKey),
         (previous, next) {
           if (previous?.party == next.party) return;
-          ref.read(creditNoteTabsProvider().notifier).updateTabLabel(
+          ref
+              .read(creditNoteTabsProvider().notifier)
+              .updateTabLabel(
                 tabsState.activeIndex,
                 creditNoteTabLabelForForm(
                   creditNoteNumber: tabsState.activeTab.creditNoteNumber,
@@ -384,8 +392,9 @@ class _FormFields extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(creditNoteFormProvider(sessionKey: sessionKey));
-    final notifier =
-        ref.read(creditNoteFormProvider(sessionKey: sessionKey).notifier);
+    final notifier = ref.read(
+      creditNoteFormProvider(sessionKey: sessionKey).notifier,
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,8 +454,9 @@ class _BottomActionBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(creditNoteFormProvider(sessionKey: sessionKey));
-    final notifier =
-        ref.read(creditNoteFormProvider(sessionKey: sessionKey).notifier);
+    final notifier = ref.read(
+      creditNoteFormProvider(sessionKey: sessionKey).notifier,
+    );
     final isSaving = form.isSaving;
 
     return Padding(
@@ -597,7 +607,9 @@ class _BottomActionBar extends ConsumerWidget {
       ref.invalidate(creditNoteTotalTaxProvider(sessionKey: sessionKey));
       ref.invalidate(creditNoteGrandTotalProvider(sessionKey: sessionKey));
       final tabsState = ref.read(creditNoteTabsProvider());
-      ref.read(creditNoteTabsProvider().notifier).updateTabLabel(
+      ref
+          .read(creditNoteTabsProvider().notifier)
+          .updateTabLabel(
             tabsState.activeIndex,
             creditNoteTabLabelForForm(
               creditNoteNumber: tabsState.activeTab.creditNoteNumber,

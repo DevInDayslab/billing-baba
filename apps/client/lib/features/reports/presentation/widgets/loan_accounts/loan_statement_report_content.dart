@@ -105,198 +105,205 @@ class _LoanStatementReportContentState
         }
 
         return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: ReportTitleActionsRow(
-              title: 'Loan Statement',
-              actions: [
-                ReportTextActionButton(
-                  label: 'Excel',
-                  icon: Icons.table_chart_outlined,
-                  onTap: loanSelected ? exportCsv : null,
+          color: AppColors.background,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.md,
                 ),
-                ReportTextActionButton(
-                  label: 'Print',
-                  icon: Icons.print_outlined,
-                  onTap: loanSelected
-                      ? () => ReportExportService.showPrintPreview(
-                            context: context,
-                            title: 'Loan Statement',
-                            content: ReportExportService.toCsv(
-                              headers: const [
-                                'Date',
-                                'Ref No',
-                                'Particulars',
-                                'Debit',
-                                'Credit',
-                                'Outstanding',
-                              ],
-                              rows: [
-                                for (final row in rows)
-                                  [
-                                    formatReportDate(row.date),
-                                    row.refNo,
-                                    row.description,
-                                    if (row.debit > 0) formatReportCurrency(row.debit) else '-',
-                                    if (row.credit > 0) formatReportCurrency(row.credit) else '-',
-                                    formatReportCurrency(row.balance),
-                                  ],
-                              ],
-                            ),
-                          )
-                      : null,
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: ReportCard(
-              backgroundColor: const Color(0xFFF5F7FA),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Wrap(
-                spacing: AppSpacing.lg,
-                runSpacing: AppSpacing.sm,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Loan account',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      SizedBox(
-                        width: 220,
-                        child: SaleFilterDropdown(
-                          label: selectedLoan,
-                          options: _loanOptions,
-                          selected: selectedLoan,
-                          onSelected: (value) => ref
-                              .read(reportFiltersProvider.notifier)
-                              .setLoanAccount(
-                                value == _selectLoanLabel ? null : value,
+                child: ReportTitleActionsRow(
+                  title: 'Loan Statement',
+                  actions: [
+                    ReportTextActionButton(
+                      label: 'Excel',
+                      icon: Icons.table_chart_outlined,
+                      onTap: loanSelected ? exportCsv : null,
+                    ),
+                    ReportTextActionButton(
+                      label: 'Print',
+                      icon: Icons.print_outlined,
+                      onTap: loanSelected
+                          ? () => ReportExportService.showPrintPreview(
+                              context: context,
+                              title: 'Loan Statement',
+                              content: ReportExportService.toCsv(
+                                headers: const [
+                                  'Date',
+                                  'Ref No',
+                                  'Particulars',
+                                  'Debit',
+                                  'Credit',
+                                  'Outstanding',
+                                ],
+                                rows: [
+                                  for (final row in rows)
+                                    [
+                                      formatReportDate(row.date),
+                                      row.refNo,
+                                      row.description,
+                                      if (row.debit > 0)
+                                        formatReportCurrency(row.debit)
+                                      else
+                                        '-',
+                                      if (row.credit > 0)
+                                        formatReportCurrency(row.credit)
+                                      else
+                                        '-',
+                                      formatReportCurrency(row.balance),
+                                    ],
+                                ],
                               ),
-                        ),
+                            )
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  0,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
+                child: ReportCard(
+                  backgroundColor: const Color(0xFFF5F7FA),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: Wrap(
+                    spacing: AppSpacing.lg,
+                    runSpacing: AppSpacing.sm,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Loan account',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          SizedBox(
+                            width: 220,
+                            child: SaleFilterDropdown(
+                              label: selectedLoan,
+                              options: _loanOptions,
+                              selected: selectedLoan,
+                              onSelected: (value) => ref
+                                  .read(reportFiltersProvider.notifier)
+                                  .setLoanAccount(
+                                    value == _selectLoanLabel ? null : value,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 16,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _dateFormat.format(_dateRange.start),
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          const Text(
+                            'to',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          SaleDateRangePickerAnchor(
+                            key: _datePickerKey,
+                            initialRange: _dateRange,
+                            onRangeSelected: (range) =>
+                                setState(() => _dateRange = range),
+                            child: InkWell(
+                              onTap: () =>
+                                  _datePickerKey.currentState?.toggle(),
+                              borderRadius: BorderRadius.circular(4),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 2,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.calendar_today_outlined,
+                                      size: 16,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _dateFormat.format(_dateRange.end),
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.calendar_today_outlined,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _dateFormat.format(_dateRange.start),
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      const Text(
-                        'to',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      SaleDateRangePickerAnchor(
-                        key: _datePickerKey,
-                        initialRange: _dateRange,
-                        onRangeSelected: (range) =>
-                            setState(() => _dateRange = range),
-                        child: InkWell(
-                          onTap: () => _datePickerKey.currentState?.toggle(),
-                          borderRadius: BorderRadius.circular(4),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 2,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.calendar_today_outlined,
-                                  size: 16,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  _dateFormat.format(_dateRange.end),
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ],
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: ReportCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.sm,
+                          ),
+                          child: Text(
+                            'TRANSACTIONS',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textSecondary,
+                              letterSpacing: 0.6,
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                0,
-                AppSpacing.lg,
-                AppSpacing.lg,
-              ),
-              child: ReportCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.sm,
-                      ),
-                      child: Text(
-                        'TRANSACTIONS',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 0.6,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: !loanSelected
-                          ? _emptyState(
-                              message:
-                                  'Select a loan account to view the statement.',
-                            )
-                          : rows.isEmpty
+                        Expanded(
+                          child: !loanSelected
+                              ? _emptyState(
+                                  message:
+                                      'Select a loan account to view the statement.',
+                                )
+                              : rows.isEmpty
                               ? _emptyState(
                                   message:
                                       'No transactions for the selected period.',
@@ -326,7 +333,8 @@ class _LoanStatementReportContentState
                                                 child: Text(
                                                   rows[i].description,
                                                   style: TextStyle(
-                                                    fontWeight: rows[i].isOpening
+                                                    fontWeight:
+                                                        rows[i].isOpening
                                                         ? FontWeight.w600
                                                         : FontWeight.normal,
                                                   ),
@@ -334,7 +342,8 @@ class _LoanStatementReportContentState
                                               ),
                                               ReportAlignedCell.fixed(
                                                 130,
-                                                alignment: Alignment.centerRight,
+                                                alignment:
+                                                    Alignment.centerRight,
                                                 child: Text(
                                                   rows[i].debit > 0
                                                       ? formatReportCurrency(
@@ -346,14 +355,14 @@ class _LoanStatementReportContentState
                                                         ? const Color(
                                                             0xFFE53935,
                                                           )
-                                                        : AppColors
-                                                            .textPrimary,
+                                                        : AppColors.textPrimary,
                                                   ),
                                                 ),
                                               ),
                                               ReportAlignedCell.fixed(
                                                 130,
-                                                alignment: Alignment.centerRight,
+                                                alignment:
+                                                    Alignment.centerRight,
                                                 child: Text(
                                                   rows[i].credit > 0
                                                       ? formatReportCurrency(
@@ -363,14 +372,14 @@ class _LoanStatementReportContentState
                                                   style: TextStyle(
                                                     color: rows[i].credit > 0
                                                         ? reportTeal
-                                                        : AppColors
-                                                            .textPrimary,
+                                                        : AppColors.textPrimary,
                                                   ),
                                                 ),
                                               ),
                                               ReportAlignedCell.fixed(
                                                 140,
-                                                alignment: Alignment.centerRight,
+                                                alignment:
+                                                    Alignment.centerRight,
                                                 child: Text(
                                                   formatReportCurrency(
                                                     rows[i].balance,
@@ -386,47 +395,49 @@ class _LoanStatementReportContentState
                                     ],
                                   ),
                                 ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.md,
-                      ),
-                      decoration: const BoxDecoration(
-                        border: Border(top: BorderSide(color: reportCardBorder)),
-                      ),
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text.rich(
-                          TextSpan(
-                            style: const TextStyle(fontSize: 14),
-                            children: [
-                              const TextSpan(
-                                text: 'Outstanding Balance: ',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.md,
+                          ),
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              top: BorderSide(color: reportCardBorder),
+                            ),
+                          ),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Text.rich(
                               TextSpan(
-                                text: formatReportCurrency(closingBalance),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
+                                style: const TextStyle(fontSize: 14),
+                                children: [
+                                  const TextSpan(
+                                    text: 'Outstanding Balance: ',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: formatReportCurrency(closingBalance),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
       },
     );
   }
