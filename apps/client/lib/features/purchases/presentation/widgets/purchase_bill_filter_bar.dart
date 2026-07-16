@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/upload_purchase_bills_dialog.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -125,6 +126,8 @@ class _PurchaseBillFilterBarState extends ConsumerState<PurchaseBillFilterBar> {
           ),
         ),
         const SizedBox(width: AppSpacing.md),
+        const UploadPurchaseBillsButton(),
+        const SizedBox(width: AppSpacing.sm),
         FilledButton.icon(
           onPressed: () => context.push(AppRoutes.addPurchase),
           style: FilledButton.styleFrom(
