@@ -1,0 +1,18 @@
+{
+  "env": {
+    "bracketed": "[AQ.Ab8RN6JjS7ROI4JdBGB9x9nr5TB0dgTNViptn-OVx9_pJ86emw]",
+    "first5": "AQ.Ab",
+    "last5": "86emw",
+    "length": 53,
+    "hasSpacesQuotesNewlinesOrBearer": false,
+    "trimmedLength": 53
+  },
+  "prefixValidation": {
+    "looksLikeAiStudioApiKey": false,
+    "issue": "GEMINI_API_KEY looks like OAuth/Vertex token (app validation)"
+  },
+  "sdkVersion": "2.11.0",
+  "requests": [],
+  "sdkError": null,
+  "conclusion": "Stopped before SDK call: app prefix validation failed — GEMINI_API_KEY looks like OAuth/Vertex token (app validation)"
+}

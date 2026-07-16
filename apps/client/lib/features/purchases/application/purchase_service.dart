@@ -5,6 +5,7 @@ import 'package:billing_baba/features/purchases/data/purchase_local_data_source.
 import 'package:billing_baba/features/purchases/data/purchase_remote_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_repository.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
+import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/mappers/purchase_document_mapper.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
@@ -435,6 +436,29 @@ class PurchaseService {
       return _repository.getPaymentHistory(documentId);
     } on DioException catch (error) {
       throw mapPurchaseError(error);
+    }
+  }
+
+  Future<PurchaseDocumentParseDto> parsePurchaseDocument({
+    required String filename,
+    required List<int> bytes,
+    String? mimeType,
+  }) async {
+    try {
+      debugPrint('[PurchaseParse] parsePurchaseDocument request filename=$filename bytes=${bytes.length}');
+      final result = await _repository.parseDocument(
+        filename: filename,
+        bytes: bytes,
+        mimeType: mimeType,
+      );
+      debugPrint('[PurchaseParse] parsePurchaseDocument response lines=${result.lines.length}');
+      return result;
+    } on DioException catch (error, stackTrace) {
+      debugPrint('[PurchaseParse] parsePurchaseDocument DioException: $error\n$stackTrace');
+      throw mapPurchaseError(error);
+    } on Object catch (error, stackTrace) {
+      debugPrint('[PurchaseParse] parsePurchaseDocument error: $error\n$stackTrace');
+      rethrow;
     }
   }
 

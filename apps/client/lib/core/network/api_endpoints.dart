@@ -96,6 +96,7 @@ abstract final class ApiEndpoints {
       '${paymentAllocations(id)}/$allocationId';
 
   static const purchases = '/api/v1/purchases';
+  static const purchaseParseDocument = '$purchases/parse-document';
   static const purchaseDocuments = '$purchases/purchase-documents';
   static String purchaseDocument(String id) => '$purchaseDocuments/$id';
   static String purchaseDocumentLines(String id) =>

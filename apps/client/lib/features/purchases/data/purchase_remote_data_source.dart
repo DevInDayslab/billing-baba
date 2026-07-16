@@ -1,5 +1,7 @@
+import 'package:billing_baba/core/constants/app_constants.dart';
 import 'package:billing_baba/core/network/api_endpoints.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
+import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 import 'package:dio/dio.dart';
 
@@ -148,6 +150,32 @@ class PurchaseRemoteDataSource {
       data: request.toJson(),
     );
     return PaymentDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<PurchaseDocumentParseDto> parseDocument({
+    required String filename,
+    required List<int> bytes,
+    String? mimeType,
+  }) async {
+    final formData = FormData.fromMap({
+      'file': MultipartFile.fromBytes(
+        bytes,
+        filename: filename,
+      ),
+    });
+
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.purchaseParseDocument,
+      data: formData,
+      options: Options(
+        sendTimeout: AppConstants.documentParseTimeout,
+        receiveTimeout: AppConstants.documentParseTimeout,
+      ),
+    );
+
+    return PurchaseDocumentParseDto.fromJson(
       (response.data?['data'] as Map<String, dynamic>?) ?? {},
     );
   }

@@ -2,6 +2,7 @@ import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
+import 'package:billing_baba/features/purchases/application/purchase_document_desktop_import.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/add_purchase_footer.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_line_items_table.dart';
@@ -328,11 +329,10 @@ class _BottomActionBar extends ConsumerWidget {
           OutlinedButton.icon(
             onPressed: isSaving
                 ? null
-                : () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Upload bill coming soon')),
-                    );
-                  },
+                : () => runPurchaseDocumentDesktopImport(
+                      context: context,
+                      billId: billId,
+                    ),
             icon: const Icon(Icons.upload_file_outlined, size: 16),
             label: const Text('Upload Bill', style: TextStyle(fontSize: 13)),
             style: OutlinedButton.styleFrom(
