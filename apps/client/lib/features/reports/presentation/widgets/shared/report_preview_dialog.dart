@@ -1,13 +1,14 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/platform_file_output.dart';
+import 'package:billing_baba/features/print/application/print_output_service.dart';
+import 'package:billing_baba/features/print/models/printable_pdf.dart';
 import 'package:billing_baba/features/export/presentation/widgets/export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/utils/report_pdf_builder.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 
 /// Optional header metadata shown above the report preview body.
@@ -74,6 +75,23 @@ class ReportPreviewDialog extends StatefulWidget {
 
 class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
   _ReportPreviewTab _tab = _ReportPreviewTab.table;
+  Uint8List? _cachedPdfBytes;
+  final _printOutput = PrintOutputService();
+
+  Future<Uint8List> _buildPdfBytes() async {
+    if (_cachedPdfBytes != null) {
+      return _cachedPdfBytes!;
+    }
+
+    final bytes = await ReportPdfBuilder.build(
+      title: widget.title,
+      headers: widget.headers,
+      rows: widget.rows,
+      meta: widget.meta,
+    );
+    _cachedPdfBytes = bytes;
+    return bytes;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -149,12 +167,7 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
   bool get _canOpenExternally => !kIsWeb && PlatformFileOutput.isDesktop;
 
   Future<void> _downloadPdf(BuildContext context) async {
-    final bytes = await ReportPdfBuilder.build(
-      title: widget.title,
-      headers: widget.headers,
-      rows: widget.rows,
-      meta: widget.meta,
-    );
+    final bytes = await _buildPdfBytes();
     if (!context.mounted) return;
     await PlatformFileOutput.saveViaDialog(
       filename: '${widget.filenameBase}.pdf',
@@ -173,41 +186,22 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
   }
 
   Future<void> _print(BuildContext context) async {
-    final bytes = await ReportPdfBuilder.build(
-      title: widget.title,
-      headers: widget.headers,
-      rows: widget.rows,
-      meta: widget.meta,
-    );
+    final bytes = await _buildPdfBytes();
     if (!context.mounted) return;
-    await Printing.layoutPdf(
-      onLayout: (_) async => bytes,
-      name: widget.filenameBase,
-      dynamicLayout: false,
+    await _printOutput.printDocument(
+      PrintablePdf(bytes: bytes, name: widget.filenameBase),
     );
   }
 
   Future<void> _openPdf(BuildContext context) async {
     try {
-      final bytes = await ReportPdfBuilder.build(
-        title: widget.title,
-        headers: widget.headers,
-        rows: widget.rows,
-        meta: widget.meta,
-      );
+      final bytes = await _buildPdfBytes();
       if (!context.mounted) return;
 
-      final directory = await getTemporaryDirectory();
-      final file = File('${directory.path}/${widget.filenameBase}.pdf');
-      await file.writeAsBytes(bytes, flush: true);
-
-      if (Platform.isMacOS) {
-        await Process.run('open', [file.path]);
-      } else if (Platform.isWindows) {
-        await Process.run('cmd', ['/c', 'start', '', file.path]);
-      } else if (Platform.isLinux) {
-        await Process.run('xdg-open', [file.path]);
-      }
+      await PlatformFileOutput.openInDefaultViewer(
+        bytes: bytes,
+        filename: '${widget.filenameBase}.pdf',
+      );
     } on Object catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -45,6 +45,7 @@ import 'package:billing_baba/features/sales/presentation/pages/sale_fa_page.dart
 import 'package:billing_baba/features/sales/presentation/pages/sale_invoices_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_return_page.dart';
+import 'package:billing_baba/features/utilities/presentation/pages/barcode_generator_page.dart';
 import 'package:billing_baba/features/utilities/presentation/pages/import_items_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -430,6 +431,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.utilitiesImportItems,
             builder: (context, state) => const ImportItemsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.utilitiesBarcodeGenerator,
+            builder: (context, state) => const BarcodeGeneratorPage(),
           ),
           GoRoute(
             path: AppRoutes.developer,

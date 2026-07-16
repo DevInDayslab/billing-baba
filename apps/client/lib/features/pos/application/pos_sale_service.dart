@@ -84,6 +84,7 @@ class PosSaleService {
         lineDtos.add(lineDto);
       }
 
+      final _ = await _remote.finalizeDocument(docDto.id);
       await _remote.finalizeDocument(docDto.id);
       final finalizedDto = await _remote.getDocument(docDto.id);
 
