@@ -1,7 +1,17 @@
 import { createRequire } from 'node:module';
-import { GoogleGenAI } from '@google/genai';
+import type { GoogleGenAI } from '@google/genai' with { 'resolution-mode': 'import' };
 
 const resolveFromHere = createRequire(__filename);
+
+// @google/genai is ESM; load the package CJS build under Node16 CommonJS.
+const { GoogleGenAI: GoogleGenAIConstructor } = resolveFromHere(
+  '@google/genai',
+) as {
+  GoogleGenAI: new (options: {
+    apiKey: string;
+    vertexai: boolean;
+  }) => GoogleGenAI;
+};
 
 const AI_STUDIO_KEY_HINT =
   'Create a free API key at https://aistudio.google.com/apikey (not Vertex AI or OAuth).';
@@ -339,7 +349,7 @@ export function getGeminiDeveloperClient(): GoogleGenAI {
 
   installGeminiFetchLogging();
 
-  cachedClient = new GoogleGenAI({
+  cachedClient = new GoogleGenAIConstructor({
     apiKey,
     // Explicitly use Gemini Developer API; never Vertex OAuth/project auth.
     vertexai: false,
