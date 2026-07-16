@@ -4,7 +4,7 @@ import {
   pricingTierLabel,
   resolvePartyPricingTier,
   resolveTierPrice,
-} from '../src/shared/pricing/pricing-tier';
+} from '../../../src/shared/pricing/pricing-tier';
 
 describe('pricing-tier', () => {
   test('normalizes human-readable tier labels', () => {
@@ -29,13 +29,21 @@ describe('pricing-tier', () => {
 
   test('falls back to sale price when tier price is missing', () => {
     expect(
-      resolveTierPrice('100', [{ pricing_tier: 'tier_2', price: '90' }], 'tier_3'),
+      resolveTierPrice(
+        '100',
+        [{ pricing_tier: 'tier_2', price: '90' }],
+        'tier_3',
+      ),
     ).toBe('100');
   });
 
   test('uses tier price when available', () => {
     expect(
-      resolveTierPrice('100', [{ pricing_tier: 'tier_2', price: '90' }], 'tier_2'),
+      resolveTierPrice(
+        '100',
+        [{ pricing_tier: 'tier_2', price: '90' }],
+        'tier_2',
+      ),
     ).toBe('90');
   });
 });

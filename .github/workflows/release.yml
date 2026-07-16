@@ -1,0 +1,211 @@
+# Production release workflow for Billing Baba.
+#
+# Triggers only on pushes to `main` (after develop is merged).
+# Creates a GitHub Release with semantic version tags and attaches:
+#   - BillingBaba-Windows.zip
+#   - BillingBaba-macOS.zip  (DMG signing/notarization can replace this later)
+#   - BillingBaba-API.zip
+#
+# Bump `version` in apps/client/pubspec.yaml before merging to main.
+
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_WORKING_DIRECTORY: apps/client
+  API_WORKING_DIRECTORY: apps/api
+
+jobs:
+  version:
+    name: Determine release version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read semantic version from pubspec
+        id: version
+        run: |
+          VERSION=$(grep '^version:' apps/client/pubspec.yaml | sed 's/version:[[:space:]]*//' | cut -d'+' -f1)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+  build-windows:
+    name: Windows desktop
+    needs: version
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      API_BASE_URL: ${{ vars.API_BASE_URL }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.FLUTTER_WORKING_DIRECTORY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Flutter .env
+        uses: ./.github/actions/setup-flutter-env
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows release
+        run: flutter build windows --release --dart-define=API_BASE_URL=$env:API_BASE_URL
+
+      - name: Package Windows artifact
+        shell: pwsh
+        run: |
+          $releaseDir = "build/windows/x64/runner/Release"
+          $exePath = Join-Path $releaseDir "billing_baba.exe"
+          if (-not (Test-Path $exePath)) {
+            Write-Error "Build output missing: expected executable at '$exePath'"
+            exit 1
+          }
+          $zipPath = Join-Path $PWD "BillingBaba-Windows.zip"
+          if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+          Compress-Archive -Path "$releaseDir/*" -DestinationPath $zipPath -Force
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BillingBaba-Windows
+          path: ${{ env.FLUTTER_WORKING_DIRECTORY }}/BillingBaba-Windows.zip
+          retention-days: 14
+
+  build-macos:
+    name: macOS desktop
+    needs: version
+    runs-on: macos-latest
+    timeout-minutes: 45
+    env:
+      API_BASE_URL: ${{ vars.API_BASE_URL }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.FLUTTER_WORKING_DIRECTORY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Flutter .env
+        uses: ./.github/actions/setup-flutter-env
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build macOS release
+        run: flutter build macos --release --dart-define=API_BASE_URL=$API_BASE_URL
+
+      # DMG signing/notarization can replace the ZIP step below when configured.
+      - name: Package macOS artifact
+        run: |
+          APP_PATH="build/macos/Build/Products/Release/billing_baba.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Build output missing: expected app bundle at $APP_PATH"
+            exit 1
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" BillingBaba-macOS.zip
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BillingBaba-macOS
+          path: ${{ env.FLUTTER_WORKING_DIRECTORY }}/BillingBaba-macOS.zip
+          retention-days: 14
+
+  build-backend:
+    name: Backend bundle
+    needs: version
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: ${{ env.API_WORKING_DIRECTORY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+          cache: true
+          cache-dependency-path: apps/api/bun.lock
+
+      - name: Install dependencies and build
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+
+      - name: Create production bundle
+        run: |
+          mkdir -p release-bundle
+          cp -r dist package.json bun.lock drizzle release-bundle/
+          cd release-bundle
+          bun install --production --frozen-lockfile
+          cd ..
+          zip -r BillingBaba-API.zip release-bundle
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BillingBaba-API
+          path: ${{ env.API_WORKING_DIRECTORY }}/BillingBaba-API.zip
+          retention-days: 14
+
+  publish:
+    name: Create GitHub Release
+    needs:
+      - version
+      - build-windows
+      - build-macos
+      - build-backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          name: Billing Baba ${{ needs.version.outputs.version }}
+          generate_release_notes: true
+          files: |
+            artifacts/BillingBaba-Windows/BillingBaba-Windows.zip
+            artifacts/BillingBaba-macOS/BillingBaba-macOS.zip
+            artifacts/BillingBaba-API/BillingBaba-API.zip

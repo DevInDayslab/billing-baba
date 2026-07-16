@@ -1,0 +1,58 @@
+name: Setup Flutter environment
+description: Generate and validate apps/client .env from GitHub Variables and Secrets.
+
+inputs:
+  working-directory:
+    description: Flutter app directory relative to the repository root.
+    required: false
+    default: apps/client
+
+runs:
+  using: composite
+  steps:
+    - name: Generate Flutter .env
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        APP_ENV: ${{ vars.APP_ENV }}
+        DEBUG: ${{ vars.DEBUG }}
+        ENABLE_DEV_LOGIN: ${{ vars.ENABLE_DEV_LOGIN }}
+        DEV_OTP: ${{ vars.DEV_OTP }}
+        API_BASE_URL: ${{ vars.API_BASE_URL }}
+        MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
+        MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
+      run: |
+        set -euo pipefail
+        cat > .env <<EOF
+        APP_ENV=${APP_ENV}
+        DEBUG=${DEBUG}
+        ENABLE_DEV_LOGIN=${ENABLE_DEV_LOGIN}
+        DEV_OTP=${DEV_OTP}
+        API_BASE_URL=${API_BASE_URL}
+        MSG91_WIDGET_ID=${MSG91_WIDGET_ID}
+        MSG91_WIDGET_AUTH_TOKEN=${MSG91_WIDGET_AUTH_TOKEN}
+        EOF
+
+    - name: Validate Flutter .env
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set -euo pipefail
+        test -f .env
+
+        require_key() {
+          if ! grep -q "^${1}=." .env; then
+            echo "::error::Missing or empty required key: ${1}"
+            exit 1
+          fi
+        }
+
+        require_key APP_ENV
+        require_key DEBUG
+        require_key ENABLE_DEV_LOGIN
+        require_key DEV_OTP
+        require_key API_BASE_URL
+        require_key MSG91_WIDGET_ID
+        require_key MSG91_WIDGET_AUTH_TOKEN
+
+        echo "Flutter .env validated."
