@@ -131,17 +131,6 @@ class _ImportItemsContentState extends ConsumerState<ImportItemsContent> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xl),
-                        const _OrDivider(),
-                        const SizedBox(height: AppSpacing.xl),
-                        _LibraryMethodCard(
-                          isSelected:
-                              _selectedMethod == ImportItemsMethod.itemLibrary,
-                          onTap: () => setState(
-                            () =>
-                                _selectedMethod = ImportItemsMethod.itemLibrary,
-                          ),
-                        ),
                       ],
                     ),
                   ),
