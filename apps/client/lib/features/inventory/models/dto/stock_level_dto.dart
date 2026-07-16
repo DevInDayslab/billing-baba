@@ -14,7 +14,10 @@ abstract class StockLevelDto with _$StockLevelDto {
     @JsonKey(name: 'godown_name') required String godownName,
     required String quantity,
     @JsonKey(name: 'average_cost') required String averageCost,
-    @JsonKey(name: 'is_low_stock') required bool isLowStock, @JsonKey(name: 'created_at') required String createdAt, @JsonKey(name: 'updated_at') required String updatedAt, @JsonKey(name: 'reorder_level') String? reorderLevel,
+    @JsonKey(name: 'is_low_stock') required bool isLowStock,
+    @JsonKey(name: 'created_at') required String createdAt,
+    @JsonKey(name: 'updated_at') required String updatedAt,
+    @JsonKey(name: 'reorder_level') String? reorderLevel,
   }) = _StockLevelDto;
 
   factory StockLevelDto.fromJson(Map<String, dynamic> json) =>

@@ -19,7 +19,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Typed export actions for transaction list modules.
 abstract final class ModuleExportActions {
-  static Future<void> exportSaleInvoices(BuildContext context, WidgetRef ref) async {
+  static Future<void> exportSaleInvoices(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final options = await showSaleInvoiceReportOptionsDialog(context);
     if (options == null || !context.mounted) return;
 
@@ -74,7 +77,9 @@ abstract final class ModuleExportActions {
       loader: () => buildPurchaseDocumentExportSheet(
         ref,
         scope,
-        sheetName: purchaseDocumentExportFilenameBase(scope).replaceAll('_', ' '),
+        sheetName: purchaseDocumentExportFilenameBase(
+          scope,
+        ).replaceAll('_', ' '),
       ),
     );
   }

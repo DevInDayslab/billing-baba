@@ -10,7 +10,9 @@ const purchaseTransactionTableHeaderTextColor = Color(0xFF1E293B);
 
 const purchaseTransactionTableRowHeight = 54.0;
 const purchaseTransactionTableHeaderHeight = 48.0;
-const purchaseTransactionTableCellPadding = EdgeInsets.symmetric(horizontal: 12);
+const purchaseTransactionTableCellPadding = EdgeInsets.symmetric(
+  horizontal: 12,
+);
 
 /// Long-content columns (fixed width).
 const purchaseTransactionDateColWidth = 174.0;
@@ -23,7 +25,8 @@ const purchaseTransactionPartyColMinWidth = 97.0;
 const purchaseTransactionPartyColFlex = 1;
 
 /// @deprecated Use [purchaseTransactionPartyColMinWidth] or flex layout.
-const double purchaseTransactionPartyColWidth = purchaseTransactionPartyColMinWidth;
+const double purchaseTransactionPartyColWidth =
+    purchaseTransactionPartyColMinWidth;
 
 /// Short-content columns (fixed, compact).
 const purchaseTransactionPaymentColWidth = 123.0;
@@ -123,7 +126,9 @@ class PurchaseTransactionTableHeader extends StatelessWidget {
       height: purchaseTransactionTableHeaderHeight,
       decoration: const BoxDecoration(
         color: purchaseTransactionTableHeaderBg,
-        border: Border(bottom: BorderSide(color: purchaseTransactionTableRowBorder)),
+        border: Border(
+          bottom: BorderSide(color: purchaseTransactionTableRowBorder),
+        ),
       ),
       child: child,
     );

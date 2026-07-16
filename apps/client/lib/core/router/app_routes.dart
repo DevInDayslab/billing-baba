@@ -73,7 +73,8 @@ abstract final class AppRoutes {
   static const developerComponentsButtons = '/developer/components/buttons';
   static const developerComponentsInputs = '/developer/components/inputs';
   static const developerComponentsDialogs = '/developer/components/dialogs';
-  static const developerComponentsDataTables = '/developer/components/data-tables';
+  static const developerComponentsDataTables =
+      '/developer/components/data-tables';
   static const developerComponentsTableFilters =
       '/developer/components/table-filters';
   static const developerComponentsBadges = '/developer/components/badges';

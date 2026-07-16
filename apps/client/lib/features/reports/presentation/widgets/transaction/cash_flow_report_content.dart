@@ -253,7 +253,10 @@ class _CashFlowReportContentState extends ConsumerState<CashFlowReportContent> {
   }
 }
 
-List<String> _cashFlowExportRow(ReportTransactionRow row, double runningBalance) {
+List<String> _cashFlowExportRow(
+  ReportTransactionRow row,
+  double runningBalance,
+) {
   return [
     formatReportDate(row.date),
     row.refNo,
@@ -295,18 +298,14 @@ class _CashFlowRow extends StatelessWidget {
             90,
             alignment: Alignment.centerRight,
             child: Text(
-              row.moneyIn > 0
-                  ? formatReportCurrencyCompact(row.moneyIn)
-                  : '',
+              row.moneyIn > 0 ? formatReportCurrencyCompact(row.moneyIn) : '',
             ),
           ),
           ReportAlignedCell.fixed(
             90,
             alignment: Alignment.centerRight,
             child: Text(
-              row.moneyOut > 0
-                  ? formatReportCurrencyCompact(row.moneyOut)
-                  : '',
+              row.moneyOut > 0 ? formatReportCurrencyCompact(row.moneyOut) : '',
             ),
           ),
           ReportAlignedCell.fixed(

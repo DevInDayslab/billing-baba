@@ -24,11 +24,7 @@ export function createPaymentController() {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const query = listPaymentsQuerySchema.parse(request.query);
-        const result = await service.listPayments(
-          businessId,
-          accountId,
-          query,
-        );
+        const result = await service.listPayments(businessId, accountId, query);
         return sendPaginated(reply, result.data, result.meta);
       } catch (error) {
         if (error instanceof ZodError) {

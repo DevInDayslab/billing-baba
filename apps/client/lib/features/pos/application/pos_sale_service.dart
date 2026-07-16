@@ -35,9 +35,9 @@ class PosSaleService {
     required SalesRemoteDataSource remote,
     required PosSessionService sessionService,
     required PosLocalDataSource localDataSource,
-  })  : _remote = remote,
-        _sessionService = sessionService,
-        _localDataSource = localDataSource;
+  }) : _remote = remote,
+       _sessionService = sessionService,
+       _localDataSource = localDataSource;
 
   final SalesRemoteDataSource _remote;
   final PosSessionService _sessionService;
@@ -211,11 +211,11 @@ class PosSaleService {
   }
 
   String _paymentModeToApi(PaymentMode mode) => switch (mode) {
-        PaymentMode.cash => 'cash',
-        PaymentMode.upi => 'upi',
-        PaymentMode.card => 'card',
-        PaymentMode.bank => 'bank_transfer',
-      };
+    PaymentMode.cash => 'cash',
+    PaymentMode.upi => 'upi',
+    PaymentMode.card => 'card',
+    PaymentMode.bank => 'bank_transfer',
+  };
 
   PosRepositoryException _mapError(DioException error) {
     final salesError = mapSalesError(error);
@@ -239,8 +239,7 @@ class PosSaleService {
     if (statusCode == 500) {
       return 'Server error. Please try again.';
     }
-    if (statusCode == null &&
-        message.toLowerCase().contains('connection')) {
+    if (statusCode == null && message.toLowerCase().contains('connection')) {
       return 'No connection. Check your internet and try again.';
     }
     return message;

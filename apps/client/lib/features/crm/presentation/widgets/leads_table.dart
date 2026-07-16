@@ -61,7 +61,9 @@ class LeadsTable extends ConsumerWidget {
                   initialQuery: ref.read(leadSearchQueryProvider),
                   onQueryChanged: (query) {
                     ref.read(leadSearchQueryProvider.notifier).query = query;
-                    ref.read(leadFiltersProvider.notifier).setSearchQuery(query);
+                    ref
+                        .read(leadFiltersProvider.notifier)
+                        .setSearchQuery(query);
                     unawaited(notifier.refresh());
                   },
                 ),
@@ -305,9 +307,8 @@ class _LeadTableRowState extends ConsumerState<_LeadTableRow> {
               width: _checkboxColWidth,
               child: Checkbox(
                 value: isSelected,
-                onChanged: (_) => ref
-                    .read(selectedLeadIdsProvider.notifier)
-                    .toggle(lead.id),
+                onChanged: (_) =>
+                    ref.read(selectedLeadIdsProvider.notifier).toggle(lead.id),
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),

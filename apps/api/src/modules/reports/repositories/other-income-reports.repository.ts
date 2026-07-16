@@ -9,7 +9,7 @@ import type {
 import { resolveRange, toPeriodMeta } from './reports.helpers';
 
 export class OtherIncomeReportsRepository {
-  constructor(private readonly db: Database) {}
+  constructor(readonly _db: Database) {}
 
   private emptyPaginated<T>(query: ReportExtendedQuery): {
     payload: PaginatedRowsPayload<T>;
@@ -25,14 +25,17 @@ export class OtherIncomeReportsRepository {
   }
 
   async getOtherIncome(
-    businessId: string,
+    _businessId: string,
     query: ReportExtendedQuery,
-  ): Promise<{ payload: PaginatedRowsPayload<ReportOtherIncomeRow>; total: number }> {
+  ): Promise<{
+    payload: PaginatedRowsPayload<ReportOtherIncomeRow>;
+    total: number;
+  }> {
     return this.emptyPaginated(query);
   }
 
   async getOtherIncomeByCategory(
-    businessId: string,
+    _businessId: string,
     query: ReportExtendedQuery,
   ): Promise<{
     payload: PaginatedRowsPayload<ReportOtherIncomeCategoryRow>;
@@ -42,7 +45,7 @@ export class OtherIncomeReportsRepository {
   }
 
   async getOtherIncomeByItem(
-    businessId: string,
+    _businessId: string,
     query: ReportExtendedQuery,
   ): Promise<{
     payload: PaginatedRowsPayload<ReportOtherIncomeItemRow>;

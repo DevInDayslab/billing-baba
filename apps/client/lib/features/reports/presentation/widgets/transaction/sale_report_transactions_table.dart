@@ -93,7 +93,10 @@ class SaleReportTransactionsTable extends ConsumerWidget {
                       ),
                     ),
                     headerChildren: const [
-                      ReportAlignedHeaderCell(label: 'Date', width: _dateColWidth),
+                      ReportAlignedHeaderCell(
+                        label: 'Date',
+                        width: _dateColWidth,
+                      ),
                       ReportAlignedHeaderCell(
                         label: 'Invoice no',
                         width: _invoiceColWidth,
@@ -144,14 +147,18 @@ class SaleReportTransactionsTable extends ConsumerWidget {
               page: meta.page,
               totalPages: meta.totalPages,
               onPrevious: meta.page > 1
-                  ? () => ref.read(saleReportProvider.notifier).goToPage(
-                        meta.page - 1,
-                      )
+                  ? () => ref
+                        .read(saleReportProvider.notifier)
+                        .goToPage(
+                          meta.page - 1,
+                        )
                   : null,
               onNext: meta.page < meta.totalPages
-                  ? () => ref.read(saleReportProvider.notifier).goToPage(
-                        meta.page + 1,
-                      )
+                  ? () => ref
+                        .read(saleReportProvider.notifier)
+                        .goToPage(
+                          meta.page + 1,
+                        )
                   : null,
             ),
           ],

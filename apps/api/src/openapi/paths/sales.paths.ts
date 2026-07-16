@@ -5,19 +5,19 @@ import {
 } from '../../modules/sales/sales-document.schema';
 import { salesExamples } from '../examples';
 import {
-  documentActionOperation,
-  documentCrudPaths,
-  getByIdOperation,
-  listOperation,
-  updateOperation,
-} from '../operations';
-import {
   jsonRequestBody,
   okPaginatedResponse,
   okResponse,
   securedOperation,
   standardErrorResponses,
 } from '../helpers';
+import {
+  documentActionOperation,
+  documentCrudPaths,
+  getByIdOperation,
+  listOperation,
+  updateOperation,
+} from '../operations';
 import { Schema } from '../schema-names';
 
 const idParam = {
@@ -122,7 +122,10 @@ export function buildSalesPaths() {
         operationId: 'listPosSessionDocuments',
         parameters: [idParam],
         responses: {
-          200: okPaginatedResponse('POS documents', Schema.SalesDocumentResponse),
+          200: okPaginatedResponse(
+            'POS documents',
+            Schema.SalesDocumentResponse,
+          ),
           ...standardErrorResponses,
         },
       }),

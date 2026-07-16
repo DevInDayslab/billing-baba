@@ -190,11 +190,11 @@ class ReceiptViewWidget extends ConsumerWidget {
   }
 
   static String _paymentModeLabel(PaymentMode mode) => switch (mode) {
-        PaymentMode.cash => 'Cash',
-        PaymentMode.upi => 'UPI',
-        PaymentMode.card => 'Card',
-        PaymentMode.bank => 'Bank',
-      };
+    PaymentMode.cash => 'Cash',
+    PaymentMode.upi => 'UPI',
+    PaymentMode.card => 'Card',
+    PaymentMode.bank => 'Bank',
+  };
 }
 
 class _ItemsTable extends StatelessWidget {
@@ -233,15 +233,27 @@ class _ItemsTable extends StatelessWidget {
             ),
             Padding(
               padding: EdgeInsets.only(bottom: 6),
-              child: Text('Qty', style: headerStyle, textAlign: TextAlign.right),
+              child: Text(
+                'Qty',
+                style: headerStyle,
+                textAlign: TextAlign.right,
+              ),
             ),
             Padding(
               padding: EdgeInsets.only(bottom: 6),
-              child: Text('Rate', style: headerStyle, textAlign: TextAlign.right),
+              child: Text(
+                'Rate',
+                style: headerStyle,
+                textAlign: TextAlign.right,
+              ),
             ),
             Padding(
               padding: EdgeInsets.only(bottom: 6),
-              child: Text('Total', style: headerStyle, textAlign: TextAlign.right),
+              child: Text(
+                'Total',
+                style: headerStyle,
+                textAlign: TextAlign.right,
+              ),
             ),
           ],
         ),

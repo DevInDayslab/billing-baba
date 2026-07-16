@@ -7,8 +7,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'inventory_units_provider.g.dart';
 
-final unitBackendSearchProvider =
-    NotifierProvider<UnitBackendSearch, String>(UnitBackendSearch.new);
+final unitBackendSearchProvider = NotifierProvider<UnitBackendSearch, String>(
+  UnitBackendSearch.new,
+);
 
 class UnitBackendSearch extends Notifier<String> {
   @override
@@ -164,7 +165,9 @@ class InventoryUnits extends _$InventoryUnits {
     }
 
     if (rate <= 0) {
-      return const AddConversionResult(error: 'Conversion rate must be positive');
+      return const AddConversionResult(
+        error: 'Conversion rate must be positive',
+      );
     }
 
     try {

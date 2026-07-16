@@ -1,7 +1,5 @@
 import type { AppConfig } from '../config/app_config';
 import { bearerAuth } from './helpers';
-import { polishOpenApiDocument } from './polish';
-import { buildSchemas } from './schemas';
 import {
   buildAccountingPaths,
   buildDashboardPaths,
@@ -19,6 +17,8 @@ import {
 import { buildPurchasesPaths } from './paths/purchases.paths';
 import { buildReportsPaths } from './paths/reports.paths';
 import { buildSalesPaths } from './paths/sales.paths';
+import { polishOpenApiDocument } from './polish';
+import { buildSchemas } from './schemas';
 
 export function buildOpenApiDocument(config: AppConfig) {
   const schemas = buildSchemas();

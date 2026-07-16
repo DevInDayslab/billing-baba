@@ -78,8 +78,9 @@ class _PaymentPanelState extends ConsumerState<PaymentPanel> {
     });
 
     final selectedModes = cart.payments.map((p) => p.mode).toList();
-    final customerSearchAsync =
-        ref.watch(posCustomerSearchProvider(_debouncedCustomerQuery));
+    final customerSearchAsync = ref.watch(
+      posCustomerSearchProvider(_debouncedCustomerQuery),
+    );
 
     return PosPanel(
       child: Column(
@@ -135,7 +136,8 @@ class _PaymentPanelState extends ConsumerState<PaymentPanel> {
                   const SizedBox(height: AppSpacing.sm),
                   LayoutBuilder(
                     builder: (context, constraints) {
-                      final tileWidth = (constraints.maxWidth - AppSpacing.sm) / 2;
+                      final tileWidth =
+                          (constraints.maxWidth - AppSpacing.sm) / 2;
                       return Wrap(
                         spacing: AppSpacing.sm,
                         runSpacing: AppSpacing.sm,
@@ -170,8 +172,9 @@ class _PaymentPanelState extends ConsumerState<PaymentPanel> {
                         onPressed: () {},
                       ),
                     ),
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     onChanged: (value) {
                       final amount = double.tryParse(value) ?? 0;
                       if (cart.payments.length == 1) {
@@ -283,7 +286,8 @@ class _CustomerSearchResults extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: customers.length,
-            separatorBuilder: (_, _) => const Divider(height: 1, color: posCardBorder),
+            separatorBuilder: (_, _) =>
+                const Divider(height: 1, color: posCardBorder),
             itemBuilder: (context, index) {
               final customer = customers[index];
               return ListTile(
@@ -439,7 +443,10 @@ class _StaticDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return InputDecorator(
       decoration: buildPosFieldDecoration(labelText: label).copyWith(
-        suffixIcon: const Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+        suffixIcon: const Icon(
+          Icons.arrow_drop_down,
+          color: AppColors.textSecondary,
+        ),
       ),
       child: Text(value, style: saleFieldTextStyle.copyWith(fontSize: 13)),
     );

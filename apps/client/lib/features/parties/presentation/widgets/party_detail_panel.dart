@@ -139,7 +139,8 @@ class _PartyDetailHeader extends ConsumerWidget {
 
   String _outstandingBalance() {
     return ledgerAsync.maybeWhen(
-      data: (ledger) => PartyModel.displayOutstanding(ledger.summary.outstanding),
+      data: (ledger) =>
+          PartyModel.displayOutstanding(ledger.summary.outstanding),
       orElse: () => PartyModel.displayOutstanding(party.balance),
     );
   }
@@ -350,7 +351,8 @@ class _PartyLoyaltyPointsBadge extends ConsumerStatefulWidget {
       _PartyLoyaltyPointsBadgeState();
 }
 
-class _PartyLoyaltyPointsBadgeState extends ConsumerState<_PartyLoyaltyPointsBadge> {
+class _PartyLoyaltyPointsBadgeState
+    extends ConsumerState<_PartyLoyaltyPointsBadge> {
   @override
   void initState() {
     super.initState();
@@ -423,7 +425,9 @@ class _PartyLoyaltyPointsBadgeState extends ConsumerState<_PartyLoyaltyPointsBad
 
   @override
   Widget build(BuildContext context) {
-    final balanceAsync = ref.watch(partyLoyaltyBalanceProvider(widget.party.id));
+    final balanceAsync = ref.watch(
+      partyLoyaltyBalanceProvider(widget.party.id),
+    );
     final cached = ref.watch(partyLoyaltyBalanceCacheProvider)[widget.party.id];
 
     return _badgeShell(

@@ -1,11 +1,4 @@
 import type { Database } from '../../../db/client';
-import type { ReportBaseQuery } from '../reports.schema';
-import type {
-  BalanceSheetPayload,
-  ReportBalanceSheetItem,
-  ReportTrialBalanceRow,
-  TrialBalancePayload,
-} from '../reports.types';
 import {
   calculateNetProfit,
   getCashBalanceAsOf,
@@ -23,6 +16,13 @@ import {
   REVENUE_SALES_TYPES,
   SALES_RETURN_TYPE,
 } from '../../../shared/reporting/constants';
+import type { ReportBaseQuery } from '../reports.schema';
+import type {
+  BalanceSheetPayload,
+  ReportBalanceSheetItem,
+  ReportTrialBalanceRow,
+  TrialBalancePayload,
+} from '../reports.types';
 import { resolveRange, toPeriodMeta } from './reports.helpers';
 
 function money(value: number): string {
@@ -161,12 +161,15 @@ export class AccountingReportsRepository {
       trialRow('Sales', 0, salesReturnTotal, salesTotal),
       trialRow('Purchases', 0, purchaseTotal, purchaseReturnTotal),
       trialRow('Expenses', 0, expenseTotal, 0),
-      trialRow('Net Profit', 0, netProfit < 0 ? Math.abs(netProfit) : 0, netProfit > 0 ? netProfit : 0),
+      trialRow(
+        'Net Profit',
+        0,
+        netProfit < 0 ? Math.abs(netProfit) : 0,
+        netProfit > 0 ? netProfit : 0,
+      ),
     ].filter((row) => {
       if (query.q) {
-        return row.account_name
-          .toLowerCase()
-          .includes(query.q!.toLowerCase());
+        return row.account_name.toLowerCase().includes(query.q?.toLowerCase());
       }
       return true;
     });
@@ -216,13 +219,20 @@ export class AccountingReportsRepository {
       getStockValue(this.db, businessId),
       calculateNetProfit(this.db, businessId, range),
       sumPartyOpeningBalances(this.db, businessId),
-      getOutstandingAsOf(this.db, businessId, new Date(range.from.getTime() - 1)),
-      getCashBalanceAsOf(this.db, businessId, new Date(range.from.getTime() - 1)),
+      getOutstandingAsOf(
+        this.db,
+        businessId,
+        new Date(range.from.getTime() - 1),
+      ),
+      getCashBalanceAsOf(
+        this.db,
+        businessId,
+        new Date(range.from.getTime() - 1),
+      ),
       getStockValue(this.db, businessId),
     ]);
 
-    const assetsTotal =
-      cash + outstanding.receivable + stockValue;
+    const assetsTotal = cash + outstanding.receivable + stockValue;
     const liabilitiesTotal = outstanding.payable;
     const equityBeforePlug = assetsTotal - liabilitiesTotal;
     const retainedEarnings = equityBeforePlug - partyOpening - netProfit;
@@ -304,8 +314,7 @@ export class AccountingReportsRepository {
       closing_liabilities: money(liabilitiesAndEquityTotal),
       opening_equity: money(openingEquity),
       closing_equity: money(closingEquity),
-      is_balanced:
-        Math.abs(assetsTotal - liabilitiesAndEquityTotal) < 0.02,
+      is_balanced: Math.abs(assetsTotal - liabilitiesAndEquityTotal) < 0.02,
     };
   }
 }

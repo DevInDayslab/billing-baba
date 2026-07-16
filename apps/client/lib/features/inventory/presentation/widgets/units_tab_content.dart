@@ -45,7 +45,10 @@ class _UnitsTabContentState extends ConsumerState<UnitsTabContent> {
     });
   }
 
-  Future<void> _confirmDeleteUnit(BuildContext context, InventoryUnit unit) async {
+  Future<void> _confirmDeleteUnit(
+    BuildContext context,
+    InventoryUnit unit,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -71,7 +74,9 @@ class _UnitsTabContentState extends ConsumerState<UnitsTabContent> {
         .deleteUnit(unit.id);
     if (!context.mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
@@ -87,12 +92,16 @@ class _UnitsTabContentState extends ConsumerState<UnitsTabContent> {
         unitsAsync: unitsAsync,
         selectedId: selectedId,
         onSearchChanged: _onSearchChanged,
-        onRefresh: () => ref.read(inventoryUnitsProvider.notifier).refresh(
-          searchQuery: ref.read(unitBackendSearchProvider),
-        ),
+        onRefresh: () => ref
+            .read(inventoryUnitsProvider.notifier)
+            .refresh(
+              searchQuery: ref.read(unitBackendSearchProvider),
+            ),
         onUnitSelected: (id) {
           ref.read(selectedUnitIdProvider.notifier).selected = id;
-          unawaited(ref.read(inventoryUnitsProvider.notifier).loadUnitDetail(id));
+          unawaited(
+            ref.read(inventoryUnitsProvider.notifier).loadUnitDetail(id),
+          );
         },
         onAddUnit: () => showAddUnitDialog(context),
         onMenuSelected: (value, unit) {
@@ -222,8 +231,7 @@ class _UnitsListPanel extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(right: AppSpacing.sm),
                         child: InventoryListRowMenu(
-                          onSelected: (value) =>
-                              onMenuSelected(value, unit),
+                          onSelected: (value) => onMenuSelected(value, unit),
                         ),
                       ),
                     ],
@@ -289,9 +297,11 @@ class _UnitDetailPanel extends ConsumerWidget {
                 width: 200,
                 child: InventorySearchField(
                   hint: 'Search',
-                  onChanged: (query) => ref
-                      .read(unitConversionSearchQueryProvider.notifier)
-                      .query = query,
+                  onChanged: (query) =>
+                      ref
+                              .read(unitConversionSearchQueryProvider.notifier)
+                              .query =
+                          query,
                 ),
               ),
             ],
@@ -345,7 +355,10 @@ class _UnitDetailPanel extends ConsumerWidget {
                                 children: [
                                   Text('${conversion.factor}x'),
                                   IconButton(
-                                    icon: const Icon(Icons.delete_outline, size: 18),
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                    ),
                                     tooltip: 'Delete conversion',
                                     onPressed: () async {
                                       final error = await ref
@@ -356,8 +369,9 @@ class _UnitDetailPanel extends ConsumerWidget {
                                           );
                                       if (!context.mounted) return;
                                       if (error != null) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(content: Text(error)),
                                         );
                                       }

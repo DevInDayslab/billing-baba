@@ -8,11 +8,9 @@ import 'package:share_plus/share_plus.dart';
 /// Platform-aware save and share for generated file bytes.
 abstract final class PlatformFileOutput {
   static bool get isDesktop =>
-      !kIsWeb &&
-      (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
+      !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
-  static bool get isMobile =>
-      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  static bool get isMobile => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
   /// Desktop: native save dialog. Returns path or null if cancelled.
   ///

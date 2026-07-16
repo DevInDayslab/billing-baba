@@ -538,7 +538,9 @@ class _PageNumber extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFFEEEEEE) : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.sm),
-          border: isActive ? null : Border.all(color: purchaseTransactionTableCardBorder),
+          border: isActive
+              ? null
+              : Border.all(color: purchaseTransactionTableCardBorder),
         ),
         child: Text(
           '$page',
@@ -552,4 +554,3 @@ class _PageNumber extends StatelessWidget {
     );
   }
 }
-

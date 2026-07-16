@@ -49,19 +49,23 @@ abstract final class InventoryTransactionTableService {
     final sorted = [...filtered];
     sorted.sort((a, b) {
       final comparison = switch (filters.sortColumn) {
-        InventoryTransactionSortColumn.type =>
-          a.transactionType.compareTo(b.transactionType),
-        InventoryTransactionSortColumn.invoiceRef =>
-          _invoiceRefLabel(a).compareTo(_invoiceRefLabel(b)),
-        InventoryTransactionSortColumn.party =>
-          a.partyName.compareTo(b.partyName),
+        InventoryTransactionSortColumn.type => a.transactionType.compareTo(
+          b.transactionType,
+        ),
+        InventoryTransactionSortColumn.invoiceRef => _invoiceRefLabel(
+          a,
+        ).compareTo(_invoiceRefLabel(b)),
+        InventoryTransactionSortColumn.party => a.partyName.compareTo(
+          b.partyName,
+        ),
         InventoryTransactionSortColumn.date => a.date.compareTo(b.date),
-        InventoryTransactionSortColumn.quantity =>
-          a.quantity.compareTo(b.quantity),
-        InventoryTransactionSortColumn.pricePerUnit =>
-          a.pricePerUnit.compareTo(b.pricePerUnit),
-        InventoryTransactionSortColumn.status =>
-          a.status.compareTo(b.status),
+        InventoryTransactionSortColumn.quantity => a.quantity.compareTo(
+          b.quantity,
+        ),
+        InventoryTransactionSortColumn.pricePerUnit => a.pricePerUnit.compareTo(
+          b.pricePerUnit,
+        ),
+        InventoryTransactionSortColumn.status => a.status.compareTo(b.status),
       };
       return ascending ? comparison : -comparison;
     });

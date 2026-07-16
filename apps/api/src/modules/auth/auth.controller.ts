@@ -2,7 +2,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
-import { sendData, sendPaginated } from '../../shared/http/response';
+import { sendData } from '../../shared/http/response';
 import type { ApiDataResponse } from '../../shared/types';
 import {
   loginBodySchema,

@@ -90,8 +90,9 @@ class CartRow extends ConsumerWidget {
                     ),
                   ),
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                    ),
                     child: Text(
                       '${cartItem.quantity}',
                       style: const TextStyle(

@@ -52,8 +52,7 @@ class SaleLineItem {
   final bool isConfirmed;
   final bool priceManuallyOverridden;
 
-  double get _discountedUnitPrice =>
-      pricePerUnit * (1 - discountPercent / 100);
+  double get _discountedUnitPrice => pricePerUnit * (1 - discountPercent / 100);
 
   double get lineSubtotal {
     final base = qty * _discountedUnitPrice;
@@ -278,9 +277,7 @@ class AddSaleFormState {
   }
 
   bool get showLoyaltySection =>
-      partyId != null &&
-      partyId!.isNotEmpty &&
-      loyaltyPointsAvailable > 0;
+      partyId != null && partyId!.isNotEmpty && loyaltyPointsAvailable > 0;
 
   double get displayReceivedAmount {
     if (saleType == SaleType.cash) return paymentAmount;

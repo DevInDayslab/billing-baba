@@ -170,11 +170,11 @@ class _Gstr2ReportContentState extends ConsumerState<Gstr2ReportContent> {
                                   builder: (context, constraints) {
                                     final tableWidth =
                                         constraints.maxWidth.isFinite
-                                            ? math.max(
-                                                constraints.maxWidth,
-                                                _Gstr2ColumnLayout.minWidth,
-                                              )
-                                            : _Gstr2ColumnLayout.minWidth;
+                                        ? math.max(
+                                            constraints.maxWidth,
+                                            _Gstr2ColumnLayout.minWidth,
+                                          )
+                                        : _Gstr2ColumnLayout.minWidth;
 
                                     return SingleChildScrollView(
                                       child: SingleChildScrollView(
@@ -188,9 +188,11 @@ class _Gstr2ReportContentState extends ConsumerState<Gstr2ReportContent> {
                                               const _Gstr2TableHeader(
                                                 headerStyle: _headerStyle,
                                               ),
-                                              for (var i = 0;
-                                                  i < rows.length;
-                                                  i++)
+                                              for (
+                                                var i = 0;
+                                                i < rows.length;
+                                                i++
+                                              )
                                                 ReportAlignedRowStrip(
                                                   index: i,
                                                   child: _Gstr2DataRow(
@@ -235,7 +237,8 @@ class _Gstr2ColumnLayout {
   static const double billDetailsWidth =
       billNoWidth + dateWidth + valueWidth + taxRateWidth + cessWidth;
 
-  static const double minWidth = indexWidth +
+  static const double minWidth =
+      indexWidth +
       gstinWidth +
       partyWidth +
       billNoWidth +
@@ -378,9 +381,7 @@ class _TabButton extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-              color: selected
-                  ? AppColors.textPrimary
-                  : AppColors.textSecondary,
+              color: selected ? AppColors.textPrimary : AppColors.textSecondary,
             ),
           ),
         ),

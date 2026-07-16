@@ -35,7 +35,9 @@ class A4CommercialDocumentTemplate implements PrintTemplate {
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.fromLTRB(40, 40, 40, 52),
           buildBackground: (context) =>
-              CommercialDocumentPdfSections.watermark(document.metadata.status) ??
+              CommercialDocumentPdfSections.watermark(
+                document.metadata.status,
+              ) ??
               pw.SizedBox(),
         ),
         header: (context) {

@@ -47,7 +47,9 @@ class _AddSaleFaPageState extends ConsumerState<AddSaleFaPage> {
   void initState() {
     super.initState();
     if (widget.batchId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeEditForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeEditForm(),
+      );
     } else {
       _initialized = true;
     }
@@ -72,7 +74,9 @@ class _AddSaleFaPageState extends ConsumerState<AddSaleFaPage> {
         addSaleFaFormProvider(sessionKey: activeSessionKey),
         (previous, next) {
           if (previous?.party == next.party) return;
-          ref.read(saleFaTabsProvider().notifier).updateTabLabel(
+          ref
+              .read(saleFaTabsProvider().notifier)
+              .updateTabLabel(
                 tabsState.activeIndex,
                 saleFaTabLabelForForm(
                   saleFaNumber: tabsState.activeTab.saleFaNumber,
@@ -85,8 +89,9 @@ class _AddSaleFaPageState extends ConsumerState<AddSaleFaPage> {
 
     final sessionKey = _sessionKey;
     final isLoading = ref.watch(
-      addSaleFaFormProvider(sessionKey: sessionKey)
-          .select((form) => form.isLoading),
+      addSaleFaFormProvider(
+        sessionKey: sessionKey,
+      ).select((form) => form.isLoading),
     );
 
     if (!_initialized || (widget.batchId != null && isLoading)) {
@@ -313,8 +318,9 @@ class _FormFields extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addSaleFaFormProvider(sessionKey: sessionKey));
-    final notifier =
-        ref.read(addSaleFaFormProvider(sessionKey: sessionKey).notifier);
+    final notifier = ref.read(
+      addSaleFaFormProvider(sessionKey: sessionKey).notifier,
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,8 +367,9 @@ class _BottomActionBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addSaleFaFormProvider(sessionKey: sessionKey));
-    final notifier =
-        ref.read(addSaleFaFormProvider(sessionKey: sessionKey).notifier);
+    final notifier = ref.read(
+      addSaleFaFormProvider(sessionKey: sessionKey).notifier,
+    );
     final isSaving = form.isSaving;
 
     return Padding(

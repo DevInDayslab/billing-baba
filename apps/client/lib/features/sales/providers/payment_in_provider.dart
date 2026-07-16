@@ -207,7 +207,8 @@ List<PaymentInModel> _applyClientFilters(
     if (statusFilter != null && record.status != statusFilter) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && record.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        record.firm != filters.selectedFirm) {
       return false;
     }
     if (filters.selectedUser != 'All Users' &&
@@ -261,7 +262,9 @@ class PaymentInRecords extends _$PaymentInRecords {
   Future<PaginatedPaymentIn> _fetchPage() async {
     final filters = ref.read(paymentInFiltersProvider);
     final service = await ref.read(salesServiceProvider.future);
-    final page = await service.fetchPaymentsPage(_buildPaymentListQuery(filters));
+    final page = await service.fetchPaymentsPage(
+      _buildPaymentListQuery(filters),
+    );
 
     return PaginatedPaymentIn(
       items: _applyClientFilters(page.items, filters),
@@ -631,7 +634,9 @@ class PaymentInForm extends _$PaymentInForm {
           paymentMode: SalesPaymentModes.toApi(payment.paymentType),
           paymentDate: payment.date.toUtc().toIso8601String(),
           referenceNumber: payment.receiptNo,
-          notes: payment.description.trim().isEmpty ? null : payment.description,
+          notes: payment.description.trim().isEmpty
+              ? null
+              : payment.description,
           allocations: allocations,
         ),
       );

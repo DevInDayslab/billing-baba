@@ -393,7 +393,10 @@ class InventoryService {
       final dto = await _repository.updateItemImage(
         itemId,
         imageId,
-        UpdateItemImageRequest(imageUrl: imageUrl?.trim(), isPrimary: isPrimary),
+        UpdateItemImageRequest(
+          imageUrl: imageUrl?.trim(),
+          isPrimary: isPrimary,
+        ),
       );
       return ItemImageMapper.fromDto(dto);
     } on DioException catch (error) {
@@ -633,7 +636,8 @@ class InventoryService {
     AddItemFormState form,
     List<InventoryUnit> units,
   ) async {
-    final baseUnit = _resolveUnit(form.baseUnitId, units) ??
+    final baseUnit =
+        _resolveUnit(form.baseUnitId, units) ??
         (form.itemType == ItemType.service
             ? resolveDefaultServiceUnit(units)
             : null);
@@ -641,7 +645,9 @@ class InventoryService {
       throw const InventoryException('Please select a base unit.');
     }
 
-    final defaultGodown = form.godownId == null ? await getDefaultGodown() : null;
+    final defaultGodown = form.godownId == null
+        ? await getDefaultGodown()
+        : null;
     final request = AddItemFormMapper.toCreateRequest(
       form,
       baseUnitShortName: baseUnit.shortName,
@@ -664,7 +670,8 @@ class InventoryService {
     AddItemFormState form,
     List<InventoryUnit> units,
   ) async {
-    final baseUnit = _resolveUnit(form.baseUnitId, units) ??
+    final baseUnit =
+        _resolveUnit(form.baseUnitId, units) ??
         (form.itemType == ItemType.service
             ? resolveDefaultServiceUnit(units)
             : null);
@@ -743,9 +750,7 @@ class InventoryService {
           return (response.movements, response.meta.total);
         },
       );
-      return movements
-          .map(MovementMapper.toProductTransaction)
-          .toList()
+      return movements.map(MovementMapper.toProductTransaction).toList()
         ..sort((a, b) => b.date.compareTo(a.date));
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);

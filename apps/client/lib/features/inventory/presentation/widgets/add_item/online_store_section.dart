@@ -31,8 +31,9 @@ class OnlineStoreSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final priceLabel =
-        _isProduct ? 'Online Store Price' : 'Online Service Price';
+    final priceLabel = _isProduct
+        ? 'Online Store Price'
+        : 'Online Service Price';
 
     return FormGrid(
       cells: [

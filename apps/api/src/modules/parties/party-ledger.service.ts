@@ -1,9 +1,9 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
-import type { PartyLedgerQuery } from './party-ledger.schema';
-import { PartyLedgerRepository } from './party-ledger.repository';
-import type { PartyLedgerPayload } from './party-ledger.types';
 import { PartyRepository } from './party.repository';
+import { PartyLedgerRepository } from './party-ledger.repository';
+import type { PartyLedgerQuery } from './party-ledger.schema';
+import type { PartyLedgerPayload } from './party-ledger.types';
 
 export class PartyLedgerService {
   private readonly repository: PartyLedgerRepository;
@@ -30,15 +30,11 @@ export class PartyLedgerService {
   ): Promise<PartyLedgerPayload> {
     await this.assertBusinessAccess(businessId, accountId);
 
-    const payload = await this.repository.getPartyLedger(
-      businessId,
-      partyId,
-      {
-        filter: query.filter,
-        from: query.from,
-        to: query.to,
-      },
-    );
+    const payload = await this.repository.getPartyLedger(businessId, partyId, {
+      filter: query.filter,
+      from: query.from,
+      to: query.to,
+    });
 
     if (!payload) {
       throw new AppError('NOT_FOUND', 'Party not found', 404);

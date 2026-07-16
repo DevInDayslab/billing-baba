@@ -20,7 +20,12 @@ class SalesDocumentMapper {
         ? 0.0
         : (amount - paid).clamp(0.0, double.infinity);
     final status = _mapPaymentStatus(documentStatus, amount, paid);
-    final paymentType = _mapPaymentType(documentStatus, amount, paid, dto.paymentMode);
+    final paymentType = _mapPaymentType(
+      documentStatus,
+      amount,
+      paid,
+      dto.paymentMode,
+    );
 
     return SaleInvoiceModel(
       id: dto.id,
@@ -101,9 +106,7 @@ class SalesDocumentMapper {
       return 'Credit';
     }
     if (amount > 0 && paid >= amount) {
-      return paymentMode != null
-          ? SalesPaymentModes.toUi(paymentMode)
-          : 'Cash';
+      return paymentMode != null ? SalesPaymentModes.toUi(paymentMode) : 'Cash';
     }
     return 'Credit';
   }

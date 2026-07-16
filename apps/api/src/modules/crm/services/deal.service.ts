@@ -85,8 +85,7 @@ export class DealService {
       stage: input.stage,
       accountName: input.account_name ?? null,
       assignedTo: input.assigned_to ?? null,
-      amount:
-        input.amount !== undefined ? String(input.amount) : undefined,
+      amount: input.amount !== undefined ? String(input.amount) : undefined,
       expectedCloseDate: input.expected_close_date ?? null,
       description: input.description ?? null,
       createdBy: userId ?? null,
@@ -108,8 +107,7 @@ export class DealService {
       stage: input.stage,
       accountName: input.account_name,
       assignedTo: input.assigned_to,
-      amount:
-        input.amount !== undefined ? String(input.amount) : undefined,
+      amount: input.amount !== undefined ? String(input.amount) : undefined,
       expectedCloseDate: input.expected_close_date,
       description: input.description,
       updatedBy: userId ?? null,

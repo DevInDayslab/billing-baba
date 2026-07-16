@@ -57,7 +57,7 @@ class InventoryItemWorkspace extends ConsumerStatefulWidget {
   final ValueChanged<String> onBackendSearchChanged;
   final ValueChanged<String> onSelectedIdChanged;
   final void Function(String previousId, String nextId)
-      onSelectionChangedSideEffects;
+  onSelectionChangedSideEffects;
   final Future<void> Function() onRefresh;
   final VoidCallback onAddPressed;
   final void Function(String value, InventoryItem item) onMenuSelected;

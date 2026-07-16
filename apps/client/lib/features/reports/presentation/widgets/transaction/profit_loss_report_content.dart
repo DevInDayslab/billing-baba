@@ -33,114 +33,120 @@ class _ProfitLossReportContentState
       data: (report) {
         final items = report.items;
         return ColoredBox(
-      color: AppColors.background,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const ReportDateRangeBar(
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ReportIconActionButton(
-                    icon: Icons.picture_as_pdf_outlined,
-                    tooltip: 'Export PDF',
-                  ),
-                  ReportIconActionButton(
-                    icon: Icons.print_outlined,
-                    tooltip: 'Print',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ReportCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.sm,
-                    ),
-                    child: Text(
-                      'PROFIT AND LOSS REPORT',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A237E),
-                        letterSpacing: 0.5,
+          color: AppColors.background,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const ReportDateRangeBar(
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ReportIconActionButton(
+                        icon: Icons.picture_as_pdf_outlined,
+                        tooltip: 'Export PDF',
                       ),
-                    ),
+                      ReportIconActionButton(
+                        icon: Icons.print_outlined,
+                        tooltip: 'Print',
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                    ),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'View :',
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ReportCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          AppSpacing.md,
+                          AppSpacing.md,
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                        ),
+                        child: Text(
+                          'PROFIT AND LOSS REPORT',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A237E),
+                            letterSpacing: 0.5,
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Radio<String>(
-                          value: 'Vyapar',
-                          groupValue: _viewMode,
-                          onChanged: (v) => setState(() => _viewMode = v!),
-                          visualDensity: VisualDensity.compact,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
                         ),
-                        const Text('Vyapar', style: TextStyle(fontSize: 13)),
-                        const SizedBox(width: AppSpacing.sm),
-                        Radio<String>(
-                          value: 'Accounting',
-                          groupValue: _viewMode,
-                          onChanged: (v) => setState(() => _viewMode = v!),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        const Text('Accounting', style: TextStyle(fontSize: 13)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  const Divider(height: 1, color: reportCardBorder),
-                  ReportSyncScrollTable(
-                    minWidth: 480,
-                    headerChildren: const [
-                      Expanded(
-                        child: ReportAlignedHeaderCell(
-                          label: 'Particulars',
-                          showFilter: false,
+                        child: Row(
+                          children: [
+                            const Text(
+                              'View :',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Radio<String>(
+                              value: 'Vyapar',
+                              groupValue: _viewMode,
+                              onChanged: (v) => setState(() => _viewMode = v!),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            const Text(
+                              'Vyapar',
+                              style: TextStyle(fontSize: 13),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Radio<String>(
+                              value: 'Accounting',
+                              groupValue: _viewMode,
+                              onChanged: (v) => setState(() => _viewMode = v!),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            const Text(
+                              'Accounting',
+                              style: TextStyle(fontSize: 13),
+                            ),
+                          ],
                         ),
                       ),
-                      ReportAlignedHeaderCell(
-                        label: 'Amount',
-                        width: 120,
-                        alignment: Alignment.centerRight,
-                        showFilter: false,
+                      const SizedBox(height: AppSpacing.sm),
+                      const Divider(height: 1, color: reportCardBorder),
+                      ReportSyncScrollTable(
+                        minWidth: 480,
+                        headerChildren: const [
+                          Expanded(
+                            child: ReportAlignedHeaderCell(
+                              label: 'Particulars',
+                              showFilter: false,
+                            ),
+                          ),
+                          ReportAlignedHeaderCell(
+                            label: 'Amount',
+                            width: 120,
+                            alignment: Alignment.centerRight,
+                            showFilter: false,
+                          ),
+                        ],
+                        rows: [
+                          for (var i = 0; i < items.length; i++)
+                            ReportAlignedRowStrip(
+                              index: i,
+                              child: _ProfitLossRow(item: items[i], index: i),
+                            ),
+                        ],
                       ),
                     ],
-                    rows: [
-                      for (var i = 0; i < items.length; i++)
-                        ReportAlignedRowStrip(
-                          index: i,
-                          child: _ProfitLossRow(item: items[i], index: i),
-                        ),
-                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
       },
     );
   }

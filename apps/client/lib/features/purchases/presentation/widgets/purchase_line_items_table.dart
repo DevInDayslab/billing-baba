@@ -440,8 +440,7 @@ class _LineItemRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier =
-        ref.read(addPurchaseFormProvider(billId: billId).notifier);
+    final notifier = ref.read(addPurchaseFormProvider(billId: billId).notifier);
 
     return SizedBox(
       height: _rowHeight,

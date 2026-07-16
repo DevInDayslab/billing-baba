@@ -14,8 +14,9 @@ class InventoryMovementTypeBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final type = InventoryMovementTypeMapper.fromRaw(movementType);
-    final (background, foreground) =
-        InventoryMovementTypeMapper.badgeColors(type);
+    final (background, foreground) = InventoryMovementTypeMapper.badgeColors(
+      type,
+    );
     final text = label ?? InventoryMovementTypeMapper.label(type);
 
     return Container(

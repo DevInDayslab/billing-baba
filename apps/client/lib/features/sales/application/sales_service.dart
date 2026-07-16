@@ -79,20 +79,15 @@ class SalesService {
           .toList();
 
       final total = response.meta.total;
-      final totalPages = total == 0
-          ? 1
-          : (total / query.limit).ceil();
+      final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
 
       final summaryDto = response.summary;
       final summary = summaryDto == null
           ? null
           : SaleInvoiceSummaryData(
-              totalSalesAmount:
-                  double.tryParse(summaryDto.totalAmount) ?? 0,
-              receivedAmount:
-                  double.tryParse(summaryDto.receivedAmount) ?? 0,
-              balanceAmount:
-                  double.tryParse(summaryDto.balanceAmount) ?? 0,
+              totalSalesAmount: double.tryParse(summaryDto.totalAmount) ?? 0,
+              receivedAmount: double.tryParse(summaryDto.receivedAmount) ?? 0,
+              balanceAmount: double.tryParse(summaryDto.balanceAmount) ?? 0,
             );
 
       return PaginatedSaleInvoices(
@@ -144,9 +139,7 @@ class SalesService {
           .toList();
 
       final total = response.meta.total;
-      final totalPages = total == 0
-          ? 1
-          : (total / query.limit).ceil();
+      final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
 
       return PaginatedPaymentIn(
         items: items,
@@ -362,10 +355,9 @@ class SalesService {
         quantity: line.qty.toStringAsFixed(4),
         unit: line.unit,
         unitPrice: line.pricePerUnit.toStringAsFixed(4),
-        discountAmount: (line.qty *
-                line.pricePerUnit *
-                (line.discountPercent / 100))
-            .toStringAsFixed(4),
+        discountAmount:
+            (line.qty * line.pricePerUnit * (line.discountPercent / 100))
+                .toStringAsFixed(4),
         taxRate: line.taxPercent.toStringAsFixed(4),
         taxType: line.taxPercent > 0 ? 'cgst_sgst' : 'none',
         sortOrder: i,
@@ -399,7 +391,6 @@ class SalesService {
       }
     }
   }
-
 
   Future<CreateAndFinalizeSaleResult> createAndFinalizeSale(
     AddSaleFormState form, {
@@ -454,8 +445,7 @@ class SalesService {
       return CreateAndFinalizeSaleResult(
         document: finalized,
         loyalty: finalizeResult.loyalty,
-        earnedLoyaltyPoints:
-            finalizeResult.loyalty?.earnedPointsInt ?? 0,
+        earnedLoyaltyPoints: finalizeResult.loyalty?.earnedPointsInt ?? 0,
       );
     } on DioException catch (error) {
       throw mapSalesError(error);
@@ -552,7 +542,9 @@ class SalesService {
       if (remaining <= 0) break;
       if (invoice.balance <= 0) continue;
 
-      final allocate = remaining < invoice.balance ? remaining : invoice.balance;
+      final allocate = remaining < invoice.balance
+          ? remaining
+          : invoice.balance;
       allocations.add(
         PaymentAllocationRequest(
           salesDocumentId: invoice.id,

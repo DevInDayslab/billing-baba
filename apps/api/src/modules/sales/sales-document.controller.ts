@@ -1,13 +1,12 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import { AppError } from '../../shared/errors/app-error';
-import { sendData, sendPaginated } from '../../shared/http/response';
 import { processedIdempotencyKeys } from '../../shared/http/idempotency';
+import { sendData, sendPaginated } from '../../shared/http/response';
 import {
   formatZodError,
   requireAuthContext,
 } from '../inventory/inventory.controller-helpers';
-import { SalesDocumentService } from './sales-document.service';
 import {
   brandSwapBodySchema,
   convertSalesDocumentBodySchema,
@@ -21,11 +20,12 @@ import {
   posSessionIdParamSchema,
   salesDocumentIdParamSchema,
   salesLineIdParamSchema,
-  updatePosSessionBodySchema,
   updateDocumentSequenceBodySchema,
+  updatePosSessionBodySchema,
   updateSalesDocumentBodySchema,
   updateSalesLineBodySchema,
 } from './sales-document.schema';
+import { SalesDocumentService } from './sales-document.service';
 
 export function createSalesDocumentController() {
   const service = new SalesDocumentService();

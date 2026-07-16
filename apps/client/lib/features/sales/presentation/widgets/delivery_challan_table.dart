@@ -74,18 +74,22 @@ class DeliveryChallanTable extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 OutlinedButton(
-                  onPressed: () => _handleBulkConvert(context, ref, paginated.items),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ).copyWith(
-                    foregroundColor: const WidgetStatePropertyAll(_bulkConvertColor),
-                    side: const WidgetStatePropertyAll(
-                      BorderSide(color: _bulkConvertColor),
-                    ),
-                  ),
+                  onPressed: () =>
+                      _handleBulkConvert(context, ref, paginated.items),
+                  style:
+                      OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ).copyWith(
+                        foregroundColor: const WidgetStatePropertyAll(
+                          _bulkConvertColor,
+                        ),
+                        side: const WidgetStatePropertyAll(
+                          BorderSide(color: _bulkConvertColor),
+                        ),
+                      ),
                   child: const Text(
                     'Bulk Convert To Sale',
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
@@ -152,8 +156,7 @@ class DeliveryChallanTable extends ConsumerWidget {
   ) async {
     final openChallans = items
         .where(
-          (challan) =>
-              challan.documentStatus == SalesDocumentStatus.finalized,
+          (challan) => challan.documentStatus == SalesDocumentStatus.finalized,
         )
         .toList();
 
@@ -244,9 +247,8 @@ class _ChallanTransactionsTableState
     final columns = _ChallanTableColumns.build(
       context: context,
       ref: ref,
-      onStatusFilter: (status) => ref
-          .read(deliveryChallanFiltersProvider.notifier)
-          .setStatus(status),
+      onStatusFilter: (status) =>
+          ref.read(deliveryChallanFiltersProvider.notifier).setStatus(status),
     );
 
     return Padding(

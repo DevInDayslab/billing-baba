@@ -26,11 +26,15 @@ class AddExpenseFooter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addExpenseFormProvider(expenseId: expenseId));
-    final notifier =
-        ref.read(addExpenseFormProvider(expenseId: expenseId).notifier);
-    final totalTax = ref.watch(addExpenseTotalTaxProvider(expenseId: expenseId));
-    final grandTotal =
-        ref.watch(addExpenseGrandTotalProvider(expenseId: expenseId));
+    final notifier = ref.read(
+      addExpenseFormProvider(expenseId: expenseId).notifier,
+    );
+    final totalTax = ref.watch(
+      addExpenseTotalTaxProvider(expenseId: expenseId),
+    );
+    final grandTotal = ref.watch(
+      addExpenseGrandTotalProvider(expenseId: expenseId),
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -119,8 +119,7 @@ class _PurchaseFaFilterBarState extends ConsumerState<PurchaseFaFilterBar> {
         ),
         const SizedBox(width: AppSpacing.md),
         TextButton.icon(
-          onPressed: () =>
-              ModuleExportActions.exportFixedAssets(context, ref),
+          onPressed: () => ModuleExportActions.exportFixedAssets(context, ref),
           icon: const Icon(Icons.table_chart_outlined, size: 18),
           label: const Text('Excel Report'),
         ),

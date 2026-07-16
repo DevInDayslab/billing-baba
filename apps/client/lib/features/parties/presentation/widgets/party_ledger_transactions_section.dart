@@ -74,12 +74,14 @@ class PartyTransactionTableState {
       sortColumn: sortColumn ?? this.sortColumn,
       sortDirection: sortDirection ?? this.sortDirection,
       typeFilter: typeFilter != null ? typeFilter() : this.typeFilter,
-      referenceFilter:
-          referenceFilter != null ? referenceFilter() : this.referenceFilter,
+      referenceFilter: referenceFilter != null
+          ? referenceFilter()
+          : this.referenceFilter,
       dateFilter: dateFilter != null ? dateFilter() : this.dateFilter,
       totalFilter: totalFilter != null ? totalFilter() : this.totalFilter,
-      balanceFilter:
-          balanceFilter != null ? balanceFilter() : this.balanceFilter,
+      balanceFilter: balanceFilter != null
+          ? balanceFilter()
+          : this.balanceFilter,
       statusFilter: statusFilter != null ? statusFilter() : this.statusFilter,
     );
   }
@@ -244,10 +246,12 @@ class _PartyLedgerTransactionsSectionState
           PartyTransactionSortColumn.reference =>
             (a.referenceNumber ?? '').compareTo(b.referenceNumber ?? ''),
           PartyTransactionSortColumn.date => a.date.compareTo(b.date),
-          PartyTransactionSortColumn.total =>
-            _transactionTotal(a).compareTo(_transactionTotal(b)),
-          PartyTransactionSortColumn.balance =>
-            a.balanceAfter.compareTo(b.balanceAfter),
+          PartyTransactionSortColumn.total => _transactionTotal(
+            a,
+          ).compareTo(_transactionTotal(b)),
+          PartyTransactionSortColumn.balance => a.balanceAfter.compareTo(
+            b.balanceAfter,
+          ),
           PartyTransactionSortColumn.status => _transactionStatus(
             a,
           ).compareTo(_transactionStatus(b)),

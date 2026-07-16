@@ -411,8 +411,7 @@ class PartyService {
         PartyListFilter.active => party.isActive,
         PartyListFilter.inactive => !party.isActive,
       };
-    }).toList()
-      ..sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
+    }).toList()..sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
     return filtered;
   }
 

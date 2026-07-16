@@ -21,16 +21,14 @@ class PosCartState {
   final String priceListLabel;
   final double billDiscountPercent;
 
-  double get subtotal =>
-      items.fold(0, (sum, item) => sum + item.grossTotal);
+  double get subtotal => items.fold(0, (sum, item) => sum + item.grossTotal);
 
   double get totalDiscount =>
       items.fold(0, (sum, item) => sum + item.discountAmount);
 
   double get taxableAmount => subtotal - totalDiscount;
 
-  double get billDiscountAmount =>
-      taxableAmount * billDiscountPercent / 100;
+  double get billDiscountAmount => taxableAmount * billDiscountPercent / 100;
 
   double get taxableAfterBillDiscount => taxableAmount - billDiscountAmount;
 
@@ -49,8 +47,7 @@ class PosCartState {
   double get totalPayable =>
       subtotal - totalDiscount - billDiscountAmount + totalTax + roundOff;
 
-  double get totalPaid =>
-      payments.fold(0, (sum, entry) => sum + entry.amount);
+  double get totalPaid => payments.fold(0, (sum, entry) => sum + entry.amount);
 
   double get balance => totalPaid - totalPayable;
 
@@ -70,8 +67,9 @@ class PosCartState {
   }) {
     return PosCartState(
       items: items ?? this.items,
-      customerName:
-          clearCustomerName ? null : (customerName ?? this.customerName),
+      customerName: clearCustomerName
+          ? null
+          : (customerName ?? this.customerName),
       payments: payments ?? this.payments,
       heldBills: heldBills ?? this.heldBills,
       warehouseLabel: warehouseLabel ?? this.warehouseLabel,
@@ -83,8 +81,7 @@ class PosCartState {
 
 double heldBillTotal(List<CartItem> items) {
   final subtotal = items.fold(0.0, (sum, item) => sum + item.grossTotal);
-  final discount =
-      items.fold(0.0, (sum, item) => sum + item.discountAmount);
+  final discount = items.fold(0.0, (sum, item) => sum + item.discountAmount);
   final taxable = subtotal - discount;
   final tax = taxable * 0.18;
   final beforeRound = taxable + tax;

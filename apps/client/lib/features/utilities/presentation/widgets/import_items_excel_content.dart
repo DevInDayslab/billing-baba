@@ -8,7 +8,8 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_s
 import 'package:billing_baba/features/utilities/application/import_items_excel_parser.dart';
 import 'package:billing_baba/features/utilities/models/import_item_preview_row.dart';
 import 'package:billing_baba/features/utilities/providers/import_items_excel_provider.dart';
-import 'package:justkawal_excel_updated/justkawal_excel_updated.dart' hide Border;
+import 'package:justkawal_excel_updated/justkawal_excel_updated.dart'
+    hide Border;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -134,7 +135,9 @@ class _ImportItemsExcelContentState extends State<ImportItemsExcelContent> {
                         );
                         final uploadPanel = _UploadPanel(
                           fileName: state.isParsing ? null : state.fileName,
-                          onBrowse: state.isParsing ? null : () => _pickFile(ref),
+                          onBrowse: state.isParsing
+                              ? null
+                              : () => _pickFile(ref),
                           minHeight: useColumn ? 280 : null,
                         );
 
@@ -220,17 +223,28 @@ class _ImportItemsExcelContentState extends State<ImportItemsExcelContent> {
     for (var i = 0; i < ImportItemsExcelParser.templateHeaders.length; i++) {
       sheet
           .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
-          .value = TextCellValue(ImportItemsExcelParser.templateHeaders[i]);
+          .value = TextCellValue(
+        ImportItemsExcelParser.templateHeaders[i],
+      );
     }
 
-    for (var rowIndex = 0; rowIndex < ImportItemsExcelParser.sampleRows.length; rowIndex++) {
+    for (
+      var rowIndex = 0;
+      rowIndex < ImportItemsExcelParser.sampleRows.length;
+      rowIndex++
+    ) {
       final sampleRow = ImportItemsExcelParser.sampleRows[rowIndex];
       for (var colIndex = 0; colIndex < sampleRow.length; colIndex++) {
         final cellValue = sampleRow[colIndex];
         final excelRow = rowIndex + 1;
         final parsed = double.tryParse(cellValue);
         sheet
-            .cell(CellIndex.indexByColumnRow(columnIndex: colIndex, rowIndex: excelRow))
+            .cell(
+              CellIndex.indexByColumnRow(
+                columnIndex: colIndex,
+                rowIndex: excelRow,
+              ),
+            )
             .value = parsed != null && colIndex >= 2
             ? DoubleCellValue(parsed)
             : TextCellValue(cellValue);
@@ -268,7 +282,9 @@ class _ImportItemsExcelContentState extends State<ImportItemsExcelContent> {
       await ref.read(importItemsExcelProvider.notifier).parseBytes(bytes);
     } on Object catch (error) {
       if (!mounted) return;
-      ref.read(importItemsExcelProvider.notifier).cancelParsing(
+      ref
+          .read(importItemsExcelProvider.notifier)
+          .cancelParsing(
             error: 'Failed to read file: $error',
           );
       ScaffoldMessenger.of(context).showSnackBar(
@@ -289,8 +305,9 @@ class _ImportItemsExcelContentState extends State<ImportItemsExcelContent> {
     }
 
     try {
-      final result =
-          await ref.read(importItemsExcelProvider.notifier).confirmImport();
+      final result = await ref
+          .read(importItemsExcelProvider.notifier)
+          .confirmImport();
       if (!mounted) return;
 
       if (result == null) {
@@ -332,7 +349,9 @@ class _ImportItemsExcelContentState extends State<ImportItemsExcelContent> {
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                ...result.errors.take(5).map(
+                ...result.errors
+                    .take(5)
+                    .map(
                       (error) => Padding(
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Text(
@@ -553,7 +572,8 @@ class _StepBlock extends StatelessWidget {
 
 class _UploadPanel extends StatelessWidget {
   const _UploadPanel({
-    required this.onBrowse, this.fileName,
+    required this.onBrowse,
+    this.fileName,
     this.minHeight,
   });
 
@@ -1056,9 +1076,10 @@ class _PreviewTable extends StatelessWidget {
               DataColumn(
                 label: Checkbox(
                   value: allValidSelected,
-                  onChanged: rows.any(
-                    (row) => row.status == ImportRowStatus.valid,
-                  )
+                  onChanged:
+                      rows.any(
+                        (row) => row.status == ImportRowStatus.valid,
+                      )
                       ? (value) => onSelectAllValid(value ?? false)
                       : null,
                 ),

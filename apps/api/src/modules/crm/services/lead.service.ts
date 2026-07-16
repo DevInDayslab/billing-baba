@@ -7,7 +7,11 @@ import type {
   ListLeadsQuery,
   UpdateLeadBody,
 } from '../lead.schema';
-import type { LeadActivityRecord, LeadRecord, LeadWithActivitiesRecord } from '../lead.types';
+import type {
+  LeadActivityRecord,
+  LeadRecord,
+  LeadWithActivitiesRecord,
+} from '../lead.types';
 
 export class LeadService {
   private readonly repository: LeadRepository;

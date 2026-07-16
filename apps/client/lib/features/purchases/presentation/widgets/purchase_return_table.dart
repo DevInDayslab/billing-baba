@@ -635,7 +635,9 @@ class _TableHeaderRow extends ConsumerWidget {
             label: 'STATUS',
             kind: PurchaseColumnFilterKind.status,
             headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnStatusFilterIsActive(filters.selectedStatus),
+            isActive: purchaseColumnStatusFilterIsActive(
+              filters.selectedStatus,
+            ),
             columns: columns,
             actions: actions,
             partyOptions: partyOptions,

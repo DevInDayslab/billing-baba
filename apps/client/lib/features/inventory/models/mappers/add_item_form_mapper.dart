@@ -30,7 +30,9 @@ abstract final class AddItemFormMapper {
 
     return CreateItemRequest(
       name: form.itemName.trim(),
-      description: form.description.trim().isEmpty ? null : form.description.trim(),
+      description: form.description.trim().isEmpty
+          ? null
+          : form.description.trim(),
       itemType: form.itemType == ItemType.service ? 'service' : 'product',
       hsnCode: form.hsn.trim().isEmpty ? null : form.hsn.trim(),
       barcode: form.itemCode.trim().isEmpty ? null : form.itemCode.trim(),
@@ -65,8 +67,7 @@ abstract final class AddItemFormMapper {
       barcode: form.itemCode.trim(),
       categoryId: CategoryMapper.toApiCategoryId(form.categoryId),
       clearCategory:
-          form.categoryId == null ||
-          form.categoryId == uncategorizedCategoryId,
+          form.categoryId == null || form.categoryId == uncategorizedCategoryId,
       brandId: form.brandId,
       clearBrand: form.brandId == null,
       baseUnit: baseUnitShortName,

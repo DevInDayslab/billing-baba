@@ -204,8 +204,9 @@ class ReportQuery {
       itemId: clearItemId ? null : (itemId ?? this.itemId),
       categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
       paymentMode: clearPaymentMode ? null : (paymentMode ?? this.paymentMode),
-      documentType:
-          clearDocumentType ? null : (documentType ?? this.documentType),
+      documentType: clearDocumentType
+          ? null
+          : (documentType ?? this.documentType),
       partyGroup: clearPartyGroup ? null : (partyGroup ?? this.partyGroup),
       bankName: clearBankName ? null : (bankName ?? this.bankName),
       taxRate: clearTaxRate ? null : (taxRate ?? this.taxRate),
@@ -340,8 +341,9 @@ class ReportFiltersState {
       itemId: clearItemId ? null : (itemId ?? this.itemId),
       categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
       paymentMode: clearPaymentMode ? null : (paymentMode ?? this.paymentMode),
-      documentType:
-          clearDocumentType ? null : (documentType ?? this.documentType),
+      documentType: clearDocumentType
+          ? null
+          : (documentType ?? this.documentType),
       partyGroup: clearPartyGroup ? null : (partyGroup ?? this.partyGroup),
       bankName: clearBankName ? null : (bankName ?? this.bankName),
       taxRate: clearTaxRate ? null : (taxRate ?? this.taxRate),

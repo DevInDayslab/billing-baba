@@ -111,9 +111,10 @@ class LowStockSummaryReportContent extends ConsumerWidget {
                           children: [
                             Checkbox(
                               value: filters.inStockOnly,
-                              onChanged: (value) => filterNotifier.setInStockOnly(
-                                value ?? false,
-                              ),
+                              onChanged: (value) =>
+                                  filterNotifier.setInStockOnly(
+                                    value ?? false,
+                                  ),
                               visualDensity: VisualDensity.compact,
                             ),
                             const Text(
@@ -260,8 +261,7 @@ class LowStockSummaryReportContent extends ConsumerWidget {
                                                 alignment:
                                                     Alignment.centerRight,
                                                 child: Text(
-                                                  rows[i]
-                                                      .minStock
+                                                  rows[i].minStock
                                                       .toStringAsFixed(0),
                                                 ),
                                               ),
@@ -270,8 +270,7 @@ class LowStockSummaryReportContent extends ConsumerWidget {
                                                 alignment:
                                                     Alignment.centerRight,
                                                 child: Text(
-                                                  rows[i]
-                                                      .currentStock
+                                                  rows[i].currentStock
                                                       .toStringAsFixed(0),
                                                 ),
                                               ),

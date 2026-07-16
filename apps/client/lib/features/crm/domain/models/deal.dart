@@ -82,8 +82,7 @@ extension DealStageX on DealStage {
   bool get isWon => this == DealStage.closedWon;
 
   bool get isLost =>
-      this == DealStage.closedLost ||
-      this == DealStage.closedLostToCompetition;
+      this == DealStage.closedLost || this == DealStage.closedLostToCompetition;
 
   String get wireValue => switch (this) {
     DealStage.qualification => 'qualification',

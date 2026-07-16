@@ -201,7 +201,10 @@ class _TableHeaderRow extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          SizedBox(width: _dateColWidth, child: Text('DATE', style: _headerStyle)),
+          SizedBox(
+            width: _dateColWidth,
+            child: Text('DATE', style: _headerStyle),
+          ),
           SizedBox(
             width: _partyColWidth,
             child: Text('PARTY', style: _headerStyle),

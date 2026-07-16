@@ -374,9 +374,7 @@ class _Header extends StatelessWidget {
                         children: [
                           Text(
                             'Company List',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
+                            style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
@@ -397,7 +395,11 @@ class _Header extends StatelessWidget {
                     const SizedBox(width: AppSpacing.md),
                     FilledButton.icon(
                       onPressed: onCreate,
-                      icon: const Icon(Icons.add, size: 18, color: Colors.white),
+                      icon: const Icon(
+                        Icons.add,
+                        size: 18,
+                        color: Colors.white,
+                      ),
                       label: const Text(
                         'New Company',
                         style: TextStyle(color: Colors.white),
@@ -426,8 +428,7 @@ class _Header extends StatelessWidget {
                       onChanged: (_) => onSearchChanged(),
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                       decoration: InputDecoration(
-                        hintText:
-                            'Search companies by name, GSTIN or owner...',
+                        hintText: 'Search companies by name, GSTIN or owner...',
                         hintStyle: TextStyle(
                           color: Colors.white.withValues(alpha: 0.55),
                           fontSize: 14,

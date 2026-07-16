@@ -40,8 +40,7 @@ Future<ExportSheet> buildSalesDocumentExportSheet(
       if (scope.documentSeries != null) {
         filtered = filtered
             .where(
-              (item) =>
-                  item.documentSeries == scope.documentSeries,
+              (item) => item.documentSeries == scope.documentSeries,
             )
             .toList();
       }

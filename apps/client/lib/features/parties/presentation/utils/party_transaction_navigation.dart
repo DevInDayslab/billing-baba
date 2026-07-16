@@ -12,12 +12,14 @@ void navigateToPartyLedgerTransaction(
 
   final route = switch (transaction.referenceType) {
     'sales_documents' => '${AppRoutes.editSale}/$referenceId',
-    'purchase_documents' => transaction.entryType == 'return'
-        ? '${AppRoutes.editDebitNote}/$referenceId'
-        : '${AppRoutes.editPurchase}/$referenceId',
-    'payments' => transaction.direction == 'paid'
-        ? AppRoutes.purchasePaymentOut
-        : AppRoutes.salePaymentIn,
+    'purchase_documents' =>
+      transaction.entryType == 'return'
+          ? '${AppRoutes.editDebitNote}/$referenceId'
+          : '${AppRoutes.editPurchase}/$referenceId',
+    'payments' =>
+      transaction.direction == 'paid'
+          ? AppRoutes.purchasePaymentOut
+          : AppRoutes.salePaymentIn,
     'expenses' => '${AppRoutes.editExpense}/$referenceId',
     _ => null,
   };

@@ -126,12 +126,16 @@ List<Contact> sortedContactsList(Ref ref) {
   sorted.sort((a, b) {
     final comparison = switch (filters.sortColumn) {
       ContactSortColumn.name => compareStrings(a.name, b.name),
-      ContactSortColumn.accountName =>
-        compareStrings(a.accountName, b.accountName),
+      ContactSortColumn.accountName => compareStrings(
+        a.accountName,
+        b.accountName,
+      ),
       ContactSortColumn.email => compareStrings(a.email, b.email),
       ContactSortColumn.phone => compareStrings(a.phone, b.phone),
-      ContactSortColumn.assignedTo =>
-        compareStrings(a.assignedTo, b.assignedTo),
+      ContactSortColumn.assignedTo => compareStrings(
+        a.assignedTo,
+        b.assignedTo,
+      ),
     };
     return filters.sortDirection == ContactSortDirection.descending
         ? -comparison

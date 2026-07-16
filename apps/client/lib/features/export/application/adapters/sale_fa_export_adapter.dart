@@ -73,10 +73,12 @@ List<SaleFaModel> _applyClientFilters(
   final statusFilter = _paymentStatusFromFilterLabel(filters.selectedStatus);
   return records.where((record) {
     if (statusFilter != null && record.status != statusFilter) return false;
-    if (filters.selectedUser != 'All Users' && record.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        record.user != filters.selectedUser) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && record.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        record.firm != filters.selectedFirm) {
       return false;
     }
     return true;
@@ -93,16 +95,15 @@ String? _statusFromFilterLabel(String label) => switch (label) {
   _ => null,
 };
 
-SaleFaStatus? _paymentStatusFromFilterLabel(String label) =>
-    switch (label) {
-      'Paid' => SaleFaStatus.paid,
-      'Unpaid' => SaleFaStatus.unpaid,
-      'Partially Paid' => SaleFaStatus.partiallyPaid,
-      'Partial' => SaleFaStatus.partiallyPaid,
-      'Overdue' => SaleFaStatus.overdue,
-      'Cancelled' => SaleFaStatus.cancelled,
-      _ => null,
-    };
+SaleFaStatus? _paymentStatusFromFilterLabel(String label) => switch (label) {
+  'Paid' => SaleFaStatus.paid,
+  'Unpaid' => SaleFaStatus.unpaid,
+  'Partially Paid' => SaleFaStatus.partiallyPaid,
+  'Partial' => SaleFaStatus.partiallyPaid,
+  'Overdue' => SaleFaStatus.overdue,
+  'Cancelled' => SaleFaStatus.cancelled,
+  _ => null,
+};
 
 String _statusLabel(SaleFaStatus status) => switch (status) {
   SaleFaStatus.paid => 'Paid',

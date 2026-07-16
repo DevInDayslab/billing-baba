@@ -21,8 +21,9 @@ class PosSessionService {
   Future<PosSessionDto> getOrOpenSession() async {
     try {
       final response = await _remote.listPosSessions(limit: 50);
-      final activeSession =
-          response.sessions.firstWhereOrNull((session) => session.isOpen);
+      final activeSession = response.sessions.firstWhereOrNull(
+        (session) => session.isOpen,
+      );
       if (activeSession != null) {
         return activeSession;
       }

@@ -41,7 +41,8 @@ class _TransactionReportFilterBarState
   Widget build(BuildContext context) {
     final filters = ref.watch(reportFiltersProvider);
     final notifier = ref.read(reportFiltersProvider.notifier);
-    final dateRange = filters.customDateRange ??
+    final dateRange =
+        filters.customDateRange ??
         DateTimeRange(
           start: DateTime.now(),
           end: DateTime.now(),

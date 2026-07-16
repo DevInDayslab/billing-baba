@@ -48,7 +48,8 @@ class _PosReturnPageState extends ConsumerState<PosReturnPage> {
       final qty = _returnQtyByItemId[itemId] ?? 0;
       if (qty <= 0) continue;
       final unitPrice =
-          item.unitPrice ?? (item.quantity > 0 ? item.lineTotal / item.quantity : 0);
+          item.unitPrice ??
+          (item.quantity > 0 ? item.lineTotal / item.quantity : 0);
       total += unitPrice * qty;
     }
     return total;
@@ -62,7 +63,8 @@ class _PosReturnPageState extends ConsumerState<PosReturnPage> {
       final qty = _returnQtyByItemId[itemId] ?? 0;
       if (qty <= 0) continue;
       final unitPrice =
-          item.unitPrice ?? (item.quantity > 0 ? item.lineTotal / item.quantity : 0);
+          item.unitPrice ??
+          (item.quantity > 0 ? item.lineTotal / item.quantity : 0);
       items.add(
         ReturnItem(
           itemId: itemId,
@@ -255,7 +257,8 @@ class _ReturnItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unitPrice = item.unitPrice ??
+    final unitPrice =
+        item.unitPrice ??
         (item.quantity > 0 ? item.lineTotal / item.quantity : 0);
 
     return Card(

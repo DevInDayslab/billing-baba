@@ -14,7 +14,8 @@ abstract final class ApiEndpoints {
   static const loyaltyRules = '$settings/loyalty-rules';
   static const crmLeads = '/api/v1/crm/leads';
   static String crmLead(String id) => '/api/v1/crm/leads/$id';
-  static String crmLeadActivities(String id) => '/api/v1/crm/leads/$id/activities';
+  static String crmLeadActivities(String id) =>
+      '/api/v1/crm/leads/$id/activities';
   static const crmContacts = '/api/v1/crm/contacts';
   static String crmContact(String id) => '/api/v1/crm/contacts/$id';
   static String crmContactActivities(String id) =>
@@ -79,7 +80,8 @@ abstract final class ApiEndpoints {
   static String salesDocumentFinalize(String id) =>
       '${salesDocument(id)}/finalize';
   static String salesDocumentCancel(String id) => '${salesDocument(id)}/cancel';
-  static String salesDocumentConvert(String id) => '${salesDocument(id)}/convert';
+  static String salesDocumentConvert(String id) =>
+      '${salesDocument(id)}/convert';
   static String salesDocumentBrandSwap(String id) =>
       '${salesDocument(id)}/brand-swap';
 
@@ -96,6 +98,7 @@ abstract final class ApiEndpoints {
       '${paymentAllocations(id)}/$allocationId';
 
   static const purchases = '/api/v1/purchases';
+  static const purchaseParseDocument = '$purchases/parse-document';
   static const purchaseDocuments = '$purchases/purchase-documents';
   static String purchaseDocument(String id) => '$purchaseDocuments/$id';
   static String purchaseDocumentLines(String id) =>

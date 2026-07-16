@@ -90,8 +90,12 @@ abstract final class ImportItemsExcelParser {
   }
 
   static bool _isHeaderRow(Sheet sheet, int rowIndex, String itemNameCell) {
-    final normalizedName = itemNameCell.toLowerCase().replaceAll('*', '').trim();
-    if (normalizedName == 'item name' || normalizedName.startsWith('item name')) {
+    final normalizedName = itemNameCell
+        .toLowerCase()
+        .replaceAll('*', '')
+        .trim();
+    if (normalizedName == 'item name' ||
+        normalizedName.startsWith('item name')) {
       return true;
     }
 

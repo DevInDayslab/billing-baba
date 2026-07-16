@@ -100,22 +100,23 @@ class _InventorySearchFieldState extends State<InventorySearchField> {
           focusNode: _focusNode,
           onChanged: _handleChanged,
           style: saleFieldTextStyle,
-          decoration: buildSaleFieldDecoration(
-            hint: widget.hint,
-            suffixIcon: widget.showSettings
-                ? IconButton(
-                    onPressed: widget.onSettingsTap,
-                    icon: const Icon(Icons.tune, size: 18),
-                    color: Colors.grey.shade600,
-                    tooltip: 'Filter',
-                  )
-                : const Icon(Icons.search, size: 18, color: Colors.grey),
-          ).copyWith(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
-            ),
-          ),
+          decoration:
+              buildSaleFieldDecoration(
+                hint: widget.hint,
+                suffixIcon: widget.showSettings
+                    ? IconButton(
+                        onPressed: widget.onSettingsTap,
+                        icon: const Icon(Icons.tune, size: 18),
+                        color: Colors.grey.shade600,
+                        tooltip: 'Filter',
+                      )
+                    : const Icon(Icons.search, size: 18, color: Colors.grey),
+              ).copyWith(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+              ),
         ),
       ),
     );

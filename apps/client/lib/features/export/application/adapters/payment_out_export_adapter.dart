@@ -66,10 +66,12 @@ List<PaymentOutModel> _applyClientFilters(
   PaymentOutFiltersState filters,
 ) {
   return records.where((record) {
-    if (filters.selectedUser != 'All Users' && record.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        record.user != filters.selectedUser) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && record.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        record.firm != filters.selectedFirm) {
       return false;
     }
     return true;

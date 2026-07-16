@@ -72,11 +72,7 @@ export function resolveReportPeriod(params: {
       throw new AppError('VALIDATION_ERROR', 'Invalid date range', 400);
     }
     if (from >= to) {
-      throw new AppError(
-        'VALIDATION_ERROR',
-        'from must be before to',
-        400,
-      );
+      throw new AppError('VALIDATION_ERROR', 'from must be before to', 400);
     }
     return { key, from, to };
   }

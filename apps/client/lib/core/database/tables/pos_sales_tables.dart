@@ -9,8 +9,7 @@ class SalesLocal extends Table {
   RealColumn get taxAmount => real()();
   RealColumn get finalAmount => real()();
   DateTimeColumn get createdAt => dateTime()();
-  DateTimeColumn get savedAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get savedAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get paymentMethod => text()();
   TextColumn get apiResponseJson => text()();
 

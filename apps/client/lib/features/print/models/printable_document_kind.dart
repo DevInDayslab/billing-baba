@@ -46,16 +46,14 @@ enum PrintableDocumentKind {
     creditNote ||
     debitNote ||
     saleOrder ||
-    purchaseOrder =>
-      true,
+    purchaseOrder => true,
     paymentIn ||
     paymentOut ||
     expense ||
     fixedAssetPurchase ||
     saleFa ||
     jobWorkOrder ||
-    posReceipt =>
-      false,
+    posReceipt => false,
   };
 
   /// Voucher documents rendered by the A4 voucher template.
@@ -76,7 +74,6 @@ enum PrintableDocumentKind {
     debitNote ||
     saleOrder ||
     purchaseOrder ||
-    posReceipt =>
-      false,
+    posReceipt => false,
   };
 }

@@ -146,8 +146,10 @@ List<Lead> sortedLeadsList(Ref ref) {
       LeadSortColumn.company => compareStrings(a.company, b.company),
       LeadSortColumn.email => compareStrings(a.email, b.email),
       LeadSortColumn.phone => compareStrings(a.phone, b.phone),
-      LeadSortColumn.leadSource =>
-        compareStrings(a.leadSource?.label, b.leadSource?.label),
+      LeadSortColumn.leadSource => compareStrings(
+        a.leadSource?.label,
+        b.leadSource?.label,
+      ),
     };
     return filters.sortDirection == LeadSortDirection.descending
         ? -comparison
@@ -162,9 +164,7 @@ PaginatedLeads paginatedLeads(Ref ref) {
   final leads = ref.watch(sortedLeadsListProvider);
   final filters = ref.watch(leadFiltersProvider);
   final totalItems = leads.length;
-  final totalPages = totalItems == 0
-      ? 1
-      : (totalItems / leadsPageSize).ceil();
+  final totalPages = totalItems == 0 ? 1 : (totalItems / leadsPageSize).ceil();
   final currentPage = filters.currentPage.clamp(1, totalPages);
   final start = (currentPage - 1) * leadsPageSize;
   final end = (start + leadsPageSize).clamp(0, totalItems);

@@ -385,8 +385,9 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
                                 child: _RequiredFormField(
                                   label: 'Phone',
                                   hasError: _phoneError,
-                                  errorText:
-                                      _phoneError ? 'Phone is required' : null,
+                                  errorText: _phoneError
+                                      ? 'Phone is required'
+                                      : null,
                                   child: TextFormField(
                                     controller: _phoneController,
                                     keyboardType: TextInputType.phone,
@@ -454,8 +455,9 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
                                       ...LeadSource.values.map((s) => s.label),
                                     ],
                                     onSelected: (label) => setState(() {
-                                      _leadSourceLabel =
-                                          label == '-None-' ? null : label;
+                                      _leadSourceLabel = label == '-None-'
+                                          ? null
+                                          : label;
                                     }),
                                   ),
                                 ),
@@ -516,20 +518,21 @@ class _AddLeadDialogState extends State<AddLeadDialog> {
                                   child: TextFormField(
                                     controller: _annualRevenueController,
                                     keyboardType: TextInputType.number,
-                                    decoration: buildSaleFieldDecoration(
-                                      hint: 'Annual revenue',
-                                      suffixIcon: const Icon(
-                                        Icons.info_outline,
-                                        size: 16,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ).copyWith(
-                                      prefixText: 'Rs. ',
-                                      prefixStyle: const TextStyle(
-                                        fontSize: 13,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
+                                    decoration:
+                                        buildSaleFieldDecoration(
+                                          hint: 'Annual revenue',
+                                          suffixIcon: const Icon(
+                                            Icons.info_outline,
+                                            size: 16,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ).copyWith(
+                                          prefixText: 'Rs. ',
+                                          prefixStyle: const TextStyle(
+                                            fontSize: 13,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
                                   ),
                                 ),
                               ),

@@ -46,9 +46,8 @@ class _StockSummaryReportByItemCategoryReportContentState
 
     return ReportAsyncBody(
       value: reportAsync,
-      onRetry: () => ref
-          .read(stockSummaryByItemCategoryReportProvider.notifier)
-          .refresh(),
+      onRetry: () =>
+          ref.read(stockSummaryByItemCategoryReportProvider.notifier).refresh(),
       data: (report) {
         final rows = report.rows;
         final totalPurchaseValue = rows.fold<double>(
@@ -79,473 +78,480 @@ class _StockSummaryReportByItemCategoryReportContentState
             ],
         ];
 
-    return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: ReportCard(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Wrap(
-                spacing: AppSpacing.md,
-                runSpacing: AppSpacing.sm,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  const Text(
-                    'FILTERS',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 0.6,
-                    ),
+        return ColoredBox(
+          color: AppColors.background,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
+                child: ReportCard(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Wrap(
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.sm,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Checkbox(
-                        value: _useDateFilter,
-                        onChanged: (value) => setState(
-                          () => _useDateFilter = value ?? false,
-                        ),
-                        visualDensity: VisualDensity.compact,
-                      ),
                       const Text(
-                        'As on date',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      SaleSingleDatePickerAnchor(
-                        key: _datePickerKey,
-                        selectedDate: _asOnDate,
-                        onDateSelected: (date) =>
-                            setState(() => _asOnDate = date),
-                        child: InkWell(
-                          onTap: _useDateFilter
-                              ? () => _datePickerKey.currentState?.toggle()
-                              : null,
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                          child: Opacity(
-                            opacity: _useDateFilter ? 1 : 0.5,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.sm,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius:
-                                    BorderRadius.circular(AppRadius.sm),
-                                border: Border.all(color: reportCardBorder),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.calendar_today_outlined,
-                                    size: 14,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _dateFormat.format(_asOnDate),
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Checkbox(
-                        value: _includeZeroStock,
-                        onChanged: (value) => setState(
-                          () => _includeZeroStock = value ?? false,
-                        ),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      const Text(
-                        'Include zero stock categories',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Checkbox(
-                        value: _lowStockOnly,
-                        onChanged: (value) => setState(
-                          () => _lowStockOnly = value ?? false,
-                        ),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      const Text(
-                        'Low stock categories only',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
-                  ReportTextActionButton(
-                    label: 'Excel',
-                    icon: Icons.table_chart_outlined,
-                    onTap: () => reportExportTable(
-                      context: context,
-                      title: 'Stock Summary by Item Category',
-                      filename: 'stock-summary-by-item-category',
-                      headers: exportHeaders,
-                      rows: exportRows,
-                    ),
-                  ),
-                  ReportTextActionButton(
-                    label: 'Print',
-                    icon: Icons.print_outlined,
-                    onTap: () => reportPrintTable(
-                      context: context,
-                      title: 'Stock Summary by Item Category',
-                      headers: exportHeaders,
-                      rows: exportRows,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                0,
-                AppSpacing.lg,
-                AppSpacing.lg,
-              ),
-              child: ReportCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.md,
-                        AppSpacing.sm,
-                      ),
-                      child: Text(
-                        'STOCK SUMMARY REPORT BY ITEM CATEGORY',
+                        'FILTERS',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                          letterSpacing: 0.5,
+                          color: AppColors.textSecondary,
+                          letterSpacing: 0.6,
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.md,
-                        0,
-                        AppSpacing.md,
-                        AppSpacing.sm,
-                      ),
-                      child: Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        crossAxisAlignment: WrapCrossAlignment.center,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          _SummaryChip(
-                            label: 'Categories',
-                            value: '${rows.length}',
-                            icon: Icons.category_outlined,
+                          Checkbox(
+                            value: _useDateFilter,
+                            onChanged: (value) => setState(
+                              () => _useDateFilter = value ?? false,
+                            ),
+                            visualDensity: VisualDensity.compact,
                           ),
-                          _SummaryChip(
-                            label: 'Stock Value',
-                            value: formatReportCurrency(totalPurchaseValue),
-                            icon: Icons.payments_outlined,
-                            highlight: true,
+                          const Text(
+                            'As on date',
+                            style: TextStyle(fontSize: 13),
                           ),
-                          _SummaryChip(
-                            label: 'Sale Value',
-                            value: formatReportCurrency(totalSaleValue),
-                            icon: Icons.trending_up_outlined,
-                          ),
-                          const SizedBox(
-                            width: 280,
-                            child: ReportSearchField(
-                              hintText: 'Search category...',
+                          const SizedBox(width: AppSpacing.sm),
+                          SaleSingleDatePickerAnchor(
+                            key: _datePickerKey,
+                            selectedDate: _asOnDate,
+                            onDateSelected: (date) =>
+                                setState(() => _asOnDate = date),
+                            child: InkWell(
+                              onTap: _useDateFilter
+                                  ? () => _datePickerKey.currentState?.toggle()
+                                  : null,
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                              child: Opacity(
+                                opacity: _useDateFilter ? 1 : 0.5,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.sm,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.sm,
+                                    ),
+                                    border: Border.all(color: reportCardBorder),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.calendar_today_outlined,
+                                        size: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        _dateFormat.format(_asOnDate),
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    const Divider(height: 1, color: reportCardBorder),
-                    Expanded(
-                      child: rows.isEmpty
-                          ? const Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                ReportSyncScrollTable(
-                                  headerChildren: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Checkbox(
+                            value: _includeZeroStock,
+                            onChanged: (value) => setState(
+                              () => _includeZeroStock = value ?? false,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          const Text(
+                            'Include zero stock categories',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Checkbox(
+                            value: _lowStockOnly,
+                            onChanged: (value) => setState(
+                              () => _lowStockOnly = value ?? false,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          const Text(
+                            'Low stock categories only',
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ],
+                      ),
+                      ReportTextActionButton(
+                        label: 'Excel',
+                        icon: Icons.table_chart_outlined,
+                        onTap: () => reportExportTable(
+                          context: context,
+                          title: 'Stock Summary by Item Category',
+                          filename: 'stock-summary-by-item-category',
+                          headers: exportHeaders,
+                          rows: exportRows,
+                        ),
+                      ),
+                      ReportTextActionButton(
+                        label: 'Print',
+                        icon: Icons.print_outlined,
+                        onTap: () => reportPrintTable(
+                          context: context,
+                          title: 'Stock Summary by Item Category',
+                          headers: exportHeaders,
+                          rows: exportRows,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: ReportCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.sm,
+                          ),
+                          child: Text(
+                            'STOCK SUMMARY REPORT BY ITEM CATEGORY',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            0,
+                            AppSpacing.md,
+                            AppSpacing.sm,
+                          ),
+                          child: Wrap(
+                            spacing: AppSpacing.sm,
+                            runSpacing: AppSpacing.sm,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              _SummaryChip(
+                                label: 'Categories',
+                                value: '${rows.length}',
+                                icon: Icons.category_outlined,
+                              ),
+                              _SummaryChip(
+                                label: 'Stock Value',
+                                value: formatReportCurrency(totalPurchaseValue),
+                                icon: Icons.payments_outlined,
+                                highlight: true,
+                              ),
+                              _SummaryChip(
+                                label: 'Sale Value',
+                                value: formatReportCurrency(totalSaleValue),
+                                icon: Icons.trending_up_outlined,
+                              ),
+                              const SizedBox(
+                                width: 280,
+                                child: ReportSearchField(
+                                  hintText: 'Search category...',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1, color: reportCardBorder),
+                        const Divider(height: 1, color: reportCardBorder),
+                        Expanded(
+                          child: rows.isEmpty
+                              ? const Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    ReportSyncScrollTable(
+                                      headerChildren: [
+                                        Expanded(
+                                          child: ReportAlignedHeaderCell(
+                                            label: 'ITEM CATEGORY',
+                                            showFilter: false,
+                                          ),
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'NO. OF ITEMS',
+                                          width: 110,
+                                          showFilter: false,
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'STOCK QTY',
+                                          width: 100,
+                                          showFilter: false,
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'PURCHASE VALUE',
+                                          width: 130,
+                                          showFilter: false,
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'SALE VALUE',
+                                          width: 110,
+                                          showFilter: false,
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'LOW STOCK ITEMS',
+                                          width: 130,
+                                          showFilter: false,
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                      ],
+                                      rows: [],
+                                    ),
                                     Expanded(
-                                      child: ReportAlignedHeaderCell(
-                                        label: 'ITEM CATEGORY',
-                                        showFilter: false,
+                                      child: Center(
+                                        child: Text(
+                                          'No stock data found for the selected filters.',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'NO. OF ITEMS',
-                                      width: 110,
-                                      showFilter: false,
-                                      alignment: Alignment.centerRight,
-                                    ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'STOCK QTY',
-                                      width: 100,
-                                      showFilter: false,
-                                      alignment: Alignment.centerRight,
-                                    ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'PURCHASE VALUE',
-                                      width: 130,
-                                      showFilter: false,
-                                      alignment: Alignment.centerRight,
-                                    ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'SALE VALUE',
-                                      width: 110,
-                                      showFilter: false,
-                                      alignment: Alignment.centerRight,
-                                    ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'LOW STOCK ITEMS',
-                                      width: 130,
-                                      showFilter: false,
-                                      alignment: Alignment.centerRight,
-                                    ),
                                   ],
-                                  rows: [],
+                                )
+                              : SingleChildScrollView(
+                                  child: ReportSyncScrollTable(
+                                    headerChildren: const [
+                                      Expanded(
+                                        child: ReportAlignedHeaderCell(
+                                          label: 'ITEM CATEGORY',
+                                          showFilter: false,
+                                        ),
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'NO. OF ITEMS',
+                                        width: 110,
+                                        showFilter: false,
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'STOCK QTY',
+                                        width: 100,
+                                        showFilter: false,
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'PURCHASE VALUE',
+                                        width: 130,
+                                        showFilter: false,
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'SALE VALUE',
+                                        width: 110,
+                                        showFilter: false,
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'LOW STOCK ITEMS',
+                                        width: 130,
+                                        showFilter: false,
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                    ],
+                                    rows: [
+                                      for (var i = 0; i < rows.length; i++)
+                                        ReportAlignedRowStrip(
+                                          index: i,
+                                          child: ReportAlignedDataRow(
+                                            cells: [
+                                              ReportAlignedCell.flex(
+                                                child: Text(rows[i].category),
+                                              ),
+                                              const ReportAlignedCell.fixed(
+                                                110,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text('—'),
+                                              ),
+                                              const ReportAlignedCell.fixed(
+                                                100,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text('—'),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                130,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text(
+                                                  formatReportCurrency(
+                                                    rows[i].purchaseAmount,
+                                                  ),
+                                                ),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                110,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text(
+                                                  formatReportCurrency(
+                                                    rows[i].saleAmount,
+                                                  ),
+                                                ),
+                                              ),
+                                              const ReportAlignedCell.fixed(
+                                                130,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text('—'),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ),
-                                Expanded(
-                                  child: Center(
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.sm,
+                          ),
+                          decoration: const BoxDecoration(
+                            color: reportTableHeaderBg,
+                            border: Border(
+                              top: BorderSide(color: reportCardBorder),
+                            ),
+                          ),
+                          child: ReportHorizontalScroll(
+                            minWidth: 720,
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    'Grand Total',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 110,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
                                     child: Text(
-                                      'No stock data found for the selected filters.',
+                                      '—',
                                       style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.textSecondary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 100,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      '—',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 130,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      formatReportCurrency(totalPurchaseValue),
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 110,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      formatReportCurrency(totalSaleValue),
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: reportTeal,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 130,
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      '—',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ),
                                 ),
                               ],
-                            )
-                          : SingleChildScrollView(
-                              child: ReportSyncScrollTable(
-                                headerChildren: const [
-                                  Expanded(
-                                    child: ReportAlignedHeaderCell(
-                                      label: 'ITEM CATEGORY',
-                                      showFilter: false,
-                                    ),
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'NO. OF ITEMS',
-                                    width: 110,
-                                    showFilter: false,
-                                    alignment: Alignment.centerRight,
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'STOCK QTY',
-                                    width: 100,
-                                    showFilter: false,
-                                    alignment: Alignment.centerRight,
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'PURCHASE VALUE',
-                                    width: 130,
-                                    showFilter: false,
-                                    alignment: Alignment.centerRight,
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'SALE VALUE',
-                                    width: 110,
-                                    showFilter: false,
-                                    alignment: Alignment.centerRight,
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'LOW STOCK ITEMS',
-                                    width: 130,
-                                    showFilter: false,
-                                    alignment: Alignment.centerRight,
-                                  ),
-                                ],
-                                rows: [
-                                  for (var i = 0; i < rows.length; i++)
-                                    ReportAlignedRowStrip(
-                                      index: i,
-                                      child: ReportAlignedDataRow(
-                                        cells: [
-                                          ReportAlignedCell.flex(
-                                            child: Text(rows[i].category),
-                                          ),
-                                          const ReportAlignedCell.fixed(
-                                            110,
-                                            alignment: Alignment.centerRight,
-                                            child: Text('—'),
-                                          ),
-                                          const ReportAlignedCell.fixed(
-                                            100,
-                                            alignment: Alignment.centerRight,
-                                            child: Text('—'),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            130,
-                                            alignment: Alignment.centerRight,
-                                            child: Text(
-                                              formatReportCurrency(
-                                                rows[i].purchaseAmount,
-                                              ),
-                                            ),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            110,
-                                            alignment: Alignment.centerRight,
-                                            child: Text(
-                                              formatReportCurrency(
-                                                rows[i].saleAmount,
-                                              ),
-                                            ),
-                                          ),
-                                          const ReportAlignedCell.fixed(
-                                            130,
-                                            alignment: Alignment.centerRight,
-                                            child: Text('—'),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
                             ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      decoration: const BoxDecoration(
-                        color: reportTableHeaderBg,
-                        border: Border(
-                          top: BorderSide(color: reportCardBorder),
+                          ),
                         ),
-                      ),
-                      child: ReportHorizontalScroll(
-                        minWidth: 720,
-                        child: Row(
-                          children: [
-                            const SizedBox(
-                              width: 150,
-                              child: Text(
-                                'Grand Total',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 110,
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  '—',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 100,
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  '—',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 130,
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  formatReportCurrency(totalPurchaseValue),
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 110,
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  formatReportCurrency(totalSaleValue),
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: reportTeal,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(
-                              width: 130,
-                              child: Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  '—',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
       },
     );
   }
@@ -572,10 +578,14 @@ class _SummaryChip extends StatelessWidget {
         vertical: 6,
       ),
       decoration: BoxDecoration(
-        color: highlight ? reportTeal.withValues(alpha: 0.08) : AppColors.surface,
+        color: highlight
+            ? reportTeal.withValues(alpha: 0.08)
+            : AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(
-          color: highlight ? reportTeal.withValues(alpha: 0.35) : reportCardBorder,
+          color: highlight
+              ? reportTeal.withValues(alpha: 0.35)
+              : reportCardBorder,
         ),
       ),
       child: Row(

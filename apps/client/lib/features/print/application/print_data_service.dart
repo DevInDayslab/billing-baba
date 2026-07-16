@@ -66,10 +66,14 @@ class PrintDataService {
       PurchaseBillPrintRequest() ||
       DebitNotePrintRequest() ||
       PurchaseOrderPrintRequest() => _loadPurchaseDocument(request),
-      PaymentInPrintRequest() =>
-        _loadPayment(request, expectedDirection: 'received'),
-      PaymentOutPrintRequest() =>
-        _loadPayment(request, expectedDirection: 'paid'),
+      PaymentInPrintRequest() => _loadPayment(
+        request,
+        expectedDirection: 'received',
+      ),
+      PaymentOutPrintRequest() => _loadPayment(
+        request,
+        expectedDirection: 'paid',
+      ),
       ExpensePrintRequest() => _loadExpense(request),
       FixedAssetPurchasePrintRequest() => _loadFixedAssetPurchase(request),
       SaleFaPrintRequest() => _loadSaleFa(request),
@@ -264,7 +268,9 @@ class PrintDataService {
     );
   }
 
-  Future<PrintableDocument> _loadFixedAssetPurchase(PrintRequest request) async {
+  Future<PrintableDocument> _loadFixedAssetPurchase(
+    PrintRequest request,
+  ) async {
     final batch = await _purchaseFaRepository.getBatch(request.id);
     final profile = await _businessService.fetchBusinessProfile();
     final company = PrintableCompany(profile: profile);

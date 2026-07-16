@@ -1,6 +1,7 @@
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_remote_data_source.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
+import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 
 class PurchaseRepository {
@@ -17,8 +18,7 @@ class PurchaseRepository {
     PurchaseDocumentListQuery query,
   ) => _remote.listDocuments(query);
 
-  Future<PurchaseDocumentDto> getDocument(String id) =>
-      _remote.getDocument(id);
+  Future<PurchaseDocumentDto> getDocument(String id) => _remote.getDocument(id);
 
   Future<PurchaseDocumentDto> createDocument(
     CreatePurchaseDocumentRequest request,
@@ -67,4 +67,14 @@ class PurchaseRepository {
 
   Future<PaymentDto> createPayment(CreatePaymentRequest request) =>
       _remote.createPayment(request);
+
+  Future<PurchaseDocumentParseDto> parseDocument({
+    required String filename,
+    required List<int> bytes,
+    String? mimeType,
+  }) => _remote.parseDocument(
+    filename: filename,
+    bytes: bytes,
+    mimeType: mimeType,
+  );
 }

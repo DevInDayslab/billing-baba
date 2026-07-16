@@ -27,11 +27,13 @@ class TaxInvoiceReportContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = switch (subSection) {
       TaxesReportSubSection.formNo27Eq => ref.watch(form27eqReportProvider),
-      TaxesReportSubSection.tcsReceivable =>
-        ref.watch(tcsReceivableReportProvider),
+      TaxesReportSubSection.tcsReceivable => ref.watch(
+        tcsReceivableReportProvider,
+      ),
       TaxesReportSubSection.tdsPayable => ref.watch(tdsPayableReportProvider),
-      TaxesReportSubSection.tdsReceivable =>
-        ref.watch(tdsReceivableReportProvider),
+      TaxesReportSubSection.tdsReceivable => ref.watch(
+        tdsReceivableReportProvider,
+      ),
       _ => null,
     };
 
@@ -284,8 +286,7 @@ class TaxInvoiceReportContent extends ConsumerWidget {
                                                     alignment:
                                                         Alignment.centerRight,
                                                     child: Text(
-                                                      rows[i]
-                                                          .taxRate
+                                                      rows[i].taxRate
                                                           .toStringAsFixed(2),
                                                     ),
                                                   ),
@@ -299,11 +300,18 @@ class TaxInvoiceReportContent extends ConsumerWidget {
                                       page: report.meta.page,
                                       totalPages: report.meta.totalPages,
                                       onPrevious: report.meta.page > 1
-                                          ? () => _goToPage(ref, report.meta.page - 1)
+                                          ? () => _goToPage(
+                                              ref,
+                                              report.meta.page - 1,
+                                            )
                                           : null,
                                       onNext:
-                                          report.meta.page < report.meta.totalPages
-                                          ? () => _goToPage(ref, report.meta.page + 1)
+                                          report.meta.page <
+                                              report.meta.totalPages
+                                          ? () => _goToPage(
+                                              ref,
+                                              report.meta.page + 1,
+                                            )
                                           : null,
                                     ),
                                   ],

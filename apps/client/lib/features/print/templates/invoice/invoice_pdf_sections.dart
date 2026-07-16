@@ -19,7 +19,8 @@ final _currencyFormat = NumberFormat.currency(
 final _dateFormat = DateFormat('dd MMM yyyy');
 
 abstract final class CommercialDocumentPdfSections {
-  static pw.Widget? watermark(String status) => InvoicePdfWidgets.watermark(status);
+  static pw.Widget? watermark(String status) =>
+      InvoicePdfWidgets.watermark(status);
 
   /// Company header + document meta + bill-to card (first page only).
   static pw.Widget pageHeaderSection(
@@ -43,8 +44,9 @@ abstract final class CommercialDocumentPdfSections {
     final company = document.company.profile;
     final meta = document.metadata;
     final date = DateTime.tryParse(meta.documentDate);
-    final dueDate =
-        meta.dueDate != null ? DateTime.tryParse(meta.dueDate!) : null;
+    final dueDate = meta.dueDate != null
+        ? DateTime.tryParse(meta.dueDate!)
+        : null;
     final hasLogo = document.assets.logoBytes != null;
 
     return pw.Row(
@@ -65,9 +67,14 @@ abstract final class CommercialDocumentPdfSections {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text(company.name, style: InvoicePdfTheme.companyName()),
-                    ..._companyDetailLines(company.address, company.gstin,
-                        company.phone, company.email, company.pincode,
-                        company.state),
+                    ..._companyDetailLines(
+                      company.address,
+                      company.gstin,
+                      company.phone,
+                      company.email,
+                      company.pincode,
+                      company.state,
+                    ),
                   ],
                 ),
               ),
@@ -372,11 +379,9 @@ abstract final class CommercialDocumentPdfSections {
       crossAxisAlignment: pw.CrossAxisAlignment.stretch,
       children: [
         totalsSection(document, config),
-        if (config.showAmountInWords)
-          amountInWordsSection(document),
+        if (config.showAmountInWords) amountInWordsSection(document),
         notesSection(document),
-        if (config.footerNote != null)
-          footerNoteSection(config.footerNote!),
+        if (config.footerNote != null) footerNoteSection(config.footerNote!),
         if (config.showSignature) signatureSection(document),
       ],
     );

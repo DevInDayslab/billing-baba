@@ -119,7 +119,8 @@ abstract final class ExportActions {
     Future<void> Function(
       ExportService service,
       ExportOutputService output,
-    ) action,
+    )
+    action,
   ) async {
     try {
       final container = ProviderScope.containerOf(context);

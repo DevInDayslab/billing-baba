@@ -273,7 +273,9 @@ class SaleInvoiceTableRows {
               IconButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Sharing is not available yet')),
+                    const SnackBar(
+                      content: Text('Sharing is not available yet'),
+                    ),
                   );
                 },
                 icon: const Icon(Icons.share_outlined, size: 18),
@@ -289,7 +291,6 @@ class SaleInvoiceTableRows {
       ],
     );
   }
-
 }
 
 class _SaleInvoiceTableColumns {
@@ -302,10 +303,12 @@ class _SaleInvoiceTableColumns {
   }) {
     final filters = ref.watch(saleInvoiceFiltersProvider);
     final filtersNotifier = ref.read(saleInvoiceFiltersProvider.notifier);
-    final transactionOptions =
-        ref.watch(saleInvoiceTransactionTypeFilterOptionsProvider);
-    final paymentOptions =
-        ref.watch(saleInvoicePaymentTypeFilterOptionsProvider);
+    final transactionOptions = ref.watch(
+      saleInvoiceTransactionTypeFilterOptionsProvider,
+    );
+    final paymentOptions = ref.watch(
+      saleInvoicePaymentTypeFilterOptionsProvider,
+    );
 
     return [
       ResizableDataColumn(
@@ -762,9 +765,7 @@ class _EmptyTransactionsState extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            isFiltered
-                ? 'No matching transactions'
-                : 'No sale invoices found',
+            isFiltered ? 'No matching transactions' : 'No sale invoices found',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,

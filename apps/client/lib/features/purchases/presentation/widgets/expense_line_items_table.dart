@@ -41,8 +41,9 @@ class ExpenseLineItemsTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addExpenseFormProvider(expenseId: expenseId));
-    final notifier =
-        ref.read(addExpenseFormProvider(expenseId: expenseId).notifier);
+    final notifier = ref.read(
+      addExpenseFormProvider(expenseId: expenseId).notifier,
+    );
     final minWidth = form.gstEnabled ? _minTableWidthGst : _minTableWidthNoGst;
 
     final tableContent = Column(
@@ -233,8 +234,9 @@ class _LineItemRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier =
-        ref.read(addExpenseFormProvider(expenseId: expenseId).notifier);
+    final notifier = ref.read(
+      addExpenseFormProvider(expenseId: expenseId).notifier,
+    );
 
     return SizedBox(
       height: _rowHeight,
@@ -285,42 +287,45 @@ class _LineItemRow extends ConsumerWidget {
               item.copyWith(qty: value),
             ),
           ),
-          if (gstEnabled) Row(
-                  children: [
-                    Expanded(
-                      child: _CompactNumberField(
-                        initialValue: item.pricePerUnit,
-                        onChanged: (value) => notifier.updateLineItem(
-                          index,
-                          item.copyWith(pricePerUnit: value),
-                        ),
-                      ),
+          if (gstEnabled)
+            Row(
+              children: [
+                Expanded(
+                  child: _CompactNumberField(
+                    initialValue: item.pricePerUnit,
+                    onChanged: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(pricePerUnit: value),
                     ),
-                    const SizedBox(width: 2),
-                    SizedBox(
-                      width: _priceTaxModeWidth,
-                      child: SaleGenericSelectDropdown(
-                        value: item.priceIsTaxInclusive
-                            ? 'With Tax'
-                            : 'Without Tax',
-                        options: const ['Without Tax', 'With Tax'],
-                        compact: true,
-                        onSelected: (value) => notifier.updateLineItem(
-                          index,
-                          item.copyWith(
-                            priceIsTaxInclusive: value == 'With Tax',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ) else _CompactNumberField(
-                  initialValue: item.pricePerUnit,
-                  onChanged: (value) => notifier.updateLineItem(
-                    index,
-                    item.copyWith(pricePerUnit: value),
                   ),
                 ),
+                const SizedBox(width: 2),
+                SizedBox(
+                  width: _priceTaxModeWidth,
+                  child: SaleGenericSelectDropdown(
+                    value: item.priceIsTaxInclusive
+                        ? 'With Tax'
+                        : 'Without Tax',
+                    options: const ['Without Tax', 'With Tax'],
+                    compact: true,
+                    onSelected: (value) => notifier.updateLineItem(
+                      index,
+                      item.copyWith(
+                        priceIsTaxInclusive: value == 'With Tax',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            _CompactNumberField(
+              initialValue: item.pricePerUnit,
+              onChanged: (value) => notifier.updateLineItem(
+                index,
+                item.copyWith(pricePerUnit: value),
+              ),
+            ),
           if (gstEnabled) ...[
             SaleGenericSelectDropdown(
               value: item.taxPercent == 0

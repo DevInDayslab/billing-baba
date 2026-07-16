@@ -1,11 +1,11 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { BusinessMembershipRepository } from '../../shared/repositories/business-membership.repository';
-import { resolveDashboardPeriod } from './dashboard-period';
 import { toDashboardResponse } from './dashboard.mapper';
 import { DashboardRepository } from './dashboard.repository';
 import type { DashboardQuery } from './dashboard.schema';
 import type { DashboardPayload, DashboardQuickReport } from './dashboard.types';
+import { resolveDashboardPeriod } from './dashboard-period';
 
 const QUICK_REPORTS: DashboardQuickReport[] = [
   { key: 'sale_report', title: 'Sale Report', route: '/reports' },

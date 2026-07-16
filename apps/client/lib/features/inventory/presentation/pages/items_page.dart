@@ -28,9 +28,8 @@ class _ItemsPageState extends ConsumerState<ItemsPage>
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
-      ref
-          .read(inventoryItemsTabIndexProvider.notifier)
-          .tabIndex = _tabController.index;
+      ref.read(inventoryItemsTabIndexProvider.notifier).tabIndex =
+          _tabController.index;
     }
   }
 

@@ -116,7 +116,9 @@ abstract final class ImportItemsExcelService {
         successCount++;
       } on Object catch (error) {
         failedCount++;
-        errors.add('${row.itemName}: ${InventoryErrorMapper.messageFor(error)}');
+        errors.add(
+          '${row.itemName}: ${InventoryErrorMapper.messageFor(error)}',
+        );
       }
     }
 
@@ -193,7 +195,10 @@ abstract final class ImportItemsExcelService {
     return parsed.toStringAsFixed(2);
   }
 
-  static InventoryUnit? _resolveUnit(String unitLabel, List<InventoryUnit> units) {
+  static InventoryUnit? _resolveUnit(
+    String unitLabel,
+    List<InventoryUnit> units,
+  ) {
     if (unitLabel.trim().isEmpty) return null;
     final normalized = unitLabel.trim().toLowerCase();
 
@@ -223,7 +228,10 @@ abstract final class ImportItemsExcelService {
 
   static Iterable<String> _aliasesFor(String normalized) {
     return switch (normalized) {
-      'nos' || 'no' || 'number' || 'numbers' => const ['pcs', 'piece', 'pieces'],
+      'nos' ||
+      'no' ||
+      'number' ||
+      'numbers' => const ['pcs', 'piece', 'pieces'],
       'bag' || 'bags' => const ['bag', 'pcs'],
       'kg' || 'kgs' || 'kilogram' || 'kilograms' => const ['kg', 'kgs'],
       'gm' || 'gms' || 'gram' || 'grams' => const ['gm', 'gms', 'gram'],

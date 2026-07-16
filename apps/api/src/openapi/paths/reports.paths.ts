@@ -34,8 +34,7 @@ const REPORTS: ReportEndpoint[] = [
   {
     path: '/reports/purchases',
     summary: 'Purchase Report',
-    description:
-      'Purchase transactions summary for the selected period.',
+    description: 'Purchase transactions summary for the selected period.',
     operationId: 'reportPurchases',
     querySchema: reportBaseQuerySchema,
     querySchemaName: Schema.ReportBaseQuery,
@@ -106,7 +105,8 @@ const REPORTS: ReportEndpoint[] = [
   {
     path: '/reports/profit-loss',
     summary: 'Profit & Loss Report',
-    description: 'Profit and loss statement for the selected accounting period.',
+    description:
+      'Profit and loss statement for the selected accounting period.',
     operationId: 'reportProfitLoss',
     querySchema: reportBaseQuerySchema,
     querySchemaName: Schema.ReportBaseQuery,

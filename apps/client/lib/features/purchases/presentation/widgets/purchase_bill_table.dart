@@ -312,7 +312,9 @@ class _PurchaseBillSearchFieldState
 class _TableHeaderRow extends ConsumerWidget {
   const _TableHeaderRow();
 
-  static PurchaseBillNumericFilter _toBillNumeric(PurchaseNumericFilter filter) {
+  static PurchaseBillNumericFilter _toBillNumeric(
+    PurchaseNumericFilter filter,
+  ) {
     return PurchaseBillNumericFilter(
       operator: switch (filter.operator) {
         PurchaseNumericFilterOperator.equalTo =>
@@ -626,7 +628,9 @@ class _PageNumber extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFFEEEEEE) : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.sm),
-          border: isActive ? null : Border.all(color: purchaseTransactionTableCardBorder),
+          border: isActive
+              ? null
+              : Border.all(color: purchaseTransactionTableCardBorder),
         ),
         child: Text(
           '$page',

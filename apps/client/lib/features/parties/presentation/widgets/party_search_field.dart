@@ -128,8 +128,9 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     if (!mounted) return;
     widget.onSelected(result.partyName);
     final parties = ref.read(partyPickerListProvider).value ?? [];
-    final match =
-        parties.where((party) => party.name == result.partyName).firstOrNull;
+    final match = parties
+        .where((party) => party.name == result.partyName)
+        .firstOrNull;
     if (match != null) {
       widget.onPartySelected?.call(match);
       widget.onPartySelectedWithId?.call(match.id, match.name);

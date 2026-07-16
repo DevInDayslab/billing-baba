@@ -184,14 +184,18 @@ class ReportContentPanel extends StatelessWidget {
           TaxesReportSubSection.gstReport => const GstTaxReportContent(),
           TaxesReportSubSection.gstRateReport =>
             const GstTaxRateReportContent(),
-          TaxesReportSubSection.formNo27Eq =>
-            ReportDeferredModuleContent(reportName: taxesSub!.label),
-          TaxesReportSubSection.tcsReceivable =>
-            ReportDeferredModuleContent(reportName: taxesSub!.label),
-          TaxesReportSubSection.tdsPayable =>
-            ReportDeferredModuleContent(reportName: taxesSub!.label),
-          TaxesReportSubSection.tdsReceivable =>
-            ReportDeferredModuleContent(reportName: taxesSub!.label),
+          TaxesReportSubSection.formNo27Eq => ReportDeferredModuleContent(
+            reportName: taxesSub!.label,
+          ),
+          TaxesReportSubSection.tcsReceivable => ReportDeferredModuleContent(
+            reportName: taxesSub!.label,
+          ),
+          TaxesReportSubSection.tdsPayable => ReportDeferredModuleContent(
+            reportName: taxesSub!.label,
+          ),
+          TaxesReportSubSection.tdsReceivable => ReportDeferredModuleContent(
+            reportName: taxesSub!.label,
+          ),
         },
       );
     }
@@ -247,14 +251,12 @@ class ReportContentPanel extends StatelessWidget {
       ReportNavGroup.businessStatus =>
         businessStatusSub?.label ?? 'Business Status',
       ReportNavGroup.taxes => taxesSub?.label ?? 'Taxes',
-      ReportNavGroup.expenseReport =>
-        expenseSub?.label ?? 'Expense Report',
+      ReportNavGroup.expenseReport => expenseSub?.label ?? 'Expense Report',
       ReportNavGroup.salePurchaseOrderReport =>
         salePurchaseOrderSub?.label ?? 'Sale/Purchase Order Report',
       ReportNavGroup.otherIncomeReport =>
         otherIncomeSub?.label ?? 'Other Income Report',
-      ReportNavGroup.loanAccounts =>
-        loanAccountsSub?.label ?? 'Loan Accounts',
+      ReportNavGroup.loanAccounts => loanAccountsSub?.label ?? 'Loan Accounts',
     };
 
     return ColoredBox(

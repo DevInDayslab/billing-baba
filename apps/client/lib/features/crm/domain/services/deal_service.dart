@@ -82,8 +82,7 @@ class DealService {
           deal.accountName != filters.accountName) {
         return false;
       }
-      if (filters.assignedTo != null &&
-          deal.assignedTo != filters.assignedTo) {
+      if (filters.assignedTo != null && deal.assignedTo != filters.assignedTo) {
         return false;
       }
       if (filters.stage != null && deal.stage != filters.stage) {

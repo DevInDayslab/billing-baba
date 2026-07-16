@@ -10,7 +10,6 @@ import type {
 import type { JobWorkOrderRecord } from './job-work-order.types';
 
 export class JobWorkOrderService {
-  private readonly db: NonNullable<ReturnType<typeof getDb>>;
   private readonly repository: JobWorkOrderRepository;
 
   constructor() {
@@ -22,7 +21,6 @@ export class JobWorkOrderService {
         503,
       );
     }
-    this.db = db;
     this.repository = new JobWorkOrderRepository(db);
   }
 
@@ -99,9 +97,7 @@ export class JobWorkOrderService {
       partyId: input.party_id ?? null,
       jobNumber: input.job_number ?? null,
       orderDate: input.order_date ? new Date(input.order_date) : undefined,
-      deliveryDate: input.delivery_date
-        ? new Date(input.delivery_date)
-        : null,
+      deliveryDate: input.delivery_date ? new Date(input.delivery_date) : null,
       finishedGoodName: input.finished_good_name,
       finishedGoodQuantity: input.finished_good_quantity,
       finishedGoodUnit: input.finished_good_unit,

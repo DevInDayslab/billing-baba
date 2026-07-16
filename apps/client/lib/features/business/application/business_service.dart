@@ -173,7 +173,9 @@ class BusinessService {
     return null;
   }
 
-  Future<void> ensureProfileApiBusinessScope({bool forceReselect = false}) async {
+  Future<void> ensureProfileApiBusinessScope({
+    bool forceReselect = false,
+  }) async {
     final storage = await _ref.read(storageServiceProvider.future);
     final token = await storage.readSecure(StorageKeys.accessToken);
     final jwtBusinessId = JwtUtils.businessId(token);
@@ -200,7 +202,9 @@ class BusinessService {
       throw const BusinessProfileScopeRequired();
     }
 
-    BusinessProfileDebugLog.log('Re-selecting business to scope JWT: $businessId');
+    BusinessProfileDebugLog.log(
+      'Re-selecting business to scope JWT: $businessId',
+    );
     await scopeJwtToBusiness(businessId);
   }
 

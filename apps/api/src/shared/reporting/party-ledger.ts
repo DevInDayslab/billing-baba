@@ -1,18 +1,17 @@
 import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
-import {
-  ledgerEntries,
-  payments,
-} from '../../db/schema/accounting/tables';
+import { ledgerEntries, payments } from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
 import { expenses, purchaseDocuments } from '../../db/schema/purchases/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
-import {
-  PURCHASE_BILL_TYPE,
-  REVENUE_SALES_TYPES,
-} from './constants';
+import { PURCHASE_BILL_TYPE, REVENUE_SALES_TYPES } from './constants';
 
-export type PartyLedgerFilter = 'all' | 'sales' | 'purchases' | 'payments' | 'returns';
+export type PartyLedgerFilter =
+  | 'all'
+  | 'sales'
+  | 'purchases'
+  | 'payments'
+  | 'returns';
 
 export type PartyLedgerEntryRow = {
   id: string;
@@ -506,7 +505,10 @@ export function computePartyLedgerSummary(
       totalSales += debit;
     } else if (entry.entryType === 'purchase') {
       totalPurchases += credit;
-    } else if (entry.entryType === 'payment' && entry.paymentDirection === 'received') {
+    } else if (
+      entry.entryType === 'payment' &&
+      entry.paymentDirection === 'received'
+    ) {
       totalPayments += credit;
     }
 
@@ -546,7 +548,8 @@ export function logPartyLedgerDebug(
   );
 
   for (const entry of chronological) {
-    const balance = report.runningBalances.get(entry.id) ?? report.openingBalance;
+    const balance =
+      report.runningBalances.get(entry.id) ?? report.openingBalance;
     const delta = Number(entry.debit) - Number(entry.credit);
     const sign = delta >= 0 ? '+' : '';
     console.log(
@@ -556,7 +559,13 @@ export function logPartyLedgerDebug(
   }
 
   console.log(`Final Outstanding: ${report.summary.outstanding.toFixed(2)}`);
-  console.log(`Total Sales (documents): ${report.summary.totalSales.toFixed(2)}`);
-  console.log(`Total Payments (receipts): ${report.summary.totalPayments.toFixed(2)}`);
-  console.log(`Total Purchases (documents): ${report.summary.totalPurchases.toFixed(2)}`);
+  console.log(
+    `Total Sales (documents): ${report.summary.totalSales.toFixed(2)}`,
+  );
+  console.log(
+    `Total Payments (receipts): ${report.summary.totalPayments.toFixed(2)}`,
+  );
+  console.log(
+    `Total Purchases (documents): ${report.summary.totalPurchases.toFixed(2)}`,
+  );
 }

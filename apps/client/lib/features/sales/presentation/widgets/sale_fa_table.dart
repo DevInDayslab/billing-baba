@@ -316,13 +316,11 @@ class SaleFaTable extends ConsumerWidget {
                           content: Text('Delete ${record.invoiceNo}?'),
                           actions: [
                             TextButton(
-                              onPressed: () =>
-                                  Navigator.of(context).pop(false),
+                              onPressed: () => Navigator.of(context).pop(false),
                               child: const Text('Cancel'),
                             ),
                             FilledButton(
-                              onPressed: () =>
-                                  Navigator.of(context).pop(true),
+                              onPressed: () => Navigator.of(context).pop(true),
                               child: const Text('Delete'),
                             ),
                           ],

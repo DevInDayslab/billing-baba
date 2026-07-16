@@ -70,9 +70,9 @@ class ExpenseDto {
       taxAmount: json['tax_amount'] as String?,
       taxRate: json['tax_rate'] as String?,
       attachments: json['attachments'] is List
-          ? (json['attachments'] as List)
-                .whereType<String>()
-                .toList(growable: false)
+          ? (json['attachments'] as List).whereType<String>().toList(
+              growable: false,
+            )
           : const [],
       paymentMode: json['payment_mode'] as String?,
       createdAt: json['created_at'] as String,

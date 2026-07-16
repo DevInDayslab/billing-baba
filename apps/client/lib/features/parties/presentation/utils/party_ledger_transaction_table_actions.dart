@@ -56,15 +56,18 @@ abstract final class PartyLedgerTransactionTableActions {
     PartyLedgerTransactionModel transaction,
   ) {
     return switch (transaction.referenceType) {
-      'sales_documents' => transaction.entryType == 'return'
-          ? PartyLedgerTransactionKind.saleReturn
-          : PartyLedgerTransactionKind.saleInvoice,
-      'purchase_documents' => transaction.entryType == 'return'
-          ? PartyLedgerTransactionKind.purchaseReturn
-          : PartyLedgerTransactionKind.purchaseBill,
-      'payments' => transaction.direction == 'paid'
-          ? PartyLedgerTransactionKind.paymentOut
-          : PartyLedgerTransactionKind.paymentIn,
+      'sales_documents' =>
+        transaction.entryType == 'return'
+            ? PartyLedgerTransactionKind.saleReturn
+            : PartyLedgerTransactionKind.saleInvoice,
+      'purchase_documents' =>
+        transaction.entryType == 'return'
+            ? PartyLedgerTransactionKind.purchaseReturn
+            : PartyLedgerTransactionKind.purchaseBill,
+      'payments' =>
+        transaction.direction == 'paid'
+            ? PartyLedgerTransactionKind.paymentOut
+            : PartyLedgerTransactionKind.paymentIn,
       'expenses' => PartyLedgerTransactionKind.expense,
       _ => PartyLedgerTransactionKind.unknown,
     };

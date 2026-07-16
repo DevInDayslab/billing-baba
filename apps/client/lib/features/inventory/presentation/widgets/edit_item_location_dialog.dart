@@ -38,7 +38,8 @@ class EditItemLocationDialog extends ConsumerStatefulWidget {
       _EditItemLocationDialogState();
 }
 
-class _EditItemLocationDialogState extends ConsumerState<EditItemLocationDialog> {
+class _EditItemLocationDialogState
+    extends ConsumerState<EditItemLocationDialog> {
   final _rackController = TextEditingController();
   final _shelfController = TextEditingController();
   String? _godownId;
@@ -159,7 +160,10 @@ class _EditItemLocationDialogState extends ConsumerState<EditItemLocationDialog>
               const SizedBox(height: AppSpacing.sm),
               Text(
                 _errorMessage!,
-                style: const TextStyle(fontSize: 12, color: saleFieldErrorColor),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: saleFieldErrorColor,
+                ),
               ),
             ],
           ],

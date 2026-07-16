@@ -22,9 +22,15 @@ class PosSalesHistoryPage extends ConsumerWidget {
     decimalDigits: 2,
   );
 
-  Future<void> _printReceipt(BuildContext context, WidgetRef ref, PosSale sale) async {
+  Future<void> _printReceipt(
+    BuildContext context,
+    WidgetRef ref,
+    PosSale sale,
+  ) async {
     try {
-      await ref.read(posReceiptPrinterProvider).preview(
+      await ref
+          .read(posReceiptPrinterProvider)
+          .preview(
             context: context,
             sale: sale,
             ref: ref,
@@ -169,7 +175,8 @@ class PosSalesHistoryPage extends ConsumerWidget {
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute<void>(
-                                builder: (_) => PosReturnPage(originalSale: sale),
+                                builder: (_) =>
+                                    PosReturnPage(originalSale: sale),
                               ),
                             );
                           },

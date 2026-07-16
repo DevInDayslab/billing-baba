@@ -17,7 +17,8 @@ class PosSalesList extends _$PosSalesList {
     final sales = <PosSale>[];
     for (final row in rows) {
       final lines = await local.getSaleWithLines(row.id);
-      final lineItems = lines?.$2
+      final lineItems =
+          lines?.$2
               .map(
                 (line) => PosSaleLineItem(
                   name: line.itemName,
@@ -61,11 +62,11 @@ class PosSalesList extends _$PosSalesList {
   }
 
   PaymentMode _paymentModeFromApi(String apiValue) => switch (apiValue) {
-        'upi' => PaymentMode.upi,
-        'card' => PaymentMode.card,
-        'bank_transfer' => PaymentMode.bank,
-        _ => PaymentMode.cash,
-      };
+    'upi' => PaymentMode.upi,
+    'card' => PaymentMode.card,
+    'bank_transfer' => PaymentMode.bank,
+    _ => PaymentMode.cash,
+  };
 
   List<PaymentEntry> _parseStoredPayments(String stored, double total) {
     final modes = stored
@@ -83,7 +84,10 @@ class PosSalesList extends _$PosSalesList {
     }
     final share = total / modes.length;
     return modes
-        .map((mode) => PaymentEntry(mode: _paymentModeFromApi(mode), amount: share))
+        .map(
+          (mode) =>
+              PaymentEntry(mode: _paymentModeFromApi(mode), amount: share),
+        )
         .toList();
   }
 }

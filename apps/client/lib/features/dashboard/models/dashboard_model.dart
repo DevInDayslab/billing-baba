@@ -106,7 +106,11 @@ class DashboardRecentTransactionModel {
   const DashboardRecentTransactionModel({
     required this.id,
     required this.type,
-    required this.referenceNumber, required this.partyName, required this.amount, required this.date, this.referenceId,
+    required this.referenceNumber,
+    required this.partyName,
+    required this.amount,
+    required this.date,
+    this.referenceId,
     this.referenceType,
     this.direction,
   });

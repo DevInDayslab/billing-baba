@@ -5,9 +5,10 @@ import 'package:billing_baba/shared/widgets/table_filters/filter_popup_layout.da
 import 'package:billing_baba/shared/widgets/table_filters/filter_popup_widgets.dart';
 import 'package:flutter/material.dart';
 
-typedef MultiSelectFilterApplyCallback = void Function(
-  MultiSelectColumnFilter? filter,
-);
+typedef MultiSelectFilterApplyCallback =
+    void Function(
+      MultiSelectColumnFilter? filter,
+    );
 
 /// Multi-select filter — checkbox list with optional search (Vyapar).
 class MultiSelectFilterWidget extends StatefulWidget {

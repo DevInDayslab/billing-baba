@@ -138,8 +138,8 @@ class _ImportItemsContentState extends ConsumerState<ImportItemsContent> {
                           isSelected:
                               _selectedMethod == ImportItemsMethod.itemLibrary,
                           onTap: () => setState(
-                            () => _selectedMethod =
-                                ImportItemsMethod.itemLibrary,
+                            () =>
+                                _selectedMethod = ImportItemsMethod.itemLibrary,
                           ),
                         ),
                       ],

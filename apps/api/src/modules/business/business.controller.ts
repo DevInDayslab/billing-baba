@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
 import { AppError } from '../../shared/errors/app-error';
-import { sendData, sendPaginated } from '../../shared/http/response';
+import { sendData } from '../../shared/http/response';
 import {
   createBusinessBodySchema,
   updateBusinessProfileBodySchema,

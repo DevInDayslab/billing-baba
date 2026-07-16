@@ -44,7 +44,10 @@ class SaleLineItemColumnPickerButton extends StatelessWidget {
                   value: visibility.isVisible(column),
                   onChanged: (_) => onToggle(column),
                 ),
-              const Divider(height: 1, color: SaleLineItemTableLayout.gridBorderColor),
+              const Divider(
+                height: 1,
+                color: SaleLineItemTableLayout.gridBorderColor,
+              ),
               InkWell(
                 onTap: onMoreSettings,
                 child: const Padding(

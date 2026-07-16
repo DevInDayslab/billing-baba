@@ -49,7 +49,8 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
-      ref.read(expenseTabIndexProvider.notifier).tabIndex = _tabController.index;
+      ref.read(expenseTabIndexProvider.notifier).tabIndex =
+          _tabController.index;
     }
   }
 
@@ -86,7 +87,9 @@ class _ExpensesPageState extends ConsumerState<ExpensesPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const PurchasePageTitleBar(currentRoute: AppRoutes.purchaseExpenses),
+            const PurchasePageTitleBar(
+              currentRoute: AppRoutes.purchaseExpenses,
+            ),
             Expanded(
               child: PurchaseSectionAsyncContent(
                 expand: true,

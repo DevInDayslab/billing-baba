@@ -354,8 +354,9 @@ class _AddContactDialogState extends State<AddContactDialog> {
                                       ...LeadSource.values.map((s) => s.label),
                                     ],
                                     onSelected: (label) => setState(() {
-                                      _leadSourceLabel =
-                                          label == '-None-' ? null : label;
+                                      _leadSourceLabel = label == '-None-'
+                                          ? null
+                                          : label;
                                     }),
                                   ),
                                 ),

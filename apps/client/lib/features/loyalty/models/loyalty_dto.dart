@@ -17,11 +17,9 @@ class PartyLoyaltyBalanceDto {
   final String pointsEarned;
   final String pointsAvailable;
 
-  double get availablePoints =>
-      double.tryParse(pointsAvailable) ?? 0;
+  double get availablePoints => double.tryParse(pointsAvailable) ?? 0;
 
-  double get earnedPointsValue =>
-      double.tryParse(pointsEarned) ?? 0;
+  double get earnedPointsValue => double.tryParse(pointsEarned) ?? 0;
 }
 
 class SaleLoyaltyResultDto {
