@@ -238,6 +238,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         final showTopBar =
             currentLocation != AppRoutes.pos || !ref.watch(posSessionProvider);
         final pageTitle = _pageTitleFor(currentLocation);
+        final isHomeRoute = currentLocation == AppRoutes.home;
         final mainContent = ColoredBox(
           color: AppColors.background,
           child: Column(
@@ -246,6 +247,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                 AppTopBar(
                   pageTitle: pageTitle,
                   showMenuButton: useOverlaySidebar,
+                  isHomeRoute: isHomeRoute,
                 ),
               Expanded(child: widget.child),
             ],

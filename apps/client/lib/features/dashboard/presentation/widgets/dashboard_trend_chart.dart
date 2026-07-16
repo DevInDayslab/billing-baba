@@ -8,11 +8,13 @@ class DashboardTrendChart extends StatelessWidget {
   const DashboardTrendChart({
     required this.points,
     required this.lineColor,
+    this.minimal = false,
     super.key,
   });
 
   final List<DashboardTrendPointModel> points;
   final Color lineColor;
+  final bool minimal;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,68 @@ class DashboardTrendChart extends StatelessWidget {
     final maxY = spots
         .map((spot) => spot.y)
         .fold<double>(0, (a, b) => a > b ? a : b);
-    final chartMaxY = maxY <= 0 ? 1.0 : maxY * 1.2;
+    final chartMaxY = maxY <= 0 ? 1.0 : maxY * 1.15;
+
+    if (minimal) {
+      return Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.xs),
+        child: LineChart(
+          LineChartData(
+            minY: 0,
+            maxY: chartMaxY,
+            gridData: FlGridData(
+              drawVerticalLine: false,
+              horizontalInterval: chartMaxY,
+              getDrawingHorizontalLine: (_) => const FlLine(
+                color: Color(0xFFEEEEEE),
+                strokeWidth: 1,
+              ),
+            ),
+            titlesData: FlTitlesData(
+              topTitles: const AxisTitles(),
+              rightTitles: const AxisTitles(),
+              leftTitles: const AxisTitles(),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 20,
+                  interval: points.length > 5 ? (points.length / 3).ceilToDouble() : 1,
+                  getTitlesWidget: (value, meta) {
+                    final index = value.toInt();
+                    if (index < 0 || index >= points.length) {
+                      return const SizedBox.shrink();
+                    }
+                    return Text(
+                      DateFormat('d MMM').format(points[index].date),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: AppColors.textSecondary,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            borderData: FlBorderData(show: false),
+            lineTouchData: const LineTouchData(enabled: false),
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                curveSmoothness: 0.25,
+                color: lineColor,
+                barWidth: 2,
+                dotData: const FlDotData(show: false),
+                belowBarData: BarAreaData(
+                  show: true,
+                  color: lineColor.withValues(alpha: 0.06),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.only(

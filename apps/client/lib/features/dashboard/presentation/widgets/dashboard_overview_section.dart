@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/layout/dashboard_layout.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_metric_card.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_typography.dart';
@@ -7,14 +8,12 @@ import 'package:intl/intl.dart';
 class DashboardOverviewSection extends StatelessWidget {
   const DashboardOverviewSection({
     required this.overview,
-    required this.finance,
     required this.onReceivableTap,
     required this.onPayableTap,
     super.key,
   });
 
   final DashboardOverviewModel overview;
-  final DashboardFinanceModel finance;
   final VoidCallback onReceivableTap;
   final VoidCallback onPayableTap;
 
@@ -26,114 +25,43 @@ class DashboardOverviewSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final columns = width >= 992
-            ? 4
-            : width >= 480
-            ? 2
-            : 1;
-        const gap = DashboardSpacing.widgetGap;
+    final metrics = DashboardLayoutScope.of(context);
 
-        final cards = [
-          _OverviewMetricCard(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: _OverviewMetricCard(
             title: 'Total Receivable',
             amount: overview.totalReceivable,
             subtitle: overview.receivablePartyCount == 0
                 ? "You don't have any receivables as of now."
                 : _partyCountLabel(overview.receivablePartyCount),
-            trailing: const Icon(
-              Icons.account_balance_wallet_outlined,
-              color: DashboardColors.incoming,
-              size: 20,
-            ),
+            icon: Icons.south_west,
+            iconColor: DashboardColors.incoming,
+            iconBackground: DashboardColors.incomingBg,
             onTap: onReceivableTap,
             currencyFormat: _currencyFormat,
+            padding: metrics.cardPadding,
           ),
-          _OverviewMetricCard(
+        ),
+        SizedBox(width: metrics.gap),
+        Expanded(
+          child: _OverviewMetricCard(
             title: 'Total Payable',
             amount: overview.totalPayable,
             subtitle: overview.payablePartyCount == 0
                 ? "You don't have any payables as of now."
                 : _partyCountLabel(overview.payablePartyCount),
-            trailing: const Icon(
-              Icons.account_balance_wallet_outlined,
-              color: DashboardColors.outgoing,
-              size: 20,
-            ),
+            icon: Icons.north_east,
+            iconColor: DashboardColors.outgoing,
+            iconBackground: DashboardColors.outgoingBg,
             onTap: onPayableTap,
             currencyFormat: _currencyFormat,
+            padding: metrics.cardPadding,
           ),
-          _OverviewMetricCard(
-            title: 'Cash In (Today)',
-            amount: finance.cashIn,
-            subtitle: 'Today',
-            trailing: const Icon(
-              Icons.payments_outlined,
-              color: DashboardColors.incoming,
-              size: 20,
-            ),
-            currencyFormat: _currencyFormat,
-          ),
-          _OverviewMetricCard(
-            title: 'Cash Out (Today)',
-            amount: finance.cashOut,
-            subtitle: 'Today',
-            trailing: const Icon(
-              Icons.payments_outlined,
-              color: DashboardColors.outgoing,
-              size: 20,
-            ),
-            currencyFormat: _currencyFormat,
-          ),
-        ];
-
-        if (columns == 1) {
-          return Column(
-            children: [
-              for (var i = 0; i < cards.length; i++) ...[
-                if (i > 0) const SizedBox(height: gap),
-                cards[i],
-              ],
-            ],
-          );
-        }
-
-        if (columns == 2) {
-          return Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: cards[0]),
-                  const SizedBox(width: gap),
-                  Expanded(child: cards[1]),
-                ],
-              ),
-              const SizedBox(height: gap),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: cards[2]),
-                  const SizedBox(width: gap),
-                  Expanded(child: cards[3]),
-                ],
-              ),
-            ],
-          );
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (var i = 0; i < cards.length; i++) ...[
-              if (i > 0) const SizedBox(width: gap),
-              Expanded(child: cards[i]),
-            ],
-          ],
-        );
-      },
+        ),
+      ],
     );
   }
 }
@@ -143,21 +71,28 @@ class _OverviewMetricCard extends StatelessWidget {
     required this.title,
     required this.amount,
     required this.subtitle,
-    required this.trailing,
+    required this.icon,
+    required this.iconColor,
+    required this.iconBackground,
     required this.currencyFormat,
+    required this.padding,
     this.onTap,
   });
 
   final String title;
   final double amount;
   final String subtitle;
-  final Widget trailing;
+  final IconData icon;
+  final Color iconColor;
+  final Color iconBackground;
   final NumberFormat currencyFormat;
+  final EdgeInsets padding;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return DashboardMetricCard(
+      padding: padding,
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,27 +107,54 @@ class _OverviewMetricCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              trailing,
+              _KpiDirectionIcon(
+                icon: icon,
+                color: iconColor,
+                background: iconBackground,
+              ),
             ],
           ),
-          const SizedBox(height: DashboardSpacing.titleToValue),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              currencyFormat.format(amount),
-              style: DashboardTypography.mainValue,
-            ),
+          const Spacer(),
+          Text(
+            currencyFormat.format(amount),
+            style: DashboardTypography.kpiValue,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: DashboardSpacing.valueToContent),
+          const SizedBox(height: 4),
           Text(
             subtitle,
             style: DashboardTypography.metadata,
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
+    );
+  }
+}
+
+class _KpiDirectionIcon extends StatelessWidget {
+  const _KpiDirectionIcon({
+    required this.icon,
+    required this.color,
+    required this.background,
+  });
+
+  final IconData icon;
+  final Color color;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: background,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 14, color: color),
     );
   }
 }

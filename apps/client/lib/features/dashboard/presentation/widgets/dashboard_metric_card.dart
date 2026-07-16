@@ -6,31 +6,27 @@ class DashboardMetricCard extends StatelessWidget {
   const DashboardMetricCard({
     required this.child,
     this.onTap,
+    this.padding,
     super.key,
   });
 
   final Widget child;
   final VoidCallback? onTap;
+  final EdgeInsetsGeometry? padding;
 
-  static const borderColor = Color(0xFFE0E0E0);
+  static const Color borderColor = DashboardColors.border;
 
   @override
   Widget build(BuildContext context) {
     final card = DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: DashboardDecor.cardRadius,
         border: Border.all(color: borderColor),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
+        boxShadow: DashboardDecor.cardShadow,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(DashboardSpacing.cardPadding),
+        padding: padding ?? const EdgeInsets.all(AppSpacing.sm + 4),
         child: child,
       ),
     );
@@ -41,7 +37,7 @@ class DashboardMetricCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: DashboardDecor.cardRadius,
         child: card,
       ),
     );
