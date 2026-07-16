@@ -3,7 +3,11 @@ import 'dart:typed_data';
 import 'package:billing_baba/features/print/application/print_data_service.dart';
 import 'package:billing_baba/features/print/application/print_output_service.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/models/printable_document.dart';
 import 'package:billing_baba/features/print/templates/template_registry.dart';
+import 'package:billing_baba/features/settings/models/print_settings.dart';
+import 'package:billing_baba/features/settings/repositories/print_settings_repository.dart';
+import 'package:billing_baba/features/settings/services/invoice_print_document_service.dart';
 import 'package:flutter/material.dart';
 
 export 'package:billing_baba/features/print/application/print_exception.dart'
@@ -12,29 +16,54 @@ export 'package:billing_baba/features/print/application/print_exception.dart'
 /// Orchestrates data loading, template rendering, and PDF output.
 class PrintService {
   PrintService({
-    required this._dataService,
-    required this._outputService,
-    required this._templateRegistry,
-  });
+    required PrintDataService dataService,
+    required PrintOutputService outputService,
+    required TemplateRegistry templateRegistry,
+    required PrintSettingsRepository printSettingsRepository,
+  })  : _dataService = dataService,
+        _outputService = outputService,
+        _templateRegistry = templateRegistry,
+        _printSettingsRepository = printSettingsRepository;
 
   final PrintDataService _dataService;
   final PrintOutputService _outputService;
   final TemplateRegistry _templateRegistry;
+  final PrintSettingsRepository _printSettingsRepository;
 
-  Future<Uint8List> generatePdf(PrintRequest request) => _renderPdf(request);
+  Future<PrintSettings> _loadSettings() => _printSettingsRepository.load();
 
-  Future<Uint8List> _renderPdf(PrintRequest request) async {
+  Future<Uint8List> generatePdf(PrintRequest request) async {
+    final settings = await _loadSettings();
+    return _renderPdf(request, settings: settings);
+  }
+
+  Future<Uint8List> _renderPdf(
+    PrintRequest request, {
+    required PrintSettings settings,
+  }) async {
     final document = await _dataService.load(request);
+
+    if (_usesPrintSettings(document)) {
+      return InvoicePrintDocumentService.buildBytesFromPrintableDocument(
+        settings: settings,
+        document: document,
+      );
+    }
+
     final template = _templateRegistry.resolve(document.kind);
     return template.render(document);
   }
+
+  bool _usesPrintSettings(PrintableDocument document) =>
+      document.kind.isCommercial && document.hasLineItems;
 
   Future<void> preview({
     required BuildContext context,
     required PrintRequest request,
     String? name,
   }) async {
-    final bytes = await _renderPdf(request);
+    final settings = await _loadSettings();
+    final bytes = await _renderPdf(request, settings: settings);
     if (!context.mounted) return;
     await _outputService.preview(
       context: context,
@@ -44,15 +73,18 @@ class PrintService {
   }
 
   Future<void> print(PrintRequest request, {String? name}) async {
-    final bytes = await _renderPdf(request);
-    await _outputService.print(
-      bytes: bytes,
-      name: name ?? _defaultFilename(request),
-    );
+    final settings = await _loadSettings();
+    final bytes = await _renderPdf(request, settings: settings);
+    final resolvedName = name ?? _defaultFilename(request);
+
+    for (var copy = 0; copy < settings.numberOfCopies; copy++) {
+      await _outputService.print(bytes: bytes, name: resolvedName);
+    }
   }
 
   Future<void> share(PrintRequest request, {String? filename}) async {
-    final bytes = await _renderPdf(request);
+    final settings = await _loadSettings();
+    final bytes = await _renderPdf(request, settings: settings);
     await _outputService.share(
       bytes: bytes,
       filename: filename ?? '${_defaultFilename(request)}.pdf',
@@ -60,7 +92,8 @@ class PrintService {
   }
 
   Future<String?> save(PrintRequest request, {String? filename}) async {
-    final bytes = await _renderPdf(request);
+    final settings = await _loadSettings();
+    final bytes = await _renderPdf(request, settings: settings);
     return _outputService.save(
       bytes: bytes,
       filename: filename ?? '${_defaultFilename(request)}.pdf',
@@ -82,6 +115,7 @@ class PrintService {
       PaymentOutPrintRequest(:final id) => 'payment_voucher_$id',
       ExpensePrintRequest(:final id) => 'expense_$id',
       FixedAssetPurchasePrintRequest(:final id) => 'fa_purchase_$id',
+      SaleFaPrintRequest(:final id) => 'sale_fa_$id',
       JobWorkOrderPrintRequest(:final id) => 'job_work_$id',
     };
   }

@@ -132,6 +132,7 @@ class CommercialDocumentLayoutConfig {
       PrintableDocumentKind.paymentOut ||
       PrintableDocumentKind.expense ||
       PrintableDocumentKind.fixedAssetPurchase ||
+      PrintableDocumentKind.saleFa ||
       PrintableDocumentKind.jobWorkOrder ||
       PrintableDocumentKind.posReceipt =>
         throw StateError('Voucher documents use A4VoucherTemplate'),

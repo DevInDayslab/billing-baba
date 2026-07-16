@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/presentation/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -210,15 +211,8 @@ class _SaleReturnFilterBarState extends ConsumerState<SaleReturnFilterBar> {
                         ModuleExportActions.exportCreditNotes(context, ref),
                   ),
                   IconButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Use row actions to print a credit note',
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed: () =>
+                        ModulePrintActions.printSaleReturns(context, ref),
                     icon: const Icon(Icons.print_outlined, size: 20),
                     color: AppColors.textSecondary,
                     tooltip: 'Print',

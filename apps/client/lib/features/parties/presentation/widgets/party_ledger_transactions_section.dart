@@ -1,17 +1,22 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_list_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_list_table.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
+import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/utils/party_transaction_navigation.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_ledger_transaction_actions_menu.dart';
+import 'package:billing_baba/features/parties/providers/parties_providers.dart';
+import 'package:billing_baba/features/parties/utils/party_ledger_pdf_builder.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_table_shared.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 
@@ -96,7 +101,7 @@ class PartyTransactionTableState {
   }
 }
 
-class PartyLedgerTransactionsSection extends StatefulWidget {
+class PartyLedgerTransactionsSection extends ConsumerStatefulWidget {
   const PartyLedgerTransactionsSection({
     required this.transactionsAsync,
     required this.onRefresh,
@@ -107,12 +112,12 @@ class PartyLedgerTransactionsSection extends StatefulWidget {
   final Future<void> Function() onRefresh;
 
   @override
-  State<PartyLedgerTransactionsSection> createState() =>
+  ConsumerState<PartyLedgerTransactionsSection> createState() =>
       _PartyLedgerTransactionsSectionState();
 }
 
 class _PartyLedgerTransactionsSectionState
-    extends State<PartyLedgerTransactionsSection> {
+    extends ConsumerState<PartyLedgerTransactionsSection> {
   PartyTransactionTableState _tableState = const PartyTransactionTableState();
   String _searchQuery = '';
 
@@ -252,6 +257,64 @@ class _PartyLedgerTransactionsSectionState
     }
 
     return rows;
+  }
+
+  Future<void> _printPartyLedger(BuildContext context) async {
+    final party = ref.read(selectedPartyProvider);
+    if (party == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Party details are not available'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final transactions = widget.transactionsAsync.value ?? const [];
+    final businessName = ref.read(sidebarBusinessProvider).name;
+    final ledger = ref.read(partyLedgerProvider(party.id)).value;
+
+    if (!context.mounted) return;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const PopScope(
+        canPop: false,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+    );
+
+    try {
+      final bytes = await PartyLedgerPdfBuilder.build(
+        party: party,
+        transactions: transactions,
+        businessName: businessName,
+        outstanding: ledger?.summary.outstanding ?? party.balance,
+        creditLimit: ledger?.summary.creditLimit,
+      );
+      if (!context.mounted) return;
+
+      final safeName = party.name.replaceAll(RegExp(r'[^\w\-]+'), '_');
+      await Printing.layoutPdf(
+        onLayout: (_) async => bytes,
+        name: 'Party_Ledger_$safeName',
+        dynamicLayout: false,
+      );
+    } on Object catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not print party ledger: $error'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
   }
 
   List<InventoryListColumn> _buildColumns(
@@ -433,14 +496,7 @@ class _PartyLedgerTransactionsSectionState
                 onQueryChanged: (query) => setState(() => _searchQuery = query),
               ),
               IconButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Print coming soon'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
+                onPressed: () => _printPartyLedger(context),
                 icon: const Icon(Icons.print_outlined, size: 20),
                 color: AppColors.textSecondary,
                 tooltip: 'Print',

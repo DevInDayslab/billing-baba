@@ -13,6 +13,8 @@ import 'package:billing_baba/features/print/models/printable_totals.dart';
 import 'package:billing_baba/features/print/templates/a4_commercial_document_template.dart';
 import 'package:billing_baba/features/print/templates/a4_voucher_template.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
+import 'package:billing_baba/features/settings/models/print_settings.dart';
+import 'package:billing_baba/features/settings/services/invoice_print_document_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -190,6 +192,19 @@ void main() {
 
     test('A4VoucherTemplate renders non-empty PDF bytes', () async {
       final bytes = await A4VoucherTemplate().render(_voucherFixture());
+
+      expect(bytes, isNotEmpty);
+      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
+
+    test('InvoicePrintDocumentService renders sales invoice with print settings',
+        () async {
+      const settings = PrintSettings.defaults();
+      final bytes =
+          await InvoicePrintDocumentService.buildBytesFromPrintableDocument(
+        settings: settings,
+        document: _commercialFixture(),
+      );
 
       expect(bytes, isNotEmpty);
       expect(String.fromCharCodes(bytes.take(4)), '%PDF');

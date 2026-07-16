@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/presentation/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/sales/providers/sale_fa_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -90,13 +91,7 @@ class SaleFaSummaryCard extends ConsumerWidget {
           tooltip: 'Excel Report',
         ),
         IconButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Use row actions to print a sale FA'),
-              ),
-            );
-          },
+          onPressed: () => ModulePrintActions.printSaleFa(context, ref),
           icon: const Icon(Icons.print_outlined, size: 20),
           color: AppColors.textSecondary,
           tooltip: 'Print',
