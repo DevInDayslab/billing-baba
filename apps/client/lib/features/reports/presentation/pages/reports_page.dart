@@ -68,6 +68,24 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
       if (intent.businessStatusSub != null) {
         _selectedBusinessStatusSub = intent.businessStatusSub!;
       }
+      if (intent.gstSub != null) {
+        _selectedGstSub = intent.gstSub!;
+      }
+      if (intent.taxesSub != null) {
+        _selectedTaxesSub = intent.taxesSub!;
+      }
+      if (intent.expenseSub != null) {
+        _selectedExpenseSub = intent.expenseSub!;
+      }
+      if (intent.salePurchaseOrderSub != null) {
+        _selectedSalePurchaseOrderSub = intent.salePurchaseOrderSub!;
+      }
+      if (intent.otherIncomeSub != null) {
+        _selectedOtherIncomeSub = intent.otherIncomeSub!;
+      }
+      if (intent.loanAccountsSub != null) {
+        _selectedLoanAccountsSub = intent.loanAccountsSub!;
+      }
     });
   }
 
