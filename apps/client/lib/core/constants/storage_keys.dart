@@ -23,4 +23,5 @@ abstract final class StorageKeys {
       'sale_line_item_column_visibility';
   static const dashboardTasks = 'dashboard_tasks';
   static const dashboardSideWidgets = 'dashboard_side_widgets';
+  static const printSettings = 'print_settings';
 }

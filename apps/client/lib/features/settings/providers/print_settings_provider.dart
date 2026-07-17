@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
 import 'package:billing_baba/features/settings/repositories/print_settings_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -8,13 +9,15 @@ part 'print_settings_provider.g.dart';
 @Riverpod(keepAlive: true)
 Future<PrintSettingsRepository> printSettingsRepository(Ref ref) async {
   final storage = await ref.watch(storageServiceProvider.future);
-  return PrintSettingsRepository(storage);
+  final businessId = ref.watch(currentBusinessProvider)?.id ?? '';
+  return PrintSettingsRepository(storage, businessId);
 }
 
 @Riverpod(keepAlive: true)
 class PrintSettingsNotifier extends _$PrintSettingsNotifier {
   @override
   Future<PrintSettings> build() async {
+    ref.watch(currentBusinessProvider);
     final repository = await ref.watch(printSettingsRepositoryProvider.future);
     return repository.load();
   }

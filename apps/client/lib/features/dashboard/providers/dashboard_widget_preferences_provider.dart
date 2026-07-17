@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_side_widget.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -16,13 +17,25 @@ const _defaultWidgets = <DashboardSideWidget>[
 class DashboardWidgetPreferences extends _$DashboardWidgetPreferences {
   @override
   List<DashboardSideWidget> build() {
+    ref.listen(currentBusinessProvider, (_, _) {
+      ref.invalidateSelf();
+    });
     _load();
     return List<DashboardSideWidget>.from(_defaultWidgets);
   }
 
+  String? get _storageKey {
+    final businessId = ref.read(currentBusinessProvider)?.id;
+    if (businessId == null || businessId.isEmpty) return null;
+    return '${StorageKeys.dashboardSideWidgets}_$businessId';
+  }
+
   Future<void> _load() async {
+    final key = _storageKey;
+    if (key == null) return;
+
     final storage = await ref.read(storageServiceProvider.future);
-    final raw = storage.read(StorageKeys.dashboardSideWidgets);
+    final raw = storage.read(key);
     if (raw == null || raw.isEmpty) return;
 
     final parsed = DashboardSideWidget.fromIdsOrdered(raw.split(','));
@@ -32,9 +45,12 @@ class DashboardWidgetPreferences extends _$DashboardWidgetPreferences {
   }
 
   Future<void> _persist(List<DashboardSideWidget> widgets) async {
+    final key = _storageKey;
+    if (key == null) return;
+
     final storage = await ref.read(storageServiceProvider.future);
     final value = widgets.map((w) => w.id).join(',');
-    await storage.write(StorageKeys.dashboardSideWidgets, value);
+    await storage.write(key, value);
   }
 
   void toggle(DashboardSideWidget widget) {

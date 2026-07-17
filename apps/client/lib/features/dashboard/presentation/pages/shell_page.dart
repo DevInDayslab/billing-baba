@@ -1,8 +1,10 @@
+import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
+import 'package:billing_baba/features/business/presentation/widgets/business_opening_overlay.dart';
 import 'package:billing_baba/features/dashboard/application/quick_create_executor.dart';
 import 'package:billing_baba/features/dashboard/models/quick_create_action.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/app_top_bar.dart';
@@ -226,8 +228,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     final sidebarState = ref.watch(shellSidebarProvider);
     final isCollapsed = sidebarState.isCollapsed;
     final isDrawerOpen = sidebarState.isDrawerOpen;
+    final isOpeningBusiness = ref.watch(businessSessionLoadingProvider) != null;
 
-    return LayoutBuilder(
+    final shell = LayoutBuilder(
       builder: (context, constraints) {
         final useOverlaySidebar = constraints.maxWidth < _overlayBreakpoint;
         _useOverlaySidebar = useOverlaySidebar;
@@ -329,6 +332,16 @@ class _ShellPageState extends ConsumerState<ShellPage> {
           ),
         );
       },
+    );
+
+    if (!isOpeningBusiness) return shell;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        shell,
+        const BusinessOpeningOverlay(),
+      ],
     );
   }
 

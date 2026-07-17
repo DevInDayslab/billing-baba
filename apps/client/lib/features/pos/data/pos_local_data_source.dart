@@ -16,6 +16,7 @@ class PosLocalDataSource {
   static const _uuid = Uuid();
 
   Future<void> saveSale({
+    required String businessId,
     required SalesDocumentDto dto,
     required List<CartItem> items,
     required List<SalesDocumentLineDto> lineDtos,
@@ -31,6 +32,7 @@ class PosLocalDataSource {
         .insertOnConflictUpdate(
           SalesLocalCompanion(
             id: Value(dto.id),
+            businessId: Value(businessId),
             docNumber: Value(dto.documentNumber ?? dto.id),
             partyId: Value(dto.partyId),
             totalAmount: Value(totalAmount),
@@ -44,9 +46,11 @@ class PosLocalDataSource {
           ),
         );
 
-    await (_db.delete(
-      _db.salesLineLocal,
-    )..where((line) => line.saleId.equals(dto.id))).go();
+    await (_db.delete(_db.salesLineLocal)..where(
+          (line) =>
+              line.saleId.equals(dto.id) & line.businessId.equals(businessId),
+        ))
+        .go();
 
     for (var i = 0; i < items.length; i++) {
       final cartItem = items[i];
@@ -56,6 +60,7 @@ class PosLocalDataSource {
           .insert(
             SalesLineLocalCompanion(
               id: Value(lineDto?.id ?? _uuid.v4()),
+              businessId: Value(businessId),
               saleId: Value(dto.id),
               itemId: Value(cartItem.item.id),
               itemName: Value(cartItem.item.name),
@@ -81,32 +86,43 @@ class PosLocalDataSource {
   }
 
   Future<(SaleLocal, List<SaleLineLocal>)?> getSaleWithLines(
+    String businessId,
     String saleId,
   ) async {
-    final sale = await (_db.select(
-      _db.salesLocal,
-    )..where((row) => row.id.equals(saleId))).getSingleOrNull();
+    final sale =
+        await (_db.select(_db.salesLocal)..where(
+              (row) =>
+                  row.id.equals(saleId) & row.businessId.equals(businessId),
+            ))
+            .getSingleOrNull();
     if (sale == null) return null;
 
-    final lines = await (_db.select(
-      _db.salesLineLocal,
-    )..where((row) => row.saleId.equals(saleId))).get();
+    final lines =
+        await (_db.select(_db.salesLineLocal)..where(
+              (row) =>
+                  row.saleId.equals(saleId) &
+                  row.businessId.equals(businessId),
+            ))
+            .get();
     return (sale, lines);
   }
 
-  Future<List<SaleLocal>> getAllSales() {
-    return (_db.select(_db.salesLocal)..orderBy([
-          (row) => OrderingTerm.desc(row.createdAt),
-        ]))
+  Future<List<SaleLocal>> getAllSales(String businessId) {
+    return (_db.select(_db.salesLocal)
+          ..where((row) => row.businessId.equals(businessId))
+          ..orderBy([
+            (row) => OrderingTerm.desc(row.createdAt),
+          ]))
         .get();
   }
 
-  Future<void> saveHeldBill(HeldBill bill) async {
+  Future<void> saveHeldBill(String businessId, HeldBill bill) async {
     await _db
         .into(_db.heldBillsLocal)
         .insertOnConflictUpdate(
           HeldBillsLocalCompanion(
             id: Value(bill.id),
+            businessId: Value(businessId),
             itemsJson: Value(jsonEncode(_cartItemsToJson(bill.items))),
             paymentsJson: Value(jsonEncode(_paymentsToJson(bill.payments))),
             customerName: Value(bill.customerName),
@@ -116,19 +132,22 @@ class PosLocalDataSource {
         );
   }
 
-  Future<List<HeldBill>> getHeldBills() async {
+  Future<List<HeldBill>> getHeldBills(String businessId) async {
     final rows =
-        await (_db.select(_db.heldBillsLocal)..orderBy([
-              (row) => OrderingTerm.desc(row.heldAt),
-            ]))
+        await (_db.select(_db.heldBillsLocal)
+              ..where((row) => row.businessId.equals(businessId))
+              ..orderBy([
+                (row) => OrderingTerm.desc(row.heldAt),
+              ]))
             .get();
     return rows.map(_heldBillFromRow).toList();
   }
 
-  Future<void> deleteHeldBill(String id) async {
-    await (_db.delete(
-      _db.heldBillsLocal,
-    )..where((row) => row.id.equals(id))).go();
+  Future<void> deleteHeldBill(String businessId, String id) async {
+    await (_db.delete(_db.heldBillsLocal)..where(
+          (row) => row.id.equals(id) & row.businessId.equals(businessId),
+        ))
+        .go();
   }
 
   HeldBill _heldBillFromRow(HeldBillsLocalData row) {

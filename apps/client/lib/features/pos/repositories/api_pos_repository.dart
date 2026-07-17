@@ -36,6 +36,7 @@ class ApiPosRepository implements PosRepository {
   }) async {
     try {
       return await _posSaleService.completeSale(
+        businessId: businessId,
         items: cart.items,
         payments: cart.payments,
         customerName: cart.customerName,

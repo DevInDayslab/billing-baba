@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/database/app_database_provider.dart';
+import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/pos/data/pos_local_data_source.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
@@ -11,12 +12,17 @@ part 'pos_sales_list_provider.g.dart';
 class PosSalesList extends _$PosSalesList {
   @override
   Future<List<PosSale>> build() async {
+    final businessId = ref.watch(currentBusinessProvider)?.id;
+    if (businessId == null || businessId.isEmpty) {
+      return const [];
+    }
+
     final db = ref.watch(appDatabaseProvider);
     final local = PosLocalDataSource(db);
-    final rows = await local.getAllSales();
+    final rows = await local.getAllSales(businessId);
     final sales = <PosSale>[];
     for (final row in rows) {
-      final lines = await local.getSaleWithLines(row.id);
+      final lines = await local.getSaleWithLines(businessId, row.id);
       final lineItems =
           lines?.$2
               .map(

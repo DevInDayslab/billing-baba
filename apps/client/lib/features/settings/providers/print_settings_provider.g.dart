@@ -49,7 +49,7 @@ final class PrintSettingsRepositoryProvider
 }
 
 String _$printSettingsRepositoryHash() =>
-    r'2d2f3c8d6908cac66624a29fd325dbe5494c2800';
+    r'64c410d9acb5457b61fe34e646c3a8b6ce0c9b53';
 
 @ProviderFor(PrintSettingsNotifier)
 final printSettingsProvider = PrintSettingsNotifierProvider._();
@@ -76,7 +76,7 @@ final class PrintSettingsNotifierProvider
 }
 
 String _$printSettingsNotifierHash() =>
-    r'7e0fdd56cf4e6072bb2b1c08ba2a22211bc6f730';
+    r'8f0d06ad53c6aa0f08a22d97b5a7f7e408abff0e';
 
 abstract class _$PrintSettingsNotifier extends $AsyncNotifier<PrintSettings> {
   FutureOr<PrintSettings> build();

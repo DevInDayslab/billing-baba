@@ -12,10 +12,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<bool?> showEditBusinessModal(
-  BuildContext context,
-  WidgetRef ref, {
+  BuildContext context, {
   required String businessId,
 }) async {
+  final container = ProviderScope.containerOf(context, listen: false);
   final navigator = Navigator.of(context, rootNavigator: true);
 
   unawaited(
@@ -42,9 +42,17 @@ Future<bool?> showEditBusinessModal(
 
   BusinessProfileModel profile;
   try {
-    profile = await ref
+    profile = await container
         .read(businessListProvider.notifier)
         .fetchProfileForEdit(businessId);
+  } on BusinessSelectionFailed catch (error) {
+    if (context.mounted) {
+      navigator.pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    }
+    return null;
   } on Object {
     if (context.mounted) {
       navigator.pop();
@@ -63,7 +71,7 @@ Future<bool?> showEditBusinessModal(
 
   if (!context.mounted) return null;
 
-  ref.invalidate(editBusinessProfileFormProvider);
+  container.invalidate(editBusinessProfileFormProvider);
 
   final width = MediaQuery.sizeOf(context).width;
   if (width >= 600) {
@@ -76,6 +84,7 @@ Future<bool?> showEditBusinessModal(
         insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         child: _EditBusinessSheet(
           profile: profile,
+          businessId: businessId,
           isDialog: true,
           maxWidth: maxWidth,
         ),
@@ -90,6 +99,7 @@ Future<bool?> showEditBusinessModal(
     backgroundColor: Colors.transparent,
     builder: (context) => _EditBusinessSheet(
       profile: profile,
+      businessId: businessId,
       isDialog: false,
     ),
   );
@@ -98,11 +108,13 @@ Future<bool?> showEditBusinessModal(
 class _EditBusinessSheet extends ConsumerStatefulWidget {
   const _EditBusinessSheet({
     required this.profile,
+    required this.businessId,
     required this.isDialog,
     this.maxWidth = 820,
   });
 
   final BusinessProfileModel profile;
+  final String businessId;
   final bool isDialog;
   final double maxWidth;
 
@@ -207,8 +219,20 @@ class _EditBusinessSheetState extends ConsumerState<_EditBusinessSheet> {
     if (!mounted) return;
 
     if (updated != null) {
+      if (updated.id != widget.businessId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Saved to a different company than expected. Please reopen the Company List and try again.',
+            ),
+          ),
+        );
+        return;
+      }
+
       ref.invalidate(editBusinessProfileFormProvider);
-      await ref.read(businessListProvider.notifier).refresh();
+      final container = ProviderScope.containerOf(context, listen: false);
+      await container.read(businessListProvider.notifier).refresh();
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } else {
