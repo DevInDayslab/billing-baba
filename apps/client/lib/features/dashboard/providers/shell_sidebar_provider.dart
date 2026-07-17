@@ -1,20 +1,17 @@
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
-import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'shell_sidebar_provider.g.dart';
 
 /// Sidebar entries hidden from navigation chrome.
 abstract final class ShellSidebarVisibility {
-  static const hidePos = true;
-  static const hideSettings = true;
-  static const hideUtilities = true;
-  static const hideDeveloper = true;
+  static const hidePos = false;
+  static const hideSettings = false;
+  static const hideUtilities = false;
+  static const hideDeveloper = false;
 
-  static const hiddenSaleSubRoutes = <String>{
-    AppRoutes.saleProformaInvoice,
-  };
+  static const hiddenSaleSubRoutes = <String>{};
 }
 
 /// Shell sidebar open/collapse state, persisted across sessions.

@@ -58,6 +58,8 @@ class _DashboardWidgetPickerState extends ConsumerState<DashboardWidgetPicker> {
                         child: Text(
                           'Add Widget of Your Choice',
                           style: DashboardTypography.metadata,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                       IconButton(
@@ -91,9 +93,14 @@ class _DashboardWidgetPickerState extends ConsumerState<DashboardWidgetPicker> {
                 children: [
                   Icon(Icons.add, size: 16, color: AppColors.primary),
                   SizedBox(width: AppSpacing.sm),
-                  Text(
-                    'Add Widget of Your Choice',
-                    style: DashboardTypography.metadata,
+                  Flexible(
+                    child: Text(
+                      'Add Widget of Your Choice',
+                      style: DashboardTypography.metadata,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ],
               ),

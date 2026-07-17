@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import Fastify, { type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyInstance, LogController } from 'fastify';
 import type { AppConfig } from './config/app_config';
 import { createLoggerOptions } from './config/logger';
 import { registerMiddleware } from './middleware';
@@ -13,10 +13,12 @@ function createRequestId(): string {
 export async function buildApp(config: AppConfig): Promise<FastifyInstance> {
   const app = Fastify({
     logger: createLoggerOptions(config),
-    disableRequestLogging: true,
+    logController: new LogController({
+      disableRequestLogging: true,
+      requestIdLogLabel: 'requestId',
+    }),
     genReqId: createRequestId,
     requestIdHeader: 'x-request-id',
-    requestIdLogLabel: 'requestId',
   });
 
   await registerPlugins(app, config);

@@ -1,4 +1,3 @@
-import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
@@ -178,7 +177,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         routePrefix: AppRoutes.utilities,
         subItems: _utilitiesSubItems,
       ),
-    if (!ShellSidebarVisibility.hideDeveloper && AppConfig.showDeveloperMenu)
+    if (!ShellSidebarVisibility.hideDeveloper)
       _NavItem(
         icon: Icons.code_outlined,
         label: 'Developer',

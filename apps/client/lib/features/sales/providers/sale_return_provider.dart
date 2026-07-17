@@ -1,5 +1,4 @@
 import 'package:billing_baba/core/utils/debouncer.dart';
-import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
@@ -9,7 +8,6 @@ import 'package:billing_baba/features/sales/providers/sales_documents_list_provi
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_return_provider.g.dart';
@@ -488,7 +486,7 @@ class SaleReturnFilters extends _$SaleReturnFilters {
 List<SaleInvoiceModel> filteredSaleReturns(Ref ref) {
   final allReturns = ref.watch(saleReturnsProvider).value?.items ?? [];
   final filters = ref.watch(saleReturnFiltersProvider);
-  return _applyClientFilters(allReturns, filters);
+  return applySaleReturnClientFilters(allReturns, filters);
 }
 
 @riverpod
