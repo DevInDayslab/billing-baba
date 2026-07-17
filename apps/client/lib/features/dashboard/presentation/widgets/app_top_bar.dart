@@ -1,6 +1,5 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/dashboard/presentation/widgets/company_menu_button.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/global_search_field.dart';
 import 'package:billing_baba/features/dashboard/providers/dashboard_provider.dart';
@@ -9,17 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+/// Shared shell header — search and quick actions on every page.
 class AppTopBar extends ConsumerWidget {
-  const AppTopBar({
-    required this.pageTitle,
-    this.showMenuButton = false,
-    this.isHomeRoute = false,
-    super.key,
-  });
+  const AppTopBar({this.showMenuButton = false, super.key});
 
-  final String pageTitle;
   final bool showMenuButton;
-  final bool isHomeRoute;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,21 +41,9 @@ class AppTopBar extends ConsumerWidget {
                   ),
                   const SizedBox(width: AppSpacing.xs),
                 ],
-                if (!isHomeRoute)
-                  Expanded(
-                    child: Text(
-                      pageTitle,
-                      style: DashboardTypography.pageTitle.copyWith(fontSize: 20),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )
-                else
-                  const Spacer(),
-                _TopBarActions(
-                  isHomeRoute: isHomeRoute,
-                  showQuickButtons: false,
-                ),
+                const Expanded(child: GlobalSearchField()),
+                const SizedBox(width: AppSpacing.xs),
+                const _TopBarActions(showQuickButtons: false),
               ],
             );
           }
@@ -78,20 +59,6 @@ class AppTopBar extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
               ],
-              if (!isHomeRoute) ...[
-                SizedBox(
-                  width: isCompact ? 140 : 180,
-                  child: Text(
-                    pageTitle,
-                    style: DashboardTypography.pageTitle.copyWith(
-                      fontSize: isCompact ? 20 : 22,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-              ],
               Expanded(
                 child: Center(
                   child: ConstrainedBox(
@@ -104,10 +71,7 @@ class AppTopBar extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              _TopBarActions(
-                isHomeRoute: isHomeRoute,
-                showQuickButtons: !isCompact,
-              ),
+              _TopBarActions(showQuickButtons: !isCompact),
             ],
           );
         },
@@ -117,12 +81,8 @@ class AppTopBar extends ConsumerWidget {
 }
 
 class _TopBarActions extends ConsumerWidget {
-  const _TopBarActions({
-    required this.isHomeRoute,
-    this.showQuickButtons = true,
-  });
+  const _TopBarActions({this.showQuickButtons = true});
 
-  final bool isHomeRoute;
   final bool showQuickButtons;
 
   @override
@@ -130,7 +90,7 @@ class _TopBarActions extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (isHomeRoute && showQuickButtons) ...[
+        if (showQuickButtons) ...[
           _QuickActionButton(
             label: 'Add Sale',
             icon: Icons.add,
@@ -147,10 +107,6 @@ class _TopBarActions extends ConsumerWidget {
           const SizedBox(width: AppSpacing.sm),
         ] else ...[
           const _QuickAddMenu(),
-          const SizedBox(width: AppSpacing.xs),
-        ],
-        if (isHomeRoute) ...[
-          const CompanyMenuButton(),
           const SizedBox(width: AppSpacing.xs),
         ],
         _TopBarIconButton(

@@ -16,19 +16,62 @@ final _currencyFormat = NumberFormat.currency(
 );
 
 class _SideWidgetBlock extends StatelessWidget {
-  const _SideWidgetBlock({required this.child});
+  const _SideWidgetBlock({required this.child, this.alignTop = false});
 
   final Widget child;
+  final bool alignTop;
 
   @override
   Widget build(BuildContext context) {
     final padding = DashboardLayoutScope.of(context).sideWidgetPadding;
     return Padding(
       padding: padding,
-      child: Align(
-        alignment: Alignment.topLeft,
-        child: child,
-      ),
+      child: alignTop
+          ? Align(alignment: Alignment.topLeft, child: child)
+          : child,
+    );
+  }
+}
+
+class _SideMetricContent extends StatelessWidget {
+  const _SideMetricContent({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+  });
+
+  final String title;
+  final String value;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          title,
+          style: DashboardTypography.sideWidgetTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          subtitle,
+          style: DashboardTypography.metadata,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          value,
+          style: DashboardTypography.sideWidgetValue,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 }
@@ -46,19 +89,11 @@ class DashboardPurchasesSideWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SideWidgetBlock(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Purchases', style: DashboardTypography.sideWidgetTitle),
-          const SizedBox(height: 4),
-          Text(period.label, style: DashboardTypography.metadata),
-          const SizedBox(height: 4),
-          Text(
-            _currencyFormat.format(purchases.totalAmount),
-            style: DashboardTypography.sideWidgetValue,
-          ),
-        ],
+      alignTop: true,
+      child: _SideMetricContent(
+        title: 'Purchases',
+        subtitle: period.label,
+        value: _currencyFormat.format(purchases.totalAmount),
       ),
     );
   }
@@ -77,19 +112,11 @@ class DashboardExpensesSideWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SideWidgetBlock(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Expenses', style: DashboardTypography.sideWidgetTitle),
-          const SizedBox(height: 4),
-          Text(period.label, style: DashboardTypography.metadata),
-          const SizedBox(height: 4),
-          Text(
-            _currencyFormat.format(expenses),
-            style: DashboardTypography.sideWidgetValue,
-          ),
-        ],
+      alignTop: true,
+      child: _SideMetricContent(
+        title: 'Expenses',
+        subtitle: period.label,
+        value: _currencyFormat.format(expenses),
       ),
     );
   }
@@ -105,6 +132,7 @@ class DashboardLowStockSideWidget extends StatelessWidget {
     final items = inventory.lowStockItems;
 
     return _SideWidgetBlock(
+      alignTop: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -137,7 +165,7 @@ class DashboardLowStockSideWidget extends StatelessWidget {
               children: [
                 Icon(
                   Icons.check_circle_outline,
-                  size: 14,
+                  size: AppIconSize.sm,
                   color: DashboardColors.incoming,
                 ),
                 SizedBox(width: AppSpacing.xs + 2),
@@ -208,19 +236,11 @@ class DashboardStockValueSideWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SideWidgetBlock(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Stock Value', style: DashboardTypography.sideWidgetTitle),
-          const SizedBox(height: 4),
-          const Text('As of now', style: DashboardTypography.metadata),
-          const SizedBox(height: 4),
-          Text(
-            _currencyFormat.format(stockValue),
-            style: DashboardTypography.sideWidgetValue,
-          ),
-        ],
+      alignTop: true,
+      child: _SideMetricContent(
+        title: 'Stock Value',
+        subtitle: 'As of now',
+        value: _currencyFormat.format(stockValue),
       ),
     );
   }
@@ -234,19 +254,11 @@ class DashboardCashInHandSideWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SideWidgetBlock(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Cash In Hand', style: DashboardTypography.sideWidgetTitle),
-          const SizedBox(height: 4),
-          const Text('Today', style: DashboardTypography.metadata),
-          const SizedBox(height: 4),
-          Text(
-            _currencyFormat.format(cashIn),
-            style: DashboardTypography.sideWidgetValue,
-          ),
-        ],
+      alignTop: true,
+      child: _SideMetricContent(
+        title: 'Cash In Hand',
+        subtitle: 'Today',
+        value: _currencyFormat.format(cashIn),
       ),
     );
   }
@@ -258,21 +270,11 @@ class DashboardBankBalanceSideWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const _SideWidgetBlock(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Total Bank Balance',
-            style: DashboardTypography.sideWidgetTitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: 4),
-          Text('As of Now', style: DashboardTypography.metadata),
-          SizedBox(height: 4),
-          Text('—', style: DashboardTypography.sideWidgetValue),
-        ],
+      alignTop: true,
+      child: _SideMetricContent(
+        title: 'Total Bank Balance',
+        subtitle: 'As of Now',
+        value: '—',
       ),
     );
   }

@@ -14,12 +14,14 @@ class DashboardSalesSection extends StatelessWidget {
     required this.sales,
     required this.period,
     required this.onPeriodChanged,
+    this.onTap,
     super.key,
   });
 
   final DashboardSalesModel sales;
   final DashboardPeriod period;
   final ValueChanged<DashboardPeriod> onPeriodChanged;
+  final VoidCallback? onTap;
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -33,6 +35,7 @@ class DashboardSalesSection extends StatelessWidget {
 
     return DashboardMetricCard(
       padding: metrics.cardPadding,
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

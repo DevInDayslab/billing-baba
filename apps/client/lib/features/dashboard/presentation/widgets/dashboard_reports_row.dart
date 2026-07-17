@@ -1,32 +1,43 @@
 import 'package:billing_baba/core/layout/dashboard_layout.dart';
+import 'package:billing_baba/core/layout/dashboard_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_metric_card.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_typography.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class DashboardReportsRow extends StatelessWidget {
+class DashboardReportsRow extends ConsumerWidget {
   const DashboardReportsRow({required this.reports, super.key});
 
   final List<DashboardQuickReportModel> reports;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final metrics = DashboardLayoutScope.of(context);
 
     return DashboardMetricCard(
-      padding: metrics.cardPadding,
+      padding: EdgeInsets.fromLTRB(
+        metrics.padding,
+        metrics.padding * 1.75,
+        metrics.padding,
+        metrics.padding * 0.75,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Most Used Reports',
-                  style: DashboardTypography.cardTitle,
+                  style: DashboardTypography.supportingLabel.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  
                 ),
               ),
               TextButton(
@@ -42,7 +53,9 @@ class DashboardReportsRow extends StatelessWidget {
             ],
           ),
           SizedBox(height: metrics.gap),
-          Expanded(child: _ReportsChips(reports: reports, gap: metrics.gap)),
+          Expanded(
+            child: _ReportsChips(reports: reports, gap: metrics.gap, ref: ref),
+          ),
         ],
       ),
     );
@@ -50,13 +63,19 @@ class DashboardReportsRow extends StatelessWidget {
 }
 
 class _ReportsChips extends StatelessWidget {
-  const _ReportsChips({required this.reports, required this.gap});
+  const _ReportsChips({
+    required this.reports,
+    required this.gap,
+    required this.ref,
+  });
 
   final List<DashboardQuickReportModel> reports;
   final double gap;
+  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) {
+
     if (reports.isEmpty) {
       return const Align(
         alignment: Alignment.centerLeft,
@@ -68,11 +87,10 @@ class _ReportsChips extends StatelessWidget {
     }
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var i = 0; i < reports.length; i++) ...[
           if (i > 0) SizedBox(width: gap),
-          Expanded(child: _ReportChip(report: reports[i])),
+           Expanded(child: _ReportChip(report: reports[i], ref: ref)),
         ],
       ],
     );
@@ -80,16 +98,22 @@ class _ReportsChips extends StatelessWidget {
 }
 
 class _ReportChip extends StatelessWidget {
-  const _ReportChip({required this.report});
+  const _ReportChip({required this.report, required this.ref});
 
   final DashboardQuickReportModel report;
+  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) {
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => context.go(report.route),
+        onTap: () => DashboardNavigation.openQuickReport(
+          context,
+          ref,
+          key: report.key,
+        ),
         borderRadius: DashboardDecor.cardRadius,
         hoverColor: AppColors.background,
         child: Ink(
@@ -98,7 +122,7 @@ class _ReportChip extends StatelessWidget {
             borderRadius: DashboardDecor.cardRadius,
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm + 4),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm + 4, vertical: AppSpacing.lg),
             child: Row(
               children: [
                 Expanded(
@@ -106,16 +130,17 @@ class _ReportChip extends StatelessWidget {
                     report.title,
                     style: DashboardTypography.supportingLabel.copyWith(
                       color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w700,
+                      
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const Icon(
-                  Icons.chevron_right,
+                  Icons.arrow_forward_ios,
                   color: AppColors.primary,
-                  size: 16,
+                  size: 20,
                 ),
               ],
             ),

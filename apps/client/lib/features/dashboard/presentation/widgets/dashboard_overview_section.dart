@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/layout/dashboard_layout.dart';
+import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_metric_card.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_typography.dart';
@@ -53,7 +54,7 @@ class DashboardOverviewSection extends StatelessWidget {
             subtitle: overview.payablePartyCount == 0
                 ? "You don't have any payables as of now."
                 : _partyCountLabel(overview.payablePartyCount),
-            icon: Icons.north_east,
+            icon: Icons.north_east_rounded,
             iconColor: DashboardColors.outgoing,
             iconBackground: DashboardColors.outgoingBg,
             onTap: onPayableTap,
@@ -91,44 +92,71 @@ class _OverviewMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final verticalPadding = padding.top * 0.5;
+
     return DashboardMetricCard(
-      padding: padding,
+      padding: EdgeInsets.fromLTRB(
+        padding.left,
+        verticalPadding,
+        padding.right,
+        verticalPadding,
+      ),
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: DashboardTypography.supportingLabel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+      child: SizedBox.expand(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            const iconSize = AppIconSize.lg;
+            const itemGap = AppSpacing.xs;
+
+            return Stack(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.xs,right: iconSize + 4),
+                      child: Text(
+                        title,
+                        style: DashboardTypography.supportingLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(height: itemGap),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          currencyFormat.format(amount),
+                          style: DashboardTypography.kpiValue,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      subtitle,
+                      style: DashboardTypography.supportingLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                  ],
                 ),
-              ),
-              _KpiDirectionIcon(
-                icon: icon,
-                color: iconColor,
-                background: iconBackground,
-              ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            currencyFormat.format(amount),
-            style: DashboardTypography.kpiValue,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: DashboardTypography.metadata,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: _KpiDirectionIcon(
+                    icon: icon,
+                    color: iconColor,
+                    background: iconBackground,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -139,22 +167,26 @@ class _KpiDirectionIcon extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.background,
+    this.size = 24,
   });
 
   final IconData icon;
   final Color color;
   final Color background;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 28,
-      height: 28,
-      decoration: BoxDecoration(
-        color: background,
-        shape: BoxShape.circle,
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: background,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 20, color: color),
       ),
-      child: Icon(icon, size: 14, color: color),
     );
   }
 }

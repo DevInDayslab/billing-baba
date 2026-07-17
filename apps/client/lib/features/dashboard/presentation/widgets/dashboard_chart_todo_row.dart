@@ -10,12 +10,14 @@ class DashboardChartTodoRow extends StatelessWidget {
     required this.dashboard,
     required this.period,
     required this.onPeriodChanged,
+    this.onSaleTap,
     super.key,
   });
 
   final DashboardModel dashboard;
   final DashboardPeriod period;
   final ValueChanged<DashboardPeriod> onPeriodChanged;
+  final VoidCallback? onSaleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +32,7 @@ class DashboardChartTodoRow extends StatelessWidget {
             sales: dashboard.sales,
             period: period,
             onPeriodChanged: onPeriodChanged,
+            onTap: onSaleTap,
           ),
         ),
         SizedBox(width: metrics.gap),

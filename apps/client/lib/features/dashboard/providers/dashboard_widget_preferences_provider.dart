@@ -5,19 +5,19 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'dashboard_widget_preferences_provider.g.dart';
 
-const _defaultWidgets = <DashboardSideWidget>{
+const _defaultWidgets = <DashboardSideWidget>[
   DashboardSideWidget.purchases,
   DashboardSideWidget.expenses,
   DashboardSideWidget.lowStock,
   DashboardSideWidget.bankBalance,
-};
+];
 
 @Riverpod(keepAlive: true)
 class DashboardWidgetPreferences extends _$DashboardWidgetPreferences {
   @override
-  Set<DashboardSideWidget> build() {
+  List<DashboardSideWidget> build() {
     _load();
-    return Set<DashboardSideWidget>.from(_defaultWidgets);
+    return List<DashboardSideWidget>.from(_defaultWidgets);
   }
 
   Future<void> _load() async {
@@ -25,22 +25,23 @@ class DashboardWidgetPreferences extends _$DashboardWidgetPreferences {
     final raw = storage.read(StorageKeys.dashboardSideWidgets);
     if (raw == null || raw.isEmpty) return;
 
-    final parsed = DashboardSideWidget.fromIds(raw.split(','));
+    final parsed = DashboardSideWidget.fromIdsOrdered(raw.split(','));
     if (parsed.isNotEmpty) {
       state = parsed;
     }
   }
 
-  Future<void> _persist(Set<DashboardSideWidget> widgets) async {
+  Future<void> _persist(List<DashboardSideWidget> widgets) async {
     final storage = await ref.read(storageServiceProvider.future);
     final value = widgets.map((w) => w.id).join(',');
     await storage.write(StorageKeys.dashboardSideWidgets, value);
   }
 
   void toggle(DashboardSideWidget widget) {
-    final next = Set<DashboardSideWidget>.from(state);
-    if (next.contains(widget)) {
-      next.remove(widget);
+    final next = List<DashboardSideWidget>.from(state);
+    final index = next.indexOf(widget);
+    if (index >= 0) {
+      next.removeAt(index);
     } else {
       next.add(widget);
     }

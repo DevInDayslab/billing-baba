@@ -1,45 +1,59 @@
+import 'package:billing_baba/core/layout/dashboard_navigation.dart' show DashboardNavigation;
+import 'package:billing_baba/core/layout/desktop_breakpoints.dart';
+import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
-/// Single source of truth for Vyapar-style proportional dashboard layout.
+/// Proportional dashboard layout — ratios apply to widths/heights only.
 ///
-/// Reference canvas: 1920 × 1080. All sizes derive from ratios — no magic
-/// pixel positioning. Typography stays fixed; spacing scales with width.
+/// Typography, spacing, icons, and radii use fixed design tokens.
+/// Widget tap targets use [DashboardNavigation] for route mapping.
 abstract final class DashboardLayout {
-  static const referenceWidth = 1920.0;
-  static const referenceHeight = 1080.0;
+  static const minimumWindowWidth = 1024.0;
+  static const minimumWindowHeight = 800.0;
 
-  // Column widths (main + side ≈ 1.0; gap is separate).
-  static const mainAreaRatio = 0.79;
-  static const sidePanelRatio = 0.21;
+  // Column width ratios (main + side ≈ 1.0; gap is separate).
+  static const mainAreaRatio = 0.74;
+  static const sidePanelRatio = 0.26;
 
   // Main-area row height shares (sum = 1.0).
-  // KPI and reports are slightly taller than the base Vyapar spec.
-  static const kpiHeightRatio = 0.18;
-  static const chartHeightRatio = 0.56;
-  static const reportsHeightRatio = 0.24;
+  static const kpiHeightRatio = 0.16;
+  static const chartHeightRatio = 0.64;
+  static const reportsHeightRatio = 0.20;
 
   // Chart row column split.
-  static const chartRatio = 0.70;
-  static const todoRatio = 0.30;
+  static const chartRatio = 0.64;
+  static const todoRatio = 0.36;
 
-  // In-card chart area (remaining whitespace below, like Vyapar).
+  // In-card chart area (remaining whitespace below header/value).
   static const chartAreaHeightRatio = 0.60;
 
-  // Spacing ratios.
-  static const gapRatio = 0.008;
-  static const paddingRatio = 0.012;
-  static const paddingMin = 12.0;
-  static const paddingMax = 24.0;
+  // Fixed chrome heights.
+  static const supportStripHeight = 30.0;
+  static const topBarHeight = 52.0;
+  static const tabBarHeight = 40.0;
 
-  // Chrome height ratios (fixed typography, proportional bar heights).
-  static const topBarHeightRatio = 0.048;
-  static const tabBarHeightRatio = 0.037;
-  static const supportStripHeightRatio = 0.028;
+  // Fixed dashboard spacing.
+  static const double pagePadding = AppSpacing.lg;
+  static const double gridGap = AppSpacing.xs;
 
   // Card chrome.
   static const cardRadius = 4.0;
   static const cardShadowBlur = 3.0;
   static const cardShadowOpacity = 0.08;
+
+  // Card height constraints (layout only).
+  static const chartCardMinHeight = 320.0;
+  static const chartCardPreferredHeight = 380.0;
+  static const chartCardMaxHeight = 520.0;
+  static const todoMinWidth = 320.0;
+
+  // Side-column widget content heights (padding added separately).
+  static const sideWidgetMetricHeight = 68.0;
+  static const sideWidgetLowStockTitleBlockHeight = 32.0;
+  static const sideWidgetLowStockRowHeight = 20.0;
+  static const double sideWidgetLowStockRowGap = AppSpacing.xs;
+  static const sideWidgetLowStockEmptyBodyHeight = 24.0;
+  static const sideWidgetLowStockMaxVisibleRows = 3;
 
   // Flex integers for [Expanded] / [Flexible].
   static const chartColumnFlex = 70;
@@ -49,10 +63,10 @@ abstract final class DashboardLayout {
     final width = constraints.maxWidth;
     final height = constraints.maxHeight.isFinite
         ? constraints.maxHeight
-        : referenceHeight;
+        : 800.0;
 
-    final padding = (width * paddingRatio).clamp(paddingMin, paddingMax);
-    final gap = width * gapRatio;
+    const padding = pagePadding;
+    const gap = gridGap;
 
     final contentWidth = width - padding * 2;
     final contentHeight = height - padding * 2;
@@ -66,6 +80,7 @@ abstract final class DashboardLayout {
     final reportsRowHeight = rowArea * reportsHeightRatio;
 
     return DashboardMetrics(
+      breakpoint: DesktopBreakpoints.fromWidth(width),
       padding: padding,
       gap: gap,
       contentWidth: contentWidth,
@@ -75,9 +90,6 @@ abstract final class DashboardLayout {
       kpiRowHeight: kpiRowHeight,
       chartRowHeight: chartRowHeight,
       reportsRowHeight: reportsRowHeight,
-      topBarHeight: height * topBarHeightRatio,
-      tabBarHeight: height * tabBarHeightRatio,
-      supportStripHeight: height * supportStripHeightRatio,
     );
   }
 }
@@ -85,6 +97,7 @@ abstract final class DashboardLayout {
 /// Resolved layout metrics for the current viewport.
 final class DashboardMetrics {
   const DashboardMetrics({
+    required this.breakpoint,
     required this.padding,
     required this.gap,
     required this.contentWidth,
@@ -94,11 +107,9 @@ final class DashboardMetrics {
     required this.kpiRowHeight,
     required this.chartRowHeight,
     required this.reportsRowHeight,
-    required this.topBarHeight,
-    required this.tabBarHeight,
-    required this.supportStripHeight,
   });
 
+  final DesktopBreakpoint breakpoint;
   final double padding;
   final double gap;
   final double contentWidth;
@@ -108,19 +119,41 @@ final class DashboardMetrics {
   final double kpiRowHeight;
   final double chartRowHeight;
   final double reportsRowHeight;
-  final double topBarHeight;
-  final double tabBarHeight;
-  final double supportStripHeight;
 
   int get chartColumnFlex => DashboardLayout.chartColumnFlex;
   int get todoColumnFlex => DashboardLayout.todoColumnFlex;
 
-  EdgeInsets get pagePadding => EdgeInsets.all(padding);
-  EdgeInsets get cardPadding => EdgeInsets.all(padding);
-  EdgeInsets get sideWidgetPadding => EdgeInsets.symmetric(
-        horizontal: padding,
-        vertical: padding * 0.65,
-      );
+  EdgeInsets get pagePadding =>
+      const EdgeInsets.all(DashboardLayout.pagePadding);
+  EdgeInsets get cardPadding =>
+      const EdgeInsets.all(DashboardLayout.pagePadding);
+  EdgeInsets get sideWidgetPadding => const EdgeInsets.symmetric(
+    horizontal: DashboardLayout.pagePadding,
+    vertical: AppSpacing.md,
+  );
+
+  double get sideWidgetMetricHeight =>
+      sideWidgetPadding.vertical * 2 + DashboardLayout.sideWidgetMetricHeight;
+
+  /// Low-stock panel grows with visible row count (capped at 3 items).
+  double sideWidgetLowStockHeight(int itemCount) {
+    const rowHeight = DashboardLayout.sideWidgetLowStockRowHeight;
+    final bodyHeight = itemCount == 0
+        ? DashboardLayout.sideWidgetLowStockEmptyBodyHeight
+        : () {
+            final rows = itemCount.clamp(
+              1,
+              DashboardLayout.sideWidgetLowStockMaxVisibleRows,
+            );
+            return rows * rowHeight +
+                (rows - 1) * DashboardLayout.sideWidgetLowStockRowGap;
+          }();
+
+    return sideWidgetPadding.vertical +
+        DashboardLayout.sideWidgetLowStockTitleBlockHeight +
+        bodyHeight +
+        sideWidgetPadding.vertical;
+  }
 }
 
 /// Provides [DashboardMetrics] to the dashboard widget tree.
@@ -134,8 +167,8 @@ class DashboardLayoutScope extends InheritedWidget {
   final DashboardMetrics metrics;
 
   static DashboardMetrics of(BuildContext context) {
-    final scope =
-        context.dependOnInheritedWidgetOfExactType<DashboardLayoutScope>();
+    final scope = context
+        .dependOnInheritedWidgetOfExactType<DashboardLayoutScope>();
     assert(scope != null, 'DashboardLayoutScope not found in widget tree');
     return scope!.metrics;
   }
@@ -144,5 +177,6 @@ class DashboardLayoutScope extends InheritedWidget {
   bool updateShouldNotify(DashboardLayoutScope oldWidget) =>
       oldWidget.metrics.padding != metrics.padding ||
       oldWidget.metrics.contentWidth != metrics.contentWidth ||
-      oldWidget.metrics.contentHeight != metrics.contentHeight;
+      oldWidget.metrics.contentHeight != metrics.contentHeight ||
+      oldWidget.metrics.breakpoint != metrics.breakpoint;
 }

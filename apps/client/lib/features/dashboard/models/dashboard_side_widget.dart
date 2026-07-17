@@ -26,10 +26,12 @@ enum DashboardSideWidget {
   }
 
   static Set<DashboardSideWidget> fromIds(Iterable<String> ids) {
-    return ids
-        .map(fromId)
-        .whereType<DashboardSideWidget>()
-        .toSet();
+    return fromIdsOrdered(ids).toSet();
+  }
+
+  /// Preserves persisted insertion order.
+  static List<DashboardSideWidget> fromIdsOrdered(Iterable<String> ids) {
+    return ids.map(fromId).whereType<DashboardSideWidget>().toList();
   }
 }
 

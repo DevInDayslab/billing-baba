@@ -17,7 +17,7 @@ final class DashboardWidgetPreferencesProvider
     extends
         $NotifierProvider<
           DashboardWidgetPreferences,
-          Set<DashboardSideWidget>
+          List<DashboardSideWidget>
         > {
   DashboardWidgetPreferencesProvider._()
     : super(
@@ -38,30 +38,30 @@ final class DashboardWidgetPreferencesProvider
   DashboardWidgetPreferences create() => DashboardWidgetPreferences();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Set<DashboardSideWidget> value) {
+  Override overrideWithValue(List<DashboardSideWidget> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<Set<DashboardSideWidget>>(value),
+      providerOverride: $SyncValueProvider<List<DashboardSideWidget>>(value),
     );
   }
 }
 
 String _$dashboardWidgetPreferencesHash() =>
-    r'65892762c4e2540c9b1b8fa7c6c39267f76ea815';
+    r'fa008de97d1df4a86b6c8b567f270ffd4fe0c6c8';
 
 abstract class _$DashboardWidgetPreferences
-    extends $Notifier<Set<DashboardSideWidget>> {
-  Set<DashboardSideWidget> build();
+    extends $Notifier<List<DashboardSideWidget>> {
+  List<DashboardSideWidget> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
-        this.ref as $Ref<Set<DashboardSideWidget>, Set<DashboardSideWidget>>;
+        this.ref as $Ref<List<DashboardSideWidget>, List<DashboardSideWidget>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<Set<DashboardSideWidget>, Set<DashboardSideWidget>>,
-              Set<DashboardSideWidget>,
+              AnyNotifier<List<DashboardSideWidget>, List<DashboardSideWidget>>,
+              List<DashboardSideWidget>,
               Object?,
               Object?
             >;

@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/layout/dashboard_layout.dart';
-import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/core/layout/dashboard_navigation.dart';
 import 'package:billing_baba/core/widgets/app_error.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_error_mapper.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
@@ -10,12 +10,8 @@ import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_r
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_side_widget_column.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_skeleton.dart';
 import 'package:billing_baba/features/dashboard/providers/dashboard_provider.dart';
-import 'package:billing_baba/features/parties/models/party_list_filter.dart';
-import 'package:billing_baba/features/parties/providers/parties_providers.dart';
-import 'package:billing_baba/features/parties/providers/parties_selection_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 class DashboardTabContent extends ConsumerWidget {
   const DashboardTabContent({super.key});
@@ -37,30 +33,13 @@ class DashboardTabContent extends ConsumerWidget {
           period: period,
           onPeriodChanged: (value) =>
               ref.read(dashboardProvider.notifier).setPeriod(value),
-          onReceivableTap: () => _openParties(
-            context,
-            ref,
-            PartyListFilter.toReceive,
-          ),
-          onPayableTap: () => _openParties(
-            context,
-            ref,
-            PartyListFilter.toPay,
-          ),
+          onReceivableTap: () =>
+              DashboardNavigation.openReceivables(context, ref),
+          onPayableTap: () => DashboardNavigation.openPayables(context, ref),
+          onSaleTap: () => DashboardNavigation.openTotalSale(context, ref),
         ),
       ),
     );
-  }
-
-  void _openParties(
-    BuildContext context,
-    WidgetRef ref,
-    PartyListFilter filter,
-  ) {
-    ref.read(partyListFilterProvider.notifier).filter = filter;
-    ref.read(partySearchQueryProvider.notifier).query = '';
-    ref.read(selectedPartyIdProvider.notifier).selected = null;
-    context.go(AppRoutes.partyDetails);
   }
 }
 
@@ -97,6 +76,7 @@ class _DashboardGrid extends StatelessWidget {
     required this.onPeriodChanged,
     required this.onReceivableTap,
     required this.onPayableTap,
+    required this.onSaleTap,
   });
 
   final DashboardModel dashboard;
@@ -104,6 +84,7 @@ class _DashboardGrid extends StatelessWidget {
   final ValueChanged<DashboardPeriod> onPeriodChanged;
   final VoidCallback onReceivableTap;
   final VoidCallback onPayableTap;
+  final VoidCallback onSaleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -132,6 +113,7 @@ class _DashboardGrid extends StatelessWidget {
                   dashboard: dashboard,
                   period: period,
                   onPeriodChanged: onPeriodChanged,
+                  onSaleTap: onSaleTap,
                 ),
               ),
               SizedBox(height: metrics.gap),

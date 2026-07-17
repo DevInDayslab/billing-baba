@@ -58,6 +58,7 @@ class _DashboardTabItemState extends State<_DashboardTabItem> {
 
   @override
   Widget build(BuildContext context) {
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),

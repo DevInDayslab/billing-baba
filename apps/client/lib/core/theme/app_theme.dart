@@ -13,29 +13,38 @@ abstract final class AppColors {
   static const textSecondary = Color(0xFF757575);
 }
 
-/// Global typography scale — platform-independent Inter styles.
+/// Global typography — fixed desktop sizes, no viewport scaling.
 abstract final class AppTypography {
   static const String fontFamily = 'Inter';
 
-  static const double displayLargeSize = 40;
-  static const double displayMediumSize = 36;
-  static const double displaySmallSize = 32;
+  /// Semantic scale (desktop design system).
+  static const double displaySize = 28;
+  static const double headlineSize = 22;
+  static const double titleSize = 18;
+  static const double subtitleSize = 16;
+  static const double bodySize = 14;
+  static const double captionSize = 12;
 
-  static const double headlineLargeSize = 28;
-  static const double headlineMediumSize = 24;
-  static const double headlineSmallSize = 20;
+  // Material-style aliases mapped to the semantic scale.
+  static const double displayLargeSize = displaySize;
+  static const double displayMediumSize = headlineSize;
+  static const double displaySmallSize = titleSize;
 
-  static const double titleLargeSize = 18;
-  static const double titleMediumSize = 16;
-  static const double titleSmallSize = 14;
+  static const double headlineLargeSize = headlineSize;
+  static const double headlineMediumSize = titleSize;
+  static const double headlineSmallSize = subtitleSize;
 
-  static const double bodyLargeSize = 16;
-  static const double bodyMediumSize = 14;
-  static const double bodySmallSize = 13;
+  static const double titleLargeSize = titleSize;
+  static const double titleMediumSize = subtitleSize;
+  static const double titleSmallSize = bodySize;
 
-  static const double labelLargeSize = 14;
-  static const double labelMediumSize = 12;
-  static const double labelSmallSize = 11;
+  static const double bodyLargeSize = subtitleSize;
+  static const double bodyMediumSize = bodySize;
+  static const double bodySmallSize = captionSize;
+
+  static const double labelLargeSize = bodySize;
+  static const double labelMediumSize = captionSize;
+  static const double labelSmallSize = captionSize;
 
   /// Builds an Inter [TextStyle] without relying on platform defaults.
   static TextStyle inter({
@@ -91,27 +100,35 @@ abstract final class AppTypography {
   }
 }
 
-/// Spacing design tokens.
+/// Spacing design tokens — fixed, no viewport scaling.
 abstract final class AppSpacing {
+  static const double xxs = 2;
   static const double xs = 4;
   static const double sm = 8;
-  static const double md = 16;
-  static const double lg = 24;
-  static const double xl = 32;
-  static const double xxl = 48;
+  static const double md = 12;
+  static const double lg = 16;
+  static const double xl = 20;
+  static const double xxl = 24;
+  static const double xxxl = 32;
 }
 
-/// Border radius design tokens.
+/// Border radius design tokens — fixed, no viewport scaling.
 abstract final class AppRadius {
-  static const double sm = 4;
-  static const double md = 8;
-  static const double lg = 12;
-  static const double xl = 16;
+  static const double sm = 8;
+  static const double md = 12;
+  static const double lg = 16;
 
   static BorderRadius get smBorder => BorderRadius.circular(sm);
   static BorderRadius get mdBorder => BorderRadius.circular(md);
   static BorderRadius get lgBorder => BorderRadius.circular(lg);
-  static BorderRadius get xlBorder => BorderRadius.circular(xl);
+}
+
+/// Icon size design tokens — fixed, no viewport scaling.
+abstract final class AppIconSize {
+  static const double sm = 16;
+  static const double md = 20;
+  static const double lg = 24;
+  static const double xl = 28;
 }
 
 /// Forces light appearance and disables OS text scaling for all routes.

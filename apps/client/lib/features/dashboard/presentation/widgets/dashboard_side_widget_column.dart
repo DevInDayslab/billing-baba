@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/layout/dashboard_layout.dart';
+import 'package:billing_baba/core/layout/dashboard_navigation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_side_widget.dart';
@@ -21,9 +22,6 @@ class DashboardSideWidgetColumn extends ConsumerWidget {
   final DashboardModel dashboard;
   final DashboardPeriod period;
 
-  static const List<DashboardSideWidget> _orderedWidgets =
-      DashboardSideWidget.values;
-
   static const _divider = Divider(
     height: 1,
     thickness: 1,
@@ -33,8 +31,7 @@ class DashboardSideWidgetColumn extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final metrics = DashboardLayoutScope.of(context);
-    final enabled = ref.watch(dashboardWidgetPreferencesProvider);
-    final visible = _orderedWidgets.where(enabled.contains).toList();
+    final visible = ref.watch(dashboardWidgetPreferencesProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -43,16 +40,27 @@ class DashboardSideWidgetColumn extends ConsumerWidget {
           child: DashboardSideWidgetPanel(
             child: visible.isEmpty
                 ? const DashboardSideWidgetsEmptyState()
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (var i = 0; i < visible.length; i++) ...[
-                        if (i > 0) _divider,
-                        Expanded(
-                          child: _buildWidget(visible[i]),
-                        ),
-                      ],
-                    ],
+                : Align(
+                    alignment: Alignment.topCenter,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var i = 0; i < visible.length; i++) ...[
+                            if (i > 0) _divider,
+                            SizedBox(
+                              height: _heightFor(visible[i], metrics),
+                              child: _TappableSideWidget(
+                                widget: visible[i],
+                                child: _buildWidget(visible[i]),
+                              ),
+                            ),
+                          ],
+                          if (visible.isNotEmpty) _divider,
+                        ],
+                      ),
+                    ),
                   ),
           ),
         ),
@@ -60,6 +68,15 @@ class DashboardSideWidgetColumn extends ConsumerWidget {
         const DashboardWidgetPicker(dashed: true),
       ],
     );
+  }
+
+  double _heightFor(DashboardSideWidget widget, DashboardMetrics metrics) {
+    return switch (widget) {
+      DashboardSideWidget.lowStock => metrics.sideWidgetLowStockHeight(
+        dashboard.inventory.lowStockItems.length,
+      ),
+      _ => metrics.sideWidgetMetricHeight,
+    };
   }
 
   Widget _buildWidget(DashboardSideWidget widget) {
@@ -83,6 +100,25 @@ class DashboardSideWidgetColumn extends ConsumerWidget {
       ),
       DashboardSideWidget.bankBalance => const DashboardBankBalanceSideWidget(),
     };
+  }
+}
+
+class _TappableSideWidget extends ConsumerWidget {
+  const _TappableSideWidget({required this.widget, required this.child});
+
+  final DashboardSideWidget widget;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => DashboardNavigation.openSideWidget(context, ref, widget),
+        hoverColor: AppColors.background,
+        child: child,
+      ),
+    );
   }
 }
 

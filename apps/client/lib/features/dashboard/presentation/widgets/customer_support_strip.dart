@@ -21,31 +21,31 @@ class CustomerSupportStrip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          const Text(
             'Customer Support :',
             style: DashboardTypography.supportStrip,
           ),
           const SizedBox(width: AppSpacing.xs),
           Icon(
             Icons.phone_outlined,
-            size: 12,
+            size: AppIconSize.sm,
             color: AppColors.primary.withValues(alpha: 0.85),
           ),
           const SizedBox(width: AppSpacing.xs),
-          Text(
+          const Text(
             supportPhones,
             style: DashboardTypography.supportStripLink,
           ),
           const SizedBox(width: AppSpacing.sm),
-          Text('|', style: DashboardTypography.supportStrip),
+          const Text('|', style: DashboardTypography.supportStrip),
           const SizedBox(width: AppSpacing.sm),
           Icon(
             Icons.support_agent_outlined,
-            size: 12,
+            size: AppIconSize.sm,
             color: AppColors.primary.withValues(alpha: 0.85),
           ),
           const SizedBox(width: AppSpacing.xs),
-          Text(
+          const Text(
             'Get Instant Online Support',
             style: DashboardTypography.supportStripLink,
           ),

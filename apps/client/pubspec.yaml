@@ -65,6 +65,7 @@ dependencies:
   tabler_icons_plus: ^3.44.0
   flutter_launcher_icons: ^0.14.4
   font_awesome_flutter: ^11.0.0
+  window_manager: ^0.5.2
 
 dev_dependencies:
   flutter_test:

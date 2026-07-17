@@ -5,8 +5,8 @@ import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/app_top_bar.dart';
+import 'package:billing_baba/features/dashboard/presentation/widgets/customer_support_strip.dart';
 import 'package:billing_baba/features/dashboard/providers/shell_sidebar_provider.dart';
-import 'package:billing_baba/features/developer/models/developer_sub_route.dart';
 import 'package:billing_baba/features/pos/providers/pos_session_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
@@ -237,18 +237,14 @@ class _ShellPageState extends ConsumerState<ShellPage> {
 
         final showTopBar =
             currentLocation != AppRoutes.pos || !ref.watch(posSessionProvider);
-        final pageTitle = _pageTitleFor(currentLocation);
-        final isHomeRoute = currentLocation == AppRoutes.home;
         final mainContent = ColoredBox(
           color: AppColors.background,
           child: Column(
             children: [
-              if (showTopBar)
-                AppTopBar(
-                  pageTitle: pageTitle,
-                  showMenuButton: useOverlaySidebar,
-                  isHomeRoute: isHomeRoute,
-                ),
+              if (showTopBar) ...[
+                const CustomerSupportStrip(),
+                AppTopBar(showMenuButton: useOverlaySidebar),
+              ],
               Expanded(child: widget.child),
             ],
           ),
@@ -621,24 +617,6 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         if (mounted) _navigateTo(AppRoutes.login);
       },
     );
-  }
-
-  String _pageTitleFor(String location) {
-    if (location == AppRoutes.home) return 'Dashboard';
-    if (location.startsWith(AppRoutes.parties)) return 'Parties';
-    if (location.startsWith(AppRoutes.items)) return 'Items';
-    if (location == AppRoutes.pos) return 'POS';
-    if (location.startsWith(AppRoutes.sale)) return 'Sale';
-    if (location.startsWith(AppRoutes.purchase)) return 'Purchase & Expense';
-    if (location.startsWith(AppRoutes.reports)) return 'Reports';
-    if (location.startsWith(AppRoutes.utilities)) {
-      return UtilitiesSubRoutes.labelForRoute(location);
-    }
-    if (location.startsWith(AppRoutes.developer)) {
-      return DeveloperSubRoutes.labelForRoute(location);
-    }
-    if (location.startsWith(AppRoutes.settings)) return 'Settings';
-    return 'Billing Baba';
   }
 }
 
