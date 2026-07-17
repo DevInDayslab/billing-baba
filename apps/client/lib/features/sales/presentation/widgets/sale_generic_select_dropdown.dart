@@ -19,6 +19,8 @@ class SaleGenericSelectDropdown extends StatefulWidget {
     this.hasError = false,
     this.compact = false,
     this.borderless = false,
+    this.footerActionLabel,
+    this.onFooterAction,
     super.key,
   });
 
@@ -32,6 +34,8 @@ class SaleGenericSelectDropdown extends StatefulWidget {
   final bool hasError;
   final bool compact;
   final bool borderless;
+  final String? footerActionLabel;
+  final VoidCallback? onFooterAction;
 
   @override
   State<SaleGenericSelectDropdown> createState() =>
@@ -98,21 +102,7 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
               Size(menuWidth, widget.maxMenuHeight),
             ),
           ),
-          menuChildren: widget.options.isEmpty
-              ? [
-                  MenuItemButton(
-                    child: Text(
-                      'No options available',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                  ),
-                ]
-              : [
-                  for (final option in widget.options) _buildMenuItem(option),
-                ],
+          menuChildren: _buildMenuChildren(),
           builder: (context, controller, child) {
             return SaleFieldTrigger(
               onTap: () {
@@ -152,6 +142,59 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
         );
       },
     );
+  }
+
+  List<Widget> _buildMenuChildren() {
+    final children = <Widget>[];
+
+    if (widget.options.isEmpty) {
+      children.add(
+        MenuItemButton(
+          child: Text(
+            'No groups yet',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ),
+      );
+    } else {
+      children.addAll(
+        widget.options.map(_buildMenuItem),
+      );
+    }
+
+    if (widget.footerActionLabel != null && widget.onFooterAction != null) {
+      children.add(const Divider(height: 1));
+      children.add(
+        MenuItemButton(
+          onPressed: widget.onFooterAction,
+          style: const ButtonStyle(
+            minimumSize: WidgetStatePropertyAll(Size.fromHeight(40)),
+            padding: WidgetStatePropertyAll(
+              EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.add, size: 16, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                widget.footerActionLabel!,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return children;
   }
 
   MenuItemButton _buildMenuItem(String option) {

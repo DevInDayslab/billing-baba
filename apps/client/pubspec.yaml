@@ -64,6 +64,7 @@ dependencies:
   justkawal_excel_updated: ^5.0.0
   tabler_icons_plus: ^3.44.0
   flutter_launcher_icons: ^0.14.4
+  font_awesome_flutter: ^11.0.0
 
 dev_dependencies:
   flutter_test:

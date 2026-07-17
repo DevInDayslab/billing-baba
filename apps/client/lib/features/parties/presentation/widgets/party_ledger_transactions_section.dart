@@ -327,7 +327,6 @@ class _PartyLedgerTransactionsSectionState
           title: 'Type',
           type: FilterType.multiSelect,
           values: typeOptions,
-          searchable: false,
         ),
         initialFilter: _tableState.typeFilter,
         onApply: (result) => setState(() {
@@ -434,7 +433,6 @@ class _PartyLedgerTransactionsSectionState
           title: 'Status',
           type: FilterType.multiSelect,
           values: statusOptions,
-          searchable: false,
         ),
         initialFilter: _tableState.statusFilter,
         onApply: (result) => setState(() {

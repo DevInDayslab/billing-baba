@@ -133,7 +133,7 @@ class PartyPageTitleBar extends StatelessWidget {
       itemBuilder: (context) => const [
         PopupMenuItem(
           value: 'Manage Party Groups',
-          child: Text('Manage Party Groups'),
+          child: Text('View All Party Groups'),
         ),
         PopupMenuItem(
           value: 'Import Parties',

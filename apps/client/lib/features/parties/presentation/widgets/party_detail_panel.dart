@@ -6,10 +6,12 @@ import 'package:billing_baba/features/parties/application/party_ledger_service.d
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_actions_menu_button.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_ledger_transactions_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class PartyDetailPanel extends ConsumerWidget {
   const PartyDetailPanel({
@@ -104,7 +106,7 @@ class _PartyDetailContent extends ConsumerWidget {
   }
 }
 
-class _PartyDetailHeader extends StatelessWidget {
+class _PartyDetailHeader extends ConsumerWidget {
   const _PartyDetailHeader({
     required this.party,
     required this.ledgerAsync,
@@ -158,7 +160,7 @@ class _PartyDetailHeader extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final leftLines = [
       _MetaLine(
         label: 'Phone Number',
@@ -199,7 +201,8 @@ class _PartyDetailHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: AppSpacing.sm,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (onBack != null) ...[
                 IconButton(
@@ -215,20 +218,93 @@ class _PartyDetailHeader extends StatelessWidget {
                 const SizedBox(width: AppSpacing.xs),
               ],
               Expanded(
-                child: Text(
-                  party.name,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Text(
+                          party.name,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    IconButton(
+                      onPressed: () => PartyActions.edit(context, ref, party),
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      tooltip: 'Edit party',
+                      color: AppColors.textSecondary,
+                      padding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(
+                        minWidth: 28,
+                        minHeight: 28,
+                      ),
+                    ),
+                  ],
                 ),
+              ),  
+              _PartyHeaderActionIcon(
+                iconWidget: const FaIcon(
+                  FontAwesomeIcons.commentDots,
+                  size: 20,
+                  color: Color.fromARGB(255, 240, 180, 64),
+                ),
+                tooltip: 'Send Payment Reminder SMS to party',
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Messaging coming soon'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
+              _PartyHeaderActionIcon(
+                iconWidget: const FaIcon(
+                  FontAwesomeIcons.whatsapp,
+                  size: 20,
+                  color: Color(0xFF25D366),
+                ),
+                tooltip: 'Send Payment Reminder WhatsApp to party',
+                onPressed: party.phone.trim().isEmpty
+                    ? null
+                    : () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Call ${party.phone}'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+              ),
+              _PartyHeaderActionIcon(
+                iconWidget: const FaIcon(
+                  FontAwesomeIcons.clock,
+                  size: 18,
+                  color: Color(0xFF4095F0),
+                ),
+                tooltip: 'Set Reminder',
+                 onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Messaging coming soon'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
               ),
               PartyActionsMenuButton(party: party),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const Divider(height: 20, thickness: 1, color: Color.fromARGB(98, 117, 117, 117)),
+
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -244,6 +320,7 @@ class _PartyDetailHeader extends StatelessWidget {
                   ],
                 ),
               ),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,6 +330,7 @@ class _PartyDetailHeader extends StatelessWidget {
                         label: line.label,
                         value: line.value,
                       ),
+                      
                   ],
                 ),
               ),
@@ -269,6 +347,38 @@ class _MetaLine {
 
   final String label;
   final String value;
+}
+
+class _PartyHeaderActionIcon extends StatelessWidget {
+  const _PartyHeaderActionIcon({
+    required this.tooltip,
+    this.icon,
+    this.iconWidget,
+    this.color = AppColors.textSecondary,
+    this.onPressed,
+  }) : assert(
+         icon != null || iconWidget != null,
+         'Either icon or iconWidget must be provided',
+       );
+
+  final String tooltip;
+  final IconData? icon;
+  final Widget? iconWidget;
+  final Color? color;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: iconWidget ?? Icon(icon, size: 20),
+      tooltip: tooltip,
+      color: iconWidget == null ? color : null,
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+    );
+  }
 }
 
 class _PartyDetailLoading extends StatelessWidget {

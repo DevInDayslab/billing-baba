@@ -910,42 +910,14 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
   Widget _buildPartyGroupControls() {
     final partyGroups = ref.watch(partyGroupsProvider);
-    final dropdown = SaleGenericSelectDropdown(
+
+    return SaleGenericSelectDropdown(
       value: _partyGroup,
       options: partyGroups,
       hintText: 'Party Group',
+      footerActionLabel: 'Add new group',
+      onFooterAction: _showAddPartyGroupDialog,
       onSelected: (value) => setState(() => _partyGroup = value),
-    );
-
-    final addGroupButton = IconButton(
-      onPressed: _showAddPartyGroupDialog,
-      icon: const Icon(Icons.add_circle_outline, size: 22),
-      color: AppColors.primary,
-      tooltip: 'Add new group',
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: dropdown),
-            const SizedBox(width: AppSpacing.xs),
-            addGroupButton,
-          ],
-        ),
-        if (partyGroups.isEmpty)
-          const Padding(
-            padding: EdgeInsets.only(top: 4, left: 2),
-            child: Text(
-              'No groups yet. Tap + to create one.',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-            ),
-          ),
-      ],
     );
   }
 

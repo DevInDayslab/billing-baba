@@ -20,11 +20,12 @@ class PartyActionsMenuButton extends ConsumerWidget {
     return SalesActionMenuButton(
       items: [
         SalesActionMenuItem(
-          label: 'View / Edit',
+          label: 'View Party',
           onSelected: () => PartyActions.edit(context, ref, party),
         ),
         SalesActionMenuItem(
           label: 'Delete',
+          isDestructive: true,
           onSelected: () => PartyActions.delete(context, ref, party),
         ),
         SalesActionMenuItem(
@@ -44,11 +45,6 @@ class PartyActionsMenuButton extends ConsumerWidget {
             dividerBefore: !canReceive,
             onSelected: () => PartyActions.recordPayment(context, party),
           ),
-        SalesActionMenuItem(
-          label: 'View History',
-          dividerBefore: true,
-          onSelected: () => PartyActions.viewHistory(context, ref, party),
-        ),
       ],
     );
   }

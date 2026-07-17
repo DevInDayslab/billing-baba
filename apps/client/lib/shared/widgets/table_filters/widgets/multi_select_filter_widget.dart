@@ -36,13 +36,13 @@ class MultiSelectFilterWidget extends StatefulWidget {
 class _MultiSelectFilterWidgetState extends State<MultiSelectFilterWidget> {
   late Set<String> _selected;
   late TextEditingController _searchController;
-  final String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _selected = Set<String>.from(widget.initialFilter?.values ?? {});
     _searchController = TextEditingController();
+    _searchController.addListener(() => setState(() {}));
   }
 
   @override
@@ -52,7 +52,7 @@ class _MultiSelectFilterWidgetState extends State<MultiSelectFilterWidget> {
   }
 
   List<String> get _filteredOptions {
-    final query = _searchQuery.trim().toLowerCase();
+    final query = _searchController.text.trim().toLowerCase();
     if (query.isEmpty) return widget.options;
     return widget.options
         .where((o) => o.toLowerCase().contains(query))
@@ -91,9 +91,8 @@ class _MultiSelectFilterWidgetState extends State<MultiSelectFilterWidget> {
           ? FilterTextInput(
               controller: _searchController,
               hintText: 'Search...',
-              onSubmitted: (_) {},
             )
-          : const SizedBox.shrink(),
+          : null,
       input: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 220),
         child: ListView(

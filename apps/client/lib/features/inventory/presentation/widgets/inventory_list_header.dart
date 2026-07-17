@@ -7,12 +7,16 @@ export 'inventory_list_row_menu.dart';
 /// Header row height when column separators span the full header area.
 const inventoryListHeaderHeight = 40.0;
 
+/// Shorter header variant for compact list panels (e.g. parties).
+const inventoryListHeaderCompactHeight = 30.0;
+
 class InventoryListHeader extends StatelessWidget {
   const InventoryListHeader({
     required this.columns,
     this.includeTrailingSpace = true,
     this.showColumnSeparators = true,
     this.dividerAfterColumnIndex,
+    this.height = inventoryListHeaderHeight,
     super.key,
   });
 
@@ -23,9 +27,11 @@ class InventoryListHeader extends StatelessWidget {
   /// When [showColumnSeparators] is false, draws a vertical divider after the
   /// column at this index (e.g. `0` between the first and second columns).
   final int? dividerAfterColumnIndex;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
+    final isCompact = height < inventoryListHeaderHeight;
     final rowLayout = InventoryListRowLayout(
       flexValues: [for (final column in columns) column.flex],
       fixedWidths: [for (final column in columns) column.fixedWidth],
@@ -48,14 +54,14 @@ class InventoryListHeader extends StatelessWidget {
       clipBehavior: Clip.hardEdge,
       padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: showColumnSeparators ? 0 : 12,
+        vertical: showColumnSeparators ? 0 : (isCompact ? 6 : 12),
       ),
       decoration: const BoxDecoration(
         color: Color(0xFFF5F5F5),
         border: Border(bottom: BorderSide(color: inventoryCardBorder)),
       ),
       child: SizedBox(
-        height: inventoryListHeaderHeight,
+        height: height,
         child: rowLayout,
       ),
     );

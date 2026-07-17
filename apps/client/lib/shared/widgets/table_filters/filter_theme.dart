@@ -46,7 +46,9 @@ abstract final class TableFilterTheme {
   static InputDecoration fieldDecoration({
     String? hintText,
     Widget? suffixIcon,
+    Widget? prefixIcon,
     String? prefixText,
+    Widget? prefixWidget,
   }) {
     return InputDecoration(
       hintText: hintText,
@@ -57,6 +59,7 @@ abstract final class TableFilterTheme {
       ),
       prefixText: prefixText,
       prefixStyle: fieldTextStyle,
+      prefixIcon: prefixIcon,
       filled: true,
       fillColor: AppColors.surface,
       contentPadding: const EdgeInsets.symmetric(

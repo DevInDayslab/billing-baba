@@ -11,6 +11,7 @@ class FilterTextInput extends StatelessWidget {
     this.hintText,
     this.autofocus = false,
     this.onSubmitted,
+    this.showSearchIcon = true,
     super.key,
   });
 
@@ -18,6 +19,13 @@ class FilterTextInput extends StatelessWidget {
   final String? hintText;
   final bool autofocus;
   final ValueChanged<String>? onSubmitted;
+  final bool showSearchIcon;
+
+  static const _searchIcon = Icon(
+    Icons.search,
+    size: 18,
+    color: AppColors.textSecondary,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +36,10 @@ class FilterTextInput extends StatelessWidget {
         autofocus: autofocus,
         cursorColor: AppColors.primary,
         style: TableFilterTheme.fieldTextStyle,
-        decoration: TableFilterTheme.fieldDecoration(hintText: hintText),
+        decoration: TableFilterTheme.fieldDecoration(
+          hintText: hintText,
+          prefixIcon: showSearchIcon ? _searchIcon : null,
+        ),
         onSubmitted: onSubmitted,
       ),
     );
