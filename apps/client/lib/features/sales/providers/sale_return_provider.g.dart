@@ -157,7 +157,7 @@ final class FilteredSaleReturnsProvider
 }
 
 String _$filteredSaleReturnsHash() =>
-    r'b535df5a0da81c5dbdc09168f06aa61028021684';
+    r'6b0380b9eab4b08dcfee494c5c795032bf29f08f';
 
 @ProviderFor(paginatedSaleReturns)
 final paginatedSaleReturnsProvider = PaginatedSaleReturnsProvider._();

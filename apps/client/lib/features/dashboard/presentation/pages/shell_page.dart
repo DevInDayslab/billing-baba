@@ -15,6 +15,10 @@ import 'package:billing_baba/features/pos/providers/pos_session_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
+import 'package:billing_baba/features/search/application/search_route_observer.dart';
+import 'package:billing_baba/features/search/application/search_shortcuts_handler.dart';
+import 'package:billing_baba/features/search/presentation/search_dialog.dart';
+import 'package:billing_baba/features/search/providers/search_dialog_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -56,6 +60,29 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   bool _developerExpandInitialized = false;
   bool? _wasOverlaySidebar;
   bool _useOverlaySidebar = false;
+  String? _lastRecordedSearchRoute;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _registerSearchDialog(),
+    );
+  }
+
+  @override
+  void dispose() {
+    ref.read(searchDialogProvider.notifier).unregister();
+    super.dispose();
+  }
+
+  void _registerSearchDialog() {
+    ref
+        .read(searchDialogProvider.notifier)
+        .register(
+          open: (context) => showSearchDialog(context, ref),
+        );
+  }
 
   @override
   void didChangeDependencies() {
@@ -223,6 +250,12 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   @override
   Widget build(BuildContext context) {
     final currentLocation = GoRouterState.of(context).uri.path;
+    if (_lastRecordedSearchRoute != currentLocation) {
+      _lastRecordedSearchRoute = currentLocation;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) recordSearchRouteVisit(ref, currentLocation);
+      });
+    }
     final sidebarState = ref.watch(shellSidebarProvider);
     final isCollapsed = sidebarState.isCollapsed;
     final isDrawerOpen = sidebarState.isDrawerOpen;
@@ -244,8 +277,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         final showTopBar =
             currentLocation != AppRoutes.pos ||
             !ref.watch(posSessionProvider).isTerminalOpen;
-        final mainContent = _QuickCreateShortcutScope(
-          enabled: showTopBar,
+        final mainContent = _ShellShortcutScope(
+          quickCreateEnabled: showTopBar,
           child: ColoredBox(
             color: AppColors.background,
             child: Column(
@@ -403,6 +436,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                   ),
                 Expanded(
                   child: TextField(
+                    readOnly: true,
+                    onTap: () =>
+                        ref.read(searchDialogProvider.notifier).open(context),
                     decoration: InputDecoration(
                       hintText: 'Search',
                       hintStyle: const TextStyle(
@@ -1183,24 +1219,27 @@ class _ProfileMenuItem extends StatelessWidget {
   }
 }
 
-class _QuickCreateShortcutScope extends ConsumerWidget {
-  const _QuickCreateShortcutScope({
-    required this.enabled,
+class _ShellShortcutScope extends ConsumerWidget {
+  const _ShellShortcutScope({
+    required this.quickCreateEnabled,
     required this.child,
   });
 
-  final bool enabled;
+  final bool quickCreateEnabled;
   final Widget child;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Shortcuts(
-      shortcuts: buildQuickCreateShortcuts(),
+      shortcuts: {
+        ...buildQuickCreateShortcuts(),
+        ...buildSearchShortcuts(),
+      },
       child: Actions(
         actions: {
           ToggleQuickCreateIntent: CallbackAction<ToggleQuickCreateIntent>(
             onInvoke: (_) {
-              if (!enabled || shouldSuppressQuickCreateShortcuts()) {
+              if (!quickCreateEnabled || shouldSuppressQuickCreateShortcuts()) {
                 return null;
               }
               ref.read(quickCreateMenuProvider).toggle();
@@ -1217,7 +1256,7 @@ class _QuickCreateShortcutScope extends ConsumerWidget {
           ),
           ExecuteQuickCreateIntent: CallbackAction<ExecuteQuickCreateIntent>(
             onInvoke: (intent) {
-              if (!enabled || shouldSuppressQuickCreateShortcuts()) {
+              if (!quickCreateEnabled || shouldSuppressQuickCreateShortcuts()) {
                 return null;
               }
               final action = QuickCreateActions.byId(intent.actionId);
@@ -1226,6 +1265,12 @@ class _QuickCreateShortcutScope extends ConsumerWidget {
                 ref.read(quickCreateMenuProvider).close();
               }
               executeQuickCreate(context, ref, action);
+              return null;
+            },
+          ),
+          OpenSearchDialogIntent: CallbackAction<OpenSearchDialogIntent>(
+            onInvoke: (_) {
+              ref.read(searchDialogProvider.notifier).open(context);
               return null;
             },
           ),

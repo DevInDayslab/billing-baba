@@ -68,6 +68,9 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
       if (intent.businessStatusSub != null) {
         _selectedBusinessStatusSub = intent.businessStatusSub!;
       }
+      if (intent.gstSub != null) {
+        _selectedGstSub = intent.gstSub!;
+      }
     });
   }
 

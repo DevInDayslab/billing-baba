@@ -1,9 +1,11 @@
 import 'package:billing_baba/features/reports/models/business_status_report_subsection.dart';
+import 'package:billing_baba/features/reports/models/gst_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/item_stock_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/party_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/report_nav_group.dart';
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
-import 'package:billing_baba/features/reports/presentation/pages/reports_page.dart' show ReportsPage;
+import 'package:billing_baba/features/reports/presentation/pages/reports_page.dart'
+    show ReportsPage;
 
 /// One-shot navigation target for [ReportsPage] when opened from the dashboard.
 final class ReportsNavIntent {
@@ -11,6 +13,7 @@ final class ReportsNavIntent {
     required this.group,
     this.transactionSub,
     this.partySub,
+    this.gstSub,
     this.itemStockSub,
     this.businessStatusSub,
   });
@@ -26,6 +29,13 @@ final class ReportsNavIntent {
     return ReportsNavIntent._(
       group: ReportNavGroup.party,
       partySub: sub,
+    );
+  }
+
+  factory ReportsNavIntent.gst(GstReportSubSection sub) {
+    return ReportsNavIntent._(
+      group: ReportNavGroup.gst,
+      gstSub: sub,
     );
   }
 
@@ -48,6 +58,7 @@ final class ReportsNavIntent {
   final ReportNavGroup group;
   final TransactionReportSubSection? transactionSub;
   final PartyReportSubSection? partySub;
+  final GstReportSubSection? gstSub;
   final ItemStockReportSubSection? itemStockSub;
   final BusinessStatusReportSubSection? businessStatusSub;
 }

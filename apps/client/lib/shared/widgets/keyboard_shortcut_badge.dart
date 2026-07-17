@@ -39,6 +39,14 @@ class KeyboardShortcutBadge extends StatelessWidget {
     return const KeyboardShortcutBadge(keys: ['Ctrl', 'Enter']);
   }
 
+  /// Footer shortcut for opening global search.
+  factory KeyboardShortcutBadge.platformOpenSearch() {
+    if (Platform.isMacOS) {
+      return const KeyboardShortcutBadge(keys: ['⌘', 'K']);
+    }
+    return const KeyboardShortcutBadge(keys: ['Ctrl', 'K']);
+  }
+
   final List<String> keys;
 
   static String get _altLabel => Platform.isMacOS ? '⌥' : 'Alt';
