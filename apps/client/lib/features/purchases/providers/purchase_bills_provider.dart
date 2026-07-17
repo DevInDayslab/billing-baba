@@ -125,9 +125,12 @@ class PurchaseBillFiltersState {
       selectedPaymentTypes: clearPaymentTypes
           ? const {}
           : (selectedPaymentTypes ?? this.selectedPaymentTypes),
-      amountFilter: clearAmountFilter ? null : (amountFilter ?? this.amountFilter),
-      balanceFilter:
-          clearBalanceFilter ? null : (balanceFilter ?? this.balanceFilter),
+      amountFilter: clearAmountFilter
+          ? null
+          : (amountFilter ?? this.amountFilter),
+      balanceFilter: clearBalanceFilter
+          ? null
+          : (balanceFilter ?? this.balanceFilter),
       dueDateRange: clearDueDateRange
           ? null
           : (dueDateRange ?? this.dueDateRange),

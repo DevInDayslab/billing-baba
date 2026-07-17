@@ -39,8 +39,9 @@ class _SplitPaymentSheetState extends ConsumerState<SplitPaymentSheet> {
     final notifier = ref.read(posCartProvider.notifier);
 
     final activeModes = widget.payments.map((p) => p.mode).toSet();
-    final staleModes =
-        _controllers.keys.where((m) => !activeModes.contains(m)).toList();
+    final staleModes = _controllers.keys
+        .where((m) => !activeModes.contains(m))
+        .toList();
     for (final mode in staleModes) {
       _controllers.remove(mode)?.dispose();
     }

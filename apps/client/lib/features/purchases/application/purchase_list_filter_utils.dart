@@ -31,7 +31,11 @@ bool purchaseFilterMatchesParty(String selected, String value) {
   return value == selected;
 }
 
-bool purchaseFilterMatchesOption(String selected, String allLabel, String value) {
+bool purchaseFilterMatchesOption(
+  String selected,
+  String allLabel,
+  String value,
+) {
   if (selected == allLabel) return true;
   return value == selected;
 }
@@ -129,11 +133,14 @@ PurchaseListPageSlice<T> purchaseFilterPaginate<T>(
 
 List<T> purchaseFilterItemsFromAsync<T>(
   AsyncValue<({List<T> items, int currentPage, int totalPages, int totalItems})>
-      async,
+  async,
 ) {
   return async.when(
-    data: (({List<T> items, int currentPage, int totalPages, int totalItems}) page) =>
-        page.items,
+    data:
+        (
+          ({List<T> items, int currentPage, int totalPages, int totalItems})
+          page,
+        ) => page.items,
     loading: () => <T>[],
     error: (_, _) => <T>[],
   );
@@ -214,10 +221,12 @@ class PurchaseColumnFilterFields {
       selectedPaymentTypes: clearPaymentTypes
           ? const {}
           : (selectedPaymentTypes ?? this.selectedPaymentTypes),
-      amountFilter:
-          clearAmountFilter ? null : (amountFilter ?? this.amountFilter),
-      balanceFilter:
-          clearBalanceFilter ? null : (balanceFilter ?? this.balanceFilter),
+      amountFilter: clearAmountFilter
+          ? null
+          : (amountFilter ?? this.amountFilter),
+      balanceFilter: clearBalanceFilter
+          ? null
+          : (balanceFilter ?? this.balanceFilter),
       dueDateRange: clearDueDateRange
           ? null
           : (dueDateRange ?? this.dueDateRange),

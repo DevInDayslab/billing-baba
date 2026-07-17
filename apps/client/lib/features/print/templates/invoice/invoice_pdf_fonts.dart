@@ -8,6 +8,7 @@ abstract final class InvoicePdfFonts {
   static pw.Font? medium;
   static pw.Font? semiBold;
   static pw.Font? bold;
+
   /// Fallback for glyphs missing from Inter (e.g. ₹ U+20B9).
   static pw.Font? symbols;
   static bool _loaded = false;

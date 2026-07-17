@@ -223,11 +223,9 @@ class PartyModel {
   );
 
   /// Always formats monetary values (including zero) as currency.
-  static String formatCurrency(double value) =>
-      _currencyFormat.format(value);
+  static String formatCurrency(double value) => _currencyFormat.format(value);
 
-  static String displayCurrency(double? value) =>
-      formatCurrency(value ?? 0);
+  static String displayCurrency(double? value) => formatCurrency(value ?? 0);
 
   static String displayOutstanding(double balance) =>
       formatCurrency(balance.abs());

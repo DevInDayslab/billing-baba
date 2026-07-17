@@ -32,7 +32,10 @@ void main() {
       expect(request.location?.rack, 'Rack A');
       expect(request.primaryImageUrl, 'https://example.com/img.jpg');
       expect(request.tierPrices, hasLength(2));
-      expect(request.tierPrices.map((t) => t.pricingTier), ['tier_1', 'tier_2']);
+      expect(request.tierPrices.map((t) => t.pricingTier), [
+        'tier_1',
+        'tier_2',
+      ]);
     });
 
     test('maps brand and image on update', () {
@@ -95,7 +98,9 @@ void main() {
     test('maps known inventory exceptions', () {
       expect(
         InventoryErrorMapper.messageFor(
-          const InventoryException('Cannot delete category with existing items.'),
+          const InventoryException(
+            'Cannot delete category with existing items.',
+          ),
         ),
         'Cannot delete category with existing items.',
       );

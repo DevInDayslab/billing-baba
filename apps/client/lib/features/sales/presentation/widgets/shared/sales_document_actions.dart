@@ -42,17 +42,20 @@ class SalesDocumentTableConfig {
     BuildContext context,
     WidgetRef ref,
     SaleInvoiceModel document,
-  )? onView;
+  )?
+  onView;
   final Future<void> Function(
     BuildContext context,
     WidgetRef ref,
     SaleInvoiceModel document,
-  )? onEdit;
+  )?
+  onEdit;
   final Future<void> Function(
     BuildContext context,
     WidgetRef ref,
     SaleInvoiceModel document,
-  )? onDuplicate;
+  )?
+  onDuplicate;
 }
 
 SalesDocumentTableConfig estimateTableConfig() => SalesDocumentTableConfig(
@@ -191,9 +194,7 @@ Future<void> _defaultView(
   }
 
   if (config.scope.documentType == SalesDocumentType.saleOrder) {
-    await ref
-        .read(saleOrderFormProvider().notifier)
-        .loadDocument(document.id);
+    await ref.read(saleOrderFormProvider().notifier).loadDocument(document.id);
     return;
   }
 
@@ -241,9 +242,11 @@ Future<void> _defaultDuplicate(
   }
 
   if (config.scope.documentType == SalesDocumentType.deliveryChallan) {
-    await ref.read(deliveryChallanFormProvider.notifier).duplicateDocument(
-      document.id,
-    );
+    await ref
+        .read(deliveryChallanFormProvider.notifier)
+        .duplicateDocument(
+          document.id,
+        );
   }
 }
 
@@ -335,8 +338,9 @@ PrintRequest salesDocumentPrintRequest(
 
   return switch (config.scope.documentType) {
     SalesDocumentType.saleOrder => PrintRequest.saleOrder(documentId),
-    SalesDocumentType.deliveryChallan =>
-      PrintRequest.deliveryChallan(documentId),
+    SalesDocumentType.deliveryChallan => PrintRequest.deliveryChallan(
+      documentId,
+    ),
     SalesDocumentType.estimate => PrintRequest.estimate(documentId),
     _ => PrintRequest.saleInvoice(documentId),
   };

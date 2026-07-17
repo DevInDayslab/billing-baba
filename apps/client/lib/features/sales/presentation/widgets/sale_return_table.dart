@@ -75,12 +75,15 @@ class SaleReturnTable extends ConsumerWidget {
                 const Spacer(),
                 FilledButton.icon(
                   onPressed: () {
-                    final sessionKey =
-                        ref.read(creditNoteTabsProvider()).activeTab.sessionKey;
+                    final sessionKey = ref
+                        .read(creditNoteTabsProvider())
+                        .activeTab
+                        .sessionKey;
                     ref
                         .read(
-                          creditNoteFormProvider(sessionKey: sessionKey)
-                              .notifier,
+                          creditNoteFormProvider(
+                            sessionKey: sessionKey,
+                          ).notifier,
                         )
                         .resetForm();
                     unawaited(context.push(AppRoutes.addCreditNote));

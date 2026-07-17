@@ -30,7 +30,8 @@ class InventoryLedgerColumnHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isSorted = sortable &&
+    final isSorted =
+        sortable &&
         filters.sortColumn == sortColumn &&
         filters.sortDirection != InventoryTransactionSortDirection.none;
 

@@ -42,7 +42,8 @@ abstract final class InventoryStockCalculator {
 
   static double? lastPurchasePrice(List<ProductTransaction> transactions) {
     for (final transaction in transactions) {
-      if (transaction.movementType == 'purchase' && transaction.pricePerUnit > 0) {
+      if (transaction.movementType == 'purchase' &&
+          transaction.pricePerUnit > 0) {
         return transaction.pricePerUnit;
       }
     }

@@ -35,16 +35,22 @@ class TrialBalanceReportContent extends ConsumerWidget {
         final rows = report.rows;
 
         List<List<String>> exportRows() => [
-              for (final row in rows)
-                [
-                  row.accountName,
-                  formatReportCurrency(row.opening),
-                  formatReportCurrency(row.debit),
-                  formatReportCurrency(row.credit),
-                  if (row.closingDebit > 0) formatReportCurrency(row.closingDebit) else '—',
-                  if (row.closingCredit > 0) formatReportCurrency(row.closingCredit) else '—',
-                ],
-            ];
+          for (final row in rows)
+            [
+              row.accountName,
+              formatReportCurrency(row.opening),
+              formatReportCurrency(row.debit),
+              formatReportCurrency(row.credit),
+              if (row.closingDebit > 0)
+                formatReportCurrency(row.closingDebit)
+              else
+                '—',
+              if (row.closingCredit > 0)
+                formatReportCurrency(row.closingCredit)
+              else
+                '—',
+            ],
+        ];
 
         void exportExcel() {
           reportExportTable(
@@ -66,171 +72,174 @@ class TrialBalanceReportContent extends ConsumerWidget {
         }
 
         return ColoredBox(
-        color: AppColors.background,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Text(
-                    'Trial Balance Report',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1A237E),
-                    ),
-                  ),
-                  const Spacer(),
-                  ReportTextActionButton(
-                    label: 'Excel Report',
-                    icon: Icons.table_chart_outlined,
-                    onTap: exportExcel,
-                  ),
-                  ReportTextActionButton(
-                    label: 'Print',
-                    icon: Icons.print_outlined,
-                    onTap: printReport,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              const ReportCard(
-                padding: EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+          color: AppColors.background,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
                   children: [
-                    ReportPeriodFilterBar(),
-                    SizedBox(height: AppSpacing.sm),
-                    ReportSearchField(),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              ReportCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(
-                      color: reportTableHeaderBg,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      child: const Row(
-                        children: [
-                          Expanded(
-                            child: Text('ACCOUNT', style: reportTableHeaderStyle),
-                          ),
-                          SizedBox(
-                            width: 90,
-                            child: Text(
-                              'OPENING',
-                              style: reportTableHeaderStyle,
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                          SizedBox(
-                            width: 90,
-                            child: Text(
-                              'DEBIT',
-                              style: reportTableHeaderStyle,
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                          SizedBox(
-                            width: 90,
-                            child: Text(
-                              'CREDIT',
-                              style: reportTableHeaderStyle,
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                          SizedBox(
-                            width: 90,
-                            child: Text(
-                              'CLOS. DR',
-                              style: reportTableHeaderStyle,
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                          SizedBox(
-                            width: 90,
-                            child: Text(
-                              'CLOS. CR',
-                              style: reportTableHeaderStyle,
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                        ],
+                    const Text(
+                      'Trial Balance Report',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A237E),
                       ),
                     ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    if (report.rows.isEmpty)
-                      const ReportEmptyTableState(
-                        message: 'No data available for the selected period.',
-                        minHeight: 180,
-                      )
-                    else
-                      ...report.rows.map(
-                        (row) => _TrialBalanceRowTile(row: row),
-                      ),
-                    Container(
-                      color: const Color(0xFFE8F1FB),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      child: Row(
-                        children: [
-                          const Expanded(
-                            child: Text(
-                              'Total (Closing)',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: reportActiveBlue,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 90),
-                          const SizedBox(width: 90),
-                          const SizedBox(width: 90),
-                          SizedBox(
-                            width: 90,
-                            child: Text(
-                              formatReportCurrencyCompact(report.totalDebit),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: reportActiveBlue,
-                              ),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                          SizedBox(
-                            width: 90,
-                            child: Text(
-                              formatReportCurrencyCompact(report.totalCredit),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: reportActiveBlue,
-                              ),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                        ],
-                      ),
+                    const Spacer(),
+                    ReportTextActionButton(
+                      label: 'Excel Report',
+                      icon: Icons.table_chart_outlined,
+                      onTap: exportExcel,
+                    ),
+                    ReportTextActionButton(
+                      label: 'Print',
+                      icon: Icons.print_outlined,
+                      onTap: printReport,
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.md),
+                const ReportCard(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ReportPeriodFilterBar(),
+                      SizedBox(height: AppSpacing.sm),
+                      ReportSearchField(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ReportCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        color: reportTableHeaderBg,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                        child: const Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'ACCOUNT',
+                                style: reportTableHeaderStyle,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 90,
+                              child: Text(
+                                'OPENING',
+                                style: reportTableHeaderStyle,
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 90,
+                              child: Text(
+                                'DEBIT',
+                                style: reportTableHeaderStyle,
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 90,
+                              child: Text(
+                                'CREDIT',
+                                style: reportTableHeaderStyle,
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 90,
+                              child: Text(
+                                'CLOS. DR',
+                                style: reportTableHeaderStyle,
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 90,
+                              child: Text(
+                                'CLOS. CR',
+                                style: reportTableHeaderStyle,
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1, color: reportCardBorder),
+                      if (report.rows.isEmpty)
+                        const ReportEmptyTableState(
+                          message: 'No data available for the selected period.',
+                          minHeight: 180,
+                        )
+                      else
+                        ...report.rows.map(
+                          (row) => _TrialBalanceRowTile(row: row),
+                        ),
+                      Container(
+                        color: const Color(0xFFE8F1FB),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                        child: Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Total (Closing)',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: reportActiveBlue,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 90),
+                            const SizedBox(width: 90),
+                            const SizedBox(width: 90),
+                            SizedBox(
+                              width: 90,
+                              child: Text(
+                                formatReportCurrencyCompact(report.totalDebit),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: reportActiveBlue,
+                                ),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 90,
+                              child: Text(
+                                formatReportCurrencyCompact(report.totalCredit),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: reportActiveBlue,
+                                ),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+        );
       },
     );
   }
@@ -256,7 +265,10 @@ class _TrialBalanceRowTile extends StatelessWidget {
           Expanded(
             child: Text(
               row.accountName,
-              style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           SizedBox(

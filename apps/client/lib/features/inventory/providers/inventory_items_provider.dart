@@ -188,7 +188,8 @@ class InventoryItems extends _$InventoryItems {
       rethrow;
     } catch (error) {
       // Offline / API unavailable — add to local catalog-backed list.
-      final units = ref.read(inventoryUnitsProvider).value ?? InventoryCatalog.units;
+      final units =
+          ref.read(inventoryUnitsProvider).value ?? InventoryCatalog.units;
       final item = _itemFromForm(form, units);
       final current = state.value ?? [];
       state = AsyncData([...current, item]);

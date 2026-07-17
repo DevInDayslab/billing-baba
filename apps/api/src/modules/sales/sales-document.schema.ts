@@ -156,6 +156,15 @@ export type BrandSwapBody = z.infer<typeof brandSwapBodySchema>;
 
 export const finalizeSalesDocumentBodySchema = z.object({
   godown_id: z.uuid().optional(),
+  loyalty_points_redeemed: z
+    .string()
+    .trim()
+    .regex(/^\d+(\.\d{1,4})?$/, 'Invalid loyalty points value')
+    .optional()
+    .refine(
+      (value) => value === undefined || parseFloat(value) >= 0,
+      'Loyalty points must be >= 0',
+    ),
 });
 
 export type FinalizeSalesDocumentBody = z.infer<

@@ -265,14 +265,16 @@ List<SaleInvoiceModel> applySaleOrderClientFilters(
     if (!_matchesSaleOrderStatusFilter(order, filters.selectedStatus)) {
       return false;
     }
-    if (filters.selectedUser != 'All Users' && order.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        order.user != filters.selectedUser) {
       return false;
     }
     if (filters.selectedGodown != 'All Godown' &&
         order.godown != filters.selectedGodown) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && order.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        order.firm != filters.selectedFirm) {
       return false;
     }
     return true;
@@ -280,10 +282,15 @@ List<SaleInvoiceModel> applySaleOrderClientFilters(
 }
 
 List<String> _withAllOption(String allLabel, Iterable<String> values) {
-  final unique = values.map((value) => value.trim()).where((value) {
-    return value.isNotEmpty && value != allLabel;
-  }).toSet().toList()
-    ..sort();
+  final unique =
+      values
+          .map((value) => value.trim())
+          .where((value) {
+            return value.isNotEmpty && value != allLabel;
+          })
+          .toSet()
+          .toList()
+        ..sort();
   return [allLabel, ...unique];
 }
 
@@ -502,9 +509,7 @@ class SaleOrders extends _$SaleOrders {
 class SaleOrderFilters extends _$SaleOrderFilters {
   @override
   SaleOrderFiltersState build() {
-    return const SaleOrderFiltersState(
-      
-    );
+    return const SaleOrderFiltersState();
   }
 
   void setTimeRange(String label) {

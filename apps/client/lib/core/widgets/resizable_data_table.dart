@@ -100,9 +100,7 @@ class _ResizableDataTableState extends State<ResizableDataTable> {
   /// the natural table width so the grid fills available space (e.g. when the
   /// sidebar collapses).
   List<double> _displayColumnWidths(double availableWidth) {
-    if (_hasManualResize ||
-        !availableWidth.isFinite ||
-        availableWidth <= 0) {
+    if (_hasManualResize || !availableWidth.isFinite || availableWidth <= 0) {
       return List<double>.from(_columnWidths);
     }
 

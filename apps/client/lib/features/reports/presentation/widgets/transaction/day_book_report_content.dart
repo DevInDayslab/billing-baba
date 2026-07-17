@@ -67,161 +67,164 @@ class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
           for (final row in rows) _dayBookExportRow(row),
         ];
         return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: Row(
-              children: [
-                const Text(
-                  'Date',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
+          color: AppColors.background,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.md,
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                SaleDateRangePickerAnchor(
-                  key: _datePickerKey,
-                  initialRange: DateTimeRange(
-                    start: _selectedDate,
-                    end: _selectedDate,
-                  ),
-                  onRangeSelected: (range) {
-                    setState(() => _selectedDate = range.start);
-                    ref
-                        .read(reportFiltersProvider.notifier)
-                        .setSelectedDate(range.start);
-                  },
-                  child: SaleFilterChip(
-                    label: _dateFormat.format(_selectedDate),
-                    onTap: () => _datePickerKey.currentState?.toggle(),
-                  ),
-                ),
-                const Spacer(),
-                ReportTextActionButton(
-                  label: 'Excel Report',
-                  icon: Icons.table_chart_outlined,
-                  onTap: () => reportExportTable(
-                    context: context,
-                    title: 'Day Book',
-                    filename: 'day-book',
-                    headers: DayBookReportContent._exportHeaders,
-                    rows: exportRows,
-                  ),
-                ),
-                ReportTextActionButton(
-                  label: 'Print',
-                  icon: Icons.print_outlined,
-                  onTap: () => reportPrintTable(
-                    context: context,
-                    title: 'Day Book',
-                    headers: DayBookReportContent._exportHeaders,
-                    rows: exportRows,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                0,
-                AppSpacing.lg,
-                AppSpacing.lg,
-              ),
-              child: ReportCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: Row(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.all(AppSpacing.md),
-                      child: ReportSearchField(
-                        hintText: 'Search transactions...',
+                    const Text(
+                      'Date',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
                       ),
                     ),
-                    const Divider(height: 1, color: reportCardBorder),
-                    Expanded(
-                      child: ReportSyncScrollTable(
-                        minWidth: 800,
-                        headerChildren: const [
-                          Expanded(
-                            child: ReportAlignedHeaderCell(label: 'NAME'),
-                          ),
-                          ReportAlignedHeaderCell(label: 'REF NO.', width: 100),
-                          ReportAlignedHeaderCell(label: 'TYPE', width: 90),
-                          ReportAlignedHeaderCell(
-                            label: 'TOTAL',
-                            width: 90,
-                            alignment: Alignment.centerRight,
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'MONEY IN',
-                            width: 100,
-                            alignment: Alignment.centerRight,
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'MONEY OUT',
-                            width: 100,
-                            alignment: Alignment.centerRight,
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'PRINT/ SHARE',
-                            width: 110,
-                            showFilter: false,
-                          ),
-                        ],
-                        rows: [
-                          for (var i = 0; i < rows.length; i++)
-                            _DayBookRow(row: rows[i], index: i),
-                        ],
-                        emptyState: const Center(
-                          child: Text(
-                            'No transactions to show',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
+                    const SizedBox(width: AppSpacing.sm),
+                    SaleDateRangePickerAnchor(
+                      key: _datePickerKey,
+                      initialRange: DateTimeRange(
+                        start: _selectedDate,
+                        end: _selectedDate,
+                      ),
+                      onRangeSelected: (range) {
+                        setState(() => _selectedDate = range.start);
+                        ref
+                            .read(reportFiltersProvider.notifier)
+                            .setSelectedDate(range.start);
+                      },
+                      child: SaleFilterChip(
+                        label: _dateFormat.format(_selectedDate),
+                        onTap: () => _datePickerKey.currentState?.toggle(),
                       ),
                     ),
-                    ReportMoneySummaryFooter(
-                      items: [
-                        ReportMoneySummaryItem(
-                          label: 'Total Money-In',
-                          amount: formatReportCurrency(totalMoneyIn),
-                          color: reportTeal,
-                        ),
-                        ReportMoneySummaryItem(
-                          label: 'Total Money-Out',
-                          amount: formatReportCurrency(totalMoneyOut),
-                          color: reportAddRed,
-                        ),
-                        ReportMoneySummaryItem(
-                          label: 'Total Money In - Total Money Out',
-                          amount: formatReportCurrency(netTotal),
-                          bold: true,
-                        ),
-                      ],
+                    const Spacer(),
+                    ReportTextActionButton(
+                      label: 'Excel Report',
+                      icon: Icons.table_chart_outlined,
+                      onTap: () => reportExportTable(
+                        context: context,
+                        title: 'Day Book',
+                        filename: 'day-book',
+                        headers: DayBookReportContent._exportHeaders,
+                        rows: exportRows,
+                      ),
+                    ),
+                    ReportTextActionButton(
+                      label: 'Print',
+                      icon: Icons.print_outlined,
+                      onTap: () => reportPrintTable(
+                        context: context,
+                        title: 'Day Book',
+                        headers: DayBookReportContent._exportHeaders,
+                        rows: exportRows,
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: ReportCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.all(AppSpacing.md),
+                          child: ReportSearchField(
+                            hintText: 'Search transactions...',
+                          ),
+                        ),
+                        const Divider(height: 1, color: reportCardBorder),
+                        Expanded(
+                          child: ReportSyncScrollTable(
+                            minWidth: 800,
+                            headerChildren: const [
+                              Expanded(
+                                child: ReportAlignedHeaderCell(label: 'NAME'),
+                              ),
+                              ReportAlignedHeaderCell(
+                                label: 'REF NO.',
+                                width: 100,
+                              ),
+                              ReportAlignedHeaderCell(label: 'TYPE', width: 90),
+                              ReportAlignedHeaderCell(
+                                label: 'TOTAL',
+                                width: 90,
+                                alignment: Alignment.centerRight,
+                              ),
+                              ReportAlignedHeaderCell(
+                                label: 'MONEY IN',
+                                width: 100,
+                                alignment: Alignment.centerRight,
+                              ),
+                              ReportAlignedHeaderCell(
+                                label: 'MONEY OUT',
+                                width: 100,
+                                alignment: Alignment.centerRight,
+                              ),
+                              ReportAlignedHeaderCell(
+                                label: 'PRINT/ SHARE',
+                                width: 110,
+                                showFilter: false,
+                              ),
+                            ],
+                            rows: [
+                              for (var i = 0; i < rows.length; i++)
+                                _DayBookRow(row: rows[i], index: i),
+                            ],
+                            emptyState: const Center(
+                              child: Text(
+                                'No transactions to show',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        ReportMoneySummaryFooter(
+                          items: [
+                            ReportMoneySummaryItem(
+                              label: 'Total Money-In',
+                              amount: formatReportCurrency(totalMoneyIn),
+                              color: reportTeal,
+                            ),
+                            ReportMoneySummaryItem(
+                              label: 'Total Money-Out',
+                              amount: formatReportCurrency(totalMoneyOut),
+                              color: reportAddRed,
+                            ),
+                            ReportMoneySummaryItem(
+                              label: 'Total Money In - Total Money Out',
+                              amount: formatReportCurrency(netTotal),
+                              bold: true,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
       },
     );
   }
@@ -262,18 +265,14 @@ class _DayBookRow extends StatelessWidget {
             100,
             alignment: Alignment.centerRight,
             child: Text(
-              row.moneyIn > 0
-                  ? formatReportCurrencyCompact(row.moneyIn)
-                  : '',
+              row.moneyIn > 0 ? formatReportCurrencyCompact(row.moneyIn) : '',
             ),
           ),
           ReportAlignedCell.fixed(
             100,
             alignment: Alignment.centerRight,
             child: Text(
-              row.moneyOut > 0
-                  ? formatReportCurrencyCompact(row.moneyOut)
-                  : '',
+              row.moneyOut > 0 ? formatReportCurrencyCompact(row.moneyOut) : '',
             ),
           ),
           ReportAlignedCell.fixed(

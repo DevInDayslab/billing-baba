@@ -27,13 +27,19 @@ abstract final class SaleSubRoutes {
       route: AppRoutes.saleDeliveryChallan,
       label: 'Delivery Challan',
     ),
-    SaleSubRoute(route: AppRoutes.saleJobWorkOut, label: 'Job Work Out (Challan)'),
+    SaleSubRoute(
+      route: AppRoutes.saleJobWorkOut,
+      label: 'Job Work Out (Challan)',
+    ),
     SaleSubRoute(
       route: AppRoutes.saleReturnCreditNote,
       label: 'Sale Return/Credit Note',
       pageTitle: 'Sale Return',
     ),
     SaleSubRoute(route: AppRoutes.saleFa, label: 'Sale FA'),
+    SaleSubRoute(route: AppRoutes.crmLeads, label: 'Leads'),
+    SaleSubRoute(route: AppRoutes.crmContacts, label: 'Contacts'),
+    SaleSubRoute(route: AppRoutes.crmDeals, label: 'Deals'),
   ];
 
   static String labelForRoute(String route) {

@@ -86,7 +86,6 @@ class ExcelExporter {
       }
       worksheet.setColumnWidth(col, (maxLen + 2).clamp(8, 48).toDouble());
     }
-
   }
 
   void _setCellValue(Data cell, Object? value, ExportCellType type) {
@@ -125,9 +124,7 @@ class ExcelExporter {
   }
 
   String _safeSheetName(String name) {
-    final cleaned = name
-        .replaceAll(RegExp(r'[\\/*?:\[\]]'), '_')
-        .trim();
+    final cleaned = name.replaceAll(RegExp(r'[\\/*?:\[\]]'), '_').trim();
     final truncated = cleaned.length > 31 ? cleaned.substring(0, 31) : cleaned;
     return truncated.isEmpty ? 'Sheet' : truncated;
   }

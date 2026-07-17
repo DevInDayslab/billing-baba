@@ -26,10 +26,70 @@ class HoldBillsPanel extends ConsumerWidget {
     );
   }
 
+  Future<void> _resumeBill(
+    BuildContext context,
+    WidgetRef ref,
+    HeldBill bill,
+  ) async {
+    final cart = ref.read(posCartProvider);
+    if (cart.items.isNotEmpty) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Resume held bill?'),
+          content: const Text('Current bill will be cleared. Continue?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) return;
+    }
+
+    ref.read(posCartProvider.notifier).resumeBill(bill);
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _discardBill(
+    BuildContext context,
+    WidgetRef ref,
+    String billId,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Discard held bill?'),
+        content: const Text('This held bill will be permanently removed.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref.read(posCartProvider.notifier).discardHeldBill(billId);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final heldBills = ref.watch(posCartProvider).heldBills;
-    final notifier = ref.read(posCartProvider.notifier);
 
     return Dialog(
       backgroundColor: AppColors.surface,
@@ -74,10 +134,8 @@ class HoldBillsPanel extends ConsumerWidget {
                       final bill = heldBills[index];
                       return _HeldBillRow(
                         bill: bill,
-                        onResume: () {
-                          notifier.resumeBill(bill.id);
-                          Navigator.of(context).pop();
-                        },
+                        onResume: () => _resumeBill(context, ref, bill),
+                        onDiscard: () => _discardBill(context, ref, bill.id),
                       );
                     },
                   ),
@@ -91,15 +149,23 @@ class HoldBillsPanel extends ConsumerWidget {
 }
 
 class _HeldBillRow extends StatelessWidget {
-  const _HeldBillRow({required this.bill, required this.onResume});
+  const _HeldBillRow({
+    required this.bill,
+    required this.onResume,
+    required this.onDiscard,
+  });
 
   final HeldBill bill;
   final VoidCallback onResume;
+  final VoidCallback onDiscard;
 
   @override
   Widget build(BuildContext context) {
     final total = heldBillTotal(bill.items);
     final itemCount = bill.items.fold(0, (sum, i) => sum + i.quantity);
+    final customerLabel = bill.customerName?.trim().isNotEmpty == true
+        ? bill.customerName!
+        : 'Walk-in';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -110,10 +176,19 @@ class _HeldBillRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
+                  customerLabel,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
                   _timeFormat.format(bill.heldAt),
                   style: const TextStyle(
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -124,6 +199,13 @@ class _HeldBillRow extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, size: 20),
+            color: AppColors.error,
+            tooltip: 'Discard',
+            onPressed: onDiscard,
+          ),
+          const SizedBox(width: AppSpacing.xs),
           FilledButton(
             onPressed: onResume,
             style: PosButtonStyles.primaryFilled,

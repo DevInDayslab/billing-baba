@@ -8,6 +8,21 @@ abstract final class ApiEndpoints {
   static String party(String id) => '/api/v1/parties/$id';
   static String partyDeleteStatus(String id) => '/api/v1/parties/$id/delete-status';
   static String partyLedger(String id) => '/api/v1/parties/$id/ledger';
+  static String partyLoyalty(String id) => '/api/v1/parties/$id/loyalty';
+  static String partyLoyaltyTransactions(String id) =>
+      '/api/v1/parties/$id/loyalty/transactions';
+  static const settings = '/api/v1/settings';
+  static const loyaltyRules = '$settings/loyalty-rules';
+  static const crmLeads = '/api/v1/crm/leads';
+  static String crmLead(String id) => '/api/v1/crm/leads/$id';
+  static String crmLeadActivities(String id) =>
+      '/api/v1/crm/leads/$id/activities';
+  static const crmContacts = '/api/v1/crm/contacts';
+  static String crmContact(String id) => '/api/v1/crm/contacts/$id';
+  static String crmContactActivities(String id) =>
+      '/api/v1/crm/contacts/$id/activities';
+  static const crmDeals = '/api/v1/crm/deals';
+  static String crmDeal(String id) => '/api/v1/crm/deals/$id';
   static const sync = '/api/v1/sync';
   static const health = '/api/v1/health';
 
@@ -66,7 +81,8 @@ abstract final class ApiEndpoints {
   static String salesDocumentFinalize(String id) =>
       '${salesDocument(id)}/finalize';
   static String salesDocumentCancel(String id) => '${salesDocument(id)}/cancel';
-  static String salesDocumentConvert(String id) => '${salesDocument(id)}/convert';
+  static String salesDocumentConvert(String id) =>
+      '${salesDocument(id)}/convert';
   static String salesDocumentBrandSwap(String id) =>
       '${salesDocument(id)}/brand-swap';
 
@@ -83,6 +99,7 @@ abstract final class ApiEndpoints {
       '${paymentAllocations(id)}/$allocationId';
 
   static const purchases = '/api/v1/purchases';
+  static const purchaseParseDocument = '$purchases/parse-document';
   static const purchaseDocuments = '$purchases/purchase-documents';
   static String purchaseDocument(String id) => '$purchaseDocuments/$id';
   static String purchaseDocumentLines(String id) =>

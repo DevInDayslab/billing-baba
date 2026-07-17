@@ -22,6 +22,7 @@ class PartyLocalExtension {
     this.openingBalanceAsOfDate,
     this.loyaltyPointsOpeningBalance = '',
     this.loyaltyPointsAsOfDate,
+    this.loyaltyPointsBalance = '',
     this.additionalField1 = '',
     this.additionalField2 = '',
     this.defaultPriceTier = '',
@@ -49,6 +50,7 @@ class PartyLocalExtension {
       loyaltyPointsAsOfDate: json['loyalty_points_as_of_date'] != null
           ? DateTime.tryParse(json['loyalty_points_as_of_date'] as String)
           : null,
+      loyaltyPointsBalance: json['loyalty_points_balance'] as String? ?? '',
       additionalField1: json['additional_field_1'] as String? ?? '',
       additionalField2: json['additional_field_2'] as String? ?? '',
       defaultPriceTier: json['default_price_tier'] as String? ?? '',
@@ -72,6 +74,9 @@ class PartyLocalExtension {
       openingBalanceAsOfDate: result.openingBalanceAsOfDate,
       loyaltyPointsOpeningBalance: result.loyaltyPointsOpeningBalance,
       loyaltyPointsAsOfDate: result.loyaltyPointsAsOfDate,
+      loyaltyPointsBalance: _initialLoyaltyBalance(
+        result.loyaltyPointsOpeningBalance,
+      ),
       additionalField1: result.additionalField1Enabled
           ? result.additionalField1
           : '',
@@ -97,6 +102,7 @@ class PartyLocalExtension {
   final DateTime? openingBalanceAsOfDate;
   final String loyaltyPointsOpeningBalance;
   final DateTime? loyaltyPointsAsOfDate;
+  final String loyaltyPointsBalance;
   final String additionalField1;
   final String additionalField2;
   final String defaultPriceTier;
@@ -119,10 +125,16 @@ class PartyLocalExtension {
     'loyalty_points_opening_balance': loyaltyPointsOpeningBalance,
     if (loyaltyPointsAsOfDate != null)
       'loyalty_points_as_of_date': loyaltyPointsAsOfDate!.toIso8601String(),
+    'loyalty_points_balance': loyaltyPointsBalance,
     'additional_field_1': additionalField1,
     'additional_field_2': additionalField2,
     'default_price_tier': defaultPriceTier,
   };
+}
+
+String _initialLoyaltyBalance(String openingBalance) {
+  final opening = double.tryParse(openingBalance) ?? 0;
+  return opening > 0 ? openingBalance : '';
 }
 
 class PartyCache {

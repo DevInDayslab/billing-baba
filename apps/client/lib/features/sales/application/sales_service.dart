@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/utils/date_time_utils.dart';
+import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
@@ -22,6 +23,18 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 export 'sales_error_mapper.dart' show SalesException, SalesOfflineException;
 
 part 'sales_service.g.dart';
+
+class CreateAndFinalizeSaleResult {
+  const CreateAndFinalizeSaleResult({
+    required this.document,
+    this.loyalty,
+    this.earnedLoyaltyPoints = 0,
+  });
+
+  final SalesDocumentDto document;
+  final SaleLoyaltyResultDto? loyalty;
+  final int earnedLoyaltyPoints;
+}
 
 @Riverpod(keepAlive: true)
 Future<SalesService> salesService(Ref ref) async {
@@ -68,20 +81,15 @@ class SalesService {
           .toList();
 
       final total = response.meta.total;
-      final totalPages = total == 0
-          ? 1
-          : (total / query.limit).ceil();
+      final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
 
       final summaryDto = response.summary;
       final summary = summaryDto == null
           ? null
           : SaleInvoiceSummaryData(
-              totalSalesAmount:
-                  double.tryParse(summaryDto.totalAmount) ?? 0,
-              receivedAmount:
-                  double.tryParse(summaryDto.receivedAmount) ?? 0,
-              balanceAmount:
-                  double.tryParse(summaryDto.balanceAmount) ?? 0,
+              totalSalesAmount: double.tryParse(summaryDto.totalAmount) ?? 0,
+              receivedAmount: double.tryParse(summaryDto.receivedAmount) ?? 0,
+              balanceAmount: double.tryParse(summaryDto.balanceAmount) ?? 0,
             );
 
       return PaginatedSaleInvoices(
@@ -133,9 +141,7 @@ class SalesService {
           .toList();
 
       final total = response.meta.total;
-      final totalPages = total == 0
-          ? 1
-          : (total / query.limit).ceil();
+      final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
 
       return PaginatedPaymentIn(
         items: items,
@@ -252,10 +258,11 @@ class SalesService {
     }
 
     final draft = await saveDocumentDraft(input, itemNameToId: itemNameToId);
-    return _repository.finalizeDocument(
+    await _repository.finalizeDocument(
       draft.id,
       godownId: godownId ?? input.godownId,
     );
+    return _repository.getDocument(draft.id);
   }
 
   Future<SaleDocumentFormState> loadSaleDocumentForm(String documentId) async {
@@ -351,10 +358,9 @@ class SalesService {
         quantity: line.qty.toStringAsFixed(4),
         unit: line.unit,
         unitPrice: line.pricePerUnit.toStringAsFixed(4),
-        discountAmount: (line.qty *
-                line.pricePerUnit *
-                (line.discountPercent / 100))
-            .toStringAsFixed(4),
+        discountAmount:
+            (line.qty * line.pricePerUnit * (line.discountPercent / 100))
+                .toStringAsFixed(4),
         taxRate: line.taxPercent.toStringAsFixed(4),
         taxType: line.taxPercent > 0 ? 'cgst_sgst' : 'none',
         sortOrder: i,
@@ -397,13 +403,13 @@ class SalesService {
     }
   }
 
-
-  Future<SalesDocumentDto> createAndFinalizeSale(
+  Future<CreateAndFinalizeSaleResult> createAndFinalizeSale(
     AddSaleFormState form, {
     required String? partyId,
     required Map<String, String> itemNameToId,
     String? godownId,
     bool isGstFormal = true,
+    double loyaltyPointsRedeemed = 0,
   }) async {
     if (partyId == null || partyId.isEmpty) {
       throw const SalesException('Party is required');
@@ -414,13 +420,16 @@ class SalesService {
         form.copyWith(partyId: partyId, godownId: godownId),
         itemNameToId: itemNameToId,
       );
-      final finalized = await _repository.finalizeDocument(
+      final finalizeResult = await _repository.finalizeDocument(
         draft.id,
         godownId: godownId ?? form.godownId,
+        loyaltyPointsRedeemed: loyaltyPointsRedeemed,
       );
+      final finalized = await _repository.getDocument(draft.id);
 
+      final payableTotal = form.invoiceTotal;
       final receivedAmount = form.saleType == SaleType.cash
-          ? form.grandTotal
+          ? payableTotal
           : (form.receivedEnabled ? form.receivedAmount : 0);
 
       if (receivedAmount > 0) {
@@ -450,7 +459,11 @@ class SalesService {
         );
       }
 
-      return finalized;
+      return CreateAndFinalizeSaleResult(
+        document: finalized,
+        loyalty: finalizeResult.loyalty,
+        earnedLoyaltyPoints: finalizeResult.loyalty?.earnedPointsInt ?? 0,
+      );
     } on DioException catch (error) {
       throw mapSalesError(error);
     }
@@ -495,7 +508,8 @@ class SalesService {
     String? godownId,
   }) async {
     try {
-      return _repository.finalizeDocument(documentId, godownId: godownId);
+      await _repository.finalizeDocument(documentId, godownId: godownId);
+      return _repository.getDocument(documentId);
     } on DioException catch (error) {
       throw mapSalesError(error);
     }
@@ -545,7 +559,9 @@ class SalesService {
       if (remaining <= 0) break;
       if (invoice.balance <= 0) continue;
 
-      final allocate = remaining < invoice.balance ? remaining : invoice.balance;
+      final allocate = remaining < invoice.balance
+          ? remaining
+          : invoice.balance;
       allocations.add(
         PaymentAllocationRequest(
           salesDocumentId: invoice.id,

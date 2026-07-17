@@ -23,8 +23,7 @@ class LocalItemTierPrices extends Notifier<Map<String, Map<String, double>>> {
   }
 
   /// Awaits the first load from local storage before reading tier prices.
-  Future<void> ensureInitialized() =>
-      _initialization ??= _loadFromStorage();
+  Future<void> ensureInitialized() => _initialization ??= _loadFromStorage();
 
   Future<void> _loadFromStorage() async {
     final storage = await ref.read(storageServiceProvider.future);
@@ -63,8 +62,7 @@ class LocalItemTierPrices extends Notifier<Map<String, Map<String, double>>> {
     );
   }
 
-  Map<String, double> tierPricesFor(String itemId) =>
-      state[itemId] ?? const {};
+  Map<String, double> tierPricesFor(String itemId) => state[itemId] ?? const {};
 
   void setTierPrices(String itemId, Map<String, double> tierPrices) {
     final cleaned = {
@@ -74,8 +72,7 @@ class LocalItemTierPrices extends Notifier<Map<String, Map<String, double>>> {
 
     if (cleaned.isEmpty) {
       if (!state.containsKey(itemId)) return;
-      final next = Map<String, Map<String, double>>.from(state)
-        ..remove(itemId);
+      final next = Map<String, Map<String, double>>.from(state)..remove(itemId);
       state = next;
     } else {
       state = {...state, itemId: cleaned};

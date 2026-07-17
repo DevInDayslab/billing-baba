@@ -27,12 +27,15 @@ class AddPurchaseOrderFooter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
-    final notifier =
-        ref.read(addPurchaseOrderFormProvider(orderId: orderId).notifier);
-    final totalTax =
-        ref.watch(addPurchaseOrderTotalTaxProvider(orderId: orderId));
-    final grandTotal =
-        ref.watch(addPurchaseOrderGrandTotalProvider(orderId: orderId));
+    final notifier = ref.read(
+      addPurchaseOrderFormProvider(orderId: orderId).notifier,
+    );
+    final totalTax = ref.watch(
+      addPurchaseOrderTotalTaxProvider(orderId: orderId),
+    );
+    final grandTotal = ref.watch(
+      addPurchaseOrderGrandTotalProvider(orderId: orderId),
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

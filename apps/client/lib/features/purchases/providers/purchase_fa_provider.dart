@@ -354,7 +354,9 @@ class PurchaseFa extends _$PurchaseFa {
     if (current != null) {
       state = AsyncData(
         PaginatedPurchaseFaRecords(
-          items: current.items.where((item) => item.batchId != batchId).toList(),
+          items: current.items
+              .where((item) => item.batchId != batchId)
+              .toList(),
           currentPage: current.currentPage,
           totalPages: current.totalPages,
           totalItems: current.totalItems - 1,
@@ -373,7 +375,9 @@ class PurchaseFa extends _$PurchaseFa {
     }
   }
 
-  Future<({String? error, String? newId})> duplicateRecord(String batchId) async {
+  Future<({String? error, String? newId})> duplicateRecord(
+    String batchId,
+  ) async {
     try {
       final service = await ref.read(purchaseFaServiceProvider.future);
       final newId = await service.duplicateBatch(batchId);

@@ -3,13 +3,12 @@
     "ignoreDeprecations": "5.0",
     "target": "ES2022",
     "lib": ["ES2022"],
-    "module": "CommonJS",
-    "moduleResolution": "node",
+    "module": "Node16",
+    "moduleResolution": "Node16",
     "rootDir": "./src",
     "outDir": "./dist",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "strict": true,
     "esModuleInterop": true,

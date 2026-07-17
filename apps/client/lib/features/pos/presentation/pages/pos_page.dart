@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/pos/presentation/pages/pos_sales_history_page.dart';
 import 'package:billing_baba/features/pos/presentation/pages/pos_terminal_view.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_landing_content.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_page_title_bar.dart';
@@ -14,9 +15,9 @@ class PosPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isTerminalOpen = ref.watch(posSessionProvider);
+    final session = ref.watch(posSessionProvider);
 
-    if (isTerminalOpen) {
+    if (session.isTerminalOpen) {
       return const PosTerminalView();
     }
 
@@ -27,7 +28,16 @@ class PosPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            PosPageTitleBar(onSettingsTap: () {}),
+            PosPageTitleBar(
+              onHistoryTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PosSalesHistoryPage(),
+                  ),
+                );
+              },
+              onSettingsTap: () {},
+            ),
             const SizedBox(height: AppSpacing.md),
             DecoratedBox(
               decoration: BoxDecoration(

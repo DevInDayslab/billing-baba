@@ -5,6 +5,7 @@ import {
   buildPartyLedgerReport,
   logPartyLedgerDebug,
   type PartyLedgerFilter,
+  resolveLedgerTypeLabel,
 } from '../../shared/reporting/party-ledger';
 import { buildPartyTimeline } from '../../shared/reporting/party-timeline';
 import type { PartyTimelineRow } from '../../shared/reporting/party-timeline/party-timeline.types';

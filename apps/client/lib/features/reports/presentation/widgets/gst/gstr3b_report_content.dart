@@ -16,7 +16,8 @@ class Gstr3bReportContent extends ConsumerStatefulWidget {
   const Gstr3bReportContent({super.key});
 
   @override
-  ConsumerState<Gstr3bReportContent> createState() => _Gstr3bReportContentState();
+  ConsumerState<Gstr3bReportContent> createState() =>
+      _Gstr3bReportContentState();
 }
 
 class _Gstr3bReportContentState extends ConsumerState<Gstr3bReportContent> {
@@ -439,7 +440,8 @@ class _ItcTable extends StatelessWidget {
   static const _detailWidth = 360.0;
   static const _taxWidth = 120.0;
   static const _cessWidth = 80.0;
-  static const double minWidth = _detailWidth + (_taxWidth * 3) + _cessWidth + 32;
+  static const double minWidth =
+      _detailWidth + (_taxWidth * 3) + _cessWidth + 32;
 
   @override
   Widget build(BuildContext context) {

@@ -12,7 +12,9 @@ abstract class UnitConversionDto with _$UnitConversionDto {
     @JsonKey(name: 'to_unit_id') required String toUnitId,
     @JsonKey(name: 'conversion_factor') required String conversionFactor,
     required String label,
-    @JsonKey(name: 'created_at') required String createdAt, @JsonKey(name: 'updated_at') required String updatedAt, @JsonKey(name: 'from_unit_name') String? fromUnitName,
+    @JsonKey(name: 'created_at') required String createdAt,
+    @JsonKey(name: 'updated_at') required String updatedAt,
+    @JsonKey(name: 'from_unit_name') String? fromUnitName,
     @JsonKey(name: 'to_unit_name') String? toUnitName,
   }) = _UnitConversionDto;
 

@@ -13,7 +13,9 @@ enum PrintableDocumentKind {
   paymentOut,
   expense,
   fixedAssetPurchase,
-  jobWorkOrder;
+  saleFa,
+  jobWorkOrder,
+  posReceipt;
 
   String get label => switch (this) {
     PrintableDocumentKind.saleInvoice => 'Sales Invoice',
@@ -29,7 +31,9 @@ enum PrintableDocumentKind {
     PrintableDocumentKind.paymentOut => 'Payment Out',
     PrintableDocumentKind.expense => 'Expense',
     PrintableDocumentKind.fixedAssetPurchase => 'Fixed Asset Purchase',
+    PrintableDocumentKind.saleFa => 'Sale FA',
     PrintableDocumentKind.jobWorkOrder => 'Job Work Order',
+    PrintableDocumentKind.posReceipt => 'POS Receipt',
   };
 
   /// Commercial documents rendered by the A4 commercial template.
@@ -42,14 +46,14 @@ enum PrintableDocumentKind {
     creditNote ||
     debitNote ||
     saleOrder ||
-    purchaseOrder =>
-      true,
+    purchaseOrder => true,
     paymentIn ||
     paymentOut ||
     expense ||
     fixedAssetPurchase ||
-    jobWorkOrder =>
-      false,
+    saleFa ||
+    jobWorkOrder ||
+    posReceipt => false,
   };
 
   /// Voucher documents rendered by the A4 voucher template.
@@ -58,6 +62,7 @@ enum PrintableDocumentKind {
     paymentOut ||
     expense ||
     fixedAssetPurchase ||
+    saleFa ||
     jobWorkOrder =>
       true,
     saleInvoice ||
@@ -68,7 +73,7 @@ enum PrintableDocumentKind {
     creditNote ||
     debitNote ||
     saleOrder ||
-    purchaseOrder =>
-      false,
+    purchaseOrder ||
+    posReceipt => false,
   };
 }

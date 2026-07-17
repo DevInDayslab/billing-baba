@@ -72,7 +72,8 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
     final cost = costText.isEmpty ? null : double.tryParse(costText);
     if (delta > 0 && cost == null) {
       setState(
-        () => _errorMessage = 'Cost per unit is required for positive adjustments.',
+        () => _errorMessage =
+            'Cost per unit is required for positive adjustments.',
       );
       return;
     }
@@ -178,20 +179,28 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
                 decoration: buildSaleFieldDecoration(hint: 'Select godown'),
               ),
               const SizedBox(height: AppSpacing.md),
-              const Text('Cost per unit (for +qty)', style: saleFieldLabelStyle),
+              const Text(
+                'Cost per unit (for +qty)',
+                style: saleFieldLabelStyle,
+              ),
               const SizedBox(height: AppSpacing.sm),
               TextField(
                 controller: _costController,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: buildSaleFieldDecoration(hint: 'Optional for reductions'),
+                decoration: buildSaleFieldDecoration(
+                  hint: 'Optional for reductions',
+                ),
               ),
               if (_errorMessage != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   _errorMessage!,
-                  style: const TextStyle(fontSize: 12, color: saleFieldErrorColor),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: saleFieldErrorColor,
+                  ),
                 ),
               ],
               const SizedBox(height: AppSpacing.lg),

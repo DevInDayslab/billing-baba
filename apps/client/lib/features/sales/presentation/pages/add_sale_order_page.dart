@@ -54,7 +54,9 @@ class _AddSaleOrderPageState extends ConsumerState<AddSaleOrderPage> {
   void initState() {
     super.initState();
     if (widget.orderId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeEditForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeEditForm(),
+      );
     } else {
       _initialized = true;
     }
@@ -79,7 +81,9 @@ class _AddSaleOrderPageState extends ConsumerState<AddSaleOrderPage> {
         saleOrderFormProvider(sessionKey: activeSessionKey),
         (previous, next) {
           if (previous?.party == next.party) return;
-          ref.read(saleOrderTabsProvider().notifier).updateTabLabel(
+          ref
+              .read(saleOrderTabsProvider().notifier)
+              .updateTabLabel(
                 tabsState.activeIndex,
                 saleOrderTabLabelForForm(
                   orderNumber: tabsState.activeTab.orderNumber,
@@ -92,8 +96,9 @@ class _AddSaleOrderPageState extends ConsumerState<AddSaleOrderPage> {
 
     final sessionKey = _sessionKey;
     final isLoading = ref.watch(
-      saleOrderFormProvider(sessionKey: sessionKey)
-          .select((form) => form.isLoading),
+      saleOrderFormProvider(
+        sessionKey: sessionKey,
+      ).select((form) => form.isLoading),
     );
 
     if (!_initialized || (widget.orderId != null && isLoading)) {
@@ -563,7 +568,9 @@ class _BottomActionBar extends ConsumerWidget {
     if (supportsTabs) {
       ref.invalidate(saleOrderFormProvider(sessionKey: sessionKey));
       final tabsState = ref.read(saleOrderTabsProvider());
-      ref.read(saleOrderTabsProvider().notifier).updateTabLabel(
+      ref
+          .read(saleOrderTabsProvider().notifier)
+          .updateTabLabel(
             tabsState.activeIndex,
             saleOrderTabLabelForForm(
               orderNumber: tabsState.activeTab.orderNumber,

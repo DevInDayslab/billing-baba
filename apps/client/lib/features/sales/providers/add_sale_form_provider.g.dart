@@ -58,7 +58,7 @@ final class AddSaleFormProvider
   }
 }
 
-String _$addSaleFormHash() => r'6dbf510cc72c8f9164c55032601552bf027cb8fc';
+String _$addSaleFormHash() => r'247ce5c577d10c4582c92a7fe466a71a26aef007';
 
 final class AddSaleFormFamily extends $Family
     with
@@ -317,7 +317,7 @@ final class AddSaleGrandTotalProvider
   }
 }
 
-String _$addSaleGrandTotalHash() => r'67e660e66fb9e701f1b711521ab596a6b1b01ba6';
+String _$addSaleGrandTotalHash() => r'70c206bbf8a7cdfd3cbafd836be5a7ed2211b3f6';
 
 final class AddSaleGrandTotalFamily extends $Family
     with $FunctionalFamilyOverride<double, String> {

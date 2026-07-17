@@ -52,7 +52,8 @@ class FilterOverlayAnchor {
     if (renderBox == null || !renderBox.hasSize) return;
 
     final overlay = Overlay.of(context, rootOverlay: true);
-    final size = estimatedSize ??
+    final size =
+        estimatedSize ??
         const Size(
           TableFilterTheme.popoverWidth,
           TableFilterTheme.defaultPopoverHeight,
@@ -125,8 +126,7 @@ class _AnchoredFilterPopoverState extends State<_AnchoredFilterPopover> {
         ? popoverBox!.size
         : widget.estimatedSize;
 
-    final triggerRect =
-        triggerBox.localToGlobal(Offset.zero) & triggerBox.size;
+    final triggerRect = triggerBox.localToGlobal(Offset.zero) & triggerBox.size;
     final viewportSize = MediaQuery.sizeOf(context);
     final placement = FilterPopoverPositioner.resolveFollower(
       triggerRect: triggerRect,

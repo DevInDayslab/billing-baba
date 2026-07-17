@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/presentation/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/print/presentation/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
@@ -83,7 +84,8 @@ class SaleInvoiceTable extends ConsumerWidget {
                       ModuleExportActions.exportSaleInvoices(context, ref),
                 ),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () =>
+                      ModulePrintActions.printSaleInvoices(context, ref),
                   icon: const Icon(Icons.print_outlined, size: 20),
                   color: AppColors.textSecondary,
                   tooltip: 'Print',
@@ -271,7 +273,9 @@ class SaleInvoiceTableRows {
               IconButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Sharing is not available yet')),
+                    const SnackBar(
+                      content: Text('Sharing is not available yet'),
+                    ),
                   );
                 },
                 icon: const Icon(Icons.share_outlined, size: 18),
@@ -287,7 +291,6 @@ class SaleInvoiceTableRows {
       ],
     );
   }
-
 }
 
 class _SaleInvoiceTableColumns {
@@ -300,10 +303,12 @@ class _SaleInvoiceTableColumns {
   }) {
     final filters = ref.watch(saleInvoiceFiltersProvider);
     final filtersNotifier = ref.read(saleInvoiceFiltersProvider.notifier);
-    final transactionOptions =
-        ref.watch(saleInvoiceTransactionTypeFilterOptionsProvider);
-    final paymentOptions =
-        ref.watch(saleInvoicePaymentTypeFilterOptionsProvider);
+    final transactionOptions = ref.watch(
+      saleInvoiceTransactionTypeFilterOptionsProvider,
+    );
+    final paymentOptions = ref.watch(
+      saleInvoicePaymentTypeFilterOptionsProvider,
+    );
 
     return [
       ResizableDataColumn(
@@ -760,9 +765,7 @@ class _EmptyTransactionsState extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            isFiltered
-                ? 'No matching transactions'
-                : 'No sale invoices found',
+            isFiltered ? 'No matching transactions' : 'No sale invoices found',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,

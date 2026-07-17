@@ -19,7 +19,7 @@ class PosItemSearchQuery extends _$PosItemSearchQuery {
 Future<List<PosItem>> posItems(Ref ref) async {
   ref.watch(inventoryItemsProvider);
   ref.watch(inventoryCategoriesProvider);
-  final repository = ref.watch(posRepositoryProvider);
+  final repository = await ref.watch(posRepositoryProvider.future);
   return repository.getItems();
 }
 
@@ -27,14 +27,14 @@ Future<List<PosItem>> posItems(Ref ref) async {
 Future<List<PosItem>> posItemSearch(Ref ref, String query) async {
   ref.watch(inventoryItemsProvider);
   ref.watch(inventoryCategoriesProvider);
-  final repository = ref.watch(posRepositoryProvider);
+  final repository = await ref.watch(posRepositoryProvider.future);
   if (query.isEmpty) return repository.getItems();
   return repository.searchItems(query);
 }
 
 @riverpod
 Future<List<PosCustomer>> posCustomerSearch(Ref ref, String query) async {
-  final repository = ref.watch(posRepositoryProvider);
+  final repository = await ref.watch(posRepositoryProvider.future);
   if (query.isEmpty) return [];
   return repository.searchCustomers(query);
 }

@@ -71,6 +71,17 @@ class VoucherLayoutConfig {
         showAmountInWords: true,
         showSignature: true,
       ),
+      PrintableDocumentKind.saleFa => const VoucherLayoutConfig(
+        title: 'SALE FA VOUCHER',
+        voucherNumberLabel: 'Invoice No',
+        partyHeading: 'Customer',
+        showAllocationTable: false,
+        showAssetTable: true,
+        showJobWorkMaterials: false,
+        showJobWorkCharges: false,
+        showAmountInWords: true,
+        showSignature: true,
+      ),
       PrintableDocumentKind.jobWorkOrder => const VoucherLayoutConfig(
         title: 'JOB WORK ORDER',
         voucherNumberLabel: 'Job No',

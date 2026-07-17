@@ -155,14 +155,15 @@ class SaleInvoiceFiltersState {
   }
 }
 
-SaleInvoiceStatus? _paymentStatusFromFilterLabel(String label) => switch (label) {
-  'Paid' => SaleInvoiceStatus.paid,
-  'Unpaid' => SaleInvoiceStatus.unpaid,
-  'Partial' => SaleInvoiceStatus.partiallyPaid,
-  'Overdue' => SaleInvoiceStatus.overdue,
-  'Cancelled' => SaleInvoiceStatus.cancelled,
-  _ => null,
-};
+SaleInvoiceStatus? _paymentStatusFromFilterLabel(String label) =>
+    switch (label) {
+      'Paid' => SaleInvoiceStatus.paid,
+      'Unpaid' => SaleInvoiceStatus.unpaid,
+      'Partial' => SaleInvoiceStatus.partiallyPaid,
+      'Overdue' => SaleInvoiceStatus.overdue,
+      'Cancelled' => SaleInvoiceStatus.cancelled,
+      _ => null,
+    };
 
 String? _documentStatusFromFilterLabel(String label) => switch (label) {
   'Cancelled' => 'cancelled',
@@ -328,10 +329,15 @@ List<SaleInvoiceModel> applySaleInvoiceClientFilters(
 }
 
 List<String> _withAllOption(String allLabel, Iterable<String> values) {
-  final unique = values.map((value) => value.trim()).where((value) {
-    return value.isNotEmpty && value != allLabel;
-  }).toSet().toList()
-    ..sort();
+  final unique =
+      values
+          .map((value) => value.trim())
+          .where((value) {
+            return value.isNotEmpty && value != allLabel;
+          })
+          .toSet()
+          .toList()
+        ..sort();
   return [allLabel, ...unique];
 }
 

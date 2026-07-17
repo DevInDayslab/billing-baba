@@ -152,7 +152,7 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-SalesDocumentListQuery _buildChallanListQuery(
+SalesDocumentListQuery buildChallanListQuery(
   DeliveryChallanFiltersState filters,
   String searchQuery, {
   int? page,
@@ -186,7 +186,7 @@ bool needsChallanClientSideFiltering(DeliveryChallanFiltersState filters) {
       filters.selectedFirm != 'All Firms';
 }
 
-List<SaleInvoiceModel> _filterChallanSeries(List<SaleInvoiceModel> items) {
+List<SaleInvoiceModel> filterChallanSeries(List<SaleInvoiceModel> items) {
   return items
       .where(
         (item) => item.documentSeries == SalesConstants.challanSeries,
@@ -242,8 +242,7 @@ List<SaleInvoiceModel> applyChallanClientFilters(
         !filters.amountColumnFilter!.matches(challan.amount)) {
       return false;
     }
-    if (documentStatus != null &&
-        challan.documentStatus != documentStatus) {
+    if (documentStatus != null && challan.documentStatus != documentStatus) {
       return false;
     }
     if (filters.selectedUser != 'All Users' &&
@@ -263,10 +262,15 @@ List<SaleInvoiceModel> applyChallanClientFilters(
 }
 
 List<String> _withAllOption(String allLabel, Iterable<String> values) {
-  final unique = values.map((value) => value.trim()).where((value) {
-    return value.isNotEmpty && value != allLabel;
-  }).toSet().toList()
-    ..sort();
+  final unique =
+      values
+          .map((value) => value.trim())
+          .where((value) {
+            return value.isNotEmpty && value != allLabel;
+          })
+          .toSet()
+          .toList()
+        ..sort();
   return [allLabel, ...unique];
 }
 
@@ -350,55 +354,54 @@ class SelectedDeliveryChallanIds extends _$SelectedDeliveryChallanIds {
 class DeliveryChallans extends _$DeliveryChallans {
   @override
   Future<PaginatedSaleInvoices> build() async {
-    ref.watch(
-      deliveryChallanFiltersProvider.select(
-        (filters) => (filters.timeRangeOption, filters.customDateRange),
-      ),
-    );
+    ref.watch(deliveryChallanFiltersProvider);
     ref.watch(deliveryChallanSearchQueryProvider);
-    final allItems = await _fetchAllChallans();
-    return PaginatedSaleInvoices(
-      items: allItems,
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: allItems.length,
-    );
+    return _fetchPage();
   }
 
-  Future<List<SaleInvoiceModel>> _fetchAllChallans() async {
+  Future<PaginatedSaleInvoices> _fetchPage() async {
     final filters = ref.read(deliveryChallanFiltersProvider);
     final search = ref.read(deliveryChallanSearchQueryProvider);
     final service = await ref.read(salesServiceProvider.future);
 
-    return PaginatedFetch.fetchAll<SaleInvoiceModel>(
-      fetchPage: (page) async {
-        final result = await service.fetchInvoicesPage(
-          _buildChallanListQuery(
-            filters,
-            search,
-            page: page,
-            limit: PaginatedFetch.defaultPageSize,
-          ),
-        );
-        return (
-          items: _filterChallanSeries(result.items),
-          totalPages: result.totalPages,
-        );
-      },
+    if (needsChallanClientSideFiltering(filters)) {
+      final allItems = await PaginatedFetch.fetchAll<SaleInvoiceModel>(
+        fetchPage: (page) async {
+          final result = await service.fetchInvoicesPage(
+            buildChallanListQuery(
+              filters,
+              search,
+              page: page,
+              limit: PaginatedFetch.defaultPageSize,
+            ),
+          );
+          return (
+            items: filterChallanSeries(result.items),
+            totalPages: result.totalPages,
+          );
+        },
+      );
+
+      final filteredItems = applyChallanClientFilters(allItems, filters);
+      return paginateChallanItems(filteredItems, filters);
+    }
+
+    final page = await service.fetchInvoicesPage(
+      buildChallanListQuery(filters, search),
+    );
+
+    final seriesFiltered = filterChallanSeries(page.items);
+    return PaginatedSaleInvoices(
+      items: seriesFiltered,
+      currentPage: page.currentPage,
+      totalPages: page.totalPages,
+      totalItems: seriesFiltered.length,
     );
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final allItems = await _fetchAllChallans();
-      return PaginatedSaleInvoices(
-        items: allItems,
-        currentPage: 1,
-        totalPages: 1,
-        totalItems: allItems.length,
-      );
-    });
+    state = await AsyncValue.guard(_fetchPage);
   }
 
   Future<String?> deleteChallan(String documentId) async {
@@ -485,9 +488,7 @@ class DeliveryChallans extends _$DeliveryChallans {
 class DeliveryChallanFilters extends _$DeliveryChallanFilters {
   @override
   DeliveryChallanFiltersState build() {
-    return const DeliveryChallanFiltersState(
-      
-    );
+    return const DeliveryChallanFiltersState();
   }
 
   void setTimeRange(String label) {

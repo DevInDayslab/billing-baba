@@ -73,10 +73,12 @@ List<PurchaseBillModel> _applyClientFilters(
   final paymentStatus = _paymentStatusFromFilterLabel(filters.selectedStatus);
   return bills.where((bill) {
     if (paymentStatus != null && bill.status != paymentStatus) return false;
-    if (filters.selectedUser != 'All Users' && bill.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        bill.user != filters.selectedUser) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && bill.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        bill.firm != filters.selectedFirm) {
       return false;
     }
     return true;

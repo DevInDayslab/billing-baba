@@ -5,6 +5,9 @@ import 'package:billing_baba/features/auth/presentation/pages/verify_otp_page.da
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/presentation/pages/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/pages/edit_profile_page.dart';
+import 'package:billing_baba/features/crm/presentation/screens/contacts_screen.dart';
+import 'package:billing_baba/features/crm/presentation/screens/deals_screen.dart';
+import 'package:billing_baba/features/crm/presentation/screens/leads_screen.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/coming_soon_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/home_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.dart';
@@ -43,6 +46,9 @@ import 'package:billing_baba/features/sales/presentation/pages/sale_fa_page.dart
 import 'package:billing_baba/features/sales/presentation/pages/sale_invoices_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/pages/sale_return_page.dart';
+import 'package:billing_baba/features/settings/presentation/screens/print_settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/screens/settings_screen.dart';
+import 'package:billing_baba/features/utilities/presentation/pages/barcode_generator_page.dart';
 import 'package:billing_baba/features/utilities/presentation/pages/import_items_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -126,6 +132,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.partyGroups,
             builder: (context, state) => const PartyGroupsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.crm,
+            redirect: (_, _) => AppRoutes.crmLeads,
+          ),
+          GoRoute(
+            path: AppRoutes.crmLeads,
+            builder: (context, state) => const LeadsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.crmContacts,
+            builder: (context, state) => const ContactsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.crmDeals,
+            builder: (context, state) => const DealsScreen(),
           ),
           GoRoute(
             path: AppRoutes.items,
@@ -418,6 +440,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const ImportItemsPage(),
           ),
           GoRoute(
+            path: AppRoutes.utilitiesBarcodeGenerator,
+            builder: (context, state) => const BarcodeGeneratorPage(),
+          ),
+          GoRoute(
             path: AppRoutes.developer,
             redirect: (_, _) => AppRoutes.developerComponents,
           ),
@@ -457,8 +483,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.settingsPreferences,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Preferences'),
+            builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.settingsPrint,
+            builder: (context, state) => const PrintSettingsScreen(),
           ),
           GoRoute(
             path: AppRoutes.settingsBackup,

@@ -8,6 +8,7 @@ class FormRow extends StatelessWidget {
     this.spacing = FormSpacing.gutter,
     this.crossAxisAlignment = CrossAxisAlignment.start,
     this.narrowBreakpoint = FormSpacing.narrowBreakpoint,
+    this.alwaysHorizontal = false,
     this.flexes,
     super.key,
   });
@@ -17,6 +18,9 @@ class FormRow extends StatelessWidget {
   final CrossAxisAlignment crossAxisAlignment;
   final double narrowBreakpoint;
 
+  /// When true, keeps a [Row] layout even inside narrow grid cells.
+  final bool alwaysHorizontal;
+
   /// Optional flex weights matching [children] length. Defaults to equal flex.
   final List<int>? flexes;
 
@@ -24,7 +28,8 @@ class FormRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < narrowBreakpoint;
+        final isNarrow =
+            !alwaysHorizontal && constraints.maxWidth < narrowBreakpoint;
 
         if (isNarrow) {
           return Column(

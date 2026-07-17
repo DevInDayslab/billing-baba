@@ -563,8 +563,7 @@ class _AmountFieldState extends State<_AmountField> {
   @override
   void didUpdateWidget(_AmountField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newText =
-        widget.value == 0 ? '0' : widget.value.toStringAsFixed(2);
+    final newText = widget.value == 0 ? '0' : widget.value.toStringAsFixed(2);
     if (widget.value != oldWidget.value && newText != _controller.text) {
       _controller.text = newText;
     }

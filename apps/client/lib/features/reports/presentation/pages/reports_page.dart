@@ -36,8 +36,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
   BusinessStatusReportSubSection _selectedBusinessStatusSub =
       BusinessStatusReportSubSection.bankStatement;
   TaxesReportSubSection _selectedTaxesSub = TaxesReportSubSection.gstReport;
-  ExpenseReportSubSection _selectedExpenseSub =
-      ExpenseReportSubSection.expense;
+  ExpenseReportSubSection _selectedExpenseSub = ExpenseReportSubSection.expense;
   SalePurchaseOrderReportSubSection _selectedSalePurchaseOrderSub =
       SalePurchaseOrderReportSubSection.salePurchaseOrders;
   OtherIncomeReportSubSection _selectedOtherIncomeSub =

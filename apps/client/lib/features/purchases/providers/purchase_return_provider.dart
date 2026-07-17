@@ -200,7 +200,10 @@ List<PurchaseReturnModel> _applyFilters(
       return false;
     }
 
-    if (!purchaseFilterMatchesText(columns.documentNoFilter, item.debitNoteNo)) {
+    if (!purchaseFilterMatchesText(
+      columns.documentNoFilter,
+      item.debitNoteNo,
+    )) {
       return false;
     }
 
@@ -388,7 +391,9 @@ class PurchaseReturns extends _$PurchaseReturns {
     }
   }
 
-  Future<({String? error, String? newId})> duplicateReturn(String returnId) async {
+  Future<({String? error, String? newId})> duplicateReturn(
+    String returnId,
+  ) async {
     try {
       final service = await ref.read(purchaseServiceProvider.future);
       final newId = await service.duplicatePurchaseReturn(returnId);
@@ -526,7 +531,9 @@ class PurchaseReturnFilters extends _$PurchaseReturnFilters {
 
   void clearReceivedPaidFilter() {
     state = state.copyWith(
-      columnFilters: state.columnFilters.copyWith(clearReceivedPaidFilter: true),
+      columnFilters: state.columnFilters.copyWith(
+        clearReceivedPaidFilter: true,
+      ),
       currentPage: 1,
     );
   }
@@ -598,8 +605,8 @@ List<String> purchaseReturnPartyOptions(Ref ref) {
 @riverpod
 List<String> purchaseReturnCategoryOptions(Ref ref) {
   final allReturns = _allReturnsFromAsync(ref.watch(purchaseReturnsProvider));
-  final categories = allReturns.map((item) => item.categoryName).toSet().toList()
-    ..sort();
+  final categories =
+      allReturns.map((item) => item.categoryName).toSet().toList()..sort();
   return ['All Categories', ...categories];
 }
 

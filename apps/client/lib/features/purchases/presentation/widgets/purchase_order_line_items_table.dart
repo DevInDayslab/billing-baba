@@ -34,7 +34,11 @@ const _descriptionFlex = 2;
 const _minLineItemsTableWidth = 1020.0;
 
 class PurchaseOrderLineItemsTable extends ConsumerWidget {
-  const PurchaseOrderLineItemsTable({this.embedded = false, this.orderId, super.key});
+  const PurchaseOrderLineItemsTable({
+    this.embedded = false,
+    this.orderId,
+    super.key,
+  });
 
   final bool embedded;
   final String? orderId;
@@ -44,8 +48,9 @@ class PurchaseOrderLineItemsTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
-    final notifier =
-        ref.read(addPurchaseOrderFormProvider(orderId: orderId).notifier);
+    final notifier = ref.read(
+      addPurchaseOrderFormProvider(orderId: orderId).notifier,
+    );
 
     final tableContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -441,8 +446,9 @@ class _LineItemRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier =
-        ref.read(addPurchaseOrderFormProvider(orderId: orderId).notifier);
+    final notifier = ref.read(
+      addPurchaseOrderFormProvider(orderId: orderId).notifier,
+    );
 
     return SizedBox(
       height: _rowHeight,

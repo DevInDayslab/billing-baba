@@ -1,13 +1,18 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/features/pos/application/pos_receipt_printer.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/pos/models/pos_sale_line_item.dart';
+import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/cart_panel.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/hold_bills_panel.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/item_grid.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/payment_panel.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_panel.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_styles.dart';
+import 'package:billing_baba/features/pos/presentation/widgets/receipt_view_widget.dart';
 import 'package:billing_baba/features/pos/providers/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/providers/pos_items_provider.dart';
 import 'package:billing_baba/features/pos/providers/pos_sales_list_provider.dart';
@@ -49,53 +54,147 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
     super.dispose();
   }
 
-  void _holdBill() {
-    ref.read(posCartProvider.notifier).holdBill();
+  Future<void> _printCurrentBill() async {
+    final cart = ref.read(posCartProvider);
+    if (cart.items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Complete sale first to print')),
+      );
+      return;
+    }
+
+    final previewSale = PosSale(
+      id: 'PREVIEW',
+      docNumber: 'Bill Preview',
+      completedAt: DateTime.now(),
+      totalAmount: cart.subtotal,
+      taxAmount: cart.totalTax,
+      finalAmount: cart.totalPayable,
+      itemCount: cart.totalQty,
+      customerName: cart.customerName,
+      payments: cart.payments,
+      items: cart.items
+          .map(
+            (item) => PosSaleLineItem(
+              name: item.item.name,
+              quantity: item.quantity,
+              lineTotal: item.lineTotal,
+              itemId: item.item.id,
+              unit: item.item.unit,
+              unitPrice: item.item.price,
+            ),
+          )
+          .toList(),
+    );
+
+    try {
+      await ref
+          .read(posReceiptPrinterProvider)
+          .preview(
+            context: context,
+            sale: previewSale,
+            ref: ref,
+          );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Print failed: $error')),
+      );
+    }
+  }
+
+  Future<void> _holdBill() async {
+    await ref.read(posCartProvider.notifier).holdBill();
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Bill held successfully')),
     );
   }
 
   Future<void> _completeSale() async {
+    final session = ref.read(posSessionProvider);
+    if (!session.hasActiveBackendSession) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('POS session not open. Please retry.')),
+      );
+      return;
+    }
+
     final cart = ref.read(posCartProvider);
     if (cart.items.isEmpty || cart.totalPayable <= 0) return;
 
-    try {
-      final saleId = await ref.read(posCartProvider.notifier).completeSale();
-      if (!mounted) return;
-
-      ref.read(posSalesListProvider.notifier).addSale(
-            PosSale(
-              id: saleId,
-              billNo: saleId,
-              completedAt: DateTime.now(),
-              amount: cart.totalPayable,
-              itemCount: cart.totalQty,
-              customerName: cart.customerName,
-              payments: List.from(cart.payments),
-              items: cart.items
-                  .map(
-                    (line) => PosSaleLineItem(
-                      name: line.item.name,
-                      quantity: line.quantity,
-                      lineTotal: line.lineTotal,
-                    ),
-                  )
-                  .toList(),
-            ),
-          );
-
-      ref.read(posSessionProvider.notifier).closeTerminal();
-
+    final totalPaid = cart.payments.fold(0.0, (sum, p) => sum + p.amount);
+    final totalPayable = cart.totalPayable;
+    if (cart.payments.isNotEmpty && totalPaid < totalPayable) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sale completed! ID: $saleId')),
+        const SnackBar(
+          content: Text('Payment amount is less than total'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => const PopScope(
+          canPop: false,
+          child: AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 16),
+                Expanded(child: Text('Creating sale...')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final sale = await ref.read(posCartProvider.notifier).completeSale();
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+
+      ref.read(posSalesListProvider.notifier).addSale(sale);
+      await _showReceiptDialog(sale);
+    } on PosRepositoryException catch (error) {
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message),
+          backgroundColor: Colors.red.shade700,
+          duration: const Duration(seconds: 5),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to complete sale: $error')),
       );
     }
+  }
+
+  Future<void> _showReceiptDialog(PosSale sale) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.white,
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.lg,
+        ),
+        child: SingleChildScrollView(
+          child: ReceiptViewWidget(sale: sale),
+        ),
+      ),
+    );
   }
 
   void _onSearchChanged(String value) {
@@ -104,14 +203,15 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
     });
   }
 
-  void _exitTerminal() {
-    ref.read(posSessionProvider.notifier).closeTerminal();
+  Future<void> _exitTerminal() async {
+    await ref.read(posSessionProvider.notifier).closeTerminal();
   }
 
   KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
 
-    final isAltS = event.logicalKey == LogicalKeyboardKey.keyS &&
+    final isAltS =
+        event.logicalKey == LogicalKeyboardKey.keyS &&
         HardwareKeyboard.instance.isAltPressed;
     if (isAltS) {
       _searchFocusNode.requestFocus();
@@ -119,6 +219,10 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
     }
     if (event.logicalKey == LogicalKeyboardKey.f7) {
       _holdBill();
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.f8) {
+      unawaited(_printCurrentBill());
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.f9) {
@@ -134,8 +238,38 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
 
   @override
   Widget build(BuildContext context) {
+    final session = ref.watch(posSessionProvider);
     final heldCount = ref.watch(posCartProvider).heldBills.length;
     final cartItemCount = ref.watch(posCartProvider).totalItems;
+
+    if (session.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (session.errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Could not open POS session',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(session.errorMessage!),
+              const SizedBox(height: AppSpacing.md),
+              FilledButton(
+                onPressed: () =>
+                    ref.read(posSessionProvider.notifier).openTerminal(),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Focus(
       focusNode: _focusNode,
@@ -146,6 +280,7 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
         children: [
           _PosToolbar(
             heldCount: heldCount,
+            sessionLabel: session.backendSession?.id.substring(0, 8),
             searchController: _searchController,
             searchFocusNode: _searchFocusNode,
             onSearchChanged: _onSearchChanged,
@@ -158,7 +293,8 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
               builder: (context, constraints) {
                 final width = constraints.maxWidth;
                 final isMobile = width < PosBreakpoints.mobile;
-                final isTablet = width >= PosBreakpoints.mobile &&
+                final isTablet =
+                    width >= PosBreakpoints.mobile &&
                     width < PosBreakpoints.tablet;
                 final isCompact = width < PosBreakpoints.laptop;
 
@@ -166,7 +302,10 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
                   padding: EdgeInsets.all(AppSpacing.sm),
                   child: ItemGrid(),
                 );
-                final cartPanel = CartPanel(onHoldBill: _holdBill);
+                final cartPanel = CartPanel(
+                  onHoldBill: _holdBill,
+                  onPrint: _printCurrentBill,
+                );
                 final paymentPanel = PaymentPanel(
                   onCompleteSale: _completeSale,
                 );
@@ -326,6 +465,7 @@ class _MobilePosLayout extends StatelessWidget {
 class _PosToolbar extends StatelessWidget {
   const _PosToolbar({
     required this.heldCount,
+    required this.sessionLabel,
     required this.searchController,
     required this.searchFocusNode,
     required this.onSearchChanged,
@@ -335,6 +475,7 @@ class _PosToolbar extends StatelessWidget {
   });
 
   final int heldCount;
+  final String? sessionLabel;
   final TextEditingController searchController;
   final FocusNode searchFocusNode;
   final ValueChanged<String> onSearchChanged;
@@ -401,6 +542,27 @@ class _PosToolbar extends StatelessWidget {
                       onPressed: onBack,
                     ),
                     const SizedBox(width: AppSpacing.sm),
+                    if (sessionLabel != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: AppRadius.smBorder,
+                          border: Border.all(color: posCardBorder),
+                        ),
+                        child: Text(
+                          'Session ${sessionLabel!}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                    ],
                     Expanded(
                       child: Center(
                         child: ConstrainedBox(
@@ -627,7 +789,10 @@ class _ShortcutHintsBar extends StatelessWidget {
                         children: [
                           for (var i = 0; i < hints.length; i++) ...[
                             if (i > 0)
-                              const Text('|', style: PosStyles.shortcutHintStyle),
+                              const Text(
+                                '|',
+                                style: PosStyles.shortcutHintStyle,
+                              ),
                             Text(hints[i], style: PosStyles.shortcutHintStyle),
                           ],
                         ],
@@ -651,7 +816,10 @@ class _ShortcutHintsBar extends StatelessWidget {
                       visualDensity: VisualDensity.compact,
                       activeColor: AppColors.primary,
                     ),
-                    const Text('Show Hints', style: PosStyles.shortcutHintStyle),
+                    const Text(
+                      'Show Hints',
+                      style: PosStyles.shortcutHintStyle,
+                    ),
                   ],
                 ),
         );

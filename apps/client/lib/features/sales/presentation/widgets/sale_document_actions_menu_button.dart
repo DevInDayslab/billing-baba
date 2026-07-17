@@ -47,7 +47,7 @@ class SaleDocumentActionsConfig {
   final PrintRequest Function(String documentId) printRequestBuilder;
   final List<SaleDocumentConversionOption> conversionOptions;
   final Future<void> Function(BuildContext context, WidgetRef ref, String id)?
-      onEdit;
+  onEdit;
   final String? Function(String targetType)? navigateAfterConvert;
 
   static SaleDocumentActionsConfig saleOrder({
@@ -206,12 +206,16 @@ class SaleDocumentActionsMenuButton extends ConsumerWidget {
         Overlay.of(context, rootOverlay: true).context.findRenderObject()!
             as RenderBox;
 
-    final buttonOrigin =
-        buttonBox.localToGlobal(Offset.zero, ancestor: overlayBox);
+    final buttonOrigin = buttonBox.localToGlobal(
+      Offset.zero,
+      ancestor: overlayBox,
+    );
     final buttonSize = buttonBox.size;
 
-    final menuLeft = (buttonOrigin.dx + buttonSize.width - _menuMinWidth)
-        .clamp(0.0, overlayBox.size.width - _menuMinWidth);
+    final menuLeft = (buttonOrigin.dx + buttonSize.width - _menuMinWidth).clamp(
+      0.0,
+      overlayBox.size.width - _menuMinWidth,
+    );
     final menuTop = buttonOrigin.dy + buttonSize.height + 4;
 
     return RelativeRect.fromLTRB(
@@ -267,8 +271,9 @@ class SaleDocumentTableActions {
     SaleDocumentActionsConfig config,
     String action,
   ) async {
-    final notifier =
-        ref.read(salesDocumentsListProvider(config.listScope).notifier);
+    final notifier = ref.read(
+      salesDocumentsListProvider(config.listScope).notifier,
+    );
     final filename = DocumentPrintActions.filenameFor(document.invoiceNo);
     final printRequest = config.printRequestBuilder(document.id);
 
@@ -370,7 +375,9 @@ class SaleDocumentTableActions {
     if (document.isCancelled) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('This ${config.documentLabel.toLowerCase()} is already cancelled'),
+          content: Text(
+            'This ${config.documentLabel.toLowerCase()} is already cancelled',
+          ),
         ),
       );
       return;
@@ -408,7 +415,9 @@ class SaleDocumentTableActions {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${config.documentLabel} ${document.invoiceNo} cancelled'),
+        content: Text(
+          '${config.documentLabel} ${document.invoiceNo} cancelled',
+        ),
       ),
     );
   }

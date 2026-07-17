@@ -227,9 +227,15 @@ class _DialogBottomBar extends ConsumerWidget {
                 filename: filename,
               ),
               icon: const Icon(Icons.print_outlined, size: 16),
-              label: const Text('Print / Preview', style: TextStyle(fontSize: 14)),
+              label: const Text(
+                'Print / Preview',
+                style: TextStyle(fontSize: 14),
+              ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 side: const BorderSide(color: _cardBorder),
               ),
             ),

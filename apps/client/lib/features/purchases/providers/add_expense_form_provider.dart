@@ -342,7 +342,8 @@ class AddExpenseForm extends _$AddExpenseForm {
 
     final purchaseService = await ref.read(purchaseServiceProvider.future);
     final expenseDate = state.expenseDate ?? DateTime.now();
-    final expenseTime = state.expenseTime ?? TimeOfDay.fromDateTime(expenseDate);
+    final expenseTime =
+        state.expenseTime ?? TimeOfDay.fromDateTime(expenseDate);
 
     final input = PurchaseDocumentDraftInput(
       partyId: partyId,
@@ -372,7 +373,9 @@ class AddExpenseForm extends _$AddExpenseForm {
       final reference = state.payments.isNotEmpty
           ? state.payments.first.referenceNo.trim()
           : '';
-      final payAmount = state.paymentAmount.clamp(0, state.grandTotal).toDouble();
+      final payAmount = state.paymentAmount
+          .clamp(0, state.grandTotal)
+          .toDouble();
       await purchaseService.recordPurchaseBillPayment(
         partyId: partyId,
         purchaseDocumentId: document.id,

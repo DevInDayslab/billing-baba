@@ -2,11 +2,12 @@ import 'package:billing_baba/shared/widgets/table_filters/filter_types.dart';
 import 'package:flutter/material.dart';
 
 /// Optional hook for future custom filter widgets without changing existing code.
-typedef CustomFilterWidgetBuilder = Widget Function({
-  required ColumnFilter config,
-  required Object? initialValue,
-  required void Function(Object? value) onApply,
-});
+typedef CustomFilterWidgetBuilder =
+    Widget Function({
+      required ColumnFilter config,
+      required Object? initialValue,
+      required void Function(Object? value) onApply,
+    });
 
 /// Describes a single table column filter — pages only supply config; the popup
 /// renders itself from [type] and optional [values].

@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_header.dart';
+import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
+import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -76,6 +78,10 @@ class _PartyDetailContent extends ConsumerWidget {
       (ledger) => ledger.transactions,
     );
 
+    if (LoyaltyRules.isEligibleParty(party)) {
+      ref.watch(partyLoyaltyBalanceProvider(party.id));
+    }
+
     return Column(
       key: ValueKey(party.id),
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,7 +141,8 @@ class _PartyDetailHeader extends ConsumerWidget {
 
   String _outstandingBalance() {
     return ledgerAsync.maybeWhen(
-      data: (ledger) => PartyModel.displayOutstanding(ledger.summary.outstanding),
+      data: (ledger) =>
+          PartyModel.displayOutstanding(ledger.summary.outstanding),
       orElse: () => PartyModel.displayOutstanding(party.balance),
     );
   }
@@ -161,6 +168,21 @@ class _PartyDetailHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final outstanding = ledgerAsync.maybeWhen(
+      data: (ledger) => ledger.summary.outstanding,
+      orElse: () => party.balance,
+    );
+    final showLoyalty = LoyaltyRules.shouldShowPartyLoyalty(
+      party,
+      outstanding: outstanding,
+    );
+    final loyaltyCache = showLoyalty
+        ? ref.watch(partyLoyaltyBalanceCacheProvider)
+        : null;
+    final loyaltyAsync = showLoyalty
+        ? ref.watch(partyLoyaltyBalanceProvider(party.id))
+        : null;
+
     final leftLines = [
       _MetaLine(
         label: 'Phone Number',
@@ -188,6 +210,14 @@ class _PartyDetailHeader extends ConsumerWidget {
       ),
       _MetaLine(label: 'Credit Limit', value: _creditLimit()),
       _MetaLine(label: 'Outstanding Balance', value: _outstandingBalance()),
+      if (showLoyalty && loyaltyAsync != null)
+        _MetaLine(
+          label: 'Loyalty Points',
+          value: _loyaltyDisplayValue(
+            loyaltyAsync,
+            cached: loyaltyCache?[party.id],
+          ),
+        ),
     ];
 
     return Padding(
@@ -218,67 +248,77 @@ class _PartyDetailHeader extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.xs),
               ],
               Expanded(
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 3),
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                party.name,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: party.isActive
-                                      ? AppColors.textPrimary
-                                      : AppColors.textSecondary,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (!party.isActive) ...[
-                              const SizedBox(width: AppSpacing.sm),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  'Inactive',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey.shade600,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    party.name,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: party.isActive
+                                          ? AppColors.textPrimary
+                                          : AppColors.textSecondary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ],
+                                if (!party.isActive) ...[
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade200,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'Inactive',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton(
+                          onPressed: () =>
+                              PartyActions.edit(context, ref, party),
+                          icon: const Icon(Icons.edit_outlined, size: 20),
+                          tooltip: 'Edit party',
+                          color: AppColors.textSecondary,
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                          constraints: const BoxConstraints(
+                            minWidth: 28,
+                            minHeight: 28,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    IconButton(
-                      onPressed: () => PartyActions.edit(context, ref, party),
-                      icon: const Icon(Icons.edit_outlined, size: 20),
-                      tooltip: 'Edit party',
-                      color: AppColors.textSecondary,
-                      padding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                      constraints: const BoxConstraints(
-                        minWidth: 28,
-                        minHeight: 28,
-                      ),
-                    ),
+                    if (showLoyalty) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      _PartyLoyaltyPointsBadge(party: party),
+                    ],
                   ],
                 ),
-              ),  
+              ),
               _PartyHeaderActionIcon(
                 iconWidget: const FaIcon(
                   FontAwesomeIcons.commentDots,
@@ -406,6 +446,134 @@ class _PartyHeaderActionIcon extends StatelessWidget {
       padding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,
       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+    );
+  }
+}
+
+String _formatLoyaltyPoints(double value) {
+  return value == value.roundToDouble()
+      ? '${value.toInt()}'
+      : value.toStringAsFixed(0);
+}
+
+const _loyaltyZeroLabel = '0 earned';
+
+String _loyaltyBalanceSummary(PartyLoyaltyBalanceDto balance) {
+  final earnedLabel = _formatLoyaltyPoints(balance.earnedPointsValue);
+  final availableLabel = _formatLoyaltyPoints(balance.availablePoints);
+  if (balance.availablePoints != balance.earnedPointsValue) {
+    return '$earnedLabel earned · $availableLabel available';
+  }
+  return '$earnedLabel earned';
+}
+
+String _loyaltyDisplayValue(
+  AsyncValue<PartyLoyaltyBalanceDto> balanceAsync, {
+  PartyLoyaltyBalanceDto? cached,
+}) {
+  return balanceAsync.maybeWhen(
+    data: _loyaltyBalanceSummary,
+    orElse: () =>
+        cached != null ? _loyaltyBalanceSummary(cached) : _loyaltyZeroLabel,
+  );
+}
+
+class _PartyLoyaltyPointsBadge extends ConsumerStatefulWidget {
+  const _PartyLoyaltyPointsBadge({required this.party});
+
+  final PartyModel party;
+
+  static const _badgeBackground = Color(0xFFFFF8E7);
+  static const _badgeBorder = Color(0xFFFFE082);
+
+  @override
+  ConsumerState<_PartyLoyaltyPointsBadge> createState() =>
+      _PartyLoyaltyPointsBadgeState();
+}
+
+class _PartyLoyaltyPointsBadgeState
+    extends ConsumerState<_PartyLoyaltyPointsBadge> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.invalidate(partyLoyaltyBalanceProvider(widget.party.id));
+    });
+  }
+
+  Widget _badgeShell({required Widget child}) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: _PartyLoyaltyPointsBadge._badgeBackground,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _PartyLoyaltyPointsBadge._badgeBorder.withValues(alpha: 0.55),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _badgeText(String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '⭐',
+          style: AppTypography.inter(fontSize: 12, height: 1.2),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          'Loyalty Points',
+          style: AppTypography.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+            height: 1.2,
+            letterSpacing: 0.15,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Text(
+            '·',
+            style: AppTypography.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary.withValues(alpha: 0.5),
+              height: 1.2,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: AppTypography.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+            height: 1.2,
+            letterSpacing: -0.2,
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final balanceAsync = ref.watch(
+      partyLoyaltyBalanceProvider(widget.party.id),
+    );
+    final cached = ref.watch(partyLoyaltyBalanceCacheProvider)[widget.party.id];
+
+    return _badgeShell(
+      child: _badgeText(
+        _loyaltyDisplayValue(balanceAsync, cached: cached),
+      ),
     );
   }
 }

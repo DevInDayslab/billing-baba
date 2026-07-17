@@ -39,7 +39,8 @@ class AddDeliveryChallanPage extends ConsumerStatefulWidget {
       _AddDeliveryChallanPageState();
 }
 
-class _AddDeliveryChallanPageState extends ConsumerState<AddDeliveryChallanPage> {
+class _AddDeliveryChallanPageState
+    extends ConsumerState<AddDeliveryChallanPage> {
   var _initialized = false;
 
   bool get _isEditing => widget.challanId != null;
@@ -156,7 +157,8 @@ class _AddDeliveryChallanPageState extends ConsumerState<AddDeliveryChallanPage>
                       const Divider(height: 1, color: _cardBorder),
                       _ChallanBottomActionBar(
                         isEditing: _isEditing,
-                        onSaved: () => context.go(AppRoutes.saleDeliveryChallan),
+                        onSaved: () =>
+                            context.go(AppRoutes.saleDeliveryChallan),
                       ),
                     ],
                   ),
@@ -247,8 +249,7 @@ class _ChallanFormFields extends ConsumerStatefulWidget {
   const _ChallanFormFields();
 
   @override
-  ConsumerState<_ChallanFormFields> createState() =>
-      _ChallanFormFieldsState();
+  ConsumerState<_ChallanFormFields> createState() => _ChallanFormFieldsState();
 }
 
 class _ChallanFormFieldsState extends ConsumerState<_ChallanFormFields> {

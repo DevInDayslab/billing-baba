@@ -229,8 +229,7 @@ List<SaleInvoiceModel> applyEstimateClientFilters(
         !filters.amountColumnFilter!.matches(estimate.amount)) {
       return false;
     }
-    if (documentStatus != null &&
-        estimate.documentStatus != documentStatus) {
+    if (documentStatus != null && estimate.documentStatus != documentStatus) {
       return false;
     }
     if (filters.selectedUser != 'All Users' &&
@@ -258,10 +257,15 @@ double estimateBalanceFor(SaleInvoiceModel estimate) {
 }
 
 List<String> _withAllOption(String allLabel, Iterable<String> values) {
-  final unique = values.map((value) => value.trim()).where((value) {
-    return value.isNotEmpty && value != allLabel;
-  }).toSet().toList()
-    ..sort();
+  final unique =
+      values
+          .map((value) => value.trim())
+          .where((value) {
+            return value.isNotEmpty && value != allLabel;
+          })
+          .toSet()
+          .toList()
+        ..sort();
   return [allLabel, ...unique];
 }
 
@@ -458,9 +462,7 @@ class EstimateQuotations extends _$EstimateQuotations {
 class EstimateQuotationFilters extends _$EstimateQuotationFilters {
   @override
   EstimateQuotationFiltersState build() {
-    return const EstimateQuotationFiltersState(
-      
-    );
+    return const EstimateQuotationFiltersState();
   }
 
   void setTimeRange(String label) {

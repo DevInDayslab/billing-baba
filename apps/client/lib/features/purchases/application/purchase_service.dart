@@ -7,6 +7,7 @@ import 'package:billing_baba/features/purchases/data/purchase_local_data_source.
 import 'package:billing_baba/features/purchases/data/purchase_remote_data_source.dart';
 import 'package:billing_baba/features/purchases/data/purchase_repository.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
+import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/mappers/purchase_document_mapper.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
@@ -149,7 +150,9 @@ class PurchaseService {
     try {
       final partyNames = await _partyNameMap();
       final response = await _repository.listDocuments(
-        query.copyWith(documentType: PurchaseDocumentType.purchaseBill.apiValue),
+        query.copyWith(
+          documentType: PurchaseDocumentType.purchaseBill.apiValue,
+        ),
       );
       final items = response.documents
           .map(
@@ -160,7 +163,12 @@ class PurchaseService {
           )
           .toList();
 
-      return _paginateBills(items, query.page, query.limit, response.meta.total);
+      return _paginateBills(
+        items,
+        query.page,
+        query.limit,
+        response.meta.total,
+      );
     } on DioException catch (error) {
       throw mapPurchaseError(error);
     }
@@ -273,8 +281,7 @@ class PurchaseService {
       final document = await _repository.getDocument(documentId);
       final partyNames = await _partyNameMap();
       final partyName = partyNames[document.partyId] ?? '';
-      final date =
-          DateTime.tryParse(document.documentDate) ?? DateTime.now();
+      final date = DateTime.tryParse(document.documentDate) ?? DateTime.now();
       final dueDate = document.dueDate != null
           ? DateTime.tryParse(document.dueDate!)
           : null;
@@ -375,11 +382,17 @@ class PurchaseService {
   }
 
   Future<String> duplicatePurchaseBill(String documentId) async {
-    return _duplicatePurchaseDocument(documentId, PurchaseDocumentType.purchaseBill);
+    return _duplicatePurchaseDocument(
+      documentId,
+      PurchaseDocumentType.purchaseBill,
+    );
   }
 
   Future<String> duplicatePurchaseOrder(String documentId) async {
-    return _duplicatePurchaseDocument(documentId, PurchaseDocumentType.purchaseOrder);
+    return _duplicatePurchaseDocument(
+      documentId,
+      PurchaseDocumentType.purchaseOrder,
+    );
   }
 
   Future<String> duplicatePurchaseReturn(String documentId) async {
@@ -437,6 +450,37 @@ class PurchaseService {
       return _repository.getPaymentHistory(documentId);
     } on DioException catch (error) {
       throw mapPurchaseError(error);
+    }
+  }
+
+  Future<PurchaseDocumentParseDto> parsePurchaseDocument({
+    required String filename,
+    required List<int> bytes,
+    String? mimeType,
+  }) async {
+    try {
+      debugPrint(
+        '[PurchaseParse] parsePurchaseDocument request filename=$filename bytes=${bytes.length}',
+      );
+      final result = await _repository.parseDocument(
+        filename: filename,
+        bytes: bytes,
+        mimeType: mimeType,
+      );
+      debugPrint(
+        '[PurchaseParse] parsePurchaseDocument response lines=${result.lines.length}',
+      );
+      return result;
+    } on DioException catch (error, stackTrace) {
+      debugPrint(
+        '[PurchaseParse] parsePurchaseDocument DioException: $error\n$stackTrace',
+      );
+      throw mapPurchaseError(error);
+    } on Object catch (error, stackTrace) {
+      debugPrint(
+        '[PurchaseParse] parsePurchaseDocument error: $error\n$stackTrace',
+      );
+      rethrow;
     }
   }
 
@@ -736,8 +780,9 @@ class PurchaseService {
       if (remaining <= 0) break;
       if (bill.balanceDue <= 0) continue;
 
-      final allocate =
-          remaining < bill.balanceDue ? remaining : bill.balanceDue;
+      final allocate = remaining < bill.balanceDue
+          ? remaining
+          : bill.balanceDue;
       allocations.add(
         PaymentAllocationRequest(
           purchaseDocumentId: bill.id,
@@ -898,8 +943,8 @@ class PurchaseService {
         unit: line.unit,
         pricePerUnit: price,
         taxPercent: taxPercent,
-        priceIsTaxInclusive: taxPercent > 0 &&
-            (double.tryParse(line.cgstAmount) ?? 0) > 0,
+        priceIsTaxInclusive:
+            taxPercent > 0 && (double.tryParse(line.cgstAmount) ?? 0) > 0,
       );
     }).toList();
   }

@@ -47,8 +47,9 @@ class PurchaseFaLineItemsTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addPurchaseFaFormProvider(batchId: batchId));
-    final notifier =
-        ref.read(addPurchaseFaFormProvider(batchId: batchId).notifier);
+    final notifier = ref.read(
+      addPurchaseFaFormProvider(batchId: batchId).notifier,
+    );
 
     final tableContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -440,8 +441,9 @@ class _LineItemRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier =
-        ref.read(addPurchaseFaFormProvider(batchId: batchId).notifier);
+    final notifier = ref.read(
+      addPurchaseFaFormProvider(batchId: batchId).notifier,
+    );
 
     return SizedBox(
       height: _rowHeight,

@@ -13,8 +13,13 @@ part of 'pos_repository_provider.dart';
 final posRepositoryProvider = PosRepositoryProvider._();
 
 final class PosRepositoryProvider
-    extends $FunctionalProvider<PosRepository, PosRepository, PosRepository>
-    with $Provider<PosRepository> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<PosRepository>,
+          PosRepository,
+          FutureOr<PosRepository>
+        >
+    with $FutureModifier<PosRepository>, $FutureProvider<PosRepository> {
   PosRepositoryProvider._()
     : super(
         from: null,
@@ -31,21 +36,56 @@ final class PosRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<PosRepository> $createElement($ProviderPointer pointer) =>
+  $FutureProviderElement<PosRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<PosRepository> create(Ref ref) {
+    return posRepository(ref);
+  }
+}
+
+String _$posRepositoryHash() => r'6520390ee006cbc3c23fb9c90202eb057cbdc5b6';
+
+@ProviderFor(activePosBusinessId)
+final activePosBusinessIdProvider = ActivePosBusinessIdProvider._();
+
+final class ActivePosBusinessIdProvider
+    extends $FunctionalProvider<String?, String?, String?>
+    with $Provider<String?> {
+  ActivePosBusinessIdProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'activePosBusinessIdProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$activePosBusinessIdHash();
+
+  @$internal
+  @override
+  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  PosRepository create(Ref ref) {
-    return posRepository(ref);
+  String? create(Ref ref) {
+    return activePosBusinessId(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(PosRepository value) {
+  Override overrideWithValue(String? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<PosRepository>(value),
+      providerOverride: $SyncValueProvider<String?>(value),
     );
   }
 }
 
-String _$posRepositoryHash() => r'823d8431a42b0c1a82c4e44b8f9b6df75186bb89';
+String _$activePosBusinessIdHash() =>
+    r'1090a1e0715bc08211291572071a9792bb49fc75';

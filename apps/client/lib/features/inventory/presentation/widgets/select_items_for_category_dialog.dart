@@ -273,7 +273,9 @@ class _SelectItemsForCategoryDialogState
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   FilledButton(
-                    onPressed: _selectedIds.isEmpty || _isMoving ? null : _moveItems,
+                    onPressed: _selectedIds.isEmpty || _isMoving
+                        ? null
+                        : _moveItems,
                     style: FilledButton.styleFrom(
                       backgroundColor: inventoryNegativeColor,
                       disabledBackgroundColor: inventoryNegativeColor

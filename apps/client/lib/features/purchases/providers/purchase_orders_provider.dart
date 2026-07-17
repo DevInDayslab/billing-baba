@@ -175,7 +175,10 @@ List<PurchaseOrderModel> _applyFilters(
     }
 
     if (columns.columnDateRange != null &&
-        !purchaseFilterIsWithinDateRange(order.date, columns.columnDateRange!)) {
+        !purchaseFilterIsWithinDateRange(
+          order.date,
+          columns.columnDateRange!,
+        )) {
       return false;
     }
 
@@ -385,7 +388,9 @@ class PurchaseOrders extends _$PurchaseOrders {
     }
   }
 
-  Future<({String? error, String? newId})> duplicateOrder(String orderId) async {
+  Future<({String? error, String? newId})> duplicateOrder(
+    String orderId,
+  ) async {
     try {
       final service = await ref.read(purchaseServiceProvider.future);
       final newId = await service.duplicatePurchaseOrder(orderId);

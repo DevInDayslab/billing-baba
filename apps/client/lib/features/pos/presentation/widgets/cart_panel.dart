@@ -18,10 +18,12 @@ final _currencyFormat = NumberFormat.currency(
 class CartPanel extends ConsumerWidget {
   const CartPanel({
     required this.onHoldBill,
+    this.onPrint,
     super.key,
   });
 
   final VoidCallback onHoldBill;
+  final VoidCallback? onPrint;
 
   static const _tableMinWidth = 640.0;
 
@@ -80,7 +82,7 @@ class CartPanel extends ConsumerWidget {
               ),
             ),
             const Divider(height: 1, color: posCardBorder),
-            _BottomActionBar(onHoldBill: onHoldBill),
+            _BottomActionBar(onHoldBill: onHoldBill, onPrint: onPrint),
           ],
         ),
       ),
@@ -142,7 +144,10 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 3,
+      ),
       decoration: BoxDecoration(
         color: posSelectedBackground,
         borderRadius: AppRadius.smBorder,
@@ -160,15 +165,62 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-class _BillSummary extends StatelessWidget {
+class _BillSummary extends ConsumerWidget {
   const _BillSummary({required this.cart});
 
   final PosCartState cart;
 
+  Future<void> _showBillDiscountDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final controller = TextEditingController(
+      text: cart.billDiscountPercent > 0
+          ? cart.billDiscountPercent.toStringAsFixed(0)
+          : '',
+    );
+
+    final result = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Bill Discount'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Discount %',
+            suffixText: '%',
+            hintText: '0–100',
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = double.tryParse(controller.text.trim()) ?? 0;
+              Navigator.of(dialogContext).pop(value.clamp(0, 100));
+            },
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    );
+
+    controller.dispose();
+    if (result != null) {
+      ref.read(posCartProvider.notifier).updateBillDiscount(result);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final balanceColor =
-        cart.balance == 0 ? posPositiveColor : posNegativeColor;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final balanceColor = cart.balance == 0
+        ? posPositiveColor
+        : posNegativeColor;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -186,9 +238,21 @@ class _BillSummary extends StatelessWidget {
               value: '-${_currencyFormat.format(cart.totalDiscount)}',
               valueColor: posNegativeColor,
             ),
+            InkWell(
+              onTap: () => _showBillDiscountDialog(context, ref),
+              child: _SummaryRow(
+                label: 'Bill Discount',
+                value: cart.billDiscountPercent > 0
+                    ? '-${_currencyFormat.format(cart.billDiscountAmount)} (${cart.billDiscountPercent.toStringAsFixed(0)}%)'
+                    : '${cart.billDiscountPercent.toStringAsFixed(0)}%',
+                valueColor: cart.billDiscountPercent > 0
+                    ? posNegativeColor
+                    : AppColors.primary,
+              ),
+            ),
             _SummaryRow(
               label: 'Taxable Amount',
-              value: _currencyFormat.format(cart.taxableAmount),
+              value: _currencyFormat.format(cart.taxableAfterBillDiscount),
             ),
             _SummaryRow(
               label: 'CGST (9%)',
@@ -366,9 +430,13 @@ class _StatBox extends StatelessWidget {
 }
 
 class _BottomActionBar extends StatelessWidget {
-  const _BottomActionBar({required this.onHoldBill});
+  const _BottomActionBar({
+    required this.onHoldBill,
+    this.onPrint,
+  });
 
   final VoidCallback onHoldBill;
+  final VoidCallback? onPrint;
 
   @override
   Widget build(BuildContext context) {
@@ -391,7 +459,7 @@ class _BottomActionBar extends StatelessWidget {
             child: const Text('Save Draft', style: TextStyle(fontSize: 11)),
           ),
           OutlinedButton(
-            onPressed: () {},
+            onPressed: onPrint,
             style: PosButtonStyles.primaryOutlined,
             child: Text(
               wrapButtons ? 'Print' : 'Print (F8)',

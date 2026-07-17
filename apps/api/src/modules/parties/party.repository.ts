@@ -1,5 +1,4 @@
 import { and, asc, count, desc, eq, ilike, ne, or, sql } from 'drizzle-orm';
-import type { PartyDeleteReferences } from './party.types';
 import type { Database } from '../../db/client';
 import { payments } from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
@@ -10,6 +9,7 @@ import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import { OutstandingRepository } from '../accounting/outstanding.repository';
 import type {
   ListPartiesParams,
+  PartyDeleteReferences,
   PartyInsertValues,
   PartyRecord,
   PartyUpdateValues,

@@ -102,7 +102,8 @@ class PurchaseFaTable extends ConsumerWidget {
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
-                if (filters.hasActiveFilters || searchQuery.trim().isNotEmpty) ...[
+                if (filters.hasActiveFilters ||
+                    searchQuery.trim().isNotEmpty) ...[
                   const SizedBox(width: AppSpacing.sm),
                   TextButton(
                     onPressed: ref
@@ -269,11 +270,13 @@ class PurchaseFaTable extends ConsumerWidget {
                   followerAnchor: Alignment.topRight,
                   onChannelSelected: (_) =>
                       VoucherPrintActions.shareFixedAssetPurchase(
-                    context,
-                    ref,
-                    record.batchId,
-                    filename: VoucherPrintActions.filenameFor(record.invoiceNo),
-                  ),
+                        context,
+                        ref,
+                        record.batchId,
+                        filename: VoucherPrintActions.filenameFor(
+                          record.invoiceNo,
+                        ),
+                      ),
                   child: const SizedBox(
                     width: 28,
                     height: 28,

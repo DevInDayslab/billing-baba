@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart' show ReportTableHeaderRow;
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart'
+    show ReportTableHeaderRow;
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -151,7 +152,7 @@ class ReportAlignedCell {
     required this.child,
     this.flex = 1,
     this.alignment = Alignment.centerLeft,
-  })  : width = null;
+  }) : width = null;
 
   const ReportAlignedCell.fixed(
     this.width, {
@@ -189,7 +190,9 @@ class ReportAlignedRowStrip extends StatelessWidget {
 }
 
 /// Helper to build header + data from shared column specs.
-List<Widget> buildAlignedHeaderRow(List<({String label, ReportColumn col})> specs) {
+List<Widget> buildAlignedHeaderRow(
+  List<({String label, ReportColumn col})> specs,
+) {
   return [
     for (final spec in specs)
       if (spec.col.isFlex)

@@ -64,7 +64,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     if (!_expandInitialized) {
       _expandInitialized = true;
       final location = GoRouterState.of(context).uri.path;
-      if (location.startsWith(AppRoutes.sale)) {
+      if (location.startsWith(AppRoutes.sale) ||
+          location.startsWith(AppRoutes.crm)) {
         _isSaleExpanded = true;
       }
       if (location.startsWith(AppRoutes.purchase)) {
@@ -242,7 +243,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         _wasOverlaySidebar = useOverlaySidebar;
 
         final showTopBar =
-            currentLocation != AppRoutes.pos || !ref.watch(posSessionProvider);
+            currentLocation != AppRoutes.pos ||
+            !ref.watch(posSessionProvider).isTerminalOpen;
         final mainContent = _QuickCreateShortcutScope(
           enabled: showTopBar,
           child: ColoredBox(
@@ -473,7 +475,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       final routePrefix = item.routePrefix ?? item.route!;
 
       final isParentActive = isSale
-          ? currentLocation.startsWith(AppRoutes.sale)
+          ? currentLocation.startsWith(AppRoutes.sale) ||
+                currentLocation.startsWith(AppRoutes.crm)
           : isPurchase
           ? currentLocation.startsWith(AppRoutes.purchase)
           : isParties

@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/network/api_endpoints.dart';
+import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
+import 'package:billing_baba/features/sales/models/dto/pos_session_dto.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:dio/dio.dart';
@@ -65,15 +67,31 @@ class SalesRemoteDataSource {
     );
   }
 
-  Future<SalesDocumentDto> finalizeDocument(
+  Future<FinalizeSalesDocumentResult> finalizeDocument(
     String id, {
     String? godownId,
+    double loyaltyPointsRedeemed = 0,
   }) async {
-    await _dio.post<Map<String, dynamic>>(
+    final payload = <String, dynamic>{
+      if (godownId != null) 'godown_id': godownId,
+      if (loyaltyPointsRedeemed > 0)
+        'loyalty_points_redeemed': _formatPoints(loyaltyPointsRedeemed),
+    };
+
+    final response = await _dio.post<Map<String, dynamic>>(
       ApiEndpoints.salesDocumentFinalize(id),
-      data: {'godown_id': ?godownId},
+      data: payload,
     );
-    return getDocument(id);
+    return FinalizeSalesDocumentResult.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  String _formatPoints(double value) {
+    if (value == value.roundToDouble()) {
+      return value.round().toString();
+    }
+    return value.toStringAsFixed(4);
   }
 
   Future<SalesDocumentLineDto> addLine(
@@ -175,6 +193,61 @@ class SalesRemoteDataSource {
       data: request.toJson(),
     );
     return SalesDocumentDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<PaginatedPosSessionsDto> listPosSessions({
+    int page = 1,
+    int limit = 20,
+    String sort = 'started_at',
+    String order = 'desc',
+  }) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.posSessions,
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        'sort': sort,
+        'order': order,
+      },
+    );
+    return PaginatedPosSessionsDto.fromJson(response.data ?? {});
+  }
+
+  Future<PosSessionDto> createPosSession({String? openingCash}) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.posSessions,
+      data: {
+        if (openingCash != null) 'opening_cash': openingCash,
+      },
+    );
+    return PosSessionDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<PosSessionDto> getPosSession(String id) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.posSession(id),
+    );
+    return PosSessionDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
+  Future<PosSessionDto> closePosSession({
+    required String sessionId,
+    String? closingCash,
+  }) async {
+    final response = await _dio.patch<Map<String, dynamic>>(
+      ApiEndpoints.posSession(sessionId),
+      data: {
+        'ended_at': DateTime.now().toUtc().toIso8601String(),
+        if (closingCash != null) 'closing_cash': closingCash,
+      },
+    );
+    return PosSessionDto.fromJson(
       (response.data?['data'] as Map<String, dynamic>?) ?? {},
     );
   }

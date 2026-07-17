@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/presentation/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_fa_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
@@ -118,19 +119,12 @@ class _PurchaseFaFilterBarState extends ConsumerState<PurchaseFaFilterBar> {
         ),
         const SizedBox(width: AppSpacing.md),
         TextButton.icon(
-          onPressed: () =>
-              ModuleExportActions.exportFixedAssets(context, ref),
+          onPressed: () => ModuleExportActions.exportFixedAssets(context, ref),
           icon: const Icon(Icons.table_chart_outlined, size: 18),
           label: const Text('Excel Report'),
         ),
         IconButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Use row actions to print a purchase FA'),
-              ),
-            );
-          },
+          onPressed: () => ModulePrintActions.printPurchaseFa(context, ref),
           icon: const Icon(Icons.print_outlined, size: 20),
           color: AppColors.textSecondary,
           tooltip: 'Print',

@@ -27,11 +27,13 @@ class AddPurchaseFaFooter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addPurchaseFaFormProvider(batchId: batchId));
-    final notifier =
-        ref.read(addPurchaseFaFormProvider(batchId: batchId).notifier);
+    final notifier = ref.read(
+      addPurchaseFaFormProvider(batchId: batchId).notifier,
+    );
     final totalTax = ref.watch(addPurchaseFaTotalTaxProvider(batchId: batchId));
-    final grandTotal =
-        ref.watch(addPurchaseFaGrandTotalProvider(batchId: batchId));
+    final grandTotal = ref.watch(
+      addPurchaseFaGrandTotalProvider(batchId: batchId),
+    );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

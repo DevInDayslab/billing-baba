@@ -400,6 +400,7 @@ export class SalesDocumentService extends SalesServiceBase {
       documentId,
       userId,
       godownId: input.godown_id,
+      loyaltyPointsRedeemed: input.loyalty_points_redeemed ?? '0',
     });
 
     return {
@@ -407,6 +408,7 @@ export class SalesDocumentService extends SalesServiceBase {
       message: 'Document finalized',
       document_number: result.documentNumber,
       status: 'finalized',
+      ...(result.loyalty ? { loyalty: result.loyalty } : {}),
     };
   }
 
@@ -773,16 +775,6 @@ export class SalesDocumentService extends SalesServiceBase {
     const item = await this.repository.findItem(businessId, itemId);
     if (!item) {
       throw new AppError('NOT_FOUND', 'Item not found', 404);
-    }
-  }
-
-  private async assertGodownValid(
-    businessId: string,
-    godownId: string,
-  ): Promise<void> {
-    const exists = await this.repository.godownExists(businessId, godownId);
-    if (!exists) {
-      throw new AppError('NOT_FOUND', 'Godown not found', 404);
     }
   }
 

@@ -192,7 +192,10 @@ List<PaymentOutModel> _applyFilters(
       return false;
     }
 
-    if (!purchaseFilterMatchesText(columns.documentNoFilter, record.receiptNo)) {
+    if (!purchaseFilterMatchesText(
+      columns.documentNoFilter,
+      record.receiptNo,
+    )) {
       return false;
     }
 
@@ -603,7 +606,8 @@ class PaymentOutFormState {
   final bool isSaving;
   final bool isLoadingBalance;
 
-  double get total => (paidAmount - discount).clamp(0, double.infinity).toDouble();
+  double get total =>
+      (paidAmount - discount).clamp(0, double.infinity).toDouble();
 
   bool get isValid =>
       party.trim().isNotEmpty &&
@@ -768,9 +772,11 @@ class PaymentOutForm extends _$PaymentOutForm {
       state = state.copyWith(isSaving: false);
       reset();
       if (showSuccessMessage) {
-        ref.read(paymentOutSaveSuccessMessageProvider.notifier).setMessage(
-          'Payment $receiptNo saved successfully',
-        );
+        ref
+            .read(paymentOutSaveSuccessMessageProvider.notifier)
+            .setMessage(
+              'Payment $receiptNo saved successfully',
+            );
       }
       return (error: null, paymentId: paymentId);
     } catch (error) {

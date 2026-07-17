@@ -18,6 +18,10 @@ abstract final class UtilitiesSubRoutes {
       route: AppRoutes.utilitiesImportItems,
       label: 'Import Items',
     ),
+    UtilitiesSubRoute(
+      route: AppRoutes.utilitiesBarcodeGenerator,
+      label: 'Barcode Generator',
+    ),
   ];
 
   static String labelForRoute(String route) {

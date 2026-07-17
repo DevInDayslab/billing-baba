@@ -21,9 +21,12 @@ import 'package:billing_baba/features/purchases/data/purchase_remote_data_source
 import 'package:billing_baba/features/purchases/data/purchase_repository.dart';
 import 'package:billing_baba/features/sales/data/job_work_remote_data_source.dart';
 import 'package:billing_baba/features/sales/data/job_work_repository.dart';
+import 'package:billing_baba/features/sales/data/sale_fa_remote_data_source.dart';
+import 'package:billing_baba/features/sales/data/sale_fa_repository.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_remote_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_repository.dart';
+import 'package:billing_baba/features/settings/providers/print_settings_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'print_providers.g.dart';
@@ -80,6 +83,9 @@ Future<PrintDataService> printDataService(Ref ref) async {
     purchaseFaRepository: PurchaseFaRepository(
       remote: PurchaseFaRemoteDataSource(api.dio),
     ),
+    saleFaRepository: SaleFaRepository(
+      remote: SaleFaRemoteDataSource(api.dio),
+    ),
     jobWorkRepository: JobWorkRepository(
       remote: JobWorkRemoteDataSource(api.dio),
     ),
@@ -90,16 +96,21 @@ Future<PrintDataService> printDataService(Ref ref) async {
 @Riverpod(keepAlive: true)
 Future<PrintService> printService(Ref ref) async {
   final dataService = await ref.watch(printDataServiceProvider.future);
+  final printSettingsRepository =
+      await ref.watch(printSettingsRepositoryProvider.future);
   return PrintService(
     dataService: dataService,
     outputService: ref.watch(printOutputServiceProvider),
     templateRegistry: ref.watch(templateRegistryProvider),
+    printSettingsRepository: printSettingsRepository,
   );
 }
 
 @riverpod
 Future<PrintableDocument> printableDocument(Ref ref, PrintRequest request) {
-  return ref.watch(printDataServiceProvider.future).then(
-    (service) => service.load(request),
-  );
+  return ref
+      .watch(printDataServiceProvider.future)
+      .then(
+        (service) => service.load(request),
+      );
 }

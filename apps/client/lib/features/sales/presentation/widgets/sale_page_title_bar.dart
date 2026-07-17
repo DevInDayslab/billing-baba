@@ -67,7 +67,9 @@ class _SalePageTitleBarState extends State<SalePageTitleBar> {
                   onExit: (_) => _setHovered(false),
                   cursor: SystemMouseCursors.click,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.xs,
+                    ),
                     child: Row(
                       children: [
                         Flexible(

@@ -210,7 +210,8 @@ List<PaymentInModel> _applyClientFilters(
     if (statusFilter != null && record.status != statusFilter) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && record.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        record.firm != filters.selectedFirm) {
       return false;
     }
     if (filters.selectedUser != 'All Users' &&
@@ -708,7 +709,9 @@ class PaymentInForm extends _$PaymentInForm {
           paymentMode: SalesPaymentModes.toApi(payment.paymentType),
           paymentDate: payment.date.toUtc().toIso8601String(),
           referenceNumber: payment.receiptNo,
-          notes: payment.description.trim().isEmpty ? null : payment.description,
+          notes: payment.description.trim().isEmpty
+              ? null
+              : payment.description,
           allocations: allocations,
         ),
       );

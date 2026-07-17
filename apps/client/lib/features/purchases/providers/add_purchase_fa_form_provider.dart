@@ -66,7 +66,11 @@ class AddPurchaseFaForm extends _$AddPurchaseFaForm {
   }
 
   void updateBillingName(String value) {
-    state = state.copyWith(billingName: value, isDirty: true, clearSaveError: true);
+    state = state.copyWith(
+      billingName: value,
+      isDirty: true,
+      clearSaveError: true,
+    );
   }
 
   void updateEWayBillNo(String value) {

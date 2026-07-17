@@ -97,7 +97,8 @@ class CreateItemTierPriceRequest {
 class CreateItemRequest {
   const CreateItemRequest({
     required this.name,
-    required this.baseUnit, this.description,
+    required this.baseUnit,
+    this.description,
     this.itemType = 'product',
     this.hsnCode,
     this.barcode,

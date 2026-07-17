@@ -320,7 +320,10 @@ class _DeliveryChallanBottomActionBar extends ConsumerWidget {
                 style: TextStyle(fontSize: 13),
               ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 side: const BorderSide(color: _cardBorder),
               ),
             ),

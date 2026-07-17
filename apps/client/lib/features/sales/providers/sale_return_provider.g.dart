@@ -33,7 +33,7 @@ final class SaleReturnsProvider
   SaleReturns create() => SaleReturns();
 }
 
-String _$saleReturnsHash() => r'853e6431dc8ca62ac6f2beeb3ee2d04bff427741';
+String _$saleReturnsHash() => r'ab4da2ec22c69cd09b5e21ca50e6e040375f2dec';
 
 abstract class _$SaleReturns extends $AsyncNotifier<PaginatedSaleInvoices> {
   FutureOr<PaginatedSaleInvoices> build();

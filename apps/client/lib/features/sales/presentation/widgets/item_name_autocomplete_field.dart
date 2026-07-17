@@ -137,7 +137,9 @@ class ItemNameAutocompleteFieldState
       } else {
         final itemIds = itemsAsync.value!.map((item) => item.id);
         unawaited(
-          ref.read(itemApiTierPricesProvider.notifier).preloadForItemIds(itemIds),
+          ref
+              .read(itemApiTierPricesProvider.notifier)
+              .preloadForItemIds(itemIds),
         );
       }
       unawaited(
@@ -262,258 +264,265 @@ class ItemNameAutocompleteFieldState
           data: (inventory) {
             final items = _buildItemOptions(inventory);
             return Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  _removeOverlay();
-                  _focusNode.unfocus();
-                },
-              ),
-            ),
-            CompositedTransformFollower(
-              link: _layerLink,
-              showWhenUnlinked: false,
-              offset: const Offset(0, 38),
-              child: Material(
-                elevation: 4,
-                shadowColor: Colors.black26,
-                borderRadius: AppRadius.mdBorder,
-                clipBehavior: Clip.antiAlias,
-                color: AppColors.surface,
-                child: SizedBox(
-                  width: triggerWidth < 420 ? 420 : triggerWidth,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      InkWell(
-                        onTap: _openAddItemDialog,
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          child: Text(
-                            '+ Add Item',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                'ITEM',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                'SALE PRICE',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                ),
-                                textAlign: TextAlign.right,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                'PURCHASE',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                ),
-                                textAlign: TextAlign.right,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                'MFG COST',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                ),
-                                textAlign: TextAlign.right,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                'STOCK',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                ),
-                                textAlign: TextAlign.right,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      ConstrainedBox(
-                          constraints: const BoxConstraints(maxHeight: 200),
-                          child: items.isEmpty
-                              ? const Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: Text('No items found'),
-                                )
-                              : ListView.builder(
-                                  shrinkWrap: true,
-                                  padding: EdgeInsets.zero,
-                                  itemCount: items.length,
-                                  itemBuilder: (context, index) {
-                                    final item = items[index];
-                                    final isSelected =
-                                        item.name == widget.value;
-                                    return InkWell(
-                                      onTap: () async {
-                                        await ref
-                                            .read(
-                                              itemApiTierPricesProvider.notifier,
-                                            )
-                                            .preloadForItemIds([item.id]);
-                                        await ref
-                                            .read(
-                                              localItemTierPricesProvider
-                                                  .notifier,
-                                            )
-                                            .ensureInitialized();
-                                        if (!mounted) return;
-
-                                        final localStore = ref.read(
-                                          localItemTierPricesProvider,
-                                        );
-                                        final apiStore = ref.read(
-                                          itemApiTierPricesProvider,
-                                        );
-                                        final resolved = saleItemOptionFromInventory(
-                                          inventory.firstWhere(
-                                            (entry) => entry.id == item.id,
-                                            orElse: () => InventoryItem(
-                                              id: item.id,
-                                              name: item.name,
-                                              type: ItemType.product,
-                                              salePrice: item.salePrice,
-                                              purchasePrice: item.purchasePrice,
-                                            ),
-                                          ),
-                                          tierPrices: mergedTierPricesForItem(
-                                            apiStore: apiStore,
-                                            localStore: localStore,
-                                            itemId: item.id,
-                                          ),
-                                        );
-                                        _controller.text = resolved.name;
-                                        widget.onChanged(resolved.name);
-                                        widget.onItemSelected(resolved);
-                                        _removeOverlay();
-                                        _focusNode.unfocus();
-                                      },
-                                      hoverColor: const Color(0xFFF5F5F5),
-                                      child: Container(
-                                        color: isSelected
-                                            ? const Color(
-                                                0xFFD32F2F,
-                                              ).withValues(alpha: 0.06)
-                                            : null,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 8,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              flex: 3,
-                                              child: Text(
-                                                item.name,
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: isSelected
-                                                      ? FontWeight.w600
-                                                      : FontWeight.normal,
-                                                  color: isSelected
-                                                      ? const Color(0xFFD32F2F)
-                                                      : AppColors.textPrimary,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                _priceFormat.format(
-                                                  item.salePrice,
-                                                ),
-                                                textAlign: TextAlign.right,
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                _priceFormat.format(
-                                                  item.purchasePrice,
-                                                ),
-                                                textAlign: TextAlign.right,
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                _priceFormat.format(
-                                                  item.mfgCost,
-                                                ),
-                                                textAlign: TextAlign.right,
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                '${item.stock.toInt()}',
-                                                textAlign: TextAlign.right,
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                        ),
-                    ],
+              children: [
+                Positioned.fill(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      _removeOverlay();
+                      _focusNode.unfocus();
+                    },
                   ),
                 ),
-              ),
-            ),
-          ],
-        );
+                CompositedTransformFollower(
+                  link: _layerLink,
+                  showWhenUnlinked: false,
+                  offset: const Offset(0, 38),
+                  child: Material(
+                    elevation: 4,
+                    shadowColor: Colors.black26,
+                    borderRadius: AppRadius.mdBorder,
+                    clipBehavior: Clip.antiAlias,
+                    color: AppColors.surface,
+                    child: SizedBox(
+                      width: triggerWidth < 420 ? 420 : triggerWidth,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          InkWell(
+                            onTap: _openAddItemDialog,
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              child: Text(
+                                '+ Add Item',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const Divider(height: 1),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Text(
+                                    'ITEM',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'SALE PRICE',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'PURCHASE',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'MFG COST',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    'STOCK',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 200),
+                            child: items.isEmpty
+                                ? const Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: Text('No items found'),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    padding: EdgeInsets.zero,
+                                    itemCount: items.length,
+                                    itemBuilder: (context, index) {
+                                      final item = items[index];
+                                      final isSelected =
+                                          item.name == widget.value;
+                                      return InkWell(
+                                        onTap: () async {
+                                          await ref
+                                              .read(
+                                                itemApiTierPricesProvider
+                                                    .notifier,
+                                              )
+                                              .preloadForItemIds([item.id]);
+                                          await ref
+                                              .read(
+                                                localItemTierPricesProvider
+                                                    .notifier,
+                                              )
+                                              .ensureInitialized();
+                                          if (!mounted) return;
+
+                                          final localStore = ref.read(
+                                            localItemTierPricesProvider,
+                                          );
+                                          final apiStore = ref.read(
+                                            itemApiTierPricesProvider,
+                                          );
+                                          final resolved =
+                                              saleItemOptionFromInventory(
+                                                inventory.firstWhere(
+                                                  (entry) =>
+                                                      entry.id == item.id,
+                                                  orElse: () => InventoryItem(
+                                                    id: item.id,
+                                                    name: item.name,
+                                                    type: ItemType.product,
+                                                    salePrice: item.salePrice,
+                                                    purchasePrice:
+                                                        item.purchasePrice,
+                                                  ),
+                                                ),
+                                                tierPrices:
+                                                    mergedTierPricesForItem(
+                                                      apiStore: apiStore,
+                                                      localStore: localStore,
+                                                      itemId: item.id,
+                                                    ),
+                                              );
+                                          _controller.text = resolved.name;
+                                          widget.onChanged(resolved.name);
+                                          widget.onItemSelected(resolved);
+                                          _removeOverlay();
+                                          _focusNode.unfocus();
+                                        },
+                                        hoverColor: const Color(0xFFF5F5F5),
+                                        child: Container(
+                                          color: isSelected
+                                              ? const Color(
+                                                  0xFFD32F2F,
+                                                ).withValues(alpha: 0.06)
+                                              : null,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                flex: 3,
+                                                child: Text(
+                                                  item.name,
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: isSelected
+                                                        ? FontWeight.w600
+                                                        : FontWeight.normal,
+                                                    color: isSelected
+                                                        ? const Color(
+                                                            0xFFD32F2F,
+                                                          )
+                                                        : AppColors.textPrimary,
+                                                  ),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Text(
+                                                  _priceFormat.format(
+                                                    item.salePrice,
+                                                  ),
+                                                  textAlign: TextAlign.right,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Text(
+                                                  _priceFormat.format(
+                                                    item.purchasePrice,
+                                                  ),
+                                                  textAlign: TextAlign.right,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Text(
+                                                  _priceFormat.format(
+                                                    item.mfgCost,
+                                                  ),
+                                                  textAlign: TextAlign.right,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: Text(
+                                                  '${item.stock.toInt()}',
+                                                  textAlign: TextAlign.right,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
           },
         );
       },

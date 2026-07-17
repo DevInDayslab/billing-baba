@@ -9,8 +9,7 @@ class ExpenseMapper {
     final type = dto.categoryType == 'indirect'
         ? ExpenseCategoryType.indirect
         : ExpenseCategoryType.direct;
-    final variant =
-        dto.isSystem && dto.name.toLowerCase().contains('loyalty')
+    final variant = dto.isSystem && dto.name.toLowerCase().contains('loyalty')
         ? ExpenseCategoryVariant.loyaltyRedeemed
         : ExpenseCategoryVariant.standard;
 

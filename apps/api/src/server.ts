@@ -1,7 +1,17 @@
-import 'dotenv/config';
+import path from 'node:path';
+import { config as loadEnv } from 'dotenv';
 import { buildApp } from './app';
 import { loadAppConfig } from './config/app_config';
+import { resolveGeminiModel } from './modules/purchases/purchase-document-gemini.parser';
+import {
+  auditGeminiAuthEnvironment,
+  describeGeminiKeyForLog,
+  formatGeminiAuthEnvironmentLogLine,
+  formatGeminiKeyLogLine,
+} from './shared/gemini/gemini-client';
 import { setupGracefulShutdown } from './shutdown';
+
+loadEnv({ path: path.resolve(__dirname, '../.env'), override: true });
 
 async function startServer(): Promise<void> {
   const config = loadAppConfig();
@@ -20,6 +30,29 @@ async function startServer(): Promise<void> {
   if (!config.databaseUrl) {
     app.log.warn(
       'DATABASE_URL is not set — database features are disabled until Neon is configured.',
+    );
+  }
+
+  const geminiAuthEnv = auditGeminiAuthEnvironment();
+  app.log.info(formatGeminiAuthEnvironmentLogLine(geminiAuthEnv));
+  if (geminiAuthEnv.conflictingEnvVars.length > 0) {
+    app.log.warn(
+      `Gemini auth env vars present (unused when GEMINI_API_KEY is set, but verify they are not rewriting outbound requests): ${geminiAuthEnv.conflictingEnvVars.join(', ')}`,
+    );
+  }
+
+  const geminiKey = describeGeminiKeyForLog();
+  app.log.info(formatGeminiKeyLogLine(geminiKey));
+  if (geminiKey.issue) {
+    app.log.warn(geminiKey.issue);
+  }
+  if (geminiKey.loadedSuccessfully) {
+    app.log.info(
+      `Purchase document parsing: Gemini Developer API, model ${resolveGeminiModel()}`,
+    );
+  } else {
+    app.log.warn(
+      'POST /purchases/parse-document will return 503 until GEMINI_API_KEY is set in apps/api/.env (or Railway variables in production).',
     );
   }
 }

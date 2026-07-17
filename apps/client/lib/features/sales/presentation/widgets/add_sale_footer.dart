@@ -209,6 +209,14 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
                   ),
                 ],
               ),
+              if (form.showLoyaltySection) ...[
+                const SizedBox(height: 8),
+                _LoyaltyPointsSection(
+                  form: form,
+                  notifier: notifier,
+                  currencyFormat: _currencyFormat,
+                ),
+              ],
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -565,6 +573,182 @@ class _AttachmentChips extends StatelessWidget {
   }
 }
 
+class _LoyaltyPointsSection extends StatelessWidget {
+  const _LoyaltyPointsSection({
+    required this.form,
+    required this.notifier,
+    required this.currencyFormat,
+  });
+
+  final AddSaleFormState form;
+  final AddSaleForm notifier;
+  final NumberFormat currencyFormat;
+
+  static const _sectionBackground = Color(0xFFFFF8E7);
+  static const _sectionBorder = Color(0xFFFFE082);
+
+  @override
+  Widget build(BuildContext context) {
+    final available = form.loyaltyPointsAvailable;
+    final discount = form.loyaltyDiscount;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: _sectionBackground,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _sectionBorder.withValues(alpha: 0.55)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Loyalty Points',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+              letterSpacing: 0.15,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Text(
+                'Available',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const Spacer(),
+              Text(
+                available == available.roundToDouble()
+                    ? '${available.toInt()}'
+                    : available.toStringAsFixed(0),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Text(
+                'Redeem',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 56,
+                child: _PointsInputField(
+                  value: form.loyaltyPointsUsed
+                      .clamp(0, form.maxRedeemablePoints)
+                      .toDouble(),
+                  onChanged: notifier.updateLoyaltyPointsUsed,
+                ),
+              ),
+              const SizedBox(width: 6),
+              TextButton(
+                onPressed: form.maxRedeemablePoints > 0
+                    ? notifier.useMaxLoyaltyPoints
+                    : null,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: const Size(0, 28),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                ),
+                child: const Text(
+                  'Use Max',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Text(
+                'Loyalty Discount',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const Spacer(),
+              Text(
+                currencyFormat.format(discount),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PointsInputField extends StatefulWidget {
+  const _PointsInputField({
+    required this.value,
+    required this.onChanged,
+  });
+
+  final double value;
+  final ValueChanged<double> onChanged;
+
+  @override
+  State<_PointsInputField> createState() => _PointsInputFieldState();
+}
+
+class _PointsInputFieldState extends State<_PointsInputField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: _formatValue(widget.value));
+  }
+
+  @override
+  void didUpdateWidget(_PointsInputField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newText = _formatValue(widget.value);
+    if (widget.value != oldWidget.value && newText != _controller.text) {
+      _controller.text = newText;
+    }
+  }
+
+  String _formatValue(double value) =>
+      value == 0 ? '0' : value.round().toString();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      style: saleFieldTextStyle.copyWith(fontSize: 13),
+      decoration: buildSaleFieldDecoration(),
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      onChanged: (text) {
+        final parsed = double.tryParse(text) ?? 0;
+        widget.onChanged(parsed);
+      },
+    );
+  }
+}
+
 class _CreditSummarySection extends StatelessWidget {
   const _CreditSummarySection({
     required this.form,
@@ -581,34 +765,6 @@ class _CreditSummarySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Loyalty Point Used',
-                style: TextStyle(fontSize: 13),
-              ),
-            ),
-            SizedBox(
-              width: 56,
-              child: _AmountField(
-                value: form.loyaltyPointsUsed,
-                onChanged: (value) {
-                  if (!form.loyaltyPointsEnabled) {
-                    notifier.toggleLoyaltyPoints(enabled: true);
-                  }
-                  notifier.updateLoyaltyPointsUsed(value);
-                },
-              ),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '= ${currencyFormat.format(form.loyaltyPointsValue)}',
-              style: const TextStyle(fontSize: 13),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
         Row(
           children: [
             const Text(

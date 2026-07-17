@@ -2,6 +2,8 @@ import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/sales/models/sale_fa_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_fa_status_badge.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
@@ -260,11 +262,12 @@ class SaleFaTable extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Print coming soon')),
-                  );
-                },
+                onPressed: () => DocumentPrintActions.preview(
+                  context,
+                  ref,
+                  PrintRequest.saleFa(record.batchId),
+                  filename: DocumentPrintActions.filenameFor(record.invoiceNo),
+                ),
                 icon: const Icon(Icons.print_outlined, size: 18),
                 color: AppColors.textSecondary,
                 padding: EdgeInsets.zero,
@@ -313,13 +316,11 @@ class SaleFaTable extends ConsumerWidget {
                           content: Text('Delete ${record.invoiceNo}?'),
                           actions: [
                             TextButton(
-                              onPressed: () =>
-                                  Navigator.of(context).pop(false),
+                              onPressed: () => Navigator.of(context).pop(false),
                               child: const Text('Cancel'),
                             ),
                             FilledButton(
-                              onPressed: () =>
-                                  Navigator.of(context).pop(true),
+                              onPressed: () => Navigator.of(context).pop(true),
                               child: const Text('Delete'),
                             ),
                           ],

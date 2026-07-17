@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/presentation/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_return_model.dart';
@@ -110,13 +111,8 @@ class PurchaseReturnTable extends ConsumerWidget {
                       ModuleExportActions.exportDebitNotes(context, ref),
                 ),
                 IconButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Use row actions to print a debit note'),
-                      ),
-                    );
-                  },
+                  onPressed: () =>
+                      ModulePrintActions.printDebitNotes(context, ref),
                   icon: const Icon(Icons.print_outlined, size: 20),
                   color: AppColors.textSecondary,
                   tooltip: 'Print',
@@ -639,7 +635,9 @@ class _TableHeaderRow extends ConsumerWidget {
             label: 'STATUS',
             kind: PurchaseColumnFilterKind.status,
             headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnStatusFilterIsActive(filters.selectedStatus),
+            isActive: purchaseColumnStatusFilterIsActive(
+              filters.selectedStatus,
+            ),
             columns: columns,
             actions: actions,
             partyOptions: partyOptions,

@@ -51,265 +51,279 @@ class SalePurchaseOrdersReportContent extends ConsumerWidget {
         ];
 
         return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.lg,
-              AppSpacing.md,
-            ),
-            child: SalePurchaseOrderReportFilters(
-              onExportExcel: () => reportExportTable(
-                context: context,
-                title: 'Sale / Purchase Orders',
-                filename: 'sale-purchase-orders',
-                headers: exportHeaders,
-                rows: exportRows,
+          color: AppColors.background,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
+                child: SalePurchaseOrderReportFilters(
+                  onExportExcel: () => reportExportTable(
+                    context: context,
+                    title: 'Sale / Purchase Orders',
+                    filename: 'sale-purchase-orders',
+                    headers: exportHeaders,
+                    rows: exportRows,
+                  ),
+                  onPrint: () => reportPrintTable(
+                    context: context,
+                    title: 'Sale / Purchase Orders',
+                    headers: exportHeaders,
+                    rows: exportRows,
+                  ),
+                ),
               ),
-              onPrint: () => reportPrintTable(
-                context: context,
-                title: 'Sale / Purchase Orders',
-                headers: exportHeaders,
-                rows: exportRows,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                0,
-                AppSpacing.lg,
-                AppSpacing.lg,
-              ),
-              child: ReportCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: rows.isEmpty
-                          ? const Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                ReportSyncScrollTable(
-                                  headerChildren: [
-                                    ReportAlignedHeaderCell(
-                                      label: 'DATE',
-                                      width: 100,
-                                    ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'ORDER NO.',
-                                      width: 110,
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: ReportCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: rows.isEmpty
+                              ? const Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    ReportSyncScrollTable(
+                                      headerChildren: [
+                                        ReportAlignedHeaderCell(
+                                          label: 'DATE',
+                                          width: 100,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'ORDER NO.',
+                                          width: 110,
+                                        ),
+                                        Expanded(
+                                          child: ReportAlignedHeaderCell(
+                                            label: 'NAME',
+                                          ),
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'DUE DATE',
+                                          width: 100,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'STATUS',
+                                          width: 90,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'TYPE',
+                                          width: 100,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'TOTAL',
+                                          width: 100,
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'ADVANCE',
+                                          width: 100,
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                        ReportAlignedHeaderCell(
+                                          label: 'BALANCE',
+                                          width: 100,
+                                          alignment: Alignment.centerRight,
+                                        ),
+                                      ],
+                                      rows: [],
                                     ),
                                     Expanded(
-                                      child: ReportAlignedHeaderCell(
-                                        label: 'NAME',
+                                      child: Center(
+                                        child: Text(
+                                          'No orders found for the selected period.',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'DUE DATE',
-                                      width: 100,
-                                    ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'STATUS',
-                                      width: 90,
-                                    ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'TYPE',
-                                      width: 100,
-                                    ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'TOTAL',
-                                      width: 100,
-                                      alignment: Alignment.centerRight,
-                                    ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'ADVANCE',
-                                      width: 100,
-                                      alignment: Alignment.centerRight,
-                                    ),
-                                    ReportAlignedHeaderCell(
-                                      label: 'BALANCE',
-                                      width: 100,
-                                      alignment: Alignment.centerRight,
                                     ),
                                   ],
-                                  rows: [],
-                                ),
-                                Expanded(
-                                  child: Center(
-                                    child: Text(
-                                      'No orders found for the selected period.',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.textSecondary,
+                                )
+                              : SingleChildScrollView(
+                                  child: ReportSyncScrollTable(
+                                    headerChildren: const [
+                                      ReportAlignedHeaderCell(
+                                        label: 'DATE',
+                                        width: 100,
                                       ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : SingleChildScrollView(
-                              child: ReportSyncScrollTable(
-                                headerChildren: const [
-                                  ReportAlignedHeaderCell(
-                                    label: 'DATE',
-                                    width: 100,
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'ORDER NO.',
-                                    width: 110,
-                                  ),
-                                  Expanded(
-                                    child: ReportAlignedHeaderCell(
-                                      label: 'NAME',
-                                    ),
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'DUE DATE',
-                                    width: 100,
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'STATUS',
-                                    width: 90,
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'TYPE',
-                                    width: 100,
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'TOTAL',
-                                    width: 100,
-                                    alignment: Alignment.centerRight,
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'ADVANCE',
-                                    width: 100,
-                                    alignment: Alignment.centerRight,
-                                  ),
-                                  ReportAlignedHeaderCell(
-                                    label: 'BALANCE',
-                                    width: 100,
-                                    alignment: Alignment.centerRight,
-                                  ),
-                                ],
-                                rows: [
-                                  for (var i = 0; i < rows.length; i++)
-                                    ReportAlignedRowStrip(
-                                      index: i,
-                                      child: ReportAlignedDataRow(
-                                        cells: [
-                                          ReportAlignedCell.fixed(
-                                            100,
-                                            child: Text(
-                                              formatReportDate(rows[i].date),
-                                            ),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            110,
-                                            child: Text(rows[i].orderNo),
-                                          ),
-                                          ReportAlignedCell.flex(
-                                            child: Text(rows[i].partyName),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            100,
-                                            child: Text(
-                                              formatReportDate(rows[i].dueDate),
-                                            ),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            90,
-                                            child: Text(rows[i].status),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            100,
-                                            child: Text(rows[i].type),
-                                          ),
-                                          ReportAlignedCell.fixed(
-                                            100,
-                                            alignment: Alignment.centerRight,
-                                            child: Text(
-                                              formatReportCurrency(
-                                                rows[i].amount,
+                                      ReportAlignedHeaderCell(
+                                        label: 'ORDER NO.',
+                                        width: 110,
+                                      ),
+                                      Expanded(
+                                        child: ReportAlignedHeaderCell(
+                                          label: 'NAME',
+                                        ),
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'DUE DATE',
+                                        width: 100,
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'STATUS',
+                                        width: 90,
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'TYPE',
+                                        width: 100,
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'TOTAL',
+                                        width: 100,
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'ADVANCE',
+                                        width: 100,
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                      ReportAlignedHeaderCell(
+                                        label: 'BALANCE',
+                                        width: 100,
+                                        alignment: Alignment.centerRight,
+                                      ),
+                                    ],
+                                    rows: [
+                                      for (var i = 0; i < rows.length; i++)
+                                        ReportAlignedRowStrip(
+                                          index: i,
+                                          child: ReportAlignedDataRow(
+                                            cells: [
+                                              ReportAlignedCell.fixed(
+                                                100,
+                                                child: Text(
+                                                  formatReportDate(
+                                                    rows[i].date,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
+                                              ReportAlignedCell.fixed(
+                                                110,
+                                                child: Text(rows[i].orderNo),
+                                              ),
+                                              ReportAlignedCell.flex(
+                                                child: Text(rows[i].partyName),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                100,
+                                                child: Text(
+                                                  formatReportDate(
+                                                    rows[i].dueDate,
+                                                  ),
+                                                ),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                90,
+                                                child: Text(rows[i].status),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                100,
+                                                child: Text(rows[i].type),
+                                              ),
+                                              ReportAlignedCell.fixed(
+                                                100,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text(
+                                                  formatReportCurrency(
+                                                    rows[i].amount,
+                                                  ),
+                                                ),
+                                              ),
+                                              const ReportAlignedCell.fixed(
+                                                100,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text('-'),
+                                              ),
+                                              const ReportAlignedCell.fixed(
+                                                100,
+                                                alignment:
+                                                    Alignment.centerRight,
+                                                child: Text('-'),
+                                              ),
+                                            ],
                                           ),
-                                          const ReportAlignedCell.fixed(
-                                            100,
-                                            alignment: Alignment.centerRight,
-                                            child: Text('-'),
-                                          ),
-                                          const ReportAlignedCell.fixed(
-                                            100,
-                                            alignment: Alignment.centerRight,
-                                            child: Text('-'),
-                                          ),
-                                        ],
-                                      ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.md,
+                          ),
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              top: BorderSide(color: reportCardBorder),
+                            ),
+                          ),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Text.rich(
+                              TextSpan(
+                                style: const TextStyle(fontSize: 14),
+                                children: [
+                                  const TextSpan(
+                                    text: 'Total Amount: ',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
                                     ),
+                                  ),
+                                  TextSpan(
+                                    text: formatReportCurrency(totalAmount),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: reportTeal,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.md,
-                      ),
-                      decoration: const BoxDecoration(
-                        border: Border(top: BorderSide(color: reportCardBorder)),
-                      ),
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text.rich(
-                          TextSpan(
-                            style: const TextStyle(fontSize: 14),
-                            children: [
-                              const TextSpan(
-                                text: 'Total Amount: ',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              TextSpan(
-                                text: formatReportCurrency(totalAmount),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: reportTeal,
-                                ),
-                              ),
-                            ],
                           ),
                         ),
-                      ),
+                        ReportPaginationBar(
+                          page: report.meta.page,
+                          totalPages: report.meta.totalPages,
+                          onPrevious: report.meta.page > 1
+                              ? () => ref
+                                    .read(
+                                      salePurchaseOrdersReportProvider.notifier,
+                                    )
+                                    .goToPage(report.meta.page - 1)
+                              : null,
+                          onNext: report.meta.page < report.meta.totalPages
+                              ? () => ref
+                                    .read(
+                                      salePurchaseOrdersReportProvider.notifier,
+                                    )
+                                    .goToPage(report.meta.page + 1)
+                              : null,
+                        ),
+                      ],
                     ),
-                    ReportPaginationBar(
-                      page: report.meta.page,
-                      totalPages: report.meta.totalPages,
-                      onPrevious: report.meta.page > 1
-                          ? () => ref
-                                .read(salePurchaseOrdersReportProvider.notifier)
-                                .goToPage(report.meta.page - 1)
-                          : null,
-                      onNext: report.meta.page < report.meta.totalPages
-                          ? () => ref
-                                .read(salePurchaseOrdersReportProvider.notifier)
-                                .goToPage(report.meta.page + 1)
-                          : null,
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
       },
     );
   }

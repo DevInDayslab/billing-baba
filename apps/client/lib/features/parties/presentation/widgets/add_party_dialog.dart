@@ -192,15 +192,21 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     } else if (duplicateFrom != null) {
       _populateFromParty(duplicateFrom, duplicateNameSuffix: ' (Copy)');
     } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _applyCreateDefaults());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _applyCreateDefaults(),
+      );
     }
   }
 
   void _applyCreateDefaults() {
     if (!mounted || _isEditMode || widget.duplicateFrom != null) return;
 
-    final businessState =
-        ref.read(businessProfileProvider).asData?.value.state?.trim();
+    final businessState = ref
+        .read(businessProfileProvider)
+        .asData
+        ?.value
+        .state
+        ?.trim();
     final resolvedState =
         businessState != null &&
             businessState.isNotEmpty &&
@@ -224,8 +230,12 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   String _resolvedBusinessState() {
-    final businessState =
-        ref.read(businessProfileProvider).asData?.value.state?.trim();
+    final businessState = ref
+        .read(businessProfileProvider)
+        .asData
+        ?.value
+        .state
+        ?.trim();
     if (businessState != null &&
         businessState.isNotEmpty &&
         SaleDropdownOptions.indianStates.contains(businessState)) {
@@ -288,8 +298,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _openingBalanceController.text = PartyModel.formatDecimalInput(
       party.openingBalance,
     );
-    _openingBalanceAsOfDate =
-        party.openingBalanceAsOfDate ?? DateTime.now();
+    _openingBalanceAsOfDate = party.openingBalanceAsOfDate ?? DateTime.now();
 
     _loyaltyPointsOpeningBalanceController.text =
         party.loyaltyPointsOpeningBalance.trim().isEmpty
@@ -544,7 +553,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       return party.gstin.trim().toUpperCase() == gstin;
     });
 
-    return conflict ? 'This GSTIN is already registered to another party' : null;
+    return conflict
+        ? 'This GSTIN is already registered to another party'
+        : null;
   }
 
   void _applyApiValidationErrors(ApiValidationException exception) {
@@ -1807,7 +1818,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               onPressed: () => _save(saveAndNew: false),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 10,
+                ),
                 minimumSize: const Size(0, FormSpacing.inputHeight),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),

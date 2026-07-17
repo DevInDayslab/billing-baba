@@ -1,12 +1,18 @@
 import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/purchases/application/purchase_document_party_factory.dart';
+import 'package:billing_baba/features/purchases/application/purchase_document_parse_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
+import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
+import 'package:billing_baba/features/purchases/providers/pending_purchase_document_parse_provider.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
@@ -46,7 +52,119 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       Future.microtask(() => _loadDocument(billId));
       return _defaultFormState(documentId: billId);
     }
+    Future.microtask(_consumePendingParse);
     return _defaultFormState();
+  }
+
+  Future<void> _consumePendingParse() async {
+    if (billId != null) return;
+    final pending = ref
+        .read(pendingPurchaseDocumentParseProvider.notifier)
+        .take();
+    if (pending == null) return;
+    debugPrint('[PurchaseParse] consuming pending parse on Add Purchase mount');
+    try {
+      await applyParsedDocument(pending);
+      debugPrint('[PurchaseParse] pending parse applied');
+    } on Object catch (error, stackTrace) {
+      debugPrint('[PurchaseParse] pending parse failed: $error\n$stackTrace');
+      state = state.copyWith(
+        isLoading: false,
+        saveError: PurchaseErrorMapper.messageFor(error),
+      );
+    }
+  }
+
+  Future<void> applyParsedDocument(PurchaseDocumentParseDto parsed) async {
+    debugPrint(
+      '[PurchaseParse] applyParsedDocument start lines=${parsed.lines.length}',
+    );
+    try {
+      final parties = await _partiesForParsedDocument(parsed);
+
+      final mapped = PurchaseDocumentParseMapper.apply(
+        base: state,
+        parsed: parsed,
+        parties: parties,
+        itemNameToId: _itemNameToId(),
+        nextLineId: _nextPurchaseLineItemId,
+      );
+      final items = await _resolveItemNames(mapped.items);
+      state = mapped.copyWith(
+        items: items,
+        isLoading: false,
+        clearSaveError: true,
+      );
+      debugPrint(
+        '[PurchaseParse] applyParsedDocument complete items=${items.length} partyId=${mapped.partyId}',
+      );
+    } on Object catch (error, stackTrace) {
+      debugPrint(
+        '[PurchaseParse] applyParsedDocument error: $error\n$stackTrace',
+      );
+      state = state.copyWith(
+        isLoading: false,
+        saveError: PurchaseErrorMapper.messageFor(error),
+      );
+    }
+  }
+
+  /// Resolves the supplier party list for mapping, creating the party via
+  /// [partyServiceProvider] when the parsed vendor is not already known.
+  ///
+  /// Uses the service directly instead of [partyListProvider.notifier.createParty]
+  /// so we do not invalidate [partyListProvider] from inside its own notifier
+  /// (Riverpod assertion: a provider cannot depend on itself).
+  Future<List<PartyModel>> _partiesForParsedDocument(
+    PurchaseDocumentParseDto parsed,
+  ) async {
+    var parties = ref.read(partiesListProvider);
+    if (!PurchaseDocumentPartyFactory.needsCreation(parsed, parties)) {
+      return parties;
+    }
+
+    debugPrint('[PurchaseParse] creating supplier party from parsed bill');
+    final partyResult = PurchaseDocumentPartyFactory.toAddPartyResult(parsed);
+    final partyService = await ref.read(partyServiceProvider.future);
+
+    try {
+      final created = await partyService.createParty(partyResult);
+      debugPrint('[PurchaseParse] supplier party created id=${created.id}');
+
+      final existingIndex = parties.indexWhere(
+        (party) => party.id == created.id,
+      );
+      if (existingIndex >= 0) {
+        parties = List<PartyModel>.from(parties);
+        parties[existingIndex] = created;
+        return parties;
+      }
+
+      return [...parties, created];
+    } on PartyOfflineException {
+      debugPrint('[PurchaseParse] supplier party queued offline');
+      final refreshed = await partyService.fetchParties();
+      final match = PurchaseDocumentParseMapper.resolveParty(parsed, refreshed);
+      if (match != null) return refreshed;
+      return parties;
+    } on Object catch (error, stackTrace) {
+      debugPrint(
+        '[PurchaseParse] supplier party creation failed, continuing form fill: $error\n$stackTrace',
+      );
+      try {
+        final refreshed = await partyService.fetchParties();
+        final match = PurchaseDocumentParseMapper.resolveParty(
+          parsed,
+          refreshed,
+        );
+        if (match != null) return refreshed;
+      } on Object catch (refreshError, refreshStack) {
+        debugPrint(
+          '[PurchaseParse] party refresh after create failure: $refreshError\n$refreshStack',
+        );
+      }
+      return parties;
+    }
   }
 
   Future<void> _loadDocument(String documentId) async {
@@ -95,7 +213,11 @@ class AddPurchaseForm extends _$AddPurchaseForm {
   }
 
   void updateBillingName(String value) {
-    state = state.copyWith(billingName: value, isDirty: true, clearSaveError: true);
+    state = state.copyWith(
+      billingName: value,
+      isDirty: true,
+      clearSaveError: true,
+    );
   }
 
   void updateEWayBillNo(String value) {
@@ -376,8 +498,9 @@ class AddPurchaseForm extends _$AddPurchaseForm {
           billTime.hour,
           billTime.minute,
         );
-        final payAmount =
-            state.paymentAmount.clamp(0, state.grandTotal).toDouble();
+        final payAmount = state.paymentAmount
+            .clamp(0, state.grandTotal)
+            .toDouble();
         await service.recordPurchaseBillPayment(
           partyId: state.partyId!,
           purchaseDocumentId: document.id,

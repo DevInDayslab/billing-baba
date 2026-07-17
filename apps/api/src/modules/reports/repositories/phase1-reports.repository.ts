@@ -1,6 +1,5 @@
 import {
   and,
-  asc,
   count,
   desc,
   eq,
@@ -8,7 +7,6 @@ import {
   ilike,
   inArray,
   lt,
-  lte,
   or,
   sql,
 } from 'drizzle-orm';
@@ -647,7 +645,7 @@ export class Phase1ReportsRepository {
       }),
       ...paymentRows.map((row) => {
         const isIn = row.direction === 'received';
-        const amount = Number(row.amount ?? 0);
+        const _amount = Number(row.amount ?? 0);
         return {
           id: row.id,
           date: row.date.toISOString(),

@@ -165,8 +165,9 @@ class PurchaseDocumentMapper {
       (sum, allocation) =>
           sum + (double.tryParse(allocation.allocatedAmount) ?? 0),
     );
-    final effectivePaid =
-        dto.allocations.isEmpty && amount > 0 ? amount : allocated;
+    final effectivePaid = dto.allocations.isEmpty && amount > 0
+        ? amount
+        : allocated;
 
     return PaymentOutModel(
       id: dto.id,
@@ -246,20 +247,16 @@ class PurchaseDocumentMapper {
   ) {
     return switch (documentStatus) {
       PurchaseDocumentStatus.cancelled => PurchaseOrderStatus.cancelled,
-      PurchaseDocumentStatus.converted =>
-        PurchaseOrderStatus.partiallyReceived,
+      PurchaseDocumentStatus.converted => PurchaseOrderStatus.partiallyReceived,
       PurchaseDocumentStatus.finalized => PurchaseOrderStatus.orderCompleted,
       _ => PurchaseOrderStatus.open,
     };
   }
 
-  static String seriesForType(PurchaseDocumentType type) =>
-      switch (type) {
-        PurchaseDocumentType.purchaseBill =>
-          PurchaseConstants.purchaseBillSeries,
-        PurchaseDocumentType.purchaseOrder =>
-          PurchaseConstants.purchaseOrderSeries,
-        PurchaseDocumentType.purchaseReturn =>
-          PurchaseConstants.purchaseReturnSeries,
-      };
+  static String seriesForType(PurchaseDocumentType type) => switch (type) {
+    PurchaseDocumentType.purchaseBill => PurchaseConstants.purchaseBillSeries,
+    PurchaseDocumentType.purchaseOrder => PurchaseConstants.purchaseOrderSeries,
+    PurchaseDocumentType.purchaseReturn =>
+      PurchaseConstants.purchaseReturnSeries,
+  };
 }

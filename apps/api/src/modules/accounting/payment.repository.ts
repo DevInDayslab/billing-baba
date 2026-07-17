@@ -484,7 +484,7 @@ export class PaymentRepository {
     businessId: string,
     accountId: string,
   ): Promise<boolean> {
-    const { users } = await import('../../db/schema/identity/tables');
+    const { users } = await import('../../db/schema/identity/tables.js');
     const [membership] = await this.db
       .select({ id: users.id })
       .from(users)

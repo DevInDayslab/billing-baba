@@ -72,7 +72,10 @@ abstract final class SaleExportSheetBuilder {
     if (options.includeBalanceDue) {
       addColumn(
         _SaleInvoiceExportColumn.balanceDue,
-        const ExportColumn(header: 'Balance Due', type: ExportCellType.currency),
+        const ExportColumn(
+          header: 'Balance Due',
+          type: ExportCellType.currency,
+        ),
       );
     }
     if (options.includeItemDetails) {
@@ -130,7 +133,10 @@ abstract final class SaleExportSheetBuilder {
     );
   }
 
-  static Object? _cellValue(SaleInvoiceModel item, _SaleInvoiceExportColumn key) {
+  static Object? _cellValue(
+    SaleInvoiceModel item,
+    _SaleInvoiceExportColumn key,
+  ) {
     return switch (key) {
       _SaleInvoiceExportColumn.date => item.date,
       _SaleInvoiceExportColumn.invoiceNo => item.invoiceNo,

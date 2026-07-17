@@ -82,8 +82,7 @@ class _TaxesReportFilterBarState extends State<TaxesReportFilterBar> {
               SaleDateRangePickerAnchor(
                 key: _datePickerKey,
                 initialRange: _dateRange,
-                onRangeSelected: (range) =>
-                    setState(() => _dateRange = range),
+                onRangeSelected: (range) => setState(() => _dateRange = range),
                 child: InkWell(
                   onTap: () => _datePickerKey.currentState?.toggle(),
                   borderRadius: BorderRadius.circular(4),
@@ -206,8 +205,7 @@ class _TaxInvoiceReportFilterBarState extends State<TaxInvoiceReportFilterBar> {
               SaleDateRangePickerAnchor(
                 key: _datePickerKey,
                 initialRange: _dateRange,
-                onRangeSelected: (range) =>
-                    setState(() => _dateRange = range),
+                onRangeSelected: (range) => setState(() => _dateRange = range),
                 child: InkWell(
                   onTap: () => _datePickerKey.currentState?.toggle(),
                   borderRadius: BorderRadius.circular(4),

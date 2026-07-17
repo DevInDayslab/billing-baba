@@ -205,7 +205,7 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-SalesDocumentListQuery _buildListQuery(
+SalesDocumentListQuery buildSaleReturnListQuery(
   SaleReturnFiltersState filters, {
   int? page,
   int? limit,
@@ -216,8 +216,8 @@ SalesDocumentListQuery _buildListQuery(
   );
 
   return SalesDocumentListQuery(
-    page: page ?? 1,
-    limit: limit ?? PaginatedFetch.defaultPageSize,
+    page: page ?? filters.currentPage,
+    limit: limit ?? saleReturnPageSize,
     documentType: SalesDocumentType.salesReturn.apiValue,
     status: _documentStatusFromFilterLabel(filters.selectedStatus),
     from: dateRange?.start.toUtc().toIso8601String(),
@@ -245,7 +245,7 @@ PaginatedSaleInvoices paginateSaleReturnItems(
   );
 }
 
-List<SaleInvoiceModel> _applyClientFilters(
+List<SaleInvoiceModel> applySaleReturnClientFilters(
   List<SaleInvoiceModel> returns,
   SaleReturnFiltersState filters,
 ) {
@@ -264,10 +264,12 @@ List<SaleInvoiceModel> _applyClientFilters(
     if (statusFilter != null && item.status != statusFilter) {
       return false;
     }
-    if (filters.selectedUser != 'All Users' && item.user != filters.selectedUser) {
+    if (filters.selectedUser != 'All Users' &&
+        item.user != filters.selectedUser) {
       return false;
     }
-    if (filters.selectedFirm != 'All Firms' && item.firm != filters.selectedFirm) {
+    if (filters.selectedFirm != 'All Firms' &&
+        item.firm != filters.selectedFirm) {
       return false;
     }
     if (filters.selectedGodown != 'All Godown' &&
@@ -321,45 +323,26 @@ List<SaleInvoiceModel> _applyClientFilters(
 class SaleReturns extends _$SaleReturns {
   @override
   Future<PaginatedSaleInvoices> build() async {
-    ref.watch(
-      saleReturnFiltersProvider.select(
-        (filters) => (filters.timeRangeOption, filters.customDateRange),
-      ),
-    );
-    final allReturns = await _fetchAllReturns();
-    return PaginatedSaleInvoices(
-      items: allReturns,
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: allReturns.length,
-    );
+    ref.watch(saleReturnFiltersProvider);
+    return _fetchPage();
   }
 
-  Future<List<SaleInvoiceModel>> _fetchAllReturns() async {
+  Future<PaginatedSaleInvoices> _fetchPage() async {
     final filters = ref.read(saleReturnFiltersProvider);
     final service = await ref.read(salesServiceProvider.future);
+    final page = await service.fetchInvoicesPage(buildSaleReturnListQuery(filters));
 
-    return PaginatedFetch.fetchAll<SaleInvoiceModel>(
-      fetchPage: (page) async {
-        final result = await service.fetchInvoicesPage(
-          _buildListQuery(filters, page: page),
-        );
-        return (items: result.items, totalPages: result.totalPages);
-      },
+    return PaginatedSaleInvoices(
+      items: applySaleReturnClientFilters(page.items, filters),
+      currentPage: page.currentPage,
+      totalPages: page.totalPages,
+      totalItems: page.totalItems,
     );
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final allReturns = await _fetchAllReturns();
-      return PaginatedSaleInvoices(
-        items: allReturns,
-        currentPage: 1,
-        totalPages: 1,
-        totalItems: allReturns.length,
-      );
-    });
+    state = await AsyncValue.guard(_fetchPage);
   }
 
   Future<String?> deleteDraft(String documentId) async {

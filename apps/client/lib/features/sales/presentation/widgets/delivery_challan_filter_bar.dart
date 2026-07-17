@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/export/presentation/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/presentation/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:billing_baba/features/sales/providers/delivery_challan_provider.dart';
@@ -161,13 +162,8 @@ class _DeliveryChallanFilterBarState
               ),
             ),
             IconButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Delivery challan print report coming soon'),
-                  ),
-                );
-              },
+              onPressed: () =>
+                  ModulePrintActions.printDeliveryChallans(context, ref),
               icon: const Icon(Icons.print_outlined, size: 20),
               color: AppColors.textSecondary,
               tooltip: 'Print',

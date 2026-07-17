@@ -8,6 +8,10 @@ abstract final class AppRoutes {
   static const parties = '/parties';
   static const partyDetails = '/parties/party-details';
   static const partyGroups = '/parties/groups';
+  static const crm = '/crm';
+  static const crmLeads = '/crm/leads';
+  static const crmContacts = '/crm/contacts';
+  static const crmDeals = '/crm/deals';
   static const items = '/items';
   static const itemsCategories = '/items/categories';
   static const itemsUnits = '/items/units';
@@ -65,12 +69,14 @@ abstract final class AppRoutes {
   static const reportsGst = '/reports/gst';
   static const utilities = '/utilities';
   static const utilitiesImportItems = '/utilities/import-items';
+  static const utilitiesBarcodeGenerator = '/utilities/barcode-generator';
   static const developer = '/developer';
   static const developerComponents = '/developer/components';
   static const developerComponentsButtons = '/developer/components/buttons';
   static const developerComponentsInputs = '/developer/components/inputs';
   static const developerComponentsDialogs = '/developer/components/dialogs';
-  static const developerComponentsDataTables = '/developer/components/data-tables';
+  static const developerComponentsDataTables =
+      '/developer/components/data-tables';
   static const developerComponentsTableFilters =
       '/developer/components/table-filters';
   static const developerComponentsBadges = '/developer/components/badges';
@@ -88,6 +94,7 @@ abstract final class AppRoutes {
   static const settingsTaxes = '/settings/taxes';
   static const settingsInvoiceTemplates = '/settings/invoice-templates';
   static const settingsPreferences = '/settings/preferences';
+  static const settingsPrint = '/settings/print';
   static const settingsBackup = '/settings/backup';
   static const plansPricing = '/plans-pricing';
   static const editProfile = '/edit-profile';

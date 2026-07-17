@@ -170,3 +170,52 @@ export const visitPurposeEnum = pgEnum('visit_purpose', [
   'payment_collection',
   'casual',
 ]);
+
+export const loyaltyTransactionTypeEnum = pgEnum('loyalty_transaction_type', [
+  'earn',
+  'redeem',
+]);
+
+export const leadSourceEnum = pgEnum('lead_source', [
+  'google_ads',
+  'referral',
+  'website',
+  'walk_in',
+  'other',
+]);
+
+export const leadStatusEnum = pgEnum('lead_status', [
+  'new',
+  'contacted',
+  'qualified',
+  'converted',
+  'lost',
+]);
+
+export const leadActivityTypeEnum = pgEnum('lead_activity_type', [
+  'call',
+  'email',
+  'meeting',
+  'note',
+  'status_change',
+]);
+
+export const contactActivityTypeEnum = pgEnum('contact_activity_type', [
+  'call',
+  'email',
+  'meeting',
+  'note',
+  'status_change',
+]);
+
+export const dealStageEnum = pgEnum('deal_stage', [
+  'qualification',
+  'needs_analysis',
+  'value_proposition',
+  'identify_decision_makers',
+  'proposal_price_quote',
+  'negotiation_review',
+  'closed_won',
+  'closed_lost',
+  'closed_lost_to_competition',
+]);

@@ -290,7 +290,10 @@ class SalesDocumentsList extends _$SalesDocumentsList {
     }
   }
 
-  Future<String?> finalizeDocument(String documentId, {String? godownId}) async {
+  Future<String?> finalizeDocument(
+    String documentId, {
+    String? godownId,
+  }) async {
     try {
       final service = await ref.read(salesServiceProvider.future);
       await service.finalizeDraft(documentId, godownId: godownId);

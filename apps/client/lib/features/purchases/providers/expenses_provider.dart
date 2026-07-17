@@ -224,7 +224,10 @@ class ExpenseCategories extends _$ExpenseCategories {
     });
   }
 
-  Future<String?> addCategory(String name, {String categoryType = 'direct'}) async {
+  Future<String?> addCategory(
+    String name, {
+    String categoryType = 'direct',
+  }) async {
     try {
       final service = await ref.read(expenseServiceProvider.future);
       await service.createCategory(
@@ -339,7 +342,9 @@ List<ExpenseItemModel> expenseItems(Ref ref) {
   final transactionsAsync = ref.watch(expenseTransactionsProvider);
   final categoriesAsync = ref.watch(expenseCategoriesProvider);
   final categoryNames = categoriesAsync.maybeWhen(
-    data: (categories) => {for (final category in categories) category.id: category.name},
+    data: (categories) => {
+      for (final category in categories) category.id: category.name,
+    },
     orElse: () => const <String, String>{},
   );
 

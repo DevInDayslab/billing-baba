@@ -5,6 +5,11 @@ import 'package:dio/dio.dart';
 Interceptor buildJsonBodyInterceptor() {
   return InterceptorsWrapper(
     onRequest: (options, handler) {
+      if (options.data is FormData) {
+        options.headers.remove(Headers.contentTypeHeader);
+        options.contentType = null;
+      }
+
       final method = options.method.toUpperCase();
       if (method == 'POST' || method == 'PUT' || method == 'PATCH') {
         final contentType = _jsonContentType(options);

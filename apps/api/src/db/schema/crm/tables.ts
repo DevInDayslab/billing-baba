@@ -8,8 +8,19 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { businesses } from '../business/tables';
-import { money, syncedBusinessColumns, timestamptz } from '../columns';
 import {
+  money,
+  syncedBusinessColumns,
+  timestamptz,
+  uuidPrimaryKey,
+} from '../columns';
+import {
+  contactActivityTypeEnum,
+  dealStageEnum,
+  leadActivityTypeEnum,
+  leadSourceEnum,
+  leadStatusEnum,
+  loyaltyTransactionTypeEnum,
   partyCategoryEnum,
   partyTypeEnum,
   pricingTierEnum,
@@ -141,5 +152,97 @@ export const partyLoyaltyBalances = pgTable(
       table.businessId,
       table.partyId,
     ),
+    sql`CHECK (${table.pointsEarned} >= 0)`,
+    sql`CHECK (${table.pointsAvailable} >= 0)`,
   ],
 );
+
+/** Immutable earn/redeem audit ledger for loyalty points */
+export const loyaltyTransactions = pgTable(
+  'loyalty_transactions',
+  {
+    id: uuidPrimaryKey(),
+    businessId: uuid('business_id')
+      .notNull()
+      .references(() => businesses.id),
+    partyId: uuid('party_id')
+      .notNull()
+      .references(() => parties.id),
+    transactionType: loyaltyTransactionTypeEnum('transaction_type').notNull(),
+    points: money('points').notNull(),
+    balanceAfter: money('balance_after').notNull(),
+    referenceId: uuid('reference_id'),
+    referenceType: text('reference_type'),
+    spendAmount: money('spend_amount'),
+    rupeesPerPoint: money('rupees_per_point'),
+    description: text('description'),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    createdBy: uuid('created_by'),
+  },
+  (table) => [
+    sql`CHECK (${table.points} > 0)`,
+    sql`CHECK (${table.balanceAfter} >= 0)`,
+  ],
+);
+
+export const leads = pgTable('leads', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  name: text('name').notNull(),
+  company: text('company'),
+  phone: text('phone'),
+  email: text('email'),
+  leadSource: leadSourceEnum('lead_source'),
+  status: leadStatusEnum('status').notNull().default('new'),
+  assignedTo: text('assigned_to'),
+  notes: text('notes'),
+});
+
+export const leadActivities = pgTable('lead_activities', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  leadId: uuid('lead_id')
+    .notNull()
+    .references(() => leads.id),
+  type: leadActivityTypeEnum('type').notNull(),
+  notes: text('notes'),
+  addedBy: text('added_by'),
+});
+
+export const contacts = pgTable('contacts', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  name: text('name').notNull(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  salutation: text('salutation'),
+  accountName: text('account_name'),
+  phone: text('phone'),
+  email: text('email'),
+  assignedTo: text('assigned_to'),
+  title: text('title'),
+  description: text('description'),
+});
+
+export const contactActivities = pgTable('contact_activities', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  contactId: uuid('contact_id')
+    .notNull()
+    .references(() => contacts.id),
+  type: contactActivityTypeEnum('type').notNull(),
+  notes: text('notes'),
+  addedBy: text('added_by'),
+});
+
+export const deals = pgTable('deals', {
+  ...syncedBusinessColumns,
+  businessId: businessId(),
+  name: text('name').notNull(),
+  stage: dealStageEnum('stage').notNull().default('qualification'),
+  accountName: text('account_name'),
+  assignedTo: text('assigned_to'),
+  amount: money('amount').notNull().default('0'),
+  expectedCloseDate: date('expected_close_date'),
+  description: text('description'),
+});

@@ -90,8 +90,9 @@ class CartRow extends ConsumerWidget {
                     ),
                   ),
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                    ),
                     child: Text(
                       '${cartItem.quantity}',
                       style: const TextStyle(
@@ -133,14 +134,24 @@ class CartRow extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: Text(
-              '${cartItem.discountPercent.toStringAsFixed(0)}%',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: PosStyles.metadataStyle.copyWith(
-                fontSize: 11,
-                color: AppColors.textPrimary,
+            child: InkWell(
+              onTap: () => _showDiscountDialog(context, ref),
+              borderRadius: AppRadius.smBorder,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  '${cartItem.discountPercent.toStringAsFixed(0)}%',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: PosStyles.metadataStyle.copyWith(
+                    fontSize: 11,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: AppColors.primary.withValues(alpha: 0.4),
+                  ),
+                ),
               ),
             ),
           ),
@@ -171,6 +182,74 @@ class CartRow extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showDiscountDialog(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController(
+      text: cartItem.discountPercent > 0
+          ? cartItem.discountPercent.toStringAsFixed(0)
+          : '',
+    );
+
+    final result = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Discount — ${cartItem.item.name}'),
+          content: SizedBox(
+            width: 280,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Discount %',
+                    suffixText: '%',
+                    hintText: '0–100',
+                  ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  children: [5, 10, 15, 20].map((preset) {
+                    return OutlinedButton(
+                      onPressed: () {
+                        controller.text = '$preset';
+                      },
+                      child: Text('$preset%'),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final value = double.tryParse(controller.text.trim()) ?? 0;
+                Navigator.of(dialogContext).pop(value.clamp(0, 100));
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+    if (result != null) {
+      ref
+          .read(posCartProvider.notifier)
+          .updateDiscount(cartItem.item.id, result);
+    }
   }
 }
 

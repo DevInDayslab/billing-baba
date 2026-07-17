@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 
 /// POS page header with title and settings action.
 class PosPageTitleBar extends StatelessWidget {
-  const PosPageTitleBar({this.onSettingsTap, super.key});
+  const PosPageTitleBar({
+    this.onHistoryTap,
+    this.onSettingsTap,
+    super.key,
+  });
 
+  final VoidCallback? onHistoryTap;
   final VoidCallback? onSettingsTap;
 
   @override
@@ -20,6 +25,12 @@ class PosPageTitleBar extends StatelessWidget {
           ),
         ),
         const Spacer(),
+        IconButton(
+          onPressed: onHistoryTap,
+          icon: const Icon(Icons.history),
+          color: AppColors.textSecondary,
+          tooltip: 'History',
+        ),
         IconButton(
           onPressed: onSettingsTap,
           icon: const Icon(Icons.settings_outlined),

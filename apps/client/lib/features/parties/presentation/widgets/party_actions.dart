@@ -34,7 +34,9 @@ abstract final class PartyActions {
     final messenger = ScaffoldMessenger.maybeOf(context);
 
     try {
-      await ref.read(partyListProvider.notifier).updateParty(
+      await ref
+          .read(partyListProvider.notifier)
+          .updateParty(
             party.id,
             result,
             isActive: party.isActive,

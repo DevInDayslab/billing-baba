@@ -33,7 +33,9 @@ class CommercialDocumentLayoutConfig {
       'This is a quotation and not a tax invoice. '
       'Prices and availability are subject to change.';
 
-  static CommercialDocumentLayoutConfig forDocument(PrintableDocument document) {
+  static CommercialDocumentLayoutConfig forDocument(
+    PrintableDocument document,
+  ) {
     final kind = document.kind;
     final meta = document.metadata;
     final isGst = meta.isGstFormal;
@@ -132,8 +134,11 @@ class CommercialDocumentLayoutConfig {
       PrintableDocumentKind.paymentOut ||
       PrintableDocumentKind.expense ||
       PrintableDocumentKind.fixedAssetPurchase ||
-      PrintableDocumentKind.jobWorkOrder =>
-        throw StateError('Voucher documents use A4VoucherTemplate'),
+      PrintableDocumentKind.saleFa ||
+      PrintableDocumentKind.jobWorkOrder ||
+      PrintableDocumentKind.posReceipt => throw StateError(
+        'Voucher documents use A4VoucherTemplate',
+      ),
     };
   }
 }

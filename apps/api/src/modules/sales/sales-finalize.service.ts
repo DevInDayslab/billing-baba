@@ -1,6 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { ledgerEntries } from '../../db/schema/accounting/tables';
+import { parties } from '../../db/schema/crm/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
 import { AppError } from '../../shared/errors/app-error';
 import { normalizeMoney } from '../inventory/inventory.utils';
@@ -8,6 +9,8 @@ import {
   getDefaultGodown,
   recordMovementAndUpdateStock,
 } from '../inventory/inventory-stock.service';
+import { LoyaltyService } from '../loyalty/loyalty.service';
+import type { SaleLoyaltyResult } from '../loyalty/loyalty.types';
 import type { SalesDocumentRepository } from './sales-document.repository';
 import type { SalesDocumentType } from './sales-document.types';
 import { assignDocumentNumber } from './sales-numbering.service';
@@ -89,8 +92,13 @@ export async function finalizeSalesDocument(
     documentId: string;
     userId?: string;
     godownId?: string;
+    loyaltyPointsRedeemed?: string;
   },
-): Promise<{ documentNumber: string | null; documentType: SalesDocumentType }> {
+): Promise<{
+  documentNumber: string | null;
+  documentType: SalesDocumentType;
+  loyalty: SaleLoyaltyResult | null;
+}> {
   const document = await repository.findRowById(
     params.businessId,
     params.documentId,
@@ -240,9 +248,50 @@ export async function finalizeSalesDocument(
       throw new AppError('NOT_FOUND', 'Sales document not found', 404);
     }
 
+    let loyalty: SaleLoyaltyResult | null = null;
+    if (document.partyId) {
+      const [partyRow] = await tx
+        .select({ partyType: parties.partyType })
+        .from(parties)
+        .where(
+          and(
+            eq(parties.businessId, params.businessId),
+            eq(parties.id, document.partyId),
+            eq(parties.isDeleted, false),
+          ),
+        )
+        .limit(1);
+
+      if (partyRow) {
+        const [totalsRow] = await tx
+          .select({ totalAmount: salesDocuments.totalAmount })
+          .from(salesDocuments)
+          .where(
+            and(
+              eq(salesDocuments.businessId, params.businessId),
+              eq(salesDocuments.id, params.documentId),
+            ),
+          )
+          .limit(1);
+
+        const loyaltyService = new LoyaltyService(db);
+        loyalty = await loyaltyService.applySaleLoyalty(tx, {
+          businessId: params.businessId,
+          partyId: document.partyId,
+          partyType: partyRow.partyType,
+          documentId: params.documentId,
+          documentType: document.documentType as SalesDocumentType,
+          totalAmount: totalsRow?.totalAmount ?? document.totalAmount,
+          loyaltyPointsRedeemed: params.loyaltyPointsRedeemed,
+          userId: params.userId,
+        });
+      }
+    }
+
     return {
       documentNumber,
       documentType: document.documentType as SalesDocumentType,
+      loyalty,
     };
   });
 }

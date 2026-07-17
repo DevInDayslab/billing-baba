@@ -49,7 +49,8 @@ class AddSalePage extends ConsumerStatefulWidget {
 
 class _AddSalePageState extends ConsumerState<AddSalePage> {
   var _initialized = false;
-  late final String _duplicateSessionKey = 'duplicate_${widget.duplicateFromId}';
+  late final String _duplicateSessionKey =
+      'duplicate_${widget.duplicateFromId}';
   late final String _attachSessionKey =
       'attach_${widget.attachOrderIds?.join('_') ?? ''}';
 
@@ -87,10 +88,14 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
       );
     });
     if (widget.invoiceId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeEditForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeEditForm(),
+      );
     } else if (widget.attachOrderIds != null &&
         widget.attachOrderIds!.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _initializeAttachForm());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeAttachForm(),
+      );
     } else if (widget.duplicateFromId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _initializeForm());
     } else {
@@ -140,7 +145,9 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
               previous?.billingName == next.billingName) {
             return;
           }
-          ref.read(saleTabsProvider().notifier).updateTabLabel(
+          ref
+              .read(saleTabsProvider().notifier)
+              .updateTabLabel(
                 tabsState.activeIndex,
                 saleTabLabelForForm(
                   saleNumber: tabsState.activeTab.saleNumber,
@@ -153,8 +160,9 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
 
     final sessionKey = _sessionKey;
     final isLoading = ref.watch(
-      addSaleFormProvider(sessionKey: sessionKey)
-          .select((form) => form.isLoading),
+      addSaleFormProvider(
+        sessionKey: sessionKey,
+      ).select((form) => form.isLoading),
     );
 
     if (!_initialized ||
@@ -557,11 +565,10 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                 emptyPlaceholder: 'Billing Name (Optional)',
                 onSelected: notifier.updateBillingName,
                 onPartySelected: notifier.applyPartyDetails,
-                onPartySelectedWithId: (partyId, name) =>
-                    notifier.updateParty(
-                      partyId: partyId,
-                      partyName: name,
-                    ),
+                onPartySelectedWithId: (partyId, name) => notifier.updateParty(
+                  partyId: partyId,
+                  partyName: name,
+                ),
                 onPartyCreated: (party) {
                   notifier.updateBillingName(party.partyName);
                   if (party.phone.isNotEmpty) {
@@ -774,15 +781,21 @@ class _BottomActionBar extends ConsumerWidget {
     final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
     if (form.isSaving) return;
 
-    final error = await notifier.saveInvoice();
+    final result = await notifier.saveInvoice();
     if (!context.mounted) return;
-    if (error != null) {
+    if (!result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(content: Text(result.error!)),
       );
       return;
     }
-    _showSaveSuccessSnackBar(context, isEditing);
+    await _showSaveSuccessDialog(
+      context,
+      isEditing: isEditing,
+      earnedLoyaltyPoints: result.earnedLoyaltyPoints,
+      pointsAvailable: result.pointsAvailable,
+    );
+    if (!context.mounted) return;
     final saved = ref.read(addSaleFormProvider(sessionKey: sessionKey));
     final docId = saved.documentId;
     if (docId == null) {
@@ -798,12 +811,91 @@ class _BottomActionBar extends ConsumerWidget {
     if (context.mounted) _afterSave(context, ref);
   }
 
-  void _showSaveSuccessSnackBar(BuildContext context, bool editing) {
-    final message = editing
-        ? 'Sale updated successfully.'
-        : 'Sale created successfully.';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+  Future<void> _showSaveSuccessDialog(
+    BuildContext context, {
+    required bool isEditing,
+    int earnedLoyaltyPoints = 0,
+    double pointsAvailable = 0,
+  }) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(isEditing ? 'Sale Updated' : 'Sale Created'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isEditing
+                  ? 'Sale updated successfully.'
+                  : 'Sale created successfully.',
+            ),
+            if (earnedLoyaltyPoints > 0) ...[
+              const SizedBox(height: 16),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF8E7),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFFFFE082).withValues(alpha: 0.7),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '⭐',
+                            style: AppTypography.inter(fontSize: 16),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Loyalty Points Earned',
+                            style: AppTypography.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '$earnedLoyaltyPoints',
+                        style: AppTypography.inter(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      if (pointsAvailable > 0) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Total available: ${pointsAvailable == pointsAvailable.roundToDouble() ? pointsAvailable.toInt() : pointsAvailable.toStringAsFixed(0)} points',
+                          style: AppTypography.inter(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -815,17 +907,23 @@ class _BottomActionBar extends ConsumerWidget {
     final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
     if (form.isSaving) return;
 
-    final error = await notifier.saveInvoice();
+    final result = await notifier.saveInvoice();
     if (!context.mounted) return;
 
-    if (error != null) {
+    if (!result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(content: Text(result.error!)),
       );
       return;
     }
 
-    _showSaveSuccessSnackBar(context, isEditing);
+    await _showSaveSuccessDialog(
+      context,
+      isEditing: isEditing,
+      earnedLoyaltyPoints: result.earnedLoyaltyPoints,
+      pointsAvailable: result.pointsAvailable,
+    );
+    if (!context.mounted) return;
     _afterSave(context, ref);
   }
 
@@ -836,7 +934,9 @@ class _BottomActionBar extends ConsumerWidget {
       ref.invalidate(addSaleTotalTaxProvider(sessionKey: sessionKey));
       ref.invalidate(addSaleGrandTotalProvider(sessionKey: sessionKey));
       final tabsState = ref.read(saleTabsProvider());
-      ref.read(saleTabsProvider().notifier).updateTabLabel(
+      ref
+          .read(saleTabsProvider().notifier)
+          .updateTabLabel(
             tabsState.activeIndex,
             saleTabLabelForForm(
               saleNumber: tabsState.activeTab.saleNumber,

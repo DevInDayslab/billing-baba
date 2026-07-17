@@ -13,11 +13,7 @@ import {
 import type { Database } from '../../db/client';
 import { parties } from '../../db/schema/crm/tables';
 import { saleFaBatches, saleFixedAssets } from '../../db/schema/sales/tables';
-import {
-  toSaleFaAssetRecord,
-  toSaleFaBatchListRecord,
-  toSaleFaBatchRecord,
-} from './sale-fa.mapper';
+import { toSaleFaBatchListRecord, toSaleFaBatchRecord } from './sale-fa.mapper';
 import type {
   ListSaleFaParams,
   SaleFaAssetInput,

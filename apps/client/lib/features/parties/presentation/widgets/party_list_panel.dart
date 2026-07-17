@@ -122,8 +122,9 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
           PartyListSortColumn.name => a.name.toLowerCase().compareTo(
             b.name.toLowerCase(),
           ),
-          PartyListSortColumn.amount =>
-            a.balance.abs().compareTo(b.balance.abs()),
+          PartyListSortColumn.amount => a.balance.abs().compareTo(
+            b.balance.abs(),
+          ),
         };
         return ascending ? comparison : -comparison;
       });
@@ -149,7 +150,8 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
     final activeFilter = ref.watch(partyListFilterProvider);
     final searchQuery = ref.watch(partySearchQueryProvider);
     final usingCache = ref.watch(partiesUsingCacheProvider);
-    final isFiltered = activeFilter != PartyListFilter.all || searchQuery.isNotEmpty;
+    final isFiltered =
+        activeFilter != PartyListFilter.all || searchQuery.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -7,7 +7,8 @@ export 'package:billing_baba/features/reports/presentation/widgets/shared/report
 /// @deprecated Use [ReportAlignedDataRow] inside [ReportSyncScrollTable].
 class ReportSimpleDataRow extends StatelessWidget {
   const ReportSimpleDataRow({
-    required this.cells, super.key,
+    required this.cells,
+    super.key,
     this.padding = const EdgeInsets.symmetric(
       horizontal: AppSpacing.md,
       vertical: AppSpacing.sm,
@@ -60,7 +61,9 @@ class ReportSimpleCell {
 /// @deprecated Use [ReportAlignedRowStrip].
 class ReportDataRowContainer extends StatelessWidget {
   const ReportDataRowContainer({
-    required this.index, required this.child, super.key,
+    required this.index,
+    required this.child,
+    super.key,
   });
 
   final int index;
