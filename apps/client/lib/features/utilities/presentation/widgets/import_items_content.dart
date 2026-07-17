@@ -1,9 +1,11 @@
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/utilities/presentation/widgets/import_items_excel_content.dart';
 import 'package:billing_baba/features/utilities/providers/import_items_excel_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 
@@ -174,11 +176,7 @@ class _ImportItemsContentState extends ConsumerState<ImportItemsContent> {
   void _onContinue() {
     switch (_selectedMethod) {
       case ImportItemsMethod.barcode:
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Barcode import is coming soon'),
-          ),
-        );
+        context.push(AppRoutes.utilitiesAddItemsBarcode);
       case ImportItemsMethod.excel:
         ref.read(importItemsExcelProvider.notifier).reset();
         setState(() => _showExcelFlow = true);

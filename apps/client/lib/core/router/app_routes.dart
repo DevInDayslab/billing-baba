@@ -69,6 +69,7 @@ abstract final class AppRoutes {
   static const reportsGst = '/reports/gst';
   static const utilities = '/utilities';
   static const utilitiesImportItems = '/utilities/import-items';
+  static const utilitiesAddItemsBarcode = '/utilities/import-items/barcode';
   static const utilitiesBarcodeGenerator = '/utilities/barcode-generator';
   static const developer = '/developer';
   static const developerComponents = '/developer/components';

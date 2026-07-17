@@ -28,6 +28,8 @@ class InventoryRepository {
   // ignore: unused_field
   final InventoryLocalDataSource? _local;
 
+  InventoryRemoteDataSource get remoteDataSource => _remote;
+
   Future<PaginatedCategoriesDto> getCategories(CategoryListQuery query) =>
       _remote.listCategories(query);
 
