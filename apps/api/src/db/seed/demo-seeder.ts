@@ -696,6 +696,7 @@ async function seedPayments(
         payment_mode: paymentModes[i % paymentModes.length] ?? 'cash',
         payment_date: daysAgoIso(30 - i * 2),
         reference_number: `RCPT-${1001 + i}`,
+        source: 'manual',
         allocations:
           invoice && i < 8
             ? [
@@ -732,6 +733,7 @@ async function seedPayments(
         payment_mode: paymentModes[(i + 1) % paymentModes.length] ?? 'upi',
         payment_date: daysAgoIso(40 - i * 3),
         reference_number: `PAY-${2001 + i}`,
+        source: 'manual',
         allocations:
           purchase && i < 8
             ? [

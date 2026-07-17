@@ -226,7 +226,7 @@ class _EmptyBusinessState extends StatelessWidget {
                 height: 120,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: AppRadius.xlBorder,
+                  borderRadius: AppRadius.lgBorder,
                 ),
                 child: Icon(
                   Icons.storefront_outlined,

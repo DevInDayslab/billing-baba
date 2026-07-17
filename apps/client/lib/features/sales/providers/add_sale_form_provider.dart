@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
@@ -15,7 +16,7 @@ import 'package:billing_baba/features/sales/models/add_sale_save_result.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
-import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:collection/collection.dart';
@@ -596,6 +597,23 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
   }
 
+  void selectCatalogItem(int index, SaleItemOption catalogItem) {
+    if (index < 0 || index >= state.items.length) return;
+    final line = state.items[index];
+    final applied = applyCatalogItemToLine(
+      line,
+      catalogItem,
+      partyPriceTier: state.partyPriceTier,
+    ).copyWith(mrp: catalogItem.salePrice);
+    final items = selectCatalogItemOnSaleLines(
+      items: state.items,
+      targetIndex: index,
+      appliedLine: applied,
+      nextLineId: _nextLineItemId,
+    );
+    state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
+  }
+
   void confirmLineItem(int index) {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
@@ -756,17 +774,31 @@ class AddSaleForm extends _$AddSaleForm {
       );
       state = state.copyWith(
         documentId: document.id,
+        items: bindSaleServerLineIds(state.items, document.lines),
         isSaving: false,
         isDirty: false,
       );
-      ref.invalidate(saleInvoicesProvider);
-      refreshAfterSaleMutation(ref);
+      _refreshAfterSaleMutation();
       return null;
     } catch (error) {
       final message = SalesErrorMapper.messageFor(error);
       state = state.copyWith(isSaving: false, saveError: message);
       return message;
     }
+  }
+
+  void _refreshAfterSaleMutation() {
+    final itemIds = state.items
+        .map((line) => line.itemId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty);
+    refreshAfterSaleMutation(
+      ref,
+      context: (
+        partyId: state.partyId,
+        itemIds: itemIds,
+      ),
+    );
   }
 
   Future<AddSaleSaveResult> saveInvoice({bool finalize = true}) async {
@@ -817,6 +849,7 @@ class AddSaleForm extends _$AddSaleForm {
 
         state = state.copyWith(
           documentId: result.document.id,
+          items: bindSaleServerLineIds(state.items, result.document.lines),
           isSaving: false,
           isDirty: false,
         );
@@ -831,13 +864,13 @@ class AddSaleForm extends _$AddSaleForm {
         );
         state = state.copyWith(
           documentId: document.id,
+          items: bindSaleServerLineIds(state.items, document.lines),
           isSaving: false,
           isDirty: false,
         );
       }
 
-      ref.invalidate(saleInvoicesProvider);
-      refreshAfterSaleMutation(ref);
+      _refreshAfterSaleMutation();
       if (state.attachedSaleOrderIds.isNotEmpty) {
         ref.invalidate(saleOrdersProvider);
       }

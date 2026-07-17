@@ -33,7 +33,7 @@ final class SaleReturnsProvider
   SaleReturns create() => SaleReturns();
 }
 
-String _$saleReturnsHash() => r'819a0fc62d97be4cb2e5bd6dd9675103ce0cd00c';
+String _$saleReturnsHash() => r'ab4da2ec22c69cd09b5e21ca50e6e040375f2dec';
 
 abstract class _$SaleReturns extends $AsyncNotifier<PaginatedSaleInvoices> {
   FutureOr<PaginatedSaleInvoices> build();
@@ -90,7 +90,7 @@ final class SaleReturnFiltersProvider
   }
 }
 
-String _$saleReturnFiltersHash() => r'27df18b0ab36716d76df96864f080945b682dffa';
+String _$saleReturnFiltersHash() => r'61f18be421822c7ec420152a9a91b581af2d2b41';
 
 abstract class _$SaleReturnFilters extends $Notifier<SaleReturnFiltersState> {
   SaleReturnFiltersState build();
@@ -110,6 +110,54 @@ abstract class _$SaleReturnFilters extends $Notifier<SaleReturnFiltersState> {
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(filteredSaleReturns)
+final filteredSaleReturnsProvider = FilteredSaleReturnsProvider._();
+
+final class FilteredSaleReturnsProvider
+    extends
+        $FunctionalProvider<
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>
+        >
+    with $Provider<List<SaleInvoiceModel>> {
+  FilteredSaleReturnsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'filteredSaleReturnsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredSaleReturnsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<SaleInvoiceModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<SaleInvoiceModel> create(Ref ref) {
+    return filteredSaleReturns(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<SaleInvoiceModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<SaleInvoiceModel>>(value),
+    );
+  }
+}
+
+String _$filteredSaleReturnsHash() =>
+    r'b535df5a0da81c5dbdc09168f06aa61028021684';
 
 @ProviderFor(paginatedSaleReturns)
 final paginatedSaleReturnsProvider = PaginatedSaleReturnsProvider._();
@@ -157,7 +205,7 @@ final class PaginatedSaleReturnsProvider
 }
 
 String _$paginatedSaleReturnsHash() =>
-    r'012402879865f2bd5caf6614e3c1f67e3cb65cbf';
+    r'20235bb829c8131604530d134768ce522e022523';
 
 @ProviderFor(saleReturnSummary)
 final saleReturnSummaryProvider = SaleReturnSummaryProvider._();
@@ -204,7 +252,7 @@ final class SaleReturnSummaryProvider
   }
 }
 
-String _$saleReturnSummaryHash() => r'56bca3a4d79e78c4bf19fa8962de787c49c50fc1';
+String _$saleReturnSummaryHash() => r'd18411c2418f0d097813e03a25319084ac404690';
 
 @ProviderFor(saleReturnRefresh)
 final saleReturnRefreshProvider = SaleReturnRefreshProvider._();

@@ -1,12 +1,17 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
+import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_catalog.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
+import 'package:billing_baba/features/pricing/providers/item_api_tier_prices_provider.dart';
 import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +19,31 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
 part 'inventory_items_provider.g.dart';
+
+/// Clears cached detail/tier data for a single item after mutations.
+///
+/// Deferred to the next microtask so provider invalidation does not run while
+/// the inventory detail panel (and its transactions table) is rebuilding.
+void invalidateItemCaches(
+  Ref ref,
+  String itemId, {
+  bool refreshDashboard = false,
+}) {
+  unawaited(
+    Future.microtask(() {
+      if (!ref.mounted) return;
+      ref
+        ..invalidate(productDetailProvider(itemId))
+        ..invalidate(itemTierPricesProvider(itemId))
+        ..invalidate(itemStockLevelsProvider(itemId))
+        ..invalidate(productTransactionsProvider(itemId));
+      ref.read(itemApiTierPricesProvider.notifier).removeItem(itemId);
+      if (refreshDashboard) {
+        invalidateDashboard(ref);
+      }
+    }),
+  );
+}
 
 const _uuid = Uuid();
 
@@ -29,11 +59,14 @@ List<InventoryItem> _catalogItems({
   if (categoryId != null) {
     items = items.where((item) => item.categoryId == categoryId).toList();
   }
-  final query = searchQuery?.trim().toLowerCase();
+  final query = searchQuery?.trim();
   if (query != null && query.isNotEmpty) {
-    items = items
-        .where((item) => item.name.toLowerCase().contains(query))
-        .toList();
+    final engine = InventorySearchEngine.build(
+      items: items.map(
+        InventorySearchableFields.fromInventoryItem,
+      ),
+    );
+    items = engine.searchItems(items, query: query);
   }
   return items;
 }
@@ -73,7 +106,6 @@ InventoryItem _itemFromForm(
     salePrice: form.salePrice,
     purchasePrice: form.atPrice,
     quantity: form.openingQty,
-    availableForSale: form.openingQty,
     stockValue: form.openingQty * form.atPrice,
     categoryId: form.categoryId,
     hsnCode: form.hsn.isEmpty ? null : form.hsn,
@@ -178,6 +210,7 @@ class InventoryItems extends _$InventoryItems {
         for (final existing in current)
           if (existing.id == itemId) item else existing,
       ]);
+      invalidateItemCaches(ref, itemId, refreshDashboard: true);
       return item;
     } on ApiValidationException {
       rethrow;
@@ -197,6 +230,7 @@ class InventoryItems extends _$InventoryItems {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.deleteItem(id);
       ref.read(localItemTierPricesProvider.notifier).removeItem(id);
+      invalidateItemCaches(ref, id, refreshDashboard: true);
       return null;
     } on InventoryException catch (error) {
       state = previous;
@@ -220,11 +254,20 @@ class InventoryItems extends _$InventoryItems {
         removeFromExistingCategory: removeFromExistingCategory,
       );
       await refresh(searchQuery: ref.read(productBackendSearchProvider));
+      refreshAfterItemMutation(ref);
       return null;
     } on InventoryException catch (error) {
       return error.message;
     } catch (error) {
       return InventoryErrorMapper.messageFor(error);
     }
+  }
+
+  Future<void> refreshAfterStockAdjustment(String itemId) async {
+    refreshAfterItemMutation(
+      ref,
+      context: (partyId: null, itemIds: [itemId]),
+    );
+    await refresh();
   }
 }

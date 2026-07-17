@@ -94,8 +94,6 @@ class SaleOrderTabsBar extends ConsumerWidget {
     if (index < 0 || index >= tabsState.tabs.length) return;
     final sessionKey = tabsState.tabs[index].sessionKey;
     ref.invalidate(saleOrderFormProvider(sessionKey: sessionKey));
-    ref.invalidate(saleOrderGrandTotalProvider(sessionKey: sessionKey));
-    ref.invalidate(saleOrderTotalTaxProvider(sessionKey: sessionKey));
     tabsNotifier.closeTab(index);
   }
 }

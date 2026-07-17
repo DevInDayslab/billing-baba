@@ -14,6 +14,8 @@ PODS:
     - FlutterMacOS
   - printing (1.0.0):
     - FlutterMacOS
+  - screen_retriever_macos (0.0.1):
+    - FlutterMacOS
   - share_plus (0.0.1):
     - FlutterMacOS
   - shared_preferences_foundation (0.0.1):
@@ -21,6 +23,8 @@ PODS:
     - FlutterMacOS
   - sqflite_darwin (0.0.4):
     - Flutter
+    - FlutterMacOS
+  - window_manager (0.5.0):
     - FlutterMacOS
 
 DEPENDENCIES:
@@ -31,9 +35,11 @@ DEPENDENCIES:
   - FlutterMacOS (from `Flutter/ephemeral`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - printing (from `Flutter/ephemeral/.symlinks/plugins/printing/macos`)
+  - screen_retriever_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos`)
   - share_plus (from `Flutter/ephemeral/.symlinks/plugins/share_plus/macos`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin`)
+  - window_manager (from `Flutter/ephemeral/.symlinks/plugins/window_manager/macos`)
 
 EXTERNAL SOURCES:
   connectivity_plus:
@@ -50,12 +56,16 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos
   printing:
     :path: Flutter/ephemeral/.symlinks/plugins/printing/macos
+  screen_retriever_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos
   share_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/share_plus/macos
   shared_preferences_foundation:
     :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
   sqflite_darwin:
     :path: Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin
+  window_manager:
+    :path: Flutter/ephemeral/.symlinks/plugins/window_manager/macos
 
 SPEC CHECKSUMS:
   connectivity_plus: 4adf20a405e25b42b9c9f87feff8f4b6fde18a4e
@@ -65,9 +75,11 @@ SPEC CHECKSUMS:
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   package_info_plus: f0052d280d17aa382b932f399edf32507174e870
   printing: c4cf83c78fd684f9bc318e6aadc18972aa48f617
+  screen_retriever_macos: c5508cc3c66ff0d4db650480cf0ab691e220d933
   share_plus: 510bf0af1a42cd602274b4629920c9649c52f4cc
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
+  window_manager: b729e31d38fb04905235df9ea896128991cad99e
 
 PODFILE CHECKSUM: ba548bdb278f57ba9872b16bb47514f1b98102e4
 

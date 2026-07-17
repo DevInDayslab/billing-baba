@@ -17,14 +17,22 @@ export type PartyLedgerTransactionRecord = {
   created_at: string;
   type: string;
   entry_type: string;
+  source: string;
+  source_type: string;
   reference_id: string | null;
   reference_type: string | null;
   reference_number: string | null;
   description: string | null;
+  document_date: string;
+  total: string;
+  balance: string;
+  due_date: string | null;
+  status: string | null;
   debit: string;
   credit: string;
   balance_after: string;
   direction?: 'received' | 'paid';
+  payment_status?: 'Paid' | 'Partial' | 'Unpaid' | null;
 };
 
 export type PartyLedgerPayload = {

@@ -1,3 +1,5 @@
+import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
+
 /// Dropdown option lists for the Add Sale page.
 abstract final class SaleDropdownOptions {
   static const units = ['NONE', 'PCS', 'KG', 'GM', 'LTR', 'MTR', 'BOX', 'BAG'];
@@ -122,22 +124,17 @@ class SaleItemOption {
   final Map<String, double> tierPrices;
 
   bool matchesSearchQuery(String query) {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) return true;
-
-    bool contains(String? value) {
-      final normalized = value?.trim().toLowerCase();
-      return normalized != null &&
-          normalized.isNotEmpty &&
-          normalized.contains(q);
-    }
-
-    if (name.toLowerCase().contains(q)) return true;
-    if (contains(hsn)) return true;
-    if (contains(itemCode)) return true;
-    if (contains(sku)) return true;
-    if (contains(barcode)) return true;
-    return false;
+    return InventorySearchEngine.matchesFields(
+      InventorySearchableFields(
+        id: id,
+        name: name,
+        sku: sku,
+        barcode: barcode,
+        hsn: hsn,
+        unitName: unit,
+      ),
+      query,
+    );
   }
 }
 

@@ -12,6 +12,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_field_deco
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/providers/job_work_out_form_provider.dart';
+import 'package:billing_baba/features/sales/utils/sale_quantity_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -425,16 +426,12 @@ class _FinishedGoodSection extends ConsumerWidget {
               child: _RequiredLabeledField(
                 label: 'Quantity',
                 child: _SaleTextField(
-                  initialValue: form.finishedGoodQty.toString(),
+                  initialValue: SaleQuantityInput.format(form.finishedGoodQty),
                   hintText: '1',
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                  ],
+                  keyboardType: SaleQuantityInput.integerKeyboardType,
+                  inputFormatters: SaleQuantityInput.integerFormatters,
                   onChanged: (value) => notifier.updateFinishedGoodQty(
-                    double.tryParse(value) ?? 0,
+                    SaleQuantityInput.parse(value),
                   ),
                 ),
               ),

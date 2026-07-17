@@ -20,6 +20,7 @@ class DashboardEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Column(
@@ -38,7 +39,7 @@ class DashboardEmptyState extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             subtitle,
-            style: DashboardTypography.metadata.copyWith(fontSize: 13),
+            style: DashboardTypography.metadata,
             textAlign: TextAlign.center,
           ),
           if (actionLabel != null && onAction != null) ...[

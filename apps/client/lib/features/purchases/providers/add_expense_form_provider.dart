@@ -462,7 +462,10 @@ class AddExpenseForm extends _$AddExpenseForm {
         await service.createExpense(request);
       }
 
-      refreshAfterExpense(ref);
+      refreshAfterExpense(
+        ref,
+        context: (partyId: partyId, itemIds: const []),
+      );
       await ref.read(expenseTransactionsProvider.notifier).refresh();
       await ref.read(expenseCategoriesProvider.notifier).refresh();
       ref

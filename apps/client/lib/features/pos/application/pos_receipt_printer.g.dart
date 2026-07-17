@@ -54,4 +54,4 @@ final class PosReceiptPrinterProvider
   }
 }
 
-String _$posReceiptPrinterHash() => r'436b401f51f92f44942bf850f28d8eaf5e35f530';
+String _$posReceiptPrinterHash() => r'ce8d6f2eb936beddffb89f3ddabc28af122b3641';

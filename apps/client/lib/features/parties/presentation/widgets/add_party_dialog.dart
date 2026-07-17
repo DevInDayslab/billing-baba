@@ -6,6 +6,7 @@ import 'package:billing_baba/features/business/application/business_service.dart
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/parties/providers/party_groups_provider.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
@@ -921,42 +922,14 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
   Widget _buildPartyGroupControls() {
     final partyGroups = ref.watch(partyGroupsProvider);
-    final dropdown = SaleGenericSelectDropdown(
+
+    return SaleGenericSelectDropdown(
       value: _partyGroup,
       options: partyGroups,
       hintText: 'Party Group',
+      footerActionLabel: 'Add new group',
+      onFooterAction: _showAddPartyGroupDialog,
       onSelected: (value) => setState(() => _partyGroup = value),
-    );
-
-    final addGroupButton = IconButton(
-      onPressed: _showAddPartyGroupDialog,
-      icon: const Icon(Icons.add_circle_outline, size: 22),
-      color: AppColors.primary,
-      tooltip: 'Add new group',
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: dropdown),
-            const SizedBox(width: AppSpacing.xs),
-            addGroupButton,
-          ],
-        ),
-        if (partyGroups.isEmpty)
-          const Padding(
-            padding: EdgeInsets.only(top: 4, left: 2),
-            child: Text(
-              'No groups yet. Tap + to create one.',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-            ),
-          ),
-      ],
     );
   }
 
@@ -1952,120 +1925,16 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     final party = widget.partyToEdit;
     if (party == null) return;
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete party?'),
-        content: Text(
-          'Are you sure you want to delete "${party.name}"?\n\n'
-          'If this party is linked to invoices or purchases, it will be '
-          'deactivated instead.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+    await PartyActions.delete(
+      context,
+      ref,
+      party,
+      onSuccess: () {
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      },
     );
-
-    if (confirmed != true || !mounted) return;
-
-    try {
-      await ref.read(partyListProvider.notifier).deleteParty(party.id);
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      _showSaveSnackBar(
-        message: 'Party "${party.name}" deleted',
-        backgroundColor: _successSnackBarColor,
-      );
-    } on PartyHasDependenciesException {
-      if (!mounted) return;
-      await _offerDeactivateParty(party);
-    } on PartyOfflineException {
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      _showSaveSnackBar(
-        message:
-            'Delete queued offline. It will sync when you are back online.',
-        backgroundColor: Colors.orange.shade800,
-      );
-    } on PartyException catch (e) {
-      if (!mounted) return;
-      _showSaveSnackBar(
-        message: e.message,
-        backgroundColor: AppColors.error,
-      );
-    } on Object catch (_) {
-      if (!mounted) return;
-      _showSaveSnackBar(
-        message: 'Failed to delete party. Please try again.',
-        backgroundColor: AppColors.error,
-      );
-    }
-  }
-
-  Future<void> _offerDeactivateParty(PartyModel party) async {
-    final deactivate = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Deactivate party instead?'),
-        content: Text(
-          '"${party.name}" is linked to invoices or other documents and '
-          'cannot be permanently deleted.\n\n'
-          'Deactivate it to hide it from active lists. You can view inactive '
-          'parties using the list filter.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Deactivate'),
-          ),
-        ],
-      ),
-    );
-
-    if (deactivate != true || !mounted) return;
-
-    try {
-      await ref.read(partyListProvider.notifier).deactivateParty(party.id);
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      _showSaveSnackBar(
-        message: 'Party "${party.name}" deactivated',
-        backgroundColor: _successSnackBarColor,
-      );
-    } on PartyOfflineException {
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      _showSaveSnackBar(
-        message:
-            'Deactivation saved offline. It will sync when you are back online.',
-        backgroundColor: Colors.orange.shade800,
-      );
-    } on PartyException catch (e) {
-      if (!mounted) return;
-      _showSaveSnackBar(
-        message: e.message,
-        backgroundColor: AppColors.error,
-      );
-    } on Object catch (_) {
-      if (!mounted) return;
-      _showSaveSnackBar(
-        message: 'Failed to deactivate party. Please try again.',
-        backgroundColor: AppColors.error,
-      );
-    }
   }
 }
 

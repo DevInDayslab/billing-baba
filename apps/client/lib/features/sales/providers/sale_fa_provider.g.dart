@@ -85,7 +85,7 @@ final class SaleFaProvider
   SaleFa create() => SaleFa();
 }
 
-String _$saleFaHash() => r'b5006ba8b3b484819597773e88018de13a6dc035';
+String _$saleFaHash() => r'61eec3c5a1b70fc6fb51a3b44b9dc66c6384595f';
 
 abstract class _$SaleFa extends $AsyncNotifier<PaginatedSaleFaRecords> {
   FutureOr<PaginatedSaleFaRecords> build();
@@ -142,7 +142,7 @@ final class SaleFaFiltersProvider
   }
 }
 
-String _$saleFaFiltersHash() => r'ceb3d5285b0958743c25b59d521f7e5cb4744f71';
+String _$saleFaFiltersHash() => r'a1ddf90819cf1875d5e66ec188c79be56a7c084f';
 
 abstract class _$SaleFaFilters extends $Notifier<SaleFaFiltersState> {
   SaleFaFiltersState build();
@@ -161,6 +161,54 @@ abstract class _$SaleFaFilters extends $Notifier<SaleFaFiltersState> {
     return element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(filteredSaleFaRecords)
+final filteredSaleFaRecordsProvider = FilteredSaleFaRecordsProvider._();
+
+final class FilteredSaleFaRecordsProvider
+    extends
+        $FunctionalProvider<
+          List<SaleFaModel>,
+          List<SaleFaModel>,
+          List<SaleFaModel>
+        >
+    with $Provider<List<SaleFaModel>> {
+  FilteredSaleFaRecordsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'filteredSaleFaRecordsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredSaleFaRecordsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<SaleFaModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<SaleFaModel> create(Ref ref) {
+    return filteredSaleFaRecords(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<SaleFaModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<SaleFaModel>>(value),
+    );
+  }
+}
+
+String _$filteredSaleFaRecordsHash() =>
+    r'c07cd09878b754004b8e9a4a920870db748c3592';
 
 @ProviderFor(paginatedSaleFaRecords)
 final paginatedSaleFaRecordsProvider = PaginatedSaleFaRecordsProvider._();
@@ -208,7 +256,7 @@ final class PaginatedSaleFaRecordsProvider
 }
 
 String _$paginatedSaleFaRecordsHash() =>
-    r'342fdc3c7654823b6880334a91691b381526ec28';
+    r'53a55297015e94ea0c0ceb104a907e430f9169e2';
 
 @ProviderFor(saleFaSummary)
 final saleFaSummaryProvider = SaleFaSummaryProvider._();
@@ -255,7 +303,7 @@ final class SaleFaSummaryProvider
   }
 }
 
-String _$saleFaSummaryHash() => r'e05f3ec502be9461d605bcdf71192be31eb48785';
+String _$saleFaSummaryHash() => r'de60e967924523aef76404cb72b11e273422e04f';
 
 @ProviderFor(saleFaFirmFilterOptions)
 final saleFaFirmFilterOptionsProvider = SaleFaFirmFilterOptionsProvider._();

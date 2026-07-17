@@ -10,19 +10,17 @@ final partyGroupsProvider = NotifierProvider<PartyGroups, List<String>>(
 );
 
 class PartyGroups extends Notifier<List<String>> {
-  var _loadedFromStorage = false;
+  var _storageLoaded = false;
 
   @override
   List<String> build() {
     ref.listen(partiesListProvider, (previous, next) {
-      scheduleMicrotask(() => _mergeFromParties(next));
+      if (_storageLoaded) {
+        scheduleMicrotask(() => _mergeFromParties(next));
+      }
     });
 
-    if (!_loadedFromStorage) {
-      _loadedFromStorage = true;
-      scheduleMicrotask(_loadFromStorage);
-    }
-
+    scheduleMicrotask(_loadFromStorage);
     return const [];
   }
 
@@ -40,6 +38,8 @@ class PartyGroups extends Notifier<List<String>> {
       _mergeFromParties(ref.read(partiesListProvider));
     } on Object {
       // Keep empty list; groups can still be added manually.
+    } finally {
+      _storageLoaded = true;
     }
   }
 
@@ -54,7 +54,9 @@ class PartyGroups extends Notifier<List<String>> {
     final next = _sortedUnique(merged);
     if (!_listsEqual(next, state)) {
       state = next;
-      unawaited(_persist());
+      if (_storageLoaded) {
+        unawaited(_persist());
+      }
     }
   }
 
@@ -99,7 +101,14 @@ class PartyGroups extends Notifier<List<String>> {
     if (!ref.mounted) return;
     try {
       final service = await ref.read(partyServiceProvider.future);
-      await service.savePartyGroupNames(state);
+      final stored = await service.readPartyGroupNames();
+      if (!ref.mounted) return;
+
+      final merged = _sortedUnique([...stored, ...state]);
+      if (!_listsEqual(merged, state)) {
+        state = merged;
+      }
+      await service.savePartyGroupNames(merged);
     } on Object {
       // Ignore persistence errors; groups remain in memory.
     }

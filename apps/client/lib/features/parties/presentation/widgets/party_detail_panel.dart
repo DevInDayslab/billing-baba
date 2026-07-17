@@ -8,10 +8,12 @@ import 'package:billing_baba/features/parties/application/party_ledger_service.d
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_actions_menu_button.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_ledger_transactions_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class PartyDetailPanel extends ConsumerWidget {
   const PartyDetailPanel({
@@ -70,7 +72,7 @@ class _PartyDetailContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ledgerAsync = ref.watch(partyLedgerProvider(party.id));
+    final ledgerAsync = ref.watch(partyTimelineProvider(party.id));
     final businessName = ref.watch(sidebarBusinessProvider).name;
     final transactionsAsync = ledgerAsync.whenData(
       (ledger) => ledger.transactions,
@@ -96,12 +98,12 @@ class _PartyDetailContent extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => _PartyDetailError(
               message: PartyErrorMapper.messageFor(error),
-              onRetry: () => ref.invalidate(partyLedgerProvider(party.id)),
+              onRetry: () => ref.invalidate(partyTimelineProvider(party.id)),
             ),
             data: (_) => PartyLedgerTransactionsSection(
               transactionsAsync: transactionsAsync,
               onRefresh: () async =>
-                  ref.invalidate(partyLedgerProvider(party.id)),
+                  ref.invalidate(partyTimelineProvider(party.id)),
             ),
           ),
         ),
@@ -229,7 +231,8 @@ class _PartyDetailHeader extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: AppSpacing.sm,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (onBack != null) ...[
                 IconButton(
@@ -248,14 +251,66 @@ class _PartyDetailHeader extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      party.name,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    party.name,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: party.isActive
+                                          ? AppColors.textPrimary
+                                          : AppColors.textSecondary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (!party.isActive) ...[
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade200,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'Inactive',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton(
+                          onPressed: () =>
+                              PartyActions.edit(context, ref, party),
+                          icon: const Icon(Icons.edit_outlined, size: 20),
+                          tooltip: 'Edit party',
+                          color: AppColors.textSecondary,
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                          constraints: const BoxConstraints(
+                            minWidth: 28,
+                            minHeight: 28,
+                          ),
+                        ),
+                      ],
                     ),
                     if (showLoyalty) ...[
                       const SizedBox(height: AppSpacing.xs),
@@ -264,10 +319,61 @@ class _PartyDetailHeader extends ConsumerWidget {
                   ],
                 ),
               ),
+              _PartyHeaderActionIcon(
+                iconWidget: const FaIcon(
+                  FontAwesomeIcons.commentDots,
+                  size: 20,
+                  color: Color.fromARGB(255, 240, 180, 64),
+                ),
+                tooltip: 'Send Payment Reminder SMS to party',
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Messaging coming soon'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
+              _PartyHeaderActionIcon(
+                iconWidget: const FaIcon(
+                  FontAwesomeIcons.whatsapp,
+                  size: 20,
+                  color: Color(0xFF25D366),
+                ),
+                tooltip: 'Send Payment Reminder WhatsApp to party',
+                onPressed: party.phone.trim().isEmpty
+                    ? null
+                    : () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Call ${party.phone}'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+              ),
+              _PartyHeaderActionIcon(
+                iconWidget: const FaIcon(
+                  FontAwesomeIcons.clock,
+                  size: 18,
+                  color: Color(0xFF4095F0),
+                ),
+                tooltip: 'Set Reminder',
+                 onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Messaging coming soon'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
               PartyActionsMenuButton(party: party),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const Divider(height: 20, thickness: 1, color: Color.fromARGB(98, 117, 117, 117)),
+
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -283,6 +389,7 @@ class _PartyDetailHeader extends ConsumerWidget {
                   ],
                 ),
               ),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,6 +399,7 @@ class _PartyDetailHeader extends ConsumerWidget {
                         label: line.label,
                         value: line.value,
                       ),
+                      
                   ],
                 ),
               ),
@@ -308,6 +416,38 @@ class _MetaLine {
 
   final String label;
   final String value;
+}
+
+class _PartyHeaderActionIcon extends StatelessWidget {
+  const _PartyHeaderActionIcon({
+    required this.tooltip,
+    this.icon,
+    this.iconWidget,
+    this.color = AppColors.textSecondary,
+    this.onPressed,
+  }) : assert(
+         icon != null || iconWidget != null,
+         'Either icon or iconWidget must be provided',
+       );
+
+  final String tooltip;
+  final IconData? icon;
+  final Widget? iconWidget;
+  final Color? color;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: iconWidget ?? Icon(icon, size: 20),
+      tooltip: tooltip,
+      color: iconWidget == null ? color : null,
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+    );
+  }
 }
 
 String _formatLoyaltyPoints(double value) {

@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_primary_button.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_stock_utils.dart';
@@ -13,6 +14,7 @@ class InventoryDetailHeader extends StatelessWidget {
   const InventoryDetailHeader({
     required this.item,
     required this.mode,
+    this.stockMetrics,
     this.stockSummary,
     this.categoryName,
     this.actionLabel,
@@ -22,6 +24,7 @@ class InventoryDetailHeader extends StatelessWidget {
 
   final InventoryItem item;
   final InventoryDetailHeaderMode mode;
+  final ItemStockMetrics? stockMetrics;
   final ProductStockSummary? stockSummary;
   final String? categoryName;
   final String? actionLabel;
@@ -133,6 +136,7 @@ class InventoryDetailHeader extends StatelessWidget {
     }
 
     final summary = stockSummary;
+    final metrics = stockMetrics ?? InventoryStockCalculator.metricsFromItem(item);
     return [
       _MetaData(
         label: 'Sale Price',
@@ -148,9 +152,7 @@ class InventoryDetailHeader extends StatelessWidget {
       ),
       _MetaData(
         label: 'Available for Sale',
-        value: summary?.availableStock != null
-            ? formatQuantityValue(summary!.availableStock!)
-            : inventoryEmDash,
+        value: formatQuantityValue(metrics.availableForSale),
       ),
     ];
   }
@@ -181,14 +183,13 @@ class InventoryDetailHeader extends StatelessWidget {
     }
 
     final summary = stockSummary;
+    final metrics = stockMetrics ?? InventoryStockCalculator.metricsFromItem(item);
     return [
       _MetaData(
         label: 'Stock Quantity',
-        value: item.quantity != null
-            ? formatQuantityValue(item.quantity!)
-            : inventoryEmDash,
+        value: formatQuantityValue(metrics.physicalQuantity),
         valueColor: listQuantityColor(
-          item.quantity,
+          metrics.physicalQuantity,
           reorderLevel: item.reorderLevel,
         ),
       ),
@@ -200,8 +201,8 @@ class InventoryDetailHeader extends StatelessWidget {
       ),
       _MetaData(
         label: 'Reserved Quantity',
-        value: summary?.reservedStock != null
-            ? formatQuantityValue(summary!.reservedStock!)
+        value: metrics.reservedQuantity > 0
+            ? formatQuantityValue(metrics.reservedQuantity)
             : inventoryEmDash,
       ),
     ];

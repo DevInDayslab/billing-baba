@@ -79,3 +79,17 @@ export type ListPartiesParams = {
   sort: 'name' | 'created_at' | 'opening_balance';
   order: 'asc' | 'desc';
 };
+
+export type PartyDeleteReferences = {
+  sales: number;
+  purchases: number;
+  payments: number;
+  salesReturns: number;
+  purchaseReturns: number;
+};
+
+export type PartyDeleteStatus =
+  | { canDelete: true }
+  | { canDelete: false; references: PartyDeleteReferences };
+
+export type PartyDeleteAction = 'deleted' | 'deactivated';

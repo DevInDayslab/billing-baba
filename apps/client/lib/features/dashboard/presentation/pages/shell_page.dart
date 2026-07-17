@@ -1,12 +1,16 @@
-import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
+import 'package:billing_baba/features/dashboard/application/quick_create_executor.dart';
+import 'package:billing_baba/features/dashboard/models/quick_create_action.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/app_top_bar.dart';
+import 'package:billing_baba/features/dashboard/presentation/widgets/customer_support_strip.dart';
+import 'package:billing_baba/features/dashboard/presentation/widgets/quick_create_menu.dart';
+import 'package:billing_baba/features/dashboard/providers/quick_create_menu_provider.dart';
 import 'package:billing_baba/features/dashboard/providers/shell_sidebar_provider.dart';
-import 'package:billing_baba/features/developer/models/developer_sub_route.dart';
+import 'package:billing_baba/features/parties/models/party_sub_route.dart';
 import 'package:billing_baba/features/pos/providers/pos_session_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
@@ -90,11 +94,15 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     }
   }
 
-  static const List<_NavSubItem> _partiesSubItems = [
-    _NavSubItem(route: AppRoutes.partyDetails, label: 'Party Details'),
-  ];
+  static final List<_NavSubItem> _partiesSubItems = PartySubRoutes.items
+      .map((item) => _NavSubItem(route: item.route, label: item.label))
+      .toList();
 
   static final List<_NavSubItem> _saleSubItems = SaleSubRoutes.items
+      .where(
+        (item) =>
+            !ShellSidebarVisibility.hiddenSaleSubRoutes.contains(item.route),
+      )
       .map((item) => _NavSubItem(route: item.route, label: item.label))
       .toList();
 
@@ -123,7 +131,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       icon: Icons.home_outlined,
       label: 'Home',
     ),
-    const _NavItem(
+    _NavItem(
       route: AppRoutes.parties,
       icon: Icons.people_outlined,
       label: 'Parties',
@@ -143,11 +151,12 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       routePrefix: AppRoutes.sale,
       subItems: _saleSubItems,
     ),
-    const _NavItem(
-      route: AppRoutes.pos,
-      icon: Icons.point_of_sale_outlined,
-      label: 'POS',
-    ),
+    if (!ShellSidebarVisibility.hidePos)
+      const _NavItem(
+        route: AppRoutes.pos,
+        icon: Icons.point_of_sale_outlined,
+        label: 'POS',
+      ),
     _NavItem(
       icon: Icons.shopping_cart_outlined,
       label: 'Purchase & Expense',
@@ -160,14 +169,15 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       icon: Icons.bar_chart_outlined,
       label: 'Reports',
     ),
-    _NavItem(
-      icon: Icons.build_outlined,
-      label: 'Utilities',
-      isExpandable: true,
-      routePrefix: AppRoutes.utilities,
-      subItems: _utilitiesSubItems,
-    ),
-    if (AppConfig.showDeveloperMenu)
+    if (!ShellSidebarVisibility.hideUtilities)
+      _NavItem(
+        icon: Icons.build_outlined,
+        label: 'Utilities',
+        isExpandable: true,
+        routePrefix: AppRoutes.utilities,
+        subItems: _utilitiesSubItems,
+      ),
+    if (!ShellSidebarVisibility.hideDeveloper)
       _NavItem(
         icon: Icons.code_outlined,
         label: 'Developer',
@@ -175,11 +185,12 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         routePrefix: AppRoutes.developer,
         subItems: _developerSubItems,
       ),
-    const _NavItem(
-      route: AppRoutes.settings,
-      icon: Icons.settings_outlined,
-      label: 'Settings',
-    ),
+    if (!ShellSidebarVisibility.hideSettings)
+      const _NavItem(
+        route: AppRoutes.settings,
+        icon: Icons.settings_outlined,
+        label: 'Settings',
+      ),
     const _NavItem(
       route: AppRoutes.plansPricing,
       icon: Icons.workspace_premium_outlined,
@@ -233,18 +244,19 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         final showTopBar =
             currentLocation != AppRoutes.pos ||
             !ref.watch(posSessionProvider).isTerminalOpen;
-        final pageTitle = _pageTitleFor(currentLocation);
-        final mainContent = ColoredBox(
-          color: AppColors.background,
-          child: Column(
-            children: [
-              if (showTopBar)
-                AppTopBar(
-                  pageTitle: pageTitle,
-                  showMenuButton: useOverlaySidebar,
-                ),
-              Expanded(child: widget.child),
-            ],
+        final mainContent = _QuickCreateShortcutScope(
+          enabled: showTopBar,
+          child: ColoredBox(
+            color: AppColors.background,
+            child: Column(
+              children: [
+                if (showTopBar) ...[
+                  const CustomerSupportStrip(),
+                  AppTopBar(showMenuButton: useOverlaySidebar),
+                ],
+                Expanded(child: widget.child),
+              ],
+            ),
           ),
         );
 
@@ -615,27 +627,6 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         if (mounted) _navigateTo(AppRoutes.login);
       },
     );
-  }
-
-  String _pageTitleFor(String location) {
-    if (location == AppRoutes.home) return 'Dashboard';
-    if (location.startsWith(AppRoutes.parties)) return 'Parties';
-    if (location.startsWith(AppRoutes.items)) return 'Items';
-    if (location == AppRoutes.pos) return 'POS';
-    if (location.startsWith(AppRoutes.sale) ||
-        location.startsWith(AppRoutes.crm)) {
-      return SaleSubRoutes.labelForRoute(location);
-    }
-    if (location.startsWith(AppRoutes.purchase)) return 'Purchase & Expense';
-    if (location.startsWith(AppRoutes.reports)) return 'Reports';
-    if (location.startsWith(AppRoutes.utilities)) {
-      return UtilitiesSubRoutes.labelForRoute(location);
-    }
-    if (location.startsWith(AppRoutes.developer)) {
-      return DeveloperSubRoutes.labelForRoute(location);
-    }
-    if (location.startsWith(AppRoutes.settings)) return 'Settings';
-    return 'Billing Baba';
   }
 }
 
@@ -1187,6 +1178,59 @@ class _ProfileMenuItem extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _QuickCreateShortcutScope extends ConsumerWidget {
+  const _QuickCreateShortcutScope({
+    required this.enabled,
+    required this.child,
+  });
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Shortcuts(
+      shortcuts: buildQuickCreateShortcuts(),
+      child: Actions(
+        actions: {
+          ToggleQuickCreateIntent: CallbackAction<ToggleQuickCreateIntent>(
+            onInvoke: (_) {
+              if (!enabled || shouldSuppressQuickCreateShortcuts()) {
+                return null;
+              }
+              ref.read(quickCreateMenuProvider).toggle();
+              return null;
+            },
+          ),
+          DismissQuickCreateIntent: CallbackAction<DismissQuickCreateIntent>(
+            onInvoke: (_) {
+              if (ref.read(quickCreateMenuProvider).isOpen) {
+                ref.read(quickCreateMenuProvider).close();
+              }
+              return null;
+            },
+          ),
+          ExecuteQuickCreateIntent: CallbackAction<ExecuteQuickCreateIntent>(
+            onInvoke: (intent) {
+              if (!enabled || shouldSuppressQuickCreateShortcuts()) {
+                return null;
+              }
+              final action = QuickCreateActions.byId(intent.actionId);
+              if (action == null) return null;
+              if (ref.read(quickCreateMenuProvider).isOpen) {
+                ref.read(quickCreateMenuProvider).close();
+              }
+              executeQuickCreate(context, ref, action);
+              return null;
+            },
+          ),
+        },
+        child: Focus(autofocus: true, child: child),
       ),
     );
   }

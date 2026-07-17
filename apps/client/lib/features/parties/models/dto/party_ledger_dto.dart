@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 
 class PartyLedgerSummaryDto {
@@ -48,14 +49,22 @@ class PartyLedgerTransactionDto {
     required this.createdAt,
     required this.type,
     required this.entryType,
+    required this.source,
+    required this.sourceType,
     required this.debit,
     required this.credit,
     required this.balanceAfter,
+    required this.total,
+    required this.balance,
     this.referenceId,
     this.referenceType,
     this.referenceNumber,
     this.description,
+    this.documentDate,
+    this.dueDate,
+    this.status,
     this.direction,
+    this.paymentStatus,
   });
 
   factory PartyLedgerTransactionDto.fromJson(Map<String, dynamic> json) {
@@ -65,14 +74,22 @@ class PartyLedgerTransactionDto {
       createdAt: json['created_at'] as String,
       type: json['type'] as String? ?? '',
       entryType: json['entry_type'] as String? ?? '',
+      source: json['source'] as String? ?? json['reference_type'] as String? ?? '',
+      sourceType: json['source_type'] as String? ?? json['entry_type'] as String? ?? '',
       referenceId: json['reference_id'] as String?,
       referenceType: json['reference_type'] as String?,
       referenceNumber: json['reference_number'] as String?,
       description: json['description'] as String?,
+      documentDate: json['document_date'] as String?,
+      dueDate: json['due_date'] as String?,
+      total: json['total'] as String? ?? '0',
+      balance: json['balance'] as String? ?? json['balance_after'] as String? ?? '0',
+      status: json['status'] as String?,
       debit: json['debit'] as String? ?? '0',
       credit: json['credit'] as String? ?? '0',
-      balanceAfter: json['balance_after'] as String? ?? '0',
+      balanceAfter: json['balance_after'] as String? ?? json['balance'] as String? ?? '0',
       direction: json['direction'] as String?,
+      paymentStatus: json['payment_status'] as String?,
     );
   }
 
@@ -81,14 +98,22 @@ class PartyLedgerTransactionDto {
   final String createdAt;
   final String type;
   final String entryType;
+  final String source;
+  final String sourceType;
   final String? referenceId;
   final String? referenceType;
   final String? referenceNumber;
   final String? description;
+  final String? documentDate;
+  final String? dueDate;
+  final String total;
+  final String balance;
+  final String? status;
   final String debit;
   final String credit;
   final String balanceAfter;
   final String? direction;
+  final String? paymentStatus;
 }
 
 class PartyLedgerDto {
@@ -149,20 +174,36 @@ class PartyLedgerMapper {
   static PartyLedgerTransactionModel toTransaction(
     PartyLedgerTransactionDto dto,
   ) {
+    final total = double.tryParse(dto.total) ?? 0;
+    final balance =
+        double.tryParse(dto.balance) ?? double.tryParse(dto.balanceAfter) ?? 0;
+
     return PartyLedgerTransactionModel(
       id: dto.id,
-      date: DateTime.tryParse(dto.date) ?? DateTime.now(),
-      createdAt: DateTime.tryParse(dto.createdAt) ?? DateTime.now(),
+      date: DateTimeUtils.parseApiDateTime(dto.date),
+      createdAt: DateTimeUtils.parseApiDateTime(dto.createdAt),
       type: dto.type,
       entryType: dto.entryType,
+      source: dto.source,
+      sourceType: dto.sourceType,
       referenceId: dto.referenceId,
       referenceType: dto.referenceType,
       referenceNumber: dto.referenceNumber,
       description: dto.description,
+      documentDate: dto.documentDate != null
+          ? DateTimeUtils.parseApiDateTime(dto.documentDate)
+          : null,
+      dueDate: dto.dueDate != null
+          ? DateTimeUtils.parseApiDateTime(dto.dueDate)
+          : null,
+      total: total,
+      balance: balance,
+      status: dto.status,
       debit: double.tryParse(dto.debit) ?? 0,
       credit: double.tryParse(dto.credit) ?? 0,
-      balanceAfter: double.tryParse(dto.balanceAfter) ?? 0,
+      balanceAfter: balance,
       direction: dto.direction,
+      paymentStatus: dto.paymentStatus,
     );
   }
 }

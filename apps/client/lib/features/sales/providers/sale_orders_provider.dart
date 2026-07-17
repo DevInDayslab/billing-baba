@@ -10,6 +10,7 @@ import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dar
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_orders_provider.g.dart';
@@ -385,48 +386,52 @@ class BulkSelectedSaleOrderIds extends _$BulkSelectedSaleOrderIds {
 class SaleOrders extends _$SaleOrders {
   @override
   Future<PaginatedSaleInvoices> build() async {
-    ref.watch(saleOrderFiltersProvider);
+    ref.watch(
+      saleOrderFiltersProvider.select(
+        (filters) => (filters.timeRangeOption, filters.customDateRange),
+      ),
+    );
     ref.watch(saleOrderSearchQueryProvider);
-    return _fetchPage();
+    final allOrders = await _fetchAllOrders();
+    return PaginatedSaleInvoices(
+      items: allOrders,
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: allOrders.length,
+    );
   }
 
-  Future<PaginatedSaleInvoices> _fetchPage() async {
+  Future<List<SaleInvoiceModel>> _fetchAllOrders() async {
     final filters = ref.read(saleOrderFiltersProvider);
     final search = ref.read(saleOrderSearchQueryProvider);
     final service = await ref.read(salesServiceProvider.future);
 
-    if (needsSaleOrderClientSideFiltering(filters)) {
-      final allItems = await PaginatedFetch.fetchAll<SaleInvoiceModel>(
-        fetchPage: (page) async {
-          final result = await service.fetchInvoicesPage(
-            _buildSaleOrderListQuery(
-              filters,
-              search,
-              page: page,
-              limit: PaginatedFetch.defaultPageSize,
-            ),
-          );
-          return (
-            items: result.items,
-            totalPages: result.totalPages,
-          );
-        },
-      );
-
-      final filteredItems = applySaleOrderClientFilters(allItems, filters);
-      return paginateSaleOrderItems(filteredItems, filters);
-    }
-
-    final page = await service.fetchInvoicesPage(
-      _buildSaleOrderListQuery(filters, search),
+    return PaginatedFetch.fetchAll<SaleInvoiceModel>(
+      fetchPage: (page) async {
+        final result = await service.fetchInvoicesPage(
+          _buildSaleOrderListQuery(
+            filters,
+            search,
+            page: page,
+            limit: PaginatedFetch.defaultPageSize,
+          ),
+        );
+        return (items: result.items, totalPages: result.totalPages);
+      },
     );
-
-    return page;
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchPage);
+    state = await AsyncValue.guard(() async {
+      final allOrders = await _fetchAllOrders();
+      return PaginatedSaleInvoices(
+        items: allOrders,
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: allOrders.length,
+      );
+    });
   }
 
   Future<String?> deleteOrder(String documentId) async {
@@ -579,15 +584,15 @@ class SaleOrderFilters extends _$SaleOrderFilters {
 }
 
 @riverpod
+List<SaleInvoiceModel> filteredSaleOrders(Ref ref) {
+  final allOrders = ref.watch(saleOrdersProvider).value?.items ?? [];
+  final filters = ref.watch(saleOrderFiltersProvider);
+  return applySaleOrderClientFilters(allOrders, filters);
+}
+
+@riverpod
 PaginatedSaleInvoices paginatedSaleOrders(Ref ref) {
-  final ordersAsync = ref.watch(saleOrdersProvider);
-  return ordersAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedSaleInvoices(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
-  );
+  final filtered = ref.watch(filteredSaleOrdersProvider);
+  final filters = ref.watch(saleOrderFiltersProvider);
+  return paginateSaleOrderItems(filtered, filters);
 }

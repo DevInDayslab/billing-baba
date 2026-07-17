@@ -58,6 +58,26 @@ void main() {
       expect(tiers, hasLength(1));
       expect(tiers.first.pricingTier, 'tier_2');
     });
+
+    test('maps opening stock on update', () {
+      const form = AddItemFormState(
+        itemName: 'Hairpin',
+        openingQty: 11,
+        atPrice: 100,
+        godownId: 'godown-1',
+      );
+
+      final request = AddItemFormMapper.toUpdateRequest(
+        form,
+        baseUnitShortName: 'PCS',
+        openingGodownId: 'fallback-godown',
+        godownIdForLocation: 'fallback-godown',
+      );
+
+      expect(request.openingQuantity, '11');
+      expect(request.openingCostPerUnit, '100');
+      expect(request.openingGodownId, 'godown-1');
+    });
   });
 
   group('CategoryMapper', () {

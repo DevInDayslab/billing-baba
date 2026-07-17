@@ -1,6 +1,10 @@
 import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
-import { ledgerEntries, payments } from '../../db/schema/accounting/tables';
+import {
+  ledgerEntries,
+  paymentAllocations,
+  payments,
+} from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
 import { expenses, purchaseDocuments } from '../../db/schema/purchases/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
@@ -25,8 +29,12 @@ export type PartyLedgerEntryRow = {
   referenceType: string | null;
   referenceNumber: string | null;
   paymentDirection: 'received' | 'paid' | null;
+  paymentSource: 'manual' | 'document_finalize' | null;
   salesDocumentType: string | null;
   purchaseDocumentType: string | null;
+  documentTotal: string | null;
+  documentPaid: string | null;
+  paymentStatus: 'Paid' | 'Partial' | 'Unpaid' | null;
 };
 
 export type PartyLedgerSummary = {
@@ -46,6 +54,7 @@ export type PartyLedgerReport = {
   summary: PartyLedgerSummary;
   entries: PartyLedgerEntryRow[];
   runningBalances: Map<string, number>;
+  hiddenPaymentBalanceEntryByDocument: Map<string, string>;
 };
 
 /**
@@ -127,6 +136,131 @@ export function resolveLedgerTypeLabel(
   return entryType;
 }
 
+function resolveDocumentPaymentStatus(
+  entryType: string,
+  documentTotal: string | null,
+  paidAmount: string | null,
+): 'Paid' | 'Partial' | 'Unpaid' | null {
+  if (entryType !== 'sale' && entryType !== 'purchase') {
+    return null;
+  }
+
+  const total = Number(documentTotal ?? 0);
+  const paid = Number(paidAmount ?? 0);
+  if (total <= 0) {
+    return null;
+  }
+  if (paid >= total) {
+    return 'Paid';
+  }
+  if (paid > 0) {
+    return 'Partial';
+  }
+  return 'Unpaid';
+}
+
+function salesAllocationSubquery(db: Database, businessId: string) {
+  return db
+    .select({
+      salesDocumentId: paymentAllocations.salesDocumentId,
+      allocated:
+        sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+          'sales_allocated',
+        ),
+    })
+    .from(paymentAllocations)
+    .where(
+      and(
+        eq(paymentAllocations.businessId, businessId),
+        eq(paymentAllocations.isDeleted, false),
+      ),
+    )
+    .groupBy(paymentAllocations.salesDocumentId)
+    .as('sales_alloc');
+}
+
+function purchaseAllocationSubquery(db: Database, businessId: string) {
+  return db
+    .select({
+      purchaseDocumentId: paymentAllocations.purchaseDocumentId,
+      allocated:
+        sql<string>`COALESCE(SUM(${paymentAllocations.allocatedAmount}::numeric), 0)`.as(
+          'purchase_allocated',
+        ),
+    })
+    .from(paymentAllocations)
+    .where(
+      and(
+        eq(paymentAllocations.businessId, businessId),
+        eq(paymentAllocations.isDeleted, false),
+      ),
+    )
+    .groupBy(paymentAllocations.purchaseDocumentId)
+    .as('purchase_alloc');
+}
+
+export async function loadHiddenAutoPaymentBalanceEntryIds(
+  db: Database,
+  businessId: string,
+  partyId: string,
+): Promise<Map<string, string>> {
+  const rows = await db
+    .select({
+      documentId: sql<string>`COALESCE(${paymentAllocations.salesDocumentId}, ${paymentAllocations.purchaseDocumentId})`,
+      ledgerEntryId: ledgerEntries.id,
+    })
+    .from(payments)
+    .innerJoin(
+      ledgerEntries,
+      and(
+        eq(ledgerEntries.referenceType, 'payments'),
+        eq(ledgerEntries.referenceId, payments.id),
+      ),
+    )
+    .innerJoin(
+      paymentAllocations,
+      eq(paymentAllocations.paymentId, payments.id),
+    )
+    .where(
+      and(
+        eq(payments.businessId, businessId),
+        eq(payments.partyId, partyId),
+        eq(payments.source, 'document_finalize'),
+        eq(payments.isDeleted, false),
+        eq(paymentAllocations.isDeleted, false),
+      ),
+    );
+
+  const result = new Map<string, string>();
+  for (const row of rows) {
+    if (row.documentId) {
+      result.set(row.documentId, row.ledgerEntryId);
+    }
+  }
+  return result;
+}
+
+export function resolveDisplayBalanceAfter(
+  entry: PartyLedgerEntryRow,
+  runningBalances: Map<string, number>,
+  hiddenPaymentBalanceEntryByDocument: Map<string, string>,
+  openingBalance: number,
+): number {
+  if (
+    (entry.entryType === 'sale' || entry.entryType === 'purchase') &&
+    entry.referenceId
+  ) {
+    const paymentEntryId = hiddenPaymentBalanceEntryByDocument.get(
+      entry.referenceId,
+    );
+    if (paymentEntryId) {
+      return runningBalances.get(paymentEntryId) ?? openingBalance;
+    }
+  }
+
+  return runningBalances.get(entry.id) ?? openingBalance;
+}
+
 export async function fetchPartyLedgerEntries(
   db: Database,
   params: {
@@ -136,6 +270,7 @@ export async function fetchPartyLedgerEntries(
     from?: string;
     to?: string;
     order?: 'asc' | 'desc';
+    excludeAutoFinalizePayments?: boolean;
   },
 ): Promise<PartyLedgerEntryRow[]> {
   const filters = [
@@ -143,6 +278,15 @@ export async function fetchPartyLedgerEntries(
     eq(ledgerEntries.partyId, params.partyId),
     validLedgerEntrySql,
   ];
+
+  if (params.excludeAutoFinalizePayments) {
+    filters.push(
+      sql`NOT (
+        ${ledgerEntries.entryType} = 'payment'
+        AND ${payments.source} = 'document_finalize'
+      )`,
+    );
+  }
 
   const typeFilter = filterCondition(params.filter ?? 'all');
   if (typeFilter) {
@@ -160,6 +304,9 @@ export async function fetchPartyLedgerEntries(
     params.order === 'asc'
       ? [asc(ledgerEntries.entryDate), asc(ledgerEntries.createdAt)]
       : [desc(ledgerEntries.entryDate), desc(ledgerEntries.createdAt)];
+
+  const salesAlloc = salesAllocationSubquery(db, params.businessId);
+  const purchaseAlloc = purchaseAllocationSubquery(db, params.businessId);
 
   const rows = await db
     .select({
@@ -179,8 +326,13 @@ export async function fetchPartyLedgerEntries(
         ${expenses.description}
       )`,
       paymentDirection: payments.direction,
+      paymentSource: payments.source,
       salesDocumentType: salesDocuments.documentType,
       purchaseDocumentType: purchaseDocuments.documentType,
+      salesDocumentTotal: salesDocuments.totalAmount,
+      salesDocumentPaid: salesAlloc.allocated,
+      purchaseDocumentTotal: purchaseDocuments.totalAmount,
+      purchaseDocumentPaid: purchaseAlloc.allocated,
     })
     .from(ledgerEntries)
     .leftJoin(
@@ -211,24 +363,52 @@ export async function fetchPartyLedgerEntries(
         eq(ledgerEntries.referenceId, expenses.id),
       ),
     )
+    .leftJoin(salesAlloc, eq(salesAlloc.salesDocumentId, salesDocuments.id))
+    .leftJoin(
+      purchaseAlloc,
+      eq(purchaseAlloc.purchaseDocumentId, purchaseDocuments.id),
+    )
     .where(and(...filters))
     .orderBy(...orderBy);
 
-  return rows.map((row) => ({
-    id: row.id,
-    date: row.date,
-    createdAt: row.createdAt,
-    entryType: row.entryType,
-    description: row.description,
-    debit: row.debit ?? '0',
-    credit: row.credit ?? '0',
-    referenceId: row.referenceId,
-    referenceType: row.referenceType,
-    referenceNumber: row.referenceNumber,
-    paymentDirection: row.paymentDirection,
-    salesDocumentType: row.salesDocumentType,
-    purchaseDocumentType: row.purchaseDocumentType,
-  }));
+  return rows.map((row) => {
+    const documentTotal =
+      row.entryType === 'sale'
+        ? row.salesDocumentTotal
+        : row.entryType === 'purchase'
+          ? row.purchaseDocumentTotal
+          : null;
+    const documentPaid =
+      row.entryType === 'sale'
+        ? row.salesDocumentPaid
+        : row.entryType === 'purchase'
+          ? row.purchaseDocumentPaid
+          : null;
+
+    return {
+      id: row.id,
+      date: row.date,
+      createdAt: row.createdAt,
+      entryType: row.entryType,
+      description: row.description,
+      debit: row.debit ?? '0',
+      credit: row.credit ?? '0',
+      referenceId: row.referenceId,
+      referenceType: row.referenceType,
+      referenceNumber: row.referenceNumber,
+      paymentDirection: row.paymentDirection,
+      paymentSource: row.paymentSource,
+      salesDocumentType: row.salesDocumentType,
+      purchaseDocumentType: row.purchaseDocumentType,
+      documentTotal: documentTotal ?? null,
+      documentPaid: documentPaid ?? null,
+      paymentStatus: resolveDocumentPaymentStatus(
+        row.entryType,
+        documentTotal ?? null,
+        documentPaid ?? null,
+      ),
+    };
+  });
 }
 
 export function computeRunningBalances(
@@ -364,6 +544,7 @@ export async function buildPartyLedgerReport(
     filter?: PartyLedgerFilter;
     from?: string;
     to?: string;
+    excludeAutoFinalizePayments?: boolean;
   } = {},
 ): Promise<PartyLedgerReport> {
   const openingBalance = await getPartyOpeningBalance(db, businessId, partyId);
@@ -389,6 +570,10 @@ export async function buildPartyLedgerReport(
   );
 
   const runningBalances = computeRunningBalances(openingBalance, allEntries);
+  const hiddenPaymentBalanceEntryByDocument =
+    options.excludeAutoFinalizePayments
+      ? await loadHiddenAutoPaymentBalanceEntryIds(db, businessId, partyId)
+      : new Map<string, string>();
 
   let displayEntries = allEntries;
   if (options.filter && options.filter !== 'all') {
@@ -399,6 +584,16 @@ export async function buildPartyLedgerReport(
       from: options.from,
       to: options.to,
       order: 'desc',
+      excludeAutoFinalizePayments: options.excludeAutoFinalizePayments,
+    });
+  } else if (options.excludeAutoFinalizePayments) {
+    displayEntries = await fetchPartyLedgerEntries(db, {
+      businessId,
+      partyId,
+      from: options.from,
+      to: options.to,
+      order: 'desc',
+      excludeAutoFinalizePayments: true,
     });
   } else {
     displayEntries = [...allEntries].sort(
@@ -414,6 +609,7 @@ export async function buildPartyLedgerReport(
     summary,
     entries: displayEntries,
     runningBalances,
+    hiddenPaymentBalanceEntryByDocument,
   };
 }
 

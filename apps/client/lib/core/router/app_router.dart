@@ -16,6 +16,7 @@ import 'package:billing_baba/features/developer/presentation/pages/developer_com
 import 'package:billing_baba/features/developer/presentation/pages/table_filters_playground_page.dart';
 import 'package:billing_baba/features/inventory/presentation/pages/items_page.dart';
 import 'package:billing_baba/features/parties/presentation/pages/party_details_page.dart';
+import 'package:billing_baba/features/parties/presentation/pages/party_groups_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/pages/plans_pricing_page.dart';
 import 'package:billing_baba/features/pos/presentation/pages/pos_page.dart';
 import 'package:billing_baba/features/purchases/presentation/pages/add_debit_note_page.dart';
@@ -127,6 +128,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.partyDetails,
             builder: (context, state) => const PartyDetailsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.partyGroups,
+            builder: (context, state) => const PartyGroupsPage(),
           ),
           GoRoute(
             path: AppRoutes.crm,

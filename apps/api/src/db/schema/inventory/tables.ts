@@ -230,6 +230,7 @@ export const inventoryMovements = pgTable('inventory_movements', {
   movementType: inventoryMovementTypeEnum('movement_type').notNull(),
   quantityDelta: money('quantity_delta').notNull(),
   costPerUnit: money('cost_per_unit'),
+  unit: text('unit'),
   referenceId: uuid('reference_id'),
   referenceType: text('reference_type'),
   createdAt: timestamptz('created_at').notNull().defaultNow(),

@@ -47,6 +47,10 @@ export const createPaymentBodySchema = z.object({
   notes: z.string().trim().max(2000).optional().nullable(),
   short_payment_handling: z.enum(shortPaymentHandlingValues).optional(),
   allocations: z.array(allocationSchema).optional().default([]),
+  source: z
+    .enum(['manual', 'document_finalize'] as const)
+    .optional()
+    .default('manual'),
 });
 
 export type CreatePaymentBody = z.infer<typeof createPaymentBodySchema>;

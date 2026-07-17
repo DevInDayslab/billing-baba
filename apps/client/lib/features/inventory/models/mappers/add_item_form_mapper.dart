@@ -58,7 +58,24 @@ abstract final class AddItemFormMapper {
   static UpdateItemRequest toUpdateRequest(
     AddItemFormState form, {
     required String baseUnitShortName,
+    String? openingGodownId,
+    String? godownIdForLocation,
   }) {
+    final godownId = form.godownId ?? openingGodownId;
+    final locationGodownId = form.godownId ?? godownIdForLocation;
+
+    CreateItemLocationRequest? location;
+    if (locationGodownId != null &&
+        (form.location.isNotEmpty || form.minStock > 0)) {
+      location = CreateItemLocationRequest(
+        godownId: locationGodownId,
+        rack: form.location.isNotEmpty ? form.location : null,
+      );
+    }
+
+    final hasOpeningStock =
+        form.itemType == ItemType.product && form.openingQty > 0;
+
     return UpdateItemRequest(
       name: form.itemName.trim(),
       description: form.description.trim(),
@@ -79,6 +96,12 @@ abstract final class AddItemFormMapper {
       primaryImageUrl: form.primaryImageUrl.trim().isEmpty
           ? null
           : form.primaryImageUrl.trim(),
+      openingQuantity:
+          hasOpeningStock ? _formatMoney(form.openingQty) : null,
+      openingCostPerUnit:
+          hasOpeningStock ? _formatMoney(form.atPrice) : null,
+      openingGodownId: hasOpeningStock ? godownId : null,
+      location: location,
     );
   }
 

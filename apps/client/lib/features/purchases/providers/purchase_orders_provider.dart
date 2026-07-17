@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_list_filter_utils.dart';
@@ -336,6 +337,7 @@ class PurchaseOrders extends _$PurchaseOrders {
       final service = await ref.read(purchaseServiceProvider.future);
       await service.finalizeDraft(documentId, godownId: godownId);
       await refresh();
+      refreshAfterPurchaseMutation(ref);
       return null;
     } catch (error) {
       return PurchaseErrorMapper.messageFor(error);
@@ -349,6 +351,7 @@ class PurchaseOrders extends _$PurchaseOrders {
       await refresh();
       ref.invalidate(purchaseBillsProvider);
       await ref.read(purchaseBillsProvider.notifier).refresh();
+      refreshAfterPurchaseMutation(ref);
       return null;
     } catch (error) {
       return PurchaseErrorMapper.messageFor(error);
@@ -364,6 +367,7 @@ class PurchaseOrders extends _$PurchaseOrders {
       await refresh();
       ref.invalidate(purchaseBillsProvider);
       await ref.read(purchaseBillsProvider.notifier).refresh();
+      refreshAfterPurchaseMutation(ref);
       return (error: null, billId: document.id);
     } catch (error) {
       return (

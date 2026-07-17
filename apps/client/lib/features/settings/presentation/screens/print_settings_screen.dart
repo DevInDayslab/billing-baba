@@ -51,7 +51,7 @@ class _PrintSettingsScreenState extends ConsumerState<PrintSettingsScreen>
     setState(() => _isApplying = true);
 
     try {
-      await ref.read(printSettingsNotifierProvider.notifier).save(draft);
+      await ref.read(printSettingsProvider.notifier).save(draft);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Print settings applied app-wide')),
@@ -74,7 +74,7 @@ class _PrintSettingsScreenState extends ConsumerState<PrintSettingsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final settingsAsync = ref.watch(printSettingsNotifierProvider);
+    final settingsAsync = ref.watch(printSettingsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -109,7 +109,7 @@ class _PrintSettingsScreenState extends ConsumerState<PrintSettingsScreen>
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorState(
           message: error.toString(),
-          onRetry: () => ref.invalidate(printSettingsNotifierProvider),
+          onRetry: () => ref.invalidate(printSettingsProvider),
         ),
         data: (savedSettings) {
           _draft ??= savedSettings;
@@ -207,7 +207,6 @@ class _PrintSettingsBody extends StatelessWidget {
           ),
           child: TabBar(
             controller: tabController,
-            isScrollable: false,
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.primary,

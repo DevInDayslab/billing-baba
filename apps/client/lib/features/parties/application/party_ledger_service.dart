@@ -27,6 +27,23 @@ Future<PartyLedgerService> partyLedgerService(Ref ref) async {
 }
 
 @riverpod
+class PartyTimeline extends _$PartyTimeline {
+  @override
+  Future<PartyLedgerModel> build(String partyId) async {
+    final service = await ref.watch(partyLedgerServiceProvider.future);
+    return service.fetchPartyLedger(partyId);
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final service = await ref.read(partyLedgerServiceProvider.future);
+      return service.fetchPartyLedger(partyId);
+    });
+  }
+}
+
+@riverpod
 class PartyLedger extends _$PartyLedger {
   @override
   Future<PartyLedgerModel> build(String partyId) async {

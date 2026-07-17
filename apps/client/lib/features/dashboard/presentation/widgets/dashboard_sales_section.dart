@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/layout/dashboard_layout.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
@@ -13,12 +14,14 @@ class DashboardSalesSection extends StatelessWidget {
     required this.sales,
     required this.period,
     required this.onPeriodChanged,
+    this.onTap,
     super.key,
   });
 
   final DashboardSalesModel sales;
   final DashboardPeriod period;
   final ValueChanged<DashboardPeriod> onPeriodChanged;
+  final VoidCallback? onTap;
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -26,20 +29,21 @@ class DashboardSalesSection extends StatelessWidget {
     decimalDigits: 0,
   );
 
-  static const _chartHeight = 180.0;
-
   @override
   Widget build(BuildContext context) {
+    final metrics = DashboardLayoutScope.of(context);
+
     return DashboardMetricCard(
+      padding: metrics.cardPadding,
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
               const Expanded(
                 child: Text(
-                  'Total Sales',
+                  'Total Sale',
                   style: DashboardTypography.cardTitle,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -50,19 +54,22 @@ class DashboardSalesSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: DashboardSpacing.titleToValue),
+          SizedBox(height: metrics.gap * 0.5),
           Text(
             _currencyFormat.format(sales.totalAmount),
-            style: DashboardTypography.mainValue,
+            style: DashboardTypography.chartValue,
           ),
-          const SizedBox(height: DashboardSpacing.valueToContent),
-          SizedBox(
-            height: _chartHeight,
+          SizedBox(height: metrics.gap * 0.5),
+          Expanded(
+            flex: (DashboardLayout.chartAreaHeightRatio * 100).round(),
             child: DashboardTrendChart(
               points: sales.trendPoints,
               lineColor: AppColors.primary,
+              period: period,
+              minimal: true,
             ),
           ),
+          const Spacer(),
         ],
       ),
     );
@@ -89,10 +96,12 @@ class DashboardPurchasesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final metrics = DashboardLayoutScope.of(context);
+
     return DashboardMetricCard(
+      padding: metrics.cardPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -109,19 +118,22 @@ class DashboardPurchasesCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: DashboardSpacing.titleToValue),
+          SizedBox(height: metrics.gap * 0.5),
           Text(
             _currencyFormat.format(purchases.totalAmount),
-            style: DashboardTypography.mainValue,
+            style: DashboardTypography.chartValue,
           ),
-          const SizedBox(height: DashboardSpacing.valueToContent),
-          SizedBox(
-            height: DashboardSalesSection._chartHeight,
+          SizedBox(height: metrics.gap * 0.5),
+          Expanded(
+            flex: (DashboardLayout.chartAreaHeightRatio * 100).round(),
             child: DashboardTrendChart(
               points: purchases.trendPoints,
               lineColor: DashboardColors.outgoing,
+              period: period,
+              emptyMessage: 'No purchases available',
             ),
           ),
+          const Spacer(),
         ],
       ),
     );

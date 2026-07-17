@@ -218,7 +218,7 @@ final class PrintDataServiceProvider
   }
 }
 
-String _$printDataServiceHash() => r'6c76cd6c4d47bad0862983b205e5750e4527b09e';
+String _$printDataServiceHash() => r'3417c474398bd91227bfc8f24cef176b4fb752ef';
 
 @ProviderFor(printService)
 final printServiceProvider = PrintServiceProvider._();
@@ -257,7 +257,7 @@ final class PrintServiceProvider
   }
 }
 
-String _$printServiceHash() => r'f62ef2090dd88526c1c5d100ade8a790de988734';
+String _$printServiceHash() => r'04044d5ea9274ca8384d7062f7699059761b14df';
 
 @ProviderFor(printableDocument)
 final printableDocumentProvider = PrintableDocumentFamily._();

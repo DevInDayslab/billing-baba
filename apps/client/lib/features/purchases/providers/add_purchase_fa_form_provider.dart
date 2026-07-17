@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_fa_service.dart';
 import 'package:billing_baba/features/purchases/models/purchase_fa_form_model.dart';
@@ -249,6 +250,10 @@ class AddPurchaseFaForm extends _$AddPurchaseFaForm {
 
       ref.invalidate(purchaseFaProvider);
       await ref.read(purchaseFaProvider.notifier).refresh();
+      refreshAfterPurchaseFaMutation(
+        ref,
+        context: (partyId: state.partyId, itemIds: const []),
+      );
       ref
           .read(purchaseFaSaveSuccessMessageProvider.notifier)
           .setMessage('Purchase FA saved successfully');

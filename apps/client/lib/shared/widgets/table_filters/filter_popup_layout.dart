@@ -7,17 +7,17 @@ import 'package:flutter/material.dart';
 class FilterPopoverLayout extends StatelessWidget {
   const FilterPopoverLayout({
     required this.title,
-    required this.operator,
     required this.input,
     required this.onClear,
     required this.onApply,
+    this.operator,
     this.width = TableFilterTheme.popoverWidth,
     this.applyEnabled = true,
     super.key,
   });
 
   final String title;
-  final Widget operator;
+  final Widget? operator;
   final Widget input;
   final VoidCallback onClear;
   final VoidCallback onApply;
@@ -26,6 +26,8 @@ class FilterPopoverLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasOperator = operator != null;
+
     return FilterPopoverShell(
       width: width,
       child: Column(
@@ -40,9 +42,11 @@ class FilterPopoverLayout extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          operator,
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: hasOperator ? AppSpacing.md : AppSpacing.sm),
+          if (hasOperator) ...[
+            operator!,
+            const SizedBox(height: AppSpacing.md),
+          ],
           input,
           const SizedBox(height: AppSpacing.md),
           FilterActionButtons(

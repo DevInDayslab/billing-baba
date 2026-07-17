@@ -96,7 +96,10 @@ class _GlobalSearchFieldState extends ConsumerState<GlobalSearchField> {
           ),
           filled: true,
           fillColor: AppColors.background,
-          contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm + 2,
+          ),
           border: OutlineInputBorder(
             borderRadius: AppRadius.mdBorder,
             borderSide: BorderSide.none,

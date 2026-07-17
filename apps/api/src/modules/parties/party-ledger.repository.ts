@@ -7,6 +7,12 @@ import {
   type PartyLedgerFilter,
   resolveLedgerTypeLabel,
 } from '../../shared/reporting/party-ledger';
+import { buildPartyTimeline } from '../../shared/reporting/party-timeline';
+import type { PartyTimelineRow } from '../../shared/reporting/party-timeline/party-timeline.types';
+import {
+  mapTimelineDebitCredit,
+  mapTimelineEntryType,
+} from '../../shared/reporting/party-timeline/party-timeline.utils';
 import type {
   PartyLedgerPayload,
   PartyLedgerSummaryRecord,
@@ -15,6 +21,41 @@ import type {
 
 function normalizeMoney(value: number): string {
   return value.toFixed(2);
+}
+
+function toLedgerTransactionRecord(
+  row: PartyTimelineRow,
+): PartyLedgerTransactionRecord {
+  const { debit, credit } = mapTimelineDebitCredit(row);
+
+  const record: PartyLedgerTransactionRecord = {
+    id: row.id,
+    date: row.documentDate.toISOString().slice(0, 10),
+    created_at: row.createdAt.toISOString(),
+    type: row.type,
+    entry_type: mapTimelineEntryType(row),
+    source: row.source,
+    source_type: row.sourceType,
+    reference_id: row.referenceId,
+    reference_type: row.referenceType,
+    reference_number: row.referenceNumber,
+    description: null,
+    document_date: row.documentDate.toISOString(),
+    total: row.total,
+    balance: row.balance,
+    due_date: row.dueDate,
+    status: row.status,
+    debit,
+    credit,
+    balance_after: row.balance,
+    payment_status: row.paymentStatus ?? null,
+  };
+
+  if (row.direction) {
+    record.direction = row.direction;
+  }
+
+  return record;
 }
 
 export class PartyLedgerRepository {
@@ -33,6 +74,7 @@ export class PartyLedgerRepository {
       .select({
         id: parties.id,
         name: parties.name,
+        partyType: parties.partyType,
         creditLimit: parties.creditLimit,
         isActive: parties.isActive,
       })
@@ -51,10 +93,18 @@ export class PartyLedgerRepository {
     }
 
     const report = await buildPartyLedgerReport(this.db, businessId, partyId, {
-      filter: options.filter,
       from: options.from,
       to: options.to,
+      excludeAutoFinalizePayments: true,
     });
+
+    const timeline = await buildPartyTimeline(
+      this.db,
+      businessId,
+      partyId,
+      partyRow.partyType,
+      options,
+    );
 
     logPartyLedgerDebug(partyRow.name, report);
 
@@ -71,39 +121,7 @@ export class PartyLedgerRepository {
       total_payments: normalizeMoney(report.summary.totalPayments),
     };
 
-    const transactions: PartyLedgerTransactionRecord[] = report.entries.map(
-      (entry) => {
-        const typeLabel = resolveLedgerTypeLabel(
-          entry.entryType,
-          entry.salesDocumentType,
-          entry.purchaseDocumentType,
-          entry.paymentDirection,
-        );
-
-        const record: PartyLedgerTransactionRecord = {
-          id: entry.id,
-          date: entry.date,
-          created_at: entry.createdAt.toISOString(),
-          type: typeLabel,
-          entry_type: entry.entryType,
-          reference_id: entry.referenceId,
-          reference_type: entry.referenceType,
-          reference_number: entry.referenceNumber,
-          description: entry.description,
-          debit: entry.debit,
-          credit: entry.credit,
-          balance_after: normalizeMoney(
-            report.runningBalances.get(entry.id) ?? report.openingBalance,
-          ),
-        };
-
-        if (entry.entryType === 'payment' && entry.paymentDirection) {
-          record.direction = entry.paymentDirection;
-        }
-
-        return record;
-      },
-    );
+    const transactions = timeline.map(toLedgerTransactionRecord);
 
     return {
       party_id: partyId,

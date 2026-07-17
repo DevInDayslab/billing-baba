@@ -4,6 +4,7 @@ import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_search_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -58,26 +59,22 @@ class _SelectItemsForCategoryDialogState
   }
 
   List<InventoryItem> _filteredItems(List<InventoryItem> allItems) {
-    final query = _searchQuery.toLowerCase();
-    final items =
-        allItems
-            .where((item) => !_isInTargetCategory(item))
-            .where(
-              (item) =>
-                  query.isEmpty || item.name.toLowerCase().contains(query),
-            )
-            .toList()
-          ..sort((a, b) {
-            final comparison = switch (_sortField) {
-              _ItemSortField.name => a.name.toLowerCase().compareTo(
-                b.name.toLowerCase(),
-              ),
-              _ItemSortField.quantity => (a.quantity ?? 0).compareTo(
-                b.quantity ?? 0,
-              ),
-            };
-            return _sortAscending ? comparison : -comparison;
-          });
+    final engine = ref.read(inventorySearchEngineProvider);
+    final items = searchInventoryItems(
+      engine,
+      allItems.where((item) => !_isInTargetCategory(item)),
+      query: _searchQuery,
+    ).toList()
+      ..sort((a, b) {
+        final comparison = switch (_sortField) {
+          _ItemSortField.name => a.name.toLowerCase().compareTo(
+            b.name.toLowerCase(),
+          ),
+          _ItemSortField.quantity =>
+            (a.quantity ?? 0).compareTo(b.quantity ?? 0),
+        };
+        return _sortAscending ? comparison : -comparison;
+      });
 
     return items;
   }

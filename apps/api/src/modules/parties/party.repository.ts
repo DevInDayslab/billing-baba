@@ -1,14 +1,15 @@
 import { and, asc, count, desc, eq, ilike, ne, or, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
-import { ledgerEntries, payments } from '../../db/schema/accounting/tables';
+import { payments } from '../../db/schema/accounting/tables';
 import { parties } from '../../db/schema/crm/tables';
 import { users } from '../../db/schema/identity/tables';
-import { expenses, purchaseDocuments } from '../../db/schema/purchases/tables';
+import { purchaseDocuments } from '../../db/schema/purchases/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
 import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import { OutstandingRepository } from '../accounting/outstanding.repository';
 import type {
   ListPartiesParams,
+  PartyDeleteReferences,
   PartyInsertValues,
   PartyRecord,
   PartyUpdateValues,
@@ -389,71 +390,59 @@ export class PartyRepository {
     return Boolean(row);
   }
 
-  async countDocumentDependencies(
+  async countDeleteReferences(
     businessId: string,
     partyId: string,
-  ): Promise<number> {
-    const [salesCount] = await this.db
-      .select({ total: count() })
-      .from(salesDocuments)
-      .where(
-        and(
-          eq(salesDocuments.businessId, businessId),
-          eq(salesDocuments.partyId, partyId),
-          eq(salesDocuments.isDeleted, false),
-        ),
-      );
-
-    const [purchaseCount] = await this.db
-      .select({ total: count() })
-      .from(purchaseDocuments)
-      .where(
-        and(
-          eq(purchaseDocuments.businessId, businessId),
-          eq(purchaseDocuments.partyId, partyId),
-          eq(purchaseDocuments.isDeleted, false),
-        ),
-      );
-
-    const [expenseCount] = await this.db
-      .select({ total: count() })
-      .from(expenses)
-      .where(
-        and(
-          eq(expenses.businessId, businessId),
-          eq(expenses.partyId, partyId),
-          eq(expenses.isDeleted, false),
-        ),
-      );
-
-    const [paymentCount] = await this.db
-      .select({ total: count() })
-      .from(payments)
-      .where(
-        and(
-          eq(payments.businessId, businessId),
-          eq(payments.partyId, partyId),
-          eq(payments.isDeleted, false),
-        ),
-      );
-
-    const [ledgerCount] = await this.db
-      .select({ total: count() })
-      .from(ledgerEntries)
-      .where(
-        and(
-          eq(ledgerEntries.businessId, businessId),
-          eq(ledgerEntries.partyId, partyId),
-        ),
-      );
-
-    return (
-      Number(salesCount?.total ?? 0) +
-      Number(purchaseCount?.total ?? 0) +
-      Number(expenseCount?.total ?? 0) +
-      Number(paymentCount?.total ?? 0) +
-      Number(ledgerCount?.total ?? 0)
+  ): Promise<PartyDeleteReferences> {
+    const salesFilter = and(
+      eq(salesDocuments.businessId, businessId),
+      eq(salesDocuments.partyId, partyId),
+      eq(salesDocuments.isDeleted, false),
     );
+
+    const purchaseFilter = and(
+      eq(purchaseDocuments.businessId, businessId),
+      eq(purchaseDocuments.partyId, partyId),
+      eq(purchaseDocuments.isDeleted, false),
+    );
+
+    const [salesRow, purchaseRow, paymentRow] = await Promise.all([
+      this.db
+        .select({
+          sales: sql<number>`count(*) filter (where ${salesDocuments.documentType} != 'sales_return')::int`,
+          salesReturns: sql<number>`count(*) filter (where ${salesDocuments.documentType} = 'sales_return')::int`,
+        })
+        .from(salesDocuments)
+        .where(salesFilter)
+        .then((rows) => rows[0]),
+      this.db
+        .select({
+          purchases: sql<number>`count(*) filter (where ${purchaseDocuments.documentType} != 'purchase_return')::int`,
+          purchaseReturns: sql<number>`count(*) filter (where ${purchaseDocuments.documentType} = 'purchase_return')::int`,
+        })
+        .from(purchaseDocuments)
+        .where(purchaseFilter)
+        .then((rows) => rows[0]),
+      this.db
+        .select({ total: count() })
+        .from(payments)
+        .where(
+          and(
+            eq(payments.businessId, businessId),
+            eq(payments.partyId, partyId),
+            eq(payments.isDeleted, false),
+          ),
+        )
+        .then((rows) => rows[0]),
+    ]);
+
+    return {
+      sales: Number(salesRow?.sales ?? 0),
+      purchases: Number(purchaseRow?.purchases ?? 0),
+      payments: Number(paymentRow?.total ?? 0),
+      salesReturns: Number(salesRow?.salesReturns ?? 0),
+      purchaseReturns: Number(purchaseRow?.purchaseReturns ?? 0),
+    };
   }
 
   private async loadBalanceMap(

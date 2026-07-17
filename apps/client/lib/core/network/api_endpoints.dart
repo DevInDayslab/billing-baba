@@ -6,6 +6,7 @@ abstract final class ApiEndpoints {
   static const businessProfile = '/api/v1/business/profile';
   static const parties = '/api/v1/parties';
   static String party(String id) => '/api/v1/parties/$id';
+  static String partyDeleteStatus(String id) => '/api/v1/parties/$id/delete-status';
   static String partyLedger(String id) => '/api/v1/parties/$id/ledger';
   static String partyLoyalty(String id) => '/api/v1/parties/$id/loyalty';
   static String partyLoyaltyTransactions(String id) =>

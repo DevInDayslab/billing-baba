@@ -567,8 +567,6 @@ class _BottomActionBar extends ConsumerWidget {
   void _afterSave(BuildContext context, WidgetRef ref) {
     if (supportsTabs) {
       ref.invalidate(saleOrderFormProvider(sessionKey: sessionKey));
-      ref.invalidate(saleOrderGrandTotalProvider(sessionKey: sessionKey));
-      ref.invalidate(saleOrderTotalTaxProvider(sessionKey: sessionKey));
       final tabsState = ref.read(saleOrderTabsProvider());
       ref
           .read(saleOrderTabsProvider().notifier)

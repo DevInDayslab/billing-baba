@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/features/inventory/models/dto/movement_dto.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_stock_utils.dart';
@@ -12,7 +13,12 @@ abstract final class MovementMapper {
     final qty = double.tryParse(dto.quantityDelta) ?? 0;
     final isInbound = _isInboundMovement(dto.movementType, qty);
     final documentLabel = _documentLabel(dto.movementType);
-    final referenceNo = _formatReferenceNo(dto.referenceId, dto.referenceType);
+    final referenceNo = _formatReferenceNo(
+      dto.referenceNumber,
+      dto.referenceId,
+      dto.referenceType,
+    );
+    final partyName = dto.partyName?.trim();
 
     return ProductTransaction(
       id: dto.id,
@@ -23,9 +29,12 @@ abstract final class MovementMapper {
       movementType: dto.movementType,
       invoiceRefNo: referenceNo,
       referenceNo: referenceNo,
-      partyName: inventoryEmDash,
-      date: DateTime.tryParse(dto.createdAt) ?? DateTime.now(),
+      partyName: partyName == null || partyName.isEmpty
+          ? inventoryEmDash
+          : partyName,
+      date: DateTimeUtils.parseApiDateTime(dto.createdAt),
       quantity: qty.abs(),
+      unit: dto.unit,
       pricePerUnit: double.tryParse(dto.costPerUnit ?? '') ?? 0,
       status: 'Completed',
       isInbound: isInbound,
@@ -78,7 +87,16 @@ abstract final class MovementMapper {
     };
   }
 
-  static String _formatReferenceNo(String? referenceId, String? referenceType) {
+  static String _formatReferenceNo(
+    String? referenceNumber,
+    String? referenceId,
+    String? referenceType,
+  ) {
+    final number = referenceNumber?.trim();
+    if (number != null && number.isNotEmpty) {
+      return number;
+    }
+
     if (referenceId == null || referenceId.trim().isEmpty) {
       return inventoryEmDash;
     }

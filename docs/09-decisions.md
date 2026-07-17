@@ -1036,6 +1036,108 @@ Frontend tier pricing uses four tiers (Retail, Wholesale, Dealer, Distributor) m
 
 ---
 
+## ADR-013: Reserved Quantity from Unfulfilled Sale Orders
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-14 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+#### Context
+
+Inventory list and detail views showed inconsistent stock numbers because the client derived `availableForSale` from physical quantity alone while catalog seed data introduced phantom reserved splits. Sale orders finalize without deducting stock, so reserved quantity must be computed server-side for a single source of truth.
+
+#### Decision
+
+- Physical stock remains `SUM(stock_levels.quantity)` per item.
+- `reserved_quantity` = sum of quantities on finalized `sale_order` lines minus quantities already fulfilled via descendant documents in the conversion chain (`delivery_challan`, `tax_invoice`, etc.).
+- `available_for_sale` = `quantity - reserved_quantity` (floored at 0), computed in `inventory-item-stock.ts` and exposed on item list/detail API responses.
+- Client `itemStockMetricsProvider` reads API fields; all UI surfaces (list, detail, POS, sales autocomplete) use the same pipeline.
+
+#### Consequences
+
+- Sale order finalize reduces available stock without changing physical quantity until invoice/challan fulfillment.
+- Conversion chain logic is shared between stock reservation and sales finalize skip rules.
+
+#### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Client-side reservation in Drift only | Breaks multi-device sync and API-backed views |
+| Dedicated `reserved_qty` column on `stock_levels` | Sale orders are document-level; conversion math belongs in reporting layer |
+
+---
+
+## ADR-014: Payment Source Provenance for Party Ledger Display
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-14 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+#### Context
+
+Cash sale finalization posts a sale ledger row and a separate payment row, producing duplicate-looking entries in party history (Vyapar shows a single Paid invoice row). Payments must still appear in Cash Book, Day Book, and dashboard reports.
+
+#### Decision
+
+- Add `payments.source` enum: `manual` (default) | `document_finalize`.
+- Set `document_finalize` when the client auto-records payment during sale/purchase finalize.
+- Party ledger endpoint filters out `payment` rows where `source = document_finalize`; all other reporting endpoints include them.
+- Sale/purchase ledger rows expose `payment_status` (Paid / Partial / Unpaid) from document total vs allocated payments, including hidden auto-finalize allocations in balance math.
+
+#### Consequences
+
+- Party timeline shows one row per cash sale; manual Payment In/Out dialogs unchanged.
+- Day book and cash book continue to show payment activity.
+
+#### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| UI-only hide payment rows | Stale balances, duplicate client logic |
+| Skip payment creation on cash finalize | Breaks cash book / allocation audit trail |
+
+---
+
+## ADR-015: Document-First Party Transaction Timeline
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-14 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+#### Context
+
+The party details page showed only `ledger_entries`-backed rows (invoices, bills, manual payments). Estimates, sale orders, delivery challans, purchase orders, FA batches, job work, and expenses were missing — unlike Vyapar's complete party document history.
+
+#### Decision
+
+- Introduce `buildPartyTimeline()` with a registry of per-module sources (`sales_documents`, `purchase_documents`, `payments`, `expenses`, `sale_fa_batches`, `purchase_fa_batches`, `job_work_orders`).
+- `GET /parties/:id/ledger` returns timeline rows from source tables; accounting summary (`outstanding`, totals) still uses `buildPartyLedgerReport()`.
+- Include finalized and converted documents; exclude drafts, cancelled, and soft-deleted records.
+- Sort timeline by `created_at DESC`.
+- Hide `document_finalize` payments from timeline only (see ADR-014).
+- Client consumes via `partyTimelineProvider` (same endpoint).
+
+#### Consequences
+
+- Party page becomes the unified document history without client-side multi-fetch.
+- New document modules register a timeline source instead of hardcoding types in the UI.
+- Party statement / day book / outstanding continue using ledger engine unchanged.
+
+#### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Post all documents to `ledger_entries` on create | Pollutes accounting; estimates/orders are not ledger events |
+| Client-side merge of module list APIs | N+1 fetches, inconsistent sort, duplicate cache logic |
+
+---
+
 ## ADR Template
 
 Use for future decisions. Do not remove.

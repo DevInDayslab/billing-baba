@@ -23,25 +23,11 @@ class ActionCenterTasksSection extends ConsumerWidget {
     final result = await showTaskEditorDialog(context, editTask: editTask);
     if (result == null || !context.mounted) return;
 
-    final notifier = ref.read(tasksProvider.notifier);
-    if (editTask != null) {
-      await notifier.updateTask(
-        editTask.copyWith(
-          title: result.title,
-          description: result.description,
-          clearDescription: result.description == null,
-          reminderAt: result.reminderAt,
-          clearReminderAt: result.reminderAt == null,
-          updatedAt: DateTime.now(),
-        ),
-      );
-    } else {
-      await notifier.add(
-        title: result.title,
-        description: result.description,
-        reminderAt: result.reminderAt,
-      );
-    }
+    await applyTaskEditorResult(
+      result: result,
+      notifier: ref.read(tasksProvider.notifier),
+      editTask: editTask,
+    );
   }
 
   Future<void> _toggleComplete(
@@ -187,14 +173,14 @@ class ActionCenterTasksSection extends ConsumerWidget {
                   value: _OverflowAction.deleteCompleted,
                   child: Text('Delete Completed'),
                 ),
-                PopupMenuItem(
-                  value: _OverflowAction.viewAll,
-                  child: Text('View All Tasks'),
-                ),
-                PopupMenuItem(
-                  value: _OverflowAction.settings,
-                  child: Text('Settings'),
-                ),
+                // PopupMenuItem(
+                //   value: _OverflowAction.viewAll,
+                //   child: Text('View All Tasks'),
+                // ),
+                // PopupMenuItem(
+                //   value: _OverflowAction.settings,
+                //   child: Text('Settings'),
+                // ),
               ],
             ),
           ],

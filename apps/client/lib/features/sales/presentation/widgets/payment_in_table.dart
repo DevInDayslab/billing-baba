@@ -399,7 +399,7 @@ class _StatusColumnFilterHeaderState extends State<_StatusColumnFilterHeader> {
     'All Status',
     'Paid',
     'Partial',
-    'Unused',
+    'Unpaid',
   ];
 
   @override

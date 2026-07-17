@@ -7,7 +7,11 @@ import type {
   ListPartiesQuery,
   UpdatePartyBody,
 } from './party.schema';
-import type { PartyRecord } from './party.types';
+import type {
+  PartyDeleteAction,
+  PartyDeleteStatus,
+  PartyRecord,
+} from './party.types';
 import {
   normalizeGstin,
   normalizeMobile,
@@ -212,12 +216,11 @@ export class PartyService {
     return updated;
   }
 
-  async deleteParty(
+  async getPartyDeleteStatus(
     businessId: string,
     accountId: string,
-    userId: string | undefined,
     partyId: string,
-  ): Promise<void> {
+  ): Promise<PartyDeleteStatus> {
     await this.assertBusinessAccess(businessId, accountId);
 
     const existing = await this.repository.findById(businessId, partyId);
@@ -225,28 +228,63 @@ export class PartyService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    const dependencyCount = await this.repository.countDocumentDependencies(
+    const references = await this.repository.countDeleteReferences(
       businessId,
       partyId,
     );
 
-    if (dependencyCount > 0) {
-      throw new AppError(
-        'PARTY_HAS_DEPENDENCIES',
-        'Cannot delete party with existing documents or ledger entries',
-        422,
-      );
+    const hasReferences = Object.values(references).some((count) => count > 0);
+    if (!hasReferences) {
+      return { canDelete: true };
     }
 
-    const deleted = await this.repository.softDelete(
-      businessId,
-      partyId,
-      userId ?? null,
-    );
+    return { canDelete: false, references };
+  }
 
-    if (!deleted) {
+  async deleteParty(
+    businessId: string,
+    accountId: string,
+    userId: string | undefined,
+    partyId: string,
+  ): Promise<PartyDeleteAction> {
+    await this.assertBusinessAccess(businessId, accountId);
+
+    const existing = await this.repository.findById(businessId, partyId);
+    if (!existing) {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
+
+    const references = await this.repository.countDeleteReferences(
+      businessId,
+      partyId,
+    );
+
+    const hasReferences = Object.values(references).some((count) => count > 0);
+
+    if (!hasReferences) {
+      const deleted = await this.repository.softDelete(
+        businessId,
+        partyId,
+        userId ?? null,
+      );
+
+      if (!deleted) {
+        throw new AppError('NOT_FOUND', 'Party not found', 404);
+      }
+
+      return 'deleted';
+    }
+
+    const deactivated = await this.repository.update(businessId, partyId, {
+      isActive: false,
+      updatedBy: userId ?? null,
+    });
+
+    if (!deactivated) {
+      throw new AppError('NOT_FOUND', 'Party not found', 404);
+    }
+
+    return 'deactivated';
   }
 
   private async assertBusinessAccess(

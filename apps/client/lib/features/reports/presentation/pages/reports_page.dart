@@ -13,16 +13,18 @@ import 'package:billing_baba/features/reports/models/taxes_report_subsection.dar
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/report_content_panel.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/reports_nav_panel.dart';
+import 'package:billing_baba/features/reports/providers/reports_nav_intent_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ReportsPage extends StatefulWidget {
+class ReportsPage extends ConsumerStatefulWidget {
   const ReportsPage({super.key});
 
   @override
-  State<ReportsPage> createState() => _ReportsPageState();
+  ConsumerState<ReportsPage> createState() => _ReportsPageState();
 }
 
-class _ReportsPageState extends State<ReportsPage> {
+class _ReportsPageState extends ConsumerState<ReportsPage> {
   ReportNavGroup _navGroup = ReportNavGroup.transaction;
   TransactionReportSubSection _selectedTransactionSub =
       TransactionReportSubSection.sale;
@@ -41,6 +43,33 @@ class _ReportsPageState extends State<ReportsPage> {
       OtherIncomeReportSubSection.otherIncome;
   LoanAccountsReportSubSection _selectedLoanAccountsSub =
       LoanAccountsReportSubSection.loanStatement;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _applyPendingIntent());
+  }
+
+  void _applyPendingIntent() {
+    final intent = ref.read(reportsNavIntentProvider.notifier).consume();
+    if (intent == null || !mounted) return;
+
+    setState(() {
+      _navGroup = intent.group;
+      if (intent.transactionSub != null) {
+        _selectedTransactionSub = intent.transactionSub!;
+      }
+      if (intent.partySub != null) {
+        _selectedPartySub = intent.partySub!;
+      }
+      if (intent.itemStockSub != null) {
+        _selectedItemStockSub = intent.itemStockSub!;
+      }
+      if (intent.businessStatusSub != null) {
+        _selectedBusinessStatusSub = intent.businessStatusSub!;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

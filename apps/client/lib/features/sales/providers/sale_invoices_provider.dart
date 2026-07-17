@@ -11,6 +11,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_o
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_invoices_provider.g.dart';
@@ -446,77 +447,65 @@ class SelectedSaleInvoiceId extends _$SelectedSaleInvoiceId {
   void clear() => state = null;
 }
 
+PaginatedSaleInvoices _allInvoicesPage(List<SaleInvoiceModel> allInvoices) {
+  return PaginatedSaleInvoices(
+    items: allInvoices,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: allInvoices.length,
+  );
+}
+
+List<SaleInvoiceModel> _allInvoicesFromAsync(
+  AsyncValue<PaginatedSaleInvoices> invoicesAsync,
+) {
+  return invoicesAsync.when(
+    data: (page) => page.items,
+    loading: () => const [],
+    error: (_, _) => const [],
+  );
+}
+
 @Riverpod(keepAlive: true)
 class SaleInvoices extends _$SaleInvoices {
-  List<SaleInvoiceModel>? _cachedFullList;
-  Object? _cachedServerQueryKey;
-
   @override
   Future<PaginatedSaleInvoices> build() async {
-    ref.watch(saleInvoiceFiltersProvider);
+    ref.watch(
+      saleInvoiceFiltersProvider.select(
+        (filters) => (filters.timeRangeOption, filters.customDateRange),
+      ),
+    );
     ref.watch(saleInvoiceSearchQueryProvider);
-    return _fetchPage();
+    final allInvoices = await _fetchAllInvoices();
+    return _allInvoicesPage(allInvoices);
   }
 
-  Object _serverQueryKey(SaleInvoiceFiltersState filters, String search) => (
-    filters.timeRangeOption,
-    filters.customDateRange?.start.millisecondsSinceEpoch,
-    filters.customDateRange?.end.millisecondsSinceEpoch,
-    search.trim(),
-  );
-
-  Future<PaginatedSaleInvoices> _fetchPage() async {
+  Future<List<SaleInvoiceModel>> _fetchAllInvoices() async {
     final filters = ref.read(saleInvoiceFiltersProvider);
     final search = ref.read(saleInvoiceSearchQueryProvider);
     final service = await ref.read(salesServiceProvider.future);
-    final queryKey = _serverQueryKey(filters, search);
 
-    if (needsSaleInvoiceClientSideFiltering(filters)) {
-      if (_cachedFullList == null || _cachedServerQueryKey != queryKey) {
-        _cachedServerQueryKey = queryKey;
-        _cachedFullList = await PaginatedFetch.fetchAll<SaleInvoiceModel>(
-          fetchPage: (page) async {
-            final result = await service.fetchInvoicesPage(
-              _buildListQuery(
-                filters,
-                search,
-                page: page,
-                limit: PaginatedFetch.defaultPageSize,
-              ),
-            );
-            return (items: result.items, totalPages: result.totalPages);
-          },
+    return PaginatedFetch.fetchAll<SaleInvoiceModel>(
+      fetchPage: (page) async {
+        final result = await service.fetchInvoicesPage(
+          _buildListQuery(
+            filters,
+            search,
+            page: page,
+            limit: PaginatedFetch.defaultPageSize,
+          ),
         );
-      }
-
-      final filteredItems = applySaleInvoiceClientFilters(
-        _cachedFullList!,
-        filters,
-      );
-      return paginateSaleInvoiceItems(filteredItems, filters);
-    }
-
-    _cachedFullList = null;
-    _cachedServerQueryKey = null;
-
-    final page = await service.fetchInvoicesPage(
-      _buildListQuery(filters, search),
-    );
-
-    return PaginatedSaleInvoices(
-      items: page.items,
-      currentPage: page.currentPage,
-      totalPages: page.totalPages,
-      totalItems: page.totalItems,
-      summary: page.summary,
+        return (items: result.items, totalPages: result.totalPages);
+      },
     );
   }
 
   Future<void> refresh() async {
-    _cachedFullList = null;
-    _cachedServerQueryKey = null;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchPage);
+    state = await AsyncValue.guard(() async {
+      final allInvoices = await _fetchAllInvoices();
+      return _allInvoicesPage(allInvoices);
+    });
   }
 
   Future<String?> deleteDraft(String documentId) async {
@@ -536,7 +525,6 @@ class SaleInvoices extends _$SaleInvoices {
     try {
       final service = await ref.read(salesServiceProvider.future);
       await service.deleteDraft(documentId);
-      await refresh();
       refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
@@ -549,7 +537,6 @@ class SaleInvoices extends _$SaleInvoices {
     try {
       final service = await ref.read(salesServiceProvider.future);
       await service.cancelSale(documentId);
-      await refresh();
       refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
@@ -565,7 +552,6 @@ class SaleInvoices extends _$SaleInvoices {
       } else {
         await service.cancelSale(invoice.id);
       }
-      await refresh();
       refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
@@ -581,7 +567,6 @@ class SaleInvoices extends _$SaleInvoices {
     try {
       final service = await ref.read(salesServiceProvider.future);
       await service.finalizeDraft(documentId);
-      await refresh();
       refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
@@ -700,23 +685,22 @@ class SaleInvoiceFilters extends _$SaleInvoiceFilters {
 }
 
 @riverpod
+List<SaleInvoiceModel> filteredSaleInvoices(Ref ref) {
+  final allInvoices = _allInvoicesFromAsync(ref.watch(saleInvoicesProvider));
+  final filters = ref.watch(saleInvoiceFiltersProvider);
+  return applySaleInvoiceClientFilters(allInvoices, filters);
+}
+
+@riverpod
 PaginatedSaleInvoices paginatedSaleInvoices(Ref ref) {
-  final invoicesAsync = ref.watch(saleInvoicesProvider);
-  return invoicesAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedSaleInvoices(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
-  );
+  final filtered = ref.watch(filteredSaleInvoicesProvider);
+  final filters = ref.watch(saleInvoiceFiltersProvider);
+  return paginateSaleInvoiceItems(filtered, filters);
 }
 
 @riverpod
 SaleInvoiceSummaryData saleInvoiceSummary(Ref ref) {
-  final page = ref.watch(paginatedSaleInvoicesProvider);
-  final invoices = page.items;
+  final invoices = ref.watch(filteredSaleInvoicesProvider);
   final totalSalesAmount = invoices.fold<double>(
     0,
     (sum, invoice) => sum + invoice.amount,

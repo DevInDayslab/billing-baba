@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_fa_model.dart';
@@ -30,7 +31,6 @@ const double _minTableWidth =
 class PurchaseFaTable extends ConsumerWidget {
   const PurchaseFaTable({super.key});
 
-  static final _dateFormat = DateFormat('dd/MM/yyyy, hh:mm a');
   static final _dueDateFormat = DateFormat('dd/MM/yyyy');
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -191,7 +191,7 @@ class PurchaseFaTable extends ConsumerWidget {
         PurchaseTransactionTableCell(
           width: purchaseTransactionDateColWidth,
           child: Text(
-            _dateFormat.format(record.date),
+            DateTimeUtils.formatDisplayDate(record.date),
             overflow: TextOverflow.ellipsis,
           ),
         ),

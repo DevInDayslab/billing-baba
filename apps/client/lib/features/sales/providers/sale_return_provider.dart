@@ -220,7 +220,26 @@ SalesDocumentListQuery buildSaleReturnListQuery(
     status: _documentStatusFromFilterLabel(filters.selectedStatus),
     from: dateRange?.start.toUtc().toIso8601String(),
     to: dateRange?.end.toUtc().toIso8601String(),
-    q: filters.searchQuery.trim().isEmpty ? null : filters.searchQuery.trim(),
+  );
+}
+
+PaginatedSaleInvoices paginateSaleReturnItems(
+  List<SaleInvoiceModel> items,
+  SaleReturnFiltersState filters,
+) {
+  final totalItems = items.length;
+  final totalPages = totalItems == 0
+      ? 1
+      : (totalItems / saleReturnPageSize).ceil();
+  final currentPage = filters.currentPage.clamp(1, totalPages);
+  final start = (currentPage - 1) * saleReturnPageSize;
+  final pageItems = items.skip(start).take(saleReturnPageSize).toList();
+
+  return PaginatedSaleInvoices(
+    items: pageItems,
+    currentPage: currentPage,
+    totalPages: totalPages,
+    totalItems: totalItems,
   );
 }
 
@@ -229,8 +248,17 @@ List<SaleInvoiceModel> applySaleReturnClientFilters(
   SaleReturnFiltersState filters,
 ) {
   final statusFilter = _statusFromFilterLabel(filters.selectedStatus);
+  final search = filters.searchQuery.trim().toLowerCase();
 
   return returns.where((item) {
+    if (search.isNotEmpty) {
+      final haystack =
+          '${item.partyName} ${item.invoiceNo} ${item.transactionType}'
+              .toLowerCase();
+      if (!haystack.contains(search)) {
+        return false;
+      }
+    }
     if (statusFilter != null && item.status != statusFilter) {
       return false;
     }
@@ -355,7 +383,6 @@ class SaleReturnFilters extends _$SaleReturnFilters {
       timeRangeOption: TimeRangeOptionX.fromLabel(label),
       currentPage: 1,
     );
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setCustomDateRange(
@@ -369,127 +396,109 @@ class SaleReturnFilters extends _$SaleReturnFilters {
       customDateRange: range,
       currentPage: 1,
     );
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setTransaction(String transaction) {
     state = state.copyWith(selectedTransaction: transaction, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setFirm(String firm) {
     state = state.copyWith(selectedFirm: firm, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setUser(String user) {
     state = state.copyWith(selectedUser: user, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setGodown(String godown) {
     state = state.copyWith(selectedGodown: godown, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setPayment(String payment) {
     state = state.copyWith(selectedPayment: payment, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setStatus(String status) {
     state = state.copyWith(selectedStatus: status, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setSearchQuery(String query) {
     _searchDebouncer ??= Debouncer();
     _searchDebouncer!.run(() {
       state = state.copyWith(searchQuery: query, currentPage: 1);
-      ref.invalidate(saleReturnsProvider);
     });
   }
 
   void setPage(int page) {
     state = state.copyWith(currentPage: page);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setDateColumnFilter(DateColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearDateColumnFilter: true, currentPage: 1)
         : state.copyWith(dateColumnFilter: filter, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setRefNoColumnFilter(TextColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearRefNoColumnFilter: true, currentPage: 1)
         : state.copyWith(refNoColumnFilter: filter, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setPartyNameColumnFilter(TextColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearPartyNameColumnFilter: true, currentPage: 1)
         : state.copyWith(partyNameColumnFilter: filter, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setTypeColumnFilter(SelectColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearTypeColumnFilter: true, currentPage: 1)
         : state.copyWith(typeColumnFilter: filter, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setTotalAmountColumnFilter(AmountColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearTotalAmountColumnFilter: true, currentPage: 1)
         : state.copyWith(totalAmountColumnFilter: filter, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setReceivedPaidColumnFilter(AmountColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearReceivedPaidColumnFilter: true, currentPage: 1)
         : state.copyWith(receivedPaidColumnFilter: filter, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setBalanceColumnFilter(AmountColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearBalanceColumnFilter: true, currentPage: 1)
         : state.copyWith(balanceColumnFilter: filter, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 
   void setDueDateColumnFilter(DateColumnFilter? filter) {
     state = filter == null
         ? state.copyWith(clearDueDateColumnFilter: true, currentPage: 1)
         : state.copyWith(dueDateColumnFilter: filter, currentPage: 1);
-    ref.invalidate(saleReturnsProvider);
   }
 }
 
 @riverpod
+List<SaleInvoiceModel> filteredSaleReturns(Ref ref) {
+  final allReturns = ref.watch(saleReturnsProvider).value?.items ?? [];
+  final filters = ref.watch(saleReturnFiltersProvider);
+  return applySaleReturnClientFilters(allReturns, filters);
+}
+
+@riverpod
 PaginatedSaleInvoices paginatedSaleReturns(Ref ref) {
-  final returnsAsync = ref.watch(saleReturnsProvider);
-  return returnsAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedSaleInvoices(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
-  );
+  final filtered = ref.watch(filteredSaleReturnsProvider);
+  final filters = ref.watch(saleReturnFiltersProvider);
+  return paginateSaleReturnItems(filtered, filters);
 }
 
 @riverpod
 SaleReturnSummaryData saleReturnSummary(Ref ref) {
-  final page = ref.watch(paginatedSaleReturnsProvider);
-  final returns = page.items;
+  final returns = ref.watch(filteredSaleReturnsProvider);
 
   var totalAmount = 0.0;
   var balance = 0.0;

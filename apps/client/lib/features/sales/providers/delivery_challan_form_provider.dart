@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
@@ -5,9 +6,11 @@ import 'package:billing_baba/features/sales/models/delivery_challan_form_model.d
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/providers/delivery_challan_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -290,6 +293,22 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     state = state.copyWith(items: items, clearSaveError: true);
   }
 
+  void selectCatalogItem(int index, SaleItemOption catalogItem) {
+    if (index < 0 || index >= state.items.length) return;
+    final line = state.items[index];
+    final applied = applyCatalogItemToLine(
+      line,
+      catalogItem,
+    ).copyWith(mrp: catalogItem.salePrice);
+    final items = selectCatalogItemOnSaleLines(
+      items: state.items,
+      targetIndex: index,
+      appliedLine: applied,
+      nextLineId: _nextChallanLineItemId,
+    );
+    state = state.copyWith(items: items, clearSaveError: true);
+  }
+
   void confirmLineItem(int index) {
     if (index < 0 || index >= state.items.length) return;
     final item = state.items[index];
@@ -317,6 +336,7 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     documentType: SalesDocumentType.deliveryChallan,
     documentSeries: SalesConstants.challanSeries,
     documentDate: state.invoiceDate,
+    documentTime: state.invoiceTime,
     notes: _buildNotes(),
     godownId: state.godownId,
     items: state.items,
@@ -370,6 +390,16 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
       );
       ref.invalidate(salesDocumentsListProvider(deliveryChallanListScope()));
       ref.invalidate(deliveryChallansProvider);
+      refreshAfterSaleMutation(
+        ref,
+        context: (
+          partyId: state.partyId,
+          itemIds: state.items
+              .map((line) => line.itemId)
+              .whereType<String>()
+              .where((id) => id.isNotEmpty),
+        ),
+      );
       resetForm();
       return null;
     } catch (error) {

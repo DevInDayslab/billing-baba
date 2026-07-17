@@ -321,7 +321,7 @@ final class SaleOrdersProvider
   SaleOrders create() => SaleOrders();
 }
 
-String _$saleOrdersHash() => r'f5234ae906543c75f3532ef4182ba24512d01e9d';
+String _$saleOrdersHash() => r'bdfbada52e88ea08dfb79cd1d2115363042ae883';
 
 abstract class _$SaleOrders extends $AsyncNotifier<PaginatedSaleInvoices> {
   FutureOr<PaginatedSaleInvoices> build();
@@ -398,6 +398,54 @@ abstract class _$SaleOrderFilters extends $Notifier<SaleOrderFiltersState> {
   }
 }
 
+@ProviderFor(filteredSaleOrders)
+final filteredSaleOrdersProvider = FilteredSaleOrdersProvider._();
+
+final class FilteredSaleOrdersProvider
+    extends
+        $FunctionalProvider<
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>
+        >
+    with $Provider<List<SaleInvoiceModel>> {
+  FilteredSaleOrdersProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'filteredSaleOrdersProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredSaleOrdersHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<SaleInvoiceModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<SaleInvoiceModel> create(Ref ref) {
+    return filteredSaleOrders(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<SaleInvoiceModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<SaleInvoiceModel>>(value),
+    );
+  }
+}
+
+String _$filteredSaleOrdersHash() =>
+    r'121a349b6a69771f7d86af65c56ac5bd50a2333a';
+
 @ProviderFor(paginatedSaleOrders)
 final paginatedSaleOrdersProvider = PaginatedSaleOrdersProvider._();
 
@@ -444,4 +492,4 @@ final class PaginatedSaleOrdersProvider
 }
 
 String _$paginatedSaleOrdersHash() =>
-    r'85ca261c3eb5b1c06b8b669801462561c4356f8f';
+    r'd1c40f1a9481fc6e0be8a683869e5f1d5f762963';

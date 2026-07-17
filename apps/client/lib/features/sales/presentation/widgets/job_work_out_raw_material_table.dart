@@ -5,6 +5,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_o
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/providers/job_work_out_form_provider.dart';
+import 'package:billing_baba/features/sales/utils/sale_quantity_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -203,18 +204,17 @@ class _RawMaterialRow extends ConsumerWidget {
             SizedBox(
               width: 64,
               child: _CompactTextField(
-                initialValue: item.qty == 0 ? '0' : item.qty.toString(),
+                initialValue: SaleQuantityInput.format(
+                  item.qty,
+                  zeroValue: '0',
+                ),
                 hintText: '0',
                 textAlign: TextAlign.center,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                ],
+                keyboardType: SaleQuantityInput.integerKeyboardType,
+                inputFormatters: SaleQuantityInput.integerFormatters,
                 onChanged: (value) => notifier.updateRawMaterial(
                   index,
-                  item.copyWith(qty: double.tryParse(value) ?? 0),
+                  item.copyWith(qty: SaleQuantityInput.parse(value)),
                 ),
               ),
             ),

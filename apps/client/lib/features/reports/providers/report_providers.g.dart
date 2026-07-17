@@ -35,7 +35,7 @@ final class BillWiseProfitReportProvider
 }
 
 String _$billWiseProfitReportHash() =>
-    r'30d55ecb1df74e84ad327c53442e0364dc477635';
+    r'0e31a207aa30f28a91104d105f1522dedcc2c16e';
 
 abstract class _$BillWiseProfitReport
     extends $AsyncNotifier<BillWiseProfitReportData> {
@@ -88,7 +88,7 @@ final class CashFlowReportProvider
   CashFlowReport create() => CashFlowReport();
 }
 
-String _$cashFlowReportHash() => r'5ebf72cb55622fd37cd0d93aa2d082a73ed4ff6d';
+String _$cashFlowReportHash() => r'5b258cf0ada6597a38797a9cd1c3a708b20a5a5e';
 
 abstract class _$CashFlowReport extends $AsyncNotifier<CashFlowReportData> {
   FutureOr<CashFlowReportData> build();
@@ -138,7 +138,7 @@ final class PartyWiseProfitLossReportProvider
 }
 
 String _$partyWiseProfitLossReportHash() =>
-    r'd18df4a7ea3a3d01f4cbbee288ef1e8946f3926e';
+    r'050033dbda061144599dbe2014737e0ee9e982a1';
 
 abstract class _$PartyWiseProfitLossReport
     extends $AsyncNotifier<PartyWiseProfitLossReportData> {
@@ -254,7 +254,7 @@ final class SalePurchaseByPartyReportProvider
 }
 
 String _$salePurchaseByPartyReportHash() =>
-    r'85983f5866b3a941750573397782151b55e41dc5';
+    r'b02e6d8f53640e92a9d56ed1c9149c9af8ee856f';
 
 abstract class _$SalePurchaseByPartyReport
     extends $AsyncNotifier<SalePurchaseByPartyReportData> {
@@ -313,7 +313,7 @@ final class SalePurchaseByPartyGroupReportProvider
 }
 
 String _$salePurchaseByPartyGroupReportHash() =>
-    r'a665d025dc8e74c07c0142c40f538540520ccc9c';
+    r'98c8342b720e99d38e013ad6af4cb8693e574904';
 
 abstract class _$SalePurchaseByPartyGroupReport
     extends $AsyncNotifier<SalePurchaseByPartyGroupReportData> {
@@ -366,7 +366,7 @@ final class Gstr9ReportProvider
   Gstr9Report create() => Gstr9Report();
 }
 
-String _$gstr9ReportHash() => r'500ab0cab2685d71ae96c456dba6ae93db2a6369';
+String _$gstr9ReportHash() => r'282c74d2b2635dcd29167e3be64d9e6ff364460c';
 
 abstract class _$Gstr9Report extends $AsyncNotifier<Gstr9ReportData> {
   FutureOr<Gstr9ReportData> build();
@@ -415,7 +415,7 @@ final class SaleSummaryByHsnReportProvider
 }
 
 String _$saleSummaryByHsnReportHash() =>
-    r'bfa0ef06572207dd61a3fb4edfb380ece2ba7c1f';
+    r'820eb81440adfe82abdd6a8985c122d5170be35f';
 
 abstract class _$SaleSummaryByHsnReport
     extends $AsyncNotifier<SaleSummaryByHsnReportData> {
@@ -468,7 +468,7 @@ final class SacReportReportProvider
   SacReportReport create() => SacReportReport();
 }
 
-String _$sacReportReportHash() => r'e1f797dcd1185f07072a610f4db6d0f7457b2d8e';
+String _$sacReportReportHash() => r'64f6e4e530ebb27da4f9a42daa3da48ed6966dc2';
 
 abstract class _$SacReportReport extends $AsyncNotifier<SacReportData> {
   FutureOr<SacReportData> build();
@@ -517,7 +517,7 @@ final class ItemReportByPartyReportProvider
 }
 
 String _$itemReportByPartyReportHash() =>
-    r'6b7c76dc5b5fb0fc85ec93d4414c8640cfc6bbfa';
+    r'8fb9f1c603fd68e51c330703969b884bc8bf2db0';
 
 abstract class _$ItemReportByPartyReport
     extends $AsyncNotifier<ItemReportByPartyReportData> {
@@ -575,7 +575,7 @@ final class ItemWiseProfitLossReportProvider
 }
 
 String _$itemWiseProfitLossReportHash() =>
-    r'a633b947acb080efb5034af07fd3e0016180f4c3';
+    r'9edce71d3d2536a6409ca889938bcbc2d7fa725e';
 
 abstract class _$ItemWiseProfitLossReport
     extends $AsyncNotifier<ItemWiseProfitLossReportData> {
@@ -628,7 +628,7 @@ final class StockDetailReportProvider
   StockDetailReport create() => StockDetailReport();
 }
 
-String _$stockDetailReportHash() => r'0c178376730c6a43fbd94901eb2840c985dde7ee';
+String _$stockDetailReportHash() => r'24e8ff1ce7ee57bcbfc50a69385ce21d69558eaa';
 
 abstract class _$StockDetailReport
     extends $AsyncNotifier<StockDetailReportData> {
@@ -735,7 +735,7 @@ final class SalePurchaseByItemCategoryReportProvider
 }
 
 String _$salePurchaseByItemCategoryReportHash() =>
-    r'16d35fcbcff2d5c318334cbc2c6344f15a81c56a';
+    r'1ec4a9b0ca17e9e9f98d31c20d9031fab79c9269';
 
 abstract class _$SalePurchaseByItemCategoryReport
     extends $AsyncNotifier<CategoryAmountReportData> {
@@ -795,7 +795,7 @@ final class StockSummaryByItemCategoryReportProvider
 }
 
 String _$stockSummaryByItemCategoryReportHash() =>
-    r'3fc365e013a9801dc790cb6ff947d17c9f2ab861';
+    r'a2c0ab610524ff5f8d206c36e40f7f390795b63a';
 
 abstract class _$StockSummaryByItemCategoryReport
     extends $AsyncNotifier<CategoryAmountReportData> {
@@ -855,7 +855,7 @@ final class ItemCategoryWiseProfitLossReportProvider
 }
 
 String _$itemCategoryWiseProfitLossReportHash() =>
-    r'6046ea5b8971894284b778009555e272647b7f59';
+    r'a70da93ce5e328761ba58cd7a436c41125004eb9';
 
 abstract class _$ItemCategoryWiseProfitLossReport
     extends $AsyncNotifier<CategoryAmountReportData> {
@@ -913,7 +913,7 @@ final class ItemWiseDiscountReportProvider
 }
 
 String _$itemWiseDiscountReportHash() =>
-    r'cb6b1e279af540cab4cd86aebeb5a832f5152419';
+    r'ae1e45c6eb93d1740f09fc42aa8d58331fe810ec';
 
 abstract class _$ItemWiseDiscountReport
     extends $AsyncNotifier<ItemWiseDiscountReportData> {
@@ -968,7 +968,7 @@ final class ManufacturingReportProvider
 }
 
 String _$manufacturingReportHash() =>
-    r'3f26e1235d212f806008b00b2422a385dee1b0f4';
+    r'ffe5e1161a49d7744a2258a36d36a66223e7b110';
 
 abstract class _$ManufacturingReport
     extends $AsyncNotifier<ManufacturingReportData> {
@@ -1021,7 +1021,7 @@ final class ConsumptionReportProvider
   ConsumptionReport create() => ConsumptionReport();
 }
 
-String _$consumptionReportHash() => r'383ba69babf9b281a23728f0372df8179a984a56';
+String _$consumptionReportHash() => r'36cf056659fbddc2db1d5b77ef1f9ef2735c45be';
 
 abstract class _$ConsumptionReport
     extends $AsyncNotifier<ConsumptionReportData> {
@@ -1073,7 +1073,7 @@ final class StockTransferReportProvider
 }
 
 String _$stockTransferReportHash() =>
-    r'23b2c1a1818e5b6855d6bfa56f8660886a9204e9';
+    r'19e8060db70708c53e9f9c25d6b3d3aded810ac8';
 
 abstract class _$StockTransferReport
     extends $AsyncNotifier<StockTransferReportData> {
@@ -1181,7 +1181,7 @@ final class GstTaxReportProvider
   GstTaxReport create() => GstTaxReport();
 }
 
-String _$gstTaxReportHash() => r'2fffe28bc3416def8c9b8eb93e70483755718ee9';
+String _$gstTaxReportHash() => r'be5614602db26874dec87142a81ed1295c72b9b9';
 
 abstract class _$GstTaxReport extends $AsyncNotifier<GstTaxReportData> {
   FutureOr<GstTaxReportData> build();
@@ -1226,7 +1226,7 @@ final class GstTaxRateReportProvider
   GstTaxRateReport create() => GstTaxRateReport();
 }
 
-String _$gstTaxRateReportHash() => r'1f21cf747594ee5d68c7926ced14dcd2d11ab7b8';
+String _$gstTaxRateReportHash() => r'838b0e9c4fc05318d8d9ba4da0b23b6765d6cf3e';
 
 abstract class _$GstTaxRateReport extends $AsyncNotifier<GstTaxRateReportData> {
   FutureOr<GstTaxRateReportData> build();
@@ -1275,7 +1275,7 @@ final class Form27eqReportProvider
   Form27eqReport create() => Form27eqReport();
 }
 
-String _$form27eqReportHash() => r'f16b033202f45509dc77ac6ea18e425e431e0996';
+String _$form27eqReportHash() => r'75e0ac232663144d6b3182005ab4d6929a1aebfb';
 
 abstract class _$Form27eqReport extends $AsyncNotifier<TaxInvoiceReportData> {
   FutureOr<TaxInvoiceReportData> build();
@@ -1325,7 +1325,7 @@ final class TcsReceivableReportProvider
 }
 
 String _$tcsReceivableReportHash() =>
-    r'4ccc00f3c4fc8515b4b552b6059d5cd1deb82ceb';
+    r'c57c39969eff67e08bb5914f71bcdfd4f16e5ddb';
 
 abstract class _$TcsReceivableReport
     extends $AsyncNotifier<TaxInvoiceReportData> {
@@ -1375,7 +1375,7 @@ final class TdsPayableReportProvider
   TdsPayableReport create() => TdsPayableReport();
 }
 
-String _$tdsPayableReportHash() => r'c1fcd5d3e9e96b5c40c391c5a65f0e62025d20c7';
+String _$tdsPayableReportHash() => r'0c7d55826cbdf8f99f6024f5457b82a80eaf5058';
 
 abstract class _$TdsPayableReport extends $AsyncNotifier<TaxInvoiceReportData> {
   FutureOr<TaxInvoiceReportData> build();
@@ -1425,7 +1425,7 @@ final class TdsReceivableReportProvider
 }
 
 String _$tdsReceivableReportHash() =>
-    r'841b1b230eabbd71f257fa96bf43f90fa9390b7a';
+    r'f22d2b919f2faab7716b525552d7c8d947ee1819';
 
 abstract class _$TdsReceivableReport
     extends $AsyncNotifier<TaxInvoiceReportData> {
@@ -1475,7 +1475,7 @@ final class ExpensesReportProvider
   ExpensesReport create() => ExpensesReport();
 }
 
-String _$expensesReportHash() => r'fd3636ca1c1a554a26e8cabd0a9f457eb40dd659';
+String _$expensesReportHash() => r'f6def556047df49e7d4b0edd63710fefbda2e531';
 
 abstract class _$ExpensesReport extends $AsyncNotifier<ExpensesReportData> {
   FutureOr<ExpensesReportData> build();
@@ -1525,7 +1525,7 @@ final class ExpenseByCategoryReportProvider
 }
 
 String _$expenseByCategoryReportHash() =>
-    r'800d2f45bb5abe4fbc067874e858a6a3693f34b9';
+    r'3ca727c74e5fb561705f31a178fdc7e950dd8c23';
 
 abstract class _$ExpenseByCategoryReport
     extends $AsyncNotifier<ExpenseByCategoryReportData> {
@@ -1580,7 +1580,7 @@ final class ExpenseByItemReportProvider
 }
 
 String _$expenseByItemReportHash() =>
-    r'558b821bfce40c269f8860962a675621f1541815';
+    r'2f9b2d081b982173afdd08dcdaa9d6a30a5c8cc1';
 
 abstract class _$ExpenseByItemReport
     extends $AsyncNotifier<ExpenseByItemReportData> {
@@ -1638,7 +1638,7 @@ final class SalePurchaseOrdersReportProvider
 }
 
 String _$salePurchaseOrdersReportHash() =>
-    r'99a7d1dece428b7108f316c00ba8a82d9d8ba4a7';
+    r'83a34dc7ca79f6423f61c5de933bf0dda8f1cc0f';
 
 abstract class _$SalePurchaseOrdersReport
     extends $AsyncNotifier<SalePurchaseOrdersReportData> {
@@ -1697,7 +1697,7 @@ final class SalePurchaseOrderItemsReportProvider
 }
 
 String _$salePurchaseOrderItemsReportHash() =>
-    r'b9bb8db88ba5ff7fafa3f232ebf67aabd6020cd6';
+    r'454a57dea614d5ef8e7f3a8039a6ab27f49162e1';
 
 abstract class _$SalePurchaseOrderItemsReport
     extends $AsyncNotifier<SalePurchaseOrderItemsReportData> {
@@ -1750,7 +1750,7 @@ final class OtherIncomeReportProvider
   OtherIncomeReport create() => OtherIncomeReport();
 }
 
-String _$otherIncomeReportHash() => r'8a8429264f32c25c2191feab3f3b72f908258ede';
+String _$otherIncomeReportHash() => r'77153c6d6a40d403c29d79f8930a73dfbb0da3e9';
 
 abstract class _$OtherIncomeReport
     extends $AsyncNotifier<OtherIncomeReportData> {
@@ -1806,7 +1806,7 @@ final class OtherIncomeByCategoryReportProvider
 }
 
 String _$otherIncomeByCategoryReportHash() =>
-    r'6a23b0e2092f8cc4b9b6a14fa34dc3181377356e';
+    r'cf5deb9168e8134ee1c950604ad85552f10da5fe';
 
 abstract class _$OtherIncomeByCategoryReport
     extends $AsyncNotifier<OtherIncomeByCategoryReportData> {
@@ -1864,7 +1864,7 @@ final class OtherIncomeByItemReportProvider
 }
 
 String _$otherIncomeByItemReportHash() =>
-    r'973df11295346675b16a5e030a685ef42d01e200';
+    r'efbc8bba40335feb9588bce053bdf9134f9283e4';
 
 abstract class _$OtherIncomeByItemReport
     extends $AsyncNotifier<OtherIncomeByItemReportData> {

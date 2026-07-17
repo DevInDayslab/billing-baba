@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
@@ -91,6 +92,7 @@ class InventoryUnits extends _$InventoryUnits {
         shortName: trimmedShortName,
       );
       await refresh();
+      invalidateInventoryLists(ref);
       return AddUnitResult(unit: unit);
     } on ApiValidationException catch (error) {
       return AddUnitResult(
@@ -119,6 +121,7 @@ class InventoryUnits extends _$InventoryUnits {
         shortName: shortName.trim(),
       );
       await refresh();
+      invalidateInventoryLists(ref);
       return AddUnitResult(unit: unit);
     } on ApiValidationException catch (error) {
       return AddUnitResult(
@@ -143,6 +146,7 @@ class InventoryUnits extends _$InventoryUnits {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.deleteUnit(id);
       await refresh();
+      invalidateInventoryLists(ref);
       return null;
     } on InventoryException catch (error) {
       state = previous;

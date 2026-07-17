@@ -10,8 +10,11 @@ export function toMovementRecord(row: MovementRow): MovementRecord {
     movement_type: row.movementType,
     quantity_delta: row.quantityDelta,
     cost_per_unit: row.costPerUnit,
+    unit: row.unit,
     reference_id: row.referenceId,
     reference_type: row.referenceType,
+    reference_number: row.referenceNumber,
+    party_name: row.partyName,
     created_by: row.createdBy,
     created_at: row.createdAt.toISOString(),
   };

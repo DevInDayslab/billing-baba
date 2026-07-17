@@ -16,7 +16,7 @@ class PaymentInStatusBadge extends StatelessWidget {
     final (label, textColor) = switch (status) {
       PaymentInStatus.paid => ('Paid', const Color(0xFF2E7D32)),
       PaymentInStatus.partial => ('Partial', const Color(0xFFE65100)),
-      PaymentInStatus.unused => ('Unused', const Color(0xFFC62828)),
+      PaymentInStatus.unused => ('Unpaid', const Color(0xFFC62828)),
     };
 
     if (plain) {

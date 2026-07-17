@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_list_tile.dart';
@@ -26,6 +27,7 @@ enum PartyTransactionSortColumn {
   date,
   total,
   balance,
+  dueDate,
   status,
 }
 
@@ -123,7 +125,6 @@ class _PartyLedgerTransactionsSectionState
   PartyTransactionTableState _tableState = const PartyTransactionTableState();
   String _searchQuery = '';
 
-  static final _dateFormat = DateFormat('dd/MM/yyyy, hh:mm a');
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
@@ -145,15 +146,39 @@ class _PartyLedgerTransactionsSectionState
       _tableState.sortDirection == PartyTransactionSortDirection.ascending;
 
   double _transactionTotal(PartyLedgerTransactionModel transaction) =>
-      transaction.debit > 0 ? transaction.debit : transaction.credit;
+      transaction.total > 0
+      ? transaction.total
+      : (transaction.debit > 0 ? transaction.debit : transaction.credit);
+
+  double _transactionBalance(PartyLedgerTransactionModel transaction) =>
+      transaction.balance > 0 || transaction.balanceAfter == 0
+      ? transaction.balance
+      : transaction.balanceAfter;
 
   String _transactionStatus(PartyLedgerTransactionModel transaction) {
+    final status = transaction.status?.trim();
+    if (status != null && status.isNotEmpty) {
+      return status;
+    }
+
+    final paymentStatus = transaction.paymentStatus?.trim();
+    if (paymentStatus != null && paymentStatus.isNotEmpty) {
+      return paymentStatus;
+    }
+
     return switch (transaction.entryType) {
-      'payment' => 'Paid',
-      'sale' || 'purchase' => 'Paid',
+      'payment' => transaction.isPayment ? 'Unpaid' : 'Paid',
       'return' => 'Returned',
       _ => '—',
     };
+  }
+
+  String _dueDateLabel(PartyLedgerTransactionModel transaction) {
+    final dueDate = transaction.dueDate;
+    if (dueDate == null) {
+      return '—';
+    }
+    return DateTimeUtils.formatDisplayDate(dueDate);
   }
 
   List<String> _typeOptions(List<PartyLedgerTransactionModel> transactions) {
@@ -186,10 +211,11 @@ class _PartyLedgerTransactionsSectionState
         final haystack = [
           tx.type,
           tx.referenceNumber ?? '',
-          _dateFormat.format(tx.date),
+          DateTimeUtils.formatDisplayDateTime(tx.createdAt),
           _currencyFormat.format(_transactionTotal(tx)),
-          _currencyFormat.format(tx.balanceAfter),
+          _currencyFormat.format(_transactionBalance(tx)),
           _transactionStatus(tx),
+          _dueDateLabel(tx),
         ].join(' ').toLowerCase();
         return haystack.contains(query);
       }).toList();
@@ -211,7 +237,7 @@ class _PartyLedgerTransactionsSectionState
 
     final dateFilter = _tableState.dateFilter;
     if (dateFilter != null && dateFilter.isActive) {
-      rows = rows.where((tx) => dateFilter.matches(tx.date)).toList();
+      rows = rows.where((tx) => dateFilter.matches(tx.createdAt)).toList();
     }
 
     final totalFilter = _tableState.totalFilter;
@@ -224,7 +250,7 @@ class _PartyLedgerTransactionsSectionState
     final balanceFilter = _tableState.balanceFilter;
     if (balanceFilter != null && balanceFilter.isActive) {
       rows = rows
-          .where((tx) => balanceFilter.matches(tx.balanceAfter))
+          .where((tx) => balanceFilter.matches(_transactionBalance(tx)))
           .toList();
     }
 
@@ -245,13 +271,16 @@ class _PartyLedgerTransactionsSectionState
           PartyTransactionSortColumn.type => a.type.compareTo(b.type),
           PartyTransactionSortColumn.reference =>
             (a.referenceNumber ?? '').compareTo(b.referenceNumber ?? ''),
-          PartyTransactionSortColumn.date => a.date.compareTo(b.date),
-          PartyTransactionSortColumn.total => _transactionTotal(
-            a,
-          ).compareTo(_transactionTotal(b)),
-          PartyTransactionSortColumn.balance => a.balanceAfter.compareTo(
-            b.balanceAfter,
-          ),
+          PartyTransactionSortColumn.date =>
+            a.createdAt.compareTo(b.createdAt),
+          PartyTransactionSortColumn.total =>
+            _transactionTotal(a).compareTo(_transactionTotal(b)),
+          PartyTransactionSortColumn.balance =>
+            _transactionBalance(a).compareTo(_transactionBalance(b)),
+          PartyTransactionSortColumn.dueDate =>
+            (a.dueDate ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
+              b.dueDate ?? DateTime.fromMillisecondsSinceEpoch(0),
+            ),
           PartyTransactionSortColumn.status => _transactionStatus(
             a,
           ).compareTo(_transactionStatus(b)),
@@ -363,7 +392,6 @@ class _PartyLedgerTransactionsSectionState
           title: 'Type',
           type: FilterType.multiSelect,
           values: typeOptions,
-          searchable: false,
         ),
         initialFilter: _tableState.typeFilter,
         onApply: (result) => setState(() {
@@ -445,6 +473,23 @@ class _PartyLedgerTransactionsSectionState
         }),
       ),
       column(
+        label: 'DUE DATE',
+        flex: 2,
+        sortColumn: PartyTransactionSortColumn.dueDate,
+        filterConfig: const ColumnFilter(
+          id: 'due_date',
+          title: 'Due Date',
+          type: FilterType.date,
+        ),
+        initialFilter: _tableState.dateFilter,
+        onApply: (result) => setState(() {
+          _tableState = _tableState.copyWith(
+            dateFilter: () =>
+                FilterUtils.fromResult(result) as DateColumnFilter?,
+          );
+        }),
+      ),
+      column(
         label: 'STATUS',
         flex: 2,
         sortColumn: PartyTransactionSortColumn.status,
@@ -453,7 +498,6 @@ class _PartyLedgerTransactionsSectionState
           title: 'Status',
           type: FilterType.multiSelect,
           values: statusOptions,
-          searchable: false,
         ),
         initialFilter: _tableState.statusFilter,
         onApply: (result) => setState(() {
@@ -541,13 +585,14 @@ class _PartyLedgerTransactionsSectionState
                     context,
                     transaction,
                   ),
-                  flexValues: const [2, 2, 2, 2, 2, 2, 1],
+                  flexValues: const [2, 2, 2, 2, 2, 2, 2, 1],
                   alignEnds: const [
                     false,
                     false,
                     false,
                     true,
                     true,
+                    false,
                     false,
                     false,
                   ],
@@ -559,16 +604,21 @@ class _PartyLedgerTransactionsSectionState
                       ),
                     ),
                     InventoryListValueText(
-                      value: _dateFormat.format(transaction.date),
+                      value: DateTimeUtils.formatDisplayDateTime(
+                        transaction.createdAt,
+                      ),
                     ),
                     InventoryListValueText(
                       value: _currencyFormat.format(total),
                       textAlign: TextAlign.right,
                     ),
                     InventoryListValueText(
-                      value: _currencyFormat.format(transaction.balanceAfter),
+                      value: _currencyFormat.format(
+                        _transactionBalance(transaction),
+                      ),
                       textAlign: TextAlign.right,
                     ),
+                    InventoryListValueText(value: _dueDateLabel(transaction)),
                     _PartyTransactionStatusChip(status: status),
                     Center(
                       child: PartyLedgerTransactionActionsMenu(
@@ -603,11 +653,19 @@ class _PartyTransactionStatusChip extends StatelessWidget {
         const Color(0xFFE8F5E9),
         const Color(0xFF2E7D32),
       ),
-      'unpaid' => (
+      'unpaid' || 'unused' => (
         const Color(0xFFFFEBEE),
         const Color(0xFFC62828),
       ),
+      'partial' || 'partially paid' => (
+        const Color(0xFFFFF3E0),
+        const Color(0xFFE65100),
+      ),
       'returned' => (
+        const Color(0xFFFFF3E0),
+        const Color(0xFFE65100),
+      ),
+      _ when normalized.startsWith('overdue') => (
         const Color(0xFFFFF3E0),
         const Color(0xFFE65100),
       ),

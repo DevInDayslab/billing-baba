@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MovementDto {
 
- String get id;@JsonKey(name: 'item_id') String get itemId;@JsonKey(name: 'item_name') String get itemName;@JsonKey(name: 'godown_id') String get godownId;@JsonKey(name: 'godown_name') String get godownName;@JsonKey(name: 'movement_type') String get movementType;@JsonKey(name: 'quantity_delta') String get quantityDelta;@JsonKey(name: 'created_at') String get createdAt;@JsonKey(name: 'cost_per_unit') String? get costPerUnit;@JsonKey(name: 'reference_id') String? get referenceId;@JsonKey(name: 'reference_type') String? get referenceType;@JsonKey(name: 'created_by') String? get createdBy;
+ String get id;@JsonKey(name: 'item_id') String get itemId;@JsonKey(name: 'item_name') String get itemName;@JsonKey(name: 'godown_id') String get godownId;@JsonKey(name: 'godown_name') String get godownName;@JsonKey(name: 'movement_type') String get movementType;@JsonKey(name: 'quantity_delta') String get quantityDelta;@JsonKey(name: 'created_at') String get createdAt;@JsonKey(name: 'cost_per_unit') String? get costPerUnit; String? get unit;@JsonKey(name: 'reference_id') String? get referenceId;@JsonKey(name: 'reference_type') String? get referenceType;@JsonKey(name: 'reference_number') String? get referenceNumber;@JsonKey(name: 'party_name') String? get partyName;@JsonKey(name: 'created_by') String? get createdBy;
 /// Create a copy of MovementDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $MovementDtoCopyWith<MovementDto> get copyWith => _$MovementDtoCopyWithImpl<Move
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MovementDto&&(identical(other.id, id) || other.id == id)&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.godownId, godownId) || other.godownId == godownId)&&(identical(other.godownName, godownName) || other.godownName == godownName)&&(identical(other.movementType, movementType) || other.movementType == movementType)&&(identical(other.quantityDelta, quantityDelta) || other.quantityDelta == quantityDelta)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.costPerUnit, costPerUnit) || other.costPerUnit == costPerUnit)&&(identical(other.referenceId, referenceId) || other.referenceId == referenceId)&&(identical(other.referenceType, referenceType) || other.referenceType == referenceType)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MovementDto&&(identical(other.id, id) || other.id == id)&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.godownId, godownId) || other.godownId == godownId)&&(identical(other.godownName, godownName) || other.godownName == godownName)&&(identical(other.movementType, movementType) || other.movementType == movementType)&&(identical(other.quantityDelta, quantityDelta) || other.quantityDelta == quantityDelta)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.costPerUnit, costPerUnit) || other.costPerUnit == costPerUnit)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.referenceId, referenceId) || other.referenceId == referenceId)&&(identical(other.referenceType, referenceType) || other.referenceType == referenceType)&&(identical(other.referenceNumber, referenceNumber) || other.referenceNumber == referenceNumber)&&(identical(other.partyName, partyName) || other.partyName == partyName)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,itemId,itemName,godownId,godownName,movementType,quantityDelta,createdAt,costPerUnit,referenceId,referenceType,createdBy);
+int get hashCode => Object.hash(runtimeType,id,itemId,itemName,godownId,godownName,movementType,quantityDelta,createdAt,costPerUnit,unit,referenceId,referenceType,referenceNumber,partyName,createdBy);
 
 @override
 String toString() {
-  return 'MovementDto(id: $id, itemId: $itemId, itemName: $itemName, godownId: $godownId, godownName: $godownName, movementType: $movementType, quantityDelta: $quantityDelta, createdAt: $createdAt, costPerUnit: $costPerUnit, referenceId: $referenceId, referenceType: $referenceType, createdBy: $createdBy)';
+  return 'MovementDto(id: $id, itemId: $itemId, itemName: $itemName, godownId: $godownId, godownName: $godownName, movementType: $movementType, quantityDelta: $quantityDelta, createdAt: $createdAt, costPerUnit: $costPerUnit, unit: $unit, referenceId: $referenceId, referenceType: $referenceType, referenceNumber: $referenceNumber, partyName: $partyName, createdBy: $createdBy)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $MovementDtoCopyWith<$Res>  {
   factory $MovementDtoCopyWith(MovementDto value, $Res Function(MovementDto) _then) = _$MovementDtoCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'item_id') String itemId,@JsonKey(name: 'item_name') String itemName,@JsonKey(name: 'godown_id') String godownId,@JsonKey(name: 'godown_name') String godownName,@JsonKey(name: 'movement_type') String movementType,@JsonKey(name: 'quantity_delta') String quantityDelta,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'cost_per_unit') String? costPerUnit,@JsonKey(name: 'reference_id') String? referenceId,@JsonKey(name: 'reference_type') String? referenceType,@JsonKey(name: 'created_by') String? createdBy
+ String id,@JsonKey(name: 'item_id') String itemId,@JsonKey(name: 'item_name') String itemName,@JsonKey(name: 'godown_id') String godownId,@JsonKey(name: 'godown_name') String godownName,@JsonKey(name: 'movement_type') String movementType,@JsonKey(name: 'quantity_delta') String quantityDelta,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'cost_per_unit') String? costPerUnit, String? unit,@JsonKey(name: 'reference_id') String? referenceId,@JsonKey(name: 'reference_type') String? referenceType,@JsonKey(name: 'reference_number') String? referenceNumber,@JsonKey(name: 'party_name') String? partyName,@JsonKey(name: 'created_by') String? createdBy
 });
 
 
@@ -65,7 +65,7 @@ class _$MovementDtoCopyWithImpl<$Res>
 
 /// Create a copy of MovementDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? itemId = null,Object? itemName = null,Object? godownId = null,Object? godownName = null,Object? movementType = null,Object? quantityDelta = null,Object? createdAt = null,Object? costPerUnit = freezed,Object? referenceId = freezed,Object? referenceType = freezed,Object? createdBy = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? itemId = null,Object? itemName = null,Object? godownId = null,Object? godownName = null,Object? movementType = null,Object? quantityDelta = null,Object? createdAt = null,Object? costPerUnit = freezed,Object? unit = freezed,Object? referenceId = freezed,Object? referenceType = freezed,Object? referenceNumber = freezed,Object? partyName = freezed,Object? createdBy = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,itemId: null == itemId ? _self.itemId : itemId // ignore: cast_nullable_to_non_nullable
@@ -76,8 +76,11 @@ as String,movementType: null == movementType ? _self.movementType : movementType
 as String,quantityDelta: null == quantityDelta ? _self.quantityDelta : quantityDelta // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String,costPerUnit: freezed == costPerUnit ? _self.costPerUnit : costPerUnit // ignore: cast_nullable_to_non_nullable
+as String?,unit: freezed == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
 as String?,referenceId: freezed == referenceId ? _self.referenceId : referenceId // ignore: cast_nullable_to_non_nullable
 as String?,referenceType: freezed == referenceType ? _self.referenceType : referenceType // ignore: cast_nullable_to_non_nullable
+as String?,referenceNumber: freezed == referenceNumber ? _self.referenceNumber : referenceNumber // ignore: cast_nullable_to_non_nullable
+as String?,partyName: freezed == partyName ? _self.partyName : partyName // ignore: cast_nullable_to_non_nullable
 as String?,createdBy: freezed == createdBy ? _self.createdBy : createdBy // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -164,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'item_id')  String itemId, @JsonKey(name: 'item_name')  String itemName, @JsonKey(name: 'godown_id')  String godownId, @JsonKey(name: 'godown_name')  String godownName, @JsonKey(name: 'movement_type')  String movementType, @JsonKey(name: 'quantity_delta')  String quantityDelta, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'cost_per_unit')  String? costPerUnit, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'reference_type')  String? referenceType, @JsonKey(name: 'created_by')  String? createdBy)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'item_id')  String itemId, @JsonKey(name: 'item_name')  String itemName, @JsonKey(name: 'godown_id')  String godownId, @JsonKey(name: 'godown_name')  String godownName, @JsonKey(name: 'movement_type')  String movementType, @JsonKey(name: 'quantity_delta')  String quantityDelta, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'cost_per_unit')  String? costPerUnit,  String? unit, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'reference_type')  String? referenceType, @JsonKey(name: 'reference_number')  String? referenceNumber, @JsonKey(name: 'party_name')  String? partyName, @JsonKey(name: 'created_by')  String? createdBy)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MovementDto() when $default != null:
-return $default(_that.id,_that.itemId,_that.itemName,_that.godownId,_that.godownName,_that.movementType,_that.quantityDelta,_that.createdAt,_that.costPerUnit,_that.referenceId,_that.referenceType,_that.createdBy);case _:
+return $default(_that.id,_that.itemId,_that.itemName,_that.godownId,_that.godownName,_that.movementType,_that.quantityDelta,_that.createdAt,_that.costPerUnit,_that.unit,_that.referenceId,_that.referenceType,_that.referenceNumber,_that.partyName,_that.createdBy);case _:
   return orElse();
 
 }
@@ -185,10 +188,10 @@ return $default(_that.id,_that.itemId,_that.itemName,_that.godownId,_that.godown
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'item_id')  String itemId, @JsonKey(name: 'item_name')  String itemName, @JsonKey(name: 'godown_id')  String godownId, @JsonKey(name: 'godown_name')  String godownName, @JsonKey(name: 'movement_type')  String movementType, @JsonKey(name: 'quantity_delta')  String quantityDelta, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'cost_per_unit')  String? costPerUnit, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'reference_type')  String? referenceType, @JsonKey(name: 'created_by')  String? createdBy)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'item_id')  String itemId, @JsonKey(name: 'item_name')  String itemName, @JsonKey(name: 'godown_id')  String godownId, @JsonKey(name: 'godown_name')  String godownName, @JsonKey(name: 'movement_type')  String movementType, @JsonKey(name: 'quantity_delta')  String quantityDelta, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'cost_per_unit')  String? costPerUnit,  String? unit, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'reference_type')  String? referenceType, @JsonKey(name: 'reference_number')  String? referenceNumber, @JsonKey(name: 'party_name')  String? partyName, @JsonKey(name: 'created_by')  String? createdBy)  $default,) {final _that = this;
 switch (_that) {
 case _MovementDto():
-return $default(_that.id,_that.itemId,_that.itemName,_that.godownId,_that.godownName,_that.movementType,_that.quantityDelta,_that.createdAt,_that.costPerUnit,_that.referenceId,_that.referenceType,_that.createdBy);case _:
+return $default(_that.id,_that.itemId,_that.itemName,_that.godownId,_that.godownName,_that.movementType,_that.quantityDelta,_that.createdAt,_that.costPerUnit,_that.unit,_that.referenceId,_that.referenceType,_that.referenceNumber,_that.partyName,_that.createdBy);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +208,10 @@ return $default(_that.id,_that.itemId,_that.itemName,_that.godownId,_that.godown
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'item_id')  String itemId, @JsonKey(name: 'item_name')  String itemName, @JsonKey(name: 'godown_id')  String godownId, @JsonKey(name: 'godown_name')  String godownName, @JsonKey(name: 'movement_type')  String movementType, @JsonKey(name: 'quantity_delta')  String quantityDelta, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'cost_per_unit')  String? costPerUnit, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'reference_type')  String? referenceType, @JsonKey(name: 'created_by')  String? createdBy)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'item_id')  String itemId, @JsonKey(name: 'item_name')  String itemName, @JsonKey(name: 'godown_id')  String godownId, @JsonKey(name: 'godown_name')  String godownName, @JsonKey(name: 'movement_type')  String movementType, @JsonKey(name: 'quantity_delta')  String quantityDelta, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'cost_per_unit')  String? costPerUnit,  String? unit, @JsonKey(name: 'reference_id')  String? referenceId, @JsonKey(name: 'reference_type')  String? referenceType, @JsonKey(name: 'reference_number')  String? referenceNumber, @JsonKey(name: 'party_name')  String? partyName, @JsonKey(name: 'created_by')  String? createdBy)?  $default,) {final _that = this;
 switch (_that) {
 case _MovementDto() when $default != null:
-return $default(_that.id,_that.itemId,_that.itemName,_that.godownId,_that.godownName,_that.movementType,_that.quantityDelta,_that.createdAt,_that.costPerUnit,_that.referenceId,_that.referenceType,_that.createdBy);case _:
+return $default(_that.id,_that.itemId,_that.itemName,_that.godownId,_that.godownName,_that.movementType,_that.quantityDelta,_that.createdAt,_that.costPerUnit,_that.unit,_that.referenceId,_that.referenceType,_that.referenceNumber,_that.partyName,_that.createdBy);case _:
   return null;
 
 }
@@ -220,7 +223,7 @@ return $default(_that.id,_that.itemId,_that.itemName,_that.godownId,_that.godown
 @JsonSerializable()
 
 class _MovementDto implements MovementDto {
-  const _MovementDto({required this.id, @JsonKey(name: 'item_id') required this.itemId, @JsonKey(name: 'item_name') required this.itemName, @JsonKey(name: 'godown_id') required this.godownId, @JsonKey(name: 'godown_name') required this.godownName, @JsonKey(name: 'movement_type') required this.movementType, @JsonKey(name: 'quantity_delta') required this.quantityDelta, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'cost_per_unit') this.costPerUnit, @JsonKey(name: 'reference_id') this.referenceId, @JsonKey(name: 'reference_type') this.referenceType, @JsonKey(name: 'created_by') this.createdBy});
+  const _MovementDto({required this.id, @JsonKey(name: 'item_id') required this.itemId, @JsonKey(name: 'item_name') required this.itemName, @JsonKey(name: 'godown_id') required this.godownId, @JsonKey(name: 'godown_name') required this.godownName, @JsonKey(name: 'movement_type') required this.movementType, @JsonKey(name: 'quantity_delta') required this.quantityDelta, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'cost_per_unit') this.costPerUnit, this.unit, @JsonKey(name: 'reference_id') this.referenceId, @JsonKey(name: 'reference_type') this.referenceType, @JsonKey(name: 'reference_number') this.referenceNumber, @JsonKey(name: 'party_name') this.partyName, @JsonKey(name: 'created_by') this.createdBy});
   factory _MovementDto.fromJson(Map<String, dynamic> json) => _$MovementDtoFromJson(json);
 
 @override final  String id;
@@ -232,8 +235,11 @@ class _MovementDto implements MovementDto {
 @override@JsonKey(name: 'quantity_delta') final  String quantityDelta;
 @override@JsonKey(name: 'created_at') final  String createdAt;
 @override@JsonKey(name: 'cost_per_unit') final  String? costPerUnit;
+@override final  String? unit;
 @override@JsonKey(name: 'reference_id') final  String? referenceId;
 @override@JsonKey(name: 'reference_type') final  String? referenceType;
+@override@JsonKey(name: 'reference_number') final  String? referenceNumber;
+@override@JsonKey(name: 'party_name') final  String? partyName;
 @override@JsonKey(name: 'created_by') final  String? createdBy;
 
 /// Create a copy of MovementDto
@@ -249,16 +255,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MovementDto&&(identical(other.id, id) || other.id == id)&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.godownId, godownId) || other.godownId == godownId)&&(identical(other.godownName, godownName) || other.godownName == godownName)&&(identical(other.movementType, movementType) || other.movementType == movementType)&&(identical(other.quantityDelta, quantityDelta) || other.quantityDelta == quantityDelta)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.costPerUnit, costPerUnit) || other.costPerUnit == costPerUnit)&&(identical(other.referenceId, referenceId) || other.referenceId == referenceId)&&(identical(other.referenceType, referenceType) || other.referenceType == referenceType)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MovementDto&&(identical(other.id, id) || other.id == id)&&(identical(other.itemId, itemId) || other.itemId == itemId)&&(identical(other.itemName, itemName) || other.itemName == itemName)&&(identical(other.godownId, godownId) || other.godownId == godownId)&&(identical(other.godownName, godownName) || other.godownName == godownName)&&(identical(other.movementType, movementType) || other.movementType == movementType)&&(identical(other.quantityDelta, quantityDelta) || other.quantityDelta == quantityDelta)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.costPerUnit, costPerUnit) || other.costPerUnit == costPerUnit)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.referenceId, referenceId) || other.referenceId == referenceId)&&(identical(other.referenceType, referenceType) || other.referenceType == referenceType)&&(identical(other.referenceNumber, referenceNumber) || other.referenceNumber == referenceNumber)&&(identical(other.partyName, partyName) || other.partyName == partyName)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,itemId,itemName,godownId,godownName,movementType,quantityDelta,createdAt,costPerUnit,referenceId,referenceType,createdBy);
+int get hashCode => Object.hash(runtimeType,id,itemId,itemName,godownId,godownName,movementType,quantityDelta,createdAt,costPerUnit,unit,referenceId,referenceType,referenceNumber,partyName,createdBy);
 
 @override
 String toString() {
-  return 'MovementDto(id: $id, itemId: $itemId, itemName: $itemName, godownId: $godownId, godownName: $godownName, movementType: $movementType, quantityDelta: $quantityDelta, createdAt: $createdAt, costPerUnit: $costPerUnit, referenceId: $referenceId, referenceType: $referenceType, createdBy: $createdBy)';
+  return 'MovementDto(id: $id, itemId: $itemId, itemName: $itemName, godownId: $godownId, godownName: $godownName, movementType: $movementType, quantityDelta: $quantityDelta, createdAt: $createdAt, costPerUnit: $costPerUnit, unit: $unit, referenceId: $referenceId, referenceType: $referenceType, referenceNumber: $referenceNumber, partyName: $partyName, createdBy: $createdBy)';
 }
 
 
@@ -269,7 +275,7 @@ abstract mixin class _$MovementDtoCopyWith<$Res> implements $MovementDtoCopyWith
   factory _$MovementDtoCopyWith(_MovementDto value, $Res Function(_MovementDto) _then) = __$MovementDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'item_id') String itemId,@JsonKey(name: 'item_name') String itemName,@JsonKey(name: 'godown_id') String godownId,@JsonKey(name: 'godown_name') String godownName,@JsonKey(name: 'movement_type') String movementType,@JsonKey(name: 'quantity_delta') String quantityDelta,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'cost_per_unit') String? costPerUnit,@JsonKey(name: 'reference_id') String? referenceId,@JsonKey(name: 'reference_type') String? referenceType,@JsonKey(name: 'created_by') String? createdBy
+ String id,@JsonKey(name: 'item_id') String itemId,@JsonKey(name: 'item_name') String itemName,@JsonKey(name: 'godown_id') String godownId,@JsonKey(name: 'godown_name') String godownName,@JsonKey(name: 'movement_type') String movementType,@JsonKey(name: 'quantity_delta') String quantityDelta,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'cost_per_unit') String? costPerUnit, String? unit,@JsonKey(name: 'reference_id') String? referenceId,@JsonKey(name: 'reference_type') String? referenceType,@JsonKey(name: 'reference_number') String? referenceNumber,@JsonKey(name: 'party_name') String? partyName,@JsonKey(name: 'created_by') String? createdBy
 });
 
 
@@ -286,7 +292,7 @@ class __$MovementDtoCopyWithImpl<$Res>
 
 /// Create a copy of MovementDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? itemId = null,Object? itemName = null,Object? godownId = null,Object? godownName = null,Object? movementType = null,Object? quantityDelta = null,Object? createdAt = null,Object? costPerUnit = freezed,Object? referenceId = freezed,Object? referenceType = freezed,Object? createdBy = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? itemId = null,Object? itemName = null,Object? godownId = null,Object? godownName = null,Object? movementType = null,Object? quantityDelta = null,Object? createdAt = null,Object? costPerUnit = freezed,Object? unit = freezed,Object? referenceId = freezed,Object? referenceType = freezed,Object? referenceNumber = freezed,Object? partyName = freezed,Object? createdBy = freezed,}) {
   return _then(_MovementDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,itemId: null == itemId ? _self.itemId : itemId // ignore: cast_nullable_to_non_nullable
@@ -297,8 +303,11 @@ as String,movementType: null == movementType ? _self.movementType : movementType
 as String,quantityDelta: null == quantityDelta ? _self.quantityDelta : quantityDelta // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String,costPerUnit: freezed == costPerUnit ? _self.costPerUnit : costPerUnit // ignore: cast_nullable_to_non_nullable
+as String?,unit: freezed == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
 as String?,referenceId: freezed == referenceId ? _self.referenceId : referenceId // ignore: cast_nullable_to_non_nullable
 as String?,referenceType: freezed == referenceType ? _self.referenceType : referenceType // ignore: cast_nullable_to_non_nullable
+as String?,referenceNumber: freezed == referenceNumber ? _self.referenceNumber : referenceNumber // ignore: cast_nullable_to_non_nullable
+as String?,partyName: freezed == partyName ? _self.partyName : partyName // ignore: cast_nullable_to_non_nullable
 as String?,createdBy: freezed == createdBy ? _self.createdBy : createdBy // ignore: cast_nullable_to_non_nullable
 as String?,
   ));

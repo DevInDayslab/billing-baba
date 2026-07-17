@@ -16,8 +16,11 @@ abstract class MovementDto with _$MovementDto {
     @JsonKey(name: 'quantity_delta') required String quantityDelta,
     @JsonKey(name: 'created_at') required String createdAt,
     @JsonKey(name: 'cost_per_unit') String? costPerUnit,
+    String? unit,
     @JsonKey(name: 'reference_id') String? referenceId,
     @JsonKey(name: 'reference_type') String? referenceType,
+    @JsonKey(name: 'reference_number') String? referenceNumber,
+    @JsonKey(name: 'party_name') String? partyName,
     @JsonKey(name: 'created_by') String? createdBy,
   }) = _MovementDto;
 

@@ -4,6 +4,11 @@ import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import { InventoryServiceBase } from './inventory.base-service';
 import { normalizeMoney, parseMoney } from './inventory.utils';
 import {
+  enrichItemDetailRecord,
+  enrichItemListRecord,
+  loadStockSummariesForItems,
+} from './inventory-item-stock';
+import {
   getDefaultGodown,
   recordMovementAndUpdateStock,
 } from './inventory-stock.service';
@@ -67,8 +72,19 @@ export class ItemService extends InventoryServiceBase {
       order: query.order,
     });
 
+    const stockTrackedIds = result.rows
+      .filter((row) => row.has_stock_tracking)
+      .map((row) => row.id);
+    const { physicalByItem, reservedByItem } = await loadStockSummariesForItems(
+      this.db,
+      businessId,
+      stockTrackedIds,
+    );
+
     return {
-      data: result.rows,
+      data: result.rows.map((row) =>
+        enrichItemListRecord(row, physicalByItem, reservedByItem),
+      ),
       meta: {
         page: query.page,
         limit: query.limit,
@@ -89,7 +105,17 @@ export class ItemService extends InventoryServiceBase {
       throw new AppError('NOT_FOUND', 'Item not found', 404);
     }
 
-    return item;
+    if (!item.has_stock_tracking) {
+      return item;
+    }
+
+    const { physicalByItem, reservedByItem } = await loadStockSummariesForItems(
+      this.db,
+      businessId,
+      [itemId],
+    );
+
+    return enrichItemDetailRecord(item, physicalByItem, reservedByItem);
   }
 
   async createItem(
@@ -215,6 +241,7 @@ export class ItemService extends InventoryServiceBase {
           movementType: 'opening',
           quantityDelta: normalizeMoney(openingQty),
           costPerUnit: openingCost,
+          unit: baseUnit,
           referenceType: 'items',
           referenceId: item.id,
           createdBy: userId ?? null,
@@ -330,12 +357,134 @@ export class ItemService extends InventoryServiceBase {
       });
     }
 
+    if (input.opening_quantity !== undefined) {
+      await this.applyOpeningStockChange(
+        businessId,
+        itemId,
+        userId,
+        hasStockTracking,
+        {
+          openingQuantity: input.opening_quantity,
+          openingCostPerUnit: input.opening_cost_per_unit,
+          openingGodownId: input.opening_godown_id,
+          location: input.location,
+        },
+      );
+    }
+
     const detail = await this.repository.findById(businessId, itemId);
     if (!detail) {
       throw new AppError('NOT_FOUND', 'Item not found', 404);
     }
 
     return detail;
+  }
+
+  private async applyOpeningStockChange(
+    businessId: string,
+    itemId: string,
+    userId: string | undefined,
+    hasStockTracking: boolean,
+    input: {
+      openingQuantity?: string;
+      openingCostPerUnit?: string;
+      openingGodownId?: string;
+      location?: {
+        godown_id: string;
+        rack?: string;
+        shelf?: string;
+      };
+    },
+  ): Promise<void> {
+    const openingQty = parseMoney(input.openingQuantity ?? '0');
+    const openingCost = normalizeMoney(input.openingCostPerUnit ?? '0');
+
+    if (openingQty > 0 && !hasStockTracking) {
+      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        opening_quantity: [
+          'Opening quantity is not allowed for items without stock tracking',
+        ],
+      });
+    }
+
+    if (input.location) {
+      await this.assertGodownValid(businessId, input.location.godown_id);
+      await this.repository.runTransaction(async (tx) => {
+        const hasLocation = await this.repository.hasItemLocation(
+          tx,
+          businessId,
+          itemId,
+          input.location!.godown_id,
+        );
+        if (!hasLocation) {
+          await this.repository.insertLocation(
+            tx,
+            businessId,
+            itemId,
+            {
+              godownId: input.location!.godown_id,
+              rack: input.location!.rack ?? null,
+              shelf: input.location!.shelf ?? null,
+            },
+            userId ?? null,
+          );
+        }
+      });
+    }
+
+    if (openingQty <= 0) {
+      return;
+    }
+
+    const hasOtherMovements = await this.repository.hasNonOpeningMovements(
+      businessId,
+      itemId,
+    );
+    if (hasOtherMovements) {
+      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        opening_quantity: [
+          'Opening stock cannot be changed after other inventory transactions exist. Use Adjust Stock instead.',
+        ],
+      });
+    }
+
+    let openingGodownId = input.openingGodownId;
+    if (openingGodownId) {
+      await this.assertGodownValid(businessId, openingGodownId);
+    } else {
+      const defaultGodown = await getDefaultGodown(this.db, businessId);
+      openingGodownId = defaultGodown.id;
+    }
+
+    const currentStock = await this.repository.getTotalStockQuantity(
+      businessId,
+      itemId,
+    );
+    const delta = openingQty - currentStock;
+    if (delta === 0) {
+      return;
+    }
+
+    const itemRow = await this.repository.findRowById(businessId, itemId);
+    const baseUnit = itemRow?.baseUnit ?? null;
+
+    await this.repository.runTransaction(async (tx) => {
+      const movementType =
+        currentStock === 0 && delta > 0 ? 'opening' : 'adjustment';
+
+      await recordMovementAndUpdateStock(this.db, tx, {
+        businessId,
+        itemId,
+        godownId: openingGodownId!,
+        movementType,
+        quantityDelta: normalizeMoney(delta),
+        costPerUnit: delta > 0 ? openingCost : null,
+        unit: baseUnit,
+        referenceType: 'items',
+        referenceId: itemId,
+        createdBy: userId ?? null,
+      });
+    });
   }
 
   async deleteItem(

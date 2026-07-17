@@ -51,3 +51,28 @@ class PartyTypeFilterNotifier extends Notifier<PartyTypeFilter> {
   PartyTypeFilter get filter => state;
   set filter(PartyTypeFilter value) => state = value;
 }
+
+class SelectedPartyGroup extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  String? get selected => state;
+  set selected(String? name) => state = name;
+}
+
+class PartyGroupSearchQuery extends Notifier<String> {
+  @override
+  String build() => '';
+
+  String get query => state;
+  set query(String value) => state = value;
+}
+
+final selectedPartyGroupProvider = NotifierProvider<SelectedPartyGroup, String?>(
+  SelectedPartyGroup.new,
+);
+
+final partyGroupSearchQueryProvider =
+    NotifierProvider<PartyGroupSearchQuery, String>(
+      PartyGroupSearchQuery.new,
+    );

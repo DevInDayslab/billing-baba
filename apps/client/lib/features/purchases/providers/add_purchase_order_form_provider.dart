@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
@@ -6,8 +7,10 @@ import 'package:billing_baba/features/purchases/models/purchase_document_draft_i
 import 'package:billing_baba/features/purchases/models/purchase_order_form_model.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_orders_provider.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
+import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -173,6 +176,19 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
     state = state.copyWith(items: items, isDirty: true);
   }
 
+  void selectCatalogItem(int index, SaleItemOption catalogItem) {
+    if (index < 0 || index >= state.items.length) return;
+    final line = state.items[index];
+    final applied = applyCatalogItemToPurchaseLine(line, catalogItem);
+    final items = selectCatalogItemOnPurchaseLines(
+      items: state.items,
+      targetIndex: index,
+      appliedLine: applied,
+      nextLineId: _nextPurchaseOrderLineItemId,
+    );
+    state = state.copyWith(items: items, isDirty: true);
+  }
+
   void updatePaymentType(String type) {
     final payments = [...state.payments];
     if (payments.isEmpty) {
@@ -310,6 +326,9 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
 
       ref.invalidate(purchaseOrdersProvider);
       await ref.read(purchaseOrdersProvider.notifier).refresh();
+      if (finalize) {
+        refreshAfterPurchaseMutation(ref);
+      }
       ref
           .read(purchaseOrderSaveSuccessMessageProvider.notifier)
           .setMessage('Purchase order saved successfully');

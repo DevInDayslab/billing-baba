@@ -4,6 +4,16 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'shell_sidebar_provider.g.dart';
 
+/// Sidebar entries hidden from navigation chrome.
+abstract final class ShellSidebarVisibility {
+  static const hidePos = false;
+  static const hideSettings = false;
+  static const hideUtilities = false;
+  static const hideDeveloper = false;
+
+  static const hiddenSaleSubRoutes = <String>{};
+}
+
 /// Shell sidebar open/collapse state, persisted across sessions.
 @Riverpod(keepAlive: true)
 class ShellSidebar extends _$ShellSidebar {

@@ -42,13 +42,31 @@ async function startServer(): Promise<void> {
   }
 
   const geminiKey = describeGeminiKeyForLog();
-  app.log.info(formatGeminiKeyLogLine(geminiKey));
-  if (geminiKey.issue) {
-    app.log.warn(geminiKey.issue);
+  if (config.environment === 'development') {
+    app.log.debug(formatGeminiKeyLogLine(geminiKey));
+  } else {
+    app.log.info(formatGeminiKeyLogLine(geminiKey));
   }
+
+  if (geminiKey.issue) {
+    if (config.environment === 'development') {
+      app.log.debug(geminiKey.issue);
+    } else {
+      app.log.warn(geminiKey.issue);
+    }
+  }
+
   if (geminiKey.loadedSuccessfully) {
     app.log.info(
       `Purchase document parsing: Gemini Developer API, model ${resolveGeminiModel()}`,
+    );
+  } else if (process.env.ENABLE_MOCK_PURCHASE_PARSE === 'true') {
+    app.log.info(
+      'Purchase document parsing: mock mode (ENABLE_MOCK_PURCHASE_PARSE=true)',
+    );
+  } else if (config.environment === 'development') {
+    app.log.debug(
+      'Purchase document parsing disabled locally — set GEMINI_API_KEY or ENABLE_MOCK_PURCHASE_PARSE=true in apps/api/.env',
     );
   } else {
     app.log.warn(

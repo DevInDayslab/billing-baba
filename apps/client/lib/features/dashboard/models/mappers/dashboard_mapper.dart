@@ -1,11 +1,11 @@
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/models/dto/dashboard_dto.dart';
 
 abstract final class DashboardMapper {
   static double _money(String? value) => double.tryParse(value ?? '') ?? 0;
 
-  static DateTime _date(String value) =>
-      DateTime.tryParse(value) ?? DateTime.fromMillisecondsSinceEpoch(0);
+  static DateTime _date(String value) => DateTimeUtils.parseApiDateTime(value);
 
   static DashboardTransactionType _transactionType(String value) =>
       switch (value) {

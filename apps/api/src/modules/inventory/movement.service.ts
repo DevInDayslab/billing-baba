@@ -116,6 +116,7 @@ export class MovementService extends InventoryServiceBase {
         movementType: input.movement_type,
         quantityDelta: normalizeMoney(input.quantity_delta),
         costPerUnit: input.cost_per_unit ?? null,
+        unit: item.baseUnit,
         referenceId: input.reference_id ?? null,
         referenceType: input.reference_type ?? null,
         createdBy: userId ?? null,

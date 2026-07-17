@@ -139,6 +139,7 @@ export class PaymentService {
         referenceNumber: input.reference_number ?? null,
         notes: input.notes ?? null,
         shortPaymentHandling: input.short_payment_handling ?? null,
+        source: input.source ?? 'manual',
         createdBy: userId ?? null,
         updatedBy: userId ?? null,
       });

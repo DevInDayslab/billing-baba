@@ -16,8 +16,11 @@ _MovementDto _$MovementDtoFromJson(Map<String, dynamic> json) => _MovementDto(
   quantityDelta: json['quantity_delta'] as String,
   createdAt: json['created_at'] as String,
   costPerUnit: json['cost_per_unit'] as String?,
+  unit: json['unit'] as String?,
   referenceId: json['reference_id'] as String?,
   referenceType: json['reference_type'] as String?,
+  referenceNumber: json['reference_number'] as String?,
+  partyName: json['party_name'] as String?,
   createdBy: json['created_by'] as String?,
 );
 
@@ -32,7 +35,10 @@ Map<String, dynamic> _$MovementDtoToJson(_MovementDto instance) =>
       'quantity_delta': instance.quantityDelta,
       'created_at': instance.createdAt,
       'cost_per_unit': instance.costPerUnit,
+      'unit': instance.unit,
       'reference_id': instance.referenceId,
       'reference_type': instance.referenceType,
+      'reference_number': instance.referenceNumber,
+      'party_name': instance.partyName,
       'created_by': instance.createdBy,
     };

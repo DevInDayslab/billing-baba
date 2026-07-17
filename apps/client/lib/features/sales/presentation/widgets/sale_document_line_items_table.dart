@@ -8,8 +8,8 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_se
 import 'package:billing_baba/features/sales/presentation/widgets/sale_item_serial_no_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_line_items_table_layout.dart';
 import 'package:billing_baba/features/sales/providers/sale_document_form_provider.dart';
+import 'package:billing_baba/features/sales/utils/sale_quantity_input.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -324,16 +324,7 @@ class _LineItemRow extends ConsumerWidget {
                               item.copyWith(itemName: value),
                             ),
                             onItemSelected: (catalogItem) =>
-                                notifier.updateLineItem(
-                                  index,
-                                  item.copyWith(
-                                    itemId: catalogItem.id,
-                                    itemName: catalogItem.name,
-                                    pricePerUnit: catalogItem.salePrice,
-                                    unit: catalogItem.unit ?? item.unit,
-                                    mrp: catalogItem.salePrice,
-                                  ),
-                                ),
+                                notifier.selectCatalogItem(index, catalogItem),
                           ),
                         ),
                       ),
@@ -464,12 +455,13 @@ class _LineItemRow extends ConsumerWidget {
                 SaleLineItemGridCell(
                   width: widths.qty,
                   child: _CompactNumberField(
-                    initialValue: item.qty == 0 ? '' : item.qty.toString(),
+                    initialValue: SaleQuantityInput.format(item.qty),
                     hintText: '0',
                     borderless: _gridBorderless,
+                    integerOnly: true,
                     onChanged: (value) => notifier.updateLineItem(
                       index,
-                      item.copyWith(qty: double.tryParse(value) ?? 0),
+                      item.copyWith(qty: SaleQuantityInput.parse(value)),
                     ),
                   ),
                 ),
@@ -767,12 +759,14 @@ class _CompactNumberField extends StatefulWidget {
     required this.onChanged,
     this.hintText,
     this.borderless = false,
+    this.integerOnly = false,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
   final bool borderless;
+  final bool integerOnly;
 
   @override
   State<_CompactNumberField> createState() => _CompactNumberFieldState();
@@ -813,10 +807,12 @@ class _CompactNumberFieldState extends State<_CompactNumberField> {
         compact: true,
         borderless: widget.borderless,
       ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-      ],
+      keyboardType: widget.integerOnly
+          ? SaleQuantityInput.integerKeyboardType
+          : SaleQuantityInput.decimalKeyboardType,
+      inputFormatters: widget.integerOnly
+          ? SaleQuantityInput.integerFormatters
+          : SaleQuantityInput.decimalFormatters,
       onChanged: widget.onChanged,
     );
 

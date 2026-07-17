@@ -156,13 +156,14 @@ class _ActionCenterQuickReports extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Text(
                 'Quick Reports',
                 style: DashboardTypography.cardTitle,
@@ -176,13 +177,13 @@ class _ActionCenterQuickReports extends StatelessWidget {
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text('View All →', style: DashboardTypography.link),
+              child: Text('View All →', style: DashboardTypography.link),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
         if (reports.isEmpty)
-          const Text(
+          Text(
             'No reports available',
             style: DashboardTypography.metadata,
           )

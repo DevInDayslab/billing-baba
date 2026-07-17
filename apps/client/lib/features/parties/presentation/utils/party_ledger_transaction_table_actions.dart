@@ -29,8 +29,16 @@ import 'package:go_router/go_router.dart';
 enum PartyLedgerTransactionKind {
   saleInvoice,
   saleReturn,
+  estimate,
+  proforma,
+  saleOrder,
+  deliveryChallan,
+  saleFa,
   purchaseBill,
   purchaseReturn,
+  purchaseOrder,
+  purchaseFa,
+  jobWork,
   paymentIn,
   paymentOut,
   expense,
@@ -55,20 +63,33 @@ abstract final class PartyLedgerTransactionTableActions {
   static PartyLedgerTransactionKind kindFor(
     PartyLedgerTransactionModel transaction,
   ) {
-    return switch (transaction.referenceType) {
-      'sales_documents' =>
-        transaction.entryType == 'return'
-            ? PartyLedgerTransactionKind.saleReturn
-            : PartyLedgerTransactionKind.saleInvoice,
-      'purchase_documents' =>
-        transaction.entryType == 'return'
-            ? PartyLedgerTransactionKind.purchaseReturn
-            : PartyLedgerTransactionKind.purchaseBill,
-      'payments' =>
-        transaction.direction == 'paid'
-            ? PartyLedgerTransactionKind.paymentOut
-            : PartyLedgerTransactionKind.paymentIn,
+    final source = transaction.source.isNotEmpty
+        ? transaction.source
+        : (transaction.referenceType ?? '');
+
+    return switch (source) {
+      'payments' => transaction.direction == 'paid'
+          ? PartyLedgerTransactionKind.paymentOut
+          : PartyLedgerTransactionKind.paymentIn,
       'expenses' => PartyLedgerTransactionKind.expense,
+      'sale_fa_batches' => PartyLedgerTransactionKind.saleFa,
+      'purchase_fa_batches' => PartyLedgerTransactionKind.purchaseFa,
+      'job_work_orders' => PartyLedgerTransactionKind.jobWork,
+      'purchase_documents' => switch (transaction.sourceType) {
+        'purchase_return' => PartyLedgerTransactionKind.purchaseReturn,
+        'purchase_order' => PartyLedgerTransactionKind.purchaseOrder,
+        _ => PartyLedgerTransactionKind.purchaseBill,
+      },
+      'sales_documents' => switch (transaction.sourceType) {
+        'sales_return' => PartyLedgerTransactionKind.saleReturn,
+        'estimate' =>
+          transaction.type.toLowerCase().contains('proforma')
+              ? PartyLedgerTransactionKind.proforma
+              : PartyLedgerTransactionKind.estimate,
+        'sale_order' => PartyLedgerTransactionKind.saleOrder,
+        'delivery_challan' => PartyLedgerTransactionKind.deliveryChallan,
+        _ => PartyLedgerTransactionKind.saleInvoice,
+      },
       _ => PartyLedgerTransactionKind.unknown,
     };
   }
@@ -186,6 +207,17 @@ abstract final class PartyLedgerTransactionTableActions {
       ],
       PartyLedgerTransactionKind.expense => const [
         PartyLedgerMenuEntry(action: 'view_edit', label: 'View/Edit'),
+      ],
+      PartyLedgerTransactionKind.estimate ||
+      PartyLedgerTransactionKind.proforma ||
+      PartyLedgerTransactionKind.saleOrder ||
+      PartyLedgerTransactionKind.deliveryChallan ||
+      PartyLedgerTransactionKind.saleFa ||
+      PartyLedgerTransactionKind.purchaseOrder ||
+      PartyLedgerTransactionKind.purchaseFa ||
+      PartyLedgerTransactionKind.jobWork => const [
+        PartyLedgerMenuEntry(action: 'view_edit', label: 'View/Edit'),
+        PartyLedgerMenuEntry(action: 'print', label: 'Print'),
       ],
       PartyLedgerTransactionKind.unknown => const [
         PartyLedgerMenuEntry(action: 'view_edit', label: 'View/Edit'),
@@ -370,6 +402,14 @@ abstract final class PartyLedgerTransactionTableActions {
           referenceId,
           filename: filename,
         );
+      case PartyLedgerTransactionKind.estimate:
+      case PartyLedgerTransactionKind.proforma:
+      case PartyLedgerTransactionKind.saleOrder:
+      case PartyLedgerTransactionKind.deliveryChallan:
+      case PartyLedgerTransactionKind.saleFa:
+      case PartyLedgerTransactionKind.purchaseOrder:
+      case PartyLedgerTransactionKind.purchaseFa:
+      case PartyLedgerTransactionKind.jobWork:
       case PartyLedgerTransactionKind.expense:
       case PartyLedgerTransactionKind.unknown:
         _showComingSoon(context, action);

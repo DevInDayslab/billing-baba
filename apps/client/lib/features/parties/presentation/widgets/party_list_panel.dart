@@ -11,6 +11,10 @@ import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
+import 'package:billing_baba/shared/widgets/table_filters/column_filter_trigger.dart';
+import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
+import 'package:billing_baba/shared/widgets/table_filters/filter_result.dart';
+import 'package:billing_baba/shared/widgets/table_filters/filter_types.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
@@ -53,6 +57,19 @@ class _PartyListSortState {
 
 /// Fixed width for the Amount column in the Parties left list header.
 const partyListAmountHeaderWidth = 88.0;
+
+const _partyListFilterConfig = ColumnFilter(
+  id: 'party_status',
+  title: 'Filter Parties',
+  type: FilterType.singleSelect,
+  searchable: false,
+  values: [
+    'To Receive',
+    'To Pay',
+    'Active',
+    'Inactive',
+  ],
+);
 
 class PartyListPanel extends ConsumerStatefulWidget {
   const PartyListPanel({super.key});
@@ -166,15 +183,18 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
         ),
         const SizedBox(height: 14),
         InventoryListHeader(
+          height: inventoryListHeaderCompactHeight,
           showColumnSeparators: false,
           includeTrailingSpace: false,
-          dividerAfterColumnIndex: 0,
           columns: [
             InventoryListColumn(
               label: 'PARTY NAME',
-              trailing: _PartyListFilterTrigger(
-                activeFilter: activeFilter,
-                onFilterSelected: _onFilterSelected,
+              trailing: TableColumnFilterTrigger(
+                config: _partyListFilterConfig,
+                iconOnly: true,
+                initialValue: _toSelectFilter(activeFilter),
+                onApply: (result) =>
+                    _onFilterSelected(_fromSelectFilter(result)),
               ),
               sortable: true,
               isSorted: _sort.isSorted(PartyListSortColumn.name),
@@ -225,48 +245,21 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
   }
 }
 
-class _PartyListFilterTrigger extends StatelessWidget {
-  const _PartyListFilterTrigger({
-    required this.activeFilter,
-    required this.onFilterSelected,
-  });
+SelectColumnFilter? _toSelectFilter(PartyListFilter filter) {
+  if (filter == PartyListFilter.all) return null;
+  return SelectColumnFilter(value: filter.label);
+}
 
-  final PartyListFilter activeFilter;
-  final ValueChanged<PartyListFilter> onFilterSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final isFiltered = activeFilter != PartyListFilter.all;
-
-    return PopupMenuButton<PartyListFilter>(
-      tooltip: 'Filter parties',
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-      icon: Icon(
-        Icons.filter_list,
-        size: 14,
-        color: isFiltered ? AppColors.error : AppColors.textSecondary,
-      ),
-      onSelected: onFilterSelected,
-      itemBuilder: (context) => PartyListFilter.values
-          .map(
-            (filter) => PopupMenuItem(
-              value: filter,
-              child: Row(
-                children: [
-                  if (filter == activeFilter)
-                    const Icon(Icons.check, size: 16)
-                  else
-                    const SizedBox(width: 16),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(filter.label),
-                ],
-              ),
-            ),
-          )
-          .toList(),
+PartyListFilter _fromSelectFilter(FilterResult? result) {
+  if (result == null || !result.isActive) return PartyListFilter.all;
+  if (result is SelectFilterResult) {
+    final value = result.filter.value;
+    return PartyListFilter.values.firstWhere(
+      (filter) => filter.label == value,
+      orElse: () => PartyListFilter.all,
     );
   }
+  return PartyListFilter.all;
 }
 
 class _PartyListTile extends StatelessWidget {
@@ -311,15 +304,43 @@ class _PartyListTile extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               flex: 3,
-              child: InventoryHighlightedText(
-                text: party.name,
-                query: searchQuery,
-                style: InventoryStyles.listCellStyle.copyWith(
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: party.isActive
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
-                ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InventoryHighlightedText(
+                      text: party.name,
+                      query: searchQuery,
+                      style: InventoryStyles.listCellStyle.copyWith(
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: party.isActive
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  if (!party.isActive) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Inactive',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             Expanded(

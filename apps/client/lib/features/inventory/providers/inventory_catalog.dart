@@ -195,8 +195,6 @@ abstract final class InventoryCatalog {
       purchasePrice: 45,
       stockValue: 1260,
       categoryId: snacksCategoryId,
-      availableForSale: 26,
-      reservedQuantity: 2,
       baseUnitShortName: 'Pcs',
       hsnCode: '1806',
     ),

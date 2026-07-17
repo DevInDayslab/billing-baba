@@ -45,7 +45,6 @@ class _BooleanFilterWidgetState extends State<BooleanFilterWidget> {
   Widget build(BuildContext context) {
     return FilterPopoverLayout(
       title: widget.title,
-      operator: const SizedBox.shrink(),
       input: Column(
         children: [
           FilterRadioTile(

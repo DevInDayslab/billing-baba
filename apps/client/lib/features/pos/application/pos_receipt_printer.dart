@@ -23,8 +23,8 @@ PosReceiptPrinter posReceiptPrinter(Ref ref) {
 /// Prints POS receipts using the app-wide print settings.
 class PosReceiptPrinter {
   PosReceiptPrinter({
-    required PrintOutputService outputService,
-  }) : _outputService = outputService;
+    required this._outputService,
+  });
 
   final PrintOutputService _outputService;
 
@@ -37,7 +37,7 @@ class PosReceiptPrinter {
       throw StateError('Business profile is not available');
     }
 
-    final settings = await ref.read(printSettingsNotifierProvider.future);
+    final settings = await ref.read(printSettingsProvider.future);
     return InvoicePrintDocumentService.buildBytesFromPosSale(
       settings: settings,
       business: business,
@@ -51,7 +51,7 @@ class PosReceiptPrinter {
     required PosSale sale,
     required WidgetRef ref,
   }) async {
-    final settings = await ref.read(printSettingsNotifierProvider.future);
+    final settings = await ref.read(printSettingsProvider.future);
     final bytes = await generatePdf(sale: sale, ref: ref);
     final name = 'pos_${sale.docNumber}';
     final format = posReceiptPdfFormat(settings: settings, sale: sale);

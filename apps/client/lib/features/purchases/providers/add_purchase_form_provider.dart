@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
@@ -14,8 +15,10 @@ import 'package:billing_baba/features/purchases/models/purchase_document_draft_i
 import 'package:billing_baba/features/purchases/providers/pending_purchase_document_parse_provider.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
+import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -285,6 +288,19 @@ class AddPurchaseForm extends _$AddPurchaseForm {
     state = state.copyWith(items: items, isDirty: true);
   }
 
+  void selectCatalogItem(int index, SaleItemOption catalogItem) {
+    if (index < 0 || index >= state.items.length) return;
+    final line = state.items[index];
+    final applied = applyCatalogItemToPurchaseLine(line, catalogItem);
+    final items = selectCatalogItemOnPurchaseLines(
+      items: state.items,
+      targetIndex: index,
+      appliedLine: applied,
+      nextLineId: _nextPurchaseLineItemId,
+    );
+    state = state.copyWith(items: items, isDirty: true);
+  }
+
   void updatePaymentType(String type) {
     final payments = [...state.payments];
     if (payments.isEmpty) {
@@ -415,11 +431,12 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       );
       state = state.copyWith(
         documentId: document.id,
+        items: bindPurchaseServerLineIds(state.items, document.lines),
         isSaving: false,
         isDirty: false,
       );
       ref.invalidate(purchaseBillsProvider);
-      refreshAfterPurchaseMutation(ref);
+      _refreshAfterPurchaseMutation();
       return null;
     } catch (error) {
       final message = PurchaseErrorMapper.messageFor(error);
@@ -461,6 +478,13 @@ class AddPurchaseForm extends _$AddPurchaseForm {
         );
       }
 
+      state = state.copyWith(
+        documentId: document.id,
+        items: bindPurchaseServerLineIds(state.items, document.lines),
+        isSaving: false,
+        isDirty: false,
+      );
+
       if (finalize &&
           state.partyId != null &&
           state.partyId!.isNotEmpty &&
@@ -487,7 +511,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       }
 
       ref.invalidate(purchaseBillsProvider);
-      refreshAfterPurchaseMutation(ref);
+      _refreshAfterPurchaseMutation();
       ref.invalidateSelf();
       return null;
     } catch (error) {
@@ -495,6 +519,20 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       state = state.copyWith(isSaving: false, saveError: message);
       return message;
     }
+  }
+
+  void _refreshAfterPurchaseMutation() {
+    final itemIds = state.items
+        .map((line) => line.itemId)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty);
+    refreshAfterPurchaseMutation(
+      ref,
+      context: (
+        partyId: state.partyId,
+        itemIds: itemIds,
+      ),
+    );
   }
 }
 

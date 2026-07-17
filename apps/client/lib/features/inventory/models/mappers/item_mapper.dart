@@ -11,16 +11,27 @@ abstract final class ItemMapper {
     ItemListDto dto, {
     double? quantity,
     double? stockValue,
+    double? reservedQuantity,
+    double? availableForSale,
   }) {
+    final parsedQuantity = _parseMoney(dto.quantity) ?? quantity;
+    final parsedReserved = _parseMoney(dto.reservedQuantity) ?? reservedQuantity;
+    final parsedAvailable =
+        _parseMoney(dto.availableForSale) ?? availableForSale;
+
     return InventoryItem(
       id: dto.id,
       name: dto.name,
       type: dto.itemType == 'service' ? ItemType.service : ItemType.product,
-      quantity: quantity,
+      quantity: parsedQuantity,
       salePrice: _parseMoney(dto.salePrice),
       stockValue: stockValue,
       categoryId: CategoryMapper.fromApiCategoryId(dto.categoryId),
-      availableForSale: quantity,
+      availableForSale: parsedAvailable ??
+          (parsedQuantity != null && parsedReserved != null
+              ? parsedQuantity - parsedReserved
+              : parsedQuantity),
+      reservedQuantity: parsedReserved,
       description: dto.description,
       hsnCode: dto.hsnCode,
       barcode: dto.barcode,
@@ -38,6 +49,8 @@ abstract final class ItemMapper {
     ItemDetailDto dto, {
     double? quantity,
     double? stockValue,
+    double? reservedQuantity,
+    double? availableForSale,
   }) {
     final openingQty = double.tryParse(dto.openingStock?.totalQuantity ?? '');
     return fromListDto(
@@ -63,9 +76,14 @@ abstract final class ItemMapper {
         primaryImageUrl: dto.primaryImageUrl,
         createdAt: dto.createdAt,
         updatedAt: dto.updatedAt,
+        quantity: dto.quantity,
+        reservedQuantity: dto.reservedQuantity,
+        availableForSale: dto.availableForSale,
       ),
-      quantity: quantity ?? openingQty,
+      quantity: quantity ?? _parseMoney(dto.quantity),
       stockValue: stockValue,
+      reservedQuantity: _parseMoney(dto.reservedQuantity),
+      availableForSale: _parseMoney(dto.availableForSale),
     );
   }
 

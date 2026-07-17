@@ -19,17 +19,20 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_s
 import 'package:billing_baba/features/inventory/providers/inventory_brands_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_search_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final productsProvider = Provider<List<InventoryItem>>((ref) {
-  final query = ref.watch(productSearchQueryProvider).toLowerCase();
+  final query = ref.watch(productSearchQueryProvider);
   final filters = ref.watch(inventoryItemFiltersProvider);
-  return (ref.watch(inventoryItemsProvider).value ?? [])
-      .where((item) => item.type == ItemType.product)
-      .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
+  final engine = ref.watch(inventorySearchEngineProvider);
+  final products = (ref.watch(inventoryItemsProvider).value ?? [])
+      .where((item) => item.type == ItemType.product);
+
+  return searchInventoryItems(engine, products, query: query)
       .where(
         (item) => InventoryItemFilterService.matches(item, filters: filters),
       )
@@ -37,11 +40,13 @@ final productsProvider = Provider<List<InventoryItem>>((ref) {
 });
 
 final servicesProvider = Provider<List<InventoryItem>>((ref) {
-  final query = ref.watch(serviceSearchQueryProvider).toLowerCase();
+  final query = ref.watch(serviceSearchQueryProvider);
   final filters = ref.watch(inventoryItemFiltersProvider);
-  return (ref.watch(inventoryItemsProvider).value ?? [])
-      .where((item) => item.type == ItemType.service)
-      .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
+  final engine = ref.watch(inventorySearchEngineProvider);
+  final services = (ref.watch(inventoryItemsProvider).value ?? [])
+      .where((item) => item.type == ItemType.service);
+
+  return searchInventoryItems(engine, services, query: query)
       .where(
         (item) => InventoryItemFilterService.matches(item, filters: filters),
       )
@@ -76,7 +81,7 @@ final categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
   ref,
   categoryId,
 ) {
-  final query = ref.watch(categoryItemSearchQueryProvider).toLowerCase();
+  final query = ref.watch(categoryItemSearchQueryProvider);
   final filters = ref.watch(categoryItemFiltersProvider);
   final sort = ref.watch(categoryItemSortProvider);
   final items = ref.watch(inventoryItemsProvider).value ?? [];
@@ -89,8 +94,8 @@ final categoryItemsProvider = Provider.family<List<InventoryItem>, String>((
         )
       : items.where((item) => item.categoryId == categoryId);
 
-  final result = filteredItems
-      .where((item) => query.isEmpty || item.name.toLowerCase().contains(query))
+  final engine = ref.watch(inventorySearchEngineProvider);
+  final result = searchInventoryItems(engine, filteredItems, query: query)
       .where(
         (item) => InventoryItemFilterService.matches(item, filters: filters),
       )
@@ -319,11 +324,22 @@ class ProductStockSummary {
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
+final itemStockMetricsProvider =
+    Provider.family<ItemStockMetrics, String>((ref, itemId) {
+      final item = (ref.watch(inventoryItemsProvider).value ?? [])
+          .where((entry) => entry.id == itemId)
+          .firstOrNull;
+      return InventoryStockCalculator.metricsFromItem(item);
+    });
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
 final productStockSummaryProvider =
     Provider.family<ProductStockSummary, String>((ref, itemId) {
       final item = (ref.watch(inventoryItemsProvider).value ?? [])
           .where((entry) => entry.id == itemId)
           .firstOrNull;
+      final metrics = ref.watch(itemStockMetricsProvider(itemId));
       final stockLevels =
           ref.watch(itemStockLevelsProvider(itemId)).value ?? [];
       final transactions =
@@ -345,8 +361,8 @@ final productStockSummaryProvider =
           InventoryStockCalculator.lastPurchasePrice(transactions) ??
           item?.purchasePrice;
 
-      final available = item?.availableForSale ?? item?.quantity;
-      final reserved = item?.reservedQuantity;
+      final available = metrics.availableForSale;
+      final reserved = metrics.reservedQuantity;
       final stockValue =
           item?.stockValue ??
           stockLevels.fold<double>(
@@ -363,10 +379,10 @@ final productStockSummaryProvider =
 
       final isLowStock =
           hasLowStock ||
-          (available != null &&
+          (metrics.physicalQuantity > 0 &&
               reorder != null &&
-              available > 0 &&
-              available <= reorder);
+              metrics.availableForSale > 0 &&
+              metrics.availableForSale <= reorder);
 
       return ProductStockSummary(
         availableStock: available,

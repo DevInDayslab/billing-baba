@@ -1,16 +1,23 @@
-import { and, asc, count, desc, eq } from 'drizzle-orm';
+import { and, asc, count, desc, eq, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '../../db/client';
+import { parties } from '../../db/schema/crm/tables';
 import {
   godowns,
   inventoryMovements,
   items,
 } from '../../db/schema/inventory/tables';
+import { purchaseDocuments } from '../../db/schema/purchases/tables';
+import { salesDocuments } from '../../db/schema/sales/tables';
 import { toMovementRecord } from './movement.mapper';
 import type {
   ListMovementsParams,
   MovementRecord,
   MovementRow,
 } from './movement.types';
+
+const salesParty = alias(parties, 'sales_party');
+const purchaseParty = alias(parties, 'purchase_party');
 
 export class MovementRepository {
   constructor(private readonly db: Database) {}
@@ -25,11 +32,50 @@ export class MovementRepository {
       movementType: inventoryMovements.movementType,
       quantityDelta: inventoryMovements.quantityDelta,
       costPerUnit: inventoryMovements.costPerUnit,
+      unit: inventoryMovements.unit,
       referenceId: inventoryMovements.referenceId,
       referenceType: inventoryMovements.referenceType,
+      referenceNumber: sql<string | null>`COALESCE(
+        ${salesDocuments.documentNumber},
+        ${purchaseDocuments.documentNumber},
+        CASE
+          WHEN ${inventoryMovements.referenceType} = 'items'
+            AND ${inventoryMovements.movementType} = 'opening'
+          THEN COALESCE(NULLIF(${items.barcode}, ''), 'Opening')
+          ELSE NULL
+        END
+      )`,
+      partyName: sql<string | null>`COALESCE(
+        ${salesParty.name},
+        ${purchaseParty.name}
+      )`,
       createdBy: inventoryMovements.createdBy,
       createdAt: inventoryMovements.createdAt,
     };
+  }
+
+  private movementJoins() {
+    return this.db
+      .select(this.selectShape())
+      .from(inventoryMovements)
+      .innerJoin(items, eq(inventoryMovements.itemId, items.id))
+      .innerJoin(godowns, eq(inventoryMovements.godownId, godowns.id))
+      .leftJoin(
+        salesDocuments,
+        and(
+          eq(inventoryMovements.referenceType, 'sales_documents'),
+          eq(inventoryMovements.referenceId, salesDocuments.id),
+        ),
+      )
+      .leftJoin(salesParty, eq(salesDocuments.partyId, salesParty.id))
+      .leftJoin(
+        purchaseDocuments,
+        and(
+          eq(inventoryMovements.referenceType, 'purchase_documents'),
+          eq(inventoryMovements.referenceId, purchaseDocuments.id),
+        ),
+      )
+      .leftJoin(purchaseParty, eq(purchaseDocuments.partyId, purchaseParty.id));
   }
 
   async list(params: ListMovementsParams): Promise<{
@@ -70,11 +116,7 @@ export class MovementRepository {
         : asc(inventoryMovements.createdAt);
     const offset = (params.page - 1) * params.limit;
 
-    const rows = await this.db
-      .select(this.selectShape())
-      .from(inventoryMovements)
-      .innerJoin(items, eq(inventoryMovements.itemId, items.id))
-      .innerJoin(godowns, eq(inventoryMovements.godownId, godowns.id))
+    const rows = await this.movementJoins()
       .where(whereClause)
       .orderBy(orderBy)
       .limit(params.limit)
@@ -90,11 +132,7 @@ export class MovementRepository {
     businessId: string,
     movementId: string,
   ): Promise<MovementRecord | null> {
-    const [row] = await this.db
-      .select(this.selectShape())
-      .from(inventoryMovements)
-      .innerJoin(items, eq(inventoryMovements.itemId, items.id))
-      .innerJoin(godowns, eq(inventoryMovements.godownId, godowns.id))
+    const [row] = await this.movementJoins()
       .where(
         and(
           eq(inventoryMovements.id, movementId),

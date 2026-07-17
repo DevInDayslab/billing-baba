@@ -97,6 +97,11 @@ export const paymentDirectionEnum = pgEnum('payment_direction', [
   'paid',
 ]);
 
+export const paymentSourceEnum = pgEnum('payment_source', [
+  'manual',
+  'document_finalize',
+]);
+
 export const shortPaymentHandlingEnum = pgEnum('short_payment_handling', [
   'official_balance',
   'unrecovered',

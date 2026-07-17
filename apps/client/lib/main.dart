@@ -1,5 +1,6 @@
 import 'package:billing_baba/app.dart';
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/platform/desktop_window_config.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await configureDesktopWindow();
   GoogleFonts.config.allowRuntimeFetching = false;
 
   await dotenv.load();

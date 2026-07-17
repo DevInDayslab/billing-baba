@@ -169,7 +169,9 @@ export class AccountingReportsRepository {
       ),
     ].filter((row) => {
       if (query.q) {
-        return row.account_name.toLowerCase().includes(query.q?.toLowerCase());
+        return row.account_name
+          .toLowerCase()
+          .includes(query.q?.toLowerCase() ?? '');
       }
       return true;
     });

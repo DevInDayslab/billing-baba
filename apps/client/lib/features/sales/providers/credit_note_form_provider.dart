@@ -6,8 +6,10 @@ import 'package:billing_baba/features/sales/models/credit_note_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -264,6 +266,22 @@ class CreditNoteForm extends _$CreditNoteForm {
     state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
   }
 
+  void selectCatalogItem(int index, SaleItemOption catalogItem) {
+    if (index < 0 || index >= state.items.length) return;
+    final line = state.items[index];
+    final applied = applyCatalogItemToLine(
+      line,
+      catalogItem,
+    ).copyWith(mrp: catalogItem.salePrice);
+    final items = selectCatalogItemOnSaleLines(
+      items: state.items,
+      targetIndex: index,
+      appliedLine: applied,
+      nextLineId: _nextCreditNoteLineItemId,
+    );
+    state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
+  }
+
   void confirmLineItem(int index) {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
@@ -305,7 +323,16 @@ class CreditNoteForm extends _$CreditNoteForm {
         godownId: state.godownId,
       );
       ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
-      refreshAfterSaleReturn(ref);
+      refreshAfterSaleReturn(
+        ref,
+        context: (
+          partyId: state.partyId,
+          itemIds: state.items
+              .map((line) => line.itemId)
+              .whereType<String>()
+              .where((id) => id.isNotEmpty),
+        ),
+      );
       state = state.copyWith(
         documentId: document.id,
         isSaving: false,

@@ -127,11 +127,12 @@ export async function finalizePurchaseDocument(
           godownId: godown.id,
           movementType,
           quantityDelta: delta,
-          costPerUnit:
-            document.documentType === 'purchase_bill' ? line.unitPrice : null,
+          costPerUnit: line.unitPrice,
+          unit: line.unit,
           referenceId: params.documentId,
           referenceType: 'purchase_documents',
           createdBy: params.userId ?? null,
+          occurredAt: document.documentDate,
         });
       }
     }

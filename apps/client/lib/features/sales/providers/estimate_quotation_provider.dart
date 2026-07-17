@@ -10,6 +10,7 @@ import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dar
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'estimate_quotation_provider.g.dart';
@@ -340,54 +341,56 @@ class SelectedEstimateQuotationId extends _$SelectedEstimateQuotationId {
 class EstimateQuotations extends _$EstimateQuotations {
   @override
   Future<PaginatedSaleInvoices> build() async {
-    ref.watch(estimateQuotationFiltersProvider);
+    ref.watch(
+      estimateQuotationFiltersProvider.select(
+        (filters) => (filters.timeRangeOption, filters.customDateRange),
+      ),
+    );
     ref.watch(estimateQuotationSearchQueryProvider);
-    return _fetchPage();
+    final allItems = await _fetchAllEstimates();
+    return PaginatedSaleInvoices(
+      items: allItems,
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: allItems.length,
+    );
   }
 
-  Future<PaginatedSaleInvoices> _fetchPage() async {
+  Future<List<SaleInvoiceModel>> _fetchAllEstimates() async {
     final filters = ref.read(estimateQuotationFiltersProvider);
     final search = ref.read(estimateQuotationSearchQueryProvider);
     final service = await ref.read(salesServiceProvider.future);
 
-    if (needsEstimateClientSideFiltering(filters)) {
-      final allItems = await PaginatedFetch.fetchAll<SaleInvoiceModel>(
-        fetchPage: (page) async {
-          final result = await service.fetchInvoicesPage(
-            _buildEstimateListQuery(
-              filters,
-              search,
-              page: page,
-              limit: PaginatedFetch.defaultPageSize,
-            ),
-          );
-          return (
-            items: _filterEstimateSeries(result.items),
-            totalPages: result.totalPages,
-          );
-        },
-      );
-
-      final filteredItems = applyEstimateClientFilters(allItems, filters);
-      return paginateEstimateItems(filteredItems, filters);
-    }
-
-    final page = await service.fetchInvoicesPage(
-      _buildEstimateListQuery(filters, search),
+    final allItems = await PaginatedFetch.fetchAll<SaleInvoiceModel>(
+      fetchPage: (page) async {
+        final result = await service.fetchInvoicesPage(
+          _buildEstimateListQuery(
+            filters,
+            search,
+            page: page,
+            limit: PaginatedFetch.defaultPageSize,
+          ),
+        );
+        return (
+          items: _filterEstimateSeries(result.items),
+          totalPages: result.totalPages,
+        );
+      },
     );
-
-    final seriesFiltered = _filterEstimateSeries(page.items);
-    return PaginatedSaleInvoices(
-      items: seriesFiltered,
-      currentPage: page.currentPage,
-      totalPages: page.totalPages,
-      totalItems: seriesFiltered.length,
-    );
+    return allItems;
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(_fetchPage);
+    state = await AsyncValue.guard(() async {
+      final allItems = await _fetchAllEstimates();
+      return PaginatedSaleInvoices(
+        items: allItems,
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: allItems.length,
+      );
+    });
   }
 
   Future<String?> deleteEstimate(String documentId) async {
@@ -528,23 +531,22 @@ class EstimateQuotationFilters extends _$EstimateQuotationFilters {
 }
 
 @riverpod
+List<SaleInvoiceModel> filteredEstimateQuotations(Ref ref) {
+  final allEstimates = ref.watch(estimateQuotationsProvider).value?.items ?? [];
+  final filters = ref.watch(estimateQuotationFiltersProvider);
+  return applyEstimateClientFilters(allEstimates, filters);
+}
+
+@riverpod
 PaginatedSaleInvoices paginatedEstimateQuotations(Ref ref) {
-  final estimatesAsync = ref.watch(estimateQuotationsProvider);
-  return estimatesAsync.maybeWhen(
-    data: (page) => page,
-    orElse: () => const PaginatedSaleInvoices(
-      items: [],
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 0,
-    ),
-  );
+  final filtered = ref.watch(filteredEstimateQuotationsProvider);
+  final filters = ref.watch(estimateQuotationFiltersProvider);
+  return paginateEstimateItems(filtered, filters);
 }
 
 @riverpod
 EstimateQuotationSummaryData estimateQuotationSummary(Ref ref) {
-  final page = ref.watch(paginatedEstimateQuotationsProvider);
-  final estimates = page.items;
+  final estimates = ref.watch(filteredEstimateQuotationsProvider);
 
   var totalAmount = 0.0;
   var convertedAmount = 0.0;

@@ -1,7 +1,10 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
-const _menuHoverColor = Color(0xFFE3F2FD);
+const _menuHoverBackground = Color(0xFFF5F5F5);
+const Color _menuHoverForeground = AppColors.textPrimary;
+const _menuDestructiveHoverBackground = Color(0xFFFFF5F5);
+const Color _menuDestructiveHoverForeground = AppColors.error;
 const _menuBorderColor = Color(0xFFE0E0E0);
 const _menuMinWidth = 220.0;
 
@@ -10,11 +13,13 @@ class SalesActionMenuItem {
     required this.label,
     required this.onSelected,
     this.dividerBefore = false,
+    this.isDestructive = false,
   });
 
   final String label;
   final Future<void> Function() onSelected;
   final bool dividerBefore;
+  final bool isDestructive;
 }
 
 /// Three-dot overflow menu anchored to the trigger icon (filter-dropdown style).
@@ -75,27 +80,15 @@ class _SalesActionMenuButtonState extends State<SalesActionMenuButton> {
             ),
           MenuItemButton(
             onPressed: () => _selectItem(item),
-            style: ButtonStyle(
-              minimumSize: const WidgetStatePropertyAll(Size.fromHeight(44)),
-              padding: const WidgetStatePropertyAll(
-                EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: 12,
-                ),
-              ),
-              overlayColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.hovered)) {
-                  return _menuHoverColor;
-                }
-                return null;
-              }),
-              splashFactory: NoSplash.splashFactory,
-            ),
+            style: _menuItemStyle(item.isDestructive),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 item.label,
-                style: const TextStyle(fontSize: 14, color: Colors.black87),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
@@ -111,6 +104,39 @@ class _SalesActionMenuButtonState extends State<SalesActionMenuButton> {
           tooltip: 'Actions',
         );
       },
+    );
+  }
+
+  ButtonStyle _menuItemStyle(bool isDestructive) {
+    return ButtonStyle(
+      minimumSize: const WidgetStatePropertyAll(Size.fromHeight(44)),
+      padding: const WidgetStatePropertyAll(
+        EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 12,
+        ),
+      ),
+      mouseCursor: const WidgetStatePropertyAll(SystemMouseCursors.click),
+      overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+      splashFactory: NoSplash.splashFactory,
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        final isHovered = states.contains(WidgetState.hovered) ||
+            states.contains(WidgetState.focused);
+        if (!isHovered) return Colors.transparent;
+        return isDestructive
+            ? _menuDestructiveHoverBackground
+            : _menuHoverBackground;
+      }),
+      foregroundColor: WidgetStateProperty.resolveWith((states) {
+        final isHovered = states.contains(WidgetState.hovered) ||
+            states.contains(WidgetState.focused);
+        if (!isHovered) {
+          return isDestructive ? AppColors.error : AppColors.textPrimary;
+        }
+        return isDestructive
+            ? _menuDestructiveHoverForeground
+            : _menuHoverForeground;
+      }),
     );
   }
 }

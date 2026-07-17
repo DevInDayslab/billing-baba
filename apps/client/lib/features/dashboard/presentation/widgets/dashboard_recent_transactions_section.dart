@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/presentation/utils/dashboard_transaction_navigation.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_empty_state.dart';
@@ -23,17 +24,18 @@ class DashboardRecentTransactionsSection extends StatelessWidget {
     decimalDigits: 0,
   );
 
-  static final _dateFormat = DateFormat('d MMM, h:mm a');
+  static final DateFormat _dateFormat = DateTimeUtils.displayDateTime;
 
   @override
   Widget build(BuildContext context) {
+
     return DashboardMetricCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Recent Transactions',
                   style: DashboardTypography.cardTitle,
@@ -47,7 +49,7 @@ class DashboardRecentTransactionsSection extends StatelessWidget {
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text(
+                child: Text(
                   'View All →',
                   style: DashboardTypography.link,
                 ),
@@ -184,7 +186,7 @@ class _TransactionRow extends StatelessWidget {
                     Text(
                       _detailLine,
                       style: DashboardTypography.metadata.copyWith(
-                        fontSize: 13,
+                        fontSize: AppTypography.subtitleSize,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

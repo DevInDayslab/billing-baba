@@ -167,6 +167,10 @@ export const updateItemBodySchema = z
       .nullable()
       .optional()
       .transform((value) => (value === '' ? null : value)),
+    opening_quantity: optionalMoneyField,
+    opening_cost_per_unit: optionalMoneyField,
+    opening_godown_id: z.uuid('Invalid godown ID').optional(),
+    location: locationSchema.optional(),
   })
   .refine((body) => Object.keys(body).length > 0, {
     message: 'At least one field is required',

@@ -20,13 +20,20 @@ class PartyActionsMenuButton extends ConsumerWidget {
     return SalesActionMenuButton(
       items: [
         SalesActionMenuItem(
-          label: 'View / Edit',
+          label: 'View Party',
           onSelected: () => PartyActions.edit(context, ref, party),
         ),
-        SalesActionMenuItem(
-          label: 'Delete',
-          onSelected: () => PartyActions.delete(context, ref, party),
-        ),
+        if (!party.isActive)
+          SalesActionMenuItem(
+            label: 'Restore Party',
+            onSelected: () => PartyActions.restore(context, ref, party),
+          ),
+        if (party.isActive)
+          SalesActionMenuItem(
+            label: 'Delete',
+            isDestructive: true,
+            onSelected: () => PartyActions.delete(context, ref, party),
+          ),
         SalesActionMenuItem(
           label: 'Duplicate',
           dividerBefore: true,
@@ -44,11 +51,6 @@ class PartyActionsMenuButton extends ConsumerWidget {
             dividerBefore: !canReceive,
             onSelected: () => PartyActions.recordPayment(context, party),
           ),
-        SalesActionMenuItem(
-          label: 'View History',
-          dividerBefore: true,
-          onSelected: () => PartyActions.viewHistory(context, ref, party),
-        ),
       ],
     );
   }

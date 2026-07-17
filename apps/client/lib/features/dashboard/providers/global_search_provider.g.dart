@@ -101,4 +101,4 @@ final class GlobalSearchResultsProvider
 }
 
 String _$globalSearchResultsHash() =>
-    r'2cdeffec198337c579efc4752b180187f0c77b4c';
+    r'486a5961dd9c8df6958f4d8ee312710257331843';

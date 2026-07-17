@@ -92,15 +92,12 @@ class _InventoryItemWorkspaceState
   }
 
   void _onSearchDebounced(String query) {
-    final trimmed = query.trim();
-    widget.onBackendSearchChanged(trimmed);
-    unawaited(widget.onRefresh());
+    // Inventory search is fully client-side; avoid API pre-filtering that
+    // drops items before the local token engine can rank them.
   }
 
   void _clearSearch() {
     widget.onLocalSearchChanged('');
-    widget.onBackendSearchChanged('');
-    unawaited(widget.onRefresh());
     setState(() {
       _focusedIndex = 0;
       _searchResetToken++;

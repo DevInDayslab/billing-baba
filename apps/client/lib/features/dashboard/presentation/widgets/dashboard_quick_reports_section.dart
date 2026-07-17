@@ -14,6 +14,7 @@ class DashboardQuickReportsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return DashboardMetricCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

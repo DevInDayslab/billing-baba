@@ -1,4 +1,6 @@
+import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
@@ -169,7 +171,7 @@ class SalesService {
           ? (partyNames[document.partyId] ?? '')
           : '';
 
-      final date = DateTime.tryParse(document.documentDate) ?? DateTime.now();
+      final date = DateTimeUtils.parseApiDateTime(document.documentDate);
       final items = _linesToSaleLineItems(document.lines);
 
       return AddSaleFormState(
@@ -202,7 +204,7 @@ class SalesService {
                 documentSeries: input.documentSeries,
                 partyId: input.partyId,
                 isGstFormal: input.isGstFormal,
-                documentDate: input.documentDate?.toUtc().toIso8601String(),
+                documentDate: _apiDocumentDate(input),
                 convertedFromId: input.convertedFromId,
                 notes: input.notes?.trim().isEmpty ?? true ? null : input.notes,
               ),
@@ -233,6 +235,7 @@ class SalesService {
         documentType: SalesDocumentType.taxInvoice,
         documentSeries: SalesConstants.defaultDocumentSeries,
         documentDate: form.invoiceDate,
+        documentTime: form.invoiceTime,
         notes: form.description,
         godownId: form.godownId,
         isGstFormal: true,
@@ -270,7 +273,7 @@ class SalesService {
           ? (partyNames[document.partyId] ?? '')
           : '';
 
-      final date = DateTime.tryParse(document.documentDate) ?? DateTime.now();
+      final date = DateTimeUtils.parseApiDateTime(document.documentDate);
       final items = _linesToSaleLineItems(document.lines);
 
       return SaleDocumentFormState(
@@ -324,7 +327,7 @@ class SalesService {
       input.documentId!,
       UpdateSalesDocumentRequest(
         partyId: input.partyId,
-        documentDate: input.documentDate?.toUtc().toIso8601String(),
+        documentDate: _apiDocumentDate(input),
         notes: input.notes?.trim().isEmpty ?? true ? null : input.notes,
       ),
     );
@@ -363,11 +366,19 @@ class SalesService {
         sortOrder: i,
       );
 
-      if (line.serverLineId != null) {
-        keptServerIds.add(line.serverLineId!);
+      final serverLineId = resolveSaleServerLineId(
+        localServerLineId: line.serverLineId,
+        sortOrder: i,
+        itemId: itemId,
+        existingLines: existingLines,
+        keptServerIds: keptServerIds,
+      );
+
+      if (serverLineId != null) {
+        keptServerIds.add(serverLineId);
         await _repository.updateLine(
           documentId,
-          line.serverLineId!,
+          serverLineId,
           UpdateSalesLineRequest(
             itemId: itemId,
             quantity: request.quantity,
@@ -431,7 +442,13 @@ class SalesService {
             direction: 'received',
             amount: receivedAmount.toStringAsFixed(4),
             paymentMode: paymentMode,
-            paymentDate: form.invoiceDate?.toUtc().toIso8601String(),
+            source: 'document_finalize',
+            paymentDate: DateTimeUtils.toApiIso(
+              DateTimeUtils.mergeDateAndTime(
+                date: form.invoiceDate,
+                time: form.invoiceTime,
+              ),
+            ),
             allocations: [
               PaymentAllocationRequest(
                 salesDocumentId: finalized.id,
@@ -567,5 +584,16 @@ class SalesService {
       ),
     );
     return page.items.fold<double>(0, (sum, invoice) => sum + invoice.balance);
+  }
+
+  String? _apiDocumentDate(SalesDocumentDraftInput input) {
+    final date = input.documentDate;
+    if (date == null) return null;
+    return DateTimeUtils.toApiIso(
+      DateTimeUtils.mergeDateAndTime(
+        date: date,
+        time: input.documentTime,
+      ),
+    );
   }
 }

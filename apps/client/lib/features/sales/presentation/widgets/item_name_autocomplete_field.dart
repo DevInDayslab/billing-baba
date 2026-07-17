@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_search_provider.dart';
 import 'package:billing_baba/features/pricing/providers/item_api_tier_prices_provider.dart';
 import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
@@ -22,7 +24,7 @@ SaleItemOption saleItemOptionFromInventory(
     salePrice: item.salePrice ?? 0,
     purchasePrice: item.purchasePrice ?? 0,
     mfgCost: item.purchasePrice ?? 0,
-    stock: item.availableForSale ?? item.quantity ?? 0,
+    stock: InventoryStockCalculator.metricsFromItem(item).availableForSale,
     unit: item.baseUnitShortName,
     hsn: item.hsnCode,
     itemCode: item.barcode,
@@ -165,7 +167,14 @@ class ItemNameAutocompleteFieldState
 
     final query = _controller.text.trim();
     if (query.isEmpty) return options;
-    return options.where((item) => item.matchesSearchQuery(query)).toList();
+
+    final engine = ref.read(inventorySearchEngineProvider);
+    final rankedItems = engine.searchItems(inventory, query: query);
+    final optionsById = {for (final option in options) option.id: option};
+    return [
+      for (final item in rankedItems)
+        if (optionsById.containsKey(item.id)) optionsById[item.id]!,
+    ];
   }
 
   void _removeOverlay() {

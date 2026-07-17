@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/inventory/models/inventory_transaction_filters.dart';
@@ -190,7 +191,6 @@ class _TransactionsTableShell extends ConsumerWidget {
 class InventoryTransactionTableRows {
   const InventoryTransactionTableRows._();
 
-  static final _dateFormat = DateFormat('dd/MM/yyyy, hh:mm a');
   static final _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',
     symbol: '₹',
@@ -258,7 +258,7 @@ class InventoryTransactionTableRows {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        _DataCell(child: Text(_dateFormat.format(transaction.date))),
+        _DataCell(child: Text(DateTimeUtils.formatDisplayDateTime(transaction.date))),
         _DataCell(
           alignment: Alignment.centerRight,
           child: Text(

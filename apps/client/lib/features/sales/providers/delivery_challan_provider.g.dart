@@ -271,7 +271,7 @@ final class DeliveryChallansProvider
   DeliveryChallans create() => DeliveryChallans();
 }
 
-String _$deliveryChallansHash() => r'fdf1f92606f30b2a640ad45919e205cd00600c9f';
+String _$deliveryChallansHash() => r'61ca4b7d712f69b2c058fd8bd8b099742704fd46';
 
 abstract class _$DeliveryChallans
     extends $AsyncNotifier<PaginatedSaleInvoices> {
@@ -357,6 +357,54 @@ abstract class _$DeliveryChallanFilters
   }
 }
 
+@ProviderFor(filteredDeliveryChallans)
+final filteredDeliveryChallansProvider = FilteredDeliveryChallansProvider._();
+
+final class FilteredDeliveryChallansProvider
+    extends
+        $FunctionalProvider<
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>,
+          List<SaleInvoiceModel>
+        >
+    with $Provider<List<SaleInvoiceModel>> {
+  FilteredDeliveryChallansProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'filteredDeliveryChallansProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$filteredDeliveryChallansHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<SaleInvoiceModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<SaleInvoiceModel> create(Ref ref) {
+    return filteredDeliveryChallans(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<SaleInvoiceModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<SaleInvoiceModel>>(value),
+    );
+  }
+}
+
+String _$filteredDeliveryChallansHash() =>
+    r'd2c7c64d3040979d4d97eb33d83f9359124dc48b';
+
 @ProviderFor(paginatedDeliveryChallans)
 final paginatedDeliveryChallansProvider = PaginatedDeliveryChallansProvider._();
 
@@ -403,7 +451,7 @@ final class PaginatedDeliveryChallansProvider
 }
 
 String _$paginatedDeliveryChallansHash() =>
-    r'84beae184fc071ce3246415e7813152f143704ea';
+    r'7d9ee18a1d93695bce80dc92e96fefab7b1a6aed';
 
 @ProviderFor(deliveryChallanSummary)
 final deliveryChallanSummaryProvider = DeliveryChallanSummaryProvider._();
@@ -451,4 +499,4 @@ final class DeliveryChallanSummaryProvider
 }
 
 String _$deliveryChallanSummaryHash() =>
-    r'186d3f536ca651b0f372e012d4dd886ac14dbdee';
+    r'5719212136c5f5ece80727a12503df10be463788';

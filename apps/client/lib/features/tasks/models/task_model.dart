@@ -1,3 +1,5 @@
+import 'package:billing_baba/features/tasks/models/task_category.dart';
+
 /// Personal dashboard reminder — not a project-management task.
 enum TaskStatus { pending, completed, overdue }
 
@@ -12,6 +14,7 @@ class TaskModel {
     required this.createdAt,
     required this.updatedAt,
     this.description,
+    this.category,
     this.reminderAt,
     this.isCompleted = false,
     this.isPinned = false,
@@ -28,6 +31,9 @@ class TaskModel {
       id: json['id'] as String,
       title: json['title'] as String? ?? '',
       description: json['description'] as String?,
+      category: json['category'] != null
+          ? TaskCategoryStyle.fromJson(json['category'] as String?)
+          : null,
       reminderAt: _parseDate(json['reminder_at']),
       isCompleted: json['is_completed'] as bool? ?? false,
       isPinned: json['is_pinned'] as bool? ?? false,
@@ -49,6 +55,7 @@ class TaskModel {
   final String id;
   final String title;
   final String? description;
+  final TaskCategory? category;
   final DateTime? reminderAt;
   final bool isCompleted;
   final bool isPinned;
@@ -97,6 +104,8 @@ class TaskModel {
     String? title,
     String? description,
     bool clearDescription = false,
+    TaskCategory? category,
+    bool clearCategory = false,
     DateTime? reminderAt,
     bool clearReminderAt = false,
     bool? isCompleted,
@@ -115,6 +124,7 @@ class TaskModel {
       id: id ?? this.id,
       title: title ?? this.title,
       description: clearDescription ? null : (description ?? this.description),
+      category: clearCategory ? null : (category ?? this.category),
       reminderAt: clearReminderAt ? null : (reminderAt ?? this.reminderAt),
       isCompleted: isCompleted ?? this.isCompleted,
       isPinned: isPinned ?? this.isPinned,
@@ -133,6 +143,7 @@ class TaskModel {
     'id': id,
     'title': title,
     if (description != null) 'description': description,
+    if (category != null) 'category': category!.toJson(),
     if (reminderAt != null) 'reminder_at': reminderAt!.toIso8601String(),
     'is_completed': isCompleted,
     'is_pinned': isPinned,

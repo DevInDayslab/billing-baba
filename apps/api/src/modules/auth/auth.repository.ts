@@ -7,6 +7,7 @@ import {
   users,
 } from '../../db/schema/identity/tables';
 import { categories, godowns } from '../../db/schema/inventory/tables';
+import { expenseCategories } from '../../db/schema/purchases/tables';
 import {
   DEV_BUSINESS_ADDRESS,
   DEV_BUSINESS_GSTIN,
@@ -151,6 +152,12 @@ export class AuthRepository {
         { businessId: business.id, name: 'Services' },
       ]);
 
+      await tx.insert(expenseCategories).values([
+        { businessId: business.id, name: 'Rent', isSystem: true },
+        { businessId: business.id, name: 'Utilities', isSystem: true },
+        { businessId: business.id, name: 'Salaries', isSystem: true },
+      ]);
+
       return {
         userId: user.id,
         businessId: business.id,
@@ -200,6 +207,25 @@ export class AuthRepository {
       await this.db.insert(categories).values([
         { businessId, name: 'General' },
         { businessId, name: 'Services' },
+      ]);
+    }
+
+    const [expenseCategory] = await this.db
+      .select({ id: expenseCategories.id })
+      .from(expenseCategories)
+      .where(
+        and(
+          eq(expenseCategories.businessId, businessId),
+          eq(expenseCategories.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    if (!expenseCategory) {
+      await this.db.insert(expenseCategories).values([
+        { businessId, name: 'Rent', isSystem: true },
+        { businessId, name: 'Utilities', isSystem: true },
+        { businessId, name: 'Salaries', isSystem: true },
       ]);
     }
   }
