@@ -25,6 +25,18 @@ class BusinessListPage extends ConsumerStatefulWidget {
   ConsumerState<BusinessListPage> createState() => _BusinessListPageState();
 }
 
+/// Preview card for the "Companies Shared with Me" tab.
+const kDemoSharedBusinessId = 'demo-shared-sharma-traders';
+
+const _demoSharedBusiness = BusinessModel(
+  id: kDemoSharedBusinessId,
+  name: 'Sharma Traders',
+  syncStatus: SyncStatus.on,
+  isShared: true,
+  ownerName: 'Ramesh Sharma',
+  role: 'Biller',
+);
+
 class _BusinessListPageState extends ConsumerState<BusinessListPage>
     with SingleTickerProviderStateMixin {
   static const _headerColor = Color(0xFF1A1A2E);
@@ -138,80 +150,81 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
       body: Stack(
         children: [
           businessesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _ErrorState(
-          onRetry: () => ref.read(businessListProvider.notifier).refresh(),
-        ),
-        data: (allBusinesses) {
-          if (allBusinesses.isEmpty) {
-            return Column(
-              children: [
-                const _SupportBar(phone: _supportPhone),
-                Expanded(
-                  child: _EmptyBusinessState(onCreate: _openCreateBusiness),
-                ),
-                _BottomBar(
-                  phoneNumber: phoneNumber,
-                  supportEmail: _supportEmail,
-                  onCreate: _openCreateBusiness,
-                  showNewCompany: false,
-                ),
-              ],
-            );
-          }
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => _ErrorState(
+              onRetry: () => ref.read(businessListProvider.notifier).refresh(),
+            ),
+            data: (allBusinesses) {
+              if (allBusinesses.isEmpty) {
+                return Column(
+                  children: [
+                    const _SupportBar(phone: _supportPhone),
+                    Expanded(
+                      child: _EmptyBusinessState(onCreate: _openCreateBusiness),
+                    ),
+                    _BottomBar(
+                      phoneNumber: phoneNumber,
+                      supportEmail: _supportEmail,
+                      onCreate: _openCreateBusiness,
+                      showNewCompany: false,
+                    ),
+                  ],
+                );
+              }
 
-          final sharedBusinesses = _filterBusinesses(
-            allBusinesses.where((b) => b.isShared).toList(),
-          );
-          final myBusinesses = _filterBusinesses(
-            allBusinesses.where((b) => !b.isShared).toList(),
-          );
+              final sharedBusinesses = _filterBusinesses([
+                _demoSharedBusiness,
+                ...allBusinesses.where((b) => b.isShared),
+              ]);
+              final myBusinesses = _filterBusinesses(
+                allBusinesses.where((b) => !b.isShared).toList(),
+              );
 
-          return Column(
-            children: [
-              const _SupportBar(phone: _supportPhone),
-              _Header(
-                searchController: _searchController,
-                searchFocusNode: _searchFocusNode,
-                tabController: _tabController,
-                onSearchChanged: () => setState(() {}),
-                onCreate: _openCreateBusiness,
-              ),
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () =>
-                      ref.read(businessListProvider.notifier).refresh(),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: _maxContentWidth,
-                      ),
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _SharedCompaniesTab(
-                            businesses: sharedBusinesses,
-                            onAction: _handleCardAction,
+              return Column(
+                children: [
+                  const _SupportBar(phone: _supportPhone),
+                  _Header(
+                    searchController: _searchController,
+                    searchFocusNode: _searchFocusNode,
+                    tabController: _tabController,
+                    onSearchChanged: () => setState(() {}),
+                    onCreate: _openCreateBusiness,
+                  ),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () =>
+                          ref.read(businessListProvider.notifier).refresh(),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: _maxContentWidth,
                           ),
-                          _MyCompaniesTab(
-                            businesses: myBusinesses,
-                            onCreate: _openCreateBusiness,
-                            onAction: _handleCardAction,
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              _SharedCompaniesTab(
+                                businesses: sharedBusinesses,
+                                onAction: _handleCardAction,
+                              ),
+                              _MyCompaniesTab(
+                                businesses: myBusinesses,
+                                onCreate: _openCreateBusiness,
+                                onAction: _handleCardAction,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              _BottomBar(
-                phoneNumber: phoneNumber,
-                supportEmail: _supportEmail,
-                onCreate: _openCreateBusiness,
-              ),
-            ],
-          );
-        },
+                  _BottomBar(
+                    phoneNumber: phoneNumber,
+                    supportEmail: _supportEmail,
+                    onCreate: _openCreateBusiness,
+                  ),
+                ],
+              );
+            },
           ),
           if (openingBusinessId != null) const BusinessOpeningOverlay(),
         ],
@@ -564,7 +577,19 @@ class _SharedCompaniesTab extends ConsumerWidget {
         final business = businesses[index];
         return BusinessCard(
           business: business,
-          onOpen: () => _openBusiness(context, ref, business.id),
+          onOpen: () async {
+            if (business.id == kDemoSharedBusinessId) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Preview only — shared access will open once backend sync is connected.',
+                  ),
+                ),
+              );
+              return;
+            }
+            await _openBusiness(context, ref, business.id);
+          },
           onAction: (action) => onAction(business, action),
         );
       },
@@ -722,7 +747,9 @@ Future<void> _openBusiness(
 
   try {
     BusinessOpenDebugLog.step('ui', 'calling openBusiness');
-    await container.read(businessListProvider.notifier).openBusiness(businessId);
+    await container
+        .read(businessListProvider.notifier)
+        .openBusiness(businessId);
     BusinessOpenDebugLog.step('ui', 'openBusiness returned — navigating home');
     if (!context.mounted) return;
     context.go(AppRoutes.home);

@@ -1,0 +1,48 @@
+/// Permission areas shown in Vyapar-style role matrices.
+enum PermissionModule {
+  allTransactions,
+  settings,
+  syncSettings,
+  reports,
+  stockTransfer,
+  partySmartConnect,
+  sale,
+  paymentIn,
+  saleOrder,
+  creditNote,
+  deliveryChallan,
+  estimate,
+  expense,
+  party,
+  item,
+  proforma,
+  purchase,
+  paymentOut,
+  purchaseOrder,
+  debitNote,
+}
+
+extension PermissionModuleX on PermissionModule {
+  String get displayLabel => switch (this) {
+    PermissionModule.allTransactions => 'All Transactions',
+    PermissionModule.settings => 'Settings',
+    PermissionModule.syncSettings => 'Sync Settings',
+    PermissionModule.reports => 'Reports',
+    PermissionModule.stockTransfer => 'Stock Transfer',
+    PermissionModule.partySmartConnect => 'Party Smart Connect',
+    PermissionModule.sale => 'Sale',
+    PermissionModule.paymentIn => 'Payment In',
+    PermissionModule.saleOrder => 'Sale Order',
+    PermissionModule.creditNote => 'Credit Note',
+    PermissionModule.deliveryChallan => 'Delivery Challan',
+    PermissionModule.estimate => 'Estimate',
+    PermissionModule.expense => 'Expense',
+    PermissionModule.party => 'Party',
+    PermissionModule.item => 'Item',
+    PermissionModule.proforma => 'Proforma',
+    PermissionModule.purchase => 'Purchase',
+    PermissionModule.paymentOut => 'Payment Out',
+    PermissionModule.purchaseOrder => 'Purchase Order',
+    PermissionModule.debitNote => 'Debit Note',
+  };
+}

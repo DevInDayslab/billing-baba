@@ -67,6 +67,8 @@ abstract final class AppRoutes {
   static const reportsStock = '/reports/stock';
   static const reportsParty = '/reports/party';
   static const reportsGst = '/reports/gst';
+  static const collaboration = '/collaboration';
+  static const collaborationSyncShare = '/collaboration/sync-share';
   static const utilities = '/utilities';
   static const utilitiesImportItems = '/utilities/import-items';
   static const utilitiesBarcodeGenerator = '/utilities/barcode-generator';

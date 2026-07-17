@@ -8,12 +8,12 @@ part of 'search_repository.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Resolves grouped search results for the command palette.
+/// Resolves grouped search results for the navigation palette.
 
 @ProviderFor(searchRepository)
 final searchRepositoryProvider = SearchRepositoryProvider._();
 
-/// Resolves grouped search results for the command palette.
+/// Resolves grouped search results for the navigation palette.
 
 final class SearchRepositoryProvider
     extends
@@ -23,7 +23,7 @@ final class SearchRepositoryProvider
           SearchRepository
         >
     with $Provider<SearchRepository> {
-  /// Resolves grouped search results for the command palette.
+  /// Resolves grouped search results for the navigation palette.
   SearchRepositoryProvider._()
     : super(
         from: null,

@@ -5,6 +5,7 @@ import 'package:billing_baba/features/auth/presentation/pages/verify_otp_page.da
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/presentation/pages/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/pages/edit_profile_page.dart';
+import 'package:billing_baba/features/collaboration/presentation/pages/sync_share_page.dart';
 import 'package:billing_baba/features/crm/presentation/screens/contacts_screen.dart';
 import 'package:billing_baba/features/crm/presentation/screens/deals_screen.dart';
 import 'package:billing_baba/features/crm/presentation/screens/leads_screen.dart';
@@ -430,6 +431,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.reportsGst,
             redirect: (context, state) => AppRoutes.reports,
+          ),
+          GoRoute(
+            path: AppRoutes.collaboration,
+            redirect: (_, _) => AppRoutes.collaborationSyncShare,
+          ),
+          GoRoute(
+            path: AppRoutes.collaborationSyncShare,
+            builder: (context, state) => const SyncSharePage(),
           ),
           GoRoute(
             path: AppRoutes.utilities,

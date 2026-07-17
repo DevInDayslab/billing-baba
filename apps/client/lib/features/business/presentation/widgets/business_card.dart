@@ -26,7 +26,6 @@ class _BusinessCardState extends State<BusinessCard> {
   var _isHovered = false;
 
   static const _currentBadgeColor = Color(0xFFFF9800);
-  static const _syncOnColor = Color(0xFF2E7D32);
   static const _borderColor = Color(0xFFE8EAED);
 
   @override
@@ -116,55 +115,46 @@ class _BusinessCardState extends State<BusinessCard> {
                       ],
                     ],
                   ),
-                  if (business.lastSaleAt != null) ...[
+                  if (business.isShared) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Last sale: ${dateFormat.format(business.lastSaleAt!)}',
+                      'Shared by ${business.ownerName ?? 'Business owner'}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textSecondary,
                         fontSize: 12,
                       ),
                     ),
-                  ],
-                  const SizedBox(height: AppSpacing.sm),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: syncOn
-                          ? _syncOnColor.withValues(alpha: 0.08)
-                          : Colors.grey.shade100,
-                      borderRadius: AppRadius.smBorder,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.xs,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Icon(
-                          syncOn
-                              ? Icons.cloud_done_outlined
-                              : Icons.cloud_off_outlined,
-                          size: 14,
-                          color: syncOn
-                              ? _syncOnColor
-                              : AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          syncOn ? 'Sync On' : 'Sync Off',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: syncOn
-                                ? _syncOnColor
-                                : AppColors.textSecondary,
-                            letterSpacing: 0.2,
+                        if (business.role != null)
+                          _MetaChip(
+                            label: 'Your role: ${business.role}',
+                            color: AppColors.primary,
+                            backgroundColor: AppColors.primary.withValues(
+                              alpha: 0.08,
+                            ),
                           ),
-                        ),
+                        _SyncStatusChip(syncOn: syncOn),
                       ],
                     ),
-                  ),
+                  ] else ...[
+                    if (business.lastSaleAt != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Last sale: ${dateFormat.format(business.lastSaleAt!)}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.sm),
+                    _SyncStatusChip(syncOn: syncOn),
+                  ],
                 ],
               ),
             ),
@@ -177,6 +167,85 @@ class _BusinessCardState extends State<BusinessCard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  const _MetaChip({
+    required this.label,
+    required this.color,
+    required this.backgroundColor,
+  });
+
+  final String label;
+  final Color color;
+  final Color backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 3,
+      ),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: AppRadius.smBorder,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _SyncStatusChip extends StatelessWidget {
+  const _SyncStatusChip({required this.syncOn});
+
+  final bool syncOn;
+
+  static const _syncOnColor = Color(0xFF2E7D32);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 3,
+      ),
+      decoration: BoxDecoration(
+        color: syncOn
+            ? _syncOnColor.withValues(alpha: 0.08)
+            : Colors.grey.shade100,
+        borderRadius: AppRadius.smBorder,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            syncOn ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
+            size: 14,
+            color: syncOn ? _syncOnColor : AppColors.textSecondary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            syncOn ? 'Sync On' : 'Sync Off',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: syncOn ? _syncOnColor : AppColors.textSecondary,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
       ),
     );
   }
