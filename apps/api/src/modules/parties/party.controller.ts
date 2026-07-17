@@ -116,6 +116,30 @@ export function createPartyController() {
       }
     },
 
+    getDeleteStatus: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { accountId, businessId } = requireAuthContext(request);
+        const { id } = partyIdParamSchema.parse(request.params);
+        const service = new PartyService();
+        const data = await service.getPartyDeleteStatus(
+          businessId,
+          accountId,
+          id,
+        );
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid party ID',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
     getLedger: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const { accountId, businessId } = requireAuthContext(request);
@@ -174,8 +198,13 @@ export function createPartyController() {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id } = partyIdParamSchema.parse(request.params);
         const service = new PartyService();
-        await service.deleteParty(businessId, accountId, userId, id);
-        return reply.status(204).send();
+        const action = await service.deleteParty(
+          businessId,
+          accountId,
+          userId,
+          id,
+        );
+        return sendData(reply, { action });
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(

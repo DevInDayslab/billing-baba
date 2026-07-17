@@ -23,11 +23,17 @@ class PartyActionsMenuButton extends ConsumerWidget {
           label: 'View Party',
           onSelected: () => PartyActions.edit(context, ref, party),
         ),
-        SalesActionMenuItem(
-          label: 'Delete',
-          isDestructive: true,
-          onSelected: () => PartyActions.delete(context, ref, party),
-        ),
+        if (!party.isActive)
+          SalesActionMenuItem(
+            label: 'Restore Party',
+            onSelected: () => PartyActions.restore(context, ref, party),
+          ),
+        if (party.isActive)
+          SalesActionMenuItem(
+            label: 'Delete',
+            isDestructive: true,
+            onSelected: () => PartyActions.delete(context, ref, party),
+          ),
         SalesActionMenuItem(
           label: 'Duplicate',
           dividerBefore: true,

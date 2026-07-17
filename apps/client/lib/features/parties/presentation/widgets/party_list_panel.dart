@@ -302,15 +302,43 @@ class _PartyListTile extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               flex: 3,
-              child: InventoryHighlightedText(
-                text: party.name,
-                query: searchQuery,
-                style: InventoryStyles.listCellStyle.copyWith(
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: party.isActive
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
-                ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InventoryHighlightedText(
+                      text: party.name,
+                      query: searchQuery,
+                      style: InventoryStyles.listCellStyle.copyWith(
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: party.isActive
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  if (!party.isActive) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Inactive',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             Expanded(

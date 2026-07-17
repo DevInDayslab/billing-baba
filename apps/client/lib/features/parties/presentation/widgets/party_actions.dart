@@ -1,10 +1,13 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/parties/application/party_delete_status_service.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/parties/models/delete_status_dto.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_delete_dialogs.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/payment_out_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/payment_in_dialog.dart';
 import 'package:flutter/material.dart';
@@ -84,43 +87,102 @@ abstract final class PartyActions {
   static Future<void> delete(
     BuildContext context,
     WidgetRef ref,
+    PartyModel party, {
+    VoidCallback? onSuccess,
+  }) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
+  deleteFlow:
+    while (context.mounted) {
+      try {
+        final deleteStatusService = await ref.read(
+          partyDeleteStatusServiceProvider.future,
+        );
+        final status = await deleteStatusService.getDeleteStatus(party.id);
+        if (!context.mounted) return;
+
+        final confirmed = status.canDelete
+            ? await showPartyDeleteDialog(context, partyName: party.name)
+            : await showPartyInactiveDialog(
+                context,
+                references: status.references!,
+              );
+
+        if (confirmed != true || !context.mounted) return;
+
+        final action = await ref
+            .read(partyListProvider.notifier)
+            .deleteParty(party.id);
+
+        if (!context.mounted) return;
+        onSuccess?.call();
+        messenger?.showSnackBar(
+          SnackBar(
+            content: Text(
+              action == PartyDeleteAction.deleted
+                  ? 'Party deleted successfully.'
+                  : 'Party marked as inactive.',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: _successSnackBarColor,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      } on PartyOfflineException {
+        if (!context.mounted) return;
+        messenger?.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Delete queued offline. It will sync when you are back online.',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      } on PartyException catch (e) {
+        if (!context.mounted) return;
+        messenger?.showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      } on Object catch (_) {
+        if (!context.mounted) return;
+        final retry = await showPartyDeleteErrorDialog(
+          context,
+          message: 'Unable to delete party.',
+          showRetry: true,
+        );
+        if (retry == true) {
+          continue deleteFlow;
+        }
+        return;
+      }
+    }
+  }
+
+  static Future<void> restore(
+    BuildContext context,
+    WidgetRef ref,
     PartyModel party,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete party?'),
-        content: Text(
-          'Are you sure you want to delete "${party.name}"?\n\n'
-          'If this party is linked to invoices or purchases, it will be '
-          'deactivated instead. Transaction history will be preserved.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !context.mounted) return;
-
     final messenger = ScaffoldMessenger.maybeOf(context);
 
     try {
-      await ref.read(partyListProvider.notifier).deleteParty(party.id);
+      await ref.read(partyListProvider.notifier).restoreParty(party.id);
       if (!context.mounted) return;
       messenger?.showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
-            'Party "${party.name}" deleted',
-            style: const TextStyle(
+            'Party restored successfully.',
+            style: TextStyle(
               fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
@@ -129,15 +191,12 @@ abstract final class PartyActions {
           behavior: SnackBarBehavior.floating,
         ),
       );
-    } on PartyHasDependenciesException {
-      if (!context.mounted) return;
-      await _offerDeactivateParty(context, ref, party, messenger);
     } on PartyOfflineException {
       if (!context.mounted) return;
       messenger?.showSnackBar(
         const SnackBar(
           content: Text(
-            'Delete queued offline. It will sync when you are back online.',
+            'Restore saved offline. It will sync when you are back online.',
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -155,7 +214,7 @@ abstract final class PartyActions {
       if (!context.mounted) return;
       messenger?.showSnackBar(
         const SnackBar(
-          content: Text('Failed to delete party. Please try again.'),
+          content: Text('Something went wrong.'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -248,83 +307,5 @@ abstract final class PartyActions {
     PartyModel party,
   ) async {
     await ref.read(partyTimelineProvider(party.id).notifier).refresh();
-  }
-
-  static Future<void> _offerDeactivateParty(
-    BuildContext context,
-    WidgetRef ref,
-    PartyModel party,
-    ScaffoldMessengerState? messenger,
-  ) async {
-    final deactivate = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Deactivate party instead?'),
-        content: Text(
-          '"${party.name}" is linked to invoices or other documents and '
-          'cannot be permanently deleted.\n\n'
-          'Deactivate it to hide it from active lists. You can view inactive '
-          'parties using the list filter.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Deactivate'),
-          ),
-        ],
-      ),
-    );
-
-    if (deactivate != true || !context.mounted) return;
-
-    try {
-      await ref.read(partyListProvider.notifier).deactivateParty(party.id);
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Party "${party.name}" deactivated',
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          backgroundColor: _successSnackBarColor,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on PartyOfflineException {
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Deactivation saved offline. It will sync when you are back online.',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on PartyException catch (e) {
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on Object catch (_) {
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        const SnackBar(
-          content: Text('Failed to deactivate party. Please try again.'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 }

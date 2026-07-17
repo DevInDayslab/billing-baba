@@ -9,6 +9,7 @@ import 'package:billing_baba/features/parties/data/party_cache.dart';
 import 'package:billing_baba/features/parties/data/party_repository.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/create_party_request.dart';
+import 'package:billing_baba/features/parties/models/delete_status_dto.dart';
 import 'package:billing_baba/features/parties/models/party_dto.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_list_query.dart';
@@ -279,7 +280,7 @@ class PartyService {
     }
   }
 
-  Future<void> deleteParty(String partyId) async {
+  Future<PartyDeleteAction> deleteParty(String partyId) async {
     final businessId = _requireBusinessId();
 
     try {
@@ -288,9 +289,46 @@ class PartyService {
       } on Object {
         // Do not block delete when pending sync fails.
       }
-      await _repository.deleteParty(partyId);
-      await _cache.removeLocalExtension(businessId, partyId);
-      await _cache.removeParty(businessId, partyId);
+      final action = await _repository.deleteParty(partyId);
+      if (action == PartyDeleteAction.deleted) {
+        await _cache.removeLocalExtension(businessId, partyId);
+        await _cache.removeParty(businessId, partyId);
+      } else {
+        final cachedParties = await _loadFromCache(businessId);
+        final cached = cachedParties
+            .where((party) => party.id == partyId)
+            .firstOrNull;
+        if (cached != null) {
+          final inactiveParty = cached.copyWith(
+            isActive: false,
+            updatedAt: DateTime.now(),
+          );
+          await _cache.upsertParty(
+            businessId,
+            PartyDto(
+              id: inactiveParty.id,
+              name: inactiveParty.name,
+              mobile: PartyModel.normalizePhone(inactiveParty.phone),
+              email: inactiveParty.email.isEmpty ? null : inactiveParty.email,
+              partyType: inactiveParty.partyType,
+              pricingTier: 'tier_1',
+              gstin: inactiveParty.gstin.isEmpty ? null : inactiveParty.gstin,
+              state: inactiveParty.state.isEmpty ? null : inactiveParty.state,
+              creditLimit: inactiveParty.hasCustomCreditLimit
+                  ? inactiveParty.creditLimit
+                  : '0',
+              openingBalance: inactiveParty.openingBalance.toString(),
+              balance: inactiveParty.balance.toString(),
+              isActive: false,
+              createdAt:
+                  inactiveParty.createdAt?.toIso8601String() ??
+                  DateTime.now().toIso8601String(),
+              updatedAt: DateTime.now().toIso8601String(),
+            ).toJson(),
+          );
+        }
+      }
+      return action;
     } on DioException catch (e) {
       if (_isOffline(e)) {
         await _cache.queuePendingOperation(businessId, {
@@ -532,8 +570,40 @@ class PartyService {
           await _cache.upsertParty(businessId, updated.toJson());
         case 'delete':
           final partyId = operation['party_id'] as String;
-          await _repository.deleteParty(partyId);
-          await _cache.removeParty(businessId, partyId);
+          final action = await _repository.deleteParty(partyId);
+          if (action == PartyDeleteAction.deleted) {
+            await _cache.removeParty(businessId, partyId);
+          } else {
+            final cachedParties = await _loadFromCache(businessId);
+            final cached = cachedParties
+                .where((party) => party.id == partyId)
+                .firstOrNull;
+            if (cached != null) {
+              await _cache.upsertParty(
+                businessId,
+                PartyDto(
+                  id: cached.id,
+                  name: cached.name,
+                  mobile: PartyModel.normalizePhone(cached.phone),
+                  email: cached.email.isEmpty ? null : cached.email,
+                  partyType: cached.partyType,
+                  pricingTier: 'tier_1',
+                  gstin: cached.gstin.isEmpty ? null : cached.gstin,
+                  state: cached.state.isEmpty ? null : cached.state,
+                  creditLimit: cached.hasCustomCreditLimit
+                      ? cached.creditLimit
+                      : '0',
+                  openingBalance: cached.openingBalance.toString(),
+                  balance: cached.balance.toString(),
+                  isActive: false,
+                  createdAt:
+                      cached.createdAt?.toIso8601String() ??
+                      DateTime.now().toIso8601String(),
+                  updatedAt: DateTime.now().toIso8601String(),
+                ).toJson(),
+              );
+            }
+          }
       }
     }
 
@@ -650,21 +720,57 @@ class PartyList extends _$PartyList {
     }
   }
 
-  Future<void> deleteParty(String partyId) async {
+  Future<PartyDeleteAction> deleteParty(String partyId) async {
     final service = await ref.read(partyServiceProvider.future);
     try {
-      await service.deleteParty(partyId);
-      _removeFromState(partyId);
-      ref.invalidate(partyDetailProvider(partyId));
-      final selectedId = ref.read(selectedPartyIdProvider);
-      if (selectedId == partyId) {
-        ref.read(selectedPartyIdProvider.notifier).selected = null;
-        await service.rememberSelectedParty(null);
+      final action = await service.deleteParty(partyId);
+      if (action == PartyDeleteAction.deleted) {
+        _removeFromState(partyId);
+        ref.invalidate(partyDetailProvider(partyId));
+        final selectedId = ref.read(selectedPartyIdProvider);
+        if (selectedId == partyId) {
+          ref.read(selectedPartyIdProvider.notifier).selected = null;
+          await service.rememberSelectedParty(null);
+        }
+      } else {
+        final filter = ref.read(partyListFilterProvider);
+        if (filter == PartyListFilter.active) {
+          _removeFromState(partyId);
+          if (ref.read(selectedPartyIdProvider) == partyId) {
+            ref.read(selectedPartyIdProvider.notifier).selected = null;
+            await service.rememberSelectedParty(null);
+          }
+        } else {
+          final current = state.asData?.value;
+          final existing = current
+              ?.where((party) => party.id == partyId)
+              .firstOrNull;
+          if (existing != null) {
+            final updated = existing.copyWith(isActive: false);
+            _upsertInState(updated);
+            ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
+          }
+        }
       }
       await refresh();
+      return action;
     } on PartyOfflineException {
       _removeFromState(partyId);
       ref.invalidate(partyDetailProvider(partyId));
+      rethrow;
+    }
+  }
+
+  Future<PartyModel> restoreParty(String partyId) async {
+    final service = await ref.read(partyServiceProvider.future);
+    try {
+      final updated = await service.setPartyActive(partyId, isActive: true);
+      _upsertInState(updated);
+      ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
+      refreshAfterPartyMutation(ref);
+      return updated;
+    } on PartyOfflineException {
+      await refresh();
       rethrow;
     }
   }

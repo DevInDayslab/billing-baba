@@ -11,6 +11,7 @@ export const createPartyRoutes = (): FastifyPluginAsync => {
 
     app.get('/', { preHandler }, controller.list);
     app.post('/', { preHandler }, controller.create);
+    app.get('/:id/delete-status', { preHandler }, controller.getDeleteStatus);
     app.get('/:id/ledger', { preHandler }, controller.getLedger);
     app.get('/:id', { preHandler }, controller.getById);
     app.patch('/:id', { preHandler }, controller.update);
