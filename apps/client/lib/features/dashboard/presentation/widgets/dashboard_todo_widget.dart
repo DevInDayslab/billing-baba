@@ -5,6 +5,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_expanded_panel.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_metric_card.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_task_tile.dart';
+import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_todo_filters.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
 import 'package:billing_baba/features/tasks/presentation/widgets/task_editor_dialog.dart';
@@ -12,8 +13,7 @@ import 'package:billing_baba/features/tasks/presentation/widgets/task_empty_stat
 import 'package:billing_baba/features/tasks/providers/tasks_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-enum DashboardTodoFilter { today, all }
+import 'package:shimmer/shimmer.dart';
 
 class DashboardTodoWidget extends ConsumerStatefulWidget {
   const DashboardTodoWidget({super.key});
@@ -24,7 +24,8 @@ class DashboardTodoWidget extends ConsumerStatefulWidget {
 }
 
 class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
-  DashboardTodoFilter _filter = DashboardTodoFilter.today;
+  DashboardTodoScopeFilter _scopeFilter = DashboardTodoScopeFilter.today;
+  DashboardTodoStatusChip _statusChip = DashboardTodoStatusChip.pending;
 
   Future<void> _openEditor({TaskModel? editTask}) async {
     final result = await showTaskEditorDialog(
@@ -33,25 +34,11 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
     );
     if (result == null || !mounted) return;
 
-    final notifier = ref.read(tasksProvider.notifier);
-    if (editTask != null) {
-      await notifier.updateTask(
-        editTask.copyWith(
-          title: result.title,
-          description: result.description,
-          clearDescription: result.description == null,
-          reminderAt: result.reminderAt,
-          clearReminderAt: result.reminderAt == null,
-          updatedAt: DateTime.now(),
-        ),
-      );
-    } else {
-      await notifier.add(
-        title: result.title,
-        description: result.description,
-        reminderAt: result.reminderAt,
-      );
-    }
+    await applyTaskEditorResult(
+      result: result,
+      notifier: ref.read(tasksProvider.notifier),
+      editTask: editTask,
+    );
   }
 
   Future<void> _toggleComplete(TaskModel task) async {
@@ -77,32 +64,35 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
     );
   }
 
-  List<TaskModel> _filteredTasks(List<TaskModel> tasks) {
-    final sorted = TaskSort.filterAndSort(
-      tasks,
-      filter: TaskFilter.all,
-    );
-
-    if (_filter == DashboardTodoFilter.all) return sorted;
-
-    final today = DateTime.now();
-    return sorted
-        .where((task) {
-          final reminder = task.reminderAt;
-          if (reminder == null) return !task.isCompleted;
-          return _isSameDay(reminder, today) || task.status(now: today) == TaskStatus.overdue;
-        })
-        .toList();
-  }
-
-  bool _isSameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
-
   void _openExpanded() {
     unawaited(
       showDashboardExpandedPanel(
         context,
-        initialFilter: _filter,
+        initialScope: _scopeFilter,
+        initialStatusChip: _statusChip,
+      ),
+    );
+  }
+
+  Widget _emptyStateForChip() {
+    if (_statusChip == DashboardTodoStatusChip.pending) {
+      return TaskEmptyState(
+        onAdd: () => unawaited(_openEditor()),
+      );
+    }
+
+    final message = switch (_statusChip) {
+      DashboardTodoStatusChip.all => 'No tasks yet',
+      DashboardTodoStatusChip.today => 'Nothing due today',
+      DashboardTodoStatusChip.overdue => 'No overdue tasks',
+      DashboardTodoStatusChip.pending => "You're all caught up!",
+    };
+
+    return Center(
+      child: Text(
+        message,
+        style: DashboardTypography.metadata,
+        textAlign: TextAlign.center,
       ),
     );
   }
@@ -111,7 +101,17 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
   Widget build(BuildContext context) {
     final metrics = DashboardLayoutScope.of(context);
     final tasksAsync = ref.watch(tasksProvider);
-    final tasks = _filteredTasks(tasksAsync.value ?? const []);
+    final allTasks = tasksAsync.value ?? const <TaskModel>[];
+    final scopedTasks = DashboardTodoFilterLogic.applyScope(
+      allTasks,
+      scope: _scopeFilter,
+    );
+    final tasks = DashboardTodoFilterLogic.applyStatusChip(
+      scopedTasks,
+      chip: _statusChip,
+    );
+    final summary = DashboardTodoFilterLogic.summaryCounts(allTasks);
+    final overdueCount = DashboardTodoFilterLogic.overdueBadgeCount(allTasks);
     final showEmpty = tasksAsync.hasValue && tasks.isEmpty;
 
     final content = Column(
@@ -119,24 +119,23 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
       children: [
         Row(
           children: [
-            const Expanded(
-              child: Text(
-                'To-Do list',
-                style: DashboardTypography.cardTitle,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'To-Do list',
+                  style: DashboardTypography.cardTitle,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                _AddReminderButton(
+                  onPressed: () => unawaited(_openEditor()),
+                ),
+              ],
             ),
-            _TodoFilterButton(
-              filter: _filter,
-              onChanged: (value) => setState(() => _filter = value),
-            ),
-            IconButton(
-              tooltip: 'Add task',
-              onPressed: () => unawaited(_openEditor()),
-              icon: const Icon(Icons.add_circle_outline, size: 18),
-              color: AppColors.primary,
-              padding: const EdgeInsets.all(AppSpacing.xs),
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              visualDensity: VisualDensity.compact,
+            const Spacer(),
+            DashboardTodoScopeButton(
+              scope: _scopeFilter,
+              onChanged: (value) => setState(() => _scopeFilter = value),
             ),
             IconButton(
               tooltip: 'Expand',
@@ -150,34 +149,25 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
           ],
         ),
         const SizedBox(height: 4),
-        Text(
-          '${tasks.length} Task${tasks.length == 1 ? '' : 's'}',
-          style: DashboardTypography.metadata,
+        DashboardTodoSummaryLine(
+          pending: summary.pending,
+          overdue: summary.overdue,
+        ),
+        SizedBox(height: metrics.gap * 1.5),
+        DashboardTodoStatusChips(
+          selected: _statusChip,
+          overdueCount: overdueCount,
+          onChanged: (value) => setState(() => _statusChip = value),
         ),
         SizedBox(height: metrics.gap * 0.5),
         Expanded(
           child: tasksAsync.when(
-            loading: () => const Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-            error: (_, _) => Center(
-              child: Text(
-                'Could not load reminders',
-                style: DashboardTypography.metadata.copyWith(
-                  color: AppColors.error,
-                ),
-              ),
+            loading: () => const _TodoLoadingSkeleton(),
+            error: (_, _) => _TodoErrorState(
+              onRetry: () => ref.invalidate(tasksProvider),
             ),
             data: (_) {
-              if (showEmpty) {
-                return TaskEmptyState(
-                  onAdd: () => unawaited(_openEditor()),
-                );
-              }
+              if (showEmpty) return _emptyStateForChip();
 
               return ListView.separated(
                 padding: EdgeInsets.zero,
@@ -196,6 +186,34 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
             },
           ),
         ),
+        if (!showEmpty && tasksAsync.hasValue) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Align(
+            child: TextButton(
+              onPressed: _openExpanded,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'View all tasks',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(width: 2),
+                  Icon(Icons.chevron_right, size: 16),
+                ],
+              ),
+            ),
+          ),
+        ],
       ],
     );
 
@@ -206,67 +224,125 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
   }
 }
 
-class _TodoFilterButton extends StatelessWidget {
-  const _TodoFilterButton({
-    required this.filter,
-    required this.onChanged,
-  });
+class _AddReminderButton extends StatelessWidget {
+  const _AddReminderButton({required this.onPressed});
 
-  final DashboardTodoFilter filter;
-  final ValueChanged<DashboardTodoFilter> onChanged;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return MenuAnchor(
-      menuChildren: [
-        MenuItemButton(
-          onPressed: () => onChanged(DashboardTodoFilter.today),
-          child: const Text('Today'),
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(12),
+      child: const SizedBox(
+        width: 24,
+        height: 24,
+        child: Icon(
+          Icons.add_circle_outline,
+          size: 20,
+          color: AppColors.primary,
         ),
-        MenuItemButton(
-          onPressed: () => onChanged(DashboardTodoFilter.all),
-          child: const Text('All'),
-        ),
-      ],
-      builder: (context, controller, child) {
-        return Material(
-          color: AppColors.background,
-          borderRadius: AppRadius.lgBorder,
-          child: InkWell(
-            onTap: () {
-              if (controller.isOpen) {
-                controller.close();
-              } else {
-                controller.open();
-              }
-            },
-            borderRadius: AppRadius.lgBorder,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm + 2,
-                vertical: AppSpacing.xs + 2,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    filter == DashboardTodoFilter.today ? 'Today' : 'All',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
+      ),
+    );
+  }
+}
+
+class _TodoLoadingSkeleton extends StatelessWidget {
+  const _TodoLoadingSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: Column(
+        children: List.generate(4, (index) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            child: Row(
+              children: [
+                Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  const Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 16,
-                    color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 12,
+                        width: double.infinity,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        height: 10,
+                        width: 100,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+class _TodoErrorState extends StatelessWidget {
+  const _TodoErrorState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.cloud_off_outlined,
+            size: 32,
+            color: AppColors.textSecondary.withValues(alpha: 0.7),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          const Text(
+            'Oops! Something went wrong',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh, size: 16),
+            label: const Text('Retry'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

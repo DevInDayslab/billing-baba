@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
+import 'package:billing_baba/features/tasks/models/task_category.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
 import 'package:uuid/uuid.dart';
 
@@ -36,6 +37,7 @@ class TaskRepository {
   TaskModel create({
     required String title,
     String? description,
+    TaskCategory? category,
     DateTime? reminderAt,
   }) {
     final now = DateTime.now();
@@ -43,6 +45,7 @@ class TaskRepository {
       id: _uuid.v4(),
       title: title.trim(),
       description: _nullableTrim(description),
+      category: category,
       reminderAt: reminderAt,
       createdAt: now,
       updatedAt: now,

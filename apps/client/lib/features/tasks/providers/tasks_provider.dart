@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/tasks/data/task_repository.dart';
+import 'package:billing_baba/features/tasks/models/task_category.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -45,6 +46,7 @@ class Tasks extends _$Tasks {
   Future<TaskModel?> add({
     required String title,
     String? description,
+    TaskCategory? category,
     DateTime? reminderAt,
   }) async {
     final trimmed = title.trim();
@@ -54,6 +56,7 @@ class Tasks extends _$Tasks {
     final task = repo.create(
       title: trimmed,
       description: description,
+      category: category,
       reminderAt: reminderAt,
     );
     final current = state.value ?? [];

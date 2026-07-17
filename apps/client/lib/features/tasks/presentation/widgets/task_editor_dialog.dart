@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/features/tasks/models/task_category.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
+import 'package:billing_baba/features/tasks/providers/tasks_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -28,13 +30,21 @@ Future<TaskEditorResult?> showTaskEditorDialog(
 class TaskEditorResult {
   const TaskEditorResult({
     required this.title,
-    this.description,
+    required this.category,
     this.reminderAt,
+    this.deleted = false,
   });
 
+  const TaskEditorResult.delete()
+      : title = '',
+        category = TaskCategory.general,
+        reminderAt = null,
+        deleted = true;
+
   final String title;
-  final String? description;
+  final TaskCategory category;
   final DateTime? reminderAt;
+  final bool deleted;
 }
 
 class TaskEditorDialog extends StatefulWidget {
@@ -49,15 +59,15 @@ class TaskEditorDialog extends StatefulWidget {
 
 class _TaskEditorDialogState extends State<TaskEditorDialog> {
   late final TextEditingController _titleController;
-  late final TextEditingController _descriptionController;
   final _titleFocus = FocusNode();
-  DateTime? _reminderDate;
-  TimeOfDay? _reminderTime;
+  late TaskCategory _category;
+  DateTime? _dueAt;
   String? _errorMessage;
 
   bool get _isEditing => widget.editTask != null;
 
   static final _dateFormat = DateFormat('dd MMM yyyy');
+  static final _timeFormat = DateFormat('h:mm a');
 
   @override
   void initState() {
@@ -66,16 +76,10 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
     _titleController = TextEditingController(
       text: task?.title ?? widget.initialTitle ?? '',
     );
-    _descriptionController = TextEditingController(
-      text: task?.description ?? '',
-    );
-    final reminder = task?.reminderAt;
-    if (reminder != null) {
-      _reminderDate = DateTime(reminder.year, reminder.month, reminder.day);
-      if (reminder.hour != 0 || reminder.minute != 0) {
-        _reminderTime = TimeOfDay(hour: reminder.hour, minute: reminder.minute);
-      }
-    }
+    _category = task != null
+        ? TaskCategoryResolver.resolve(task)
+        : TaskCategory.general;
+    _dueAt = task?.reminderAt;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _titleFocus.requestFocus();
     });
@@ -84,17 +88,8 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
   @override
   void dispose() {
     _titleController.dispose();
-    _descriptionController.dispose();
     _titleFocus.dispose();
     super.dispose();
-  }
-
-  DateTime? get _combinedReminder {
-    final date = _reminderDate;
-    if (date == null) return null;
-    final time = _reminderTime;
-    if (time == null) return date;
-    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
   }
 
   void _save() {
@@ -106,41 +101,93 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
     Navigator.of(context).pop(
       TaskEditorResult(
         title: title,
-        description: _descriptionController.text.trim().isEmpty
-            ? null
-            : _descriptionController.text.trim(),
-        reminderAt: _combinedReminder,
+        category: _category,
+        reminderAt: _dueAt,
       ),
     );
   }
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final initialDate = _dueAt ?? now;
+
+    final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _reminderDate ?? now,
+      initialDate: DateTime(
+        initialDate.year,
+        initialDate.month,
+        initialDate.day,
+      ),
       firstDate: DateTime(now.year - 1),
       lastDate: DateTime(now.year + 5),
     );
-    if (picked == null || !mounted) return;
-    setState(() => _reminderDate = picked);
+    if (pickedDate == null || !mounted) return;
+
+    setState(() {
+      final existing = _dueAt;
+      _dueAt = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        existing?.hour ?? 9,
+        existing?.minute ?? 0,
+      );
+    });
   }
 
   Future<void> _pickTime() async {
-    if (_reminderDate == null) return;
-    final picked = await showTimePicker(
+    final now = DateTime.now();
+    final base = _dueAt ?? DateTime(now.year, now.month, now.day, 9);
+
+    final pickedTime = await showTimePicker(
       context: context,
-      initialTime: _reminderTime ?? TimeOfDay.now(),
+      initialTime: TimeOfDay(hour: base.hour, minute: base.minute),
     );
-    if (picked == null || !mounted) return;
-    setState(() => _reminderTime = picked);
+    if (pickedTime == null || !mounted) return;
+
+    setState(() {
+      _dueAt = DateTime(
+        base.year,
+        base.month,
+        base.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+    });
   }
 
-  void _clearReminder() {
-    setState(() {
-      _reminderDate = null;
-      _reminderTime = null;
-    });
+  void _clearDue() {
+    setState(() => _dueAt = null);
+  }
+
+  Future<void> _confirmDelete() async {
+    final task = widget.editTask;
+    if (task == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete reminder?'),
+        content: Text(
+          'Permanently delete "${task.title}"? This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      Navigator.of(context).pop(const TaskEditorResult.delete());
+    }
   }
 
   @override
@@ -176,7 +223,7 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
                     children: [
                       Expanded(
                         child: Text(
-                          _isEditing ? 'Edit Task' : 'Add Task',
+                          _isEditing ? 'Edit Reminder' : 'Add Reminder',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
@@ -184,6 +231,20 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
                           ),
                         ),
                       ),
+                      if (_isEditing)
+                        IconButton(
+                          onPressed: _confirmDelete,
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: AppColors.error,
+                          ),
+                          tooltip: 'Delete reminder',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                        ),
                       IconButton(
                         onPressed: () => Navigator.of(context).pop(),
                         icon: const Icon(
@@ -196,21 +257,20 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  const Text('Task Title', style: saleFieldLabelStyle),
+                  const Text('Title *', style: saleFieldLabelStyle),
                   const SizedBox(height: AppSpacing.sm),
                   TextField(
                     controller: _titleController,
                     focusNode: _titleFocus,
                     style: saleFieldTextStyle,
-                    textInputAction: TextInputAction.done,
+                    textInputAction: TextInputAction.next,
                     onChanged: (_) {
                       if (_errorMessage != null) {
                         setState(() => _errorMessage = null);
                       }
                     },
-                    onSubmitted: (_) => _save(),
                     decoration: buildSaleFieldDecoration(
-                      hint: 'e.g., Call supplier',
+                      hint: 'e.g., Collect payment from Sharma Traders',
                       hasError: hasError,
                     ),
                   ),
@@ -225,18 +285,52 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
                     ),
                   ],
                   const SizedBox(height: AppSpacing.md),
-                  const Text('Optional Notes', style: saleFieldLabelStyle),
+                  const Text('Category', style: saleFieldLabelStyle),
                   const SizedBox(height: AppSpacing.sm),
-                  TextField(
-                    controller: _descriptionController,
-                    style: saleFieldTextStyle,
-                    maxLines: 2,
-                    decoration: buildSaleFieldDecoration(
-                      hint: 'Add a note',
+                  InputDecorator(
+                    decoration: buildSaleFieldDecoration(),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<TaskCategory>(
+                        isExpanded: true,
+                        value: _category,
+                        items: TaskCategory.values
+                            .map(
+                              (category) => DropdownMenuItem(
+                                value: category,
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        color: category.iconBackgroundColor,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        category.icon,
+                                        size: 13,
+                                        color: category.iconColor,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Text(
+                                      category.label,
+                                      style: saleFieldTextStyle,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() => _category = value);
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  const Text('Reminder Date', style: saleFieldLabelStyle),
+                  const Text('Due', style: saleFieldLabelStyle),
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
@@ -252,90 +346,101 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
                             ),
                             alignment: Alignment.centerLeft,
                           ),
-                          child: Text(
-                            _reminderDate == null
-                                ? 'Optional'
-                                : _dateFormat.format(_reminderDate!),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: _reminderDate == null
-                                  ? AppColors.textSecondary
-                                  : AppColors.textPrimary,
-                            ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 16,
+                                color: AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: Text(
+                                  _dueAt == null
+                                      ? 'Select date'
+                                      : _dateFormat.format(_dueAt!),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: _dueAt == null
+                                        ? AppColors.textSecondary
+                                        : AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                      if (_reminderDate != null) ...[
-                        const SizedBox(width: AppSpacing.sm),
-                        IconButton(
-                          onPressed: _clearReminder,
-                          icon: const Icon(Icons.clear, size: 18),
-                          color: AppColors.textSecondary,
-                          tooltip: 'Clear reminder',
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  const Text('Reminder Time', style: saleFieldLabelStyle),
-                  const SizedBox(height: AppSpacing.sm),
-                  OutlinedButton(
-                    onPressed: _reminderDate == null ? null : _pickTime,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
-                      side: const BorderSide(color: Color(0xFFE0E0E0)),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
-                      ),
-                      alignment: Alignment.centerLeft,
-                    ),
-                    child: Text(
-                      _reminderTime == null
-                          ? 'Optional'
-                          : _reminderTime!.format(context),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _reminderTime == null
-                            ? AppColors.textSecondary
-                            : AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.textPrimary,
-                            side: const BorderSide(color: Color(0xFFE0E0E0)),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: const Text('Cancel'),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: FilledButton(
-                          onPressed: _save,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
+                        child: OutlinedButton(
+                          onPressed: _pickTime,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.textPrimary,
+                            side: const BorderSide(color: Color(0xFFE0E0E0)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
                             ),
+                            alignment: Alignment.centerLeft,
                           ),
-                          child: const Text(
-                            'Save',
-                            style: TextStyle(fontWeight: FontWeight.w600),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.access_time,
+                                size: 16,
+                                color: AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: Text(
+                                  _dueAt == null
+                                      ? 'Select time'
+                                      : _timeFormat.format(_dueAt!),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: _dueAt == null
+                                        ? AppColors.textSecondary
+                                        : AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
+                      if (_dueAt != null) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        IconButton(
+                          onPressed: _clearDue,
+                          icon: const Icon(Icons.clear, size: 18),
+                          color: AppColors.textSecondary,
+                          tooltip: 'Clear due date',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
+                        ),
+                      ],
                     ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  FilledButton(
+                    onPressed: _save,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                    child: Text(
+                      _isEditing ? 'Save Reminder' : 'Add Reminder',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ],
               ),
@@ -349,4 +454,36 @@ class _TaskEditorDialogState extends State<TaskEditorDialog> {
 
 class _DismissIntent extends Intent {
   const _DismissIntent();
+}
+
+/// Applies a dialog result to the tasks store.
+Future<void> applyTaskEditorResult({
+  required TaskEditorResult result,
+  required Tasks notifier,
+  TaskModel? editTask,
+}) async {
+  if (result.deleted) {
+    if (editTask != null) {
+      await notifier.delete(editTask.id);
+    }
+    return;
+  }
+
+  if (editTask != null) {
+    await notifier.updateTask(
+      editTask.copyWith(
+        title: result.title,
+        category: result.category,
+        reminderAt: result.reminderAt,
+        clearReminderAt: result.reminderAt == null,
+        updatedAt: DateTime.now(),
+      ),
+    );
+  } else {
+    await notifier.add(
+      title: result.title,
+      category: result.category,
+      reminderAt: result.reminderAt,
+    );
+  }
 }

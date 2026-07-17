@@ -1,19 +1,20 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_todo_widget.dart';
+import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_task_tile.dart';
+import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_todo_filters.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';
 import 'package:billing_baba/features/tasks/presentation/widgets/task_editor_dialog.dart';
 import 'package:billing_baba/features/tasks/presentation/widgets/task_empty_state.dart';
-import 'package:billing_baba/features/tasks/presentation/widgets/task_list.dart';
 import 'package:billing_baba/features/tasks/providers/tasks_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<void> showDashboardExpandedPanel(
   BuildContext context, {
-  DashboardTodoFilter initialFilter = DashboardTodoFilter.today,
+  DashboardTodoScopeFilter initialScope = DashboardTodoScopeFilter.today,
+  DashboardTodoStatusChip initialStatusChip = DashboardTodoStatusChip.pending,
 }) {
   return showDialog<void>(
     context: context,
@@ -23,7 +24,10 @@ Future<void> showDashboardExpandedPanel(
       shape: RoundedRectangleBorder(borderRadius: AppRadius.lgBorder),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 720, maxHeight: 640),
-        child: DashboardExpandedPanel(initialFilter: initialFilter),
+        child: DashboardExpandedPanel(
+          initialScope: initialScope,
+          initialStatusChip: initialStatusChip,
+        ),
       ),
     ),
   );
@@ -31,11 +35,13 @@ Future<void> showDashboardExpandedPanel(
 
 class DashboardExpandedPanel extends ConsumerStatefulWidget {
   const DashboardExpandedPanel({
-    this.initialFilter = DashboardTodoFilter.today,
+    this.initialScope = DashboardTodoScopeFilter.today,
+    this.initialStatusChip = DashboardTodoStatusChip.pending,
     super.key,
   });
 
-  final DashboardTodoFilter initialFilter;
+  final DashboardTodoScopeFilter initialScope;
+  final DashboardTodoStatusChip initialStatusChip;
 
   @override
   ConsumerState<DashboardExpandedPanel> createState() =>
@@ -43,12 +49,14 @@ class DashboardExpandedPanel extends ConsumerStatefulWidget {
 }
 
 class _DashboardExpandedPanelState extends ConsumerState<DashboardExpandedPanel> {
-  late DashboardTodoFilter _filter;
+  late DashboardTodoScopeFilter _scopeFilter;
+  late DashboardTodoStatusChip _statusChip;
 
   @override
   void initState() {
     super.initState();
-    _filter = widget.initialFilter;
+    _scopeFilter = widget.initialScope;
+    _statusChip = widget.initialStatusChip;
   }
 
   Future<void> _openEditor({TaskModel? editTask}) async {
@@ -58,25 +66,11 @@ class _DashboardExpandedPanelState extends ConsumerState<DashboardExpandedPanel>
     );
     if (result == null || !mounted) return;
 
-    final notifier = ref.read(tasksProvider.notifier);
-    if (editTask != null) {
-      await notifier.updateTask(
-        editTask.copyWith(
-          title: result.title,
-          description: result.description,
-          clearDescription: result.description == null,
-          reminderAt: result.reminderAt,
-          clearReminderAt: result.reminderAt == null,
-          updatedAt: DateTime.now(),
-        ),
-      );
-    } else {
-      await notifier.add(
-        title: result.title,
-        description: result.description,
-        reminderAt: result.reminderAt,
-      );
-    }
+    await applyTaskEditorResult(
+      result: result,
+      notifier: ref.read(tasksProvider.notifier),
+      editTask: editTask,
+    );
   }
 
   Future<void> _toggleComplete(TaskModel task) async {
@@ -102,28 +96,44 @@ class _DashboardExpandedPanelState extends ConsumerState<DashboardExpandedPanel>
     );
   }
 
-  List<TaskModel> _filteredTasks(List<TaskModel> tasks) {
-    final sorted = TaskSort.filterAndSort(tasks, filter: TaskFilter.all);
-    if (_filter == DashboardTodoFilter.all) return sorted;
+  Widget _emptyStateForChip() {
+    if (_statusChip == DashboardTodoStatusChip.pending) {
+      return TaskEmptyState(
+        onAdd: () => unawaited(_openEditor()),
+        size: 80,
+      );
+    }
 
-    final today = DateTime.now();
-    return sorted
-        .where((task) {
-          final reminder = task.reminderAt;
-          if (reminder == null) return !task.isCompleted;
-          return _isSameDay(reminder, today) ||
-              task.status(now: today) == TaskStatus.overdue;
-        })
-        .toList();
+    final message = switch (_statusChip) {
+      DashboardTodoStatusChip.all => 'No tasks yet',
+      DashboardTodoStatusChip.today => 'Nothing due today',
+      DashboardTodoStatusChip.overdue => 'No overdue tasks',
+      DashboardTodoStatusChip.pending => "You're all caught up!",
+    };
+
+    return Center(
+      child: Text(
+        message,
+        style: DashboardTypography.metadata,
+        textAlign: TextAlign.center,
+      ),
+    );
   }
-
-  bool _isSameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
 
   @override
   Widget build(BuildContext context) {
     final tasksAsync = ref.watch(tasksProvider);
-    final tasks = _filteredTasks(tasksAsync.value ?? const []);
+    final allTasks = tasksAsync.value ?? const <TaskModel>[];
+    final scopedTasks = DashboardTodoFilterLogic.applyScope(
+      allTasks,
+      scope: _scopeFilter,
+    );
+    final tasks = DashboardTodoFilterLogic.applyStatusChip(
+      scopedTasks,
+      chip: _statusChip,
+    );
+    final summary = DashboardTodoFilterLogic.summaryCounts(allTasks);
+    final overdueCount = DashboardTodoFilterLogic.overdueBadgeCount(allTasks);
     final showEmpty = tasksAsync.hasValue && tasks.isEmpty;
 
     return Padding(
@@ -139,27 +149,25 @@ class _DashboardExpandedPanelState extends ConsumerState<DashboardExpandedPanel>
                   style: DashboardTypography.pageTitle,
                 ),
               ),
-              DropdownButton<DashboardTodoFilter>(
-                value: _filter,
-                underline: const SizedBox.shrink(),
-                items: const [
-                  DropdownMenuItem(
-                    value: DashboardTodoFilter.today,
-                    child: Text('Today'),
-                  ),
-                  DropdownMenuItem(
-                    value: DashboardTodoFilter.all,
-                    child: Text('All'),
-                  ),
-                ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _filter = value);
-                },
+              DashboardTodoScopeButton(
+                scope: _scopeFilter,
+                onChanged: (value) => setState(() => _scopeFilter = value),
               ),
               TextButton.icon(
                 onPressed: () => unawaited(_openEditor()),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add'),
+                icon: const Icon(
+                  color: AppColors.primary,
+                  Icons.add_circle_outline,
+                  size: 20,
+                ),
+                label: const Text(
+                  'Add',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
               ),
               IconButton(
                 tooltip: 'Close',
@@ -167,6 +175,17 @@ class _DashboardExpandedPanelState extends ConsumerState<DashboardExpandedPanel>
                 icon: const Icon(Icons.close),
               ),
             ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          DashboardTodoSummaryLine(
+            pending: summary.pending,
+            overdue: summary.overdue,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          DashboardTodoStatusChips(
+            selected: _statusChip,
+            overdueCount: overdueCount,
+            onChanged: (value) => setState(() => _statusChip = value),
           ),
           const SizedBox(height: AppSpacing.md),
           Expanded(
@@ -181,22 +200,21 @@ class _DashboardExpandedPanelState extends ConsumerState<DashboardExpandedPanel>
                 ),
               ),
               data: (_) {
-                if (showEmpty) {
-                  return TaskEmptyState(
-                    onAdd: () => unawaited(_openEditor()),
-                  );
-                }
+                if (showEmpty) return _emptyStateForChip();
 
-                return TaskList(
-                  tasks: tasks,
-                  onToggleComplete: (task) => unawaited(_toggleComplete(task)),
-                  onOpen: (task) => unawaited(_openEditor(editTask: task)),
-                  onDuplicate: (task) => unawaited(
-                    ref.read(tasksProvider.notifier).duplicate(task.id),
-                  ),
-                  onDelete: (task) => unawaited(
-                    ref.read(tasksProvider.notifier).delete(task.id),
-                  ),
+                return ListView.separated(
+                  padding: EdgeInsets.zero,
+                  itemCount: tasks.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 4),
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return DashboardTaskTile(
+                      key: ValueKey(task.id),
+                      task: task,
+                      onToggleComplete: () => unawaited(_toggleComplete(task)),
+                      onOpen: () => unawaited(_openEditor(editTask: task)),
+                    );
+                  },
                 );
               },
             ),

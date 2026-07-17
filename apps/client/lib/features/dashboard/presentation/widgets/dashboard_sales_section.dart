@@ -65,6 +65,7 @@ class DashboardSalesSection extends StatelessWidget {
             child: DashboardTrendChart(
               points: sales.trendPoints,
               lineColor: AppColors.primary,
+              period: period,
               minimal: true,
             ),
           ),
@@ -128,6 +129,8 @@ class DashboardPurchasesCard extends StatelessWidget {
             child: DashboardTrendChart(
               points: purchases.trendPoints,
               lineColor: DashboardColors.outgoing,
+              period: period,
+              emptyMessage: 'No purchases available',
             ),
           ),
           const Spacer(),
