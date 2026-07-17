@@ -2,6 +2,7 @@ import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/global_search_field.dart';
+import 'package:billing_baba/features/dashboard/presentation/widgets/quick_create_menu.dart';
 import 'package:billing_baba/features/dashboard/providers/dashboard_provider.dart';
 import 'package:billing_baba/features/dashboard/providers/shell_sidebar_provider.dart';
 import 'package:flutter/material.dart';
@@ -105,10 +106,9 @@ class _TopBarActions extends ConsumerWidget {
             onPressed: () => context.push(AppRoutes.addPurchase),
           ),
           const SizedBox(width: AppSpacing.sm),
-        ] else ...[
-          const _QuickAddMenu(),
-          const SizedBox(width: AppSpacing.xs),
         ],
+        const QuickCreateMenuButton(),
+        const SizedBox(width: AppSpacing.xs),
         _TopBarIconButton(
           tooltip: 'Refresh',
           icon: Icons.refresh,
@@ -188,169 +188,4 @@ class _QuickActionButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class _QuickAddMenu extends StatefulWidget {
-  const _QuickAddMenu();
-
-  @override
-  State<_QuickAddMenu> createState() => _QuickAddMenuState();
-}
-
-class _QuickAddMenuState extends State<_QuickAddMenu> {
-  final _menuController = MenuController();
-
-  static const _menuWidth = 230.0;
-
-  static const _items = <_QuickAddItem>[
-    _QuickAddItem(
-      value: 'sale',
-      label: 'Add Sale',
-      icon: Icons.receipt_outlined,
-      color: AppColors.error,
-    ),
-    _QuickAddItem(
-      value: 'purchase',
-      label: 'Add Purchase',
-      icon: Icons.shopping_cart_outlined,
-      color: AppColors.primary,
-    ),
-    _QuickAddItem(
-      value: 'party',
-      label: 'Add Party',
-      icon: Icons.people_outlined,
-      color: AppColors.secondary,
-    ),
-    _QuickAddItem(
-      value: 'item',
-      label: 'Add Item',
-      icon: Icons.inventory_2_outlined,
-      color: Color(0xFF2E7D32),
-    ),
-  ];
-
-  void _toggleMenu() {
-    if (_menuController.isOpen) {
-      _menuController.close();
-    } else {
-      _menuController.open();
-    }
-  }
-
-  void _closeMenu() {
-    if (_menuController.isOpen) {
-      _menuController.close();
-    }
-  }
-
-  void _navigate(BuildContext context, String value) {
-    _closeMenu();
-    switch (value) {
-      case 'sale':
-        context.push(AppRoutes.addSale);
-      case 'purchase':
-        context.push(AppRoutes.addPurchase);
-      case 'party':
-        context.go(AppRoutes.partyDetails);
-      case 'item':
-        context.go(AppRoutes.items);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MenuAnchor(
-      controller: _menuController,
-      alignmentOffset: const Offset(0, 6),
-      style: MenuStyle(
-        padding: WidgetStateProperty.all(EdgeInsets.zero),
-        elevation: WidgetStateProperty.all(8),
-        shape: WidgetStateProperty.all(
-          RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
-        ),
-        backgroundColor: WidgetStateProperty.all(AppColors.surface),
-        minimumSize: WidgetStateProperty.all(
-          const Size(_menuWidth, 0),
-        ),
-        maximumSize: WidgetStateProperty.all(
-          const Size(_menuWidth, double.infinity),
-        ),
-      ),
-      menuChildren: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.md,
-            AppSpacing.md,
-            AppSpacing.sm,
-          ),
-          child: Text(
-            'Quick Add',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ),
-        const Divider(height: 1, color: DashboardColors.border),
-        for (final item in _items)
-          MenuItemButton(
-            onPressed: () => _navigate(context, item.value),
-            style: ButtonStyle(
-              minimumSize: WidgetStateProperty.all(
-                const Size(_menuWidth, 44),
-              ),
-              padding: WidgetStateProperty.all(
-                const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              ),
-              shape: WidgetStateProperty.all(
-                RoundedRectangleBorder(borderRadius: AppRadius.smBorder),
-              ),
-              overlayColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.hovered) ||
-                    states.contains(WidgetState.pressed)) {
-                  return AppColors.background;
-                }
-                return null;
-              }),
-            ),
-            child: Row(
-              children: [
-                Icon(item.icon, size: 18, color: item.color),
-                const SizedBox(width: AppSpacing.sm + 4),
-                Text(
-                  item.label,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        const SizedBox(height: AppSpacing.xs),
-      ],
-      child: _TopBarIconButton(
-        tooltip: 'Quick add',
-        icon: Icons.add_circle_outline,
-        iconColor: AppColors.primary,
-        onPressed: _toggleMenu,
-      ),
-    );
-  }
-}
-
-class _QuickAddItem {
-  const _QuickAddItem({
-    required this.value,
-    required this.label,
-    required this.icon,
-    required this.color,
-  });
-
-  final String value;
-  final String label;
-  final IconData icon;
-  final Color color;
 }

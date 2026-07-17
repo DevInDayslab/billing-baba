@@ -7,6 +7,7 @@ abstract final class AppRoutes {
   static const businessList = '/business-list';
   static const parties = '/parties';
   static const partyDetails = '/parties/party-details';
+  static const partyGroups = '/parties/groups';
   static const items = '/items';
   static const itemsCategories = '/items/categories';
   static const itemsUnits = '/items/units';

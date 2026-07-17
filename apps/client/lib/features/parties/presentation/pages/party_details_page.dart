@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
@@ -127,6 +128,7 @@ class _PartyDetailsPageState extends ConsumerState<PartyDetailsPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               PartyPageTitleBar(
+                currentRoute: AppRoutes.partyDetails,
                 onAddParty: () => _openAddPartyDialog(context, ref),
                 onSettingsTap: () {},
               ),

@@ -1,18 +1,25 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/parties/models/party_sub_route.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/manage_party_groups_dialog.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_page_switcher_menu.dart';
 import 'package:flutter/material.dart';
 
-class PartyPageTitleBar extends StatelessWidget {
+class PartyPageTitleBar extends StatefulWidget {
   const PartyPageTitleBar({
+    required this.currentRoute,
     this.onAddParty,
+    this.onAddGroup,
     this.onSettingsTap,
     this.onMoreSelected,
     super.key,
   });
 
+  final String currentRoute;
   final VoidCallback? onAddParty;
+  final VoidCallback? onAddGroup;
   final VoidCallback? onSettingsTap;
   final ValueChanged<String>? onMoreSelected;
 
@@ -21,11 +28,40 @@ class PartyPageTitleBar extends StatelessWidget {
   static const _titleStyle = TextStyle(
     fontSize: 20,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
   );
 
   @override
+  State<PartyPageTitleBar> createState() => _PartyPageTitleBarState();
+}
+
+class _PartyPageTitleBarState extends State<PartyPageTitleBar> {
+  static const Color _hoverColor = AppColors.primary;
+  static const Color _defaultColor = Colors.black87;
+
+  bool _isHovered = false;
+
+  Color get _contentColor => _isHovered ? _hoverColor : _defaultColor;
+
+  bool get _isGroupsView => widget.currentRoute == AppRoutes.partyGroups;
+
+  String get _addButtonLabel => _isGroupsView ? 'Add Group' : 'Add Party';
+
+  VoidCallback? get _addAction =>
+      _isGroupsView ? widget.onAddGroup : widget.onAddParty;
+
+  void _setHovered(bool hovered) {
+    if (_isHovered == hovered) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _isHovered != hovered) {
+        setState(() => _isHovered = hovered);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final currentLabel = PartySubRoutes.labelForRoute(widget.currentRoute);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isCompact = constraints.maxWidth < 560;
@@ -34,32 +70,14 @@ class PartyPageTitleBar extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Party Details', style: _titleStyle),
+              _buildTitleSwitcher(currentLabel),
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: onAddParty,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _addPartyRed,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.md,
-                        ),
-                        minimumSize: const Size(0, 42),
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      icon: const Icon(Icons.add, size: 22),
-                      label: const Text('Add Party'),
-                    ),
-                  ),
+                  if (_addAction != null)
+                    Expanded(child: _buildAddButton(compact: true)),
                   IconButton(
-                    onPressed: onSettingsTap,
+                    onPressed: widget.onSettingsTap,
                     icon: const Icon(Icons.settings_outlined),
                     color: AppColors.textSecondary,
                     tooltip: 'Settings',
@@ -73,33 +91,10 @@ class PartyPageTitleBar extends StatelessWidget {
 
         return Row(
           children: [
-            const Expanded(
-              child: Text(
-                'Party Details',
-                style: _titleStyle,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            FilledButton.icon(
-              onPressed: onAddParty,
-              style: FilledButton.styleFrom(
-                backgroundColor: _addPartyRed,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.md,
-                ),
-                minimumSize: const Size(0, 42),
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              icon: const Icon(Icons.add, size: 22),
-              label: const Text('Add Party'),
-            ),
+            Expanded(child: _buildTitleSwitcher(currentLabel)),
+            if (_addAction != null) _buildAddButton(compact: false),
             IconButton(
-              onPressed: onSettingsTap,
+              onPressed: widget.onSettingsTap,
               icon: const Icon(Icons.settings_outlined),
               color: AppColors.textSecondary,
               tooltip: 'Settings',
@@ -108,6 +103,87 @@ class PartyPageTitleBar extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildTitleSwitcher(String currentLabel) {
+    return PartyPageSwitcherMenu(
+      currentRoute: widget.currentRoute,
+      child: MouseRegion(
+        onEnter: (_) => _setHovered(true),
+        onExit: (_) => _setHovered(false),
+        cursor: SystemMouseCursors.click,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  currentLabel,
+                  style: PartyPageTitleBar._titleStyle.copyWith(
+                    color: _contentColor,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.xs),
+                child: Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 22,
+                  color: _contentColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddButton({required bool compact}) {
+    final onPressed = _addAction;
+    if (onPressed == null) return const SizedBox.shrink();
+
+    if (compact) {
+      return FilledButton.icon(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: PartyPageTitleBar._addPartyRed,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
+          minimumSize: const Size(0, 42),
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        icon: const Icon(Icons.add, size: 22),
+        label: Text(_addButtonLabel),
+      );
+    }
+
+    return FilledButton.icon(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        backgroundColor: PartyPageTitleBar._addPartyRed,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        minimumSize: const Size(0, 42),
+        textStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      icon: const Icon(Icons.add, size: 22),
+      label: Text(_addButtonLabel),
     );
   }
 
@@ -120,7 +196,7 @@ class PartyPageTitleBar extends StatelessWidget {
         size: 22,
       ),
       onSelected:
-          onMoreSelected ??
+          widget.onMoreSelected ??
           (value) {
             if (value == 'Manage Party Groups') {
               unawaited(showManagePartyGroupsDialog(context));

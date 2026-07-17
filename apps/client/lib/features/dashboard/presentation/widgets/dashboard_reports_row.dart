@@ -89,7 +89,7 @@ class _ReportsChips extends StatelessWidget {
     return Row(
       children: [
         for (var i = 0; i < reports.length; i++) ...[
-          if (i > 0) SizedBox(width: gap),
+          if (i > 0) SizedBox(width: gap*2),
            Expanded(child: _ReportChip(report: reports[i], ref: ref)),
         ],
       ],
