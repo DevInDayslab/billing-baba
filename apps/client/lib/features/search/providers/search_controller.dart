@@ -14,6 +14,7 @@ class SearchController extends _$SearchController {
   void setQuery(String query) {
     state = state.copyWith(query: query, highlightedIndex: 0);
     ref.invalidate(searchResultsProvider);
+    ref.invalidate(searchEmptySectionsProvider);
   }
 
   void setHighlightedIndex(int index) {
@@ -34,6 +35,7 @@ class SearchController extends _$SearchController {
   void reset() {
     state = const SearchUiState();
     ref.invalidate(searchResultsProvider);
+    ref.invalidate(searchEmptySectionsProvider);
   }
 }
 
@@ -58,9 +60,17 @@ class SearchUiState {
   }
 }
 
+/// Sync results for non-empty queries against the static registry.
 @riverpod
-Future<List<SearchResultSection>> searchResults(Ref ref) async {
-  final query = ref.watch(searchControllerProvider).query;
-  final repository = ref.watch(searchRepositoryProvider);
-  return repository.sectionsForQuery(query);
+List<SearchResultSection> searchResults(Ref ref) {
+  final query = ref.watch(searchControllerProvider).query.trim();
+  if (query.isEmpty) return const [];
+
+  return ref.watch(searchRepositoryProvider).filteredSections(query);
+}
+
+/// Async recent pages for an empty query (local storage only).
+@riverpod
+Future<List<SearchResultSection>> searchEmptySections(Ref ref) async {
+  return ref.watch(searchRepositoryProvider).emptyQuerySections();
 }

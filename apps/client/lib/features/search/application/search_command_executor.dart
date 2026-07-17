@@ -4,8 +4,6 @@ import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/payment_out_dialog.dart';
-import 'package:billing_baba/features/reports/models/gst_report_subsection.dart';
-import 'package:billing_baba/features/reports/models/reports_nav_intent.dart';
 import 'package:billing_baba/features/reports/providers/reports_nav_intent_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/payment_in_dialog.dart';
 import 'package:billing_baba/features/search/application/recent_search_storage.dart';
@@ -33,10 +31,11 @@ Future<void> executeSearchItem(
     return;
   }
 
-  if (action == SearchActionKind.openReportsGst) {
-    ref
-        .read(reportsNavIntentProvider.notifier)
-        .setIntent(ReportsNavIntent.gst(GstReportSubSection.gstr1));
+  if (action == SearchActionKind.openReport) {
+    final intent = item.reportIntent;
+    if (intent != null) {
+      ref.read(reportsNavIntentProvider.notifier).setIntent(intent);
+    }
     if (context.mounted) context.go(AppRoutes.reports);
     return;
   }
@@ -70,10 +69,11 @@ Future<void> _executeCommand(
       if (context.mounted) unawaited(showPaymentInDialog(context));
     case SearchActionKind.showPaymentOutDialog:
       if (context.mounted) unawaited(showPaymentOutDialog(context));
-    case SearchActionKind.openReportsGst:
-      ref
-          .read(reportsNavIntentProvider.notifier)
-          .setIntent(ReportsNavIntent.gst(GstReportSubSection.gstr1));
+    case SearchActionKind.openReport:
+      final intent = item.reportIntent;
+      if (intent != null) {
+        ref.read(reportsNavIntentProvider.notifier).setIntent(intent);
+      }
       if (context.mounted) context.go(AppRoutes.reports);
     case SearchActionKind.switchCompany:
       if (context.mounted) context.go(AppRoutes.businessList);

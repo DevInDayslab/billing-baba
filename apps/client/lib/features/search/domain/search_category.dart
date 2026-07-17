@@ -4,7 +4,7 @@ enum SearchCategory {
   command,
 }
 
-/// How a search command is executed when selected.
+/// How a search item is executed when selected.
 enum SearchActionKind {
   routeGo,
   routePush,
@@ -12,7 +12,7 @@ enum SearchActionKind {
   showAddItemDialog,
   showPaymentInDialog,
   showPaymentOutDialog,
-  openReportsGst,
+  openReport,
   switchCompany,
 }
 

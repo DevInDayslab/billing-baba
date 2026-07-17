@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/reports/models/reports_nav_intent.dart';
 import 'package:billing_baba/features/search/domain/search_category.dart';
 import 'package:flutter/material.dart';
 
@@ -12,6 +13,7 @@ final class SearchItem {
     this.keywords = const [],
     this.route,
     this.action,
+    this.reportIntent,
     this.trackAsRecentPage = true,
   });
 
@@ -23,6 +25,7 @@ final class SearchItem {
   final SearchCategory category;
   final String? route;
   final SearchActionKind? action;
+  final ReportsNavIntent? reportIntent;
 
   /// Whether visiting this item should update recent pages storage.
   final bool trackAsRecentPage;

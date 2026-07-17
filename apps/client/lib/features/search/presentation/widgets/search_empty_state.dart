@@ -18,7 +18,8 @@ class SearchEmptyState extends StatelessWidget {
           ),
           SizedBox(height: AppSpacing.sm),
           Text(
-            'No results found',
+            "We couldn't find a match with what is being searched.",
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -27,7 +28,8 @@ class SearchEmptyState extends StatelessWidget {
           ),
           SizedBox(height: AppSpacing.xs),
           Text(
-            'Try another keyword.',
+            'Please try another term in the search bar.',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
               color: AppColors.textSecondary,

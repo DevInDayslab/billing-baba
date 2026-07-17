@@ -83,16 +83,31 @@ class _SearchDialogBodyState extends ConsumerState<_SearchDialogBody> {
     if (mounted) widget.onClose();
   }
 
+  bool get _hasQuery =>
+      ref.read(searchControllerProvider).query.trim().isNotEmpty;
+
+  List<SearchItem> _flatItemsForSections(List<SearchResultSection> sections) {
+    return ref.read(searchRepositoryProvider).flattenSections(sections);
+  }
+
+  List<SearchItem> _currentFlatItems() {
+    if (_hasQuery) {
+      return _flatItemsForSections(ref.read(searchResultsProvider));
+    }
+
+    final emptyAsync = ref.read(searchEmptySectionsProvider);
+    return emptyAsync.maybeWhen(
+      data: _flatItemsForSections,
+      orElse: () => _flatItemsForSections(
+        ref.read(searchRepositoryProvider).suggestedSections(),
+      ),
+    );
+  }
+
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
 
-    final resultsAsync = ref.read(searchResultsProvider);
-    final flatItems = resultsAsync.maybeWhen(
-      data: (sections) =>
-          ref.read(searchRepositoryProvider).flattenSections(sections),
-      orElse: () => <SearchItem>[],
-    );
-
+    final flatItems = _currentFlatItems();
     final notifier = ref.read(searchControllerProvider.notifier);
     final highlightedIndex = ref
         .read(searchControllerProvider)
@@ -147,16 +162,50 @@ class _SearchDialogBodyState extends ConsumerState<_SearchDialogBody> {
   }
 
   int _globalIndexFor(List<SearchResultSection> sections, SearchItem item) {
-    final flat = ref.read(searchRepositoryProvider).flattenSections(sections);
-    return flat.indexOf(item);
+    return _flatItemsForSections(sections).indexOf(item);
+  }
+
+  Widget _buildResultsList(List<SearchResultSection> sections) {
+    final highlightedIndex = ref
+        .watch(searchControllerProvider)
+        .highlightedIndex;
+
+    if (sections.isEmpty) {
+      return const SearchEmptyState();
+    }
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: _maxResultsHeight),
+      child: ListView(
+        controller: _listScrollController,
+        shrinkWrap: true,
+        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+        children: [
+          for (final section in sections) ...[
+            SearchSectionHeader(title: section.kind.label),
+            for (final item in section.items)
+              SearchResultRow(
+                item: item,
+                isHighlighted:
+                    _globalIndexFor(sections, item) == highlightedIndex,
+                onTap: () => unawaited(_selectItem(item)),
+                onHover: () {
+                  ref
+                      .read(searchControllerProvider.notifier)
+                      .setHighlightedIndex(
+                        _globalIndexFor(sections, item),
+                      );
+                },
+              ),
+          ],
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final resultsAsync = ref.watch(searchResultsProvider);
-    final highlightedIndex = ref
-        .watch(searchControllerProvider)
-        .highlightedIndex;
+    final query = ref.watch(searchControllerProvider).query.trim();
 
     return Focus(
       autofocus: true,
@@ -202,53 +251,26 @@ class _SearchDialogBodyState extends ConsumerState<_SearchDialogBody> {
             ),
           ),
           const Divider(height: 1),
-          resultsAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.lg),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+          if (query.isNotEmpty)
+            Builder(
+              builder: (context) {
+                final sections = ref.watch(searchResultsProvider);
+                if (sections.isEmpty) {
+                  return const SearchEmptyState();
+                }
+                return _buildResultsList(sections);
+              },
+            )
+          else
+            ref
+                .watch(searchEmptySectionsProvider)
+                .when(
+                  loading: () => _buildResultsList(
+                    ref.read(searchRepositoryProvider).suggestedSections(),
+                  ),
+                  error: (_, _) => const SearchEmptyState(),
+                  data: _buildResultsList,
                 ),
-              ),
-            ),
-            error: (_, _) => const SearchEmptyState(),
-            data: (sections) {
-              if (sections.isEmpty) {
-                return const SearchEmptyState();
-              }
-
-              return ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: _maxResultsHeight),
-                child: ListView(
-                  controller: _listScrollController,
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                  children: [
-                    for (final section in sections) ...[
-                      SearchSectionHeader(title: section.kind.label),
-                      for (final item in section.items)
-                        SearchResultRow(
-                          item: item,
-                          isHighlighted:
-                              _globalIndexFor(sections, item) ==
-                              highlightedIndex,
-                          onTap: () => unawaited(_selectItem(item)),
-                          onHover: () {
-                            ref
-                                .read(searchControllerProvider.notifier)
-                                .setHighlightedIndex(
-                                  _globalIndexFor(sections, item),
-                                );
-                          },
-                        ),
-                    ],
-                  ],
-                ),
-              );
-            },
-          ),
           const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.symmetric(

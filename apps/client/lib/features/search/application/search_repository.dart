@@ -1,5 +1,5 @@
-import 'package:billing_baba/features/search/application/fuzzy_search.dart';
 import 'package:billing_baba/features/search/application/recent_search_storage.dart';
+import 'package:billing_baba/features/search/application/search_matcher.dart';
 import 'package:billing_baba/features/search/application/search_registry.dart';
 import 'package:billing_baba/features/search/application/search_shortcuts.dart';
 import 'package:billing_baba/features/search/domain/search_category.dart';
@@ -8,7 +8,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'search_repository.g.dart';
 
-/// Resolves grouped search results for the command palette.
+/// Resolves grouped search results for the navigation palette.
 @Riverpod(keepAlive: true)
 SearchRepository searchRepository(Ref ref) {
   return SearchRepository(ref);
@@ -19,15 +19,45 @@ class SearchRepository {
 
   final Ref _ref;
 
-  Future<List<SearchResultSection>> sectionsForQuery(String query) async {
-    final trimmed = query.trim();
-    if (trimmed.isEmpty) {
-      return _emptyQuerySections();
-    }
-    return _filteredSections(trimmed);
+  /// Sync filter against the static registry — no I/O.
+  List<SearchResultSection> filteredSections(String query) {
+    final pages = SearchMatcher.filter(
+      items: SearchRegistry.pages,
+      query: query,
+    );
+    final commands = SearchMatcher.filter(
+      items: SearchRegistry.commands,
+      query: query,
+    );
+
+    return [
+      if (pages.isNotEmpty)
+        SearchResultSection(kind: SearchSectionKind.pages, items: pages),
+      if (commands.isNotEmpty)
+        SearchResultSection(kind: SearchSectionKind.commands, items: commands),
+    ];
   }
 
-  Future<List<SearchResultSection>> _emptyQuerySections() async {
+  /// Suggested pages only — sync, no I/O.
+  List<SearchResultSection> suggestedSections() {
+    final suggestedItems = <SearchItem>[];
+    for (final id in SearchShortcuts.suggestedPageIds) {
+      final item = SearchRegistry.byId(id);
+      if (item != null) suggestedItems.add(item);
+    }
+
+    if (suggestedItems.isEmpty) return const [];
+
+    return [
+      SearchResultSection(
+        kind: SearchSectionKind.suggestedPages,
+        items: suggestedItems,
+      ),
+    ];
+  }
+
+  /// Recent + suggested sections for an empty query.
+  Future<List<SearchResultSection>> emptyQuerySections() async {
     final recentIds = await _ref
         .read(recentSearchStorageProvider)
         .readRecentPageIds();
@@ -56,24 +86,6 @@ class SearchRepository {
           kind: SearchSectionKind.suggestedPages,
           items: suggestedItems,
         ),
-    ];
-  }
-
-  List<SearchResultSection> _filteredSections(String query) {
-    final pages = FuzzySearch.filter(
-      items: SearchRegistry.pages(),
-      query: query,
-    );
-    final commands = FuzzySearch.filter(
-      items: SearchRegistry.commands(),
-      query: query,
-    );
-
-    return [
-      if (pages.isNotEmpty)
-        SearchResultSection(kind: SearchSectionKind.pages, items: pages),
-      if (commands.isNotEmpty)
-        SearchResultSection(kind: SearchSectionKind.commands, items: commands),
     ];
   }
 

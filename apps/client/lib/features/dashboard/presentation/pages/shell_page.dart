@@ -14,11 +14,11 @@ import 'package:billing_baba/features/parties/models/party_sub_route.dart';
 import 'package:billing_baba/features/pos/providers/pos_session_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
-import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:billing_baba/features/search/application/search_route_observer.dart';
 import 'package:billing_baba/features/search/application/search_shortcuts_handler.dart';
 import 'package:billing_baba/features/search/presentation/search_dialog.dart';
 import 'package:billing_baba/features/search/providers/search_dialog_provider.dart';
+import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -61,19 +61,29 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   bool? _wasOverlaySidebar;
   bool _useOverlaySidebar = false;
   String? _lastRecordedSearchRoute;
+  final _shellShortcutFocusNode = FocusNode(debugLabel: 'shellShortcuts');
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _registerSearchDialog(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _registerSearchDialog();
+      _ensureShellShortcutFocus();
+    });
   }
 
   @override
   void dispose() {
     ref.read(searchDialogProvider.notifier).unregister();
+    _shellShortcutFocusNode.dispose();
     super.dispose();
+  }
+
+  void _ensureShellShortcutFocus() {
+    if (!mounted || shouldSuppressSearchShortcuts()) return;
+    if (!_shellShortcutFocusNode.hasFocus) {
+      _shellShortcutFocusNode.requestFocus();
+    }
   }
 
   void _registerSearchDialog() {
@@ -253,7 +263,10 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     if (_lastRecordedSearchRoute != currentLocation) {
       _lastRecordedSearchRoute = currentLocation;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) recordSearchRouteVisit(ref, currentLocation);
+        if (mounted) {
+          recordSearchRouteVisit(ref, currentLocation);
+          _ensureShellShortcutFocus();
+        }
       });
     }
     final sidebarState = ref.watch(shellSidebarProvider);
@@ -279,6 +292,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
             !ref.watch(posSessionProvider).isTerminalOpen;
         final mainContent = _ShellShortcutScope(
           quickCreateEnabled: showTopBar,
+          shortcutFocusNode: _shellShortcutFocusNode,
           child: ColoredBox(
             color: AppColors.background,
             child: Column(
@@ -1222,10 +1236,12 @@ class _ProfileMenuItem extends StatelessWidget {
 class _ShellShortcutScope extends ConsumerWidget {
   const _ShellShortcutScope({
     required this.quickCreateEnabled,
+    required this.shortcutFocusNode,
     required this.child,
   });
 
   final bool quickCreateEnabled;
+  final FocusNode shortcutFocusNode;
   final Widget child;
 
   @override
@@ -1270,12 +1286,18 @@ class _ShellShortcutScope extends ConsumerWidget {
           ),
           OpenSearchDialogIntent: CallbackAction<OpenSearchDialogIntent>(
             onInvoke: (_) {
+              if (shouldSuppressSearchShortcuts()) return null;
               ref.read(searchDialogProvider.notifier).open(context);
               return null;
             },
           ),
         },
-        child: Focus(autofocus: true, child: child),
+        child: Focus(
+          focusNode: shortcutFocusNode,
+          autofocus: true,
+          canRequestFocus: true,
+          child: child,
+        ),
       ),
     );
   }
