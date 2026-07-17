@@ -5,6 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+const _desktopWindowSize = Size(
+  DashboardLayout.minimumWindowWidth,
+  DashboardLayout.minimumWindowHeight,
+);
+
 /// Applies desktop window constraints (minimum size) on macOS, Windows, and Linux.
 Future<void> configureDesktopWindow() async {
   if (kIsWeb) return;
@@ -12,10 +17,13 @@ Future<void> configureDesktopWindow() async {
 
   await windowManager.ensureInitialized();
 
-  await windowManager.setMinimumSize(
-    const Size(
-      DashboardLayout.minimumWindowWidth,
-      DashboardLayout.minimumWindowHeight,
-    ),
+  const windowOptions = WindowOptions(
+    size: _desktopWindowSize,
+    minimumSize: _desktopWindowSize,
+    center: true,
   );
+
+  await windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+  });
 }

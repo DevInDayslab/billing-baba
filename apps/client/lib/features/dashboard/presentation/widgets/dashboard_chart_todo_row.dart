@@ -23,24 +23,39 @@ class DashboardChartTodoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final metrics = DashboardLayoutScope.of(context);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          flex: metrics.chartColumnFlex,
-          child: DashboardSalesSection(
-            sales: dashboard.sales,
-            period: period,
-            onPeriodChanged: onPeriodChanged,
-            onTap: onSaleTap,
-          ),
-        ),
-        SizedBox(width: metrics.gap),
-        Expanded(
-          flex: metrics.todoColumnFlex,
-          child: const DashboardTodoWidget(),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final gap = metrics.gap;
+        final flexTotal = metrics.chartColumnFlex + metrics.todoColumnFlex;
+        final proportionalTodo =
+            availableWidth * metrics.todoColumnFlex / flexTotal;
+        final todoWidth = proportionalTodo.clamp(
+          DashboardLayout.todoMinWidth,
+          availableWidth - gap,
+        );
+        final chartWidth = availableWidth - gap - todoWidth;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: chartWidth,
+              child: DashboardSalesSection(
+                sales: dashboard.sales,
+                period: period,
+                onPeriodChanged: onPeriodChanged,
+                onTap: onSaleTap,
+              ),
+            ),
+            SizedBox(width: gap),
+            SizedBox(
+              width: todoWidth,
+              child: const DashboardTodoWidget(),
+            ),
+          ],
+        );
+      },
     );
   }
 }

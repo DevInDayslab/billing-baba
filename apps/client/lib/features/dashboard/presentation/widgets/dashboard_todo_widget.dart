@@ -119,20 +119,23 @@ class _DashboardTodoWidgetState extends ConsumerState<DashboardTodoWidget> {
       children: [
         Row(
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'To-Do list',
-                  style: DashboardTypography.cardTitle,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                _AddReminderButton(
-                  onPressed: () => unawaited(_openEditor()),
-                ),
-              ],
+            Expanded(
+              child: Row(
+                children: [
+                  const Flexible(
+                    child: Text(
+                      'To-Do',
+                      style: DashboardTypography.cardTitle,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  _AddReminderButton(
+                    onPressed: () => unawaited(_openEditor()),
+                  ),
+                ],
+              ),
             ),
-            const Spacer(),
             DashboardTodoScopeButton(
               scope: _scopeFilter,
               onChanged: (value) => setState(() => _scopeFilter = value),
