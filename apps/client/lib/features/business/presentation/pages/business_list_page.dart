@@ -1,12 +1,19 @@
+import 'dart:async';
+
+import 'package:billing_baba/core/network/api_error_parser.dart';
+import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_card.dart';
+import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
+import 'package:billing_baba/features/business/presentation/widgets/business_opening_overlay.dart';
 import 'package:billing_baba/features/business/presentation/widgets/create_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/widgets/delete_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/widgets/edit_business_dialog.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -86,7 +93,6 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
       case BusinessCardAction.edit:
         final updated = await showEditBusinessModal(
           context,
-          ref,
           businessId: business.id,
         );
         if (!mounted || updated != true) return;
@@ -100,20 +106,22 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
         );
         if (!mounted || confirmed != true) return;
 
+        final container = ProviderScope.containerOf(context, listen: false);
         try {
-          await ref
+          await container
               .read(businessListProvider.notifier)
               .deleteBusiness(business.id);
-          if (!mounted) return;
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('${business.name} deleted')),
           );
-        } on Object {
-          if (!mounted) return;
+        } on Object catch (error) {
+          if (!context.mounted) return;
+          final message = error is DioException
+              ? ApiErrorParser.userFacingMessage(error)
+              : 'Could not delete company. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Could not delete company. Please try again.'),
-            ),
+            SnackBar(content: Text(message)),
           );
         }
     }
@@ -123,10 +131,13 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
   Widget build(BuildContext context) {
     final businessesAsync = ref.watch(businessListProvider);
     final phoneNumber = ref.watch(loggedInPhoneProvider);
+    final openingBusinessId = ref.watch(businessSessionLoadingProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: businessesAsync.when(
+      body: Stack(
+        children: [
+          businessesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _ErrorState(
           onRetry: () => ref.read(businessListProvider.notifier).refresh(),
@@ -201,6 +212,9 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
             ],
           );
         },
+          ),
+          if (openingBusinessId != null) const BusinessOpeningOverlay(),
+        ],
       ),
     );
   }
@@ -702,9 +716,35 @@ Future<void> _openBusiness(
   WidgetRef ref,
   String businessId,
 ) async {
-  await ref.read(businessListProvider.notifier).selectBusiness(businessId);
-  if (context.mounted) {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final loading = container.read(businessSessionLoadingProvider.notifier);
+  loading.start(businessId);
+
+  try {
+    BusinessOpenDebugLog.step('ui', 'calling openBusiness');
+    await container.read(businessListProvider.notifier).openBusiness(businessId);
+    BusinessOpenDebugLog.step('ui', 'openBusiness returned — navigating home');
+    if (!context.mounted) return;
     context.go(AppRoutes.home);
+    BusinessOpenDebugLog.step('ui', 'navigation dispatched');
+  } on BusinessSelectionFailed catch (error) {
+    BusinessOpenDebugLog.step('ui', 'failed: ${error.message}');
+    if (!context.mounted) return;
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(content: Text(error.message)),
+    );
+  } on Object catch (error) {
+    BusinessOpenDebugLog.step('ui', 'failed: $error');
+    if (!context.mounted) return;
+    final message = error is DioException
+        ? ApiErrorParser.userFacingMessage(error)
+        : 'Could not open company. Please try again.';
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  } finally {
+    loading.clear();
+    BusinessOpenDebugLog.step('ui', 'loading overlay cleared');
   }
 }
 

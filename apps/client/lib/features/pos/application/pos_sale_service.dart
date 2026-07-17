@@ -44,6 +44,7 @@ class PosSaleService {
   final PosLocalDataSource _localDataSource;
 
   Future<PosSale> completeSale({
+    required String businessId,
     required List<CartItem> items,
     required List<PaymentEntry> payments,
     String? partyId,
@@ -121,6 +122,7 @@ class PosSaleService {
       }
 
       await _localDataSource.saveSale(
+        businessId: businessId,
         dto: finalizedDto,
         items: items,
         lineDtos: lineDtos,

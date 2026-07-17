@@ -175,5 +175,10 @@ class BusinessCache {
   Future<void> clearSelectedBusiness() async {
     await _storage.write(StorageKeys.lastOpenedBusinessId, '');
     await _storage.write(StorageKeys.cachedBusinessProfile, '');
+    await _storage.deleteSecure(StorageKeys.selectedBusinessId);
+  }
+
+  Future<void> clearBusinessProfile() async {
+    await _storage.write(StorageKeys.cachedBusinessProfile, '');
   }
 }

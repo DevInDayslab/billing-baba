@@ -1,38 +1,43 @@
+import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
 
 class PrintSettingsRepository {
-  PrintSettingsRepository(this._storageService);
+  PrintSettingsRepository(this._storageService, this._businessId);
 
   final StorageService _storageService;
+  final String _businessId;
 
-  static const _kPrinterType = 'print_settings.printer_type';
-  static const _kThermalPageSize = 'print_settings.thermal_page_size';
-  static const _kBold = 'print_settings.bold';
-  static const _kAutoCut = 'print_settings.auto_cut';
-  static const _kExtraLines = 'print_settings.extra_lines';
-  static const _kCopies = 'print_settings.copies';
-  static const _kOrientation = 'print_settings.orientation';
-  static const _kInvoiceTextSize = 'print_settings.invoice_text_size';
-  static const _kCompanyTextSize = 'print_settings.company_text_size';
-  static const _kCompanyName = 'print_settings.company_name';
-  static const _kCompanyLogo = 'print_settings.company_logo';
-  static const _kAddress = 'print_settings.address';
-  static const _kPhone = 'print_settings.phone';
-  static const _kGstin = 'print_settings.gstin';
-  static const _kBankDetails = 'print_settings.bank_details';
-  static const _kTermsToggle = 'print_settings.terms_toggle';
-  static const _kTermsText = 'print_settings.terms_text';
+  String _scopedKey(String suffix) =>
+      '${StorageKeys.printSettings}_$_businessId.$suffix';
+
+  static const _kPrinterType = 'printer_type';
+  static const _kThermalPageSize = 'thermal_page_size';
+  static const _kBold = 'bold';
+  static const _kAutoCut = 'auto_cut';
+  static const _kExtraLines = 'extra_lines';
+  static const _kCopies = 'copies';
+  static const _kOrientation = 'orientation';
+  static const _kInvoiceTextSize = 'invoice_text_size';
+  static const _kCompanyTextSize = 'company_text_size';
+  static const _kCompanyName = 'company_name';
+  static const _kCompanyLogo = 'company_logo';
+  static const _kAddress = 'address';
+  static const _kPhone = 'phone';
+  static const _kGstin = 'gstin';
+  static const _kBankDetails = 'bank_details';
+  static const _kTermsToggle = 'terms_toggle';
+  static const _kTermsText = 'terms_text';
 
   Future<PrintSettings> load() async {
     const defaults = PrintSettings.defaults();
 
     return PrintSettings(
       printerType: PrinterTypeX.fromStorageKey(
-        _storageService.read(_kPrinterType),
+        _storageService.read(_scopedKey(_kPrinterType)),
       ),
       thermalPageSize: ThermalPageSizeX.fromStorageKey(
-        _storageService.read(_kThermalPageSize),
+        _storageService.read(_scopedKey(_kThermalPageSize)),
       ),
       useTextStylingBold: _readBool(_kBold, defaults.useTextStylingBold),
       autoCutPaperAfterPrinting:
@@ -40,13 +45,13 @@ class PrintSettingsRepository {
       extraLinesAtEnd: _readInt(_kExtraLines, defaults.extraLinesAtEnd),
       numberOfCopies: _readInt(_kCopies, defaults.numberOfCopies),
       orientation: RegularOrientationX.fromStorageKey(
-        _storageService.read(_kOrientation),
+        _storageService.read(_scopedKey(_kOrientation)),
       ),
       invoiceTextSize: PrintTextSizeX.fromStorageKey(
-        _storageService.read(_kInvoiceTextSize),
+        _storageService.read(_scopedKey(_kInvoiceTextSize)),
       ),
       companyTextSize: PrintTextSizeX.fromStorageKey(
-        _storageService.read(_kCompanyTextSize),
+        _storageService.read(_scopedKey(_kCompanyTextSize)),
       ),
       printCompanyName: _readBool(_kCompanyName, defaults.printCompanyName),
       printCompanyLogo: _readBool(_kCompanyLogo, defaults.printCompanyLogo),
@@ -57,73 +62,83 @@ class PrintSettingsRepository {
       printTermsAndConditions:
           _readBool(_kTermsToggle, defaults.printTermsAndConditions),
       termsAndConditions:
-          _storageService.read(_kTermsText) ?? defaults.termsAndConditions,
+          _storageService.read(_scopedKey(_kTermsText)) ??
+          defaults.termsAndConditions,
     );
   }
 
   Future<void> save(PrintSettings settings) async {
     await Future.wait([
-      _storageService.write(_kPrinterType, settings.printerType.storageKey),
       _storageService.write(
-        _kThermalPageSize,
+        _scopedKey(_kPrinterType),
+        settings.printerType.storageKey,
+      ),
+      _storageService.write(
+        _scopedKey(_kThermalPageSize),
         settings.thermalPageSize.storageKey,
       ),
       _storageService.write(
-        _kBold,
+        _scopedKey(_kBold),
         _writeBool(settings.useTextStylingBold),
       ),
       _storageService.write(
-        _kAutoCut,
+        _scopedKey(_kAutoCut),
         _writeBool(settings.autoCutPaperAfterPrinting),
       ),
       _storageService.write(
-        _kExtraLines,
+        _scopedKey(_kExtraLines),
         settings.extraLinesAtEnd.toString(),
       ),
       _storageService.write(
-        _kCopies,
+        _scopedKey(_kCopies),
         settings.numberOfCopies.toString(),
       ),
-      _storageService.write(_kOrientation, settings.orientation.storageKey),
       _storageService.write(
-        _kInvoiceTextSize,
+        _scopedKey(_kOrientation),
+        settings.orientation.storageKey,
+      ),
+      _storageService.write(
+        _scopedKey(_kInvoiceTextSize),
         settings.invoiceTextSize.storageKey,
       ),
       _storageService.write(
-        _kCompanyTextSize,
+        _scopedKey(_kCompanyTextSize),
         settings.companyTextSize.storageKey,
       ),
       _storageService.write(
-        _kCompanyName,
+        _scopedKey(_kCompanyName),
         _writeBool(settings.printCompanyName),
       ),
       _storageService.write(
-        _kCompanyLogo,
+        _scopedKey(_kCompanyLogo),
         _writeBool(settings.printCompanyLogo),
       ),
-      _storageService.write(_kAddress, _writeBool(settings.printAddress)),
-      _storageService.write(_kPhone, _writeBool(settings.printPhone)),
-      _storageService.write(_kGstin, _writeBool(settings.printGstin)),
       _storageService.write(
-        _kBankDetails,
+        _scopedKey(_kAddress),
+        _writeBool(settings.printAddress),
+      ),
+      _storageService.write(_scopedKey(_kPhone), _writeBool(settings.printPhone)),
+      _storageService.write(_scopedKey(_kGstin), _writeBool(settings.printGstin)),
+      _storageService.write(
+        _scopedKey(_kBankDetails),
         _writeBool(settings.printBankDetails),
       ),
       _storageService.write(
-        _kTermsToggle,
+        _scopedKey(_kTermsToggle),
         _writeBool(settings.printTermsAndConditions),
       ),
-      _storageService.write(_kTermsText, settings.termsAndConditions),
+      _storageService.write(_scopedKey(_kTermsText), settings.termsAndConditions),
     ]);
   }
 
   bool _readBool(String key, bool defaultValue) {
-    final raw = _storageService.read(key);
+    final raw = _storageService.read(_scopedKey(key));
     if (raw == null) return defaultValue;
     return raw == '1';
   }
 
   int _readInt(String key, int defaultValue) {
-    final raw = _storageService.read(key);
+    final raw = _storageService.read(_scopedKey(key));
     if (raw == null) return defaultValue;
     return int.tryParse(raw) ?? defaultValue;
   }

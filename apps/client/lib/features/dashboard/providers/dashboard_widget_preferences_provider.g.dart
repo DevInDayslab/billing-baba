@@ -47,7 +47,7 @@ final class DashboardWidgetPreferencesProvider
 }
 
 String _$dashboardWidgetPreferencesHash() =>
-    r'fa008de97d1df4a86b6c8b567f270ffd4fe0c6c8';
+    r'8c7161c7ec5e6767dd88035271e3df5b0f3c9a4a';
 
 abstract class _$DashboardWidgetPreferences
     extends $Notifier<List<DashboardSideWidget>> {

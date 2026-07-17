@@ -26,7 +26,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -70,6 +70,15 @@ class AppDatabase extends _$AppDatabase {
         await _createTableIfMissing(m, contactActivities);
         await _createTableIfMissing(m, deals);
         await _createTableIfMissing(m, syncQueue);
+      }
+      if (from < 8) {
+        await m.addColumn(salesLocal, salesLocal.businessId);
+        await m.addColumn(salesLineLocal, salesLineLocal.businessId);
+        await m.addColumn(heldBillsLocal, heldBillsLocal.businessId);
+        // Legacy rows were not business-scoped; drop them to prevent cross-tenant leakage.
+        await m.database.customStatement('DELETE FROM sales_line_local');
+        await m.database.customStatement('DELETE FROM sales_local');
+        await m.database.customStatement('DELETE FROM held_bills_local');
       }
     },
   );
