@@ -204,6 +204,9 @@ export function createPartyController() {
           userId,
           id,
         );
+        if (action === 'deleted') {
+          return reply.status(204).send();
+        }
         return sendData(reply, { action });
       } catch (error) {
         if (error instanceof ZodError) {
