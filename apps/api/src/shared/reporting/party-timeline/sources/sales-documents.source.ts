@@ -12,6 +12,7 @@ import {
   partyKindMatches,
   resolveInvoicePaymentStatus,
   resolveOverdueStatus,
+  resolveSalesDocumentLifecycleStatus,
 } from '../party-timeline.utils';
 import { resolveTimelineTypeLabel } from '../party-timeline-labels';
 
@@ -54,6 +55,7 @@ export const salesDocumentsTimelineSource: PartyTimelineSource = {
         documentType: salesDocuments.documentType,
         documentSeries: salesDocuments.documentSeries,
         documentNumber: salesDocuments.documentNumber,
+        documentStatus: salesDocuments.status,
         createdAt: salesDocuments.createdAt,
         documentDate: salesDocuments.documentDate,
         totalAmount: salesDocuments.totalAmount,
@@ -80,7 +82,12 @@ export const salesDocumentsTimelineSource: PartyTimelineSource = {
       const paymentStatus =
         isInvoice || isReturn ? resolveInvoicePaymentStatus(total, paid) : null;
 
-      let status: string | null = paymentStatus;
+      const lifecycleStatus = resolveSalesDocumentLifecycleStatus(
+        row.documentType,
+        row.documentStatus,
+      );
+
+      let status: string | null = lifecycleStatus ?? paymentStatus;
       if (isInvoice && paymentStatus === 'Unpaid') {
         const overdue = resolveOverdueStatus(null);
         if (overdue) {

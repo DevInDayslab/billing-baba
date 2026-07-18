@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/adjust_stock_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_header.dart';
@@ -26,7 +27,11 @@ class InventoryItemDetailPanel extends ConsumerWidget {
         .where((entry) => entry.id == itemId)
         .firstOrNull;
     final detailAsync = ref.watch(productDetailProvider(itemId));
-    final displayItem = listItem ?? detailAsync.value ?? fallbackItem;
+    final displayItem = InventoryStockCalculator.resolveDisplayItem(
+      listItem: listItem,
+      detailItem: detailAsync.value,
+      fallback: fallbackItem,
+    );
     final stockMetrics = ref.watch(itemStockMetricsProvider(itemId));
     final stockSummary = mode == InventoryDetailHeaderMode.product
         ? ref.watch(productStockSummaryProvider(itemId))

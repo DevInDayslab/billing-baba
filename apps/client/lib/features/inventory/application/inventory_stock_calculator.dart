@@ -24,6 +24,26 @@ abstract final class InventoryStockCalculator {
     );
   }
 
+  /// Merges list and detail snapshots so stock fields always come from the
+  /// master list while descriptive fields can come from detail.
+  static InventoryItem resolveDisplayItem({
+    required InventoryItem? listItem,
+    required InventoryItem? detailItem,
+    required InventoryItem fallback,
+  }) {
+    final metadata = detailItem ?? listItem ?? fallback;
+    final stockSource = listItem ?? detailItem ?? fallback;
+    if (identical(metadata, stockSource)) {
+      return metadata;
+    }
+    return metadata.copyWith(
+      quantity: stockSource.quantity,
+      stockValue: stockSource.stockValue,
+      availableForSale: stockSource.availableForSale,
+      reservedQuantity: stockSource.reservedQuantity,
+    );
+  }
+
   static Map<String, double> stockAfterByTransactionId(
     List<ProductTransaction> transactions,
   ) {

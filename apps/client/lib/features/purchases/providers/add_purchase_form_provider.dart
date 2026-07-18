@@ -436,7 +436,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
         isDirty: false,
       );
       ref.invalidate(purchaseBillsProvider);
-      _refreshAfterPurchaseMutation();
+      await _refreshAfterPurchaseMutation();
       return null;
     } catch (error) {
       final message = PurchaseErrorMapper.messageFor(error);
@@ -511,7 +511,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       }
 
       ref.invalidate(purchaseBillsProvider);
-      _refreshAfterPurchaseMutation();
+      await _refreshAfterPurchaseMutation();
       ref.invalidateSelf();
       return null;
     } catch (error) {
@@ -521,12 +521,12 @@ class AddPurchaseForm extends _$AddPurchaseForm {
     }
   }
 
-  void _refreshAfterPurchaseMutation() {
+  Future<void> _refreshAfterPurchaseMutation() async {
     final itemIds = state.items
         .map((line) => line.itemId)
         .whereType<String>()
         .where((id) => id.isNotEmpty);
-    refreshAfterPurchaseMutation(
+    await refreshAfterPurchaseMutation(
       ref,
       context: (
         partyId: state.partyId,

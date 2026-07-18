@@ -117,7 +117,16 @@ class _DeliveryChallanFormCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(deliveryChallanFormProvider.notifier);
-    return DeliveryChallanForm(onClose: notifier.closeForm);
+    final isSaving = ref.watch(
+      deliveryChallanFormProvider.select((form) => form.isSaving),
+    );
+
+    return Stack(
+      children: [
+        DeliveryChallanForm(onClose: notifier.closeForm),
+        if (isSaving) const _ChallanSaveLoadingOverlay(),
+      ],
+    );
   }
 }
 
@@ -338,7 +347,8 @@ class _DeliveryChallanBottomActionBar extends ConsumerWidget {
             onPressed: form.isSaving
                 ? null
                 : () async {
-                    final error = await notifier.save();
+                    if (form.isSaving) return;
+                    final error = await notifier.finalize();
                     if (!context.mounted) return;
                     if (error != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -416,7 +426,7 @@ class _DeliveryChallanBottomActionBar extends ConsumerWidget {
     final form = ref.read(deliveryChallanFormProvider);
     if (form.isSaving) return;
 
-    final error = await notifier.save();
+    final error = await notifier.finalize();
     if (!context.mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -561,6 +571,66 @@ class _PickerField extends StatelessWidget {
           Expanded(child: Text(value, style: saleFieldTextStyle)),
           Icon(icon, size: 15, color: AppColors.textSecondary),
         ],
+      ),
+    );
+  }
+}
+
+class _ChallanSaveLoadingOverlay extends StatelessWidget {
+  const _ChallanSaveLoadingOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: AbsorbPointer(
+        child: ColoredBox(
+          color: Colors.black26,
+          child: Center(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: AppRadius.mdBorder,
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x1A000000),
+                    blurRadius: 12,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'Saving delivery challan…',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Updating dashboard and party transactions',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -19,10 +19,120 @@ class InventoryException implements Exception {
 }
 
 abstract final class InventoryErrorMapper {
+  static const _itemFieldLabels = <String, String>{
+    'name': 'Item name',
+    'barcode': 'Barcode / item code',
+    'item_code': 'Item code',
+    'base_unit': 'Base unit',
+    'category_id': 'Category',
+    'brand_id': 'Brand',
+    'opening_quantity': 'Opening quantity',
+    'opening_cost_per_unit': 'Opening cost',
+    'opening_godown_id': 'Godown',
+    'sale_price': 'Sale price',
+    'purchase_price': 'Purchase price',
+    'hsn_code': 'HSN code',
+  };
+
+  /// User-facing copy for API field validation on item save forms.
+  static String validationMessage(ApiValidationException error) {
+    if (error.fieldErrors.isEmpty) {
+      return error.message.isNotEmpty
+          ? error.message
+          : 'Please fix the highlighted fields and try again.';
+    }
+
+    final messages = <String>[];
+    for (final field in _itemValidationFieldOrder) {
+      final detail = error.fieldErrors[field];
+      if (detail == null || detail.isEmpty) continue;
+      messages.add(_formatFieldMessage(field, detail));
+    }
+
+    for (final entry in error.fieldErrors.entries) {
+      if (_itemValidationFieldOrder.contains(entry.key)) continue;
+      if (entry.value.isEmpty) continue;
+      messages.add(_formatFieldMessage(entry.key, entry.value));
+    }
+
+    return messages.isEmpty ? error.message : messages.join('\n');
+  }
+
+  static const _itemValidationFieldOrder = [
+    'name',
+    'barcode',
+    'item_code',
+    'base_unit',
+    'category_id',
+    'brand_id',
+    'opening_quantity',
+    'opening_cost_per_unit',
+    'opening_godown_id',
+    'sale_price',
+    'purchase_price',
+    'hsn_code',
+  ];
+
+  static String _formatFieldMessage(String field, String detail) {
+    final label = _itemFieldLabels[field];
+    if (label == null) return detail;
+    if (detail.toLowerCase().contains(label.toLowerCase())) return detail;
+    return '$label: $detail';
+  }
+
+  /// Context-specific messages when saving an inventory item fails.
+  static String messageForSaveItem(Object error) {
+    if (error is ApiValidationException) {
+      return validationMessage(error);
+    }
+    if (error is InventoryException) return error.message;
+    if (error is InventoryOfflineException) {
+      return 'Unable to reach the server. Check your connection and try again.';
+    }
+    if (error is DioException) {
+      final validation = ApiErrorParser.parseValidation(error);
+      if (validation != null) return validationMessage(validation);
+
+      final code = ApiErrorParser.errorCode(error);
+      final apiMessage = ApiErrorParser.errorMessage(error);
+      switch (code) {
+        case 'VALIDATION_ERROR':
+          return apiMessage ??
+              'Some item fields are invalid. Please review and try again.';
+        case 'UNAUTHORIZED':
+        case 'FORBIDDEN':
+          return 'You do not have permission to add or edit items.';
+        case 'NOT_FOUND':
+          return 'A related inventory record was not found. Refresh the page and try again.';
+        case 'CONFLICT':
+          return apiMessage ?? 'This item conflicts with existing inventory data.';
+        case 'BUSINESS_NOT_SELECTED':
+          return 'No company is selected. Open a company and try again.';
+      }
+
+      if (isOfflineError(error)) {
+        return 'Unable to connect to the server. Check your network and try again.';
+      }
+
+      final statusCode = error.response?.statusCode;
+      if (statusCode == 500) {
+        return 'Server error while saving the item. Please try again.';
+      }
+      if (statusCode == 503) {
+        return 'Server is temporarily unavailable. Please try again shortly.';
+      }
+      if (apiMessage != null && apiMessage.isNotEmpty) {
+        return apiMessage;
+      }
+    }
+
+    return 'Could not save the item. Please try again.';
+  }
+
   static Never mapAndThrow(DioException error) {
     final validation = ApiErrorParser.parseValidation(error);
     if (validation != null) {
-      throw InventoryException(validation.message);
+      throw validation;
     }
 
     final code = ApiErrorParser.errorCode(error);
@@ -70,12 +180,15 @@ abstract final class InventoryErrorMapper {
     );
   }
 
+  static bool isOfflineError(DioException error) => _isOffline(error);
+
   static String messageFor(Object error) {
     if (error is InventoryException) return error.message;
     if (error is InventoryOfflineException) {
       return 'Network unavailable. Please check your connection.';
     }
-    if (error is ApiValidationException) return error.message;
+    if (error is ApiValidationException) return validationMessage(error);
+    if (error is DioException) return messageForSaveItem(error);
     return 'Unable to load inventory data. Please try again.';
   }
 

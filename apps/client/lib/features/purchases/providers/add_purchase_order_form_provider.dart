@@ -327,7 +327,7 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
       ref.invalidate(purchaseOrdersProvider);
       await ref.read(purchaseOrdersProvider.notifier).refresh();
       if (finalize) {
-        refreshAfterPurchaseMutation(ref);
+        await refreshAfterPurchaseMutation(ref);
       }
       ref
           .read(purchaseOrderSaveSuccessMessageProvider.notifier)

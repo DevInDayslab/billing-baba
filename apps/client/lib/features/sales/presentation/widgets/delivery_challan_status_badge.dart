@@ -13,24 +13,21 @@ class DeliveryChallanStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, backgroundColor, textColor) = switch (status) {
+    final label = status.lifecycleDisplayLabel;
+    final (backgroundColor, textColor) = switch (status) {
       SalesDocumentStatus.finalized => (
-        'Open',
         const Color(0xFFE3F2FD),
         const Color(0xFF1565C0),
       ),
       SalesDocumentStatus.converted => (
-        'Converted',
         const Color(0xFFE8F5E9),
         const Color(0xFF2E7D32),
       ),
       SalesDocumentStatus.cancelled => (
-        'Cancelled',
         const Color(0xFFF5F5F5),
         const Color(0xFF9E9E9E),
       ),
       SalesDocumentStatus.draft => (
-        'Draft',
         const Color(0xFFFFF3E0),
         const Color(0xFFE65100),
       ),

@@ -353,8 +353,17 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     return parts.isEmpty ? null : parts.join('\n\n');
   }
 
+  MutationRefreshContext _mutationContext() => (
+        partyId: state.partyId,
+        itemIds: state.items
+            .map((line) => line.itemId)
+            .whereType<String>()
+            .where((id) => id.isNotEmpty),
+      );
+
   Future<String?> save() async {
     if (!validate()) return 'Please fill required fields';
+    if (state.isSaving) return 'Save already in progress';
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
@@ -365,10 +374,12 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
       );
       ref.invalidate(salesDocumentsListProvider(deliveryChallanListScope()));
       ref.invalidate(deliveryChallansProvider);
-      state = state.copyWith(
-        documentId: document.id,
-        isSaving: false,
+      state = state.copyWith(documentId: document.id);
+      await refreshAfterSaleMutation(
+        ref,
+        context: _mutationContext(),
       );
+      state = state.copyWith(isSaving: false);
       return null;
     } catch (error) {
       final message = SalesErrorMapper.messageFor(error);
@@ -377,8 +388,10 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     }
   }
 
+  /// Saves and finalizes the challan, then refreshes dashboard and party timeline.
   Future<String?> finalize() async {
     if (!validate()) return 'Please fill required fields';
+    if (state.isSaving) return 'Save already in progress';
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
@@ -390,17 +403,11 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
       );
       ref.invalidate(salesDocumentsListProvider(deliveryChallanListScope()));
       ref.invalidate(deliveryChallansProvider);
-      refreshAfterSaleMutation(
+      await refreshAfterSaleMutation(
         ref,
-        context: (
-          partyId: state.partyId,
-          itemIds: state.items
-              .map((line) => line.itemId)
-              .whereType<String>()
-              .where((id) => id.isNotEmpty),
-        ),
+        context: _mutationContext(),
       );
-      resetForm();
+      state = state.copyWith(isSaving: false);
       return null;
     } catch (error) {
       final message = SalesErrorMapper.messageFor(error);

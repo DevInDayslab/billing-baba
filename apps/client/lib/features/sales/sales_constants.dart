@@ -72,6 +72,14 @@ enum SalesDocumentStatus {
 
   String get apiValue => name;
 
+  /// Display label for open sales documents (estimates, orders, challans).
+  String get lifecycleDisplayLabel => switch (this) {
+    SalesDocumentStatus.finalized => 'Open',
+    SalesDocumentStatus.converted => 'Converted',
+    SalesDocumentStatus.cancelled => 'Cancelled',
+    SalesDocumentStatus.draft => 'Draft',
+  };
+
   static SalesDocumentStatus? fromApiValue(String value) =>
       SalesDocumentStatus.values.cast<SalesDocumentStatus?>().firstWhere(
         (status) => status?.name == value,

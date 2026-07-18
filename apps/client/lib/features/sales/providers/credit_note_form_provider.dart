@@ -323,7 +323,7 @@ class CreditNoteForm extends _$CreditNoteForm {
         godownId: state.godownId,
       );
       ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
-      refreshAfterSaleReturn(
+      await refreshAfterSaleReturn(
         ref,
         context: (
           partyId: state.partyId,

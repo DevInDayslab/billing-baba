@@ -10,6 +10,7 @@ import 'package:billing_baba/features/pricing/providers/item_api_tier_prices_pro
 import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -112,15 +113,17 @@ class ItemNameAutocompleteFieldState
     final created = await showAddItemDialog(context);
     if (!mounted || created == null) return;
 
-    await ref.read(inventoryItemsProvider.notifier).refresh();
-    if (!mounted) return;
-
     await ref.read(localItemTierPricesProvider.notifier).ensureInitialized();
     if (!mounted) return;
 
+    final resolved =
+        ref.read(inventoryItemsProvider).value?.firstWhereOrNull(
+          (item) => item.id == created.id,
+        ) ??
+        created;
     final catalogItem = saleItemOptionFromInventory(
-      created,
-      tierPrices: ref.read(localItemTierPricesProvider)[created.id] ?? const {},
+      resolved,
+      tierPrices: ref.read(localItemTierPricesProvider)[resolved.id] ?? const {},
     );
     _controller.text = catalogItem.name;
     widget.onChanged(catalogItem.name);

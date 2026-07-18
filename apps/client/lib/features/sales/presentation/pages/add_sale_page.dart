@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/close_form_dialog.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
@@ -132,6 +133,36 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
     }
   }
 
+  bool get _isEditing => widget.invoiceId != null;
+
+  void _resetSaleFormState(String sessionKey) {
+    ref.invalidate(addSaleFormProvider(sessionKey: sessionKey));
+    ref.invalidate(addSaleSubtotalProvider(sessionKey: sessionKey));
+    ref.invalidate(addSaleTotalTaxProvider(sessionKey: sessionKey));
+    ref.invalidate(addSaleGrandTotalProvider(sessionKey: sessionKey));
+  }
+
+  Future<void> _handleClose() async {
+    if (!widget.readOnly) {
+      final confirmed = await showCloseFormDialog(
+        context,
+        title: 'Close Sale',
+      );
+      if (!confirmed || !mounted) return;
+    }
+    _resetSaleFormState(_sessionKey);
+    _navigateBackToSaleInvoices();
+  }
+
+  void _navigateBackToSaleInvoices() {
+    context.go(AppRoutes.saleInvoices);
+  }
+
+  void _navigateToSaleInvoices() {
+    _resetSaleFormState(_sessionKey);
+    _navigateBackToSaleInvoices();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_supportsTabs) {
@@ -175,108 +206,116 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
       );
     }
 
-    return ColoredBox(
-      color: AppColors.background,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.md,
-              AppSpacing.md,
-              0,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await _handleClose();
+      },
+      child: ColoredBox(
+        color: AppColors.background,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                0,
+              ),
+              child: SalePageTitleBar(
+                currentRoute: AppRoutes.saleInvoices,
+                onSettingsTap: () {},
+              ),
             ),
-            child: SalePageTitleBar(
-              currentRoute: AppRoutes.saleInvoices,
-              onSettingsTap: () {},
-            ),
-          ),
-          if (_supportsTabs) ...[
-            const SizedBox(height: AppSpacing.sm),
-            const SaleTabsBar(),
-          ],
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: AppRadius.lgBorder,
-                  border: Border.all(color: _cardBorder),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x0A000000),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        _sectionGap,
-                        _sectionGap,
-                        _sectionGap,
-                        0,
-                      ),
-                      child: _PageHeader(
-                        sessionKey: sessionKey,
-                        readOnly: widget.readOnly,
-                        isEditing: widget.invoiceId != null,
-                      ),
-                    ),
-                    const SizedBox(height: _sectionGap),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: _sectionGap,
-                      ),
-                      child: IgnorePointer(
-                        ignoring: widget.readOnly,
-                        child: Opacity(
-                          opacity: widget.readOnly ? 0.85 : 1,
-                          child: _FormFields(sessionKey: sessionKey),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: _sectionGap),
-                    IgnorePointer(
-                      ignoring: widget.readOnly,
-                      child: Opacity(
-                        opacity: widget.readOnly ? 0.85 : 1,
-                        child: SaleLineItemsTable(
-                          sessionKey: sessionKey,
-                          embedded: true,
-                        ),
-                      ),
-                    ),
-                    const Divider(height: 1, color: _cardBorder),
-                    Padding(
-                      padding: const EdgeInsets.all(_sectionGap),
-                      child: IgnorePointer(
-                        ignoring: widget.readOnly,
-                        child: Opacity(
-                          opacity: widget.readOnly ? 0.85 : 1,
-                          child: AddSaleFooter(sessionKey: sessionKey),
-                        ),
-                      ),
-                    ),
-                    if (!widget.readOnly) ...[
-                      const Divider(height: 1, color: _cardBorder),
-                      _BottomActionBar(
-                        sessionKey: sessionKey,
-                        isEditing: widget.invoiceId != null,
-                        supportsTabs: _supportsTabs,
+            if (_supportsTabs) ...[
+              const SizedBox(height: AppSpacing.sm),
+              const SaleTabsBar(),
+            ],
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.lgBorder,
+                    border: Border.all(color: _cardBorder),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0A000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
                       ),
                     ],
-                  ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          _sectionGap,
+                          _sectionGap,
+                          _sectionGap,
+                          0,
+                        ),
+                        child: _PageHeader(
+                          sessionKey: sessionKey,
+                          readOnly: widget.readOnly,
+                          isEditing: _isEditing,
+                          onClose: _handleClose,
+                        ),
+                      ),
+                      const SizedBox(height: _sectionGap),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: _sectionGap,
+                        ),
+                        child: IgnorePointer(
+                          ignoring: widget.readOnly,
+                          child: Opacity(
+                            opacity: widget.readOnly ? 0.85 : 1,
+                            child: _FormFields(sessionKey: sessionKey),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: _sectionGap),
+                      IgnorePointer(
+                        ignoring: widget.readOnly,
+                        child: Opacity(
+                          opacity: widget.readOnly ? 0.85 : 1,
+                          child: SaleLineItemsTable(
+                            sessionKey: sessionKey,
+                            embedded: true,
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1, color: _cardBorder),
+                      Padding(
+                        padding: const EdgeInsets.all(_sectionGap),
+                        child: IgnorePointer(
+                          ignoring: widget.readOnly,
+                          child: Opacity(
+                            opacity: widget.readOnly ? 0.85 : 1,
+                            child: AddSaleFooter(sessionKey: sessionKey),
+                          ),
+                        ),
+                      ),
+                      if (!widget.readOnly) ...[
+                        const Divider(height: 1, color: _cardBorder),
+                        _BottomActionBar(
+                          sessionKey: sessionKey,
+                          isEditing: _isEditing,
+                          onSaved: _navigateToSaleInvoices,
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -285,11 +324,13 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
 class _PageHeader extends ConsumerStatefulWidget {
   const _PageHeader({
     required this.sessionKey,
+    required this.onClose,
     this.readOnly = false,
     this.isEditing = false,
   });
 
   final String sessionKey;
+  final VoidCallback onClose;
   final bool readOnly;
   final bool isEditing;
 
@@ -409,12 +450,13 @@ class _PageHeaderState extends ConsumerState<_PageHeader> {
             onSelected: notifier.updateGodown,
           ),
         ],
-        if (widget.readOnly) ...[
-          OutlinedButton(
-            onPressed: () => context.pop(),
-            child: const Text('Back'),
-          ),
-        ],
+        IconButton(
+          onPressed: widget.onClose,
+          icon: const Icon(Icons.close, size: 20),
+          color: AppColors.textSecondary,
+          tooltip: 'Close',
+          visualDensity: VisualDensity.compact,
+        ),
       ],
     );
   }
@@ -662,13 +704,13 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
 class _BottomActionBar extends ConsumerWidget {
   const _BottomActionBar({
     required this.sessionKey,
+    required this.onSaved,
     this.isEditing = false,
-    this.supportsTabs = false,
   });
 
   final String sessionKey;
+  final VoidCallback onSaved;
   final bool isEditing;
-  final bool supportsTabs;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -799,7 +841,7 @@ class _BottomActionBar extends ConsumerWidget {
     final saved = ref.read(addSaleFormProvider(sessionKey: sessionKey));
     final docId = saved.documentId;
     if (docId == null) {
-      _afterSave(context, ref);
+      onSaved();
       return;
     }
     await SaleInvoicePrintActions.share(
@@ -808,7 +850,35 @@ class _BottomActionBar extends ConsumerWidget {
       docId,
       filename: _filename(saved),
     );
-    if (context.mounted) _afterSave(context, ref);
+    if (context.mounted) onSaved();
+  }
+
+  Future<void> _handleSave(
+    BuildContext context,
+    WidgetRef ref,
+    AddSaleForm notifier,
+  ) async {
+    final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
+    if (form.isSaving) return;
+
+    final result = await notifier.saveInvoice();
+    if (!context.mounted) return;
+
+    if (!result.isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.error!)),
+      );
+      return;
+    }
+
+    await _showSaveSuccessDialog(
+      context,
+      isEditing: isEditing,
+      earnedLoyaltyPoints: result.earnedLoyaltyPoints,
+      pointsAvailable: result.pointsAvailable,
+    );
+    if (!context.mounted) return;
+    onSaved();
   }
 
   Future<void> _showSaveSuccessDialog(
@@ -897,54 +967,6 @@ class _BottomActionBar extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _handleSave(
-    BuildContext context,
-    WidgetRef ref,
-    AddSaleForm notifier,
-  ) async {
-    final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
-    if (form.isSaving) return;
-
-    final result = await notifier.saveInvoice();
-    if (!context.mounted) return;
-
-    if (!result.isSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.error!)),
-      );
-      return;
-    }
-
-    await _showSaveSuccessDialog(
-      context,
-      isEditing: isEditing,
-      earnedLoyaltyPoints: result.earnedLoyaltyPoints,
-      pointsAvailable: result.pointsAvailable,
-    );
-    if (!context.mounted) return;
-    _afterSave(context, ref);
-  }
-
-  void _afterSave(BuildContext context, WidgetRef ref) {
-    if (supportsTabs) {
-      ref.invalidate(addSaleFormProvider(sessionKey: sessionKey));
-      ref.invalidate(addSaleSubtotalProvider(sessionKey: sessionKey));
-      ref.invalidate(addSaleTotalTaxProvider(sessionKey: sessionKey));
-      ref.invalidate(addSaleGrandTotalProvider(sessionKey: sessionKey));
-      final tabsState = ref.read(saleTabsProvider());
-      ref
-          .read(saleTabsProvider().notifier)
-          .updateTabLabel(
-            tabsState.activeIndex,
-            saleTabLabelForForm(
-              saleNumber: tabsState.activeTab.saleNumber,
-            ),
-          );
-      return;
-    }
-    context.pop();
   }
 }
 

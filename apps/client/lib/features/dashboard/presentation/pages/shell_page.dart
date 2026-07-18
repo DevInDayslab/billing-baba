@@ -637,7 +637,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     if (routePrefix == AppRoutes.sale) {
       if (subRoute == AppRoutes.saleInvoices &&
           (currentLocation == AppRoutes.addSale ||
-              currentLocation.startsWith('${AppRoutes.editSale}/'))) {
+              currentLocation.startsWith('${AppRoutes.editSale}/') ||
+              currentLocation.startsWith('${AppRoutes.viewSale}/'))) {
         return true;
       }
       if (subRoute == AppRoutes.saleReturnCreditNote &&

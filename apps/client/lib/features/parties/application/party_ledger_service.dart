@@ -28,34 +28,56 @@ Future<PartyLedgerService> partyLedgerService(Ref ref) async {
 
 @riverpod
 class PartyTimeline extends _$PartyTimeline {
+  var _refreshGeneration = 0;
+
   @override
   Future<PartyLedgerModel> build(String partyId) async {
+    ref.onDispose(() => _refreshGeneration++);
     final service = await ref.watch(partyLedgerServiceProvider.future);
     return service.fetchPartyLedger(partyId);
   }
 
   Future<void> refresh() async {
+    if (!ref.mounted) return;
+
+    final generation = ++_refreshGeneration;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final service = await ref.read(partyLedgerServiceProvider.future);
-      return service.fetchPartyLedger(partyId);
-    });
+
+    final service = await ref.read(partyLedgerServiceProvider.future);
+    if (!ref.mounted || generation != _refreshGeneration) return;
+
+    final next = await AsyncValue.guard(
+      () => service.fetchPartyLedger(partyId),
+    );
+    if (!ref.mounted || generation != _refreshGeneration) return;
+    state = next;
   }
 }
 
 @riverpod
 class PartyLedger extends _$PartyLedger {
+  var _refreshGeneration = 0;
+
   @override
   Future<PartyLedgerModel> build(String partyId) async {
+    ref.onDispose(() => _refreshGeneration++);
     final service = await ref.watch(partyLedgerServiceProvider.future);
     return service.fetchPartyLedger(partyId);
   }
 
   Future<void> refresh() async {
+    if (!ref.mounted) return;
+
+    final generation = ++_refreshGeneration;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final service = await ref.read(partyLedgerServiceProvider.future);
-      return service.fetchPartyLedger(partyId);
-    });
+
+    final service = await ref.read(partyLedgerServiceProvider.future);
+    if (!ref.mounted || generation != _refreshGeneration) return;
+
+    final next = await AsyncValue.guard(
+      () => service.fetchPartyLedger(partyId),
+    );
+    if (!ref.mounted || generation != _refreshGeneration) return;
+    state = next;
   }
 }

@@ -672,7 +672,7 @@ class InventoryService {
       return ItemMapper.fromDetailDto(dto);
     } on DioException catch (error) {
       final validation = ApiErrorParser.parseValidation(error);
-      if (validation != null) rethrow;
+      if (validation != null) throw validation;
       InventoryErrorMapper.mapAndThrow(error);
     }
   }
@@ -711,7 +711,7 @@ class InventoryService {
       return getItem(itemId);
     } on DioException catch (error) {
       final validation = ApiErrorParser.parseValidation(error);
-      if (validation != null) rethrow;
+      if (validation != null) throw validation;
       InventoryErrorMapper.mapAndThrow(error);
     }
   }

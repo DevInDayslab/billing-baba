@@ -405,6 +405,7 @@ describe.skipIf(!canRun)('Party ledger API integration', () => {
             type: string;
             source: string;
             source_type: string;
+            status: string | null;
             created_at: string;
           }[];
         };
@@ -417,6 +418,16 @@ describe.skipIf(!canRun)('Party ledger API integration', () => {
       expect(types).toContain('Sale Return / Credit Note');
       expect(types).toContain('Sale Invoice');
       expect(types).toContain('Payment In');
+
+      const deliveryChallan = ledger.data.transactions.find(
+        (row) => row.source_type === 'delivery_challan',
+      );
+      expect(deliveryChallan?.status).toBe('Open');
+
+      const estimate = ledger.data.transactions.find(
+        (row) => row.source_type === 'estimate',
+      );
+      expect(estimate?.status).toBe('Open');
 
       const createdAtValues = ledger.data.transactions.map((row) =>
         Date.parse(row.created_at),

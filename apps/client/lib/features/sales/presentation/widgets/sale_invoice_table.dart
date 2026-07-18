@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/core/widgets/resizable_data_table.dart';
@@ -12,6 +13,7 @@ import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dar
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
@@ -164,9 +166,13 @@ class _SaleInvoiceTransactionsTableState
           invoice: widget.items[i],
           isOdd: i.isOdd,
           isSelected: widget.items[i].id == selectedId,
-          onTap: () => ref
-              .read(selectedSaleInvoiceIdProvider.notifier)
-              .select(widget.items[i].id),
+          onTap: () {
+            final invoice = widget.items[i];
+            ref
+                .read(selectedSaleInvoiceIdProvider.notifier)
+                .select(invoice.id);
+            context.push('${AppRoutes.viewSale}/${invoice.id}');
+          },
         ),
     ];
 

@@ -344,7 +344,7 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
       );
       ref.invalidate(salesDocumentsListProvider(saleOrderListScope()));
       ref.invalidate(saleOrdersProvider);
-      refreshAfterSaleMutation(
+      await refreshAfterSaleMutation(
         ref,
         context: (
           partyId: state.partyId,

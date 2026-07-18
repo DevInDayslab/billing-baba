@@ -14,6 +14,12 @@ const REVENUE_SALES_TYPES = new Set([
 
 const PURCHASE_BILL_TYPES = new Set(['purchase_bill']);
 
+const LIFECYCLE_SALES_DOCUMENT_TYPES = new Set([
+  'estimate',
+  'sale_order',
+  'delivery_challan',
+]);
+
 export function resolvePartyKind(partyType: string): PartyKind {
   if (partyType === 'supplier') return 'supplier';
   if (partyType === 'both') return 'both';
@@ -90,6 +96,32 @@ export function resolveJobWorkStatusLabel(status: string): string {
 
 export function isReceivableSalesDocument(sourceType: string): boolean {
   return REVENUE_SALES_TYPES.has(sourceType);
+}
+
+export function isLifecycleSalesDocument(sourceType: string): boolean {
+  return LIFECYCLE_SALES_DOCUMENT_TYPES.has(sourceType);
+}
+
+export function resolveSalesDocumentLifecycleStatus(
+  documentType: string,
+  documentStatus: string,
+): string | null {
+  if (!isLifecycleSalesDocument(documentType)) {
+    return null;
+  }
+
+  switch (documentStatus) {
+    case 'finalized':
+      return 'Open';
+    case 'converted':
+      return 'Converted';
+    case 'cancelled':
+      return 'Cancelled';
+    case 'draft':
+      return 'Draft';
+    default:
+      return null;
+  }
 }
 
 export function isPayablePurchaseDocument(sourceType: string): boolean {

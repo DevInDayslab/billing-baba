@@ -299,7 +299,7 @@ class SalesDocumentsList extends _$SalesDocumentsList {
       await service.finalizeDraft(documentId, godownId: godownId);
       await refresh();
       _invalidateRelatedLists(ref);
-      refreshAfterSaleMutation(ref);
+      await refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
@@ -312,7 +312,7 @@ class SalesDocumentsList extends _$SalesDocumentsList {
       await service.cancelSale(documentId);
       await refresh();
       _invalidateRelatedLists(ref);
-      refreshAfterSaleMutation(ref);
+      await refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);

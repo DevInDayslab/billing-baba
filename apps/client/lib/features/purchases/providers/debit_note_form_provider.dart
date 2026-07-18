@@ -330,7 +330,7 @@ class DebitNoteForm extends _$DebitNoteForm {
       }
 
       ref.invalidate(purchaseReturnsProvider);
-      refreshAfterPurchaseReturn(
+      await refreshAfterPurchaseReturn(
         ref,
         context: (
           partyId: state.partyId,

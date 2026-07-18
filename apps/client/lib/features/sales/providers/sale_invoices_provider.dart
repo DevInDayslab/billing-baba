@@ -525,7 +525,7 @@ class SaleInvoices extends _$SaleInvoices {
     try {
       final service = await ref.read(salesServiceProvider.future);
       await service.deleteDraft(documentId);
-      refreshAfterSaleMutation(ref);
+      await refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
       state = previous;
@@ -537,7 +537,7 @@ class SaleInvoices extends _$SaleInvoices {
     try {
       final service = await ref.read(salesServiceProvider.future);
       await service.cancelSale(documentId);
-      refreshAfterSaleMutation(ref);
+      await refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
@@ -552,7 +552,7 @@ class SaleInvoices extends _$SaleInvoices {
       } else {
         await service.cancelSale(invoice.id);
       }
-      refreshAfterSaleMutation(ref);
+      await refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
@@ -567,7 +567,7 @@ class SaleInvoices extends _$SaleInvoices {
     try {
       final service = await ref.read(salesServiceProvider.future);
       await service.finalizeDraft(documentId);
-      refreshAfterSaleMutation(ref);
+      await refreshAfterSaleMutation(ref);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
