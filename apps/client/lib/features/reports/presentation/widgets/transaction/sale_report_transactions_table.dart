@@ -201,12 +201,26 @@ class _InvoiceDataRow extends StatelessWidget {
         ReportAlignedCell.fixed(
           _amountColWidth,
           alignment: Alignment.centerRight,
-          child: Text(formatReportCurrencyCompact(invoice.amount)),
+          child: Text(
+            formatReportCurrencyCompact(invoice.amount),
+            style: const TextStyle(
+              color: Color(0xFF2E7D32),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
         ReportAlignedCell.fixed(
           _balanceColWidth,
           alignment: Alignment.centerRight,
-          child: Text(formatReportCurrencyCompact(invoice.balance)),
+          child: Text(
+            formatReportCurrencyCompact(invoice.balance),
+            style: TextStyle(
+              color: invoice.balance > 0
+                  ? const Color(0xFFC62828)
+                  : null,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
         const ReportAlignedCell.fixed(_actionsColWidth, child: SizedBox()),
       ],

@@ -1,21 +1,36 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/filter_icon.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/expense_status_badge.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_shared_column_filters.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_transaction_table_layout.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/expense_list_panel_layout.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/expense_transaction_resizable_table.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
+import 'package:billing_baba/shared/widgets/table_filters/column_filter_trigger.dart';
+import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
+import 'package:billing_baba/shared/widgets/table_filters/filter_types.dart';
+import 'package:billing_baba/shared/widgets/table_filters/filter_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _addExpenseRed = Color(0xFFD32F2F);
+
+const _categoryNameFilterConfig = ColumnFilter(
+  id: 'expense_category_name',
+  title: 'Category',
+  type: FilterType.text,
+  hintText: 'Category name',
+);
+
+const _categoryAmountFilterConfig = ColumnFilter(
+  id: 'expense_category_amount',
+  title: 'Amount',
+  type: FilterType.number,
+);
 
 class ExpensesCategoryTabContent extends ConsumerWidget {
   const ExpensesCategoryTabContent({super.key});
@@ -25,8 +40,6 @@ class ExpensesCategoryTabContent extends ConsumerWidget {
     symbol: '₹',
     decimalDigits: 2,
   );
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -115,10 +128,7 @@ class _CategoryListPanel extends StatelessWidget {
             ],
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: _CategoryListHeader(),
-        ),
+        const _CategoryListHeader(),
         Expanded(
           child: categories.isEmpty
               ? const InventoryListEmptyState(message: 'No categories found')
@@ -128,6 +138,7 @@ class _CategoryListPanel extends StatelessWidget {
                     final category = categories[index];
                     final isSelected = category.id == selectedId;
                     return _CategoryListRow(
+                      index: index,
                       category: category,
                       isSelected: isSelected,
                       onTap: () => onCategorySelected(category.id),
@@ -140,40 +151,32 @@ class _CategoryListPanel extends StatelessWidget {
   }
 }
 
-class _CategoryListHeader extends StatelessWidget {
+class _CategoryListHeader extends ConsumerWidget {
   const _CategoryListHeader();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 10,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final nameFilter = ref.watch(expenseCategoryListNameFilterProvider);
+    final amountFilter = ref.watch(expenseCategoryListAmountFilterProvider);
+
+    return ExpenseListPanelHeader(
+      leftLabel: 'CATEGORY',
+      rightLabel: 'AMOUNT',
+      leftFilter: TableColumnFilterTrigger(
+        config: _categoryNameFilterConfig,
+        iconOnly: true,
+        initialValue: nameFilter,
+        onApply: (result) => ref
+            .read(expenseCategoryListNameFilterProvider.notifier)
+            .apply(FilterUtils.fromResult(result) as TextColumnFilter?),
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF5F5F5),
-        border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                const Text('CATEGORY', style: InventoryStyles.listHeaderStyle),
-                const SizedBox(width: 4),
-                AppFilterIcon(color: Colors.grey.shade500, size: 16),
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              const Text('AMOUNT', style: InventoryStyles.listHeaderStyle),
-              const SizedBox(width: 4),
-              AppFilterIcon(color: Colors.grey.shade500, size: 16),
-            ],
-          ),
-          const SizedBox(width: 28),
-        ],
+      rightFilter: TableColumnFilterTrigger(
+        config: _categoryAmountFilterConfig,
+        iconOnly: true,
+        initialValue: amountFilter,
+        onApply: (result) => ref
+            .read(expenseCategoryListAmountFilterProvider.notifier)
+            .apply(FilterUtils.fromResult(result) as AmountColumnFilter?),
       ),
     );
   }
@@ -181,11 +184,13 @@ class _CategoryListHeader extends StatelessWidget {
 
 class _CategoryListRow extends StatelessWidget {
   const _CategoryListRow({
+    required this.index,
     required this.category,
     required this.isSelected,
     required this.onTap,
   });
 
+  final int index;
   final ExpenseCategoryModel category;
   final bool isSelected;
   final VoidCallback onTap;
@@ -197,42 +202,12 @@ class _CategoryListRow extends StatelessWidget {
         ? category.totalAmount.toInt().toString()
         : category.totalAmount.toStringAsFixed(2);
 
-    return Material(
-      color: isSelected ? inventorySelectedRowColor : Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: 12,
-          ),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  category.name,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              Text(
-                amountText,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const InventoryListRowMenu(),
-            ],
-          ),
-        ),
-      ),
+    return ExpenseListPanelRow(
+      index: index,
+      primaryText: category.name,
+      amountText: amountText,
+      isSelected: isSelected,
+      onTap: onTap,
     );
   }
 }
@@ -338,447 +313,11 @@ class _CategoryDetailPanel extends ConsumerWidget {
                 ? const InventoryListEmptyState(
                     message: 'No transactions in this category',
                   )
-                : ExpenseTransactionTableViewport(
-                    minWidth:
-                        category.variant ==
-                            ExpenseCategoryVariant.loyaltyRedeemed
-                        ? expenseTransactionLoyaltyMinTableWidth
-                        : expenseTransactionStandardMinTableWidth,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (category.variant ==
-                            ExpenseCategoryVariant.loyaltyRedeemed)
-                          const ExpenseLoyaltyTransactionFilterHeader()
-                        else
-                          const ExpenseStandardTransactionFilterHeader(),
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: transactions.length,
-                            itemBuilder: (context, index) {
-                              final transaction = transactions[index];
-                              return category.variant ==
-                                      ExpenseCategoryVariant.loyaltyRedeemed
-                                  ? _LoyaltyTransactionRow(
-                                      transaction: transaction,
-                                    )
-                                  : _StandardTransactionRow(
-                                      transaction: transaction,
-                                    );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
+                : ExpenseResizableTable(
+                    transactions: transactions,
+                    isLoyalty: category.variant ==
+                        ExpenseCategoryVariant.loyaltyRedeemed,
                   ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _LoyaltyTransactionRow extends StatelessWidget {
-  const _LoyaltyTransactionRow({required this.transaction});
-
-  final ExpenseTransactionModel transaction;
-
-  @override
-  Widget build(BuildContext context) {
-    return PurchaseTransactionTableDataRow(
-      onTap: () => context.push(
-        '${AppRoutes.editExpense}/${transaction.id}',
-      ),
-      children: [
-        PurchaseTransactionTableCell(
-          width: expenseTransactionDateColWidth,
-          child: Text(
-            ExpensesCategoryTabContent._dateFormat.format(transaction.date),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionInvoiceColWidth,
-          child: Text(
-            transaction.transactionNo,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        Expanded(
-          flex: expenseTransactionPartyColFlex,
-          child: PurchaseTransactionTableCell(
-            child: Text(
-              transaction.party,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionAmountColWidth,
-          child: Text(
-            '${transaction.loyaltyPoints}',
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionAmountColWidth,
-          showDivider: false,
-          child: Text(
-            '${transaction.loyaltyValue?.toInt()}',
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StandardTransactionRow extends StatelessWidget {
-  const _StandardTransactionRow({required this.transaction});
-
-  final ExpenseTransactionModel transaction;
-
-  @override
-  Widget build(BuildContext context) {
-    return PurchaseTransactionTableDataRow(
-      onTap: () => context.push(
-        '${AppRoutes.editExpense}/${transaction.id}',
-      ),
-      children: [
-        PurchaseTransactionTableCell(
-          width: expenseTransactionDateColWidth,
-          child: Text(
-            ExpensesCategoryTabContent._dateFormat.format(transaction.date),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionInvoiceColWidth,
-          child: Text(
-            transaction.transactionNo,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        Expanded(
-          flex: expenseTransactionPartyColFlex,
-          child: PurchaseTransactionTableCell(
-            child: Text(
-              transaction.party,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionPaymentColWidth,
-          child: Text(
-            transaction.paymentType ?? '',
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionAmountColWidth,
-          alignment: Alignment.centerRight,
-          child: Text(
-            '${transaction.amount?.toInt()}',
-            style: purchaseTransactionAmountTextStyle,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionBalanceColWidth,
-          alignment: Alignment.centerRight,
-          child: Text(
-            '${transaction.balance?.toInt()}',
-            style: purchaseTransactionAmountTextStyle,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionDueDateColWidth,
-          child: Text(
-            transaction.dueDate != null
-                ? ExpensesCategoryTabContent._dateFormat.format(
-                    transaction.dueDate!,
-                  )
-                : '',
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionStatusColWidth,
-          showDivider: false,
-          child: transaction.status != null
-              ? ExpenseStatusBadge(status: transaction.status!)
-              : const SizedBox.shrink(),
-        ),
-      ],
-    );
-  }
-}
-
-PurchaseColumnFilterActions _expenseTransactionFilterActions(
-  ExpenseFilters notifier,
-) {
-  return PurchaseColumnFilterActions(
-    onDateRange: notifier.setColumnDateRange,
-    onDueDateRange: notifier.setDueDateRange,
-    onClearDateRange: notifier.clearColumnDateRange,
-    onClearDueDateRange: notifier.clearDueDateRange,
-    onDocumentNo: notifier.setDocumentNo,
-    onParty: notifier.setParty,
-    onTogglePaymentType: notifier.togglePaymentType,
-    onClearPaymentTypes: notifier.clearPaymentTypes,
-    onApplyAmountFilter: notifier.applyAmountFilter,
-    onClearAmountFilter: notifier.clearAmountFilter,
-    onApplyBalanceFilter: notifier.applyBalanceFilter,
-    onClearBalanceFilter: notifier.clearBalanceFilter,
-    onStatus: notifier.setStatus,
-  );
-}
-
-class ExpenseStandardTransactionFilterHeader extends ConsumerWidget {
-  const ExpenseStandardTransactionFilterHeader({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final filters = ref.watch(expenseFiltersProvider);
-    final columns = filters.columnFilters;
-    final notifier = ref.read(expenseFiltersProvider.notifier);
-    final partyOptions = ref.watch(expenseTransactionPartyOptionsProvider);
-    final actions = _expenseTransactionFilterActions(notifier);
-
-    return PurchaseTransactionTableHeaderRow(
-      children: [
-        PurchaseTransactionTableCell(
-          width: expenseTransactionDateColWidth,
-          child: purchaseColumnFilterCell(
-            label: 'DATE',
-            kind: PurchaseColumnFilterKind.date,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.date,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: expenseTransactionStatusOptions,
-            selectedStatus: filters.selectedStatus,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionInvoiceColWidth,
-          child: purchaseColumnFilterCell(
-            label: 'EXP NO.',
-            kind: PurchaseColumnFilterKind.documentNo,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.documentNo,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: expenseTransactionStatusOptions,
-            selectedStatus: filters.selectedStatus,
-            documentNoHint: 'Search exp no',
-          ),
-        ),
-        Expanded(
-          flex: expenseTransactionPartyColFlex,
-          child: PurchaseTransactionTableCell(
-            child: purchaseColumnFilterCell(
-              label: 'PARTY',
-              kind: PurchaseColumnFilterKind.partyName,
-              headerStyle: purchaseTransactionTableHeaderStyle,
-              isActive: purchaseColumnFilterIsActive(
-                PurchaseColumnFilterKind.partyName,
-                columns,
-              ),
-              columns: columns,
-              actions: actions,
-              partyOptions: partyOptions,
-              statusOptions: expenseTransactionStatusOptions,
-              selectedStatus: filters.selectedStatus,
-            ),
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionPaymentColWidth,
-          child: purchaseColumnFilterCell(
-            label: 'PAYMENT TYPE',
-            kind: PurchaseColumnFilterKind.paymentType,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.paymentType,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: expenseTransactionStatusOptions,
-            selectedStatus: filters.selectedStatus,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionAmountColWidth,
-          alignment: Alignment.centerRight,
-          child: purchaseColumnFilterCell(
-            label: 'AMOUNT',
-            kind: PurchaseColumnFilterKind.amount,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.amount,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: expenseTransactionStatusOptions,
-            selectedStatus: filters.selectedStatus,
-            alignment: Alignment.centerRight,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionBalanceColWidth,
-          alignment: Alignment.centerRight,
-          child: purchaseColumnFilterCell(
-            label: 'BALANCE',
-            kind: PurchaseColumnFilterKind.balanceDue,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.balanceDue,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: expenseTransactionStatusOptions,
-            selectedStatus: filters.selectedStatus,
-            alignment: Alignment.centerRight,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionDueDateColWidth,
-          child: purchaseColumnFilterCell(
-            label: 'DUE DATE',
-            kind: PurchaseColumnFilterKind.dueDate,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.dueDate,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: expenseTransactionStatusOptions,
-            selectedStatus: filters.selectedStatus,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionStatusColWidth,
-          showDivider: false,
-          child: purchaseColumnFilterCell(
-            label: 'STATUS',
-            kind: PurchaseColumnFilterKind.status,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnStatusFilterIsActive(
-              filters.selectedStatus,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: expenseTransactionStatusOptions,
-            selectedStatus: filters.selectedStatus,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class ExpenseLoyaltyTransactionFilterHeader extends ConsumerWidget {
-  const ExpenseLoyaltyTransactionFilterHeader({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final filters = ref.watch(expenseFiltersProvider);
-    final columns = filters.columnFilters;
-    final notifier = ref.read(expenseFiltersProvider.notifier);
-    final partyOptions = ref.watch(expenseTransactionPartyOptionsProvider);
-    final actions = _expenseTransactionFilterActions(notifier);
-
-    return PurchaseTransactionTableHeaderRow(
-      children: [
-        PurchaseTransactionTableCell(
-          width: expenseTransactionDateColWidth,
-          child: purchaseColumnFilterCell(
-            label: 'DATE',
-            kind: PurchaseColumnFilterKind.date,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.date,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: expenseTransactionStatusOptions,
-            selectedStatus: filters.selectedStatus,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionInvoiceColWidth,
-          child: purchaseColumnFilterCell(
-            label: 'TRANSACTION NO.',
-            kind: PurchaseColumnFilterKind.documentNo,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.documentNo,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: expenseTransactionStatusOptions,
-            selectedStatus: filters.selectedStatus,
-            documentNoHint: 'Search transaction no',
-          ),
-        ),
-        Expanded(
-          flex: expenseTransactionPartyColFlex,
-          child: PurchaseTransactionTableCell(
-            child: purchaseColumnFilterCell(
-              label: 'PARTY',
-              kind: PurchaseColumnFilterKind.partyName,
-              headerStyle: purchaseTransactionTableHeaderStyle,
-              isActive: purchaseColumnFilterIsActive(
-                PurchaseColumnFilterKind.partyName,
-                columns,
-              ),
-              columns: columns,
-              actions: actions,
-              partyOptions: partyOptions,
-              statusOptions: expenseTransactionStatusOptions,
-              selectedStatus: filters.selectedStatus,
-            ),
-          ),
-        ),
-        const PurchaseTransactionTableCell(
-          width: expenseTransactionAmountColWidth,
-          child: Text(
-            'LOYALTY REDEEMED IN POINTS',
-            style: purchaseTransactionTableHeaderStyle,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const PurchaseTransactionTableCell(
-          width: expenseTransactionAmountColWidth,
-          showDivider: false,
-          child: Text(
-            'LOYALTY VALUE REDEEMED',
-            style: purchaseTransactionTableHeaderStyle,
-            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

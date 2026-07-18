@@ -10,6 +10,7 @@ import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dar
 import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_return_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -43,21 +44,43 @@ class SalesDocumentFiltersState {
   const SalesDocumentFiltersState({
     this.timeRangeOption = TimeRangeOption.allTime,
     this.customDateRange,
+    this.dateColumnFilter,
+    this.documentNoColumnFilter,
+    this.partyNameColumnFilter,
+    this.amountColumnFilter,
     this.selectedStatus = 'All Status',
     this.currentPage = 1,
   });
 
   final TimeRangeOption timeRangeOption;
   final DateTimeRange? customDateRange;
+  final DateColumnFilter? dateColumnFilter;
+  final TextColumnFilter? documentNoColumnFilter;
+  final TextColumnFilter? partyNameColumnFilter;
+  final AmountColumnFilter? amountColumnFilter;
   final String selectedStatus;
   final int currentPage;
 
   String get timeRangeLabel => timeRangeOption.label;
 
+  bool get hasColumnFilters =>
+      FilterUtils.isFilterActive(FilterType.date, dateColumnFilter) ||
+      FilterUtils.isFilterActive(FilterType.text, documentNoColumnFilter) ||
+      FilterUtils.isFilterActive(FilterType.text, partyNameColumnFilter) ||
+      FilterUtils.isFilterActive(FilterType.number, amountColumnFilter);
+
   SalesDocumentFiltersState copyWith({
     TimeRangeOption? timeRangeOption,
     DateTimeRange? customDateRange,
     bool clearCustomDateRange = false,
+    DateColumnFilter? dateColumnFilter,
+    bool clearDateColumnFilter = false,
+    TextColumnFilter? documentNoColumnFilter,
+    bool clearDocumentNoColumnFilter = false,
+    TextColumnFilter? partyNameColumnFilter,
+    bool clearPartyNameColumnFilter = false,
+    AmountColumnFilter? amountColumnFilter,
+    bool clearAmountColumnFilter = false,
     String? selectedStatus,
     int? currentPage,
   }) {
@@ -66,6 +89,18 @@ class SalesDocumentFiltersState {
       customDateRange: clearCustomDateRange
           ? null
           : (customDateRange ?? this.customDateRange),
+      dateColumnFilter: clearDateColumnFilter
+          ? null
+          : (dateColumnFilter ?? this.dateColumnFilter),
+      documentNoColumnFilter: clearDocumentNoColumnFilter
+          ? null
+          : (documentNoColumnFilter ?? this.documentNoColumnFilter),
+      partyNameColumnFilter: clearPartyNameColumnFilter
+          ? null
+          : (partyNameColumnFilter ?? this.partyNameColumnFilter),
+      amountColumnFilter: clearAmountColumnFilter
+          ? null
+          : (amountColumnFilter ?? this.amountColumnFilter),
       selectedStatus: selectedStatus ?? this.selectedStatus,
       currentPage: currentPage ?? this.currentPage,
     );
@@ -199,6 +234,38 @@ class SalesDocumentFilters extends _$SalesDocumentFilters {
 
   void setStatus(String status) {
     state = state.copyWith(selectedStatus: status, currentPage: 1);
+  }
+
+  void setDateColumnFilter(DateColumnFilter? filter) {
+    state = state.copyWith(
+      dateColumnFilter: filter,
+      clearDateColumnFilter: filter == null,
+      currentPage: 1,
+    );
+  }
+
+  void setDocumentNoColumnFilter(TextColumnFilter? filter) {
+    state = state.copyWith(
+      documentNoColumnFilter: filter,
+      clearDocumentNoColumnFilter: filter == null,
+      currentPage: 1,
+    );
+  }
+
+  void setPartyNameColumnFilter(TextColumnFilter? filter) {
+    state = state.copyWith(
+      partyNameColumnFilter: filter,
+      clearPartyNameColumnFilter: filter == null,
+      currentPage: 1,
+    );
+  }
+
+  void setAmountColumnFilter(AmountColumnFilter? filter) {
+    state = state.copyWith(
+      amountColumnFilter: filter,
+      clearAmountColumnFilter: filter == null,
+      currentPage: 1,
+    );
   }
 
   void setPage(int page) {
@@ -358,15 +425,34 @@ void _invalidateRelatedLists(
   }
 }
 
-List<SaleInvoiceModel> _filterSalesDocumentsByStatus(
+List<SaleInvoiceModel> _applySalesDocumentClientFilters(
   List<SaleInvoiceModel> items,
   SalesDocumentFiltersState filters,
 ) {
   final status = _documentStatusFromFilterLabel(filters.selectedStatus);
-  if (status == null) return items;
-  return items
-      .where((item) => item.documentStatus.apiValue == status)
-      .toList();
+
+  return items.where((item) {
+    if (status != null && item.documentStatus.apiValue != status) {
+      return false;
+    }
+    if (filters.dateColumnFilter != null &&
+        !filters.dateColumnFilter!.matches(item.date)) {
+      return false;
+    }
+    if (filters.documentNoColumnFilter != null &&
+        !filters.documentNoColumnFilter!.matches(item.invoiceNo)) {
+      return false;
+    }
+    if (filters.partyNameColumnFilter != null &&
+        !filters.partyNameColumnFilter!.matches(item.partyName)) {
+      return false;
+    }
+    if (filters.amountColumnFilter != null &&
+        !filters.amountColumnFilter!.matches(item.amount)) {
+      return false;
+    }
+    return true;
+  }).toList();
 }
 
 @riverpod
@@ -377,7 +463,7 @@ List<SaleInvoiceModel> filteredSalesDocuments(
   final allItems =
       ref.watch(salesDocumentsListProvider(scope)).value?.items ?? [];
   final filters = ref.watch(salesDocumentFiltersProvider(scope));
-  return _filterSalesDocumentsByStatus(allItems, filters);
+  return _applySalesDocumentClientFilters(allItems, filters);
 }
 
 @riverpod

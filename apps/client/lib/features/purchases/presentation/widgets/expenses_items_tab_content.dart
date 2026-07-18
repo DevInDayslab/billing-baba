@@ -1,21 +1,35 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/filter_icon.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/purchases/models/expense_model.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/expense_status_badge.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/expenses_category_tab_content.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_transaction_table_layout.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/expense_list_panel_layout.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/expense_transaction_resizable_table.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
+import 'package:billing_baba/shared/widgets/table_filters/column_filter_trigger.dart';
+import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
+import 'package:billing_baba/shared/widgets/table_filters/filter_types.dart';
+import 'package:billing_baba/shared/widgets/table_filters/filter_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _addExpenseRed = Color(0xFFD32F2F);
+
+const _itemNameFilterConfig = ColumnFilter(
+  id: 'expense_item_name',
+  title: 'Item',
+  type: FilterType.text,
+  hintText: 'Item name',
+);
+
+const _itemAmountFilterConfig = ColumnFilter(
+  id: 'expense_item_amount',
+  title: 'Amount',
+  type: FilterType.number,
+);
 
 class ExpensesItemsTabContent extends ConsumerWidget {
   const ExpensesItemsTabContent({super.key});
@@ -25,8 +39,6 @@ class ExpensesItemsTabContent extends ConsumerWidget {
     symbol: '₹',
     decimalDigits: 2,
   );
-
-  static final _dateTimeFormat = DateFormat('dd/MM/yyyy, HH:mm');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -116,10 +128,7 @@ class _ItemListPanel extends StatelessWidget {
             ],
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: _ItemListHeader(),
-        ),
+        const _ItemListHeader(),
         Expanded(
           child: items.isEmpty
               ? const InventoryListEmptyState(message: 'No items found')
@@ -129,6 +138,7 @@ class _ItemListPanel extends StatelessWidget {
                     final item = items[index];
                     final isSelected = item.id == selectedId;
                     return _ItemListRow(
+                      index: index,
                       item: item,
                       isSelected: isSelected,
                       onTap: () => onItemSelected(item.id),
@@ -141,40 +151,32 @@ class _ItemListPanel extends StatelessWidget {
   }
 }
 
-class _ItemListHeader extends StatelessWidget {
+class _ItemListHeader extends ConsumerWidget {
   const _ItemListHeader();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 10,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final nameFilter = ref.watch(expenseItemListNameFilterProvider);
+    final amountFilter = ref.watch(expenseItemListAmountFilterProvider);
+
+    return ExpenseListPanelHeader(
+      leftLabel: 'ITEM',
+      rightLabel: 'AMOUNT',
+      leftFilter: TableColumnFilterTrigger(
+        config: _itemNameFilterConfig,
+        iconOnly: true,
+        initialValue: nameFilter,
+        onApply: (result) => ref
+            .read(expenseItemListNameFilterProvider.notifier)
+            .apply(FilterUtils.fromResult(result) as TextColumnFilter?),
       ),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF5F5F5),
-        border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                const Text('ITEM', style: InventoryStyles.listHeaderStyle),
-                const SizedBox(width: 4),
-                AppFilterIcon(color: Colors.grey.shade500, size: 16),
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              const Text('AMOUNT', style: InventoryStyles.listHeaderStyle),
-              const SizedBox(width: 4),
-              AppFilterIcon(color: Colors.grey.shade500, size: 16),
-            ],
-          ),
-          const SizedBox(width: 28),
-        ],
+      rightFilter: TableColumnFilterTrigger(
+        config: _itemAmountFilterConfig,
+        iconOnly: true,
+        initialValue: amountFilter,
+        onApply: (result) => ref
+            .read(expenseItemListAmountFilterProvider.notifier)
+            .apply(FilterUtils.fromResult(result) as AmountColumnFilter?),
       ),
     );
   }
@@ -182,53 +184,25 @@ class _ItemListHeader extends StatelessWidget {
 
 class _ItemListRow extends StatelessWidget {
   const _ItemListRow({
+    required this.index,
     required this.item,
     required this.isSelected,
     required this.onTap,
   });
 
+  final int index;
   final ExpenseItemModel item;
   final bool isSelected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: isSelected ? inventorySelectedRowColor : Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: 12,
-          ),
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: inventoryCardBorder)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  item.name,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              Text(
-                ExpensesItemsTabContent._currencyFormat.format(item.amount),
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const InventoryListRowMenu(),
-            ],
-          ),
-        ),
-      ),
+    return ExpenseListPanelRow(
+      index: index,
+      primaryText: item.name,
+      amountText: ExpensesItemsTabContent._currencyFormat.format(item.amount),
+      isSelected: isSelected,
+      onTap: onTap,
     );
   }
 }
@@ -284,108 +258,11 @@ class _ItemDetailPanel extends ConsumerWidget {
                 ? const InventoryListEmptyState(
                     message: 'No transactions for this item',
                   )
-                : ExpenseTransactionTableViewport(
-                    minWidth: expenseTransactionStandardMinTableWidth,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const ExpenseStandardTransactionFilterHeader(),
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: transactions.length,
-                            itemBuilder: (context, index) =>
-                                _ItemTransactionRow(
-                                  transaction: transactions[index],
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
+                : ExpenseResizableTable(
+                    transactions: transactions,
+                    isLoyalty: false,
                   ),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ItemTransactionRow extends StatelessWidget {
-  const _ItemTransactionRow({required this.transaction});
-
-  final ExpenseTransactionModel transaction;
-
-  @override
-  Widget build(BuildContext context) {
-    return PurchaseTransactionTableDataRow(
-      onTap: () => context.push(
-        '${AppRoutes.editExpense}/${transaction.id}',
-      ),
-      children: [
-        PurchaseTransactionTableCell(
-          width: expenseTransactionDateColWidth,
-          child: Text(
-            ExpensesItemsTabContent._dateTimeFormat.format(transaction.date),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionInvoiceColWidth,
-          child: Text(
-            transaction.transactionNo,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        Expanded(
-          flex: expenseTransactionPartyColFlex,
-          child: PurchaseTransactionTableCell(
-            child: Text(
-              transaction.party,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionPaymentColWidth,
-          child: Text(
-            transaction.paymentType ?? '',
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionAmountColWidth,
-          alignment: Alignment.centerRight,
-          child: Text(
-            transaction.amount != null ? '${transaction.amount!.toInt()}' : '',
-            style: purchaseTransactionAmountTextStyle,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionBalanceColWidth,
-          alignment: Alignment.centerRight,
-          child: Text(
-            transaction.balance != null
-                ? '${transaction.balance!.toInt()}'
-                : '',
-            style: purchaseTransactionAmountTextStyle,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionDueDateColWidth,
-          child: Text(
-            transaction.dueDate != null
-                ? DateFormat('dd/MM/yyyy').format(transaction.dueDate!)
-                : '',
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: expenseTransactionStatusColWidth,
-          showDivider: false,
-          child: transaction.status != null
-              ? ExpenseStatusBadge(status: transaction.status!)
-              : const SizedBox.shrink(),
         ),
       ],
     );

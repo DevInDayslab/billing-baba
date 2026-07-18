@@ -57,6 +57,13 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
       _removeOverlay();
     } else {
       _searchQuery = '';
+      // Kick off data fetch before showing overlay so data is ready
+      // (or already cached) by the time the user sees the list.
+      final partiesAsync = ref.read(partyPickerListProvider);
+      if (!partiesAsync.hasValue || (partiesAsync.value?.isEmpty ?? true)) {
+        // Not cached yet — reading the provider triggers the FutureProvider fetch.
+        ref.read(partyPickerListProvider.future).ignore();
+      }
       _showOverlay();
     }
   }
@@ -86,19 +93,25 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
   }
 
   bool _partyMatchesQuery(PartyModel party, String query) {
-    bool contains(String? value) {
-      final normalized = value?.trim().toLowerCase();
-      return normalized != null &&
-          normalized.isNotEmpty &&
-          normalized.contains(query);
-    }
+    // Split query into words so "Delhi ABC" matches "ABC Traders Delhi"
+    final queryWords = query
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .toList();
 
-    if (party.name.toLowerCase().contains(query)) return true;
-    if (contains(party.additionalField1)) return true;
-    if (contains(party.phone)) return true;
-    if (contains(party.gstin)) return true;
-    if (contains(party.email)) return true;
-    return false;
+    if (queryWords.isEmpty) return true;
+
+    // Combine all searchable fields into one string
+    final searchableText = [
+      party.name,
+      party.additionalField1,
+      party.phone,
+      party.gstin,
+      party.email,
+    ].join(' ').toLowerCase();
+
+    // Every query word must be found somewhere in the combined text
+    return queryWords.every((word) => searchableText.contains(word));
   }
 
   Future<void> _openAddPartyDialog() async {

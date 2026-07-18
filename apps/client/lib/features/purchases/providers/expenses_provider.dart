@@ -6,6 +6,7 @@ import 'package:billing_baba/features/purchases/models/mappers/expense_mapper.da
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
+import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -538,6 +539,54 @@ class ExpenseFilters extends _$ExpenseFilters {
   }
 }
 
+final expenseCategoryListNameFilterProvider =
+    NotifierProvider<ExpenseCategoryListNameFilter, TextColumnFilter?>(
+      ExpenseCategoryListNameFilter.new,
+    );
+
+final expenseCategoryListAmountFilterProvider =
+    NotifierProvider<ExpenseCategoryListAmountFilter, AmountColumnFilter?>(
+      ExpenseCategoryListAmountFilter.new,
+    );
+
+final expenseItemListNameFilterProvider =
+    NotifierProvider<ExpenseItemListNameFilter, TextColumnFilter?>(
+      ExpenseItemListNameFilter.new,
+    );
+
+final expenseItemListAmountFilterProvider =
+    NotifierProvider<ExpenseItemListAmountFilter, AmountColumnFilter?>(
+      ExpenseItemListAmountFilter.new,
+    );
+
+class ExpenseCategoryListNameFilter extends Notifier<TextColumnFilter?> {
+  @override
+  TextColumnFilter? build() => null;
+
+  void apply(TextColumnFilter? filter) => state = filter;
+}
+
+class ExpenseCategoryListAmountFilter extends Notifier<AmountColumnFilter?> {
+  @override
+  AmountColumnFilter? build() => null;
+
+  void apply(AmountColumnFilter? filter) => state = filter;
+}
+
+class ExpenseItemListNameFilter extends Notifier<TextColumnFilter?> {
+  @override
+  TextColumnFilter? build() => null;
+
+  void apply(TextColumnFilter? filter) => state = filter;
+}
+
+class ExpenseItemListAmountFilter extends Notifier<AmountColumnFilter?> {
+  @override
+  AmountColumnFilter? build() => null;
+
+  void apply(AmountColumnFilter? filter) => state = filter;
+}
+
 @riverpod
 List<ExpenseCategoryModel> filteredExpenseCategories(Ref ref) {
   final categoriesAsync = ref.watch(expenseCategoriesProvider);
@@ -549,9 +598,25 @@ List<ExpenseCategoryModel> filteredExpenseCategories(Ref ref) {
       .watch(expenseCategorySearchQueryProvider)
       .trim()
       .toLowerCase();
+  final nameFilter = ref.watch(expenseCategoryListNameFilterProvider);
+  final amountFilter = ref.watch(expenseCategoryListAmountFilterProvider);
 
-  if (query.isEmpty) return categories;
-  return categories.where((c) => c.name.toLowerCase().contains(query)).toList();
+  return categories.where((category) {
+    if (query.isNotEmpty && !category.name.toLowerCase().contains(query)) {
+      return false;
+    }
+    if (nameFilter != null &&
+        nameFilter.isActive &&
+        !nameFilter.matches(category.name)) {
+      return false;
+    }
+    if (amountFilter != null &&
+        amountFilter.isActive &&
+        !amountFilter.matches(category.totalAmount)) {
+      return false;
+    }
+    return true;
+  }).toList();
 }
 
 @riverpod
@@ -575,11 +640,27 @@ List<ExpenseTransactionModel> categoryExpenseTransactions(
 List<ExpenseItemModel> filteredExpenseItems(Ref ref) {
   final items = ref.watch(expenseItemsProvider);
   final query = ref.watch(expenseItemSearchQueryProvider).trim().toLowerCase();
+  final nameFilter = ref.watch(expenseItemListNameFilterProvider);
+  final amountFilter = ref.watch(expenseItemListAmountFilterProvider);
 
-  if (query.isEmpty) return items;
   return items.where((item) {
-    return item.name.toLowerCase().contains(query) ||
-        item.category.toLowerCase().contains(query);
+    if (query.isNotEmpty) {
+      final matchesQuery =
+          item.name.toLowerCase().contains(query) ||
+          item.category.toLowerCase().contains(query);
+      if (!matchesQuery) return false;
+    }
+    if (nameFilter != null &&
+        nameFilter.isActive &&
+        !nameFilter.matches(item.name)) {
+      return false;
+    }
+    if (amountFilter != null &&
+        amountFilter.isActive &&
+        !amountFilter.matches(item.amount)) {
+      return false;
+    }
+    return true;
   }).toList();
 }
 

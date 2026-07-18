@@ -353,10 +353,16 @@ class SalesService {
       }
       if (itemId == null) continue;
 
+      // Sanitize unit: backend requires min(1) max(50), rejects 'NONE'/empty.
+      final rawUnit = line.unit.trim();
+      final sanitizedUnit = (rawUnit.isEmpty || rawUnit.toUpperCase() == 'NONE')
+          ? 'Pcs'
+          : rawUnit;
+
       final request = CreateSalesLineRequest(
         itemId: itemId,
         quantity: line.qty.toStringAsFixed(4),
-        unit: line.unit,
+        unit: sanitizedUnit,
         unitPrice: line.pricePerUnit.toStringAsFixed(4),
         discountAmount:
             (line.qty * line.pricePerUnit * (line.discountPercent / 100))
@@ -382,7 +388,7 @@ class SalesService {
           UpdateSalesLineRequest(
             itemId: itemId,
             quantity: request.quantity,
-            unit: request.unit,
+            unit: sanitizedUnit,
             unitPrice: request.unitPrice,
             discountAmount: request.discountAmount,
             taxRate: request.taxRate,

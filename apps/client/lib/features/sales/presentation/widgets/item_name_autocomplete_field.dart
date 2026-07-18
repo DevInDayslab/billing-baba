@@ -40,6 +40,8 @@ String saleItemDefaultUnit(SaleItemOption item) {
   return unit;
 }
 
+const _maxDropdownItems = 150;
+
 /// Item name field with autocomplete overlay on focus.
 class ItemNameAutocompleteField extends ConsumerStatefulWidget {
   const ItemNameAutocompleteField({
@@ -80,11 +82,6 @@ class ItemNameAutocompleteFieldState
     super.initState();
     _controller = TextEditingController(text: widget.value);
     _focusNode.addListener(_onFocusChange);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(
-        ref.read(localItemTierPricesProvider.notifier).ensureInitialized(),
-      );
-    });
   }
 
   @override
@@ -131,49 +128,29 @@ class ItemNameAutocompleteFieldState
 
   void _onFocusChange() {
     if (_focusNode.hasFocus) {
+      _showOverlay();
+
       final itemsAsync = ref.read(inventoryItemsProvider);
       if (!itemsAsync.hasValue || (itemsAsync.value?.isEmpty ?? true)) {
         unawaited(ref.read(inventoryItemsProvider.notifier).refresh());
-      } else {
-        final itemIds = itemsAsync.value!.map((item) => item.id);
-        unawaited(
-          ref
-              .read(itemApiTierPricesProvider.notifier)
-              .preloadForItemIds(itemIds),
-        );
       }
-      unawaited(
-        ref.read(localItemTierPricesProvider.notifier).ensureInitialized(),
-      );
-      _showOverlay();
     }
   }
 
   List<SaleItemOption> _buildItemOptions(List<InventoryItem> inventory) {
-    final localStore = ref.read(localItemTierPricesProvider);
-    final apiStore = ref.read(itemApiTierPricesProvider);
-    final options = inventory
-        .map(
-          (item) => saleItemOptionFromInventory(
-            item,
-            tierPrices: mergedTierPricesForItem(
-              apiStore: apiStore,
-              localStore: localStore,
-              itemId: item.id,
-            ),
-          ),
-        )
-        .toList();
-
     final query = _controller.text.trim();
-    if (query.isEmpty) return options;
+    final Iterable<InventoryItem> rankedItems;
+    if (query.isEmpty) {
+      rankedItems = inventory;
+    } else {
+      rankedItems = ref
+          .read(inventorySearchEngineProvider)
+          .searchItems(inventory, query: query);
+    }
 
-    final engine = ref.read(inventorySearchEngineProvider);
-    final rankedItems = engine.searchItems(inventory, query: query);
-    final optionsById = {for (final option in options) option.id: option};
     return [
-      for (final item in rankedItems)
-        if (optionsById.containsKey(item.id)) optionsById[item.id]!,
+      for (final item in rankedItems.take(_maxDropdownItems))
+        saleItemOptionFromInventory(item),
     ];
   }
 
@@ -191,8 +168,6 @@ class ItemNameAutocompleteFieldState
     _overlayEntry = OverlayEntry(
       builder: (overlayContext) {
         final itemsAsync = ref.watch(inventoryItemsProvider);
-        ref.watch(localItemTierPricesProvider);
-        ref.watch(itemApiTierPricesProvider);
         return itemsAsync.when(
           loading: () => Stack(
             children: [
@@ -533,6 +508,10 @@ class ItemNameAutocompleteFieldState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(inventoryItemsProvider, (_, __) {
+      _overlayEntry?.markNeedsBuild();
+    });
+
     return CompositedTransformTarget(
       link: _layerLink,
       child: TextField(
