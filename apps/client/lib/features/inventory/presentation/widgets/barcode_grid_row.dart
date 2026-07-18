@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/providers/barcode_import_provider.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/barcode_items_grid.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 const _kCategories = [
   'Grocery',
@@ -210,6 +211,7 @@ class BarcodeGridRow extends StatelessWidget {
       BarcodeRowStatus.manualEntry => _ManualEntryField(
         fieldKey: '${row.index}_barcode',
         value: row.barcode,
+        digitsOnly: true,
         onChanged: (value) => onFieldChanged?.call(row.index, 'barcode', value),
       ),
       BarcodeRowStatus.empty when isActive =>
@@ -549,11 +551,13 @@ class _ManualEntryField extends StatefulWidget {
     required this.fieldKey,
     required this.value,
     required this.onChanged,
+    this.digitsOnly = false,
   });
 
   final String fieldKey;
   final String value;
   final ValueChanged<String> onChanged;
+  final bool digitsOnly;
 
   @override
   State<_ManualEntryField> createState() => _ManualEntryFieldState();
@@ -588,6 +592,10 @@ class _ManualEntryFieldState extends State<_ManualEntryField> {
       controller: _controller,
       style: BarcodeGridRow._cellTextStyle,
       decoration: BarcodeGridRow._fieldDecoration,
+      keyboardType: widget.digitsOnly ? TextInputType.number : null,
+      inputFormatters: widget.digitsOnly
+          ? [FilteringTextInputFormatter.digitsOnly]
+          : null,
       onChanged: widget.onChanged,
     );
   }

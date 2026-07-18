@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/inventory/application/barcode_lookup_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
@@ -97,6 +100,15 @@ class BarcodeImportRow {
 
   bool get isEmpty => status == BarcodeRowStatus.empty;
 
+  /// First six data columns: item code through sale price.
+  bool get hasLeadingColumnsEmpty =>
+      barcode.trim().isEmpty &&
+      itemName.trim().isEmpty &&
+      category.trim().isEmpty &&
+      hsnCode.trim().isEmpty &&
+      defaultMrp.trim().isEmpty &&
+      salePrice.trim().isEmpty;
+
   BarcodeImportRow copyWith({
     int? index,
     String? barcode,
@@ -124,6 +136,41 @@ class BarcodeImportRow {
       status: status ?? this.status,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'index': index,
+    'barcode': barcode,
+    'itemName': itemName,
+    'category': category,
+    'hsnCode': hsnCode,
+    'defaultMrp': defaultMrp,
+    'salePrice': salePrice,
+    'incTax': incTax,
+    'taxPercent': taxPercent,
+    'baseUnit': baseUnit,
+    'status': status.name,
+  };
+
+  factory BarcodeImportRow.fromJson(Map<String, dynamic> json) {
+    final rawStatus = json['status'] as String? ?? BarcodeRowStatus.empty.name;
+    final status = rawStatus == BarcodeRowStatus.loading.name
+        ? BarcodeRowStatus.notFound
+        : BarcodeRowStatus.values.byName(rawStatus);
+
+    return BarcodeImportRow(
+      index: json['index'] as int? ?? 0,
+      barcode: json['barcode'] as String? ?? '',
+      itemName: json['itemName'] as String? ?? '',
+      category: json['category'] as String? ?? '',
+      hsnCode: json['hsnCode'] as String? ?? '',
+      defaultMrp: json['defaultMrp'] as String? ?? '',
+      salePrice: json['salePrice'] as String? ?? '',
+      incTax: json['incTax'] as bool? ?? true,
+      taxPercent: json['taxPercent'] as String? ?? '',
+      baseUnit: json['baseUnit'] as String? ?? '',
+      status: status,
+    );
+  }
 }
 
 @Riverpod(keepAlive: false)
@@ -131,32 +178,168 @@ class BarcodeImport extends _$BarcodeImport {
   static const _initialRowCount = 20;
   static const _rowsToAppend = 5;
 
+  Future<void>? _initialization;
+
   @override
   List<BarcodeImportRow> build() {
+    ref.onDispose(() {
+      unawaited(_persistDraft());
+    });
+    _initialization ??= _restoreDraft();
     return _createInitialRows();
   }
+
+  Future<void> ensureInitialized() => _initialization ??= _restoreDraft();
 
   static List<BarcodeImportRow> _createInitialRows() {
     return List.generate(_initialRowCount, BarcodeImportRow.empty);
   }
 
-  int get nextEmptyRowIndex {
-    final inProgress = state.indexWhere(
+  int get nextEmptyRowIndex => resolveActiveRowIndex(state);
+
+  static int resolveActiveRowIndex(List<BarcodeImportRow> rows) {
+    final inProgress = rows.indexWhere(
       (r) => r.status == BarcodeRowStatus.empty && r.barcode.trim().isNotEmpty,
     );
     if (inProgress != -1) return inProgress;
 
-    final idx = state.indexWhere(
-      (r) => r.status == BarcodeRowStatus.empty && r.barcode.trim().isEmpty,
+    final idx = rows.indexWhere(
+      (r) =>
+          r.status != BarcodeRowStatus.loading && r.hasLeadingColumnsEmpty,
     );
-    return idx == -1 ? state.length - 1 : idx;
+    return idx == -1 ? rows.length - 1 : idx;
   }
 
-  void updateLiveInput(int rowIndex, String currentBuffer) {
-    state = [
-      for (final r in state)
-        if (r.index == rowIndex) r.copyWith(barcode: currentBuffer) else r,
+  List<BarcodeImportRow> _normalizeRows(List<BarcodeImportRow> rows) {
+    return normalizeRows(rows);
+  }
+
+  static List<BarcodeImportRow> normalizeRows(List<BarcodeImportRow> rows) {
+    return [
+      for (final row in rows)
+        if (row.status != BarcodeRowStatus.empty &&
+            row.status != BarcodeRowStatus.loading &&
+            row.hasLeadingColumnsEmpty)
+          BarcodeImportRow.empty(row.index)
+        else
+          row,
     ];
+  }
+
+  static bool needsNormalization(List<BarcodeImportRow> rows) {
+    return rows.any(
+      (row) =>
+          row.status != BarcodeRowStatus.empty &&
+          row.status != BarcodeRowStatus.loading &&
+          row.hasLeadingColumnsEmpty,
+    );
+  }
+
+  void ensureNormalized() {
+    final normalized = normalizeRows(state);
+    if (!listEquals(normalized, state)) {
+      state = normalized;
+    }
+  }
+
+  void _commitState(List<BarcodeImportRow> rows) {
+    state = _normalizeRows(rows);
+    unawaited(_persistDraft());
+  }
+
+  Future<String?> _draftStorageKey() async {
+    final storage = await ref.read(storageServiceProvider.future);
+    final businessId = storage.read(StorageKeys.lastOpenedBusinessId);
+    if (businessId == null || businessId.isEmpty) return null;
+    return '${StorageKeys.barcodeImportDraft}_$businessId';
+  }
+
+  List<BarcodeImportRow> _draftRows(List<BarcodeImportRow> rows) {
+    return rows
+        .where((row) => !row.isEmpty || row.barcode.trim().isNotEmpty)
+        .toList();
+  }
+
+  Future<void> _restoreDraft() async {
+    try {
+      final key = await _draftStorageKey();
+      if (key == null) return;
+
+      final storage = await ref.read(storageServiceProvider.future);
+      final raw = storage.read(key);
+      if (raw == null || raw.isEmpty) return;
+
+      final decoded = jsonDecode(raw);
+      if (decoded is! List || decoded.isEmpty) return;
+
+      final restored = <BarcodeImportRow>[
+        for (final item in decoded)
+          BarcodeImportRow.fromJson(Map<String, dynamic>.from(item as Map)),
+      ];
+
+      final reIndexed = [
+        for (var i = 0; i < restored.length; i++)
+          restored[i].copyWith(index: i),
+      ];
+      while (reIndexed.length < _initialRowCount) {
+        reIndexed.add(BarcodeImportRow.empty(reIndexed.length));
+      }
+
+      if (!ref.mounted) return;
+      state = normalizeRows(reIndexed);
+    } on Object catch (_) {
+      // Ignore corrupt drafts.
+    }
+  }
+
+  Future<void> _persistDraft() async {
+    if (!ref.mounted) return;
+
+    try {
+      final key = await _draftStorageKey();
+      if (key == null) return;
+
+      final storage = await ref.read(storageServiceProvider.future);
+      final draftRows = _draftRows(state);
+      if (draftRows.isEmpty) {
+        await storage.remove(key);
+        return;
+      }
+
+      await storage.write(
+        key,
+        jsonEncode(draftRows.map((row) => row.toJson()).toList()),
+      );
+    } on Object catch (_) {
+      // Ignore persistence failures.
+    }
+  }
+
+  Future<void> clearDraft() async {
+    try {
+      final key = await _draftStorageKey();
+      if (key == null) return;
+      final storage = await ref.read(storageServiceProvider.future);
+      await storage.remove(key);
+    } on Object catch (_) {
+      // Ignore persistence failures.
+    }
+  }
+
+  void resetToEmpty() {
+    state = _createInitialRows();
+    unawaited(clearDraft());
+  }
+
+  static String _digitsOnly(String value) =>
+      value.replaceAll(RegExp(r'\D'), '');
+
+  void updateLiveInput(int rowIndex, String currentBuffer) {
+    final sanitized = _digitsOnly(currentBuffer);
+    _commitState([
+      for (final r in state)
+        if (r.index == rowIndex) r.copyWith(barcode: sanitized) else r,
+    ]);
   }
 
   Future<void> startLookup(int rowIndex, String barcode) async {
@@ -251,7 +434,7 @@ class BarcodeImport extends _$BarcodeImport {
     if (rowIndex < 0 || rowIndex >= state.length) return;
     final row = state[rowIndex];
     final updated = switch (field) {
-      'barcode' => row.copyWith(barcode: value),
+      'barcode' => row.copyWith(barcode: _digitsOnly(value)),
       'itemName' => row.copyWith(itemName: value),
       'category' => row.copyWith(category: value),
       'hsnCode' => row.copyWith(hsnCode: value),
@@ -275,24 +458,24 @@ class BarcodeImport extends _$BarcodeImport {
     while (reIndexed.length < _initialRowCount) {
       reIndexed.add(BarcodeImportRow.empty(reIndexed.length));
     }
-    state = reIndexed;
+    _commitState(reIndexed);
   }
 
   void addNewRowIfNeeded() {
     if (state.isEmpty || !state.last.hasData) return;
     final nextIndex = state.length;
-    state = [
+    _commitState([
       ...state,
       for (var i = 0; i < _rowsToAppend; i++)
         BarcodeImportRow.empty(nextIndex + i),
-    ];
+    ]);
   }
 
   void _updateRow(int rowIndex, BarcodeImportRow row) {
-    state = [
+    _commitState([
       for (var i = 0; i < state.length; i++)
         if (i == rowIndex) row else state[i],
-    ];
+    ]);
   }
 
   List<BarcodeImportRow> getRowsWithErrors() {
@@ -360,6 +543,7 @@ class BarcodeImport extends _$BarcodeImport {
           rethrow;
         }
       }
+      await clearDraft();
       return null;
     } catch (error, stackTrace) {
       debugPrint('[BarcodeImport] Save error: $error');

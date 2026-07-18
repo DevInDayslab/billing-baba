@@ -52,11 +52,15 @@ class AddItemForm extends Notifier<AddItemFormState> {
   }
 
   void updateItemCode(String value) {
-    state = state.copyWith(itemCode: value, isDirty: true);
+    final digitsOnly = value.replaceAll(RegExp(r'\D'), '');
+    state = state.copyWith(itemCode: digitsOnly, isDirty: true);
   }
 
   void assignCode() {
-    final code = 'ITM${_uuid.v4().substring(0, 6).toUpperCase()}';
+    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+    final randomDigits =
+        _uuid.v4().replaceAll(RegExp(r'\D'), '').padRight(4, '0');
+    final code = '$timestamp${randomDigits.substring(0, 4)}';
     state = state.copyWith(itemCode: code, isDirty: true);
   }
 

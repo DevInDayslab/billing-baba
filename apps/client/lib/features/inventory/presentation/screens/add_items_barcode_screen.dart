@@ -37,6 +37,11 @@ class _AddItemsBarcodeScreenState extends ConsumerState<AddItemsBarcodeScreen> {
   void initState() {
     super.initState();
     HardwareKeyboard.instance.addHandler(_onHardwareKey);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        unawaited(ref.read(barcodeImportProvider.notifier).ensureInitialized());
+      }
+    });
   }
 
   @override
@@ -76,9 +81,13 @@ class _AddItemsBarcodeScreenState extends ConsumerState<AddItemsBarcodeScreen> {
     return _continueKeyEvent(event);
   }
 
+  static final _nonDigit = RegExp(r'\D');
+
+  String _sanitizeItemCode(String value) => value.replaceAll(_nonDigit, '');
+
   Future<void> _handlePaste() async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
-    final pasted = data?.text?.trim() ?? '';
+    final pasted = _sanitizeItemCode(data?.text?.trim() ?? '');
     if (pasted.isEmpty || pasted.length < 3) return;
     final nextIndex =
         ref.read(barcodeImportProvider.notifier).nextEmptyRowIndex;
@@ -180,6 +189,7 @@ class _AddItemsBarcodeScreenState extends ConsumerState<AddItemsBarcodeScreen> {
         character.isNotEmpty &&
         character != '\n' &&
         character != '\r') {
+      if (_nonDigit.hasMatch(character)) return true;
       _barcodeBuffer.write(character);
       final notifier = ref.read(barcodeImportProvider.notifier);
       notifier.updateLiveInput(
@@ -226,7 +236,7 @@ class _AddItemsBarcodeScreenState extends ConsumerState<AddItemsBarcodeScreen> {
           ),
         );
         if (andNew) {
-          ref.invalidate(barcodeImportProvider);
+          ref.read(barcodeImportProvider.notifier).resetToEmpty();
         } else {
           context.pop();
         }
@@ -244,11 +254,16 @@ class _AddItemsBarcodeScreenState extends ConsumerState<AddItemsBarcodeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final rows = ref.watch(barcodeImportProvider);
-    final emptyIndex = rows.indexWhere(
-      (row) => row.status == BarcodeRowStatus.empty,
-    );
-    final activeRowIndex = emptyIndex == -1 ? rows.length : emptyIndex;
+    final rawRows = ref.watch(barcodeImportProvider);
+    if (BarcodeImport.needsNormalization(rawRows)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(barcodeImportProvider.notifier).ensureNormalized();
+        }
+      });
+    }
+    final rows = BarcodeImport.normalizeRows(rawRows);
+    final activeRowIndex = BarcodeImport.resolveActiveRowIndex(rows);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
