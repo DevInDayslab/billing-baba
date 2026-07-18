@@ -476,6 +476,14 @@ class InventoryRemoteDataSource {
     );
   }
 
+  Future<Map<String, dynamic>> geminiBarcodeLookup(String barcode) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.barcodeGeminiLookup,
+      data: {'barcode': barcode},
+    );
+    return response.data?['data'] as Map<String, dynamic>;
+  }
+
   T _parsePaginated<T>(
     Response<Map<String, dynamic>> response,
     T Function(Map<String, dynamic>) parser,

@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
+import { createBarcodeLookupRoutes } from './barcode-lookup.routes';
 import { createBrandRoutes } from './brand.routes';
 import { createCategoryRoutes } from './category.routes';
 import { createGodownRoutes } from './godown.routes';
@@ -19,6 +20,7 @@ export const inventoryModule: FastifyPluginAsync = async (app) => {
   });
   await app.register(createGodownRoutes(), { prefix: '/godowns' });
   await app.register(createItemRoutes(), { prefix: '/items' });
+  await app.register(createBarcodeLookupRoutes(), { prefix: '/barcode' });
   await app.register(createItemLocationRoutes(), {
     prefix: '/item-locations',
   });

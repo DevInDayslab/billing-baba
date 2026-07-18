@@ -23,6 +23,7 @@ abstract final class StorageKeys {
       'sale_line_item_column_visibility';
   static const dashboardTasks = 'dashboard_tasks';
   static const dashboardSideWidgets = 'dashboard_side_widgets';
+  static const barcodeImportDraft = 'barcode_import_draft';
   static const printSettings = 'print_settings';
   static const recentSearchPageIds = 'recent_search_page_ids';
 }
