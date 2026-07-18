@@ -124,7 +124,7 @@ final class TasksProvider
   Tasks create() => Tasks();
 }
 
-String _$tasksHash() => r'5a66dd9a97a87edd78b01d27f58e1bb8533947a6';
+String _$tasksHash() => r'a8b45474987ebb46e9c81774dda5c86cd35fca4a';
 
 abstract class _$Tasks extends $AsyncNotifier<List<TaskModel>> {
   FutureOr<List<TaskModel>> build();

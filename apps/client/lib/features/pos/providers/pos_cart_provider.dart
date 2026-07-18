@@ -22,12 +22,27 @@ class PosCart extends _$PosCart {
   @override
   PosCartState build() {
     _localDataSource = PosLocalDataSource(ref.watch(appDatabaseProvider));
+    ref.listen(currentBusinessProvider, (previous, next) {
+      final previousId = previous?.id;
+      final nextId = next?.id;
+      if (previousId != nextId) {
+        state = const PosCartState();
+        unawaited(_loadHeldBills());
+      }
+    });
     unawaited(_loadHeldBills());
     return const PosCartState();
   }
 
+  String? get _businessId => ref.read(currentBusinessProvider)?.id;
+
   Future<void> _loadHeldBills() async {
-    final bills = await _localDataSource.getHeldBills();
+    final businessId = _businessId;
+    if (businessId == null || businessId.isEmpty) {
+      state = state.copyWith(heldBills: const []);
+      return;
+    }
+    final bills = await _localDataSource.getHeldBills(businessId);
     state = state.copyWith(heldBills: bills);
   }
 
@@ -137,6 +152,9 @@ class PosCart extends _$PosCart {
 
   Future<void> holdBill() async {
     if (state.items.isEmpty) return;
+    final businessId = _businessId;
+    if (businessId == null || businessId.isEmpty) return;
+
     final bill = HeldBill(
       id: 'HOLD-${DateTime.now().millisecondsSinceEpoch}',
       items: List<CartItem>.from(state.items),
@@ -144,7 +162,7 @@ class PosCart extends _$PosCart {
       payments: List<PaymentEntry>.from(state.payments),
       customerName: state.customerName,
     );
-    await _localDataSource.saveHeldBill(bill);
+    await _localDataSource.saveHeldBill(businessId, bill);
     state = state.copyWith(
       heldBills: [...state.heldBills, bill],
       items: [],
@@ -162,12 +180,15 @@ class PosCart extends _$PosCart {
       customerName: bill.customerName,
       clearCustomerName: bill.customerName == null,
     );
-    unawaited(_localDataSource.deleteHeldBill(bill.id));
+    unawaited(_localDataSource.deleteHeldBill(_businessId ?? '', bill.id));
     _syncSinglePaymentAmount();
   }
 
   Future<void> discardHeldBill(String id) async {
-    await _localDataSource.deleteHeldBill(id);
+    final businessId = _businessId;
+    if (businessId == null || businessId.isEmpty) return;
+
+    await _localDataSource.deleteHeldBill(businessId, id);
     state = state.copyWith(
       heldBills: state.heldBills.where((b) => b.id != id).toList(),
     );

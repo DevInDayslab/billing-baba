@@ -52,7 +52,7 @@ final class SaleLineItemColumnVisibilityStateProvider
 }
 
 String _$saleLineItemColumnVisibilityStateHash() =>
-    r'2cd09a7be4f3c0df0602d80a188f389f6f410c14';
+    r'd7db92799d1c469b1138490097cf06d0dd32c61a';
 
 /// Persisted visibility for optional columns on the Add Sale line-items grid.
 

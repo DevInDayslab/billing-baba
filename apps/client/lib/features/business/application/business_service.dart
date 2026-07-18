@@ -1,9 +1,13 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/services/business_local_data_cleanup.dart';
+import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/core/utils/jwt_utils.dart';
 import 'package:billing_baba/features/auth/models/account_profile.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
@@ -12,7 +16,9 @@ import 'package:billing_baba/features/business/data/business_repository.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/business/models/create_business_request.dart';
+import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
+import 'package:billing_baba/features/pos/providers/pos_cart_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -297,6 +303,27 @@ class BusinessService {
   Future<void> rememberLastOpened(String businessId) =>
       _cache.saveLastOpenedBusinessId(businessId);
 
+  Future<void> clearCachedBusinessProfile() => _cache.clearBusinessProfile();
+
+  Future<bool> isJwtScopedToBusiness(String businessId) async {
+    final storage = await _ref.read(storageServiceProvider.future);
+    final token = await storage.readSecure(StorageKeys.accessToken);
+    final jwtBusinessId = JwtUtils.businessId(token);
+    final role = JwtUtils.role(token);
+    return jwtBusinessId == businessId && role != null && role.isNotEmpty;
+  }
+
+  /// Scopes JWT to [businessId] and clears stale profile cache before API calls.
+  Future<void> prepareScopeForBusiness(String businessId) async {
+    await clearCachedBusinessProfile();
+    await scopeJwtToBusiness(businessId);
+    if (!await isJwtScopedToBusiness(businessId)) {
+      throw const BusinessSelectionFailed(
+        'Could not open company for editing. Please try again.',
+      );
+    }
+  }
+
   BusinessModel _toModel(BusinessDetailDto dto, String? selectedId) {
     return BusinessModel(
       id: dto.id,
@@ -329,15 +356,52 @@ class BusinessService {
   Future<void> deleteBusiness(String businessId) async {
     await _repository.deleteBusiness(businessId);
     await _cache.removeBusiness(businessId);
+
+    final storage = await _ref.read(storageServiceProvider.future);
+    await SessionCacheCleanup(storage).clearBusinessData(businessId);
+
+    final db = _ref.read(appDatabaseProvider);
+    await BusinessLocalDataCleanup(db).clearBusiness(businessId);
+
     final selectedId = _cache.readLastOpenedBusinessId();
     if (selectedId == businessId) {
       await _cache.clearSelectedBusiness();
+      await storage.deleteSecure(StorageKeys.selectedBusinessId);
     }
+  }
+
+  Future<String?> readActiveBusinessId() async {
+    final fromCache = _cache.readLastOpenedBusinessId();
+    if (fromCache != null && fromCache.isNotEmpty) return fromCache;
+
+    final storage = await _ref.read(storageServiceProvider.future);
+    final selected = await storage.readSecure(StorageKeys.selectedBusinessId);
+    if (selected != null && selected.isNotEmpty) return selected;
+
+    final auth = _ref.read(authProvider);
+    if (auth.session?.user.role != null) {
+      final profile = await _cache.readBusinessProfile();
+      return profile?.id;
+    }
+
+    return null;
   }
 }
 
 class BusinessProfileScopeRequired implements Exception {
   const BusinessProfileScopeRequired();
+
+  @override
+  String toString() => 'BusinessProfileScopeRequired';
+}
+
+class BusinessSelectionFailed implements Exception {
+  const BusinessSelectionFailed([this.message = 'Could not select business']);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }
 
 bool authHasBusinessScope(AuthState auth) =>
@@ -364,26 +428,86 @@ class BusinessList extends _$BusinessList {
   }
 
   Future<void> _activateBusiness(String id) async {
+    BusinessOpenDebugLog.step('activate', 'rememberLastOpened $id');
     final service = await ref.read(businessServiceProvider.future);
     await service.rememberLastOpened(id);
+    BusinessOpenDebugLog.step('activate', 'selectBusiness (JWT refresh)');
     await ref.read(authProvider.notifier).selectBusiness(id);
+    _ensureOpenRefMounted('after selectBusiness');
+    BusinessOpenDebugLog.step('activate', 'selectBusiness done');
   }
 
-  Future<void> selectBusiness(String id) async {
+  /// Scopes the session, clears stale caches, reloads providers, and pre-warms
+  /// dashboard data before navigating into the app shell.
+  Future<void> openBusiness(String id) async {
+    BusinessOpenDebugLog.step('openBusiness', 'start id=$id');
+    _ensureOpenRefMounted('openBusiness start');
+
+    final service = await ref.read(businessServiceProvider.future);
+    _ensureOpenRefMounted('after resolve BusinessService');
+
+    final previousId = await service.readActiveBusinessId();
+    final isSwitch =
+        previousId != null && previousId.isNotEmpty && previousId != id;
+    BusinessOpenDebugLog.step(
+      'openBusiness',
+      'previousId=${previousId ?? '(none)'} isSwitch=$isSwitch',
+    );
+
+    if (isSwitch) {
+      BusinessOpenDebugLog.step('openBusiness', 'clear stale profile cache');
+      await service.clearCachedBusinessProfile();
+      ref.invalidate(posCartProvider);
+    }
+
     await _activateBusiness(id);
-    ref
-      ..invalidate(businessProfileProvider)
-      ..invalidateSelf();
+    _ensureOpenRefMounted('after activateBusiness');
+
+    BusinessOpenDebugLog.step('openBusiness', 'verify JWT scope');
+    if (!await service.isJwtScopedToBusiness(id)) {
+      throw const BusinessSelectionFailed(
+        'Could not scope session to company. Please try again.',
+      );
+    }
+
+    BusinessOpenDebugLog.step(
+      'openBusiness',
+      'invalidate providers (keep BusinessService alive)',
+    );
+    invalidateAllBusinessScopedProviders(
+      ref,
+      includeBusinessService: false,
+    );
+    _ensureOpenRefMounted('after invalidate');
+
+    BusinessOpenDebugLog.step('openBusiness', 'warm providers');
+    await warmBusinessScopedProviders(ref, businessId: id);
+    BusinessOpenDebugLog.step('openBusiness', 'complete');
+  }
+
+  void _ensureOpenRefMounted(String step) {
+    if (ref.mounted) return;
+    BusinessOpenDebugLog.step(step, 'aborted — BusinessList ref disposed');
+    throw const BusinessSelectionFailed(
+      'Company switch was interrupted. Please try again.',
+    );
   }
 
   Future<BusinessModel> createBusiness(CreateBusinessRequest request) async {
     final service = await ref.read(businessServiceProvider.future);
     final created = await service.createBusiness(request);
     await _activateBusiness(created.id);
+    _ensureOpenRefMounted('createBusiness after activate');
+
     await ref.read(authProvider.notifier).refreshBusinesses();
-    ref
-      ..invalidate(businessProfileProvider)
-      ..invalidateSelf();
+    invalidateAllBusinessScopedProviders(
+      ref,
+      includeBusinessService: false,
+    );
+    _ensureOpenRefMounted('createBusiness after invalidate');
+
+    await warmBusinessScopedProviders(ref, businessId: created.id);
+    await refresh();
     return created;
   }
 
@@ -403,19 +527,54 @@ class BusinessList extends _$BusinessList {
   }
 
   Future<void> deleteBusiness(String id) async {
+    _ensureOpenRefMounted('deleteBusiness start');
     final service = await ref.read(businessServiceProvider.future);
+    final activeId = await service.readActiveBusinessId();
+    final wasActive = activeId == id;
+
     await service.deleteBusiness(id);
+    _ensureOpenRefMounted('deleteBusiness after API');
+
+    if (wasActive) {
+      await ref.read(authProvider.notifier).enterBusinessSelection();
+      // enterBusinessSelection invalidates businessListProvider — stop here.
+      return;
+    }
+
     await ref.read(authProvider.notifier).refreshBusinesses();
-    ref
-      ..invalidate(businessProfileProvider)
-      ..invalidateSelf();
+    _ensureOpenRefMounted('deleteBusiness after refreshBusinesses');
+
+    _removeBusinessFromState(id);
+
+    invalidateAllBusinessScopedProviders(
+      ref,
+      includeBusinessService: false,
+    );
+    await refresh();
+  }
+
+  void _removeBusinessFromState(String id) {
+    final businesses = state.asData?.value;
+    if (businesses == null) return;
+
+    state = AsyncData(
+      businesses.where((business) => business.id != id).toList(),
+    );
   }
 
   Future<BusinessProfileModel> fetchProfileForEdit(String businessId) async {
-    await _activateBusiness(businessId);
-    ref.invalidate(businessProfileProvider);
     final service = await ref.read(businessServiceProvider.future);
-    return service.fetchBusinessProfile(forceRefresh: true);
+
+    await service.prepareScopeForBusiness(businessId);
+
+    final profile = await service.fetchBusinessProfile(forceRefresh: true);
+    if (profile.id != businessId) {
+      throw const BusinessSelectionFailed(
+        'Could not load company details. Please try again.',
+      );
+    }
+
+    return profile;
   }
 }
 
@@ -449,6 +608,11 @@ class BusinessProfile extends _$BusinessProfile {
     ref.read(businessListProvider.notifier).applyProfileUpdate(updated);
     state = AsyncData(updated);
     return updated;
+  }
+
+  /// Seeds provider state after a business switch without awaiting [.future].
+  void replaceWith(BusinessProfileModel profile) {
+    state = AsyncData(profile);
   }
 }
 

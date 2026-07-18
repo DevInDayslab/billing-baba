@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
+import 'package:billing_baba/core/utils/jwt_utils.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/models/auth_user.dart';
 import 'package:billing_baba/features/auth/models/business_summary.dart';
@@ -13,7 +16,7 @@ import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:billing_baba/features/auth/utils/auth_flow_logger.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
-import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -162,6 +165,7 @@ class Auth extends _$Auth {
   var _sendInFlight = false;
   var _devLoginInFlight = false;
   int _verifyGeneration = 0;
+  Future<void> _businessSelectionChain = Future<void>.value();
 
   @override
   AuthState build() {
@@ -199,19 +203,15 @@ class Auth extends _$Auth {
       session != null && session.user.role != null;
 
   Future<void> _invalidateBusinessProviders({bool includeList = false}) async {
-    if (includeList) {
-      ref.invalidate(businessListProvider);
-    }
-    ref
-      ..invalidate(businessProfileProvider)
-      ..invalidate(businessServiceProvider)
-      ..invalidate(partyListProvider)
-      ..invalidate(partyServiceProvider);
+    invalidateAllBusinessScopedProviders(
+      ref,
+      includeBusinessList: includeList,
+    );
   }
 
-  Future<void> _clearBusinessScopedCaches() async {
+  Future<void> _clearActiveBusinessSession() async {
     final storage = await ref.read(storageServiceProvider.future);
-    await SessionCacheCleanup(storage).clearBusinessScopedData();
+    await SessionCacheCleanup(storage).clearActiveBusinessSession();
     await _invalidateBusinessProviders(includeList: true);
   }
 
@@ -686,10 +686,30 @@ class Auth extends _$Auth {
     state = state.copyWith(phone: '');
   }
 
-  Future<void> selectBusiness(String businessId) async {
-    final refreshToken = state.session?.refreshToken;
-    if (refreshToken == null) return;
+  Future<void> selectBusiness(String businessId) {
+    final operation = _businessSelectionChain
+        .catchError((_) {})
+        .then((_) => _selectBusinessInternal(businessId));
+    _businessSelectionChain = operation;
+    return operation;
+  }
 
+  Future<void> _selectBusinessInternal(String businessId) async {
+    BusinessOpenDebugLog.step('selectBusiness', 'begin id=$businessId');
+    final refreshToken = state.session?.refreshToken;
+    if (refreshToken == null) {
+      throw const BusinessSelectionFailed('Session expired. Please sign in again.');
+    }
+
+    if (await _isJwtScopedToBusiness(businessId)) {
+      BusinessOpenDebugLog.step('selectBusiness', 'JWT already scoped — skip refresh');
+      if (state.status != AuthStatus.authenticated) {
+        _setAuthStatus(AuthStatus.authenticated);
+      }
+      return;
+    }
+
+    BusinessOpenDebugLog.step('selectBusiness', 'JWT refresh API');
     state = state.copyWith(clearError: true);
     try {
       final service = await _service();
@@ -698,16 +718,38 @@ class Auth extends _$Auth {
         refreshToken: refreshToken,
       );
       if (!_hasBusinessScope(session)) {
-        state = state.copyWith(
-          error: 'Could not select business. Please try again.',
+        throw const BusinessSelectionFailed(
+          'Could not select business. Please try again.',
         );
-        return;
       }
       _setAuthStatus(AuthStatus.authenticated);
       state = state.copyWith(session: session);
-      await _invalidateBusinessProviders();
+      BusinessOpenDebugLog.step('selectBusiness', 'JWT refresh done');
+    } on BusinessSelectionFailed {
+      BusinessOpenDebugLog.step('selectBusiness', 'failed (BusinessSelectionFailed)');
+      rethrow;
     } on Object catch (e) {
-      state = state.copyWith(error: _messageFromError(e));
+      BusinessOpenDebugLog.step('selectBusiness', 'failed ($e)');
+      throw BusinessSelectionFailed(_messageFromError(e));
+    }
+  }
+
+  Future<bool> _isJwtScopedToBusiness(String businessId) async {
+    final storage = await ref.read(storageServiceProvider.future);
+    final token = await storage.readSecure(StorageKeys.accessToken);
+    final jwtBusinessId = JwtUtils.businessId(token);
+    final role = JwtUtils.role(token);
+    return jwtBusinessId == businessId && role != null && role.isNotEmpty;
+  }
+
+  /// Scopes JWT to [businessId] for edit-from-list without invalidating providers.
+  Future<bool> selectBusinessForEdit(String businessId) async {
+    try {
+      await selectBusiness(businessId);
+      if (!_hasBusinessScope(state.session)) return false;
+      return await _isJwtScopedToBusiness(businessId);
+    } on Object catch (_) {
+      return false;
     }
   }
 
@@ -717,7 +759,7 @@ class Auth extends _$Auth {
 
     state = state.copyWith(clearError: true);
     try {
-      await _clearBusinessScopedCaches();
+      await _clearActiveBusinessSession();
       final service = await _service();
       final session = await service.refreshStoredSession(
         refreshToken: refreshToken,

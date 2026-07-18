@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 @DataClassName('SaleLocal')
 class SalesLocal extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text()();
   TextColumn get docNumber => text()();
   TextColumn get partyId => text().nullable()();
   RealColumn get totalAmount => real()();
@@ -20,6 +21,7 @@ class SalesLocal extends Table {
 @DataClassName('SaleLineLocal')
 class SalesLineLocal extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text()();
   TextColumn get saleId => text().references(SalesLocal, #id)();
   TextColumn get itemId => text()();
   TextColumn get itemName => text()();
@@ -36,6 +38,7 @@ class SalesLineLocal extends Table {
 
 class HeldBillsLocal extends Table {
   TextColumn get id => text()();
+  TextColumn get businessId => text()();
   TextColumn get itemsJson => text()();
   TextColumn get paymentsJson => text().withDefault(const Constant('[]'))();
   TextColumn get customerName => text().nullable()();

@@ -25,22 +25,29 @@ class TaskFilterState extends _$TaskFilterState {
 
 @Riverpod(keepAlive: true)
 class Tasks extends _$Tasks {
-  String get _businessId => ref.read(currentBusinessProvider)?.id ?? 'default';
+  String? get _businessId => ref.read(currentBusinessProvider)?.id;
 
   Future<TaskRepository> _repository() =>
       ref.read(taskRepositoryProvider.future);
 
   @override
   Future<List<TaskModel>> build() async {
-    // Rebuild when business changes.
     ref.watch(currentBusinessProvider);
+    final businessId = _businessId;
+    if (businessId == null || businessId.isEmpty) {
+      return const [];
+    }
+
     final repo = await ref.watch(taskRepositoryProvider.future);
-    return repo.load(_businessId);
+    return repo.load(businessId);
   }
 
   Future<void> _persist(List<TaskModel> tasks) async {
+    final businessId = _businessId;
+    if (businessId == null || businessId.isEmpty) return;
+
     final repo = await _repository();
-    await repo.save(_businessId, tasks);
+    await repo.save(businessId, tasks);
   }
 
   Future<TaskModel?> add({
@@ -150,6 +157,11 @@ class Tasks extends _$Tasks {
     final next = repo.clearCompleted(current);
     state = AsyncData(next);
     await _persist(next);
+  }
+
+  /// Seeds provider state after a business switch without awaiting [.future].
+  void replaceWith(List<TaskModel> tasks) {
+    state = AsyncData(tasks);
   }
 }
 
