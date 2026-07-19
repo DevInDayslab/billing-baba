@@ -52,3 +52,5 @@ htmlcov/
 *.key
 credentials.json
 secrets/
+.vercel
+.env*
