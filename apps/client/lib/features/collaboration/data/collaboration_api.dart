@@ -2,6 +2,7 @@ import 'package:billing_baba/core/network/api_endpoints.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
 import 'package:billing_baba/features/collaboration/data/collaboration_api_errors.dart';
+import 'package:billing_baba/features/collaboration/domain/models/business_member.dart';
 import 'package:billing_baba/features/collaboration/domain/models/invitation.dart';
 import 'package:billing_baba/features/collaboration/domain/models/role.dart';
 import 'package:dio/dio.dart';
@@ -10,6 +11,34 @@ class CollaborationApi {
   CollaborationApi(this._dio);
 
   final Dio _dio;
+
+  Future<List<BusinessMember>> listMembers() async {
+    return _run(() async {
+      final response = await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.collaborationMembers,
+      );
+      final data = _readList(response);
+      return data.map(_parseMember).toList();
+    });
+  }
+
+  Future<BusinessMember> updateMemberRole(String memberId, Role role) async {
+    return _run(() async {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.collaborationMember(memberId),
+        data: {'role': _roleToApi(role)},
+      );
+      return _parseMember(_readData(response));
+    });
+  }
+
+  Future<void> removeMember(String memberId) async {
+    await _run(() async {
+      await _dio.delete<Map<String, dynamic>>(
+        ApiEndpoints.collaborationMember(memberId),
+      );
+    });
+  }
 
   Future<List<Invitation>> listInvitations() async {
     return _run(() async {
@@ -52,16 +81,6 @@ class CollaborationApi {
         data: const <String, dynamic>{},
       );
       return _parseInvitation(_readData(response));
-    });
-  }
-
-  Future<String> fetchInvitationStatus(String inviteCode) async {
-    return _run(() async {
-      final response = await _dio.get<Map<String, dynamic>>(
-        ApiEndpoints.collaborationInvitationByToken(inviteCode),
-      );
-      final data = _readData(response);
-      return data['status'] as String? ?? 'pending';
     });
   }
 
@@ -167,6 +186,10 @@ class CollaborationApi {
         .whereType<Map<String, dynamic>>()
         .map(Map<String, dynamic>.from)
         .toList();
+  }
+
+  BusinessMember _parseMember(Map<String, dynamic> json) {
+    return BusinessMember.fromJson(json);
   }
 
   Invitation _parseInvitation(Map<String, dynamic> json) {

@@ -257,4 +257,77 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
     },
     INTEGRATION_TIMEOUT_MS,
   );
+
+  test(
+    'member management: list, update role, remove joined member',
+    async () => {
+      const config = loadAppConfig();
+      const prefix = `${config.apiPrefix}/collaboration`;
+      const memberPhone = `+9194${suffix.padStart(8, '5').slice(-8)}`;
+
+      const created = await app.inject({
+        method: 'POST',
+        url: `${prefix}/invitations`,
+        headers: jsonAuthHeaders(ownerToken),
+        payload: {
+          full_name: 'Member Mgmt User',
+          phone_or_email: memberPhone,
+          role: 'biller',
+        },
+      });
+      expect(created.statusCode).toBe(201);
+      const invite = (
+        created.json() as {
+          data: { member_id: string; invite_code: string };
+        }
+      ).data;
+
+      const listed = await app.inject({
+        method: 'GET',
+        url: `${prefix}/company-members`,
+        headers: jsonAuthHeaders(ownerToken),
+      });
+      expect(listed.statusCode).toBe(200);
+      const members = (listed.json() as { data: Array<{ id: string }> }).data;
+      expect(members.some((m) => m.id.startsWith('owner-'))).toBe(true);
+      expect(members.some((m) => m.id === invite.member_id)).toBe(true);
+
+      const roleUpdated = await app.inject({
+        method: 'PATCH',
+        url: `${prefix}/company-members/${invite.member_id}`,
+        headers: jsonAuthHeaders(ownerToken),
+        payload: { role: 'salesman' },
+      });
+      expect(roleUpdated.statusCode).toBe(200);
+      expect(
+        (roleUpdated.json() as { data: { role: string } }).data.role,
+      ).toBe('salesman');
+
+      await app.inject({
+        method: 'GET',
+        url: `${prefix}/invitations/${invite.invite_code}`,
+      });
+
+      const accepted = await app.inject({
+        method: 'POST',
+        url: `${prefix}/invitations/${invite.invite_code}/accept`,
+      });
+      expect(accepted.statusCode).toBe(200);
+
+      const removed = await app.inject({
+        method: 'DELETE',
+        url: `${prefix}/company-members/${invite.member_id}`,
+        headers: getAuthHeaders(ownerToken),
+      });
+      expect(removed.statusCode).toBe(200);
+
+      const ownerDelete = await app.inject({
+        method: 'DELETE',
+        url: `${prefix}/company-members/owner-${businessId}`,
+        headers: getAuthHeaders(ownerToken),
+      });
+      expect(ownerDelete.statusCode).toBe(403);
+    },
+    INTEGRATION_TIMEOUT_MS,
+  );
 });

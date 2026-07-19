@@ -14,6 +14,7 @@ abstract class BusinessMember with _$BusinessMember {
     required MemberStatus status,
     required Role role,
     @JsonKey(name: 'is_owner') @Default(false) bool isOwner,
+    @JsonKey(name: 'is_current_user') @Default(false) bool isCurrentUser,
     @JsonKey(name: 'invitation_id') String? invitationId,
     @JsonKey(name: 'invited_at') required DateTime invitedAt,
     @JsonKey(name: 'joined_at') DateTime? joinedAt,

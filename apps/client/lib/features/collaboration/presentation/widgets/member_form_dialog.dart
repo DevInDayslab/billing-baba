@@ -218,7 +218,9 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _dialogHeader('Edit Member'),
+                  _dialogHeader(
+                    widget.isEditing ? 'Edit Member Role' : 'Edit Member',
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                   LayoutBuilder(
                     builder: (context, constraints) {
@@ -319,6 +321,7 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
         const SizedBox(height: 6),
         TextFormField(
           controller: _nameController,
+          readOnly: widget.isEditing,
           decoration: buildSaleFieldDecoration(hint: 'Enter full name'),
           validator: (value) => Validators.required(value, fieldName: 'Name'),
           onChanged: (_) => setState(() {}),
@@ -344,6 +347,7 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
         const SizedBox(height: 6),
         TextFormField(
           controller: _contactController,
+          readOnly: widget.isEditing,
           decoration: buildSaleFieldDecoration(
             hint: isEmail ? 'Enter email address' : 'Enter 10-digit number',
           ).copyWith(

@@ -85,4 +85,24 @@ class CompanySession {
   bool get isOwner => relationship.isOwner;
 
   bool get hasFullAccess => isOwner;
+
+  CompanySession copyWith({
+    Role? role,
+    PermissionPreset? permissionPreset,
+  }) {
+    return CompanySession(
+      companyId: companyId,
+      companyName: companyName,
+      currentUserId: currentUserId,
+      currentUserName: currentUserName,
+      currentUserPhone: currentUserPhone,
+      relationship: relationship,
+      role: role ?? this.role,
+      permissionPreset: permissionPreset ?? this.permissionPreset,
+      syncStatus: syncStatus,
+      ownerName: ownerName,
+      ownerPhone: ownerPhone,
+      source: source,
+    );
+  }
 }

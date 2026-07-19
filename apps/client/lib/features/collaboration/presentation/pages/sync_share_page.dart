@@ -1,17 +1,19 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_repository_provider.dart';
-import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
+import 'package:billing_baba/features/collaboration/application/sync_share_live_sync_service.dart';
 import 'package:billing_baba/features/collaboration/domain/models/business_member.dart';
 import 'package:billing_baba/features/collaboration/domain/models/member_status.dart';
+import 'package:billing_baba/features/collaboration/domain/models/sync_status.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/collaboration_init_provider.dart';
-import 'package:billing_baba/features/collaboration/presentation/providers/collaboration_refresh_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/collaboration_scope_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/company_access_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/invitations_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/members_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/sync_share_live_sync_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/sync_share_refresh_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/sync_status_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/widgets/collaboration_action_helper.dart';
 import 'package:billing_baba/features/collaboration/presentation/widgets/collaboration_page_header.dart';
@@ -21,8 +23,10 @@ import 'package:billing_baba/features/collaboration/presentation/widgets/delete_
 import 'package:billing_baba/features/collaboration/presentation/widgets/logged_in_status_bar.dart';
 import 'package:billing_baba/features/collaboration/presentation/widgets/member_form_dialog.dart';
 import 'package:billing_baba/features/collaboration/presentation/widgets/members_table.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:window_manager/window_manager.dart';
 
 class SyncSharePage extends ConsumerStatefulWidget {
   const SyncSharePage({super.key});
@@ -32,15 +36,26 @@ class SyncSharePage extends ConsumerStatefulWidget {
 }
 
 class _SyncSharePageState extends ConsumerState<SyncSharePage>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, WindowListener {
+  bool get _supportsWindowFocus {
+    if (kIsWeb) return false;
+    return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (_supportsWindowFocus) {
+      windowManager.addListener(this);
+    }
   }
 
   @override
   void dispose() {
+    if (_supportsWindowFocus) {
+      windowManager.removeListener(this);
+    }
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -48,14 +63,22 @@ class _SyncSharePageState extends ConsumerState<SyncSharePage>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _refreshCollaborationData();
+      _silentRefresh(SyncShareRefreshTrigger.appResume);
     }
   }
 
-  void _refreshCollaborationData() {
-    unawaited(ref.read(membersProvider.notifier).reload(showLoading: false));
-    unawaited(ref.read(invitationsProvider.notifier).reload(showLoading: false));
-    ref.invalidate(companyAccessProvider);
+  @override
+  void onWindowFocus() {
+    _silentRefresh(SyncShareRefreshTrigger.windowFocus);
+  }
+
+  void _silentRefresh(SyncShareRefreshTrigger trigger) {
+    unawaited(
+      ref.read(syncShareRefreshProvider.notifier).refresh(
+            manual: false,
+            trigger: trigger,
+          ),
+    );
   }
 
   @override
@@ -66,7 +89,8 @@ class _SyncSharePageState extends ConsumerState<SyncSharePage>
     final initAsync = ref.watch(collaborationInitProvider);
     final membersAsync = ref.watch(membersProvider);
     final companyAccessAsync = ref.watch(companyAccessProvider);
-    final isRefreshing = ref.watch(collaborationRefreshProvider);
+    final syncStatusAsync = ref.watch(syncStatusProvider);
+    final isRefreshing = ref.watch(syncShareRefreshProvider);
 
     return initAsync.when(
       loading: () => const Padding(
@@ -91,14 +115,29 @@ class _SyncSharePageState extends ConsumerState<SyncSharePage>
             CollaborationPageHeader(
               isRefreshing: isRefreshing,
               onInviteUser: () => showAddMemberDialog(context, ref),
-              onRefresh: () =>
-                  ref.read(collaborationRefreshProvider.notifier).refreshAll(),
+              onRefresh: () => ref
+                  .read(syncShareRefreshProvider.notifier)
+                  .refresh(
+                    manual: true,
+                    trigger: SyncShareRefreshTrigger.manual,
+                  ),
               onDisableSync: () =>
                   ref.read(syncStatusProvider.notifier).disableSync(),
               onLogout: () =>
                   ref.read(syncStatusProvider.notifier).logoutSync(),
             ),
             const SizedBox(height: AppSpacing.lg),
+            syncStatusAsync.when(
+              loading: () => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
+              data: (status) {
+                if (!status.isOffline) return const SizedBox.shrink();
+                return const Padding(
+                  padding: EdgeInsets.only(bottom: AppSpacing.md),
+                  child: _OfflineModeBanner(),
+                );
+              },
+            ),
             companyAccessAsync.when(
               loading: () => const SizedBox.shrink(),
               error: (_, _) => const SizedBox.shrink(),
@@ -119,7 +158,7 @@ class _SyncSharePageState extends ConsumerState<SyncSharePage>
             Expanded(
               child: MembersTable(
                 membersAsync: membersAsync,
-                onRefresh: _refreshCollaborationData,
+                onRefresh: () => _silentRefresh(SyncShareRefreshTrigger.manual),
                 onInvite: () => showAddMemberDialog(context, ref),
                 onEdit: (member) => showEditMemberDialog(context, ref, member),
                 onDelete: (member) => _confirmDelete(context, ref, member),
@@ -128,14 +167,7 @@ class _SyncSharePageState extends ConsumerState<SyncSharePage>
                   context,
                   () => ref
                       .read(membersProvider.notifier)
-                      .updateMember(
-                        member.id,
-                        UpdateMemberInput(
-                          fullName: member.fullName,
-                          phoneOrEmail: member.phoneOrEmail,
-                          role: newRole,
-                        ),
-                      ),
+                      .changeRole(member.id, newRole),
                   successMessage: 'Role updated',
                 ),
               ),
@@ -197,6 +229,42 @@ class _SyncSharePageState extends ConsumerState<SyncSharePage>
         ref.read(collaborationServiceProvider).shareViaWhatsApp(invitation);
       },
       successMessage: 'Invitation resent to ${member.fullName}',
+    );
+  }
+}
+
+class _OfflineModeBanner extends StatelessWidget {
+  const _OfflineModeBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E1),
+        borderRadius: AppRadius.mdBorder,
+        border: Border.all(color: const Color(0xFFFFE082)),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.cloud_off_outlined, size: 18, color: Color(0xFFF57F17)),
+            SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                'Offline mode — showing cached data. Changes will sync when you reconnect.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF6D4C41),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

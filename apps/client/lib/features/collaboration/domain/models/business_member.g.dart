@@ -14,6 +14,7 @@ _BusinessMember _$BusinessMemberFromJson(Map<String, dynamic> json) =>
       status: $enumDecode(_$MemberStatusEnumMap, json['status']),
       role: $enumDecode(_$RoleEnumMap, json['role']),
       isOwner: json['is_owner'] as bool? ?? false,
+      isCurrentUser: json['is_current_user'] as bool? ?? false,
       invitationId: json['invitation_id'] as String?,
       invitedAt: DateTime.parse(json['invited_at'] as String),
       joinedAt: json['joined_at'] == null
@@ -29,6 +30,7 @@ Map<String, dynamic> _$BusinessMemberToJson(_BusinessMember instance) =>
       'status': _$MemberStatusEnumMap[instance.status]!,
       'role': _$RoleEnumMap[instance.role]!,
       'is_owner': instance.isOwner,
+      'is_current_user': instance.isCurrentUser,
       'invitation_id': instance.invitationId,
       'invited_at': instance.invitedAt.toIso8601String(),
       'joined_at': instance.joinedAt?.toIso8601String(),
@@ -37,6 +39,10 @@ Map<String, dynamic> _$BusinessMemberToJson(_BusinessMember instance) =>
 const _$MemberStatusEnumMap = {
   MemberStatus.pending: 'pending',
   MemberStatus.joined: 'joined',
+  MemberStatus.left: 'left',
+  MemberStatus.rejected: 'rejected',
+  MemberStatus.expired: 'expired',
+  MemberStatus.cancelled: 'cancelled',
 };
 
 const _$RoleEnumMap = {

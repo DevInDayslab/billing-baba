@@ -182,6 +182,83 @@ export function buildCollaborationPaths() {
         },
       }),
     },
+    '/collaboration/company-members': {
+      get: securedOperation({
+        tags: [tag],
+        summary: 'List company members',
+        description:
+          'Returns the business owner and all collaborators for the active company. Requires business owner role.',
+        operationId: 'listCompanyMembers',
+        responses: {
+          200: {
+            description: 'Company members',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['data'],
+                  properties: {
+                    data: {
+                      type: 'array',
+                      items: ref('CompanyMemberResponse'),
+                    },
+                  },
+                },
+              },
+            },
+          },
+          ...standardErrorResponses,
+        },
+      }),
+    },
+    '/collaboration/company-members/{id}': {
+      patch: securedOperation({
+        tags: [tag],
+        summary: 'Update member role',
+        description:
+          'Updates a pending or joined collaborator role. Requires business owner role.',
+        operationId: 'updateCompanyMember',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: ref('UpdateCompanyMemberRequest'),
+            },
+          },
+        },
+        responses: {
+          200: okResponse('Member updated', 'CompanyMemberResponse'),
+          ...standardErrorResponses,
+        },
+      }),
+      delete: securedOperation({
+        tags: [tag],
+        summary: 'Remove company member',
+        description:
+          'Cancels a pending invitation or removes a joined collaborator. Requires business owner role.',
+        operationId: 'removeCompanyMember',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          200: okResponse('Member removed', 'SuccessResponse'),
+          ...standardErrorResponses,
+        },
+      }),
+    },
     '/collaboration/company-members/{id}/leave': {
       post: securedOperation({
         tags: [tag],

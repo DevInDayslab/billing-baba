@@ -8,6 +8,7 @@ import 'package:billing_baba/features/collaboration/domain/models/company_sessio
 import 'package:billing_baba/features/collaboration/presentation/providers/company_directory_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/company_session_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/sync_share_refresh_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CompanySessionOpenBlocked implements Exception {
@@ -78,13 +79,13 @@ class CompanySessionService {
     final entry = await _collaborationRepository.acceptCompanyInvitation(
       invitationId,
     );
-    _ref.invalidate(companyDirectoryProvider);
+    await _ref.read(syncShareRefreshProvider.notifier).refreshAfterMutation();
     return entry;
   }
 
   Future<void> rejectInvite(String invitationId) async {
     await _collaborationRepository.rejectCompanyInvitation(invitationId);
-    _ref.invalidate(companyDirectoryProvider);
+    await _ref.read(syncShareRefreshProvider.notifier).refreshAfterMutation();
   }
 
   Future<void> leaveCompany(CompanyListEntry entry) async {
@@ -103,7 +104,7 @@ class CompanySessionService {
         includeBusinessList: true,
       );
     }
-    _ref.invalidate(companyDirectoryProvider);
+    await _ref.read(syncShareRefreshProvider.notifier).refreshAfterMutation();
   }
 
   void _applySession(CompanySession session) {

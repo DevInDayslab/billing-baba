@@ -526,4 +526,137 @@ export class CollaborationRepository {
 
     return row ?? null;
   }
+
+  async getBusinessOwnerAccountId(companyId: string): Promise<string | null> {
+    const [row] = await this.db
+      .select({ accountId: users.accountId })
+      .from(users)
+      .where(
+        and(
+          eq(users.businessId, companyId),
+          eq(users.role, 'owner'),
+          eq(users.isDeleted, false),
+          eq(users.isActive, true),
+        ),
+      )
+      .limit(1);
+
+    return row?.accountId ?? null;
+  }
+
+  async findInvitationByPlaceholderMemberId(
+    companyId: string,
+    placeholderMemberId: string,
+  ): Promise<InvitationRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(invitations)
+      .where(
+        and(
+          eq(invitations.companyId, companyId),
+          eq(invitations.placeholderMemberId, placeholderMemberId),
+        ),
+      )
+      .orderBy(asc(invitations.createdAt))
+      .limit(1);
+
+    return (row as InvitationRow | undefined) ?? null;
+  }
+
+  async findLatestInvitationByPlaceholderMemberId(
+    companyId: string,
+    placeholderMemberId: string,
+  ): Promise<InvitationRow | null> {
+    const rows = await this.db
+      .select()
+      .from(invitations)
+      .where(
+        and(
+          eq(invitations.companyId, companyId),
+          eq(invitations.placeholderMemberId, placeholderMemberId),
+        ),
+      )
+      .orderBy(asc(invitations.createdAt));
+
+    if (rows.length === 0) return null;
+    return rows[rows.length - 1] as InvitationRow;
+  }
+
+  async updateInvitationRole(
+    invitationId: string,
+    role: CollaborationRole,
+  ): Promise<InvitationRow | null> {
+    const now = new Date();
+    const [row] = await this.db
+      .update(invitations)
+      .set({ role, updatedAt: now })
+      .where(eq(invitations.id, invitationId))
+      .returning();
+
+    return (row as InvitationRow | undefined) ?? null;
+  }
+
+  async updateCompanyMemberRole(
+    memberId: string,
+    role: CollaborationRole,
+  ): Promise<CompanyMemberRow | null> {
+    const now = new Date();
+    const [row] = await this.db
+      .update(companyMembers)
+      .set({ role, updatedAt: now })
+      .where(
+        and(eq(companyMembers.id, memberId), eq(companyMembers.status, 'active')),
+      )
+      .returning();
+
+    return (row as CompanyMemberRow | undefined) ?? null;
+  }
+
+  async findActiveCompanyMemberByContact(
+    companyId: string,
+    phone: string | null,
+    email: string | null,
+  ): Promise<CompanyMemberRow | null> {
+    return this.findActiveMemberByContact(companyId, phone, email);
+  }
+
+  async markMemberRemoved(id: string): Promise<CompanyMemberRow | null> {
+    const now = new Date();
+    const [row] = await this.db
+      .update(companyMembers)
+      .set({
+        status: 'removed',
+        leftAt: now,
+        updatedAt: now,
+      })
+      .where(
+        and(eq(companyMembers.id, id), eq(companyMembers.status, 'active')),
+      )
+      .returning();
+
+    return (row as CompanyMemberRow | undefined) ?? null;
+  }
+
+  async markInvitationRemovedByContact(
+    companyId: string,
+    phone: string | null,
+    email: string | null,
+  ): Promise<void> {
+    const now = new Date();
+    const contactConditions = [];
+    if (phone) contactConditions.push(eq(invitations.phone, phone));
+    if (email) contactConditions.push(eq(invitations.email, email));
+    if (contactConditions.length === 0) return;
+
+    await this.db
+      .update(invitations)
+      .set({ status: 'left', updatedAt: now })
+      .where(
+        and(
+          eq(invitations.companyId, companyId),
+          eq(invitations.status, 'accepted'),
+          or(...contactConditions),
+        ),
+      );
+  }
 }

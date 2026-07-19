@@ -20,6 +20,7 @@ import {
   createInvitationBodySchema,
   invitationIdParamsSchema,
   invitationTokenParamsSchema,
+  updateCompanyMemberBodySchema,
 } from '../modules/collaboration/collaboration.schema';
 import { dashboardQuerySchema } from '../modules/dashboard/dashboard.schema';
 import {
@@ -311,6 +312,7 @@ function registerZodSchemas(): SchemaEntry[] {
     [Schema.InvitationTokenParams, invitationTokenParamsSchema],
     [Schema.InvitationIdParams, invitationIdParamsSchema],
     [Schema.CompanyMemberIdParams, companyMemberIdParamsSchema],
+    [Schema.UpdateCompanyMemberRequest, updateCompanyMemberBodySchema],
   ];
 
   return pairs.map(([name, schema, example]) => {
@@ -438,5 +440,6 @@ export function buildSchemas(): Record<string, Record<string, unknown>> {
     [Schema.AcceptInvitationResponse, genericObjectSchema],
     [Schema.SharedCompanyResponse, genericObjectSchema],
     [Schema.PendingInvitationResponse, genericObjectSchema],
+    [Schema.CompanyMemberResponse, genericObjectSchema],
   ]);
 }

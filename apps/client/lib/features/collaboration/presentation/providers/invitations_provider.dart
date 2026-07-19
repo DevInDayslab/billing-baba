@@ -2,9 +2,7 @@ import 'package:billing_baba/features/collaboration/application/collaboration_re
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
 import 'package:billing_baba/features/collaboration/domain/models/invitation.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/collaboration_init_provider.dart';
-import 'package:billing_baba/features/collaboration/presentation/providers/company_access_provider.dart';
-import 'package:billing_baba/features/collaboration/presentation/providers/company_directory_provider.dart';
-import 'package:billing_baba/features/collaboration/presentation/providers/members_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/sync_share_refresh_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'invitations_provider.g.dart';
@@ -31,40 +29,28 @@ class Invitations extends _$Invitations {
   Future<Invitation> cancel(String invitationId) async {
     final service = ref.read(collaborationServiceProvider);
     final invitation = await service.cancelInvitation(invitationId);
-    await reload(showLoading: false);
-    await ref.read(membersProvider.notifier).reload(showLoading: false);
-    ref.invalidate(companyAccessProvider);
-    ref.invalidate(companyDirectoryProvider);
-    ref.invalidate(collaborationCompaniesProvider);
+    await ref.read(syncShareRefreshProvider.notifier).refreshAfterMutation();
     return invitation;
   }
 
   Future<Invitation> accept(String invitationId) async {
     final service = ref.read(collaborationServiceProvider);
     final invitation = await service.acceptInvitation(invitationId);
-    await reload(showLoading: false);
-    await ref.read(membersProvider.notifier).reload(showLoading: false);
-    ref.invalidate(companyAccessProvider);
+    await ref.read(syncShareRefreshProvider.notifier).refreshAfterMutation();
     return invitation;
   }
 
   Future<Invitation> reject(String invitationId) async {
     final service = ref.read(collaborationServiceProvider);
     final invitation = await service.rejectInvitation(invitationId);
-    await reload(showLoading: false);
-    await ref.read(membersProvider.notifier).reload(showLoading: false);
-    ref.invalidate(companyAccessProvider);
+    await ref.read(syncShareRefreshProvider.notifier).refreshAfterMutation();
     return invitation;
   }
 
   Future<Invitation> reinvite(String invitationId) async {
     final service = ref.read(collaborationServiceProvider);
     final invitation = await service.reinviteInvitation(invitationId);
-    await reload(showLoading: false);
-    await ref.read(membersProvider.notifier).reload(showLoading: false);
-    ref.invalidate(companyAccessProvider);
-    ref.invalidate(companyDirectoryProvider);
-    ref.invalidate(collaborationCompaniesProvider);
+    await ref.read(syncShareRefreshProvider.notifier).refreshAfterMutation();
     return invitation;
   }
 }
@@ -96,11 +82,7 @@ class LastInvitation extends _$LastInvitation {
       memberName: input.fullName,
     );
     state = result;
-    await ref.read(invitationsProvider.notifier).reload(showLoading: false);
-    await ref.read(membersProvider.notifier).reload(showLoading: false);
-    ref.invalidate(companyAccessProvider);
-    ref.invalidate(companyDirectoryProvider);
-    ref.invalidate(collaborationCompaniesProvider);
+    await ref.read(syncShareRefreshProvider.notifier).refreshAfterMutation();
     return result;
   }
 }

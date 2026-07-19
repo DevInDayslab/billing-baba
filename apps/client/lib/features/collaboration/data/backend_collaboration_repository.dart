@@ -51,10 +51,21 @@ class BackendCollaborationRepository implements CollaborationRepository {
 
   @override
   Future<List<BusinessMember>> fetchMembers() async {
-    final invitations = await fetchInvitations();
-    final members = _membersFromInvitations(invitations);
-    _companyCache.replaceMembers(members);
-    return members;
+    try {
+      final members = await _api.listMembers();
+      _companyCache.replaceMembers(members);
+      _markOnlineIfEnabled();
+      return List<BusinessMember>.from(members);
+    } on DioException {
+      _markOfflineIfEnabled();
+      if (_companyCache.members.isNotEmpty) {
+        return List<BusinessMember>.from(_companyCache.members);
+      }
+      final invitations = await fetchInvitations();
+      final members = _membersFromInvitations(invitations);
+      _companyCache.replaceMembers(members);
+      return members;
+    }
   }
 
   @override
@@ -62,8 +73,10 @@ class BackendCollaborationRepository implements CollaborationRepository {
     try {
       final invitations = await _api.listInvitations();
       _companyCache.replaceInvitations(invitations);
+      _markOnlineIfEnabled();
       return List<Invitation>.from(invitations);
     } on DioException {
+      _markOfflineIfEnabled();
       return List<Invitation>.from(_companyCache.invitations);
     }
   }
@@ -91,13 +104,20 @@ class BackendCollaborationRepository implements CollaborationRepository {
   Future<CompanyAccess> fetchCompany() async {
     try {
       final members = await fetchMembers();
+      BusinessMember? owner;
+      for (final member in members) {
+        if (member.isOwner) {
+          owner = member;
+          break;
+        }
+      }
       final joinedCount =
           members.where((member) => member.status == MemberStatus.joined).length;
       final access = CompanyAccess(
         businessName: _companyName,
-        ownerName: 'Business Owner',
-        ownerPhone: _sessionContext.ownerPhone,
-        totalMembers: joinedCount + 1,
+        ownerName: owner?.fullName ?? 'Business Owner',
+        ownerPhone: owner?.phoneOrEmail ?? _sessionContext.ownerPhone,
+        totalMembers: joinedCount,
         loggedInPhone: _sessionContext.currentUserPhone,
       );
       _companyCache.replaceCompanyAccess(access);
@@ -124,9 +144,60 @@ class BackendCollaborationRepository implements CollaborationRepository {
     String id,
     UpdateMemberInput input,
   ) async {
-    throw const CollaborationForbiddenException(
-      'Editing members is not available yet. Remove and reinvite instead.',
-    );
+    final existing = await _memberById(id);
+    if (existing == null) {
+      throw const CollaborationNotFoundException('Member not found');
+    }
+    if (existing.isOwner) {
+      throw const CollaborationForbiddenException(
+        'The business owner cannot be edited',
+      );
+    }
+
+    final contactChanged =
+        normalizeContact(existing.phoneOrEmail) !=
+        normalizeContact(input.phoneOrEmail);
+    final nameChanged = existing.fullName.trim() != input.fullName.trim();
+    if (contactChanged || nameChanged) {
+      throw const CollaborationValidationException(
+        'Contact details cannot be changed. Remove the member and send a new invitation.',
+      );
+    }
+
+    return changeRole(id, input.role);
+  }
+
+  @override
+  Future<void> removeMember(String id) async {
+    final member = await _memberById(id);
+    if (member == null) {
+      throw const CollaborationNotFoundException('Member not found');
+    }
+    if (member.isOwner) {
+      throw const CollaborationForbiddenException(
+        'The business owner cannot be removed',
+      );
+    }
+
+    await _api.removeMember(id);
+    await _refreshMembersAndInvitationsCache();
+  }
+
+  @override
+  Future<BusinessMember> changeRole(String id, Role role) async {
+    final member = await _memberById(id);
+    if (member == null) {
+      throw const CollaborationNotFoundException('Member not found');
+    }
+    if (member.isOwner) {
+      throw const CollaborationForbiddenException(
+        'The business owner role cannot be changed',
+      );
+    }
+
+    final updated = await _api.updateMemberRole(id, role);
+    await _refreshMembersAndInvitationsCache();
+    return updated;
   }
 
   Future<BusinessMember?> _memberById(String id) async {
@@ -174,28 +245,6 @@ class BackendCollaborationRepository implements CollaborationRepository {
       if (entry.invitationId == invitationId) return entry;
     }
     return null;
-  }
-
-  @override
-  Future<void> removeMember(String id) async {
-    final member = await _memberById(id);
-    if (member == null) {
-      throw const CollaborationNotFoundException('Member not found');
-    }
-    if (member.status == MemberStatus.pending && member.invitationId != null) {
-      await cancelInvitation(member.invitationId!);
-      return;
-    }
-    throw const CollaborationForbiddenException(
-      'Removing joined members is not available yet.',
-    );
-  }
-
-  @override
-  Future<BusinessMember> changeRole(String id, Role role) async {
-    throw const CollaborationForbiddenException(
-      'Changing roles is not available yet.',
-    );
   }
 
   @override
@@ -448,10 +497,23 @@ class BackendCollaborationRepository implements CollaborationRepository {
     await loadCompanies();
   }
 
+  Future<void> _refreshMembersAndInvitationsCache() async {
+    try {
+      final members = await _api.listMembers();
+      _companyCache.replaceMembers(members);
+    } on DioException {
+      // Keep cached members on background refresh failure.
+    }
+    try {
+      final invitations = await _api.listInvitations();
+      _companyCache.replaceInvitations(invitations);
+    } on DioException {
+      // Keep cached invitations on background refresh failure.
+    }
+  }
+
   Future<void> _refreshInvitationsCache() async {
-    final invitations = await _api.listInvitations();
-    _companyCache.replaceInvitations(invitations);
-    _companyCache.replaceMembers(_membersFromInvitations(invitations));
+    await _refreshMembersAndInvitationsCache();
   }
 
   List<BusinessMember> _membersFromInvitations(List<Invitation> invitations) {
@@ -569,6 +631,26 @@ class BackendCollaborationRepository implements CollaborationRepository {
     Role.stockKeeper => 'stock_keeper',
     Role.accountantEditAccess => 'accountant_edit_access',
   };
+
+  void _markOfflineIfEnabled() {
+    if (_loggedOut || !_syncStatus.isEnabled) return;
+    _syncStatus = _syncStatus.copyWith(
+      state: CollaborationSyncState.offline,
+      isConnected: false,
+      isSyncing: false,
+    );
+  }
+
+  void _markOnlineIfEnabled() {
+    if (_loggedOut || !_syncStatus.isEnabled) return;
+    _syncStatus = _syncStatus.copyWith(
+      state: CollaborationSyncState.enabled,
+      isConnected: true,
+      isSyncing: false,
+      lastSyncedAt: DateTime.now(),
+      errorMessage: null,
+    );
+  }
 
   SyncStatus _buildInitialSyncStatus() {
     return SyncStatus(

@@ -194,6 +194,9 @@ abstract final class ApiEndpoints {
       '$collaboration/companies/shared';
   static const collaborationCompaniesInvitations =
       '$collaboration/companies/invitations';
+  static const collaborationMembers = '$collaboration/company-members';
+  static String collaborationMember(String memberId) =>
+      '$collaborationMembers/$memberId';
   static String collaborationReinvite(String invitationId) =>
       '$collaborationInvitations/reinvite/$invitationId';
   static String collaborationCancelInvitation(String invitationId) =>

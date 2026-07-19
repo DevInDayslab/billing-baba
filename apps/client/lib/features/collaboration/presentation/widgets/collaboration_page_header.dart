@@ -1,8 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/collaboration/application/collaboration_error_mapper.dart';
+import 'package:billing_baba/features/collaboration/application/sync_share_live_sync_service.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
-import 'package:billing_baba/features/collaboration/presentation/widgets/collaboration_action_helper.dart';
 import 'package:billing_baba/features/collaboration/presentation/widgets/sync_confirmation_dialogs.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
@@ -50,26 +51,28 @@ class CollaborationPageHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
+        Tooltip(
+          message: 'Refresh',
+          child: IconButton(
+            onPressed: isRefreshing ? null : () => _handleManualRefresh(context),
+            icon: isRefreshing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh, size: 20),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.xs),
         SalesActionMenuButton(
           items: [
             SalesActionMenuItem(
-              label: 'Refresh',
-              onSelected: () async {
-                if (isRefreshing) return;
-                await runCollaborationAction(
-                  context,
-                  onRefresh,
-                  successMessage: 'Sync refreshed',
-                );
-              },
-            ),
-            SalesActionMenuItem(
               label: 'Disable Sync',
-              dividerBefore: true,
               onSelected: () async {
                 final confirmed = await showDisableSyncDialog(context);
                 if (confirmed != true || !context.mounted) return;
-                await runCollaborationAction(
+                await _runAction(
                   context,
                   onDisableSync,
                   successMessage: 'Cloud sync disabled',
@@ -82,7 +85,7 @@ class CollaborationPageHeader extends StatelessWidget {
               onSelected: () async {
                 final confirmed = await showLogoutSyncDialog(context);
                 if (confirmed != true || !context.mounted) return;
-                await runCollaborationAction(
+                await _runAction(
                   context,
                   onLogout,
                   successMessage: 'Logged out from sync',
@@ -93,5 +96,49 @@ class CollaborationPageHeader extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _handleManualRefresh(BuildContext context) async {
+    await _runAction(
+      context,
+      onRefresh,
+      successMessage: 'Sync refreshed',
+    );
+  }
+
+  Future<void> _runAction(
+    BuildContext context,
+    Future<void> Function() action, {
+    String? successMessage,
+  }) async {
+    try {
+      await action();
+      if (!context.mounted) return;
+      if (successMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(successMessage),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } on SyncShareRefreshOfflineException catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on Object catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(CollaborationErrorMapper.messageFor(error)),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 }

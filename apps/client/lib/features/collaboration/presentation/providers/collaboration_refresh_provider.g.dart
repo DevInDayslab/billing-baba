@@ -8,12 +8,15 @@ part of 'collaboration_refresh_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Backwards-compatible alias for [SyncShareRefresh].
 
 @ProviderFor(CollaborationRefresh)
 final collaborationRefreshProvider = CollaborationRefreshProvider._();
 
+/// Backwards-compatible alias for [SyncShareRefresh].
 final class CollaborationRefreshProvider
     extends $NotifierProvider<CollaborationRefresh, bool> {
+  /// Backwards-compatible alias for [SyncShareRefresh].
   CollaborationRefreshProvider._()
     : super(
         from: null,
@@ -42,7 +45,9 @@ final class CollaborationRefreshProvider
 }
 
 String _$collaborationRefreshHash() =>
-    r'2d5d051566fed224457c04183f7a02c81686630f';
+    r'6dbb185102e0cdc9270e7b9fe9525a327e595dd1';
+
+/// Backwards-compatible alias for [SyncShareRefresh].
 
 abstract class _$CollaborationRefresh extends $Notifier<bool> {
   bool build();

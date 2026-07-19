@@ -4,7 +4,10 @@ import 'package:billing_baba/features/collaboration/application/collaboration_er
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
 import 'package:billing_baba/features/collaboration/domain/models/business_member.dart';
 import 'package:billing_baba/features/collaboration/domain/models/member_status.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/collaboration/domain/models/role.dart';
+import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
 import 'package:billing_baba/features/collaboration/presentation/widgets/collaboration_empty_state.dart';
 import 'package:billing_baba/features/collaboration/presentation/widgets/member_status_chip.dart';
 import 'package:billing_baba/features/collaboration/presentation/widgets/role_badge.dart';
@@ -12,6 +15,7 @@ import 'package:billing_baba/features/collaboration/presentation/widgets/role_se
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_table_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 typedef MemberRoleChangeCallback =
     void Function(BusinessMember member, Role newRole);
@@ -39,6 +43,7 @@ class MembersTable extends StatelessWidget {
   final MemberRoleChangeCallback? onRoleChange;
 
   static const _cellPadding = EdgeInsets.symmetric(horizontal: 12);
+  static final _dateFormat = DateFormat('dd MMM yyyy');
 
   @override
   Widget build(BuildContext context) {
@@ -65,64 +70,98 @@ class MembersTable extends StatelessWidget {
               horizontal: AppSpacing.md,
               vertical: AppSpacing.sm,
             ),
-            child: ResizableDataTable(
-              columns: [
-                _column('NAME', 160),
-                _column('PHONE / EMAIL', 200),
-                _column('ROLE', 200),
-                _column('STATUS', 140),
-                _column('ACTIONS', 88, resizable: false),
-              ],
-              rows: [
-                for (final member in members)
-                  ResizableDataRow(
-                    cells: [
-                      _tableCell(
-                        Text(
-                          member.fullName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textPrimary,
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                child: ResizableDataTable(
+                  columns: [
+                    _column('NAME', 160),
+                    _column('PHONE / EMAIL', 180),
+                    _column('ROLE', 180),
+                    _column('JOINED', 110),
+                    _column('STATUS', 140),
+                    _column('ACTIONS', 88, resizable: false),
+                  ],
+                  rows: [
+                    for (final member in members)
+                      ResizableDataRow(
+                        cells: [
+                          _tableCell(
+                            Text(
+                              member.fullName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      _tableCell(
-                        Text(
-                          _formatContactDisplay(member.phoneOrEmail),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textPrimary,
+                          _tableCell(
+                            Text(
+                              _formatContactDisplay(member.phoneOrEmail),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
                           ),
-                        ),
+                          _tableCell(
+                            _RoleCell(
+                              member: member,
+                              onRoleChange: onRoleChange,
+                            ),
+                          ),
+                          _tableCell(
+                            Text(
+                              _formatJoinedDate(member),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          _tableCell(
+                            MemberStatusChip(
+                              status: member.status,
+                              isOwner: member.isOwner,
+                              isCurrentUser:
+                                  member.isCurrentUser && !member.isOwner,
+                            ),
+                          ),
+                          _tableCell(
+                            _MemberActionsCell(
+                              member: member,
+                              onEdit: onEdit,
+                              onDelete: onDelete,
+                              onReinvite: onReinvite,
+                            ),
+                            alignment: Alignment.center,
+                          ),
+                        ],
                       ),
-                      _tableCell(
-                        _RoleCell(
-                          member: member,
-                          onRoleChange: onRoleChange,
-                        ),
-                      ),
-                      _tableCell(MemberStatusChip(status: member.status)),
-                      _tableCell(
-                        _MemberActionsCell(
-                          member: member,
-                          onEdit: onEdit,
-                          onDelete: onDelete,
-                          onReinvite: onReinvite,
-                        ),
-                        alignment: Alignment.center,
-                      ),
-                    ],
-                  ),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         );
       },
     );
+  }
+
+  String _formatJoinedDate(BusinessMember member) {
+    if (member.status == MemberStatus.joined && member.joinedAt != null) {
+      return _dateFormat.format(member.joinedAt!);
+    }
+    if (member.status == MemberStatus.pending) {
+      return _dateFormat.format(member.invitedAt);
+    }
+    return '—';
   }
 
   String _formatContactDisplay(String contact) {
@@ -187,39 +226,60 @@ class _MemberActionsCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (member.isOwner) {
+      return const SizedBox(width: 32);
+    }
+
     final isPending = member.status == MemberStatus.pending;
     final canReinvite =
-        !member.isOwner &&
-        isPending &&
+        member.status.canReinvite &&
         member.invitationId != null &&
         onReinvite != null;
+
+    if (canReinvite) {
+      return _compactIconButton(
+        tooltip: 'Reinvite',
+        onPressed: () => onReinvite!(member),
+        icon: const Icon(
+          Icons.send_outlined,
+          size: 18,
+          color: AppColors.primary,
+        ),
+      );
+    }
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _compactIconButton(
-          tooltip: 'Edit',
-          onPressed: () => onEdit(member),
-          icon: const Icon(
-            Icons.edit_outlined,
-            size: 18,
-            color: AppColors.primary,
+        PermissionGate(
+          module: PermissionModule.syncSettings,
+          action: PermissionAction.edit,
+          child: _compactIconButton(
+            tooltip: 'Edit',
+            onPressed: () => onEdit(member),
+            icon: const Icon(
+              Icons.edit_outlined,
+              size: 18,
+              color: AppColors.primary,
+            ),
           ),
         ),
-        if (!member.isOwner)
-          if (canReinvite)
-            _pendingActionsMenu(context)
-          else
-            _compactIconButton(
-              tooltip: isPending ? 'Cancel Invitation' : 'Delete',
-              onPressed: () => onDelete(member),
-              icon: Icon(
-                isPending ? Icons.cancel_outlined : Icons.delete_outline,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-            ),
+        PermissionGate(
+          module: PermissionModule.syncSettings,
+          action: PermissionAction.delete,
+          child: isPending
+              ? _pendingActionsMenu(context)
+              : _compactIconButton(
+                  tooltip: 'Remove member',
+                  onPressed: () => onDelete(member),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    size: 18,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+        ),
       ],
     );
   }
@@ -244,13 +304,14 @@ class _MemberActionsCell extends StatelessWidget {
         }
       },
       itemBuilder: (context) => [
-        const PopupMenuItem(
-          value: _PendingMemberAction.reinvite,
-          child: _ActionMenuRow(
-            icon: Icons.send_outlined,
-            label: 'Reinvite',
+        if (onReinvite != null)
+          const PopupMenuItem(
+            value: _PendingMemberAction.reinvite,
+            child: _ActionMenuRow(
+              icon: Icons.send_outlined,
+              label: 'Reinvite',
+            ),
           ),
-        ),
         const PopupMenuItem(
           value: _PendingMemberAction.cancelInvitation,
           child: _ActionMenuRow(
@@ -310,14 +371,24 @@ class _RoleCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (member.isOwner || onRoleChange == null) {
+    final canEditRole =
+        !member.isOwner &&
+        member.status == MemberStatus.joined &&
+        onRoleChange != null;
+
+    if (!canEditRole) {
       return RoleBadge(role: member.role);
     }
 
-    return RoleSelectTrigger(
-      dense: true,
-      selectedRole: member.role,
-      onChanged: (role) => onRoleChange!(member, role),
+    return PermissionGate(
+      module: PermissionModule.syncSettings,
+      action: PermissionAction.edit,
+      fallback: RoleBadge(role: member.role),
+      child: RoleSelectTrigger(
+        dense: true,
+        selectedRole: member.role,
+        onChanged: (role) => onRoleChange!(member, role),
+      ),
     );
   }
 }

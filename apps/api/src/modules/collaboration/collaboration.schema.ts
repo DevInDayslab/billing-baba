@@ -28,8 +28,15 @@ export const invitationIdParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const updateCompanyMemberBodySchema = z.object({
+  role: collaborationRoleSchema,
+});
+
 export const companyMemberIdParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 export type CreateInvitationBody = z.infer<typeof createInvitationBodySchema>;
+export type UpdateCompanyMemberBody = z.infer<
+  typeof updateCompanyMemberBodySchema
+>;

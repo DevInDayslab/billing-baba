@@ -165,6 +165,8 @@ export const Schema = {
   AcceptInvitationResponse: 'AcceptInvitationResponse',
   SharedCompanyResponse: 'SharedCompanyResponse',
   PendingInvitationResponse: 'PendingInvitationResponse',
+  CompanyMemberResponse: 'CompanyMemberResponse',
+  UpdateCompanyMemberRequest: 'UpdateCompanyMemberRequest',
   InvitationTokenParams: 'InvitationTokenParams',
   InvitationIdParams: 'InvitationIdParams',
   CompanyMemberIdParams: 'CompanyMemberIdParams',

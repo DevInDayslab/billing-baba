@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:billing_baba/features/collaboration/domain/models/invitation.dart';
+import 'package:billing_baba/features/collaboration/application/sync_share_live_sync_service.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/collaboration_scope_provider.dart';
-import 'package:billing_baba/features/collaboration/presentation/providers/company_access_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/invitations_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/members_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/sync_share_refresh_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,36 +14,18 @@ const _syncSharePollInterval = Duration(seconds: 15);
 final syncShareLiveSyncProvider = Provider<void>((ref) {
   ref.watch(collaborationScopeProvider);
 
+  final backend = ref.read(syncShareLiveSyncBackendProvider);
   final connectivity = Connectivity();
   Timer? timer;
   var disposed = false;
 
-  Future<bool> isOnline() async {
-    final result = await connectivity.checkConnectivity();
-    return !result.contains(ConnectivityResult.none);
-  }
-
-  bool hasPollableInvitations() {
-    final invitations = ref.read(invitationsProvider);
-    return invitations.maybeWhen(
-      data: (items) => items.any((invitation) => invitation.status.isPollable),
-      orElse: () => false,
-    );
-  }
-
-  Future<void> silentRefresh() async {
+  Future<void> silentRefresh({
+    SyncShareRefreshTrigger trigger = SyncShareRefreshTrigger.poll,
+  }) async {
     if (disposed) return;
-    if (!await isOnline()) return;
-
-    try {
-      await ref.read(membersProvider.notifier).reload(showLoading: false);
-      if (disposed) return;
-      await ref.read(invitationsProvider.notifier).reload(showLoading: false);
-      if (disposed) return;
-      ref.invalidate(companyAccessProvider);
-    } catch (_) {
-      // Background refresh failures keep existing cached data.
-    }
+    await ref
+        .read(syncShareRefreshProvider.notifier)
+        .refresh(manual: false, trigger: trigger);
   }
 
   Future<void> scheduleNextPoll() async {
@@ -51,8 +33,8 @@ final syncShareLiveSyncProvider = Provider<void>((ref) {
     timer?.cancel();
     timer = null;
 
-    if (!await isOnline()) return;
-    if (!hasPollableInvitations()) return;
+    if (!await backend.isOnline()) return;
+    if (!ref.read(syncShareRefreshProvider.notifier).shouldPoll) return;
 
     timer = Timer(_syncSharePollInterval, () async {
       await silentRefresh();
@@ -60,7 +42,15 @@ final syncShareLiveSyncProvider = Provider<void>((ref) {
     });
   }
 
-  unawaited(silentRefresh().then((_) => scheduleNextPoll()));
+  // Initial load when page opens.
+  unawaited(
+    silentRefresh(trigger: SyncShareRefreshTrigger.pageOpen)
+        .then((_) => scheduleNextPoll()),
+  );
+
+  // Resume polling when invitations/members gain pending rows.
+  ref.listen(invitationsProvider, (_, __) => unawaited(scheduleNextPoll()));
+  ref.listen(membersProvider, (_, __) => unawaited(scheduleNextPoll()));
 
   final subscription = connectivity.onConnectivityChanged.listen((result) async {
     if (disposed) return;
@@ -69,7 +59,7 @@ final syncShareLiveSyncProvider = Provider<void>((ref) {
       timer = null;
       return;
     }
-    await silentRefresh();
+    await silentRefresh(trigger: SyncShareRefreshTrigger.connectivityRestored);
     await scheduleNextPoll();
   });
 

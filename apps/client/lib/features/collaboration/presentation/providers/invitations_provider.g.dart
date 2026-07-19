@@ -33,7 +33,7 @@ final class InvitationsProvider
   Invitations create() => Invitations();
 }
 
-String _$invitationsHash() => r'a9ec174499b2c8231117fc6858342c89b9e90683';
+String _$invitationsHash() => r'7ebd5d5570713b8bff0a2332ae8c8bfefbcd82c3';
 
 abstract class _$Invitations extends $AsyncNotifier<List<Invitation>> {
   FutureOr<List<Invitation>> build();
@@ -86,7 +86,7 @@ final class LastInvitationProvider
   }
 }
 
-String _$lastInvitationHash() => r'63634dd2ddab5a11429f6a23db9eac768fab6bf7';
+String _$lastInvitationHash() => r'78bfd16f7d16917136d550b4572acef68ba7ba58';
 
 abstract class _$LastInvitation extends $Notifier<LastInvitationResult?> {
   LastInvitationResult? build();
