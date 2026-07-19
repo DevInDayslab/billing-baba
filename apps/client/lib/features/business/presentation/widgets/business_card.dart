@@ -1,22 +1,28 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
+import 'package:billing_baba/features/business/presentation/widgets/business_card_menu.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
+import 'package:billing_baba/features/collaboration/domain/models/role.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-enum BusinessCardAction { edit, delete }
-
 class BusinessCard extends StatefulWidget {
   const BusinessCard({
-    required this.business,
+    required this.entry,
     required this.onOpen,
-    this.onAction,
+    this.onAccept,
+    this.onReject,
+    this.onMenuAction,
     super.key,
   });
 
-  final BusinessModel business;
+  final CompanyListEntry entry;
   final VoidCallback onOpen;
-  final ValueChanged<BusinessCardAction>? onAction;
+  final VoidCallback? onAccept;
+  final VoidCallback? onReject;
+  final ValueChanged<CompanyCardMenuAction>? onMenuAction;
 
   @override
   State<BusinessCard> createState() => _BusinessCardState();
@@ -30,9 +36,12 @@ class _BusinessCardState extends State<BusinessCard> {
 
   @override
   Widget build(BuildContext context) {
-    final business = widget.business;
+    final entry = widget.entry;
     final dateFormat = DateFormat("dd/MM/yyyy 'at' hh:mm a");
-    final syncOn = business.syncStatus == SyncStatus.on;
+    final syncOn = entry.syncStatus == SyncStatus.on;
+    final isSharedTab = entry.isSharedTab;
+    final isPending = entry.relationship.isPending;
+    final isExpired = entry.relationship.isExpired;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -65,8 +74,8 @@ class _BusinessCardState extends State<BusinessCard> {
         child: Row(
           children: [
             BusinessAvatar(
-              name: business.name,
-              seed: business.id,
+              name: entry.name,
+              seed: entry.id,
               diameter: 44,
             ),
             const SizedBox(width: AppSpacing.md),
@@ -78,7 +87,7 @@ class _BusinessCardState extends State<BusinessCard> {
                     children: [
                       Flexible(
                         child: Text(
-                          business.name,
+                          entry.name,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.w700,
@@ -88,7 +97,7 @@ class _BusinessCardState extends State<BusinessCard> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (business.isCurrent) ...[
+                      if (entry.isCurrent) ...[
                         const SizedBox(width: AppSpacing.sm),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -115,10 +124,10 @@ class _BusinessCardState extends State<BusinessCard> {
                       ],
                     ],
                   ),
-                  if (business.isShared) ...[
+                  if (isSharedTab) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'Shared by ${business.ownerName ?? 'Business owner'}',
+                      'Shared by ${entry.ownerName ?? 'Business owner'}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textSecondary,
                         fontSize: 12,
@@ -130,11 +139,19 @@ class _BusinessCardState extends State<BusinessCard> {
                       runSpacing: AppSpacing.xs,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        if (business.role != null)
+                        if (entry.role != null)
                           _MetaChip(
-                            label: 'Your role: ${business.role}',
+                            label: 'Role: ${entry.role!.displayLabel}',
                             color: AppColors.primary,
                             backgroundColor: AppColors.primary.withValues(
+                              alpha: 0.08,
+                            ),
+                          ),
+                        if (isExpired)
+                          _MetaChip(
+                            label: 'Expired',
+                            color: AppColors.error,
+                            backgroundColor: AppColors.error.withValues(
                               alpha: 0.08,
                             ),
                           ),
@@ -142,10 +159,10 @@ class _BusinessCardState extends State<BusinessCard> {
                       ],
                     ),
                   ] else ...[
-                    if (business.lastSaleAt != null) ...[
+                    if (entry.lastSaleAt != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        'Last sale: ${dateFormat.format(business.lastSaleAt!)}',
+                        'Last sale: ${dateFormat.format(entry.lastSaleAt!)}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -159,11 +176,27 @@ class _BusinessCardState extends State<BusinessCard> {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-            _OpenButton(onPressed: widget.onOpen, isHovered: _isHovered),
+            if (isPending && !isExpired) ...[
+              OutlinedButton(
+                onPressed: widget.onReject,
+                child: const Text('Reject'),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              FilledButton(
+                onPressed: widget.onAccept,
+                child: const Text('Accept'),
+              ),
+            ] else if (isExpired) ...[
+              const FilledButton(
+                onPressed: null,
+                child: Text('Accept'),
+              ),
+            ] else if (!isExpired)
+              _OpenButton(onPressed: widget.onOpen, isHovered: _isHovered),
             const SizedBox(width: AppSpacing.xs),
-            _BusinessCardMenu(
-              business: business,
-              onAction: widget.onAction,
+            BusinessCardMenu(
+              entry: entry,
+              onAction: widget.onMenuAction,
             ),
           ],
         ),
@@ -324,116 +357,6 @@ class _OpenButtonState extends State<_OpenButton> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _BusinessCardMenu extends StatelessWidget {
-  const _BusinessCardMenu({
-    required this.business,
-    required this.onAction,
-  });
-
-  final BusinessModel business;
-  final ValueChanged<BusinessCardAction>? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    final canManage = !business.isShared && business.isOwner;
-
-    return Theme(
-      data: Theme.of(context).copyWith(
-        popupMenuTheme: PopupMenuThemeData(
-          color: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          elevation: 8,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
-          textStyle: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 14,
-          ),
-        ),
-      ),
-      child: PopupMenuButton<BusinessCardAction>(
-        tooltip: 'More options',
-        icon: Icon(
-          Icons.more_vert,
-          color: AppColors.textSecondary.withValues(alpha: 0.85),
-          size: 22,
-        ),
-        color: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBorder),
-        elevation: 8,
-        shadowColor: Colors.black.withValues(alpha: 0.12),
-        offset: const Offset(0, 8),
-        onSelected: onAction,
-        itemBuilder: (context) => [
-          if (canManage) ...[
-            const PopupMenuItem(
-              value: BusinessCardAction.edit,
-              child: _MenuRow(
-                icon: Icons.edit_outlined,
-                label: 'Edit Company',
-              ),
-            ),
-            const PopupMenuItem(
-              value: BusinessCardAction.delete,
-              child: _MenuRow(
-                icon: Icons.delete_outline_rounded,
-                label: 'Delete Company',
-                destructive: true,
-              ),
-            ),
-          ] else
-            const PopupMenuItem(
-              enabled: false,
-              child: _MenuRow(
-                icon: Icons.info_outline,
-                label: 'No actions available',
-                muted: true,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MenuRow extends StatelessWidget {
-  const _MenuRow({
-    required this.icon,
-    required this.label,
-    this.destructive = false,
-    this.muted = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool destructive;
-  final bool muted;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = destructive
-        ? AppColors.error
-        : muted
-        ? AppColors.textSecondary.withValues(alpha: 0.6)
-        : AppColors.textPrimary;
-
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-          ),
-        ),
-      ],
     );
   }
 }

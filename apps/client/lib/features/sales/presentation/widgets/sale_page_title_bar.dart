@@ -1,10 +1,13 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_document_scope_permissions.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_page_switcher_menu.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Page header with a dropdown to switch between sale sub-pages.
-class SalePageTitleBar extends StatefulWidget {
+class SalePageTitleBar extends ConsumerStatefulWidget {
   const SalePageTitleBar({
     required this.currentRoute,
     this.onSettingsTap,
@@ -21,10 +24,10 @@ class SalePageTitleBar extends StatefulWidget {
   final Color? addButtonColor;
 
   @override
-  State<SalePageTitleBar> createState() => _SalePageTitleBarState();
+  ConsumerState<SalePageTitleBar> createState() => _SalePageTitleBarState();
 }
 
-class _SalePageTitleBarState extends State<SalePageTitleBar> {
+class _SalePageTitleBarState extends ConsumerState<SalePageTitleBar> {
   static const Color _hoverColor = AppColors.primary;
   static const Color _defaultColor = Colors.black87;
 
@@ -53,8 +56,15 @@ class _SalePageTitleBarState extends State<SalePageTitleBar> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 480;
+        final module = permissionModuleForSaleRoute(widget.currentRoute);
         final showAddButton =
-            widget.addButtonLabel != null && widget.onAddTap != null;
+            widget.addButtonLabel != null &&
+            widget.onAddTap != null &&
+            ref.watch(
+              permissionServiceProvider.select(
+                (service) => service.canCreate(module),
+              ),
+            );
         final addButtonColor = widget.addButtonColor ?? AppColors.primary;
 
         return Row(

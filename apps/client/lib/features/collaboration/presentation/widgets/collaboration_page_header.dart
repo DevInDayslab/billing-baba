@@ -1,4 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
+import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
 import 'package:billing_baba/features/collaboration/presentation/widgets/collaboration_action_helper.dart';
 import 'package:billing_baba/features/collaboration/presentation/widgets/sync_confirmation_dialogs.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
@@ -33,13 +36,17 @@ class CollaborationPageHeader extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        FilledButton.icon(
-          onPressed: onInviteUser,
-          icon: const Icon(Icons.person_add_outlined, size: 18),
-          label: const Text('Invite User'),
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
+        PermissionGate(
+          module: PermissionModule.syncSettings,
+          action: PermissionAction.share,
+          child: FilledButton.icon(
+            onPressed: onInviteUser,
+            icon: const Icon(Icons.person_add_outlined, size: 18),
+            label: const Text('Invite User'),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),

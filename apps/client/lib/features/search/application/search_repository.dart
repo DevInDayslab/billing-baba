@@ -1,4 +1,6 @@
+import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
 import 'package:billing_baba/features/search/application/recent_search_storage.dart';
+import 'package:billing_baba/features/collaboration/application/navigation_permission_registry.dart';
 import 'package:billing_baba/features/search/application/search_matcher.dart';
 import 'package:billing_baba/features/search/application/search_registry.dart';
 import 'package:billing_baba/features/search/application/search_shortcuts.dart';
@@ -21,8 +23,9 @@ class SearchRepository {
 
   /// Sync filter against the static registry — no I/O.
   List<SearchResultSection> filteredSections(String query) {
+    final permissions = _ref.read(permissionServiceProvider);
     final pages = SearchMatcher.filter(
-      items: SearchRegistry.pages,
+      items: SearchRegistry.visiblePages(permissions),
       query: query,
     );
     final commands = SearchMatcher.filter(
@@ -40,10 +43,15 @@ class SearchRepository {
 
   /// Suggested pages only — sync, no I/O.
   List<SearchResultSection> suggestedSections() {
+    final permissions = _ref.read(permissionServiceProvider);
     final suggestedItems = <SearchItem>[];
     for (final id in SearchShortcuts.suggestedPageIds) {
       final item = SearchRegistry.byId(id);
-      if (item != null) suggestedItems.add(item);
+      if (item == null || item.route == null) continue;
+      if (!NavigationPermissionRegistry.isVisible(item.route!, permissions)) {
+        continue;
+      }
+      suggestedItems.add(item);
     }
 
     if (suggestedItems.isEmpty) return const [];

@@ -5,6 +5,10 @@ import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_opening_overlay.dart';
+import 'package:billing_baba/features/collaboration/application/navigation_permission_registry.dart';
+import 'package:billing_baba/features/collaboration/application/permission_service.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_session_bootstrap_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
 import 'package:billing_baba/features/collaboration/models/collaboration_sub_route.dart';
 import 'package:billing_baba/features/dashboard/application/quick_create_executor.dart';
 import 'package:billing_baba/features/dashboard/models/quick_create_action.dart';
@@ -179,7 +183,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     ),
   ];
 
-  List<_NavItem> get _navItems => [
+  List<_NavItem> get _allNavItems => [
     const _NavItem(
       route: AppRoutes.home,
       icon: Icons.home_outlined,
@@ -260,6 +264,45 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     ),
   ];
 
+  List<_NavItem> _visibleNavItems(PermissionService permissions) {
+    return _allNavItems
+        .map((item) => _filterNavItem(item, permissions))
+        .whereType<_NavItem>()
+        .toList();
+  }
+
+  _NavItem? _filterNavItem(_NavItem item, PermissionService permissions) {
+    if (item.routePrefix == AppRoutes.purchase) {
+      if (!NavigationPermissionRegistry.isPurchaseNavVisible(permissions)) {
+        return null;
+      }
+    } else {
+      final route = item.route ?? item.routePrefix;
+      if (route != null &&
+          !NavigationPermissionRegistry.isVisible(route, permissions)) {
+        return null;
+      }
+    }
+
+    if (!item.isExpandable) return item;
+
+    final subItems = item.subItems
+        .where(
+          (sub) => NavigationPermissionRegistry.isVisible(sub.route, permissions),
+        )
+        .toList();
+    if (subItems.isEmpty) return null;
+
+    return _NavItem(
+      icon: item.icon,
+      label: item.label,
+      route: item.route,
+      routePrefix: item.routePrefix,
+      isExpandable: item.isExpandable,
+      subItems: subItems,
+    );
+  }
+
   void _navigateTo(String route) {
     ref
         .read(shellSidebarProvider.notifier)
@@ -295,6 +338,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         }
       });
     }
+    ref.watch(companySessionBootstrapProvider);
+    final permissions = ref.watch(permissionServiceProvider);
     final sidebarState = ref.watch(shellSidebarProvider);
     final isCollapsed = sidebarState.isCollapsed;
     final isDrawerOpen = sidebarState.isDrawerOpen;
@@ -368,6 +413,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                       currentLocation: currentLocation,
                       collapsed: false,
                       showCloseButton: true,
+                      permissions: permissions,
                     ),
                   ),
                 ),
@@ -395,6 +441,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                   child: _buildSidebarPanel(
                     currentLocation: currentLocation,
                     collapsed: isCollapsed,
+                    permissions: permissions,
                   ),
                 ),
               ),
@@ -419,6 +466,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   Widget _buildSidebarPanel({
     required String currentLocation,
     required bool collapsed,
+    required PermissionService permissions,
     bool showCloseButton = false,
   }) {
     return LayoutBuilder(
@@ -439,6 +487,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
               child: _buildNavList(
                 currentLocation,
                 collapsed: compactLayout,
+                permissions: permissions,
               ),
             ),
             _buildSidebarFooter(collapsed: compactLayout),
@@ -533,14 +582,19 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     );
   }
 
-  Widget _buildNavList(String currentLocation, {required bool collapsed}) {
+  Widget _buildNavList(
+    String currentLocation, {
+    required bool collapsed,
+    required PermissionService permissions,
+  }) {
+    final navItems = _visibleNavItems(permissions);
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final item in _navItems)
+          for (final item in navItems)
             _buildNavItem(item, currentLocation, collapsed: collapsed),
         ],
       ),

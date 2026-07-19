@@ -1,3 +1,5 @@
+import 'package:billing_baba/features/collaboration/application/navigation_permission_registry.dart';
+import 'package:billing_baba/features/collaboration/application/permission_service.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/features/collaboration/models/collaboration_sub_route.dart';
 import 'package:billing_baba/features/parties/models/party_sub_route.dart';
@@ -436,5 +438,13 @@ abstract final class SearchRegistry {
       ...label.toLowerCase().split(RegExp(r'[\s/]+')),
       ...extra,
     }.toList(growable: false);
+  }
+
+  static List<SearchItem> visiblePages(PermissionService permissions) {
+    return pages.where((item) {
+      final route = item.route;
+      if (route == null) return true;
+      return NavigationPermissionRegistry.isVisible(route, permissions);
+    }).toList(growable: false);
   }
 }

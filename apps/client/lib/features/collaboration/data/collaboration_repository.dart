@@ -1,6 +1,8 @@
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
 import 'package:billing_baba/features/collaboration/domain/models/business_member.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_access.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
 import 'package:billing_baba/features/collaboration/domain/models/connected_device.dart';
 import 'package:billing_baba/features/collaboration/domain/models/invitation.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_preset.dart';
@@ -47,5 +49,27 @@ abstract class CollaborationRepository {
 
   PermissionPreset getPermissionPreset(Role role);
 
+  PermissionPreset loadPermissions(Role role);
+
   CollaborationSessionContext get sessionContext;
+
+  /// Invitee-centric company directory (shared / pending / expired).
+  Future<List<CompanyListEntry>> loadCompanies();
+
+  Future<CompanySession?> loadCurrentCompany({
+    required String userId,
+    required String userName,
+  });
+
+  Future<CompanySession> switchCompany({
+    required String companyId,
+    required String userId,
+    required String userName,
+  });
+
+  Future<void> leaveCompany(String companyId);
+
+  Future<CompanyListEntry> acceptCompanyInvitation(String invitationId);
+
+  Future<void> rejectCompanyInvitation(String invitationId);
 }

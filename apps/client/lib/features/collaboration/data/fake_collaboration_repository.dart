@@ -2,8 +2,11 @@ import 'dart:math';
 
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
 import 'package:billing_baba/features/collaboration/data/collaboration_repository.dart';
+import 'package:billing_baba/features/collaboration/data/fake_collaboration_directory.dart';
 import 'package:billing_baba/features/collaboration/domain/models/business_member.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_access.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
 import 'package:billing_baba/features/collaboration/domain/models/connected_device.dart';
 import 'package:billing_baba/features/collaboration/domain/models/invitation.dart';
 import 'package:billing_baba/features/collaboration/domain/models/member_status.dart';
@@ -20,10 +23,9 @@ const kCollaborationStartWithEmptyMembers = false;
 
 class FakeCollaborationRepository implements CollaborationRepository {
   FakeCollaborationRepository({
-    required CollaborationSessionContext sessionContext,
+    required this._sessionContext,
     String? businessName,
-  }) : _sessionContext = sessionContext,
-       _businessName = businessName ?? 'Sharma Traders' {
+  }) : _businessName = businessName ?? 'Sharma Traders' {
     _syncStatus = _buildInitialSyncStatus();
     _seedData();
   }
@@ -130,7 +132,6 @@ class FakeCollaborationRepository implements CollaborationRepository {
       appVersion: '1.0.0',
       lastSeenAt: DateTime.now(),
       isCurrentDevice: true,
-      isOnline: true,
       deviceSyncStatus: DeviceSyncStatus.synced,
     ),
     ConnectedDevice(
@@ -150,23 +151,17 @@ class FakeCollaborationRepository implements CollaborationRepository {
       osName: 'Android 14',
       appVersion: '1.0.0',
       lastSeenAt: DateTime.now().subtract(const Duration(minutes: 20)),
-      isOnline: true,
       deviceSyncStatus: DeviceSyncStatus.synced,
     ),
   ];
 
   SyncStatus _buildInitialSyncStatus() {
     return SyncStatus(
-      state: CollaborationSyncState.enabled,
-      isConnected: true,
-      isEnabled: true,
       lastSyncedAt: DateTime.now().subtract(const Duration(minutes: 5)),
       pendingUploads: 2,
       pendingDownloads: 1,
-      conflictCount: 0,
       pendingChanges: 3,
       storageUsedMb: 248.5,
-      storageTotalMb: 1024,
       currentDeviceName: _sessionContext.currentDeviceName,
       currentUserPhone: _sessionContext.currentUserPhone,
     );
@@ -521,5 +516,71 @@ class FakeCollaborationRepository implements CollaborationRepository {
   @override
   PermissionPreset getPermissionPreset(Role role) {
     return RolePermissionRegistry.presetFor(role);
+  }
+
+  @override
+  PermissionPreset loadPermissions(Role role) => getPermissionPreset(role);
+
+  @override
+  Future<List<CompanyListEntry>> loadCompanies() async {
+    await _delay(200, 400);
+    return FakeCollaborationDirectory.loadCompanies(
+      _sessionContext.currentUserPhone,
+    );
+  }
+
+  @override
+  Future<CompanySession?> loadCurrentCompany({
+    required String userId,
+    required String userName,
+  }) async {
+    await _delay(100, 200);
+    return FakeCollaborationDirectory.loadCurrentSession(
+      currentUserPhone: _sessionContext.currentUserPhone,
+      userId: userId,
+      userName: userName,
+    );
+  }
+
+  @override
+  Future<CompanySession> switchCompany({
+    required String companyId,
+    required String userId,
+    required String userName,
+  }) async {
+    await _delay(300, 500);
+    return FakeCollaborationDirectory.switchCompany(
+      companyId: companyId,
+      currentUserPhone: _sessionContext.currentUserPhone,
+      userId: userId,
+      userName: userName,
+    );
+  }
+
+  @override
+  Future<void> leaveCompany(String companyId) async {
+    await _delay();
+    FakeCollaborationDirectory.leaveCompany(
+      companyId,
+      _sessionContext.currentUserPhone,
+    );
+  }
+
+  @override
+  Future<CompanyListEntry> acceptCompanyInvitation(String invitationId) async {
+    await _delay();
+    return FakeCollaborationDirectory.acceptInvitation(
+      invitationId: invitationId,
+      currentUserPhone: _sessionContext.currentUserPhone,
+    );
+  }
+
+  @override
+  Future<void> rejectCompanyInvitation(String invitationId) async {
+    await _delay();
+    FakeCollaborationDirectory.rejectInvitation(
+      invitationId: invitationId,
+      currentUserPhone: _sessionContext.currentUserPhone,
+    );
   }
 }

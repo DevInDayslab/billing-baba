@@ -5,9 +5,12 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/models/party_sub_route.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/manage_party_groups_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_page_switcher_menu.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PartyPageTitleBar extends StatefulWidget {
+class PartyPageTitleBar extends ConsumerStatefulWidget {
   const PartyPageTitleBar({
     required this.currentRoute,
     this.onAddParty,
@@ -31,10 +34,10 @@ class PartyPageTitleBar extends StatefulWidget {
   );
 
   @override
-  State<PartyPageTitleBar> createState() => _PartyPageTitleBarState();
+  ConsumerState<PartyPageTitleBar> createState() => _PartyPageTitleBarState();
 }
 
-class _PartyPageTitleBarState extends State<PartyPageTitleBar> {
+class _PartyPageTitleBarState extends ConsumerState<PartyPageTitleBar> {
   static const Color _hoverColor = AppColors.primary;
   static const Color _defaultColor = Colors.black87;
 
@@ -46,8 +49,11 @@ class _PartyPageTitleBarState extends State<PartyPageTitleBar> {
 
   String get _addButtonLabel => _isGroupsView ? 'Add Group' : 'Add Party';
 
-  VoidCallback? get _addAction =>
-      _isGroupsView ? widget.onAddGroup : widget.onAddParty;
+  VoidCallback? get _addAction {
+    final permissions = ref.read(permissionServiceProvider);
+    if (!permissions.canCreate(PermissionModule.party)) return null;
+    return _isGroupsView ? widget.onAddGroup : widget.onAddParty;
+  }
 
   void _setHovered(bool hovered) {
     if (_isHovered == hovered) return;
