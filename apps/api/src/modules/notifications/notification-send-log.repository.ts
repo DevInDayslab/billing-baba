@@ -19,15 +19,18 @@ export class NotificationSendLogRepository {
   async findRecentSuccess(
     idempotencyKey: string,
     since: Date,
+    provider?: string,
   ): Promise<{
     providerMessageId: string | null;
     createdAt: Date;
+    provider: string;
   } | null> {
     const [row] = await this.db
       .select({
         providerMessageId: notificationSendLog.providerMessageId,
         createdAt: notificationSendLog.createdAt,
         status: notificationSendLog.status,
+        provider: notificationSendLog.provider,
       })
       .from(notificationSendLog)
       .where(
@@ -35,6 +38,9 @@ export class NotificationSendLogRepository {
           eq(notificationSendLog.idempotencyKey, idempotencyKey),
           eq(notificationSendLog.status, 'success'),
           gt(notificationSendLog.createdAt, since),
+          ...(provider
+            ? [eq(notificationSendLog.provider, provider)]
+            : []),
         ),
       )
       .orderBy(desc(notificationSendLog.createdAt))
@@ -44,6 +50,7 @@ export class NotificationSendLogRepository {
     return {
       providerMessageId: row.providerMessageId,
       createdAt: row.createdAt,
+      provider: row.provider,
     };
   }
 

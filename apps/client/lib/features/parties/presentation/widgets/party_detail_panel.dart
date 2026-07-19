@@ -15,6 +15,7 @@ import 'package:billing_baba/features/parties/presentation/widgets/party_actions
 import 'package:billing_baba/features/parties/presentation/widgets/party_ledger_transactions_section.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_whatsapp_actions.dart';
 import 'package:billing_baba/features/parties/providers/party_reminder_schedule_provider.dart';
+import 'package:billing_baba/features/parties/repositories/party_reminder_schedule_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -330,14 +331,25 @@ class _PartyDetailHeader extends ConsumerWidget {
                   ],
                 ),
               ),
-              // SMS — not implemented; keep visible but disabled.
-              const _PartyHeaderActionIcon(
+              _PartyHeaderActionIcon(
                 iconWidget: FaIcon(
                   FontAwesomeIcons.commentDots,
                   size: 20,
-                  color: Color(0x66F0B440),
+                  color: canShareMessaging
+                      ? const Color.fromARGB(255, 240, 180, 64)
+                      : const Color(0x66F0B440),
                 ),
-                tooltip: 'SMS — Coming Soon',
+                tooltip: canShareMessaging
+                    ? 'Send payment reminder (SMS)'
+                    : 'SMS — no share permission',
+                onPressed: !canShareMessaging
+                    ? null
+                    : () => PartyWhatsAppActions.sendPaymentReminderNow(
+                          context,
+                          ref,
+                          party,
+                          outstanding: outstanding,
+                        ),
               ),
               _PartyHeaderActionIcon(
                 iconWidget: FaIcon(
@@ -348,11 +360,16 @@ class _PartyDetailHeader extends ConsumerWidget {
                       : const Color(0x6625D366),
                 ),
                 tooltip: canShareMessaging
-                    ? 'WhatsApp actions'
+                    ? 'Send payment reminder (WhatsApp)'
                     : 'WhatsApp — no share permission',
                 onPressed: !canShareMessaging
                     ? null
-                    : () => PartyWhatsAppActions.showMenu(context, ref, party),
+                    : () => PartyWhatsAppActions.sendPaymentReminderNow(
+                          context,
+                          ref,
+                          party,
+                          outstanding: outstanding,
+                        ),
               ),
               _PartyHeaderActionIcon(
                 iconWidget: FaIcon(
@@ -371,6 +388,7 @@ class _PartyDetailHeader extends ConsumerWidget {
                           context,
                           ref,
                           party,
+                          outstanding: outstanding,
                         ),
               ),
               PartyActionsMenuButton(party: party),
@@ -380,11 +398,17 @@ class _PartyDetailHeader extends ConsumerWidget {
             builder: (context) {
               final next = ref.watch(partyNextReminderProvider(party.id));
               if (next == null) return const SizedBox.shrink();
+              final dateLabel =
+                  DateFormat('dd MMM yyyy').format(next.nextReminderAt);
+              final freqSuffix = switch (next.frequency) {
+                PartyReminderFrequency.once => '',
+                PartyReminderFrequency.weekly => ' (Weekly)',
+                PartyReminderFrequency.monthly => ' (Monthly)',
+              };
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                 child: Text(
-                  'Next Reminder: ${DateFormat('dd MMM yyyy').format(next.nextReminderAt)}'
-                  ' (${next.frequency.name})',
+                  'Next Reminder at $dateLabel$freqSuffix',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.blue.shade700,

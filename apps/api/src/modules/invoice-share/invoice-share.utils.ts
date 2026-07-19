@@ -29,7 +29,8 @@ export const sendSaleInvoiceBodySchema = z.object({
 });
 
 export const sendPaymentReminderBodySchema = z.object({
-  sales_document_id: z.string().uuid(),
+  /** Optional — ignored for amount; reminders always use party outstanding. */
+  sales_document_id: z.string().uuid().optional(),
   phone: optionalIndianPhone,
   due_date: z.string().min(1).optional(),
 });

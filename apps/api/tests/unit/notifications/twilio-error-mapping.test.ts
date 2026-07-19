@@ -15,6 +15,19 @@ describe('mapTwilioError', () => {
     expect(error.retryable).toBe(true);
   });
 
+  test('maps WhatsApp session window (63016)', () => {
+    const error = mapTwilioError({
+      status: 400,
+      code: 63016,
+      message: 'Failed to send freeform message because you are outside the allowed window',
+    });
+    expect(error.code).toBe('SESSION_WINDOW');
+    expect(error.retryable).toBe(false);
+    expect(toSafeNotificationErrorMessage('SESSION_WINDOW')).toContain(
+      'chat window',
+    );
+  });
+
   test('maps invalid numbers', () => {
     const error = mapTwilioError({
       status: 400,

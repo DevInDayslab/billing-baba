@@ -43,7 +43,10 @@ export class NotificationService {
     private readonly provider: NotificationProvider,
     private readonly config: Pick<
       AppConfig,
-      'invitationExpiryDays' | 'notificationIdempotencyTtlHours' | 'environment'
+      | 'invitationExpiryDays'
+      | 'notificationIdempotencyTtlHours'
+      | 'environment'
+      | 'twilioContentSidPaymentReminder'
     >,
     private readonly sendLog: NotificationSendLogRepository | null,
   ) {}
@@ -91,7 +94,8 @@ export class NotificationService {
     options: NotifyOptions,
   ): Promise<NotificationSendResult> {
     const content = buildPaymentReminderNotification(input);
-    return this.safeSend({
+
+    const freeform = await this.safeSend({
       to: recipient.phone,
       body: content.body,
       notificationType: content.type,
@@ -102,6 +106,68 @@ export class NotificationService {
         companyName: input.companyName,
       },
     });
+
+    if (freeform.success) return freeform;
+
+    // Outside WhatsApp freeform window — retry with approved Content template.
+    const contentSid = this.config.twilioContentSidPaymentReminder;
+    if (
+      freeform.error?.code === 'SESSION_WINDOW' &&
+      contentSid &&
+      this.provider.sendTemplate
+    ) {
+      const amount =
+        typeof input.amount === 'number'
+          ? input.amount.toLocaleString('en-IN')
+          : String(input.amount);
+      const templateResult = await this.provider.sendTemplate({
+        to: recipient.phone,
+        templateId: contentSid,
+        variables: {
+          '1': input.customerName,
+          '2': amount,
+          '3': input.companyName,
+          '4': input.companyPhone?.trim() || '',
+        },
+        metadata: {
+          notificationType: content.type,
+          companyName: input.companyName,
+        },
+      });
+
+      const phoneNorm = normalizeIndianMobile(recipient.phone);
+      const maskedRecipient = phoneNorm.ok
+        ? maskPhoneE164(phoneNorm.e164)
+        : '****';
+
+      logNotificationAttempt({
+        notification_type: content.type,
+        provider: this.provider.name,
+        recipient: maskedRecipient,
+        company_id: options.companyId ?? null,
+        idempotency_key: `${options.idempotencyKey}:template`,
+        status: templateResult.success ? 'success' : 'failure',
+        provider_message_id: templateResult.providerMessageId ?? null,
+        duration_ms: 0,
+        error: templateResult.error?.code ?? null,
+        timestamp: new Date().toISOString(),
+      });
+
+      if (templateResult.success) return templateResult;
+      return {
+        success: false,
+        error: {
+          code: templateResult.error?.code ?? 'SESSION_WINDOW',
+          message: toSafeNotificationErrorMessage(
+            templateResult.error?.code ?? 'SESSION_WINDOW',
+          ),
+          retryable: false,
+          providerCode: templateResult.error?.providerCode,
+        },
+      };
+    }
+
+    return freeform;
   }
 
   /**
@@ -212,6 +278,7 @@ export class NotificationService {
         const prior = await this.sendLog.findRecentSuccess(
           params.idempotencyKey,
           since,
+          this.provider.name,
         );
         if (prior) {
           logNotificationAttempt({

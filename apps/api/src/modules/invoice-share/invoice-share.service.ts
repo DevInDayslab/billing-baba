@@ -2,6 +2,7 @@ import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { normalizeIndianMobile } from '../../shared/utils/phone-number';
+import { OutstandingRepository } from '../accounting/outstanding.repository';
 import type { NotificationService } from '../notifications/notification.service';
 import { getSharedNotificationService } from '../notifications/notification-service.factory';
 import { InvoiceShareRepository } from './invoice-share.repository';
@@ -35,6 +36,7 @@ function requireValidPhone(raw: string | null | undefined): string {
 
 export class InvoiceShareService {
   private readonly repository: InvoiceShareRepository;
+  private readonly outstandingRepository: OutstandingRepository;
   private readonly notificationService: NotificationService;
   private readonly config: AppConfig;
 
@@ -48,6 +50,7 @@ export class InvoiceShareService {
       );
     }
     this.repository = new InvoiceShareRepository(db);
+    this.outstandingRepository = new OutstandingRepository(db);
     this.notificationService =
       notificationService ?? getSharedNotificationService(config);
     this.config = config;
@@ -274,7 +277,7 @@ export class InvoiceShareService {
     accountId: string,
     input: {
       partyId: string;
-      salesDocumentId: string;
+      salesDocumentId?: string;
       phone?: string;
       dueDate?: string;
     },
@@ -284,27 +287,6 @@ export class InvoiceShareService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    const link = await this.ensureShareLink(
-      businessId,
-      input.salesDocumentId,
-      accountId,
-    );
-    const document = await this.repository.findSalesDocument(
-      businessId,
-      input.salesDocumentId,
-    );
-    if (!document) {
-      throw new AppError('NOT_FOUND', 'Invoice not found', 404);
-    }
-
-    if (document.partyId !== input.partyId) {
-      throw new AppError(
-        'INVOICE_PARTY_MISMATCH',
-        'Invoice does not belong to this party',
-        400,
-      );
-    }
-
     const company = await this.repository.findBusiness(businessId);
     if (!company) {
       throw new AppError('NOT_FOUND', 'Company not found', 404);
@@ -312,34 +294,67 @@ export class InvoiceShareService {
 
     const phone = requireValidPhone(input.phone ?? party.mobile);
 
-    const paidAmount = await this.repository.getPaidAmount(
+    // Always remind against party outstanding (Vyapar parity) — not a single invoice.
+    const balanceRaw = await this.outstandingRepository.getPartyBalance(
       businessId,
-      input.salesDocumentId,
+      input.partyId,
     );
-    const outstanding = dueAmount(document.totalAmount, paidAmount);
-    if (Number.parseFloat(outstanding) <= 0) {
+    const balance = Number.parseFloat(balanceRaw ?? '0');
+    if (!(balance > 0)) {
       throw new AppError(
         'NO_OUTSTANDING_BALANCE',
-        'This invoice has no outstanding balance',
+        'This party has no outstanding balance',
         409,
       );
     }
+    const outstanding = balance.toFixed(4);
 
-    const dueDate = input.dueDate ?? formatDisplayDate(document.documentDate);
+    let shareUrl: string | undefined;
+    let token: string | undefined;
+    let invoiceNumber: string | null = null;
+    let invoiceId: string | null = null;
 
+    if (input.salesDocumentId) {
+      const document = await this.repository.findSalesDocument(
+        businessId,
+        input.salesDocumentId,
+      );
+      if (!document) {
+        throw new AppError('NOT_FOUND', 'Invoice not found', 404);
+      }
+      if (document.partyId !== input.partyId) {
+        throw new AppError(
+          'INVOICE_PARTY_MISMATCH',
+          'Invoice does not belong to this party',
+          400,
+        );
+      }
+      const link = await this.ensureShareLink(
+        businessId,
+        input.salesDocumentId,
+        accountId,
+      );
+      shareUrl = link.share_url;
+      token = link.token;
+      invoiceNumber = document.documentNumber;
+      invoiceId = document.id;
+    }
+
+    // Explicit user send — unique key so the first click is never skipped as deduped.
     const result = await this.notificationService.sendPaymentReminder(
       { phone },
       {
         customerName: party.name,
         companyName: company.name,
         amount: outstanding,
-        dueDate,
-        invoiceUrl: link.share_url,
-        invoiceNumber: document.documentNumber,
-        invoiceId: document.id,
+        companyPhone: company.phone,
+        dueDate: input.dueDate ?? formatDisplayDate(new Date()),
+        invoiceUrl: shareUrl,
+        invoiceNumber,
+        invoiceId,
       },
       {
-        idempotencyKey: `reminder:${input.salesDocumentId}:${input.partyId}`,
+        idempotencyKey: `reminder:party:${input.partyId}:${crypto.randomUUID()}`,
         companyId: businessId,
       },
     );
@@ -347,8 +362,8 @@ export class InvoiceShareService {
     return {
       notified: result.success,
       deduped: result.deduped === true,
-      share_url: link.share_url,
-      token: link.token,
+      share_url: shareUrl,
+      token,
       error: result.error
         ? { code: result.error.code, message: result.error.message }
         : undefined,

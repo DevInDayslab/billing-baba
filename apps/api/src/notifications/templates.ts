@@ -13,19 +13,15 @@ Accept your invitation:
 
 This invitation expires in {{expiry_days}} days.`;
 
-export const PAYMENT_REMINDER_TEMPLATE = `Hello {{customer_name}},
+export const PAYMENT_REMINDER_TEMPLATE = `Dear {{customer_name}},
 
-This is a friendly reminder that ₹{{amount}} is pending with {{company_name}}.
+Your payment of ₹{{amount}} is pending with {{company_name}}.
 
-Due Date:
-{{due_date}}
+If you have already made the payment, kindly ignore this message.
 
-If you have already paid, kindly ignore this message.
-
-View Invoice:
-{{invoice_url}}
-
-Thank you.`;
+Thank You,
+{{company_name}}
+{{company_phone}}`;
 
 export const PAYMENT_RECEIVED_TEMPLATE = `Hello {{customer_name}},
 

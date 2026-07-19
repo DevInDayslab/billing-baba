@@ -9,8 +9,9 @@ export type PaymentReminderNotificationInput = {
   customerName: string;
   companyName: string;
   amount: string | number;
-  dueDate: string;
-  invoiceUrl: string;
+  companyPhone?: string | null;
+  dueDate?: string | null;
+  invoiceUrl?: string | null;
   invoiceNumber?: string | null;
   invoiceId?: string | null;
 };
@@ -23,8 +24,7 @@ export function buildPaymentReminderNotification(
     customer_name: input.customerName,
     company_name: input.companyName,
     amount,
-    due_date: input.dueDate,
-    invoice_url: input.invoiceUrl,
+    company_phone: input.companyPhone?.trim() || '',
   });
 
   return {
@@ -35,13 +35,13 @@ export function buildPaymentReminderNotification(
       customerName: input.customerName,
       companyName: input.companyName,
       amount,
-      dueDate: input.dueDate,
+      dueDate: input.dueDate ?? null,
       invoiceNumber: input.invoiceNumber ?? null,
       invoiceId: input.invoiceId ?? null,
     },
     deepLinks: {
-      primary: input.invoiceUrl,
-      invoice: input.invoiceUrl,
+      primary: input.invoiceUrl ?? undefined,
+      invoice: input.invoiceUrl ?? undefined,
     },
   };
 }

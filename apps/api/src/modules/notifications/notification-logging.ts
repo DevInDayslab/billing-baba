@@ -7,6 +7,8 @@ const SAFE_MESSAGES: Record<NotificationErrorCode, string> = {
   AUTHENTICATION: 'Messaging provider authentication failed',
   NOT_CONFIGURED: 'Messaging is not configured',
   UNSUPPORTED: 'This message type is not supported',
+  SESSION_WINDOW:
+    'WhatsApp could not deliver the message because the customer chat window expired. Ask them to send any message to your WhatsApp business number, then try again.',
   PROVIDER_ERROR: 'Could not send the message. Please try again later',
 };
 

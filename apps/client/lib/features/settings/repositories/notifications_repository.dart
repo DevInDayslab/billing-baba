@@ -34,14 +34,12 @@ class NotificationsRepository {
 
   Future<NotifyDispatchResult> sendPartyReminder({
     required String partyId,
-    required String salesDocumentId,
     String? phone,
     String? dueDate,
   }) =>
       _map(
         () => _remote.sendPartyReminder(
           partyId: partyId,
-          salesDocumentId: salesDocumentId,
           phone: phone,
           dueDate: dueDate,
         ),
@@ -97,6 +95,12 @@ class NotificationsRepository {
       case 'INVALID_PHONE':
         throw NotificationDispatchException(
           message ?? 'Invalid or missing phone number',
+          code: code,
+        );
+      case 'SESSION_WINDOW':
+        throw NotificationDispatchException(
+          message ??
+              'WhatsApp session expired. Ask the party to message your WhatsApp number, then retry.',
           code: code,
         );
       case 'FORBIDDEN':

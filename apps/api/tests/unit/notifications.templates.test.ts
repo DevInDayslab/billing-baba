@@ -25,17 +25,19 @@ describe('notification templates', () => {
     expect(content.deepLinks.primary).toContain('/invite/');
   });
 
-  test('payment reminder includes amount and invoice url', () => {
+  test('payment reminder includes party outstanding amount', () => {
     const content = buildPaymentReminderNotification({
       customerName: 'Ravi',
       companyName: 'Acme',
       amount: '1500.5',
-      dueDate: '20 Jul 2026',
-      invoiceUrl: 'https://billingbaba.com/invoice/tok',
+      companyPhone: '7987016325',
     });
     expect(content.body).toContain('Ravi');
     expect(content.body).toContain('₹1,500.5');
-    expect(content.body).toContain('https://billingbaba.com/invoice/tok');
+    expect(content.body).toContain('Acme');
+    expect(content.body).toContain('7987016325');
+    expect(content.body).toContain('pending with');
+    expect(content.body).not.toContain('View Invoice');
   });
 
   test('payment received and sale invoice builders', () => {

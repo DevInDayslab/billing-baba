@@ -22,6 +22,7 @@ export function createNotificationProvider(
       accountSid: twilioAccountSid,
       authToken: twilioAuthToken,
       phoneNumber: twilioPhoneNumber,
+      paymentReminderContentSid: config.twilioContentSidPaymentReminder,
     });
   }
 

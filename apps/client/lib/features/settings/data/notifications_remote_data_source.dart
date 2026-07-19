@@ -80,14 +80,12 @@ class NotificationsRemoteDataSource {
 
   Future<NotifyDispatchResult> sendPartyReminder({
     required String partyId,
-    required String salesDocumentId,
     String? phone,
     String? dueDate,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       ApiEndpoints.partyReminders(partyId),
       data: {
-        'sales_document_id': salesDocumentId,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
         if (dueDate != null && dueDate.isNotEmpty) 'due_date': dueDate,
       },

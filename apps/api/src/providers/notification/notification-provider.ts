@@ -31,7 +31,9 @@ export type NotificationErrorCode =
   | 'INVALID_NUMBER'
   | 'AUTHENTICATION'
   | 'NOT_CONFIGURED'
-  | 'UNSUPPORTED';
+  | 'UNSUPPORTED'
+  /** WhatsApp 24h customer-care window closed — need template or user reply. */
+  | 'SESSION_WINDOW';
 
 export type NotificationSendError = {
   code: NotificationErrorCode;

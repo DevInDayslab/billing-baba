@@ -66,6 +66,11 @@ const envSchema = z.object({
     emptyToUndefined,
     z.string().min(1).optional(),
   ),
+  /** Twilio Content SID for payment reminders (WhatsApp utility template). */
+  TWILIO_CONTENT_SID_PAYMENT_REMINDER: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
   INVOICE_SHARE_EXPIRY_DAYS: z.preprocess((value) => {
     if (value === '' || value === undefined) return 90;
     return Number(value);
@@ -96,6 +101,7 @@ export type AppConfig = {
   twilioAccountSid?: string;
   twilioAuthToken?: string;
   twilioPhoneNumber?: string;
+  twilioContentSidPaymentReminder?: string;
   invoiceShareExpiryDays: number;
   notificationIdempotencyTtlHours: number;
 };
@@ -156,6 +162,7 @@ export function loadAppConfig(): AppConfig {
     twilioAccountSid: env.TWILIO_ACCOUNT_SID,
     twilioAuthToken: env.TWILIO_AUTH_TOKEN,
     twilioPhoneNumber: env.TWILIO_PHONE_NUMBER,
+    twilioContentSidPaymentReminder: env.TWILIO_CONTENT_SID_PAYMENT_REMINDER,
     invoiceShareExpiryDays: env.INVOICE_SHARE_EXPIRY_DAYS,
     notificationIdempotencyTtlHours: env.NOTIFICATION_IDEMPOTENCY_TTL_HOURS,
   };
