@@ -9,6 +9,7 @@ abstract final class ShellSidebarVisibility {
   static const hidePos = false;
   static const hideSettings = false;
   static const hideUtilities = false;
+  static const hideCollaboration = false;
   static const hideDeveloper = false;
 
   static const hiddenSaleSubRoutes = <String>{};

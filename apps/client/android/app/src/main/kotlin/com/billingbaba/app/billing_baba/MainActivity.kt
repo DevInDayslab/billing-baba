@@ -1,4 +1,4 @@
-package com.billingbaba.app.billing_baba
+package com.billingbaba.app
 
 import io.flutter.embedding.android.FlutterActivity
 

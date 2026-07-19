@@ -219,3 +219,29 @@ export const dealStageEnum = pgEnum('deal_stage', [
   'closed_lost',
   'closed_lost_to_competition',
 ]);
+
+export const collaborationRoleEnum = pgEnum('collaboration_role', [
+  'secondary_admin',
+  'salesman',
+  'biller',
+  'biller_and_salesman',
+  'accountant',
+  'accountant_edit_access',
+  'stock_keeper',
+]);
+
+export const companyMemberStatusEnum = pgEnum('company_member_status', [
+  'active',
+  'left',
+  'removed',
+]);
+
+export const invitationStatusEnum = pgEnum('invitation_status', [
+  'pending',
+  'opened',
+  'accepted',
+  'rejected',
+  'left',
+  'expired',
+  'cancelled',
+]);

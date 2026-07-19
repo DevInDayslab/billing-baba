@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat|Mrs+Sheppards|Poppins&display=swap');
+
+.marketing-site {
+  font-family: 'Montserrat', sans-serif;
+  color: #0f1b4c;
+
+  .circle {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #0090d3;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  .marketing-main {
+    padding-top: 70px;
+    min-height: 50vh;
+  }
+}

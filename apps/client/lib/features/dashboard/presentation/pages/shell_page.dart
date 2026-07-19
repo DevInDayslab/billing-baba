@@ -5,6 +5,11 @@ import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_opening_overlay.dart';
+import 'package:billing_baba/features/collaboration/application/navigation_permission_registry.dart';
+import 'package:billing_baba/features/collaboration/application/permission_service.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_session_bootstrap_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
+import 'package:billing_baba/features/collaboration/models/collaboration_sub_route.dart';
 import 'package:billing_baba/features/dashboard/application/quick_create_executor.dart';
 import 'package:billing_baba/features/dashboard/models/quick_create_action.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/app_top_bar.dart';
@@ -58,6 +63,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   bool _partiesExpandInitialized = false;
   bool _isUtilitiesExpanded = false;
   bool _utilitiesExpandInitialized = false;
+  bool _isCollaborationExpanded = false;
+  bool _collaborationExpandInitialized = false;
   bool _isDeveloperExpanded = false;
   bool _developerExpandInitialized = false;
   bool? _wasOverlaySidebar;
@@ -124,6 +131,13 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         _isUtilitiesExpanded = true;
       }
     }
+    if (!_collaborationExpandInitialized) {
+      _collaborationExpandInitialized = true;
+      final location = GoRouterState.of(context).uri.path;
+      if (location.startsWith(AppRoutes.collaboration)) {
+        _isCollaborationExpanded = true;
+      }
+    }
     if (!_developerExpandInitialized) {
       _developerExpandInitialized = true;
       final location = GoRouterState.of(context).uri.path;
@@ -153,6 +167,11 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       .map((item) => _NavSubItem(route: item.route, label: item.label))
       .toList();
 
+  static final List<_NavSubItem> _collaborationSubItems = CollaborationSubRoutes
+      .items
+      .map((item) => _NavSubItem(route: item.route, label: item.label))
+      .toList();
+
   static final List<_NavSubItem> _developerSubItems = [
     const _NavSubItem(
       route: AppRoutes.developerComponents,
@@ -164,7 +183,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     ),
   ];
 
-  List<_NavItem> get _navItems => [
+  List<_NavItem> get _allNavItems => [
     const _NavItem(
       route: AppRoutes.home,
       icon: Icons.home_outlined,
@@ -208,6 +227,14 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       icon: Icons.bar_chart_outlined,
       label: 'Reports',
     ),
+    if (!ShellSidebarVisibility.hideCollaboration)
+      _NavItem(
+        icon: Icons.sync_outlined,
+        label: 'Sync & Share',
+        isExpandable: true,
+        routePrefix: AppRoutes.collaboration,
+        subItems: _collaborationSubItems,
+      ),
     if (!ShellSidebarVisibility.hideUtilities)
       _NavItem(
         icon: Icons.build_outlined,
@@ -237,6 +264,45 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     ),
   ];
 
+  List<_NavItem> _visibleNavItems(PermissionService permissions) {
+    return _allNavItems
+        .map((item) => _filterNavItem(item, permissions))
+        .whereType<_NavItem>()
+        .toList();
+  }
+
+  _NavItem? _filterNavItem(_NavItem item, PermissionService permissions) {
+    if (item.routePrefix == AppRoutes.purchase) {
+      if (!NavigationPermissionRegistry.isPurchaseNavVisible(permissions)) {
+        return null;
+      }
+    } else {
+      final route = item.route ?? item.routePrefix;
+      if (route != null &&
+          !NavigationPermissionRegistry.isVisible(route, permissions)) {
+        return null;
+      }
+    }
+
+    if (!item.isExpandable) return item;
+
+    final subItems = item.subItems
+        .where(
+          (sub) => NavigationPermissionRegistry.isVisible(sub.route, permissions),
+        )
+        .toList();
+    if (subItems.isEmpty) return null;
+
+    return _NavItem(
+      icon: item.icon,
+      label: item.label,
+      route: item.route,
+      routePrefix: item.routePrefix,
+      isExpandable: item.isExpandable,
+      subItems: subItems,
+    );
+  }
+
   void _navigateTo(String route) {
     ref
         .read(shellSidebarProvider.notifier)
@@ -248,6 +314,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       _isPurchaseExpanded = false;
       _isPartiesExpanded = false;
       _isUtilitiesExpanded = false;
+      _isCollaborationExpanded = false;
       _isDeveloperExpanded = false;
     });
     context.go(route);
@@ -271,6 +338,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
         }
       });
     }
+    ref.watch(companySessionBootstrapProvider);
+    final permissions = ref.watch(permissionServiceProvider);
     final sidebarState = ref.watch(shellSidebarProvider);
     final isCollapsed = sidebarState.isCollapsed;
     final isDrawerOpen = sidebarState.isDrawerOpen;
@@ -344,6 +413,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                       currentLocation: currentLocation,
                       collapsed: false,
                       showCloseButton: true,
+                      permissions: permissions,
                     ),
                   ),
                 ),
@@ -371,6 +441,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                   child: _buildSidebarPanel(
                     currentLocation: currentLocation,
                     collapsed: isCollapsed,
+                    permissions: permissions,
                   ),
                 ),
               ),
@@ -395,6 +466,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   Widget _buildSidebarPanel({
     required String currentLocation,
     required bool collapsed,
+    required PermissionService permissions,
     bool showCloseButton = false,
   }) {
     return LayoutBuilder(
@@ -415,6 +487,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
               child: _buildNavList(
                 currentLocation,
                 collapsed: compactLayout,
+                permissions: permissions,
               ),
             ),
             _buildSidebarFooter(collapsed: compactLayout),
@@ -509,14 +582,19 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     );
   }
 
-  Widget _buildNavList(String currentLocation, {required bool collapsed}) {
+  Widget _buildNavList(
+    String currentLocation, {
+    required bool collapsed,
+    required PermissionService permissions,
+  }) {
+    final navItems = _visibleNavItems(permissions);
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final item in _navItems)
+          for (final item in navItems)
             _buildNavItem(item, currentLocation, collapsed: collapsed),
         ],
       ),
@@ -533,6 +611,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       final isPurchase = item.routePrefix == AppRoutes.purchase;
       final isParties = item.route == AppRoutes.parties;
       final isUtilities = item.routePrefix == AppRoutes.utilities;
+      final isCollaboration = item.routePrefix == AppRoutes.collaboration;
       final isDeveloper = item.routePrefix == AppRoutes.developer;
       final routePrefix = item.routePrefix ?? item.route!;
 
@@ -545,6 +624,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
           ? currentLocation.startsWith(AppRoutes.parties)
           : isUtilities
           ? currentLocation.startsWith(AppRoutes.utilities)
+          : isCollaboration
+          ? currentLocation.startsWith(AppRoutes.collaboration)
           : isDeveloper && currentLocation.startsWith(AppRoutes.developer);
 
       final isExpanded = isSale
@@ -555,6 +636,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
           ? _isPartiesExpanded
           : isUtilities
           ? _isUtilitiesExpanded
+          : isCollaboration
+          ? _isCollaborationExpanded
           : isDeveloper && _isDeveloperExpanded;
 
       return Column(
@@ -575,6 +658,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                 _isPartiesExpanded = !_isPartiesExpanded;
               } else if (isUtilities) {
                 _isUtilitiesExpanded = !_isUtilitiesExpanded;
+              } else if (isCollaboration) {
+                _isCollaborationExpanded = !_isCollaborationExpanded;
               } else if (isDeveloper) {
                 _isDeveloperExpanded = !_isDeveloperExpanded;
               }
@@ -590,6 +675,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
                   _isPartiesExpanded = true;
                 } else if (isUtilities) {
                   _isUtilitiesExpanded = true;
+                } else if (isCollaboration) {
+                  _isCollaborationExpanded = true;
                 } else if (isDeveloper) {
                   _isDeveloperExpanded = true;
                 }

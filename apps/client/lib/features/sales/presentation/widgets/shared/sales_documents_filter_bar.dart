@@ -1,4 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
+import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
+import 'package:billing_baba/features/sales/application/sales_document_scope_permissions.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
@@ -122,14 +125,18 @@ class _SalesDocumentsFilterBarState
           ),
         ),
         const SizedBox(width: AppSpacing.md),
-        FilledButton.icon(
-          onPressed: widget.onAdd,
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(widget.addButtonLabel),
-          style: FilledButton.styleFrom(
-            backgroundColor: _addSaleOrange,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        PermissionGate(
+          module: permissionModuleForScope(widget.scope),
+          action: PermissionAction.create,
+          child: FilledButton.icon(
+            onPressed: widget.onAdd,
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(widget.addButtonLabel),
+            style: FilledButton.styleFrom(
+              backgroundColor: _addSaleOrange,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
           ),
         ),
       ],

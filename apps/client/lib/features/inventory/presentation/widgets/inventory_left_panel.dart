@@ -1,4 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
+import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_async_list.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_list_tile.dart';
@@ -97,9 +100,13 @@ class InventoryLeftPanel extends ConsumerWidget {
                 onEnter: onEnter,
               ),
               const SizedBox(height: 12),
-              InventoryPrimaryButton(
-                label: addButtonLabel,
-                onPressed: onAddPressed,
+              PermissionGate(
+                module: PermissionModule.item,
+                action: PermissionAction.create,
+                child: InventoryPrimaryButton(
+                  label: addButtonLabel,
+                  onPressed: onAddPressed,
+                ),
               ),
               const SizedBox(height: 14),
             ],

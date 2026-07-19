@@ -141,6 +141,13 @@
       "when": 1784600000000,
       "tag": "0019_sale_fa_sync_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1784700000000,
+      "tag": "0020_collaboration",
+      "breakpoints": true
     }
   ]
 }

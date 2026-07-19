@@ -5,6 +5,13 @@ import 'package:billing_baba/features/auth/presentation/pages/verify_otp_page.da
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/presentation/pages/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/pages/edit_profile_page.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
+import 'package:billing_baba/features/collaboration/guards/access_denied_page.dart';
+import 'package:billing_baba/features/collaboration/guards/permission_guard.dart';
+import 'package:billing_baba/features/collaboration/presentation/pages/sync_share_page.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_session_bootstrap_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_session_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
 import 'package:billing_baba/features/crm/presentation/screens/contacts_screen.dart';
 import 'package:billing_baba/features/crm/presentation/screens/deals_screen.dart';
 import 'package:billing_baba/features/crm/presentation/screens/leads_screen.dart';
@@ -56,9 +63,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  ref.watch(companySessionBootstrapProvider);
   return GoRouter(
     initialLocation: AppRoutes.splash,
-    refreshListenable: _AuthListenable(ref),
+    refreshListenable: _RouterRefreshListenable(ref),
     redirect: (context, state) {
       final auth = ref.read(authProvider);
       final location = state.matchedLocation;
@@ -93,6 +101,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           if (!onBusinessList) return AppRoutes.businessList;
         case AuthStatus.authenticated:
           if (onLogin || onOtp) return AppRoutes.home;
+          final permission = ref.read(permissionServiceProvider);
+          return PermissionGuard.redirect(location, permission);
         case AuthStatus.initializing:
           return AppRoutes.splash;
       }
@@ -114,6 +124,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.businessList,
         builder: (context, state) => const BusinessListPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.accessDenied,
+        builder: (context, state) => AccessDeniedPage(
+          fromRoute: state.uri.queryParameters['from'],
+        ),
       ),
       ShellRoute(
         builder: (context, state, child) => ShellPage(child: child),
@@ -433,6 +449,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             redirect: (context, state) => AppRoutes.reports,
           ),
           GoRoute(
+            path: AppRoutes.collaboration,
+            redirect: (_, _) => AppRoutes.collaborationSyncShare,
+          ),
+          GoRoute(
+            path: AppRoutes.collaborationSyncShare,
+            builder: (context, state) => const SyncSharePage(),
+          ),
+          GoRoute(
             path: AppRoutes.utilities,
             redirect: (_, _) => AppRoutes.utilitiesImportItems,
           ),
@@ -513,9 +537,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-/// Bridges Riverpod auth state changes into a [Listenable] for GoRouter.
-class _AuthListenable extends ChangeNotifier {
-  _AuthListenable(Ref ref) {
+/// Bridges Riverpod auth and company session changes into a [Listenable].
+class _RouterRefreshListenable extends ChangeNotifier {
+  _RouterRefreshListenable(Ref ref) {
     ref.listen<AuthState>(authProvider, (_, _) => notifyListeners());
+    ref.listen<CompanySession?>(companySessionProvider, (_, _) {
+      notifyListeners();
+    });
   }
 }

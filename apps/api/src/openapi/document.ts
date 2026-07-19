@@ -5,6 +5,7 @@ import {
   buildDashboardPaths,
   buildJobWorkPaths,
 } from './paths/accounting-dashboard.paths';
+import { buildCollaborationPaths } from './paths/collaboration.paths';
 import {
   buildAuthPaths,
   buildBusinessPaths,
@@ -35,6 +36,7 @@ export function buildOpenApiDocument(config: AppConfig) {
     ...buildDashboardPaths(),
     ...buildReportsPaths(),
     ...buildJobWorkPaths(),
+    ...buildCollaborationPaths(),
   };
 
   const draft = {

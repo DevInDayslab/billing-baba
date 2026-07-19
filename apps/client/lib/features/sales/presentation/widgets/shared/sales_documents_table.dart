@@ -5,6 +5,8 @@ import 'package:billing_baba/features/print/presentation/widgets/document_print_
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_document_scope_permissions.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_document_actions.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_table_shared.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
@@ -171,6 +173,21 @@ class SalesDocumentsTable extends ConsumerWidget {
     WidgetRef ref,
     SaleInvoiceModel document,
   ) {
+    final module = permissionModuleForScope(config.scope);
+    final permissions = ref.watch(permissionServiceProvider);
+    final menuActions = config.actions.where((action) {
+      return switch (action) {
+        SalesDocumentMenuAction.view => permissions.canView(module),
+        SalesDocumentMenuAction.edit => permissions.canEdit(module),
+        SalesDocumentMenuAction.duplicate => permissions.canCreate(module),
+        SalesDocumentMenuAction.delete => permissions.canDelete(module),
+        SalesDocumentMenuAction.convertToSaleOrder ||
+        SalesDocumentMenuAction.convertToDeliveryChallan ||
+        SalesDocumentMenuAction.convertToInvoice =>
+          permissions.canCreate(module),
+      };
+    }).toList();
+
     return SalesTableDataRow(
       children: [
         SalesTableCell(
@@ -223,7 +240,7 @@ class SalesDocumentsTable extends ConsumerWidget {
               ),
               SalesActionMenuButton(
                 items: [
-                  for (final action in config.actions)
+                  for (final action in menuActions)
                     SalesActionMenuItem(
                       label: salesDocumentMenuActionLabel(action),
                       onSelected: () => handleSalesDocumentMenuAction(

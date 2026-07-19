@@ -6,13 +6,18 @@ import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
-import 'package:billing_baba/features/business/models/business_model.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_card.dart';
-import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
+import 'package:billing_baba/features/business/presentation/widgets/business_card_menu.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_opening_overlay.dart';
 import 'package:billing_baba/features/business/presentation/widgets/create_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/widgets/delete_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/widgets/edit_business_dialog.dart';
+import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
+import 'package:billing_baba/features/collaboration/application/company_session_service.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_directory_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_session_service_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,6 +29,8 @@ class BusinessListPage extends ConsumerStatefulWidget {
   @override
   ConsumerState<BusinessListPage> createState() => _BusinessListPageState();
 }
+
+/// Preview card id removed — shared companies come from [companyDirectoryProvider].
 
 class _BusinessListPageState extends ConsumerState<BusinessListPage>
     with SingleTickerProviderStateMixin {
@@ -50,13 +57,13 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
     super.dispose();
   }
 
-  List<BusinessModel> _filterBusinesses(List<BusinessModel> businesses) {
+  List<CompanyListEntry> _filterEntries(List<CompanyListEntry> entries) {
     final query = _searchController.text.trim().toLowerCase();
-    if (query.isEmpty) return businesses;
-    return businesses.where((business) {
-      final name = business.name.toLowerCase();
-      final gstin = business.gstin?.toLowerCase() ?? '';
-      final owner = business.ownerName?.toLowerCase() ?? '';
+    if (query.isEmpty) return entries;
+    return entries.where((entry) {
+      final name = entry.name.toLowerCase();
+      final gstin = entry.gstin?.toLowerCase() ?? '';
+      final owner = entry.ownerName?.toLowerCase() ?? '';
       return name.contains(query) ||
           gstin.contains(query) ||
           owner.contains(query);
@@ -86,23 +93,24 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
   }
 
   Future<void> _handleCardAction(
-    BusinessModel business,
-    BusinessCardAction action,
+    CompanyListEntry entry,
+    CompanyCardMenuAction action,
   ) async {
     switch (action) {
-      case BusinessCardAction.edit:
+      case CompanyCardMenuAction.edit:
         final updated = await showEditBusinessModal(
           context,
-          businessId: business.id,
+          businessId: entry.id,
         );
         if (!mounted || updated != true) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${business.name} updated successfully')),
+          SnackBar(content: Text('${entry.name} updated successfully')),
         );
-      case BusinessCardAction.delete:
+        ref.invalidate(companyDirectoryProvider);
+      case CompanyCardMenuAction.delete:
         final confirmed = await showDeleteBusinessDialog(
           context,
-          companyName: business.name,
+          companyName: entry.name,
         );
         if (!mounted || confirmed != true) return;
 
@@ -110,11 +118,12 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
         try {
           await container
               .read(businessListProvider.notifier)
-              .deleteBusiness(business.id);
+              .deleteBusiness(entry.id);
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${business.name} deleted')),
+            SnackBar(content: Text('${entry.name} deleted')),
           );
+          ref.invalidate(companyDirectoryProvider);
         } on Object catch (error) {
           if (!context.mounted) return;
           final message = error is DioException
@@ -124,12 +133,77 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
             SnackBar(content: Text(message)),
           );
         }
+      case CompanyCardMenuAction.manageUsers:
+        if (!context.mounted) return;
+        context.go(AppRoutes.collaborationSyncShare);
+      case CompanyCardMenuAction.backup:
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Backup is not available yet.')),
+        );
+      case CompanyCardMenuAction.leave:
+        final sessionService = await ref.read(
+          companySessionServiceProvider.future,
+        );
+        await sessionService.leaveCompany(entry);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Left ${entry.name}')),
+        );
+        ref.invalidate(companyDirectoryProvider);
+      case CompanyCardMenuAction.accept:
+        await _acceptInvite(entry);
+      case CompanyCardMenuAction.reject:
+        await _rejectInvite(entry);
+      case CompanyCardMenuAction.open:
+        await _openCompany(context, ref, entry);
+    }
+  }
+
+  Future<void> _acceptInvite(CompanyListEntry entry) async {
+    final invitationId = entry.invitationId;
+    if (invitationId == null) return;
+    try {
+      final sessionService = await ref.read(
+        companySessionServiceProvider.future,
+      );
+      await sessionService.acceptInvite(invitationId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Joined ${entry.name}')),
+      );
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
+    }
+  }
+
+  Future<void> _rejectInvite(CompanyListEntry entry) async {
+    final invitationId = entry.invitationId;
+    if (invitationId == null) return;
+    try {
+      final sessionService = await ref.read(
+        companySessionServiceProvider.future,
+      );
+      await sessionService.rejectInvite(invitationId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invitation rejected')),
+      );
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final businessesAsync = ref.watch(businessListProvider);
+    final directoryAsync = ref.watch(companyDirectoryProvider);
+    final directoryServiceAsync = ref.watch(companyDirectoryServiceProvider);
     final phoneNumber = ref.watch(loggedInPhoneProvider);
     final openingBusinessId = ref.watch(businessSessionLoadingProvider);
 
@@ -137,81 +211,86 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          businessesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _ErrorState(
-          onRetry: () => ref.read(businessListProvider.notifier).refresh(),
-        ),
-        data: (allBusinesses) {
-          if (allBusinesses.isEmpty) {
-            return Column(
-              children: [
-                const _SupportBar(phone: _supportPhone),
-                Expanded(
-                  child: _EmptyBusinessState(onCreate: _openCreateBusiness),
-                ),
-                _BottomBar(
-                  phoneNumber: phoneNumber,
-                  supportEmail: _supportEmail,
-                  onCreate: _openCreateBusiness,
-                  showNewCompany: false,
-                ),
-              ],
-            );
-          }
+          directoryAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => _ErrorState(
+              onRetry: () => ref.invalidate(companyDirectoryProvider),
+            ),
+            data: (allEntries) {
+              final directoryService = directoryServiceAsync.value;
+              if (allEntries.isEmpty) {
+                return Column(
+                  children: [
+                    const _SupportBar(phone: _supportPhone),
+                    Expanded(
+                      child: _EmptyBusinessState(onCreate: _openCreateBusiness),
+                    ),
+                    _BottomBar(
+                      phoneNumber: phoneNumber,
+                      supportEmail: _supportEmail,
+                      onCreate: _openCreateBusiness,
+                      showNewCompany: false,
+                    ),
+                  ],
+                );
+              }
 
-          final sharedBusinesses = _filterBusinesses(
-            allBusinesses.where((b) => b.isShared).toList(),
-          );
-          final myBusinesses = _filterBusinesses(
-            allBusinesses.where((b) => !b.isShared).toList(),
-          );
+              final sharedCompanies = _filterEntries(
+                directoryService?.sharedCompanies(allEntries) ??
+                    allEntries.where((e) => e.isSharedTab).toList(),
+              );
+              final myCompanies = _filterEntries(
+                directoryService?.ownedCompanies(allEntries) ??
+                    allEntries.where((e) => e.relationship.isOwner).toList(),
+              );
 
-          return Column(
-            children: [
-              const _SupportBar(phone: _supportPhone),
-              _Header(
-                searchController: _searchController,
-                searchFocusNode: _searchFocusNode,
-                tabController: _tabController,
-                onSearchChanged: () => setState(() {}),
-                onCreate: _openCreateBusiness,
-              ),
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () =>
-                      ref.read(businessListProvider.notifier).refresh(),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: _maxContentWidth,
-                      ),
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _SharedCompaniesTab(
-                            businesses: sharedBusinesses,
-                            onAction: _handleCardAction,
+              return Column(
+                children: [
+                  const _SupportBar(phone: _supportPhone),
+                  _Header(
+                    searchController: _searchController,
+                    searchFocusNode: _searchFocusNode,
+                    tabController: _tabController,
+                    onSearchChanged: () => setState(() {}),
+                    onCreate: _openCreateBusiness,
+                  ),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () async {
+                        ref.invalidate(companyDirectoryProvider);
+                        await ref.read(companyDirectoryProvider.future);
+                      },
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: _maxContentWidth,
                           ),
-                          _MyCompaniesTab(
-                            businesses: myBusinesses,
-                            onCreate: _openCreateBusiness,
-                            onAction: _handleCardAction,
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              _SharedCompaniesTab(
+                                entries: sharedCompanies,
+                                onAction: _handleCardAction,
+                              ),
+                              _MyCompaniesTab(
+                                entries: myCompanies,
+                                onCreate: _openCreateBusiness,
+                                onAction: _handleCardAction,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              _BottomBar(
-                phoneNumber: phoneNumber,
-                supportEmail: _supportEmail,
-                onCreate: _openCreateBusiness,
-              ),
-            ],
-          );
-        },
+                  _BottomBar(
+                    phoneNumber: phoneNumber,
+                    supportEmail: _supportEmail,
+                    onCreate: _openCreateBusiness,
+                  ),
+                ],
+              );
+            },
           ),
           if (openingBusinessId != null) const BusinessOpeningOverlay(),
         ],
@@ -526,16 +605,16 @@ class _Header extends StatelessWidget {
 
 class _SharedCompaniesTab extends ConsumerWidget {
   const _SharedCompaniesTab({
-    required this.businesses,
+    required this.entries,
     required this.onAction,
   });
 
-  final List<BusinessModel> businesses;
-  final void Function(BusinessModel, BusinessCardAction) onAction;
+  final List<CompanyListEntry> entries;
+  final void Function(CompanyListEntry, CompanyCardMenuAction) onAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (businesses.isEmpty) {
+    if (entries.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: const [
@@ -558,14 +637,20 @@ class _SharedCompaniesTab extends ConsumerWidget {
         AppSpacing.lg,
         AppSpacing.xl,
       ),
-      itemCount: businesses.length,
+      itemCount: entries.length,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
-        final business = businesses[index];
+        final entry = entries[index];
+        final isPending = entry.relationship.isPending;
+        final isExpired = entry.relationship.isExpired;
         return BusinessCard(
-          business: business,
-          onOpen: () => _openBusiness(context, ref, business.id),
-          onAction: (action) => onAction(business, action),
+          entry: entry,
+          onOpen: () => _openCompany(context, ref, entry),
+          onAccept: isPending && !isExpired
+              ? () => onAction(entry, CompanyCardMenuAction.accept)
+              : null,
+          onReject: isPending ? () => onAction(entry, CompanyCardMenuAction.reject) : null,
+          onMenuAction: (action) => onAction(entry, action),
         );
       },
     );
@@ -574,14 +659,14 @@ class _SharedCompaniesTab extends ConsumerWidget {
 
 class _MyCompaniesTab extends ConsumerWidget {
   const _MyCompaniesTab({
-    required this.businesses,
+    required this.entries,
     required this.onCreate,
     required this.onAction,
   });
 
-  final List<BusinessModel> businesses;
+  final List<CompanyListEntry> entries;
   final VoidCallback onCreate;
-  final void Function(BusinessModel, BusinessCardAction) onAction;
+  final void Function(CompanyListEntry, CompanyCardMenuAction) onAction;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -602,17 +687,17 @@ class _MyCompaniesTab extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-        ...businesses.map(
-          (business) => Padding(
+        ...entries.map(
+          (entry) => Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.md),
             child: BusinessCard(
-              business: business,
-              onOpen: () => _openBusiness(context, ref, business.id),
-              onAction: (action) => onAction(business, action),
+              entry: entry,
+              onOpen: () => _openCompany(context, ref, entry),
+              onMenuAction: (action) => onAction(entry, action),
             ),
           ),
         ),
-        if (businesses.isNotEmpty) const SizedBox(height: AppSpacing.sm),
+        if (entries.isNotEmpty) const SizedBox(height: AppSpacing.sm),
         _CreateBusinessCard(onCreate: onCreate),
       ],
     );
@@ -711,22 +796,31 @@ class _CreateBusinessCardState extends State<_CreateBusinessCard> {
   }
 }
 
-Future<void> _openBusiness(
+Future<void> _openCompany(
   BuildContext context,
   WidgetRef ref,
-  String businessId,
+  CompanyListEntry entry,
 ) async {
   final container = ProviderScope.containerOf(context, listen: false);
   final loading = container.read(businessSessionLoadingProvider.notifier);
-  loading.start(businessId);
+  loading.start(entry.id);
 
   try {
-    BusinessOpenDebugLog.step('ui', 'calling openBusiness');
-    await container.read(businessListProvider.notifier).openBusiness(businessId);
-    BusinessOpenDebugLog.step('ui', 'openBusiness returned — navigating home');
+    BusinessOpenDebugLog.step('ui', 'calling openCompany');
+    final sessionService = await container.read(
+      companySessionServiceProvider.future,
+    );
+    await sessionService.openCompany(entry);
+    BusinessOpenDebugLog.step('ui', 'openCompany returned — navigating home');
     if (!context.mounted) return;
     context.go(AppRoutes.home);
     BusinessOpenDebugLog.step('ui', 'navigation dispatched');
+  } on CompanySessionOpenBlocked catch (error) {
+    BusinessOpenDebugLog.step('ui', 'blocked: ${error.message}');
+    if (!context.mounted) return;
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(content: Text(error.message)),
+    );
   } on BusinessSelectionFailed catch (error) {
     BusinessOpenDebugLog.step('ui', 'failed: ${error.message}');
     if (!context.mounted) return;
