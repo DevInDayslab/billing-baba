@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -69,6 +71,12 @@ class AddExpenseForm extends _$AddExpenseForm {
       final taxAmount = double.tryParse(dto.taxAmount ?? '') ?? 0;
       final taxRate = double.tryParse(dto.taxRate ?? '') ?? 0;
 
+      final attachments = await loadTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.expense.apiValue,
+        entityId: id,
+      );
+
       state = state.copyWith(
         expenseId: id,
         categoryId: dto.categoryId,
@@ -103,6 +111,8 @@ class AddExpenseForm extends _$AddExpenseForm {
             taxPercent: taxRate,
           ),
         ],
+        attachedImages: attachments.images,
+        attachedDocuments: attachments.documents,
         isLoading: false,
         isDirty: false,
       );
@@ -442,6 +452,7 @@ class AddExpenseForm extends _$AddExpenseForm {
       );
 
       final expenseId = state.expenseId;
+      late final String savedExpenseId;
       if (expenseId != null && expenseId.isNotEmpty) {
         await service.updateExpense(
           expenseId,
@@ -458,9 +469,19 @@ class AddExpenseForm extends _$AddExpenseForm {
             paymentMode: request.paymentMode,
           ),
         );
+        savedExpenseId = expenseId;
       } else {
-        await service.createExpense(request);
+        final created = await service.createExpense(request);
+        savedExpenseId = created.id;
       }
+
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.expense.apiValue,
+        entityId: savedExpenseId,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
 
       refreshAfterExpense(
         ref,
@@ -471,7 +492,12 @@ class AddExpenseForm extends _$AddExpenseForm {
       ref
           .read(expenseSaveSuccessMessageProvider.notifier)
           .setMessage('Expense saved successfully');
-      state = state.copyWith(isSaving: false);
+      state = state.copyWith(
+        isSaving: false,
+        expenseId: savedExpenseId,
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
+      );
       ref.invalidateSelf();
       return null;
     } catch (error) {

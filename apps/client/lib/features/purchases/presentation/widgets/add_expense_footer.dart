@@ -1,8 +1,9 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/purchases/providers/add_expense_form_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_form_attachments_section.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -81,25 +82,21 @@ class AddExpenseFooter extends ConsumerWidget {
                 onTap: notifier.addPaymentType,
               ),
               const SizedBox(height: 12),
-              SaleFormAttachmentsSection(
+              transactionAttachmentsSection(
+                context: context,
+                ref: ref,
+                entityType: DocumentAttachmentEntityType.expense.apiValue,
+                entityId: form.expenseId,
                 description: form.description,
                 images: form.attachedImages,
                 documents: form.attachedDocuments,
                 onDescriptionChanged: notifier.updateDescription,
-                onAddImage: () => _promptAddImage(
-                  context,
-                  notifier,
-                  form.attachedImages.length,
-                ),
-                onRemoveImage: notifier.removeImage,
-                onUpdateImage: notifier.updateImage,
-                onAddDocument: () => _promptAddDocument(
-                  context,
-                  notifier,
-                  form.attachedDocuments.length,
-                ),
-                onRemoveDocument: notifier.removeDocument,
-                onUpdateDocument: notifier.updateDocument,
+                addImage: notifier.addImage,
+                addDocument: notifier.addDocument,
+                removeImage: notifier.removeImage,
+                removeDocument: notifier.removeDocument,
+                updateImage: notifier.updateImage,
+                updateDocument: notifier.updateDocument,
               ),
             ],
           ),
@@ -196,32 +193,6 @@ class AddExpenseFooter extends ConsumerWidget {
         ),
       ],
     );
-  }
-
-  Future<void> _promptAddImage(
-    BuildContext context,
-    AddExpenseForm notifier,
-    int currentCount,
-  ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add image',
-      defaultName: 'image_${currentCount + 1}.png',
-    );
-    if (attachment != null) notifier.addImage(attachment);
-  }
-
-  Future<void> _promptAddDocument(
-    BuildContext context,
-    AddExpenseForm notifier,
-    int currentCount,
-  ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add document',
-      defaultName: 'document_${currentCount + 1}.pdf',
-    );
-    if (attachment != null) notifier.addDocument(attachment);
   }
 }
 

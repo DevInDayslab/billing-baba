@@ -6,6 +6,7 @@ import { businessModule, businessProfileModule } from './business';
 import { createCollaborationModule } from './collaboration';
 import { crmModule } from './crm';
 import { dashboardModule } from './dashboard';
+import { documentAttachmentsModule } from './document-attachments';
 import { createHealthModule } from './health';
 import { inventoryModule } from './inventory';
 import {
@@ -48,6 +49,9 @@ export async function registerModules(
       await api.register(reportsModule, { prefix: '/reports' });
       await api.register(settingsModule, { prefix: '/settings' });
       await api.register(createStorageModule(config), { prefix: '/storage' });
+      await api.register(documentAttachmentsModule(config), {
+        prefix: '/document-attachments',
+      });
       await api.register(syncModule, { prefix: '/sync' });
       await api.register(createCollaborationModule(config), {
         prefix: '/collaboration',

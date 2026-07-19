@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
@@ -63,8 +65,18 @@ class AddSaleForm extends _$AddSaleForm {
       final service = await ref.read(salesServiceProvider.future);
       final loaded = await service.loadSaleForm(documentId);
       final items = await _resolveItemNames(loaded.items);
+      final attachments = await loadTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.sale.apiValue,
+        entityId: documentId,
+      );
       state = _withResolvedPartyTier(
-        loaded.copyWith(items: items, isLoading: false),
+        loaded.copyWith(
+          items: items,
+          attachedImages: attachments.images,
+          attachedDocuments: attachments.documents,
+          isLoading: false,
+        ),
       );
     } catch (error) {
       state = state.copyWith(
@@ -773,9 +785,18 @@ class AddSaleForm extends _$AddSaleForm {
         state,
         itemNameToId: _itemNameToId(),
       );
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.sale.apiValue,
+        entityId: document.id,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
       state = state.copyWith(
         documentId: document.id,
         items: bindSaleServerLineIds(state.items, document.lines),
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
         isSaving: false,
         isDirty: false,
       );
@@ -848,9 +869,19 @@ class AddSaleForm extends _$AddSaleForm {
         pointsAvailable =
             loyalty?.availablePoints ?? result.loyalty?.availablePoints ?? 0;
 
+        final synced = await syncTransactionAttachments(
+          ref,
+          entityType: DocumentAttachmentEntityType.sale.apiValue,
+          entityId: result.document.id,
+          images: state.attachedImages,
+          documents: state.attachedDocuments,
+        );
+
         state = state.copyWith(
           documentId: result.document.id,
           items: bindSaleServerLineIds(state.items, result.document.lines),
+          attachedImages: synced?.images ?? state.attachedImages,
+          attachedDocuments: synced?.documents ?? state.attachedDocuments,
           isSaving: false,
           isDirty: false,
         );
@@ -869,9 +900,18 @@ class AddSaleForm extends _$AddSaleForm {
           state,
           itemNameToId: _itemNameToId(),
         );
+        final synced = await syncTransactionAttachments(
+          ref,
+          entityType: DocumentAttachmentEntityType.sale.apiValue,
+          entityId: document.id,
+          images: state.attachedImages,
+          documents: state.attachedDocuments,
+        );
         state = state.copyWith(
           documentId: document.id,
           items: bindSaleServerLineIds(state.items, document.lines),
+          attachedImages: synced?.images ?? state.attachedImages,
+          attachedDocuments: synced?.documents ?? state.attachedDocuments,
           isSaving: false,
           isDirty: false,
         );

@@ -243,8 +243,61 @@ Max gallery images per item: **20**.
 
 Storage keys: `{env}/businesses/{businessId}/items/{itemId}/{assetId}.{ext}` (gallery), rack photos under location owner.
 
+## Phase 6 — Transaction attachments
+
+Polymorphic `document_attachments` binds files to any supported transaction via `entity_type` + `entity_id`. Modules use **`DocumentAttachmentService` → StorageService only**.
+
+### Schema (`0026_document_attachments`)
+
+| Column | Purpose |
+|--------|---------|
+| `entity_type` | `sale`, `purchase`, `estimate`, `sale_order`, `purchase_order`, `delivery_challan`, `payment_in`, `payment_out`, `expense`, `job_work` |
+| `entity_id` | UUID of parent transaction row |
+| `media_asset_id` | FK to `media_assets` |
+| `file_name`, `file_url`, `mime_type`, `attachment_kind` | Metadata + denormalized URL cache |
+| `sort_order`, `label` | Ordering and display |
+
+### API
+
+Prefix: `/api/v1/document-attachments` (JWT + business scope)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/document-attachments?entity_type=&entity_id=` | List attachments |
+| POST | `/document-attachments?entity_type=&entity_id=` | Upload intent (`mime_type`, `file_size`) or complete (`intent_id`, `file_name`, `replaces_attachment_id?`) |
+| GET | `/document-attachments/:id/url` | Fresh download URL |
+| PATCH | `/document-attachments/:id` | Rename (`file_name`, `label`) |
+| DELETE | `/document-attachments/:id` | Soft-delete row + storage object |
+
+### Validation
+
+| Asset | Max size | MIME |
+|-------|----------|------|
+| Transaction attachment | 10 MB | PNG, JPEG, WEBP, PDF |
+
+Max **30** attachments per transaction.
+
+### Entity resolution
+
+| `entity_type` | Parent table / filter |
+|---------------|----------------------|
+| `sale` | `sales_documents` — tax_invoice, bill_of_supply, normal_invoice, pos, sales_return |
+| `estimate` | `sales_documents.document_type = estimate` |
+| `sale_order` | `sales_documents.document_type = sale_order` |
+| `delivery_challan` | `sales_documents.document_type = delivery_challan` |
+| `purchase` | `purchase_documents` — purchase_bill, purchase_return |
+| `purchase_order` | `purchase_documents.document_type = purchase_order` |
+| `payment_in` | `payments.direction = received` |
+| `payment_out` | `payments.direction = paid` |
+| `expense` | `expenses` |
+| `job_work` | `job_work_orders` |
+
+Storage purpose mapping: sales → `sales`, purchases → `purchases`, expenses → `expenses`, payments → `payments`, job_work → `job_work`.
+
+Closes [ADR-021](../09-decisions.md#adr-021-sales-document-attachments).
+
 ## Future phases
 
-3. Generated PDFs for share / WhatsApp  
 4. WhatsApp `sendMedia`  
-5. Document attachments, KYC docs, thumbs, backup archives  
+5. Generated PDFs for share  
+6. Thumbnails, compression, backup archives  

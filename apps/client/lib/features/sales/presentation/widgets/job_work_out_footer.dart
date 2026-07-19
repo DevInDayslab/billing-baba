@@ -1,5 +1,6 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_form_attachments_section.dart';
 import 'package:billing_baba/features/sales/providers/job_work_out_form_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,25 +26,21 @@ class JobWorkOutFooter extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SaleFormAttachmentsSection(
+        transactionAttachmentsSection(
+          context: context,
+          ref: ref,
+          entityType: DocumentAttachmentEntityType.jobWork.apiValue,
+          entityId: form.orderId,
           description: form.description,
           images: form.attachedImages,
           documents: form.attachedDocuments,
           onDescriptionChanged: notifier.updateDescription,
-          onAddImage: () => _promptAddImage(
-            context,
-            notifier,
-            form.attachedImages.length,
-          ),
-          onRemoveImage: notifier.removeImage,
-          onUpdateImage: notifier.updateImage,
-          onAddDocument: () => _promptAddDocument(
-            context,
-            notifier,
-            form.attachedDocuments.length,
-          ),
-          onRemoveDocument: notifier.removeDocument,
-          onUpdateDocument: notifier.updateDocument,
+          addImage: notifier.addImage,
+          addDocument: notifier.addDocument,
+          removeImage: notifier.removeImage,
+          removeDocument: notifier.removeDocument,
+          updateImage: notifier.updateImage,
+          updateDocument: notifier.updateDocument,
         ),
         const SizedBox(height: AppSpacing.md),
         Align(
@@ -69,26 +66,6 @@ class JobWorkOutFooter extends ConsumerWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Future<void> _promptAddImage(
-    BuildContext context,
-    JobWorkOutFormNotifier notifier,
-    int currentCount,
-  ) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Image attachments coming soon.')),
-    );
-  }
-
-  Future<void> _promptAddDocument(
-    BuildContext context,
-    JobWorkOutFormNotifier notifier,
-    int currentCount,
-  ) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Document attachments coming soon.')),
     );
   }
 }

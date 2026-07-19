@@ -4,6 +4,7 @@ import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
+import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
@@ -519,6 +520,8 @@ class PaymentInFormState {
     this.discount = 0,
     this.description = '',
     this.showDescriptionField = false,
+    this.attachedImages = const [],
+    this.attachedDocuments = const [],
     this.showValidationErrors = false,
     this.saveError,
     this.isSaving = false,
@@ -535,6 +538,8 @@ class PaymentInFormState {
   final double discount;
   final String description;
   final bool showDescriptionField;
+  final List<SaleFormAttachment> attachedImages;
+  final List<SaleFormAttachment> attachedDocuments;
   final bool showValidationErrors;
   final String? saveError;
   final bool isSaving;
@@ -560,6 +565,8 @@ class PaymentInFormState {
     double? discount,
     String? description,
     bool? showDescriptionField,
+    List<SaleFormAttachment>? attachedImages,
+    List<SaleFormAttachment>? attachedDocuments,
     bool? showValidationErrors,
     String? saveError,
     bool clearSaveError = false,
@@ -577,6 +584,8 @@ class PaymentInFormState {
       discount: discount ?? this.discount,
       description: description ?? this.description,
       showDescriptionField: showDescriptionField ?? this.showDescriptionField,
+      attachedImages: attachedImages ?? this.attachedImages,
+      attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
       isSaving: isSaving ?? this.isSaving,
@@ -654,6 +663,49 @@ class PaymentInForm extends _$PaymentInForm {
 
   void toggleDescriptionField() {
     state = state.copyWith(showDescriptionField: !state.showDescriptionField);
+  }
+
+  void addImage(SaleFormAttachment attachment) {
+    state = state.copyWith(
+      attachedImages: [...state.attachedImages, attachment],
+    );
+  }
+
+  void removeImage(String id) {
+    state = state.copyWith(
+      attachedImages: state.attachedImages.where((item) => item.id != id).toList(),
+    );
+  }
+
+  void updateImage(String id, String name) {
+    state = state.copyWith(
+      attachedImages: [
+        for (final image in state.attachedImages)
+          if (image.id == id) image.copyWith(name: name) else image,
+      ],
+    );
+  }
+
+  void addDocument(SaleFormAttachment attachment) {
+    state = state.copyWith(
+      attachedDocuments: [...state.attachedDocuments, attachment],
+    );
+  }
+
+  void removeDocument(String id) {
+    state = state.copyWith(
+      attachedDocuments:
+          state.attachedDocuments.where((item) => item.id != id).toList(),
+    );
+  }
+
+  void updateDocument(String id, String name) {
+    state = state.copyWith(
+      attachedDocuments: [
+        for (final document in state.attachedDocuments)
+          if (document.id == id) document.copyWith(name: name) else document,
+      ],
+    );
   }
 
   PaymentInModel? buildPaymentModel() {

@@ -49,6 +49,28 @@ export const jobWorkOrderStatusEnum = pgEnum('job_work_order_status', [
   'cancelled',
 ]);
 
+export const documentAttachmentEntityTypeEnum = pgEnum(
+  'document_attachment_entity_type',
+  [
+    'sale',
+    'purchase',
+    'estimate',
+    'sale_order',
+    'purchase_order',
+    'delivery_challan',
+    'payment_in',
+    'payment_out',
+    'expense',
+    'job_work',
+  ],
+);
+
+export const documentAttachmentKindEnum = pgEnum('document_attachment_kind', [
+  'image',
+  'pdf',
+  'document',
+]);
+
 export const purchaseDocumentTypeEnum = pgEnum('purchase_document_type', [
   'purchase_order',
   'purchase_bill',

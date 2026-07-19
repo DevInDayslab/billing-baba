@@ -1,5 +1,7 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/document_attachment_providers.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
@@ -59,6 +61,7 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
       addSaleGrandTotalProvider(sessionKey: widget.sessionKey),
     );
     final isCredit = form.saleType == SaleType.credit;
+    final attachmentService = ref.watch(documentAttachmentServiceProvider).value;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,18 +124,42 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
               ),
               if (form.attachedImages.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                _AttachmentChips(
+                SaleFormAttachmentChipList(
                   attachments: form.attachedImages,
-                  onRemove: notifier.removeImage,
-                  onRename: notifier.updateImage,
+                  attachmentService: attachmentService,
+                  onRemove: (id) => transactionRemoveAttachment(
+                    ref: ref,
+                    attachments: form.attachedImages,
+                    id: id,
+                    onRemoved: notifier.removeImage,
+                  ),
+                  onRename: (id, name) => transactionRenameAttachment(
+                    ref: ref,
+                    attachments: form.attachedImages,
+                    id: id,
+                    name: name,
+                    onRenamed: notifier.updateImage,
+                  ),
                 ),
               ],
               if (form.attachedDocuments.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                _AttachmentChips(
+                SaleFormAttachmentChipList(
                   attachments: form.attachedDocuments,
-                  onRemove: notifier.removeDocument,
-                  onRename: notifier.updateDocument,
+                  attachmentService: attachmentService,
+                  onRemove: (id) => transactionRemoveAttachment(
+                    ref: ref,
+                    attachments: form.attachedDocuments,
+                    id: id,
+                    onRemoved: notifier.removeDocument,
+                  ),
+                  onRename: (id, name) => transactionRenameAttachment(
+                    ref: ref,
+                    attachments: form.attachedDocuments,
+                    id: id,
+                    name: name,
+                    onRenamed: notifier.updateDocument,
+                  ),
                 ),
               ],
             ],
@@ -305,12 +332,15 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
     AddSaleForm notifier,
     int currentCount,
   ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add image',
-      defaultName: 'image_${currentCount + 1}.png',
+    await transactionAddImage(
+      context: context,
+      ref: ref,
+      entityType: DocumentAttachmentEntityType.sale.apiValue,
+      entityId: ref
+          .read(addSaleFormProvider(sessionKey: widget.sessionKey))
+          .documentId,
+      onAdded: notifier.addImage,
     );
-    if (attachment != null) notifier.addImage(attachment);
   }
 
   Future<void> _promptAddDocument(
@@ -318,12 +348,15 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
     AddSaleForm notifier,
     int currentCount,
   ) async {
-    final attachment = await promptSaleFormAttachment(
-      context,
-      title: 'Add document',
-      defaultName: 'document_${currentCount + 1}.pdf',
+    await transactionAddDocument(
+      context: context,
+      ref: ref,
+      entityType: DocumentAttachmentEntityType.sale.apiValue,
+      entityId: ref
+          .read(addSaleFormProvider(sessionKey: widget.sessionKey))
+          .documentId,
+      onAdded: notifier.addDocument,
     );
-    if (attachment != null) notifier.addDocument(attachment);
   }
 }
 
@@ -517,58 +550,6 @@ class _DescriptionFieldState extends State<_DescriptionField> {
       minLines: 3,
       maxLines: 4,
       onChanged: widget.onChanged,
-    );
-  }
-}
-
-class _AttachmentChips extends StatelessWidget {
-  const _AttachmentChips({
-    required this.attachments,
-    required this.onRemove,
-    required this.onRename,
-  });
-
-  final List<SaleFormAttachment> attachments;
-  final ValueChanged<String> onRemove;
-  final void Function(String id, String name) onRename;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final attachment in attachments)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Material(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(4),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        attachment.displayName,
-                        style: const TextStyle(fontSize: 12),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () => onRemove(attachment.id),
-                      child: const Icon(
-                        Icons.close,
-                        size: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-      ],
     );
   }
 }

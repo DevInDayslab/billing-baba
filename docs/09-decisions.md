@@ -33,7 +33,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-018: OTP Authentication and Accounts Identity](#adr-018-otp-authentication-and-accounts-identity)
 - [ADR-019: Sale Order Document Type](#adr-019-sale-order-document-type)
 - [ADR-020: Job Work Out Domain](#adr-020-job-work-out-domain)
-- [ADR-021: Sales Document Attachments Deferred](#adr-021-sales-document-attachments-deferred)
+- [ADR-021: Sales Document Attachments](#adr-021-sales-document-attachments)
 - [ADR-022: Provider-Agnostic Outbound Notifications](#adr-022-provider-agnostic-outbound-notifications)
 - [ADR-023: Provider-Agnostic Object Storage](#adr-023-provider-agnostic-object-storage)
 
@@ -63,7 +63,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 | ADR-018 | OTP Authentication and Accounts Identity | July 2026 | Accepted |
 | ADR-019 | Sale Order Document Type | July 2026 | Accepted |
 | ADR-020 | Job Work Out Domain | July 2026 | Accepted |
-| ADR-021 | Sales Document Attachments Deferred | July 2026 | Accepted |
+| ADR-021 | Sales Document Attachments | July 2026 | Superseded |
 | ADR-022 | Provider-Agnostic Outbound Notifications | July 2026 | Accepted |
 | ADR-023 | Provider-Agnostic Object Storage | July 2026 | Accepted |
 
@@ -970,41 +970,32 @@ Introduce a separate domain with tables `job_work_orders`, `job_work_raw_materia
 
 ---
 
-## ADR-021: Sales Document Attachments Deferred
+## ADR-021: Sales Document Attachments
 
 | Field | Value |
 |-------|-------|
 | **Date** | July 2026 |
-| **Status** | Accepted |
+| **Status** | Superseded |
 | **Author** | Technical Lead |
+| **Superseded by** | Polymorphic `document_attachments` + Phase 6 storage integration |
 
 ### Context
 
-Flutter sales forms include `SaleFormAttachment` for images and documents. CRM has `party_attachments` but no sales-document attachment table exists.
+Flutter sales forms include `SaleFormAttachment` for images and documents. CRM has `party_attachments` but no sales-document attachment table existed when ADR-021 was accepted.
 
-### Decision
+### Original decision (deferred)
 
-Defer sales document attachment persistence to post-MVP. Phase 1 sales backend will not include attachment upload endpoints. UI attachments remain client-only until blob storage strategy and table design are finalized.
+Defer sales document attachment persistence to post-MVP until blob storage strategy and table design were finalized.
 
-### Consequences
+### Superseded decision (Phase 6)
 
-**Positive:**
+- Polymorphic `document_attachments` table binds `media_assets` to transactions via `entity_type` + `entity_id`.
+- Supported entities: sale, purchase, estimate, sale_order, purchase_order, delivery_challan, payment_in, payment_out, expense, job_work.
+- `DocumentAttachmentService` uses **StorageService only** (presigned intent → PUT → complete).
+- API: `GET/POST /document-attachments`, `GET /document-attachments/:id/url`, `PATCH/DELETE /document-attachments/:id`.
+- Flutter forms use file picker, preview/download, and offline metadata store for pending uploads.
 
-- Unblocks sales document CRUD and finalize without storage infrastructure
-- Avoids premature schema tied to unknown file size/CDN strategy
-
-**Negative:**
-
-- Attachments lost on refresh until implemented
-
-### Alternatives Considered
-
-| Alternative | Rejected because |
-|-------------|------------------|
-| Reuse `party_attachments` | Wrong entity scope; attachments belong to documents |
-| JSON array of URLs on `sales_documents` | No metadata, poor sync conflict handling |
-
-**References:** [ADR-014](#adr-014-unified-sales-documents)
+**References:** [04-backend/storage.md](04-backend/storage.md) · [ADR-023](#adr-023-provider-agnostic-object-storage) · [ADR-014](#adr-014-unified-sales-documents)
 
 ---
 

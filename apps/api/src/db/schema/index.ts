@@ -1,5 +1,7 @@
 export * from './accounting/relations';
 export * from './accounting/tables';
+export * from './attachments/relations';
+export * from './attachments/tables';
 export * from './business/relations';
 export * from './business/tables';
 export * from './collaboration/relations';
