@@ -6,6 +6,7 @@ import type {
   CreateUploadUrlResult,
   HeadObjectResult,
   MoveObjectParams,
+  GetObjectResult,
   PutObjectParams,
   PutObjectResult,
 } from './storage.types';
@@ -35,6 +36,8 @@ export interface StorageProvider {
   copy(params: CopyObjectParams): Promise<void>;
 
   move(params: MoveObjectParams): Promise<void>;
+
+  getObject(key: string): Promise<GetObjectResult>;
 
   putObject(params: PutObjectParams): Promise<PutObjectResult>;
 }

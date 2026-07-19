@@ -55,3 +55,10 @@ export type PutObjectResult = {
   etag?: string;
   contentLength: number;
 };
+
+export type GetObjectResult = {
+  body: Buffer;
+  contentType?: string;
+  contentLength: number;
+  etag?: string;
+};

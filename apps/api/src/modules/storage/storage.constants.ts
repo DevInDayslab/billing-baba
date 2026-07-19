@@ -10,6 +10,7 @@ export const STORAGE_PURPOSES = [
   'documents',
   'payments',
   'job_work',
+  'derivatives',
   'other',
 ] as const;
 
@@ -57,5 +58,6 @@ export const PURPOSE_PATH_SEGMENTS: Record<StoragePurpose, string> = {
   documents: 'documents',
   payments: 'payments',
   job_work: 'job-work',
+  derivatives: 'derivatives',
   other: 'other',
 };

@@ -15,6 +15,7 @@ import type {
   CreateUploadUrlResult,
   HeadObjectResult,
   MoveObjectParams,
+  GetObjectResult,
   PutObjectParams,
   PutObjectResult,
 } from './storage.types';
@@ -155,6 +156,23 @@ export class RailwayS3Provider implements StorageProvider {
     await this.delete(params.sourceKey);
   }
 
+  async getObject(key: string): Promise<GetObjectResult> {
+    const result = await this.client.send(
+      new GetObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      }),
+    );
+
+    const bytes = await streamToBuffer(result.Body);
+    return {
+      body: bytes,
+      contentType: result.ContentType,
+      contentLength: result.ContentLength ?? bytes.length,
+      etag: result.ETag?.replaceAll('"', ''),
+    };
+  }
+
   async putObject(params: PutObjectParams): Promise<PutObjectResult> {
     const body = Buffer.isBuffer(params.body)
       ? params.body
@@ -174,6 +192,32 @@ export class RailwayS3Provider implements StorageProvider {
       contentLength: body.length,
     };
   }
+}
+
+async function streamToBuffer(body: unknown): Promise<Buffer> {
+  if (!body) {
+    return Buffer.alloc(0);
+  }
+  if (Buffer.isBuffer(body)) {
+    return body;
+  }
+  if (body instanceof Uint8Array) {
+    return Buffer.from(body);
+  }
+  if (typeof body === 'object' && body !== null && Symbol.asyncIterator in body) {
+    const chunks: Buffer[] = [];
+    for await (const chunk of body as AsyncIterable<Uint8Array | string>) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+  }
+  if (typeof body === 'object' && body !== null && 'transformToByteArray' in body) {
+    const bytes = await (
+      body as { transformToByteArray: () => Promise<Uint8Array> }
+    ).transformToByteArray();
+    return Buffer.from(bytes);
+  }
+  throw new Error('Unsupported S3 object body type');
 }
 
 function isNotFoundError(error: unknown): boolean {

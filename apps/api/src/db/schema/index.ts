@@ -13,6 +13,7 @@ export * from './enums';
 export * from './generated-documents/tables';
 export * from './identity/relations';
 export * from './identity/tables';
+export * from './images/tables';
 export * from './inventory/relations';
 export * from './inventory/tables';
 export * from './job-work/relations';

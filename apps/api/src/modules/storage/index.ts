@@ -1,10 +1,12 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { AppConfig } from '../../config/app_config';
+import { createImagesModule } from '../images';
 import { createStorageRoutes } from './storage.routes';
 
 export function createStorageModule(config: AppConfig): FastifyPluginAsync {
   return async (app) => {
     await app.register(createStorageRoutes(config));
+    await app.register(createImagesModule(config), { prefix: '/images' });
   };
 }
 

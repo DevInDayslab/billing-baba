@@ -765,6 +765,140 @@ export class StorageService {
     return toStorageAsset(ready);
   }
 
+  /**
+   * Fetch object bytes for server-side processing (e.g. ImageService).
+   */
+  async getObjectBuffer(
+    businessId: string,
+    accountId: string,
+    assetId: string,
+  ): Promise<Buffer> {
+    await this.assertBusinessAccess(businessId, accountId);
+    const provider = this.requireProvider();
+
+    const row = await this.repository.findById(businessId, assetId);
+    if (!row || row.status !== 'ready') {
+      throw new StorageNotFoundError();
+    }
+
+    const object = await provider.getObject(row.storageKey);
+    return object.body;
+  }
+
+  /**
+   * Store a derivative image variant. Caller supplies the storage key.
+   */
+  async storeDerivativeFromBuffer(
+    businessId: string,
+    accountId: string,
+    input: {
+      storageKey: string;
+      mimeType: string;
+      buffer: Buffer;
+      visibility: CreateUploadIntentInput['visibility'];
+      sourceAssetId: string;
+    },
+  ): Promise<StorageAsset> {
+    await this.assertBusinessAccess(businessId, accountId);
+    this.validateMimeAndSize(input.mimeType, input.buffer.length, {
+      allowedMimes: ['image/webp'],
+      maxBytes: this.config.storageMaxFileBytes,
+    });
+
+    const provider = this.requireProvider();
+    const assetId = randomUUID();
+
+    await this.repository.insert({
+      id: assetId,
+      businessId,
+      storageKey: input.storageKey,
+      bucket: provider.bucket,
+      purpose: 'derivatives',
+      visibility: input.visibility,
+      mimeType: input.mimeType,
+      fileSize: input.buffer.length,
+      checksum: null,
+      ownerType: 'source',
+      ownerId: input.sourceAssetId,
+      status: 'pending',
+      uploadedBy: accountId,
+    });
+
+    const put = await provider.putObject({
+      key: input.storageKey,
+      body: input.buffer,
+      mimeType: input.mimeType,
+    });
+
+    const ready = await this.repository.markReady(businessId, assetId, {
+      etag: put.etag ?? null,
+      fileSize: put.contentLength,
+      mimeType: input.mimeType,
+    });
+
+    if (!ready) {
+      throw new StorageNotFoundError('Failed to mark derivative object ready');
+    }
+
+    this.log.info(
+      {
+        event: 'storage.store_derivative',
+        businessId,
+        assetId,
+        sourceAssetId: input.sourceAssetId,
+        storageKey: input.storageKey,
+        fileSize: put.contentLength,
+      },
+      'Storage derivative stored from buffer',
+    );
+
+    return toStorageAsset(ready);
+  }
+
+  /** Overwrite bytes for an existing ready asset (e.g. image variant regeneration). */
+  async replaceObjectBuffer(
+    businessId: string,
+    accountId: string,
+    assetId: string,
+    buffer: Buffer,
+    mimeType: string,
+  ): Promise<StorageAsset> {
+    await this.assertBusinessAccess(businessId, accountId);
+    this.validateMimeAndSize(mimeType, buffer.length);
+
+    const provider = this.requireProvider();
+    const row = await this.repository.findById(businessId, assetId);
+    if (!row || row.status !== 'ready') {
+      throw new StorageNotFoundError();
+    }
+
+    const put = await provider.putObject({
+      key: row.storageKey,
+      body: buffer,
+      mimeType,
+    });
+
+    const ready = await this.repository.markReady(businessId, assetId, {
+      etag: put.etag ?? null,
+      fileSize: put.contentLength,
+      mimeType,
+    });
+
+    if (!ready) {
+      throw new StorageNotFoundError('Failed to update stored object');
+    }
+
+    return toStorageAsset(ready);
+  }
+
+  /** CDN-friendly public URL when S3_PUBLIC_BASE_URL is configured. */
+  resolvePublicCdnUrl(storageKey: string): string | null {
+    if (!this.config.s3PublicBaseUrl) {
+      return null;
+    }
+    return `${this.config.s3PublicBaseUrl.replace(/\/$/, '')}/${storageKey}`;
+  }
+
   private buildPublicUrl(storageKey: string): string {
     if (this.config.s3PublicBaseUrl) {
       return `${this.config.s3PublicBaseUrl.replace(/\/$/, '')}/${storageKey}`;

@@ -53,7 +53,12 @@ class FakeProvider implements StorageProvider {
   readonly bucket = 'billing-baba';
   objects = new Map<
     string,
-    { contentType: string; contentLength: number; etag: string }
+    {
+      contentType: string;
+      contentLength: number;
+      etag: string;
+      body?: Buffer;
+    }
   >();
   deleted: string[] = [];
 
@@ -100,6 +105,19 @@ class FakeProvider implements StorageProvider {
     /* no-op for tests */
   }
 
+  async getObject(key: string) {
+    const obj = this.objects.get(key);
+    if (!obj?.body) {
+      throw new Error(`Object not found: ${key}`);
+    }
+    return {
+      body: obj.body,
+      contentType: obj.contentType,
+      contentLength: obj.contentLength,
+      etag: obj.etag,
+    };
+  }
+
   async putObject(params: {
     key: string;
     body: Buffer | Uint8Array;
@@ -112,6 +130,7 @@ class FakeProvider implements StorageProvider {
       contentType: params.mimeType,
       contentLength: body.length,
       etag: 'fake-etag',
+      body,
     });
     return { etag: 'fake-etag', contentLength: body.length };
   }

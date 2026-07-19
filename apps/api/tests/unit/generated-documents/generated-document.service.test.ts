@@ -86,6 +86,19 @@ class FakeProvider implements StorageProvider {
   async copy() {}
   async move() {}
 
+  async getObject(key: string) {
+    const obj = this.objects.get(key);
+    if (!obj) {
+      throw new Error(`Object not found: ${key}`);
+    }
+    return {
+      body: Buffer.alloc(obj.contentLength),
+      contentType: obj.contentType,
+      contentLength: obj.contentLength,
+      etag: 'etag',
+    };
+  }
+
   async putObject(params: {
     key: string;
     body: Buffer | Uint8Array;

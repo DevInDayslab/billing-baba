@@ -381,6 +381,57 @@ Cache entries are skipped when `source_version` no longer matches the parent ent
 
 The marketing website renders the logo and enables **Download PDF** when a cached generated document exists.
 
+## Phase 9 — Image processing
+
+Server-side derivative generation via **`ImageService`**, integrated with **`StorageService`**. Business modules are unchanged — they continue uploading originals; callers invoke the image API when variants are needed.
+
+### Features
+
+- Automatic thumbnail + responsive variants: `thumbnail` (150px), `small` (320px), `medium` (768px), `large` (1280px)
+- WEBP output with compression (quality 82)
+- EXIF stripped via auto-orient + WEBP encode
+- Dimension validation (max 8000px edge, 40 MP total)
+- Stable derivative storage keys for future CDN fronting
+
+### Schema (`0028_media_image_variants`)
+
+| Column | Purpose |
+|--------|---------|
+| `source_media_asset_id` | Original `media_assets` row |
+| `variant` | `thumbnail` \| `small` \| `medium` \| `large` |
+| `media_asset_id` | Stored derivative (`purpose: derivatives`) |
+| `width`, `height`, `file_size` | Output metadata |
+
+### Storage paths
+
+```
+{env}/businesses/{businessId}/derivatives/{sourceAssetId}/{variant}.webp
+```
+
+When `S3_PUBLIC_BASE_URL` is set, responses include `cdn_url` using the stable key (CDN-ready).
+
+### API
+
+Prefix: `/api/v1/storage/images` (JWT + business scope)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/storage/images/:sourceAssetId/process` | Generate all variants from a ready image asset |
+| GET | `/storage/images/:sourceAssetId/variants` | List variants + signed URLs |
+| GET | `/storage/images/:sourceAssetId/variants/:variant/url` | Single variant download URL |
+
+### Flow
+
+```
+POST /storage/images/:sourceAssetId/process
+  → StorageService.getObjectBuffer (source)
+  → sharp: orient, resize, WEBP, strip metadata
+  → StorageService.storeDerivativeFromBuffer (per variant)
+  → media_image_variants upsert
+```
+
+Re-processing overwrites existing derivative objects at the same storage key.
+
 ## Future phases
 
-5. Thumbnails, compression, backup archives  
+6. Backup archives, OCR persistence  
