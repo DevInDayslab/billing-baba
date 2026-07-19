@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/item_image_gallery_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_category_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
@@ -8,7 +9,6 @@ import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Basic details block — shared Product / Service grid (Vyapar-aligned).
 class GeneralInformationSection extends StatelessWidget {
@@ -30,6 +30,7 @@ class GeneralInformationSection extends StatelessWidget {
     required this.onCategorySelected,
     required this.unitLabel,
     required this.onSelectUnit,
+    this.itemId,
     super.key,
   });
 
@@ -50,6 +51,7 @@ class GeneralInformationSection extends StatelessWidget {
   final ValueChanged<String?> onCategorySelected;
   final String unitLabel;
   final VoidCallback onSelectUnit;
+  final String? itemId;
 
   bool get _isProduct => itemType == ItemType.product;
 
@@ -223,36 +225,28 @@ class GeneralInformationSection extends StatelessWidget {
               span: 3,
               child: AppFormField(
                 label: ' ',
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Image upload coming soon'),
+                child: itemId == null
+                    ? Text(
+                        _isProduct
+                            ? 'Save item to add images'
+                            : 'Save service to add images',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary.withValues(alpha: 0.9),
                         ),
-                      );
-                    },
-                    icon: const Icon(LucideIcons.camera, size: 16),
-                    label: Text(
-                      _isProduct ? 'Add Item Image' : 'Add Service Image',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                ),
+                      )
+                    : const SizedBox.shrink(),
               ),
             ),
           ],
         ),
+        if (itemId != null) ...[
+          const SizedBox(height: FormSpacing.section),
+          ItemImageGallerySection(
+            itemId: itemId!,
+            label: _isProduct ? 'Item Images' : 'Service Images',
+          ),
+        ],
       ],
     );
   }

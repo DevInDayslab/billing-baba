@@ -60,16 +60,19 @@ class ApiPosRepository implements PosRepository {
     return null;
   }
 
-  PosItem _mapInventoryItem(InventoryItem item) {
-    final stock = (item.availableForSale ?? item.quantity ?? 0).round();
-    return PosItem(
-      id: item.id,
-      name: item.name,
-      sku: item.barcode ?? item.id,
-      category: item.categoryId ?? 'General',
-      price: item.salePrice ?? 0,
-      stock: stock,
-      unit: item.baseUnitShortName ?? 'pcs',
-    );
-  }
+  PosItem _mapInventoryItem(InventoryItem item) => mapInventoryItemToPosItem(item);
+}
+
+PosItem mapInventoryItemToPosItem(InventoryItem item) {
+  final stock = (item.availableForSale ?? item.quantity ?? 0).round();
+  return PosItem(
+    id: item.id,
+    name: item.name,
+    sku: item.barcode ?? item.id,
+    category: item.categoryId ?? 'General',
+    price: item.salePrice ?? 0,
+    stock: stock,
+    unit: item.baseUnitShortName ?? 'pcs',
+    imageUrl: item.primaryImageUrl,
+  );
 }

@@ -193,6 +193,56 @@ All routes require JWT + business scope. **Owner/manager** only for mutations.
 Storage keys for branding: `{env}/businesses/{businessId}/branding/{kind}/{assetId}.{ext}`  
 Account avatars: `{env}/accounts/{accountId}/avatar/{assetId}.{ext}`
 
+## Phase 3 — Inventory media
+
+Item gallery images and rack location photos bind to `media_assets` via `ItemMediaService`. Business/inventory modules use **StorageService only** — never S3 directly.
+
+### Schema
+
+| Table / column | Change |
+|----------------|--------|
+| `item_images` | `media_asset_id` FK (nullable during migration) |
+| `item_locations` | `photo_media_asset_id` FK |
+
+Legacy `image_url` / `photo_url` columns remain as denormalized cache.
+
+### Gallery API
+
+| Method | Path | Body (intent) | Body (complete) |
+|--------|------|---------------|-----------------|
+| GET | `/inventory/items/:id/images` | — | — |
+| POST | `/inventory/items/:id/images` | `{ mime_type, file_size }` | `{ intent_id, is_primary?, sort_order?, replaces_image_id? }` |
+| PUT | `/inventory/items/:id/images/reorder` | `{ image_ids: uuid[] }` | — |
+| PATCH | `/inventory/items/:id/images/:imageId` | `{ is_primary: true }` (primary only) | — |
+| DELETE | `/inventory/items/:id/images/:imageId` | — | — |
+
+Legacy URL POST (`image_url`) remains for backward compatibility.
+
+### Rack photo API
+
+| Method | Path |
+|--------|------|
+| POST | `/inventory/item-locations/:id/photo` |
+| DELETE | `/inventory/item-locations/:id/photo` |
+
+### Validation
+
+| Asset | Max size | MIME |
+|-------|----------|------|
+| Item gallery | 2 MB | PNG, JPEG, WEBP |
+| Rack photo | 2 MB | PNG, JPEG, WEBP |
+
+Max gallery images per item: **20**.
+
+### Upload flow
+
+1. `POST` with `mime_type` + `file_size` → presigned PUT intent (`purpose: items`, `ownerType: item` or `rack`)  
+2. Client PUT bytes to Railway  
+3. `POST` with `intent_id` → complete + bind `media_asset`  
+4. `scheduleItemThumbnailGeneration()` — no-op hook for future thumbnail worker
+
+Storage keys: `{env}/businesses/{businessId}/items/{itemId}/{assetId}.{ext}` (gallery), rack photos under location owner.
+
 ## Future phases
 
 3. Generated PDFs for share / WhatsApp  

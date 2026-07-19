@@ -218,6 +218,7 @@ export type CreateItemTierPriceInput = {
 
 export type CreateItemImageInput = {
   imageUrl: string;
+  mediaAssetId?: string | null;
   sortOrder?: number;
   isPrimary?: boolean;
   createdBy?: string | null;

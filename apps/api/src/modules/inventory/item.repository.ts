@@ -731,6 +731,7 @@ export class ItemRepository {
         businessId,
         itemId,
         imageUrl: input.imageUrl,
+        mediaAssetId: input.mediaAssetId ?? null,
         sortOrder: input.sortOrder ?? 0,
         isPrimary: input.isPrimary ?? false,
         createdBy: input.createdBy ?? null,
@@ -935,6 +936,128 @@ export class ItemRepository {
     }
 
     return true;
+  }
+
+  async exists(businessId: string, itemId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: items.id })
+      .from(items)
+      .where(
+        and(
+          eq(items.id, itemId),
+          eq(items.businessId, businessId),
+          eq(items.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return row != null;
+  }
+
+  async countImages(businessId: string, itemId: string): Promise<number> {
+    const [result] = await this.db
+      .select({ total: count() })
+      .from(itemImages)
+      .where(
+        and(
+          eq(itemImages.businessId, businessId),
+          eq(itemImages.itemId, itemId),
+          eq(itemImages.isDeleted, false),
+        ),
+      );
+
+    return Number(result?.total ?? 0);
+  }
+
+  async getImageMediaAssetId(
+    businessId: string,
+    itemId: string,
+    imageId: string,
+  ): Promise<string | null> {
+    const [row] = await this.db
+      .select({ mediaAssetId: itemImages.mediaAssetId })
+      .from(itemImages)
+      .where(
+        and(
+          eq(itemImages.id, imageId),
+          eq(itemImages.itemId, itemId),
+          eq(itemImages.businessId, businessId),
+          eq(itemImages.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return row?.mediaAssetId ?? null;
+  }
+
+  async getImageMediaAssetIdByImageId(
+    businessId: string,
+    imageId: string,
+  ): Promise<string | null> {
+    const [row] = await this.db
+      .select({ mediaAssetId: itemImages.mediaAssetId })
+      .from(itemImages)
+      .where(
+        and(
+          eq(itemImages.id, imageId),
+          eq(itemImages.businessId, businessId),
+          eq(itemImages.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return row?.mediaAssetId ?? null;
+  }
+
+  async getPrimaryImageMediaAssetId(
+    businessId: string,
+    itemId: string,
+  ): Promise<string | null> {
+    const [row] = await this.db
+      .select({ mediaAssetId: itemImages.mediaAssetId })
+      .from(itemImages)
+      .where(
+        and(
+          eq(itemImages.businessId, businessId),
+          eq(itemImages.itemId, itemId),
+          eq(itemImages.isPrimary, true),
+          eq(itemImages.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return row?.mediaAssetId ?? null;
+  }
+
+  async reorderImages(
+    businessId: string,
+    itemId: string,
+    imageIds: string[],
+  ): Promise<ItemImageRecord[]> {
+    await this.db.transaction(async (tx) => {
+      for (let index = 0; index < imageIds.length; index++) {
+        const imageId = imageIds[index];
+        if (!imageId) continue;
+
+        await tx
+          .update(itemImages)
+          .set({
+            sortOrder: index,
+            updatedAt: new Date(),
+            syncVersion: sql`${itemImages.syncVersion} + 1`,
+          })
+          .where(
+            and(
+              eq(itemImages.id, imageId),
+              eq(itemImages.itemId, itemId),
+              eq(itemImages.businessId, businessId),
+              eq(itemImages.isDeleted, false),
+            ),
+          );
+      }
+    });
+
+    return this.listImages(businessId, itemId);
   }
 
   async getTierPrices(

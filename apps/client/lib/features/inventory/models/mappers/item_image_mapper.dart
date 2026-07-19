@@ -11,6 +11,15 @@ abstract final class ItemImageMapper {
       isPrimary: dto.isPrimary,
     );
   }
+
+  static ItemImageModel fromUploadResult(Map<String, dynamic> result) {
+    return ItemImageModel(
+      id: result['id'] as String,
+      imageUrl: result['image_url'] as String,
+      sortOrder: (result['sort_order'] as num?)?.toInt() ?? 0,
+      isPrimary: result['is_primary'] as bool? ?? false,
+    );
+  }
 }
 
 abstract final class TierPriceMapper {

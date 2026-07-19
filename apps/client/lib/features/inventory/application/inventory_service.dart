@@ -1,8 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
+import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
@@ -50,13 +53,19 @@ Future<InventoryService> inventoryService(Ref ref) async {
     repository: InventoryRepository(
       remote: InventoryRemoteDataSource(api.dio),
     ),
+    mediaRepository: ItemMediaRepository(api.dio),
   );
 }
 
 class InventoryService {
-  InventoryService({required this._repository});
+  InventoryService({
+    required InventoryRepository repository,
+    ItemMediaRepository? mediaRepository,
+  })  : _repository = repository,
+        _media = mediaRepository;
 
   final InventoryRepository _repository;
+  final ItemMediaRepository? _media;
 
   bool _isRefreshing = false;
   bool get isRefreshing => _isRefreshing;
@@ -406,7 +415,109 @@ class InventoryService {
 
   Future<void> deleteItemImage(String itemId, String imageId) async {
     try {
+      if (_media != null) {
+        await _media.deleteItemImage(itemId, imageId);
+        return;
+      }
       await _repository.deleteItemImage(itemId, imageId);
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<ItemImageModel> uploadItemImage(
+    String itemId, {
+    required Uint8List bytes,
+    required String mimeType,
+    bool isPrimary = false,
+    String? replacesImageId,
+  }) async {
+    final media = _media;
+    if (media == null) {
+      throw const InventoryException('Media upload is not configured.');
+    }
+
+    try {
+      final result = await media.uploadItemImage(
+        itemId: itemId,
+        bytes: bytes,
+        mimeType: mimeType,
+        isPrimary: isPrimary,
+        replacesImageId: replacesImageId,
+      );
+      return ItemImageMapper.fromUploadResult(result);
+    } on DioException catch (error) {
+      final validation = ApiErrorParser.parseValidation(error);
+      if (validation != null) rethrow;
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<void> setPrimaryItemImage(String itemId, String imageId) async {
+    final media = _media;
+    if (media == null) {
+      throw const InventoryException('Media upload is not configured.');
+    }
+
+    try {
+      await media.setPrimaryItemImage(itemId, imageId);
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<void> reorderItemImages(
+    String itemId,
+    List<String> imageIds,
+  ) async {
+    final media = _media;
+    if (media == null) {
+      throw const InventoryException('Media upload is not configured.');
+    }
+
+    try {
+      await media.reorderItemImages(itemId, imageIds);
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<String> uploadRackPhoto({
+    required String locationId,
+    required Uint8List bytes,
+    required String mimeType,
+  }) async {
+    final media = _media;
+    if (media == null) {
+      throw const InventoryException('Media upload is not configured.');
+    }
+
+    try {
+      final result = await media.uploadRackPhoto(
+        locationId: locationId,
+        bytes: bytes,
+        mimeType: mimeType,
+      );
+      final url = result['photo_url'] as String?;
+      if (url == null || url.isEmpty) {
+        throw const InventoryException('Rack photo upload returned no URL.');
+      }
+      return url;
+    } on DioException catch (error) {
+      final validation = ApiErrorParser.parseValidation(error);
+      if (validation != null) rethrow;
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
+  Future<void> deleteRackPhoto(String locationId) async {
+    final media = _media;
+    if (media == null) {
+      throw const InventoryException('Media upload is not configured.');
+    }
+
+    try {
+      await media.deleteRackPhoto(locationId);
     } on DioException catch (error) {
       InventoryErrorMapper.mapAndThrow(error);
     }

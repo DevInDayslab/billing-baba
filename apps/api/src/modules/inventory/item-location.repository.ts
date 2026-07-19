@@ -198,4 +198,74 @@ export class ItemLocationRepository {
 
     return Boolean(row);
   }
+
+  async getPhotoMediaAssetId(
+    businessId: string,
+    locationId: string,
+  ): Promise<string | null> {
+    const [row] = await this.db
+      .select({ photoMediaAssetId: itemLocations.photoMediaAssetId })
+      .from(itemLocations)
+      .where(
+        and(
+          eq(itemLocations.id, locationId),
+          eq(itemLocations.businessId, businessId),
+          eq(itemLocations.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return row?.photoMediaAssetId ?? null;
+  }
+
+  async bindPhotoAsset(
+    businessId: string,
+    locationId: string,
+    assetId: string,
+    url: string,
+    takenAt: Date,
+    updatedBy?: string | null,
+  ): Promise<void> {
+    await this.db
+      .update(itemLocations)
+      .set({
+        photoMediaAssetId: assetId,
+        photoUrl: url,
+        photoTakenAt: takenAt,
+        updatedAt: new Date(),
+        updatedBy: updatedBy ?? null,
+        syncVersion: sql`${itemLocations.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(itemLocations.id, locationId),
+          eq(itemLocations.businessId, businessId),
+          eq(itemLocations.isDeleted, false),
+        ),
+      );
+  }
+
+  async clearPhotoAsset(
+    businessId: string,
+    locationId: string,
+    updatedBy?: string | null,
+  ): Promise<void> {
+    await this.db
+      .update(itemLocations)
+      .set({
+        photoMediaAssetId: null,
+        photoUrl: null,
+        photoTakenAt: null,
+        updatedAt: new Date(),
+        updatedBy: updatedBy ?? null,
+        syncVersion: sql`${itemLocations.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(itemLocations.id, locationId),
+          eq(itemLocations.businessId, businessId),
+          eq(itemLocations.isDeleted, false),
+        ),
+      );
+  }
 }

@@ -54,6 +54,10 @@ abstract final class ApiEndpoints {
       '${inventoryItem(itemId)}/images';
   static String inventoryItemImage(String itemId, String imageId) =>
       '${inventoryItemImages(itemId)}/$imageId';
+  static String inventoryItemImagesReorder(String itemId) =>
+      '${inventoryItemImages(itemId)}/reorder';
+  static String inventoryItemLocationPhoto(String locationId) =>
+      '${inventoryItemLocation(locationId)}/photo';
   static String inventoryItemTierPrices(String itemId) =>
       '${inventoryItem(itemId)}/tier-prices';
   static String inventoryItemTierPrice(String itemId, String tier) =>

@@ -90,6 +90,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final Map<String, TextEditingController> _tierPriceControllers = {};
   final _primaryImageUrlController = TextEditingController();
   bool _isSaving = false;
+  String? _rackLocationId;
+  String? _rackPhotoUrl;
 
   int _tabCountFor(ItemType type) => type == ItemType.product ? 4 : 2;
 
@@ -200,6 +202,15 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       if (location?.rack != null && location!.rack!.isNotEmpty) {
         notifier.updateLocation(location.rack!);
         _locationController.text = location.rack!;
+      }
+
+      final itemLocations = await service.fetchItemLocations(item.id);
+      if (itemLocations.isNotEmpty && mounted) {
+        final firstLocation = itemLocations.first;
+        setState(() {
+          _rackLocationId = firstLocation.id;
+          _rackPhotoUrl = firstLocation.photoUrl;
+        });
       }
 
       final wholesale = tiers
@@ -554,6 +565,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             onCategorySelected: notifier.setCategory,
             unitLabel: _displayUnitLabel(),
             onSelectUnit: _openUnitPicker,
+            itemId: widget.editItem?.id,
           ),
           const SizedBox(height: FormSpacing.section),
           _buildTabBar(form),
@@ -716,6 +728,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       onLocationChanged: notifier.updateLocation,
       onAsOfDateSelected: notifier.setAsOfDate,
       asOfDatePickerKey: _asOfDatePickerKey,
+      rackLocationId: _rackLocationId,
+      rackPhotoUrl: _rackPhotoUrl,
+      onRackPhotoChanged: (url) => setState(() => _rackPhotoUrl = url),
     );
   }
 

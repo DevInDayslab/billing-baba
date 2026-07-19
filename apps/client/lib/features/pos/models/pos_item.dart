@@ -7,6 +7,7 @@ class PosItem {
     required this.price,
     required this.stock,
     this.unit = 'pcs',
+    this.imageUrl,
   });
 
   final String id;
@@ -16,4 +17,5 @@ class PosItem {
   final double price;
   final int stock;
   final String unit;
+  final String? imageUrl;
 }

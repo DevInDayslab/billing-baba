@@ -18,6 +18,7 @@ class MediaUploadClient {
     required String endpoint,
     required Uint8List bytes,
     required String mimeType,
+    Map<String, dynamic>? completeExtra,
   }) async {
     final intentResponse = await _apiDio.post<Map<String, dynamic>>(
       endpoint,
@@ -67,7 +68,10 @@ class MediaUploadClient {
 
     final completeResponse = await _apiDio.post<Map<String, dynamic>>(
       endpoint,
-      data: {'intent_id': intentId},
+      data: {
+        'intent_id': intentId,
+        if (completeExtra != null) ...completeExtra,
+      },
     );
 
     final data = completeResponse.data?['data'];

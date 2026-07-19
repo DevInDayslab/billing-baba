@@ -37,7 +37,7 @@ export async function registerModules(
         prefix: '/parties',
       });
       await api.register(crmModule, { prefix: '/crm' });
-      await api.register(inventoryModule, { prefix: '/inventory' });
+      await api.register(inventoryModule(config), { prefix: '/inventory' });
       await api.register(createSalesModule(config), { prefix: '/sales' });
       await api.register(jobWorkModule, { prefix: '/job-work' });
       await api.register(purchasesModule, { prefix: '/purchases' });

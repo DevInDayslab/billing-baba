@@ -114,6 +114,7 @@ export const itemImages = pgTable('item_images', {
     .notNull()
     .references(() => items.id),
   imageUrl: text('image_url').notNull(),
+  mediaAssetId: uuid('media_asset_id'),
   sortOrder: integer('sort_order').notNull().default(0),
   isPrimary: boolean('is_primary').notNull().default(false),
 });
@@ -188,6 +189,7 @@ export const itemLocations = pgTable('item_locations', {
   rack: text('rack'),
   shelf: text('shelf'),
   photoUrl: text('photo_url'),
+  photoMediaAssetId: uuid('photo_media_asset_id'),
   photoTakenAt: timestamptz('photo_taken_at'),
 });
 

@@ -1,10 +1,11 @@
 import type { FastifyPluginAsync } from 'fastify';
+import type { AppConfig } from '../../config/app_config';
 import { authenticate } from '../../middleware/auth.middleware';
 import { requireBusiness } from '../../middleware/require-business.middleware';
 import { createItemController } from './item.controller';
 
-export const createItemRoutes = (): FastifyPluginAsync => {
-  const controller = createItemController();
+export const createItemRoutes = (config: AppConfig): FastifyPluginAsync => {
+  const controller = createItemController(config);
 
   return async (app) => {
     const preHandler = [authenticate, requireBusiness];
@@ -14,6 +15,7 @@ export const createItemRoutes = (): FastifyPluginAsync => {
 
     app.get('/:id/images', { preHandler }, controller.listImages);
     app.post('/:id/images', { preHandler }, controller.addImage);
+    app.put('/:id/images/reorder', { preHandler }, controller.reorderImages);
     app.patch('/:id/images/:imageId', { preHandler }, controller.updateImage);
     app.delete('/:id/images/:imageId', { preHandler }, controller.deleteImage);
     app.get('/:id/tier-prices', { preHandler }, controller.getTierPrices);
