@@ -1,6 +1,8 @@
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { getSharedNotificationService } from '../notifications/notification-service.factory';
+import type { NotificationService } from '../notifications/notification.service';
 import {
   buildInvitationUrl,
   toInvitationDto,
@@ -20,21 +22,19 @@ import type {
 import {
   addDays,
   isExpired,
-  parseContact,
+  parseContactOrThrow,
   roleDisplayLabel,
 } from './collaboration.utils';
-import { ConsoleNotificationProvider } from './notifications/console-notification.provider';
-import {
-  type InvitationNotificationPayload,
-  NotificationService,
-} from './notifications/notification.service';
 
 export class InvitationService {
   private readonly repository: CollaborationRepository;
   private readonly notificationService: NotificationService;
   private readonly config: AppConfig;
 
-  constructor(config: AppConfig) {
+  constructor(
+    config: AppConfig,
+    notificationService?: NotificationService,
+  ) {
     const db = getDb();
     if (!db) {
       throw new AppError(
@@ -44,9 +44,8 @@ export class InvitationService {
       );
     }
     this.repository = new CollaborationRepository(db);
-    this.notificationService = new NotificationService(
-      new ConsoleNotificationProvider(),
-    );
+    this.notificationService =
+      notificationService ?? getSharedNotificationService(config);
     this.config = config;
   }
 
@@ -67,7 +66,23 @@ export class InvitationService {
       );
     }
 
-    const { phone, email } = parseContact(input.phone_or_email);
+    let phone: string | null;
+    let email: string | null;
+    try {
+      ({ phone, email } = parseContactOrThrow(input.phone_or_email));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Invalid phone or email';
+      throw new AppError('INVALID_PHONE', message, 400);
+    }
+
+    if (!phone && !email) {
+      throw new AppError(
+        'INVALID_PHONE',
+        'A valid phone number or email is required',
+        400,
+      );
+    }
 
     const existingMember = await this.repository.findActiveMemberByContact(
       businessId,
@@ -114,14 +129,32 @@ export class InvitationService {
       throw new AppError('NOT_FOUND', 'Company not found', 404);
     }
 
-    const payload: InvitationNotificationPayload = {
-      companyName: owner.companyName,
-      roleLabel: roleDisplayLabel(input.role),
-      phone,
-      email,
-      invitationUrl: buildInvitationUrl(this.config, token),
-    };
-    await this.notificationService.notifyInvitationCreated(payload);
+    if (phone) {
+      const result = await this.notificationService.sendSyncShareInvite(
+        { phone },
+        {
+          companyName: owner.companyName,
+          roleLabel: roleDisplayLabel(input.role),
+          phone,
+          email,
+          inviteUrl: buildInvitationUrl(this.config, token),
+          expiryDays: this.config.invitationExpiryDays,
+        },
+        {
+          idempotencyKey: `invite:${invitation.id}`,
+          companyId: businessId,
+        },
+      );
+      if (!result.success) {
+        console.warn(
+          JSON.stringify({
+            msg: 'invite_notification_failed',
+            invitation_id: invitation.id,
+            error: result.error?.code ?? 'UNKNOWN',
+          }),
+        );
+      }
+    }
 
     return toInvitationDto(invitation);
   }
@@ -296,13 +329,32 @@ export class InvitationService {
       throw new AppError('NOT_FOUND', 'Company not found', 404);
     }
 
-    await this.notificationService.notifyInvitationCreated({
-      companyName: owner.companyName,
-      roleLabel: roleDisplayLabel(existing.role),
-      phone: existing.phone,
-      email: existing.email,
-      invitationUrl: buildInvitationUrl(this.config, token),
-    });
+    if (existing.phone) {
+      const result = await this.notificationService.sendSyncShareInvite(
+        { phone: existing.phone },
+        {
+          companyName: owner.companyName,
+          roleLabel: roleDisplayLabel(existing.role),
+          phone: existing.phone,
+          email: existing.email,
+          inviteUrl: buildInvitationUrl(this.config, token),
+          expiryDays: this.config.invitationExpiryDays,
+        },
+        {
+          idempotencyKey: `invite:${newInvitation.id}`,
+          companyId: businessId,
+        },
+      );
+      if (!result.success) {
+        console.warn(
+          JSON.stringify({
+            msg: 'invite_notification_failed',
+            invitation_id: newInvitation.id,
+            error: result.error?.code ?? 'UNKNOWN',
+          }),
+        );
+      }
+    }
 
     return toInvitationDto(newInvitation);
   }
@@ -357,10 +409,7 @@ export class InvitationService {
       );
     }
 
-    const cancelled = await this.repository.cancelInvitation(
-      existing.id,
-      null,
-    );
+    const cancelled = await this.repository.cancelInvitation(existing.id, null);
     if (!cancelled) {
       throw new AppError(
         'INVITATION_NOT_ACTIONABLE',

@@ -8,12 +8,15 @@ import 'package:billing_baba/features/dashboard/providers/dashboard_provider.dar
 import 'package:billing_baba/features/dashboard/providers/dashboard_widget_preferences_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/parties/providers/party_reminder_schedule_provider.dart';
 import 'package:billing_baba/features/pos/providers/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/providers/pos_sales_list_provider.dart';
 import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/reports/providers/report_refresh_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_line_item_column_visibility_provider.dart';
 import 'package:billing_baba/features/settings/providers/print_settings_provider.dart';
+import 'package:billing_baba/features/settings/providers/transaction_message_settings_provider.dart';
+import 'package:billing_baba/features/settings/providers/whatsapp_settings_provider.dart';
 import 'package:billing_baba/features/tasks/providers/tasks_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -54,6 +57,12 @@ void invalidateAllBusinessScopedProviders(
     ..invalidate(tasksProvider)
     ..invalidate(printSettingsProvider)
     ..invalidate(printSettingsRepositoryProvider)
+    ..invalidate(whatsAppSettingsProvider)
+    ..invalidate(whatsappSettingsRepositoryProvider)
+    ..invalidate(transactionMessageSettingsProvider)
+    ..invalidate(transactionMessageSettingsRepositoryProvider)
+    ..invalidate(partyReminderScheduleMapProvider)
+    ..invalidate(partyReminderScheduleRepositoryProvider)
     ..invalidate(dashboardWidgetPreferencesProvider)
     ..invalidate(saleLineItemColumnVisibilityStateProvider)
     ..invalidate(localItemTierPricesProvider)

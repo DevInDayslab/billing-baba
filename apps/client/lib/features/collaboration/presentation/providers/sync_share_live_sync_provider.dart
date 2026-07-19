@@ -25,7 +25,7 @@ final syncShareLiveSyncProvider = Provider<void>((ref) {
     if (disposed) return;
     await ref
         .read(syncShareRefreshProvider.notifier)
-        .refresh(manual: false, trigger: trigger);
+        .refresh(trigger: trigger);
   }
 
   Future<void> scheduleNextPoll() async {
@@ -42,15 +42,16 @@ final syncShareLiveSyncProvider = Provider<void>((ref) {
     });
   }
 
-  // Initial load when page opens.
-  unawaited(
-    silentRefresh(trigger: SyncShareRefreshTrigger.pageOpen)
-        .then((_) => scheduleNextPoll()),
-  );
+  // Side effects must not run during provider build (Riverpod assertion).
+  Future.microtask(() async {
+    if (disposed) return;
+    await silentRefresh(trigger: SyncShareRefreshTrigger.pageOpen);
+    await scheduleNextPoll();
+  });
 
   // Resume polling when invitations/members gain pending rows.
-  ref.listen(invitationsProvider, (_, __) => unawaited(scheduleNextPoll()));
-  ref.listen(membersProvider, (_, __) => unawaited(scheduleNextPoll()));
+  ref.listen(invitationsProvider, (_, _) => unawaited(scheduleNextPoll()));
+  ref.listen(membersProvider, (_, _) => unawaited(scheduleNextPoll()));
 
   final subscription = connectivity.onConnectivityChanged.listen((result) async {
     if (disposed) return;

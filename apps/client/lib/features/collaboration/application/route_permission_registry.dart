@@ -42,6 +42,8 @@ abstract final class RoutePermissionRegistry {
     AppRoutes.settingsInvoiceTemplates: PermissionModule.settings,
     AppRoutes.settingsPreferences: PermissionModule.settings,
     AppRoutes.settingsPrint: PermissionModule.settings,
+    AppRoutes.settingsWhatsapp: PermissionModule.settings,
+    AppRoutes.settingsTransactionMessages: PermissionModule.settings,
     AppRoutes.settingsBackup: PermissionModule.settings,
     AppRoutes.crm: PermissionModule.partySmartConnect,
     AppRoutes.crmLeads: PermissionModule.partySmartConnect,

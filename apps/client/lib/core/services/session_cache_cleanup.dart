@@ -60,7 +60,10 @@ class SessionCacheCleanup {
             key.startsWith('${StorageKeys.saleLineItemColumnVisibility}_') ||
             key.startsWith('${StorageKeys.dashboardTasks}_') ||
             key.startsWith('${StorageKeys.dashboardSideWidgets}_') ||
-            key.startsWith('${StorageKeys.printSettings}_'));
+            key.startsWith('${StorageKeys.printSettings}_') ||
+            key.startsWith('${StorageKeys.whatsappSettings}_') ||
+            key.startsWith('${StorageKeys.transactionMessageSettings}_') ||
+            key.startsWith('${StorageKeys.partyReminderSchedule}_'));
   }
 
   bool _isAnyBusinessScopedKey(String key) {
@@ -74,6 +77,9 @@ class SessionCacheCleanup {
         key.startsWith('${StorageKeys.saleLineItemColumnVisibility}_') ||
         key.startsWith('${StorageKeys.dashboardTasks}_') ||
         key.startsWith('${StorageKeys.dashboardSideWidgets}_') ||
-        key.startsWith('${StorageKeys.printSettings}_');
+        key.startsWith('${StorageKeys.printSettings}_') ||
+        key.startsWith('${StorageKeys.whatsappSettings}_') ||
+        key.startsWith('${StorageKeys.transactionMessageSettings}_') ||
+        key.startsWith('${StorageKeys.partyReminderSchedule}_');
   }
 }

@@ -50,6 +50,35 @@ const envSchema = z.object({
     if (value === '' || value === undefined) return 7;
     return Number(value);
   }, z.number().int().positive().default(7)),
+  NOTIFICATION_PROVIDER: z.preprocess(
+    emptyToUndefined,
+    z.enum(['console', 'twilio']).optional(),
+  ),
+  TWILIO_ACCOUNT_SID: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
+  TWILIO_AUTH_TOKEN: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
+  TWILIO_PHONE_NUMBER: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
+  /** Twilio Content SID for payment reminders (WhatsApp utility template). */
+  TWILIO_CONTENT_SID_PAYMENT_REMINDER: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
+  INVOICE_SHARE_EXPIRY_DAYS: z.preprocess((value) => {
+    if (value === '' || value === undefined) return 90;
+    return Number(value);
+  }, z.number().int().positive().default(90)),
+  NOTIFICATION_IDEMPOTENCY_TTL_HOURS: z.preprocess((value) => {
+    if (value === '' || value === undefined) return 24;
+    return Number(value);
+  }, z.number().int().positive().default(24)),
 });
 
 export type AppConfig = {
@@ -68,7 +97,33 @@ export type AppConfig = {
   corsOrigins: string[];
   websiteUrl: string;
   invitationExpiryDays: number;
+  notificationProvider: 'console' | 'twilio';
+  twilioAccountSid?: string;
+  twilioAuthToken?: string;
+  twilioPhoneNumber?: string;
+  twilioContentSidPaymentReminder?: string;
+  invoiceShareExpiryDays: number;
+  notificationIdempotencyTtlHours: number;
 };
+
+function assertTwilioConfig(env: z.infer<typeof envSchema>): void {
+  if ((env.NOTIFICATION_PROVIDER ?? 'console') !== 'twilio') {
+    return;
+  }
+
+  const missing: string[] = [];
+  if (!env.TWILIO_ACCOUNT_SID) missing.push('TWILIO_ACCOUNT_SID');
+  if (!env.TWILIO_AUTH_TOKEN) missing.push('TWILIO_AUTH_TOKEN');
+  if (!env.TWILIO_PHONE_NUMBER) missing.push('TWILIO_PHONE_NUMBER');
+  if (!env.WEBSITE_URL) missing.push('WEBSITE_URL');
+
+  if (missing.length > 0) {
+    throw new Error(
+      `NOTIFICATION_PROVIDER=twilio requires: ${missing.join(', ')}. ` +
+        'Set these environment variables or switch NOTIFICATION_PROVIDER to console.',
+    );
+  }
+}
 
 export function loadAppConfig(): AppConfig {
   const result = envSchema.safeParse(process.env);
@@ -82,6 +137,7 @@ export function loadAppConfig(): AppConfig {
   }
 
   const env = result.data;
+  assertTwilioConfig(env);
 
   return {
     appName: env.APP_NAME,
@@ -102,5 +158,12 @@ export function loadAppConfig(): AppConfig {
         .filter(Boolean) ?? [],
     websiteUrl: env.WEBSITE_URL ?? 'https://billingbaba.com',
     invitationExpiryDays: env.INVITATION_EXPIRY_DAYS,
+    notificationProvider: env.NOTIFICATION_PROVIDER ?? 'console',
+    twilioAccountSid: env.TWILIO_ACCOUNT_SID,
+    twilioAuthToken: env.TWILIO_AUTH_TOKEN,
+    twilioPhoneNumber: env.TWILIO_PHONE_NUMBER,
+    twilioContentSidPaymentReminder: env.TWILIO_CONTENT_SID_PAYMENT_REMINDER,
+    invoiceShareExpiryDays: env.INVOICE_SHARE_EXPIRY_DAYS,
+    notificationIdempotencyTtlHours: env.NOTIFICATION_IDEMPOTENCY_TTL_HOURS,
   };
 }

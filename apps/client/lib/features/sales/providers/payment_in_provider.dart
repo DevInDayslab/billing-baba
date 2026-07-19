@@ -7,6 +7,7 @@ import 'package:billing_baba/features/sales/models/payment_in_model.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -724,6 +725,9 @@ class PaymentInForm extends _$PaymentInForm {
       );
       final paymentId = created.id;
       reset();
+      // Fire-and-forget WhatsApp notify when local settings allow.
+      // ignore: unawaited_futures
+      WhatsAppAutoNotify.afterPaymentIn(ref, paymentId: paymentId);
       return (error: null, paymentId: paymentId);
     } catch (error) {
       final message = SalesErrorMapper.messageFor(error);

@@ -19,6 +19,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/item_name_autoc
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
+import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -857,6 +858,12 @@ class AddSaleForm extends _$AddSaleForm {
         if (partyId != null && partyId.isNotEmpty && loyalty != null) {
           await _applyLoyaltyAfterSale(partyId: partyId, loyalty: loyalty);
         }
+
+        // ignore: unawaited_futures
+        WhatsAppAutoNotify.afterSaleFinalize(
+          ref,
+          documentId: result.document.id,
+        );
       } else {
         final document = await service.saveDraft(
           state,

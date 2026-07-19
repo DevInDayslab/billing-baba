@@ -34,6 +34,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-019: Sale Order Document Type](#adr-019-sale-order-document-type)
 - [ADR-020: Job Work Out Domain](#adr-020-job-work-out-domain)
 - [ADR-021: Sales Document Attachments Deferred](#adr-021-sales-document-attachments-deferred)
+- [ADR-022: Provider-Agnostic Outbound Notifications](#adr-022-provider-agnostic-outbound-notifications)
 
 ---
 
@@ -62,6 +63,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 | ADR-019 | Sale Order Document Type | July 2026 | Accepted |
 | ADR-020 | Job Work Out Domain | July 2026 | Accepted |
 | ADR-021 | Sales Document Attachments Deferred | July 2026 | Accepted |
+| ADR-022 | Provider-Agnostic Outbound Notifications | July 2026 | Accepted |
 
 ---
 
@@ -1001,6 +1003,47 @@ Defer sales document attachment persistence to post-MVP. Phase 1 sales backend w
 | JSON array of URLs on `sales_documents` | No metadata, poor sync conflict handling |
 
 **References:** [ADR-014](#adr-014-unified-sales-documents)
+
+---
+
+## ADR-022: Provider-Agnostic Outbound Notifications
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+### Context
+
+Collaboration invitations and future customer messaging (payment reminders, invoice share) need WhatsApp delivery. Hardcoding Twilio in business services would couple domain logic to one vendor and block console/dev fallbacks.
+
+### Decision
+
+- Introduce `NotificationProvider` with `sendText()` (and reserved `sendMedia` / `sendTemplate`).
+- Business modules call `NotificationService` only.
+- Select provider via `NOTIFICATION_PROVIDER=console|twilio`.
+- Keep user-visible copy in shared templates under `src/notifications/`.
+- Public invoice sharing uses cryptographically random `invoice_share_tokens` and website route `/invoice/:token`.
+- Phase 1 sends text-only WhatsApp; media/PDF deferred.
+
+### Consequences
+
+**Positive:**
+
+- Twilio can be swapped without touching invitation/payment/sales services
+- Console provider keeps local/dev and CI safe without credentials
+
+**Negative:**
+
+- Template changes require API deploy (acceptable for Phase 1)
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Call Twilio SDK from InvitationService | Vendor lock-in; crashes business flows on API errors |
+| Meta Cloud API only | Extra app review; Twilio already provisioned |
 
 ---
 

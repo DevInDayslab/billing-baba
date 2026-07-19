@@ -1,10 +1,13 @@
 import type { FastifyPluginAsync } from 'fastify';
+import type { AppConfig } from '../../config/app_config';
 import { authenticate } from '../../middleware/auth.middleware';
 import { requireBusiness } from '../../middleware/require-business.middleware';
+import { createPaymentNotifyHandler } from './payment-notify.routes';
 import { createPaymentController } from './payment.controller';
 
-export const createPaymentRoutes = (): FastifyPluginAsync => {
+export function createPaymentRoutes(config: AppConfig): FastifyPluginAsync {
   const controller = createPaymentController();
+  const notifyHandler = createPaymentNotifyHandler(config);
 
   return async (app) => {
     const preHandler = [authenticate, requireBusiness];
@@ -14,6 +17,7 @@ export const createPaymentRoutes = (): FastifyPluginAsync => {
     app.get('/:id', { preHandler }, controller.getById);
     app.patch('/:id', { preHandler }, controller.update);
     app.delete('/:id', { preHandler }, controller.delete);
+    app.post('/:id/notify', { preHandler }, notifyHandler);
     app.get('/:id/allocations', { preHandler }, controller.listAllocations);
     app.post('/:id/allocations', { preHandler }, controller.addAllocation);
     app.delete(
@@ -22,4 +26,4 @@ export const createPaymentRoutes = (): FastifyPluginAsync => {
       controller.deleteAllocation,
     );
   };
-};
+}

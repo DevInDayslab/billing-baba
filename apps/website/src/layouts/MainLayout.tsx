@@ -2,12 +2,17 @@ import { Outlet } from 'react-router-dom';
 
 type MainLayoutProps = {
   subtitle?: string;
+  /** Tailwind max-width class. Defaults to max-w-lg. */
+  maxWidthClassName?: string;
 };
 
-export function MainLayout({ subtitle }: MainLayoutProps) {
+export function MainLayout({
+  subtitle,
+  maxWidthClassName = 'max-w-lg',
+}: MainLayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-12">
-      <div className="mx-auto max-w-lg">
+      <div className={`mx-auto w-full ${maxWidthClassName}`}>
         <header className="mb-8 text-center">
           <p className="text-sm font-semibold uppercase tracking-widest text-slate-500">
             Billing Baba

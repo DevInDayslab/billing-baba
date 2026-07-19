@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_header.dart';
 import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
 import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
@@ -11,9 +13,13 @@ import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_actions_menu_button.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_ledger_transactions_section.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_whatsapp_actions.dart';
+import 'package:billing_baba/features/parties/providers/party_reminder_schedule_provider.dart';
+import 'package:billing_baba/features/parties/repositories/party_reminder_schedule_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 
 class PartyDetailPanel extends ConsumerWidget {
   const PartyDetailPanel({
@@ -168,6 +174,10 @@ class _PartyDetailHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final permissions = ref.watch(permissionServiceProvider);
+    final canEditParty = permissions.canEdit(PermissionModule.party);
+    final canShareMessaging = permissions.canShare(PermissionModule.party) ||
+        permissions.canShare(PermissionModule.sale);
     final outstanding = ledgerAsync.maybeWhen(
       data: (ledger) => ledger.summary.outstanding,
       orElse: () => party.balance,
@@ -296,20 +306,22 @@ class _PartyDetailHeader extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        IconButton(
-                          onPressed: () =>
-                              PartyActions.edit(context, ref, party),
-                          icon: const Icon(Icons.edit_outlined, size: 20),
-                          tooltip: 'Edit party',
-                          color: AppColors.textSecondary,
-                          padding: EdgeInsets.zero,
-                          visualDensity: VisualDensity.compact,
-                          constraints: const BoxConstraints(
-                            minWidth: 28,
-                            minHeight: 28,
+                        if (canEditParty) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          IconButton(
+                            onPressed: () =>
+                                PartyActions.edit(context, ref, party),
+                            icon: const Icon(Icons.edit_outlined, size: 20),
+                            tooltip: 'Edit party',
+                            color: AppColors.textSecondary,
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                            constraints: const BoxConstraints(
+                              minWidth: 28,
+                              minHeight: 28,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                     if (showLoyalty) ...[
@@ -320,57 +332,91 @@ class _PartyDetailHeader extends ConsumerWidget {
                 ),
               ),
               _PartyHeaderActionIcon(
-                iconWidget: const FaIcon(
+                iconWidget: FaIcon(
                   FontAwesomeIcons.commentDots,
                   size: 20,
-                  color: Color.fromARGB(255, 240, 180, 64),
+                  color: canShareMessaging
+                      ? const Color.fromARGB(255, 240, 180, 64)
+                      : const Color(0x66F0B440),
                 ),
-                tooltip: 'Send Payment Reminder SMS to party',
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Messaging coming soon'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
+                tooltip: canShareMessaging
+                    ? 'Send payment reminder (SMS)'
+                    : 'SMS — no share permission',
+                onPressed: !canShareMessaging
+                    ? null
+                    : () => PartyWhatsAppActions.sendPaymentReminderNow(
+                          context,
+                          ref,
+                          party,
+                          outstanding: outstanding,
+                        ),
               ),
               _PartyHeaderActionIcon(
-                iconWidget: const FaIcon(
+                iconWidget: FaIcon(
                   FontAwesomeIcons.whatsapp,
                   size: 20,
-                  color: Color(0xFF25D366),
+                  color: canShareMessaging
+                      ? const Color(0xFF25D366)
+                      : const Color(0x6625D366),
                 ),
-                tooltip: 'Send Payment Reminder WhatsApp to party',
-                onPressed: party.phone.trim().isEmpty
+                tooltip: canShareMessaging
+                    ? 'Send payment reminder (WhatsApp)'
+                    : 'WhatsApp — no share permission',
+                onPressed: !canShareMessaging
                     ? null
-                    : () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Call ${party.phone}'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
+                    : () => PartyWhatsAppActions.sendPaymentReminderNow(
+                          context,
+                          ref,
+                          party,
+                          outstanding: outstanding,
+                        ),
               ),
               _PartyHeaderActionIcon(
-                iconWidget: const FaIcon(
+                iconWidget: FaIcon(
                   FontAwesomeIcons.clock,
                   size: 18,
-                  color: Color(0xFF4095F0),
+                  color: canShareMessaging
+                      ? const Color(0xFF4095F0)
+                      : const Color(0x664095F0),
                 ),
-                tooltip: 'Set Reminder',
-                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Messaging coming soon'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
+                tooltip: canShareMessaging
+                    ? 'Set Reminder'
+                    : 'Reminder — no share permission',
+                onPressed: !canShareMessaging
+                    ? null
+                    : () => PartyWhatsAppActions.showReminderDialog(
+                          context,
+                          ref,
+                          party,
+                          outstanding: outstanding,
+                        ),
               ),
               PartyActionsMenuButton(party: party),
             ],
+          ),
+          Builder(
+            builder: (context) {
+              final next = ref.watch(partyNextReminderProvider(party.id));
+              if (next == null) return const SizedBox.shrink();
+              final dateLabel =
+                  DateFormat('dd MMM yyyy').format(next.nextReminderAt);
+              final freqSuffix = switch (next.frequency) {
+                PartyReminderFrequency.once => '',
+                PartyReminderFrequency.weekly => ' (Weekly)',
+                PartyReminderFrequency.monthly => ' (Monthly)',
+              };
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: Text(
+                  'Next Reminder at $dateLabel$freqSuffix',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.blue.shade700,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              );
+            },
           ),
           const Divider(height: 20, thickness: 1, color: Color.fromARGB(98, 117, 117, 117)),
 
@@ -423,7 +469,6 @@ class _PartyHeaderActionIcon extends StatelessWidget {
     required this.tooltip,
     this.icon,
     this.iconWidget,
-    this.color = AppColors.textSecondary,
     this.onPressed,
   }) : assert(
          icon != null || iconWidget != null,
@@ -433,7 +478,6 @@ class _PartyHeaderActionIcon extends StatelessWidget {
   final String tooltip;
   final IconData? icon;
   final Widget? iconWidget;
-  final Color? color;
   final VoidCallback? onPressed;
 
   @override
@@ -442,7 +486,7 @@ class _PartyHeaderActionIcon extends StatelessWidget {
       onPressed: onPressed,
       icon: iconWidget ?? Icon(icon, size: 20),
       tooltip: tooltip,
-      color: iconWidget == null ? color : null,
+      color: iconWidget == null ? AppColors.textSecondary : null,
       padding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,
       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),

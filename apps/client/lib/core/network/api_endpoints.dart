@@ -87,6 +87,16 @@ abstract final class ApiEndpoints {
       '${salesDocument(id)}/convert';
   static String salesDocumentBrandSwap(String id) =>
       '${salesDocument(id)}/brand-swap';
+  static String salesDocumentShare(String id) => '${salesDocument(id)}/share';
+  static String salesDocumentNotify(String id) => '${salesDocument(id)}/notify';
+
+  static String partyReminders(String id) => '$parties/$id/reminders';
+
+  static const notifications = '/api/v1/notifications';
+  static const notificationsStatus = '$notifications/status';
+  static const notificationsTest = '$notifications/test';
+
+  static String paymentNotify(String id) => '${payment(id)}/notify';
 
   static const posSessions = '$sales/pos-sessions';
   static String posSession(String id) => '$posSessions/$id';

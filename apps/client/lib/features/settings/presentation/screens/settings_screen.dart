@@ -17,11 +17,6 @@ class SettingsScreen extends StatelessWidget {
       push: true,
     ),
     _SettingsNavItem(
-      icon: Icons.people_outline,
-      title: 'Users & Roles',
-      route: AppRoutes.settingsUsers,
-    ),
-    _SettingsNavItem(
       icon: Icons.receipt_long_outlined,
       title: 'Taxes',
       route: AppRoutes.settingsTaxes,
@@ -30,6 +25,25 @@ class SettingsScreen extends StatelessWidget {
       icon: Icons.description_outlined,
       title: 'Invoice Templates',
       route: AppRoutes.settingsInvoiceTemplates,
+    ),
+    _SettingsNavItem(
+      icon: Icons.chat_outlined,
+      title: 'WhatsApp',
+      subtitle: 'Enable messaging and test delivery',
+      route: AppRoutes.settingsWhatsapp,
+      push: true,
+    ),
+    _SettingsNavItem(
+      icon: Icons.sms_outlined,
+      title: 'Transaction Messages',
+      subtitle: 'Auto-send templates and message content',
+      route: AppRoutes.settingsTransactionMessages,
+      push: true,
+    ),
+    _SettingsNavItem(
+      icon: Icons.people_outline,
+      title: 'Users & Roles',
+      route: AppRoutes.settingsUsers,
     ),
     _SettingsNavItem(
       icon: Icons.backup_outlined,
@@ -43,7 +57,7 @@ class SettingsScreen extends StatelessWidget {
     return ListView.separated(
       padding: EdgeInsets.zero,
       itemCount: _items.length,
-      separatorBuilder: (_, __) => const Divider(
+      separatorBuilder: (_, _) => const Divider(
         height: 1,
         thickness: 1,
         color: listPanelCardBorder,
