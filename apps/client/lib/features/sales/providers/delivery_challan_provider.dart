@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
@@ -443,8 +444,18 @@ class DeliveryChallans extends _$DeliveryChallans {
   Future<String?> finalizeChallan(String documentId) async {
     try {
       final service = await ref.read(salesServiceProvider.future);
-      await service.finalizeDraft(documentId);
+      final document = await service.finalizeDraft(documentId);
       await refresh();
+      await refreshAfterSaleMutation(
+        ref,
+        context: (
+          partyId: document.partyId,
+          itemIds: document.lines
+              .map((line) => line.itemId)
+              .whereType<String>()
+              .where((id) => id.isNotEmpty),
+        ),
+      );
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);
@@ -457,11 +468,21 @@ class DeliveryChallans extends _$DeliveryChallans {
   }) async {
     try {
       final service = await ref.read(salesServiceProvider.future);
-      await service.convertDocument(
+      final document = await service.convertDocument(
         documentId,
         targetType: targetType,
       );
       await refresh();
+      await refreshAfterSaleMutation(
+        ref,
+        context: (
+          partyId: document.partyId,
+          itemIds: document.lines
+              .map((line) => line.itemId)
+              .whereType<String>()
+              .where((id) => id.isNotEmpty),
+        ),
+      );
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);

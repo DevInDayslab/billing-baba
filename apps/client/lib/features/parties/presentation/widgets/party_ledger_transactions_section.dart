@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
@@ -585,6 +587,16 @@ class _PartyLedgerTransactionsSectionState
                     context,
                     transaction,
                   ),
+                  onDoubleTapDown: (details) {
+                    unawaited(
+                      PartyLedgerTransactionActionsMenu.showAtPosition(
+                        context: context,
+                        ref: ref,
+                        transaction: transaction,
+                        globalPosition: details.globalPosition,
+                      ),
+                    );
+                  },
                   flexValues: const [2, 2, 2, 2, 2, 2, 2, 1],
                   alignEnds: const [
                     false,

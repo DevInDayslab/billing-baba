@@ -337,7 +337,7 @@ class PurchaseOrders extends _$PurchaseOrders {
       final service = await ref.read(purchaseServiceProvider.future);
       await service.finalizeDraft(documentId, godownId: godownId);
       await refresh();
-      refreshAfterPurchaseMutation(ref);
+      await refreshAfterPurchaseMutation(ref);
       return null;
     } catch (error) {
       return PurchaseErrorMapper.messageFor(error);
@@ -351,7 +351,7 @@ class PurchaseOrders extends _$PurchaseOrders {
       await refresh();
       ref.invalidate(purchaseBillsProvider);
       await ref.read(purchaseBillsProvider.notifier).refresh();
-      refreshAfterPurchaseMutation(ref);
+      await refreshAfterPurchaseMutation(ref);
       return null;
     } catch (error) {
       return PurchaseErrorMapper.messageFor(error);
@@ -367,7 +367,7 @@ class PurchaseOrders extends _$PurchaseOrders {
       await refresh();
       ref.invalidate(purchaseBillsProvider);
       await ref.read(purchaseBillsProvider.notifier).refresh();
-      refreshAfterPurchaseMutation(ref);
+      await refreshAfterPurchaseMutation(ref);
       return (error: null, billId: document.id);
     } catch (error) {
       return (

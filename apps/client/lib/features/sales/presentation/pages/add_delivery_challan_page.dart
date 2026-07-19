@@ -94,79 +94,93 @@ class _AddDeliveryChallanPageState
         if (didPop) return;
         await _handleClose();
       },
-      child: ColoredBox(
-        color: AppColors.background,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                0,
-              ),
-              child: SalePageTitleBar(
-                currentRoute: AppRoutes.saleDeliveryChallan,
-                onSettingsTap: () {},
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.lgBorder,
-                    border: Border.all(color: _cardBorder),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x0A000000),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
+      child: Stack(
+        children: [
+          ColoredBox(
+            color: AppColors.background,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.md,
+                    AppSpacing.md,
+                    0,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          _sectionGap,
-                          _sectionGap,
-                          _sectionGap,
-                          0,
-                        ),
-                        child: _ChallanPageHeader(
-                          isEditing: _isEditing,
-                          onClose: _handleClose,
-                        ),
-                      ),
-                      const SizedBox(height: _sectionGap),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: _sectionGap),
-                        child: _ChallanFormFields(),
-                      ),
-                      const SizedBox(height: _sectionGap),
-                      const DeliveryChallanLineItemsTable(embedded: true),
-                      const Divider(height: 1, color: _cardBorder),
-                      const Padding(
-                        padding: EdgeInsets.all(_sectionGap),
-                        child: DeliveryChallanFooter(),
-                      ),
-                      const Divider(height: 1, color: _cardBorder),
-                      _ChallanBottomActionBar(
-                        isEditing: _isEditing,
-                        onSaved: () =>
-                            context.go(AppRoutes.saleDeliveryChallan),
-                      ),
-                    ],
+                  child: SalePageTitleBar(
+                    currentRoute: AppRoutes.saleDeliveryChallan,
+                    onSettingsTap: () {},
                   ),
                 ),
-              ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: AppRadius.lgBorder,
+                        border: Border.all(color: _cardBorder),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0A000000),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              _sectionGap,
+                              _sectionGap,
+                              _sectionGap,
+                              0,
+                            ),
+                            child: _ChallanPageHeader(
+                              isEditing: _isEditing,
+                              onClose: _handleClose,
+                            ),
+                          ),
+                          const SizedBox(height: _sectionGap),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: _sectionGap,
+                            ),
+                            child: _ChallanFormFields(),
+                          ),
+                          const SizedBox(height: _sectionGap),
+                          const DeliveryChallanLineItemsTable(embedded: true),
+                          const Divider(height: 1, color: _cardBorder),
+                          const Padding(
+                            padding: EdgeInsets.all(_sectionGap),
+                            child: DeliveryChallanFooter(),
+                          ),
+                          const Divider(height: 1, color: _cardBorder),
+                          _ChallanBottomActionBar(
+                            isEditing: _isEditing,
+                            onSaved: () {
+                              ref
+                                  .read(deliveryChallanFormProvider.notifier)
+                                  .resetForm();
+                              context.go(AppRoutes.saleDeliveryChallan);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          if (ref.watch(
+            deliveryChallanFormProvider.select((form) => form.isSaving),
+          ))
+            const _ChallanSaveLoadingOverlay(),
+        ],
       ),
     );
   }
@@ -470,7 +484,7 @@ class _ChallanBottomActionBar extends ConsumerWidget {
     final form = ref.read(deliveryChallanFormProvider);
     if (form.isSaving) return;
 
-    final error = await notifier.save();
+    final error = await _submitChallan(notifier);
     if (!context.mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -512,7 +526,7 @@ class _ChallanBottomActionBar extends ConsumerWidget {
     final form = ref.read(deliveryChallanFormProvider);
     if (form.isSaving) return;
 
-    final error = await notifier.save();
+    final error = await _submitChallan(notifier);
     if (!context.mounted) return;
 
     if (error != null) {
@@ -523,8 +537,69 @@ class _ChallanBottomActionBar extends ConsumerWidget {
     }
 
     _showSaveSuccessSnackBar(context);
-    ref.read(deliveryChallanFormProvider.notifier).resetForm();
     onSaved();
+  }
+
+  Future<String?> _submitChallan(DeliveryChallanFormNotifier notifier) {
+    return isEditing ? notifier.save() : notifier.finalize();
+  }
+}
+
+class _ChallanSaveLoadingOverlay extends StatelessWidget {
+  const _ChallanSaveLoadingOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return AbsorbPointer(
+      child: ColoredBox(
+        color: Colors.black26,
+        child: Center(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: AppRadius.mdBorder,
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A000000),
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'Saving delivery challan…',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Updating dashboard and party transactions',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

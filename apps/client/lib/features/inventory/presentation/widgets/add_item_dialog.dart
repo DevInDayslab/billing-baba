@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
@@ -359,24 +360,20 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     } on ApiValidationException catch (error) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.fieldErrors['name'] ?? error.message),
-        ),
-      );
+      _showSaveError(InventoryErrorMapper.validationMessage(error));
     } on InventoryException catch (error) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      _showSaveError(error.message);
     } catch (error) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(InventoryErrorMapper.messageFor(error))),
-      );
+      _showSaveError(InventoryErrorMapper.messageForSaveItem(error));
     }
+  }
+
+  void _showSaveError(String message) {
+    showTransactionErrorToast(context, message: message);
   }
 
   void _clearControllers() {

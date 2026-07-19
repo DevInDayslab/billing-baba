@@ -92,7 +92,7 @@ class InventoryUnits extends _$InventoryUnits {
         shortName: trimmedShortName,
       );
       await refresh();
-      invalidateInventoryLists(ref);
+      await refreshInventoryLists(ref);
       return AddUnitResult(unit: unit);
     } on ApiValidationException catch (error) {
       return AddUnitResult(
@@ -121,7 +121,7 @@ class InventoryUnits extends _$InventoryUnits {
         shortName: shortName.trim(),
       );
       await refresh();
-      invalidateInventoryLists(ref);
+      await refreshInventoryLists(ref);
       return AddUnitResult(unit: unit);
     } on ApiValidationException catch (error) {
       return AddUnitResult(
@@ -146,7 +146,7 @@ class InventoryUnits extends _$InventoryUnits {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.deleteUnit(id);
       await refresh();
-      invalidateInventoryLists(ref);
+      await refreshInventoryLists(ref);
       return null;
     } on InventoryException catch (error) {
       state = previous;

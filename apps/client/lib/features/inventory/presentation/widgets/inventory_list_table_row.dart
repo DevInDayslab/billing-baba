@@ -16,10 +16,8 @@ const inventoryItemListRowHeight = 44.0;
 
 /// Shared row shell for left-panel lists and right-side detail tables.
 ///
-/// Background colors are owned here via [MouseRegion] + [AnimatedContainer], not
-/// [InkWell] only handles tap/semantics; ink overlays are forced transparent so
-/// Material 3 never paints theme fallback ink (which can appear dark/black
-/// changes under an active pointer).
+/// Background colors are owned here via [MouseRegion] + [AnimatedContainer].
+/// [GestureDetector] handles tap/double-tap; press state drives row highlight.
 class InventoryListTableRow extends StatefulWidget {
   const InventoryListTableRow({
     required this.index,
@@ -27,6 +25,8 @@ class InventoryListTableRow extends StatefulWidget {
     this.isSelected = false,
     this.isFocused = false,
     this.onTap,
+    this.onDoubleTap,
+    this.onDoubleTapDown,
     super.key,
   });
 
@@ -35,6 +35,8 @@ class InventoryListTableRow extends StatefulWidget {
   final bool isSelected;
   final bool isFocused;
   final VoidCallback? onTap;
+  final VoidCallback? onDoubleTap;
+  final GestureTapDownCallback? onDoubleTapDown;
 
   @override
   State<InventoryListTableRow> createState() => _InventoryListTableRowState();
@@ -65,9 +67,27 @@ class _InventoryListTableRowState extends State<InventoryListTableRow> {
     return widget.index.isOdd ? listPanelZebraRowColor : AppColors.surface;
   }
 
-  static const _transparentOverlay = WidgetStatePropertyAll<Color?>(
-    Colors.transparent,
-  );
+  bool get _hasTapHandlers =>
+      widget.onTap != null ||
+      widget.onDoubleTap != null ||
+      widget.onDoubleTapDown != null;
+
+  Widget _buildTapTarget(Widget child) {
+    if (!_hasTapHandlers) {
+      return child;
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      onDoubleTap: widget.onDoubleTap,
+      onDoubleTapDown: widget.onDoubleTapDown,
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: child,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,18 +106,7 @@ class _InventoryListTableRowState extends State<InventoryListTableRow> {
         ),
         child: Material(
           color: Colors.transparent,
-          child: InkWell(
-            onTap: widget.onTap,
-            onHighlightChanged: widget.onTap == null
-                ? null
-                : (pressed) => setState(() => _isPressed = pressed),
-            hoverColor: Colors.transparent,
-            focusColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            splashColor: Colors.transparent,
-            overlayColor: _transparentOverlay,
-            child: widget.child,
-          ),
+          child: _buildTapTarget(widget.child),
         ),
       ),
     );

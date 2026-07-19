@@ -77,9 +77,5 @@ ExportSheet _deliveryChallanSheet(List<SaleInvoiceModel> items) {
   );
 }
 
-String _challanStatusLabel(SalesDocumentStatus status) => switch (status) {
-  SalesDocumentStatus.finalized => 'Open',
-  SalesDocumentStatus.converted => 'Converted',
-  SalesDocumentStatus.cancelled => 'Cancelled',
-  SalesDocumentStatus.draft => 'Draft',
-};
+String _challanStatusLabel(SalesDocumentStatus status) =>
+    status.lifecycleDisplayLabel;

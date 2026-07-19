@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billing_baba/features/dashboard/providers/dashboard_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
@@ -33,6 +35,66 @@ void invalidatePartyTimeline(Ref ref, String partyId) {
 
 void invalidatePartyLedger(Ref ref, String partyId) {
   invalidatePartyTimeline(ref, partyId);
+}
+
+void _schedulePartyLedgerRefresh(
+  Ref ref,
+  String partyId,
+  List<Future<void>> refreshTasks,
+) {
+  final timeline = partyTimelineProvider(partyId);
+  final ledger = partyLedgerProvider(partyId);
+
+  // Auto-dispose providers must not be invalidated then refreshed, and must
+  // only be refreshed while a listener still holds them alive.
+  if (ref.exists(timeline)) {
+    refreshTasks.add(ref.read(timeline.notifier).refresh());
+  } else {
+    ref.invalidate(timeline);
+  }
+
+  if (ref.exists(ledger)) {
+    refreshTasks.add(ref.read(ledger.notifier).refresh());
+  } else {
+    ref.invalidate(ledger);
+  }
+}
+
+/// Refetches dashboard and party timeline so dependent screens update immediately.
+///
+/// Inventory refresh is intentionally deferred — it paginates the full catalog and
+/// was blocking dashboard/party timeline invalidation for several seconds.
+Future<void> _refreshDependentViews(
+  Ref ref,
+  MutationRefreshContext? context,
+) async {
+  if (!ref.mounted) return;
+
+  invalidateDashboard(ref);
+
+  final partyId = context?.partyId?.trim();
+  final refreshTasks = <Future<void>>[
+    ref.read(dashboardProvider.notifier).refresh(),
+  ];
+
+  if (partyId != null && partyId.isNotEmpty) {
+    _schedulePartyLedgerRefresh(ref, partyId, refreshTasks);
+  } else {
+    invalidatePartyBalances(ref);
+  }
+
+  await Future.wait(refreshTasks);
+  if (!ref.mounted) return;
+}
+
+void _refreshStockContextInBackground(
+  Ref ref,
+  MutationRefreshContext? context,
+) {
+  unawaited(() async {
+    if (!ref.mounted) return;
+    await _refreshStockContext(ref, context);
+  }());
 }
 
 void invalidatePurchaseFaLists(Ref ref) {
@@ -104,37 +166,51 @@ void _refreshPartyContext(Ref ref, MutationRefreshContext? context) {
   invalidatePartyBalances(ref);
 }
 
-void _refreshStockContext(Ref ref, MutationRefreshContext? context) {
+/// Refetches the master item list without invalidating first.
+///
+/// Invalidating before [InventoryItems.refresh] races with [InventoryItems.build]
+/// and can overwrite fresh stock with stale list data.
+Future<void> refreshInventoryLists(Ref ref) {
+  return ref.read(inventoryItemsProvider.notifier).refresh();
+}
+
+Future<void> _refreshStockContext(
+  Ref ref,
+  MutationRefreshContext? context,
+) async {
+  await refreshInventoryLists(ref);
+  if (!ref.mounted) return;
+
   final itemIds = context?.itemIds;
   if (itemIds != null && itemIds.isNotEmpty) {
     invalidateItemStock(ref, itemIds);
-    return;
   }
-  invalidateInventoryLists(ref);
 }
 
 /// After sale invoice create/edit/delete/finalize or sale return.
-void refreshAfterSaleMutation(
+Future<void> refreshAfterSaleMutation(
   Ref ref, {
   MutationRefreshContext? context,
-}) {
+}) async {
+  if (!ref.mounted) return;
   invalidateSaleLists(ref);
   invalidatePaymentInLists(ref);
-  _refreshStockContext(ref, context);
-  invalidateDashboard(ref);
-  _refreshPartyContext(ref, context);
+  await _refreshDependentViews(ref, context);
+  if (!ref.mounted) return;
+  _refreshStockContextInBackground(ref, context);
 }
 
 /// After purchase bill create/edit/delete.
-void refreshAfterPurchaseMutation(
+Future<void> refreshAfterPurchaseMutation(
   Ref ref, {
   MutationRefreshContext? context,
-}) {
+}) async {
+  if (!ref.mounted) return;
   invalidatePurchaseLists(ref);
   invalidatePaymentOutLists(ref);
-  _refreshStockContext(ref, context);
-  invalidateDashboard(ref);
-  _refreshPartyContext(ref, context);
+  await _refreshDependentViews(ref, context);
+  if (!ref.mounted) return;
+  _refreshStockContextInBackground(ref, context);
 }
 
 /// After payment in create/edit/delete.
@@ -170,25 +246,27 @@ void refreshAfterExpense(
 }
 
 /// After sale return / credit note affecting receivables.
-void refreshAfterSaleReturn(
+Future<void> refreshAfterSaleReturn(
   Ref ref, {
   MutationRefreshContext? context,
-}) {
+}) async {
+  if (!ref.mounted) return;
   invalidateSaleLists(ref);
-  _refreshStockContext(ref, context);
-  invalidateDashboard(ref);
-  _refreshPartyContext(ref, context);
+  await _refreshDependentViews(ref, context);
+  if (!ref.mounted) return;
+  _refreshStockContextInBackground(ref, context);
 }
 
 /// After purchase return / debit note.
-void refreshAfterPurchaseReturn(
+Future<void> refreshAfterPurchaseReturn(
   Ref ref, {
   MutationRefreshContext? context,
-}) {
+}) async {
+  if (!ref.mounted) return;
   invalidatePurchaseLists(ref);
-  _refreshStockContext(ref, context);
-  invalidateDashboard(ref);
-  _refreshPartyContext(ref, context);
+  await _refreshDependentViews(ref, context);
+  if (!ref.mounted) return;
+  _refreshStockContextInBackground(ref, context);
 }
 
 /// After party create/edit.
@@ -230,11 +308,11 @@ void refreshAfterJobWorkMutation(
 }
 
 /// After item create/edit affecting inventory dashboard widgets.
-void refreshAfterItemMutation(
+Future<void> refreshAfterItemMutation(
   Ref ref, {
   MutationRefreshContext? context,
-}) {
-  invalidateInventoryLists(ref);
+}) async {
+  await refreshInventoryLists(ref);
   invalidateDashboard(ref);
   final itemIds = context?.itemIds;
   if (itemIds != null && itemIds.isNotEmpty) {

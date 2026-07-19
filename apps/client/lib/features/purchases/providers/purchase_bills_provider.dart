@@ -431,7 +431,7 @@ class PurchaseBills extends _$PurchaseBills {
       final service = await ref.read(purchaseServiceProvider.future);
       await service.finalizeDraft(documentId, godownId: godownId);
       await refresh();
-      refreshAfterPurchaseMutation(ref);
+      await refreshAfterPurchaseMutation(ref);
       return null;
     } catch (error) {
       return PurchaseErrorMapper.messageFor(error);
@@ -443,7 +443,7 @@ class PurchaseBills extends _$PurchaseBills {
       final service = await ref.read(purchaseServiceProvider.future);
       await service.cancelDocument(documentId);
       await refresh();
-      refreshAfterPurchaseMutation(ref);
+      await refreshAfterPurchaseMutation(ref);
       return null;
     } catch (error) {
       return PurchaseErrorMapper.messageFor(error);

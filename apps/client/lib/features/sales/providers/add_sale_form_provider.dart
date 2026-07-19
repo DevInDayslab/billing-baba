@@ -778,7 +778,7 @@ class AddSaleForm extends _$AddSaleForm {
         isSaving: false,
         isDirty: false,
       );
-      _refreshAfterSaleMutation();
+      await _refreshAfterSaleMutation();
       return null;
     } catch (error) {
       final message = SalesErrorMapper.messageFor(error);
@@ -787,12 +787,12 @@ class AddSaleForm extends _$AddSaleForm {
     }
   }
 
-  void _refreshAfterSaleMutation() {
+  Future<void> _refreshAfterSaleMutation() async {
     final itemIds = state.items
         .map((line) => line.itemId)
         .whereType<String>()
         .where((id) => id.isNotEmpty);
-    refreshAfterSaleMutation(
+    await refreshAfterSaleMutation(
       ref,
       context: (
         partyId: state.partyId,
@@ -870,7 +870,7 @@ class AddSaleForm extends _$AddSaleForm {
         );
       }
 
-      _refreshAfterSaleMutation();
+      await _refreshAfterSaleMutation();
       if (state.attachedSaleOrderIds.isNotEmpty) {
         ref.invalidate(saleOrdersProvider);
       }

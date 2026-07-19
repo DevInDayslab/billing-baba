@@ -110,7 +110,7 @@ class InventoryCategories extends _$InventoryCategories {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.deleteCategory(id);
       await refresh();
-      invalidateInventoryLists(ref);
+      await refreshInventoryLists(ref);
       invalidateDashboard(ref);
       return null;
     } on InventoryException catch (error) {
