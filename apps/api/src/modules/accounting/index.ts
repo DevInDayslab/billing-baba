@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
+import type { AppConfig } from '../../config/app_config';
 import { createPaymentRoutes } from './payment.routes';
 
 export { OutstandingRepository } from './outstanding.repository';
@@ -7,6 +8,10 @@ export type {
   PartyOutstandingBalance,
 } from './outstanding.types';
 
-export const accountingModule: FastifyPluginAsync = async (app) => {
-  await app.register(createPaymentRoutes(), { prefix: '/payments' });
-};
+export function createAccountingModule(
+  config: AppConfig,
+): FastifyPluginAsync {
+  return async (app) => {
+    await app.register(createPaymentRoutes(config), { prefix: '/payments' });
+  };
+}

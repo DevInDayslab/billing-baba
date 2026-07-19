@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '../config/app_config';
-import { accountingModule } from './accounting';
+import { createAccountingModule } from './accounting';
 import { createAuthModule } from './auth';
 import { businessModule, businessProfileModule } from './business';
 import { createCollaborationModule } from './collaboration';
@@ -13,6 +13,7 @@ import {
   createPublicInvoiceRoutes,
 } from './invoice-share';
 import { jobWorkModule } from './job-work';
+import { createNotificationsModule } from './notifications/notifications.routes';
 import { partiesModule } from './parties';
 import { purchasesModule } from './purchases';
 import { reportsModule } from './reports';
@@ -39,7 +40,9 @@ export async function registerModules(
       await api.register(createSalesModule(config), { prefix: '/sales' });
       await api.register(jobWorkModule, { prefix: '/job-work' });
       await api.register(purchasesModule, { prefix: '/purchases' });
-      await api.register(accountingModule, { prefix: '/accounting' });
+      await api.register(createAccountingModule(config), {
+        prefix: '/accounting',
+      });
       await api.register(dashboardModule, { prefix: '/dashboard' });
       await api.register(reportsModule, { prefix: '/reports' });
       await api.register(settingsModule, { prefix: '/settings' });
@@ -49,6 +52,9 @@ export async function registerModules(
       });
       await api.register(createPublicInvoiceRoutes(config), {
         prefix: '/public/invoices',
+      });
+      await api.register(createNotificationsModule(config), {
+        prefix: '/notifications',
       });
     },
     { prefix: config.apiPrefix },

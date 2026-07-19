@@ -10,6 +10,7 @@ import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dar
 import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_return_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -367,6 +368,14 @@ class SalesDocumentsList extends _$SalesDocumentsList {
       await refresh();
       _invalidateRelatedLists(ref);
       await refreshAfterSaleMutation(ref);
+      final isSaleInvoice = scope.documentType == SalesDocumentType.taxInvoice ||
+          scope.documentType == SalesDocumentType.billOfSupply ||
+          scope.documentType == SalesDocumentType.normalInvoice ||
+          scope.documentType == SalesDocumentType.pos;
+      if (isSaleInvoice) {
+        // ignore: unawaited_futures
+        WhatsAppAutoNotify.afterSaleFinalize(ref, documentId: documentId);
+      }
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);

@@ -18,10 +18,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 const _inviteDialogMaxWidth = 480.0;
 const _editDialogMaxWidth = 820.0;
 
-Future<bool?> showAddMemberDialog(BuildContext context, WidgetRef ref) {
+Future<bool?> showAddMemberDialog(
+  BuildContext context,
+  WidgetRef ref, {
+  String? initialName,
+  String? initialPhoneOrEmail,
+}) {
   return showDialog<bool>(
     context: context,
-    builder: (context) => const MemberFormDialog(),
+    builder: (context) => MemberFormDialog(
+      initialName: initialName,
+      initialPhoneOrEmail: initialPhoneOrEmail,
+    ),
   );
 }
 
@@ -37,9 +45,16 @@ Future<bool?> showEditMemberDialog(
 }
 
 class MemberFormDialog extends ConsumerStatefulWidget {
-  const MemberFormDialog({this.member, super.key});
+  const MemberFormDialog({
+    this.member,
+    this.initialName,
+    this.initialPhoneOrEmail,
+    super.key,
+  });
 
   final BusinessMember? member;
+  final String? initialName;
+  final String? initialPhoneOrEmail;
 
   bool get isEditing => member != null;
 
@@ -58,8 +73,11 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.member?.fullName);
-    final contact = widget.member?.phoneOrEmail;
+    _nameController = TextEditingController(
+      text: widget.member?.fullName ?? widget.initialName,
+    );
+    final contact =
+        widget.member?.phoneOrEmail ?? widget.initialPhoneOrEmail;
     _contactController = TextEditingController(
       text: contact != null && isPhoneContact(contact)
           ? localPhoneDigits(contact)

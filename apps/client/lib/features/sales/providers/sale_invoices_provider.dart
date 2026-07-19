@@ -9,6 +9,7 @@ import 'package:billing_baba/features/sales/models/requests/sales_requests.dart'
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -568,6 +569,8 @@ class SaleInvoices extends _$SaleInvoices {
       final service = await ref.read(salesServiceProvider.future);
       await service.finalizeDraft(documentId);
       await refreshAfterSaleMutation(ref);
+      // ignore: unawaited_futures
+      WhatsAppAutoNotify.afterSaleFinalize(ref, documentId: documentId);
       return null;
     } catch (error) {
       return SalesErrorMapper.messageFor(error);

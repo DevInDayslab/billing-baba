@@ -98,6 +98,8 @@ abstract final class AppRoutes {
   static const settingsInvoiceTemplates = '/settings/invoice-templates';
   static const settingsPreferences = '/settings/preferences';
   static const settingsPrint = '/settings/print';
+  static const settingsWhatsapp = '/settings/whatsapp';
+  static const settingsTransactionMessages = '/settings/transaction-messages';
   static const settingsBackup = '/settings/backup';
   static const plansPricing = '/plans-pricing';
   static const editProfile = '/edit-profile';

@@ -145,6 +145,23 @@ export class NotificationService {
     });
   }
 
+  /** Connectivity check — fixed copy, no business templates. */
+  async sendTestMessage(
+    recipient: NotifyRecipient,
+    options: NotifyOptions,
+  ): Promise<NotificationSendResult> {
+    const body =
+      '🏢 Billing Baba\n\nThis is a test WhatsApp message from Billing Baba. Your messaging setup is working.';
+    return this.safeSend({
+      to: recipient.phone,
+      body,
+      notificationType: 'test',
+      idempotencyKey: options.idempotencyKey,
+      companyId: options.companyId,
+      metadata: { notificationType: 'test' },
+    });
+  }
+
   /**
    * Never throws — provider failures become structured results so business
    * flows (e.g. invitation create) are not rolled back by messaging issues.
