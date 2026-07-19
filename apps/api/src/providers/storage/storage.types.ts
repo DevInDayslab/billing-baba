@@ -44,3 +44,14 @@ export type MoveObjectParams = {
   sourceKey: string;
   destinationKey: string;
 };
+
+export type PutObjectParams = {
+  key: string;
+  body: Buffer | Uint8Array;
+  mimeType: string;
+};
+
+export type PutObjectResult = {
+  etag?: string;
+  contentLength: number;
+};

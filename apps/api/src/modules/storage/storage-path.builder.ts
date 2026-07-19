@@ -15,6 +15,8 @@ export type BuildStoragePathParams = {
   mimeType: string;
   ownerType?: string | null;
   ownerId?: string | null;
+  /** Override extension when MIME is outside the default allowlist map. */
+  extension?: string;
 };
 
 export function extensionForMimeType(mimeType: string): string {
@@ -40,9 +42,10 @@ export function buildStoragePath(params: BuildStoragePathParams): string {
     mimeType,
     ownerType,
     ownerId,
+    extension,
   } = params;
 
-  const ext = extensionForMimeType(mimeType);
+  const ext = extension ?? extensionForMimeType(mimeType);
   const purposeDir = PURPOSE_PATH_SEGMENTS[purpose];
   const segments = [environment, 'businesses', businessId, purposeDir];
 

@@ -71,6 +71,22 @@ export const documentAttachmentKindEnum = pgEnum('document_attachment_kind', [
   'document',
 ]);
 
+export const generatedDocumentKindEnum = pgEnum('generated_document_kind', [
+  'invoice_pdf',
+  'estimate_pdf',
+  'receipt_pdf',
+  'delivery_challan_pdf',
+  'purchase_pdf',
+  'report_pdf',
+  'excel',
+  'csv',
+]);
+
+export const generatedDocumentSourceTypeEnum = pgEnum(
+  'generated_document_source_type',
+  ['sale_document', 'purchase_document', 'payment', 'report'],
+);
+
 export const purchaseDocumentTypeEnum = pgEnum('purchase_document_type', [
   'purchase_order',
   'purchase_bill',

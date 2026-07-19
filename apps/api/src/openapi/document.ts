@@ -20,6 +20,7 @@ import { buildReportsPaths } from './paths/reports.paths';
 import { buildSalesPaths } from './paths/sales.paths';
 import { buildStoragePaths } from './paths/storage.paths';
 import { buildDocumentAttachmentPaths } from './paths/document-attachments.paths';
+import { buildGeneratedDocumentPaths } from './paths/generated-documents.paths';
 import { polishOpenApiDocument } from './polish';
 import { buildSchemas } from './schemas';
 
@@ -41,6 +42,7 @@ export function buildOpenApiDocument(config: AppConfig) {
     ...buildCollaborationPaths(),
     ...buildStoragePaths(),
     ...buildDocumentAttachmentPaths(),
+    ...buildGeneratedDocumentPaths(),
   };
 
   const draft = {

@@ -7,6 +7,10 @@ import { createCollaborationModule } from './collaboration';
 import { crmModule } from './crm';
 import { dashboardModule } from './dashboard';
 import { documentAttachmentsModule } from './document-attachments';
+import {
+  generatedDocumentsModule,
+  publicGeneratedDocumentsModule,
+} from './generated-documents';
 import { createHealthModule } from './health';
 import { inventoryModule } from './inventory';
 import {
@@ -52,12 +56,18 @@ export async function registerModules(
       await api.register(documentAttachmentsModule(config), {
         prefix: '/document-attachments',
       });
+      await api.register(generatedDocumentsModule(config), {
+        prefix: '/generated-documents',
+      });
       await api.register(syncModule, { prefix: '/sync' });
       await api.register(createCollaborationModule(config), {
         prefix: '/collaboration',
       });
       await api.register(createPublicInvoiceRoutes(config), {
         prefix: '/public/invoices',
+      });
+      await api.register(publicGeneratedDocumentsModule(config), {
+        prefix: '/public/generated-documents',
       });
       await api.register(createNotificationsModule(config), {
         prefix: '/notifications',

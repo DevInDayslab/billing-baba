@@ -10,6 +10,7 @@ export * from './columns';
 export * from './crm/relations';
 export * from './crm/tables';
 export * from './enums';
+export * from './generated-documents/tables';
 export * from './identity/relations';
 export * from './identity/tables';
 export * from './inventory/relations';

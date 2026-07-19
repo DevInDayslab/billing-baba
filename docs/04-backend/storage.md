@@ -296,8 +296,57 @@ Storage purpose mapping: sales → `sales`, purchases → `purchases`, expenses 
 
 Closes [ADR-021](../09-decisions.md#adr-021-sales-document-attachments).
 
+## Phase 7 — Generated documents
+
+Cached PDF/CSV/Excel exports for share and download. Client generates bytes locally; API stores via **`GeneratedDocumentService` → `StorageService.storeFromBuffer`** and reuses the object until the source `sync_version` changes.
+
+### Schema (`0027_generated_documents`)
+
+| Column | Purpose |
+|--------|---------|
+| `document_kind` | `invoice_pdf`, `estimate_pdf`, `receipt_pdf`, `delivery_challan_pdf`, `purchase_pdf`, `report_pdf`, `excel`, `csv` |
+| `source_type` | `sale_document`, `purchase_document`, `payment`, `report` |
+| `source_id` | Parent entity UUID (report fingerprint UUID for exports) |
+| `source_version` | Parent `sync_version` at generation time — cache invalidates when this diverges |
+| `media_asset_id` | FK to `media_assets` |
+| `public_token` | Unguessable token for public download endpoints |
+
+### Cache flow
+
+1. Client `GET /generated-documents/lookup` — returns cached metadata + URLs when `source_version` matches.
+2. On miss, client generates PDF/CSV/XLSX locally and `POST /generated-documents/ensure` with `content_base64`.
+3. API stores object, upserts `generated_documents`, returns `cached: false`.
+4. Subsequent shares reuse the stored file until the parent document's `sync_version` increments.
+
+### API
+
+Prefix: `/api/v1/generated-documents` (JWT + business scope)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/generated-documents/lookup` | Check cache (`document_kind`, `source_type`, `source_id`) |
+| POST | `/generated-documents/ensure` | Store or return cached (`content_base64`, optional `force_regenerate`) |
+| GET | `/generated-documents/:id/url` | Fresh signed download URL |
+| POST | `/generated-documents/:id/regenerate` | Force replace stored file |
+
+Public (no auth):
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/public/generated-documents/:token` | Metadata + signed download URL |
+| GET | `/public/generated-documents/:token/file` | 302 redirect to file |
+
+### Validation
+
+| Export | Max size | MIME |
+|--------|----------|------|
+| PDF kinds | 20 MB | `application/pdf` |
+| CSV | 20 MB | `text/csv` |
+| Excel | 20 MB | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` |
+
+Storage paths use `reports`, `sales`, `purchases`, or `payments` purpose segments under `documents/generated_{kind}/{source_id}/`.
+
 ## Future phases
 
-4. WhatsApp `sendMedia`  
-5. Generated PDFs for share  
-6. Thumbnails, compression, backup archives  
+4. WhatsApp `sendMedia` with cached generated PDFs  
+5. Thumbnails, compression, backup archives  

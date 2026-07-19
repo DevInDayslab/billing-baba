@@ -15,6 +15,8 @@ import type {
   CreateUploadUrlResult,
   HeadObjectResult,
   MoveObjectParams,
+  PutObjectParams,
+  PutObjectResult,
 } from './storage.types';
 import type { StorageProvider } from './storage-provider';
 
@@ -151,6 +153,26 @@ export class RailwayS3Provider implements StorageProvider {
   async move(params: MoveObjectParams): Promise<void> {
     await this.copy(params);
     await this.delete(params.sourceKey);
+  }
+
+  async putObject(params: PutObjectParams): Promise<PutObjectResult> {
+    const body = Buffer.isBuffer(params.body)
+      ? params.body
+      : Buffer.from(params.body);
+    const result = await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: params.key,
+        Body: body,
+        ContentType: params.mimeType,
+        ContentLength: body.length,
+      }),
+    );
+
+    return {
+      etag: result.ETag?.replaceAll('"', ''),
+      contentLength: body.length,
+    };
   }
 }
 

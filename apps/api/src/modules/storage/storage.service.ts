@@ -341,6 +341,41 @@ export class StorageService {
     };
   }
 
+  /**
+   * Signed download URL without membership check — only for token-gated public flows
+   * where the caller has already validated access.
+   */
+  async getBusinessAssetDownloadUrl(
+    businessId: string,
+    assetId: string,
+  ): Promise<DownloadResult> {
+    const provider = this.requireProvider();
+
+    const row = await this.repository.findById(businessId, assetId);
+    if (!row || row.status !== 'ready') {
+      throw new StorageNotFoundError();
+    }
+
+    if (row.visibility === 'public') {
+      return {
+        url: this.buildPublicUrl(row.storageKey),
+        expiresAt: null,
+        visibility: 'public',
+      };
+    }
+
+    const download = await provider.createDownloadUrl({
+      key: row.storageKey,
+      expiresInSeconds: this.config.storageDownloadUrlTtlSeconds,
+    });
+
+    return {
+      url: download.url,
+      expiresAt: download.expiresAt.toISOString(),
+      visibility: row.visibility as StorageAsset['visibility'],
+    };
+  }
+
   async deleteAsset(
     businessId: string,
     accountId: string,
@@ -642,6 +677,92 @@ export class StorageService {
   async resolveAccountAssetUrl(accountId: string, assetId: string): Promise<string> {
     const result = await this.getAccountDownloadUrl(accountId, assetId);
     return result.url;
+  }
+
+  /**
+   * Server-side upload for generated exports (PDF, CSV, Excel).
+   * Inserts a ready media_assets row after PUT to object storage.
+   */
+  async storeFromBuffer(
+    businessId: string,
+    accountId: string,
+    input: {
+      purpose: CreateUploadIntentInput['purpose'];
+      visibility: CreateUploadIntentInput['visibility'];
+      mimeType: string;
+      buffer: Buffer;
+      ownerType?: string | null;
+      ownerId?: string | null;
+      extension?: string;
+      policy?: StorageValidationPolicy;
+    },
+  ): Promise<StorageAsset> {
+    await this.assertBusinessAccess(businessId, accountId);
+    this.validateMimeAndSize(
+      input.mimeType,
+      input.buffer.length,
+      input.policy,
+    );
+
+    const provider = this.requireProvider();
+    const assetId = randomUUID();
+    const storageKey = buildStoragePath({
+      environment: this.config.environment,
+      businessId,
+      purpose: input.purpose,
+      assetId,
+      mimeType: input.mimeType,
+      ownerType: input.ownerType,
+      ownerId: input.ownerId,
+      extension: input.extension,
+    });
+
+    await this.repository.insert({
+      id: assetId,
+      businessId,
+      storageKey,
+      bucket: provider.bucket,
+      purpose: input.purpose,
+      visibility: input.visibility,
+      mimeType: input.mimeType,
+      fileSize: input.buffer.length,
+      checksum: null,
+      ownerType: input.ownerType ?? null,
+      ownerId: input.ownerId ?? null,
+      status: 'pending',
+      uploadedBy: accountId,
+    });
+
+    const put = await provider.putObject({
+      key: storageKey,
+      body: input.buffer,
+      mimeType: input.mimeType,
+    });
+
+    const ready = await this.repository.markReady(businessId, assetId, {
+      etag: put.etag ?? null,
+      fileSize: put.contentLength,
+      mimeType: input.mimeType,
+    });
+
+    if (!ready) {
+      throw new StorageNotFoundError('Failed to mark stored object ready');
+    }
+
+    this.log.info(
+      {
+        event: 'storage.store_from_buffer',
+        businessId,
+        assetId,
+        purpose: input.purpose,
+        mimeType: input.mimeType,
+        fileSize: put.contentLength,
+        storageKey,
+      },
+      'Storage object stored from buffer',
+    );
+
+    return toStorageAsset(ready);
   }
 
   private buildPublicUrl(storageKey: string): string {

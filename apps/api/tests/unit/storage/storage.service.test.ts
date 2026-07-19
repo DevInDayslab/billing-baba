@@ -99,6 +99,22 @@ class FakeProvider implements StorageProvider {
   async move() {
     /* no-op for tests */
   }
+
+  async putObject(params: {
+    key: string;
+    body: Buffer | Uint8Array;
+    mimeType: string;
+  }) {
+    const body = Buffer.isBuffer(params.body)
+      ? params.body
+      : Buffer.from(params.body);
+    this.objects.set(params.key, {
+      contentType: params.mimeType,
+      contentLength: body.length,
+      etag: 'fake-etag',
+    });
+    return { etag: 'fake-etag', contentLength: body.length };
+  }
 }
 
 class FakeRepository {
