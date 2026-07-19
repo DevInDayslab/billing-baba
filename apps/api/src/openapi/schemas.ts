@@ -15,6 +15,12 @@ import {
   createBusinessBodySchema,
   updateBusinessProfileBodySchema,
 } from '../modules/business/business.schema';
+import {
+  companyMemberIdParamsSchema,
+  createInvitationBodySchema,
+  invitationIdParamsSchema,
+  invitationTokenParamsSchema,
+} from '../modules/collaboration/collaboration.schema';
 import { dashboardQuerySchema } from '../modules/dashboard/dashboard.schema';
 import {
   createBrandBodySchema,
@@ -301,6 +307,10 @@ function registerZodSchemas(): SchemaEntry[] {
     [Schema.ReportDateQuery, reportDateQuerySchema],
     [Schema.PartyStatementQuery, partyStatementQuerySchema],
     [Schema.LoanStatementQuery, loanStatementQuerySchema],
+    [Schema.CreateInvitationRequest, createInvitationBodySchema],
+    [Schema.InvitationTokenParams, invitationTokenParamsSchema],
+    [Schema.InvitationIdParams, invitationIdParamsSchema],
+    [Schema.CompanyMemberIdParams, companyMemberIdParamsSchema],
   ];
 
   return pairs.map(([name, schema, example]) => {
@@ -420,5 +430,13 @@ function entitySchemas(): SchemaEntry[] {
 }
 
 export function buildSchemas(): Record<string, Record<string, unknown>> {
-  return Object.fromEntries([...registerZodSchemas(), ...entitySchemas()]);
+  return Object.fromEntries([
+    ...registerZodSchemas(),
+    ...entitySchemas(),
+    [Schema.InvitationResponse, genericObjectSchema],
+    [Schema.InvitationPublicResponse, genericObjectSchema],
+    [Schema.AcceptInvitationResponse, genericObjectSchema],
+    [Schema.SharedCompanyResponse, genericObjectSchema],
+    [Schema.PendingInvitationResponse, genericObjectSchema],
+  ]);
 }

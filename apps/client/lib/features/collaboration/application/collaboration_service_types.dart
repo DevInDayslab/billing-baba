@@ -80,3 +80,54 @@ String normalizeContact(String value) {
   if (trimmed.contains('@')) return trimmed;
   return trimmed.replaceAll(RegExp(r'\D'), '');
 }
+
+/// Formats phone contacts as `+91 9876543210`. Emails are lowercased and trimmed.
+String formatPhoneOrEmailContact(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return trimmed;
+  if (trimmed.contains('@')) return trimmed.toLowerCase();
+
+  var digits = trimmed.replaceAll(RegExp(r'\D'), '');
+
+  if (digits.length == 11 && digits.startsWith('0')) {
+    digits = digits.substring(1);
+  }
+
+  if (digits.length == 12 && digits.startsWith('91')) {
+    digits = digits.substring(2);
+  }
+
+  if (digits.length == 10) {
+    return '+91 $digits';
+  }
+
+  if (digits.length > 10 && digits.startsWith('91')) {
+    final local = digits.substring(2);
+    if (local.length == 10) {
+      return '+91 $local';
+    }
+  }
+
+  return trimmed.startsWith('+') ? trimmed : '+$digits';
+}
+
+/// Returns the last 10 digits from a phone contact string.
+String localPhoneDigits(String value) {
+  final digits = value.replaceAll(RegExp(r'\D'), '');
+  if (digits.length <= 10) return digits;
+  return digits.substring(digits.length - 10);
+}
+
+/// Returns true when [value] looks like a phone number (not email).
+bool isPhoneContact(String value) => !value.trim().contains('@');
+
+final _apiInvitationIdPattern = RegExp(
+  r'^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+  caseSensitive: false,
+);
+
+/// True for invitation IDs persisted by the collaboration API (plain UUID).
+bool isApiInvitationId(String id) {
+  if (id.startsWith('invite-') || id.startsWith('member-')) return false;
+  return _apiInvitationIdPattern.hasMatch(id);
+}

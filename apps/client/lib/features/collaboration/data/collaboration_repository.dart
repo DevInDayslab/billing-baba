@@ -47,6 +47,8 @@ abstract class CollaborationRepository {
 
   Future<Invitation> cancelInvitation(String invitationId);
 
+  Future<Invitation> reinviteInvitation(String invitationId);
+
   PermissionPreset getPermissionPreset(Role role);
 
   PermissionPreset loadPermissions(Role role);

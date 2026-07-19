@@ -42,6 +42,14 @@ const envSchema = z.object({
   }, z.boolean().default(false)),
   CORS_ORIGINS: z.preprocess(emptyToUndefined, z.string().optional()),
   APP_VERSION: z.preprocess(emptyToUndefined, z.string().optional()),
+  WEBSITE_URL: z.preprocess(
+    emptyToUndefined,
+    z.string().url('WEBSITE_URL must be a valid URL').optional(),
+  ),
+  INVITATION_EXPIRY_DAYS: z.preprocess((value) => {
+    if (value === '' || value === undefined) return 7;
+    return Number(value);
+  }, z.number().int().positive().default(7)),
 });
 
 export type AppConfig = {
@@ -58,6 +66,8 @@ export type AppConfig = {
   msg91AuthKey?: string;
   enableDevLogin: boolean;
   corsOrigins: string[];
+  websiteUrl: string;
+  invitationExpiryDays: number;
 };
 
 export function loadAppConfig(): AppConfig {
@@ -90,5 +100,7 @@ export function loadAppConfig(): AppConfig {
       env.CORS_ORIGINS?.split(',')
         .map((origin) => origin.trim())
         .filter(Boolean) ?? [],
+    websiteUrl: env.WEBSITE_URL ?? 'https://billingbaba.com',
+    invitationExpiryDays: env.INVITATION_EXPIRY_DAYS,
   };
 }

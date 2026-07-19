@@ -3,6 +3,7 @@ import type { AppConfig } from '../config/app_config';
 import { accountingModule } from './accounting';
 import { createAuthModule } from './auth';
 import { businessModule, businessProfileModule } from './business';
+import { createCollaborationModule } from './collaboration';
 import { crmModule } from './crm';
 import { dashboardModule } from './dashboard';
 import { createHealthModule } from './health';
@@ -36,6 +37,9 @@ export async function registerModules(
       await api.register(reportsModule, { prefix: '/reports' });
       await api.register(settingsModule, { prefix: '/settings' });
       await api.register(syncModule, { prefix: '/sync' });
+      await api.register(createCollaborationModule(config), {
+        prefix: '/collaboration',
+      });
     },
     { prefix: config.apiPrefix },
   );

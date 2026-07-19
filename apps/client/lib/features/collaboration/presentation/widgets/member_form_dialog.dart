@@ -12,6 +12,7 @@ import 'package:billing_baba/features/collaboration/presentation/widgets/permiss
 import 'package:billing_baba/features/collaboration/presentation/widgets/role_select_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _inviteDialogMaxWidth = 480.0;
@@ -58,8 +59,11 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.member?.fullName);
+    final contact = widget.member?.phoneOrEmail;
     _contactController = TextEditingController(
-      text: widget.member?.phoneOrEmail,
+      text: contact != null && isPhoneContact(contact)
+          ? localPhoneDigits(contact)
+          : contact,
     );
     _selectedRole = widget.member?.role ?? Role.biller;
   }
@@ -71,15 +75,16 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
     super.dispose();
   }
 
+  bool get _contactIsEmail => _contactController.text.contains('@');
+
   bool get _isValid {
     final name = _nameController.text.trim();
     final contact = _contactController.text.trim();
     if (name.isEmpty || contact.isEmpty) return false;
-    if (contact.contains('@')) {
+    if (_contactIsEmail) {
       return Validators.email(contact) == null;
     }
-    final digits = contact.replaceAll(RegExp(r'\D'), '');
-    return digits.length >= 10;
+    return localPhoneDigits(contact).length == 10;
   }
 
   Future<void> _submit() async {
@@ -92,7 +97,7 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
 
     try {
       final name = _nameController.text.trim();
-      final contact = _contactController.text.trim();
+      final contact = formatPhoneOrEmailContact(_contactController.text);
 
       if (widget.isEditing) {
         await ref
@@ -323,6 +328,8 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
   }
 
   Widget _contactField({required bool showHelper}) {
+    final isEmail = _contactIsEmail;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -338,8 +345,41 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
         TextFormField(
           controller: _contactController,
           decoration: buildSaleFieldDecoration(
-            hint: 'Enter phone number or email',
+            hint: isEmail ? 'Enter email address' : 'Enter 10-digit number',
+          ).copyWith(
+            prefixIcon: isEmail
+                ? null
+                : Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                    child: const Text(
+                      '+91',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+            prefixIconConstraints: isEmail
+                ? null
+                : const BoxConstraints(),
           ),
+          keyboardType:
+              isEmail ? TextInputType.emailAddress : TextInputType.phone,
+          inputFormatters: isEmail
+              ? null
+              : [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+          onEditingComplete: _formatContactField,
+          onFieldSubmitted: (_) => _formatContactField(),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Phone or email is required';
@@ -347,9 +387,8 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
             if (value.contains('@')) {
               return Validators.email(value);
             }
-            final digits = value.replaceAll(RegExp(r'\D'), '');
-            if (digits.length < 10) {
-              return 'Enter a valid phone number or email';
+            if (localPhoneDigits(value).length != 10) {
+              return 'Enter a valid 10-digit phone number';
             }
             return null;
           },
@@ -364,6 +403,21 @@ class _MemberFormDialogState extends ConsumerState<MemberFormDialog> {
         ],
       ],
     );
+  }
+
+  void _formatContactField() {
+    final value = _contactController.text;
+    if (value.trim().isEmpty || value.contains('@')) return;
+    final digits = localPhoneDigits(value);
+    if (digits.length != 10) return;
+    final formatted = formatPhoneOrEmailContact(digits);
+    if (formatted != value) {
+      _contactController.text = formatted;
+      _contactController.selection = TextSelection.collapsed(
+        offset: formatted.length,
+      );
+      setState(() {});
+    }
   }
 
   Widget _actions({required String inviteLabel}) {

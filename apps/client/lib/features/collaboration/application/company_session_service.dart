@@ -2,7 +2,6 @@ import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/collaboration/data/collaboration_repository.dart';
-import 'package:billing_baba/features/collaboration/data/fake_collaboration_directory.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
@@ -59,7 +58,6 @@ class CompanySessionService {
         userName: userName,
         userPhone: userPhone,
       );
-      FakeCollaborationDirectory.clearCurrentCompany();
     } else {
       session = await _collaborationRepository.switchCompany(
         companyId: entry.id,
@@ -100,7 +98,6 @@ class CompanySessionService {
     final current = _ref.read(companySessionProvider);
     if (current?.companyId == entry.id) {
       _ref.read(companySessionProvider.notifier).clear();
-      FakeCollaborationDirectory.clearCurrentCompany();
       invalidateAllBusinessScopedProviders(
         _ref,
         includeBusinessList: true,

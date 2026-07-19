@@ -6,6 +6,7 @@ import 'package:billing_baba/features/collaboration/domain/models/role.dart';
 enum CompanyListSource {
   apiOwned,
   collaborationFake,
+  collaborationApi,
 }
 
 /// Unified card model for the business list (owned API + fake shared/pending).
@@ -21,6 +22,8 @@ class CompanyListEntry {
     this.role,
     this.invitationId,
     this.invitationStatus,
+    this.inviteCode,
+    this.memberId,
     this.lastSaleAt,
     this.isCurrent = false,
     this.gstin,
@@ -37,6 +40,8 @@ class CompanyListEntry {
   final Role? role;
   final String? invitationId;
   final InvitationCardStatus? invitationStatus;
+  final String? inviteCode;
+  final String? memberId;
   final business.SyncStatus syncStatus;
   final CompanyListSource source;
   final DateTime? lastSaleAt;
@@ -63,6 +68,8 @@ class CompanyListEntry {
     Role? role,
     String? invitationId,
     InvitationCardStatus? invitationStatus,
+    String? inviteCode,
+    String? memberId,
     business.SyncStatus? syncStatus,
     CompanyListSource? source,
     DateTime? lastSaleAt,
@@ -81,6 +88,8 @@ class CompanyListEntry {
       role: role ?? this.role,
       invitationId: invitationId ?? this.invitationId,
       invitationStatus: invitationStatus ?? this.invitationStatus,
+      inviteCode: inviteCode ?? this.inviteCode,
+      memberId: memberId ?? this.memberId,
       syncStatus: syncStatus ?? this.syncStatus,
       source: source ?? this.source,
       lastSaleAt: lastSaleAt ?? this.lastSaleAt,

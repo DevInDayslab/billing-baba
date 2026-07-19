@@ -34,7 +34,7 @@ final class SyncStatusNotifierProvider
 }
 
 String _$syncStatusNotifierHash() =>
-    r'ca2f427f9e912002f6bb6bc58c7138f4149dcf81';
+    r'ee9b43ec631af55ef24322b24913ad35cbc8c3e8';
 
 abstract class _$SyncStatusNotifier extends $AsyncNotifier<SyncStatus> {
   FutureOr<SyncStatus> build();

@@ -3,6 +3,7 @@ import 'package:billing_baba/features/collaboration/application/collaboration_se
 import 'package:billing_baba/features/collaboration/domain/models/business_member.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/collaboration_init_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/company_access_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_directory_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/invitations_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -34,6 +35,9 @@ class Members extends _$Members {
     final service = ref.read(collaborationServiceProvider);
     final member = await service.updateMember(id, input);
     await reload(showLoading: false);
+    ref.invalidate(companyAccessProvider);
+    ref.invalidate(companyDirectoryProvider);
+    ref.invalidate(collaborationCompaniesProvider);
     return member;
   }
 
@@ -43,5 +47,7 @@ class Members extends _$Members {
     await reload(showLoading: false);
     await ref.read(invitationsProvider.notifier).reload(showLoading: false);
     ref.invalidate(companyAccessProvider);
+    ref.invalidate(companyDirectoryProvider);
+    ref.invalidate(collaborationCompaniesProvider);
   }
 }

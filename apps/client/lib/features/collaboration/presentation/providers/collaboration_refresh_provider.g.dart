@@ -42,7 +42,7 @@ final class CollaborationRefreshProvider
 }
 
 String _$collaborationRefreshHash() =>
-    r'4314b9205c89698b0524a83bbb2737c4c9393e77';
+    r'2d5d051566fed224457c04183f7a02c81686630f';
 
 abstract class _$CollaborationRefresh extends $Notifier<bool> {
   bool build();

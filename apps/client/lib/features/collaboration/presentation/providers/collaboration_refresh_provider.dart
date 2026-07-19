@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/collaboration/application/collaboration_repository_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/company_access_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_directory_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/devices_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/invitations_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/members_provider.dart';
@@ -25,6 +26,8 @@ class CollaborationRefresh extends _$CollaborationRefresh {
         ref.read(syncStatusProvider.notifier).reload(showLoading: showLoading),
       ]);
       ref.invalidate(companyAccessProvider);
+      ref.invalidate(companyDirectoryProvider);
+      ref.invalidate(collaborationCompaniesProvider);
     } finally {
       state = false;
     }

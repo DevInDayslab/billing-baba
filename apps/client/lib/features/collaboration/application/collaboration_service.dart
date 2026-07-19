@@ -34,21 +34,22 @@ class CollaborationService {
       _repository.getPermissionPreset(role);
 
   Future<Invitation> inviteMember(InviteMemberInput input) async {
+    final formatted = _formatInput(input);
     final syncStatus = await _repository.fetchSyncStatus();
     if (syncStatus.isDisabled) {
       throw const CollaborationForbiddenException(
         'Enable cloud sync to invite members',
       );
     }
-    _validateMemberInput(input.fullName, input.phoneOrEmail);
-    _validateRole(input.role);
-    await _validateInviteTarget(input.phoneOrEmail);
+    _validateMemberInput(formatted.fullName, formatted.phoneOrEmail);
+    _validateRole(formatted.role);
+    await _validateInviteTarget(formatted.phoneOrEmail);
 
-    final invitation = await _repository.inviteMember(input);
+    final invitation = await _repository.inviteMember(formatted);
     CollaborationSimulator.inviteUser(
-      name: input.fullName,
-      role: input.role.displayLabel,
-      contact: input.phoneOrEmail,
+      name: formatted.fullName,
+      role: formatted.role.displayLabel,
+      contact: formatted.phoneOrEmail,
       invitationLink: invitation.inviteLink,
     );
     CollaborationSimulator.generateLink(link: invitation.inviteLink);
@@ -59,30 +60,31 @@ class CollaborationService {
     String id,
     UpdateMemberInput input,
   ) async {
-    _validateMemberInput(input.fullName, input.phoneOrEmail);
-    _validateRole(input.role);
+    final formatted = _formatUpdateInput(input);
+    _validateMemberInput(formatted.fullName, formatted.phoneOrEmail);
+    _validateRole(formatted.role);
 
     final members = await _repository.fetchMembers();
     final existing = _findMember(members, id);
     _assertNotOwner(existing, action: 'update');
 
     if (normalizeContact(existing.phoneOrEmail) !=
-        normalizeContact(input.phoneOrEmail)) {
-      await _validateInviteTarget(input.phoneOrEmail, ignoreMemberId: id);
+        normalizeContact(formatted.phoneOrEmail)) {
+      await _validateInviteTarget(formatted.phoneOrEmail, ignoreMemberId: id);
     }
 
-    final updated = await _repository.updateMember(id, input);
-    if (existing.role != input.role) {
+    final updated = await _repository.updateMember(id, formatted);
+    if (existing.role != formatted.role) {
       CollaborationSimulator.changeRole(
-        name: input.fullName,
+        name: formatted.fullName,
         from: existing.role,
-        to: input.role,
+        to: formatted.role,
       );
     } else {
       CollaborationSimulator.updateMember(
-        name: input.fullName,
-        role: input.role.displayLabel,
-        contact: input.phoneOrEmail,
+        name: formatted.fullName,
+        role: formatted.role.displayLabel,
+        contact: formatted.phoneOrEmail,
       );
     }
     return updated;
@@ -170,6 +172,25 @@ class CollaborationService {
       name: invitation.fullName,
       link: invitation.inviteLink,
     );
+    return invitation;
+  }
+
+  Future<Invitation> reinviteInvitation(String invitationId) async {
+    final syncStatus = await _repository.fetchSyncStatus();
+    if (syncStatus.isDisabled) {
+      throw const CollaborationForbiddenException(
+        'Enable cloud sync to invite members',
+      );
+    }
+
+    final invitation = await _repository.reinviteInvitation(invitationId);
+    CollaborationSimulator.inviteUser(
+      name: invitation.fullName,
+      role: invitation.role.displayLabel,
+      contact: invitation.phoneOrEmail,
+      invitationLink: invitation.inviteLink,
+    );
+    CollaborationSimulator.generateLink(link: invitation.inviteLink);
     return invitation;
   }
 
@@ -266,9 +287,10 @@ class CollaborationService {
     }
 
     final digits = contact.replaceAll(RegExp(r'\D'), '');
-    if (digits.length < 10) {
+    final localDigits = digits.length > 10 ? digits.substring(digits.length - 10) : digits;
+    if (localDigits.length != 10) {
       throw const CollaborationValidationException(
-        'Enter a valid phone number or email address',
+        'Enter a valid 10-digit phone number or email address',
       );
     }
   }
@@ -298,5 +320,21 @@ class CollaborationService {
         'Cannot $action the business owner',
       );
     }
+  }
+
+  InviteMemberInput _formatInput(InviteMemberInput input) {
+    return InviteMemberInput(
+      fullName: input.fullName.trim(),
+      phoneOrEmail: formatPhoneOrEmailContact(input.phoneOrEmail),
+      role: input.role,
+    );
+  }
+
+  UpdateMemberInput _formatUpdateInput(UpdateMemberInput input) {
+    return UpdateMemberInput(
+      fullName: input.fullName.trim(),
+      phoneOrEmail: formatPhoneOrEmailContact(input.phoneOrEmail),
+      role: input.role,
+    );
   }
 }

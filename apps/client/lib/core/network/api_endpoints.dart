@@ -187,4 +187,23 @@ abstract final class ApiEndpoints {
   static const reportsLoanStatement = '$reports/loan-statement';
   static const reportsTrialBalance = '$reports/trial-balance';
   static const reportsBalanceSheet = '$reports/balance-sheet';
+
+  static const collaboration = '/api/v1/collaboration';
+  static const collaborationInvitations = '$collaboration/invitations';
+  static const collaborationCompaniesShared =
+      '$collaboration/companies/shared';
+  static const collaborationCompaniesInvitations =
+      '$collaboration/companies/invitations';
+  static String collaborationReinvite(String invitationId) =>
+      '$collaborationInvitations/reinvite/$invitationId';
+  static String collaborationCancelInvitation(String invitationId) =>
+      '$collaborationInvitations/$invitationId/cancel';
+  static String collaborationInvitationByToken(String token) =>
+      '$collaborationInvitations/$token';
+  static String collaborationAcceptInvitation(String token) =>
+      '$collaborationInvitations/$token/accept';
+  static String collaborationRejectInvitation(String token) =>
+      '$collaborationInvitations/$token/reject';
+  static String collaborationLeaveCompany(String memberId) =>
+      '$collaboration/company-members/$memberId/leave';
 }

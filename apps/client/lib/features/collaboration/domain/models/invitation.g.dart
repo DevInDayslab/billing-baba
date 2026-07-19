@@ -51,8 +51,10 @@ const _$InvitationChannelEnumMap = {
 
 const _$InvitationStatusEnumMap = {
   InvitationStatus.pending: 'pending',
+  InvitationStatus.opened: 'opened',
   InvitationStatus.accepted: 'accepted',
   InvitationStatus.expired: 'expired',
   InvitationStatus.cancelled: 'cancelled',
   InvitationStatus.rejected: 'rejected',
+  InvitationStatus.left: 'left',
 };

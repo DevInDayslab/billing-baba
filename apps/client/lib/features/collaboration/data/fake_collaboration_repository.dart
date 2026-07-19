@@ -1,8 +1,10 @@
 import 'dart:math';
 
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
+import 'package:billing_baba/features/collaboration/data/collaboration_invitation_api.dart';
 import 'package:billing_baba/features/collaboration/data/collaboration_repository.dart';
 import 'package:billing_baba/features/collaboration/data/fake_collaboration_directory.dart';
+import 'package:billing_baba/features/collaboration/data/fake_collaboration_local_store.dart';
 import 'package:billing_baba/features/collaboration/domain/models/business_member.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_access.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
@@ -14,6 +16,7 @@ import 'package:billing_baba/features/collaboration/domain/models/permission_pre
 import 'package:billing_baba/features/collaboration/domain/models/role.dart';
 import 'package:billing_baba/features/collaboration/domain/models/sync_status.dart';
 import 'package:billing_baba/features/collaboration/domain/role_permission_registry.dart';
+import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
@@ -24,14 +27,21 @@ const kCollaborationStartWithEmptyMembers = false;
 class FakeCollaborationRepository implements CollaborationRepository {
   FakeCollaborationRepository({
     required this._sessionContext,
+    required this._businessId,
     String? businessName,
-  }) : _businessName = businessName ?? 'Sharma Traders' {
+    FakeCollaborationLocalStore? localStore,
+    this._invitationApi,
+  }) : _businessName = businessName ?? 'Sharma Traders',
+       _localStore = localStore ?? FakeCollaborationLocalStore() {
     _syncStatus = _buildInitialSyncStatus();
-    _seedData();
+    _devices.addAll(_seedDevices);
   }
 
   final CollaborationSessionContext _sessionContext;
+  final String _businessId;
   final String _businessName;
+  final FakeCollaborationLocalStore _localStore;
+  final CollaborationInvitationApi? _invitationApi;
 
   final List<BusinessMember> _members = [];
   final List<Invitation> _invitations = [];
@@ -50,7 +60,208 @@ class FakeCollaborationRepository implements CollaborationRepository {
       _members.addAll(_seedMembers);
       _invitations.addAll(_seedInvitations);
     }
-    _devices.addAll(_seedDevices);
+  }
+
+  Future<void> _persistState() {
+    return _localStore.save(
+      businessId: _businessId,
+      members: _members,
+      invitations: _invitations,
+    );
+  }
+
+  Future<void> _upsertApiInvitation(Invitation invitation) async {
+    final member = BusinessMember(
+      id: invitation.memberId,
+      fullName: invitation.fullName,
+      phoneOrEmail: invitation.phoneOrEmail,
+      status: MemberStatus.pending,
+      role: invitation.role,
+      invitationId: invitation.id,
+      invitedAt: invitation.sentAt,
+    );
+
+    _members.removeWhere(
+      (existing) =>
+          normalizeContact(existing.phoneOrEmail) ==
+          normalizeContact(member.phoneOrEmail),
+    );
+    _invitations.removeWhere(
+      (existing) =>
+          existing.memberId == member.id ||
+          (normalizeContact(existing.phoneOrEmail) ==
+                  normalizeContact(member.phoneOrEmail) &&
+              existing.status.isActive),
+    );
+
+    _members.add(member);
+    _invitations.add(invitation);
+    await _persistState();
+  }
+
+  BusinessMember? _memberForInvitation(String invitationId) {
+    for (final member in _members) {
+      if (member.invitationId == invitationId) return member;
+    }
+    return null;
+  }
+
+  Invitation? _invitationById(String invitationId) {
+    for (final invitation in _invitations) {
+      if (invitation.id == invitationId) return invitation;
+    }
+    return null;
+  }
+
+  Invitation? _activeInvitationForContact(String phoneOrEmail) {
+    final normalized = normalizeContact(phoneOrEmail);
+    for (final invitation in _invitations) {
+      if (!invitation.status.isActive) continue;
+      if (normalizeContact(invitation.phoneOrEmail) == normalized) {
+        return invitation;
+      }
+    }
+    return null;
+  }
+
+  Future<bool> _syncInvitationStatusesFromApi() async {
+    final api = _invitationApi;
+    if (api == null) return false;
+
+    var changed = false;
+    for (final invitation in List<Invitation>.from(_invitations)) {
+      if (!isApiInvitationId(invitation.id)) continue;
+      if (invitation.inviteCode.isEmpty) continue;
+
+      final isTerminal =
+          invitation.status == InvitationStatus.accepted ||
+          invitation.status == InvitationStatus.rejected ||
+          invitation.status == InvitationStatus.cancelled ||
+          invitation.status == InvitationStatus.expired;
+      if (isTerminal) continue;
+
+      try {
+        final remoteStatus = await api.fetchInvitationStatus(
+          invitation.inviteCode,
+        );
+        changed = _applyRemoteInvitationStatus(invitation, remoteStatus) ||
+            changed;
+      } on DioException catch (error) {
+        final statusCode = error.response?.statusCode;
+        if (statusCode == 404 ||
+            statusCode == 410 ||
+            _errorCode(error) == 'INVITATION_EXPIRED') {
+          changed =
+              _applyRemoteInvitationStatus(invitation, 'expired') || changed;
+        }
+      }
+    }
+    return changed;
+  }
+
+  bool _applyRemoteInvitationStatus(
+    Invitation invitation,
+    String remoteStatus,
+  ) {
+    final inviteIndex = _invitations.indexWhere((item) => item.id == invitation.id);
+    if (inviteIndex == -1) return false;
+
+    final memberIndex = _members.indexWhere(
+      (member) => member.id == invitation.memberId,
+    );
+
+    var changed = false;
+
+    switch (remoteStatus) {
+      case 'accepted':
+        if (_invitations[inviteIndex].status != InvitationStatus.accepted) {
+          _invitations[inviteIndex] = _invitations[inviteIndex].copyWith(
+            status: InvitationStatus.accepted,
+          );
+          changed = true;
+        }
+        if (memberIndex != -1 &&
+            _members[memberIndex].status != MemberStatus.joined) {
+          _members[memberIndex] = _members[memberIndex].copyWith(
+            status: MemberStatus.joined,
+            joinedAt: DateTime.now(),
+          );
+          changed = true;
+        }
+      case 'rejected':
+        changed = _closeInvitation(
+              inviteIndex,
+              memberIndex,
+              InvitationStatus.rejected,
+            ) ||
+            changed;
+      case 'cancelled':
+        changed = _closeInvitation(
+              inviteIndex,
+              memberIndex,
+              InvitationStatus.cancelled,
+            ) ||
+            changed;
+      case 'expired':
+        changed = _closeInvitation(
+              inviteIndex,
+              memberIndex,
+              InvitationStatus.expired,
+            ) ||
+            changed;
+      case 'opened':
+      case 'pending':
+        break;
+    }
+
+    return changed;
+  }
+
+  bool _closeInvitation(
+    int inviteIndex,
+    int memberIndex,
+    InvitationStatus status,
+  ) {
+    var changed = false;
+    if (_invitations[inviteIndex].status != status) {
+      _invitations[inviteIndex] = _invitations[inviteIndex].copyWith(
+        status: status,
+      );
+      changed = true;
+    }
+    if (memberIndex != -1 &&
+        _members[memberIndex].status == MemberStatus.pending) {
+      _members.removeAt(memberIndex);
+      changed = true;
+    }
+    return changed;
+  }
+
+  String? _errorCode(DioException error) {
+    final data = error.response?.data;
+    if (data is Map<String, dynamic>) {
+      final errorBody = data['error'];
+      if (errorBody is Map<String, dynamic>) {
+        return errorBody['code'] as String?;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _loadOrSeedData() async {
+    final stored = await _localStore.load(_businessId);
+    if (stored != null) {
+      _members
+        ..clear()
+        ..addAll(stored.members);
+      _invitations
+        ..clear()
+        ..addAll(stored.invitations);
+      return;
+    }
+
+    _seedData();
+    await _persistState();
   }
 
   static final _seedMembers = [
@@ -174,7 +385,7 @@ class FakeCollaborationRepository implements CollaborationRepository {
 
   String _generateInviteCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    return List.generate(8, (_) => chars[_random.nextInt(chars.length)]).join();
+    return List.generate(6, (_) => chars[_random.nextInt(chars.length)]).join();
   }
 
   InvitationChannel _channelFor(String phoneOrEmail) {
@@ -182,33 +393,45 @@ class FakeCollaborationRepository implements CollaborationRepository {
     return InvitationChannel.sms;
   }
 
-  void _expireStaleInvitations() {
+  bool _expireStaleInvitations() {
+    var changed = false;
     for (var i = 0; i < _invitations.length; i++) {
       final invite = _invitations[i];
       if (invite.status == InvitationStatus.pending &&
           DateTime.now().isAfter(invite.expiresAt)) {
         _invitations[i] = invite.copyWith(status: InvitationStatus.expired);
+        changed = true;
         final memberIndex = _members.indexWhere((m) => m.id == invite.memberId);
         if (memberIndex != -1 &&
             _members[memberIndex].status == MemberStatus.pending) {
           _members.removeAt(memberIndex);
+          changed = true;
         }
       }
     }
+    return changed;
   }
 
   @override
   Future<void> initialize() async {
     if (_initialized) return;
     await _delay(200, 400);
-    _expireStaleInvitations();
+    await _loadOrSeedData();
+    if (_expireStaleInvitations()) {
+      await _persistState();
+    }
     _initialized = true;
   }
 
   @override
   Future<List<BusinessMember>> fetchMembers() async {
-    await _delay();
-    _expireStaleInvitations();
+    await _delay(100, 200);
+    if (await _syncInvitationStatusesFromApi()) {
+      await _persistState();
+    }
+    if (_expireStaleInvitations()) {
+      await _persistState();
+    }
     return List<BusinessMember>.from(_members);
   }
 
@@ -223,8 +446,13 @@ class FakeCollaborationRepository implements CollaborationRepository {
 
   @override
   Future<List<Invitation>> fetchInvitations() async {
-    await _delay();
-    _expireStaleInvitations();
+    await _delay(100, 200);
+    if (await _syncInvitationStatusesFromApi()) {
+      await _persistState();
+    }
+    if (_expireStaleInvitations()) {
+      await _persistState();
+    }
     return List<Invitation>.from(_invitations);
   }
 
@@ -251,6 +479,13 @@ class FakeCollaborationRepository implements CollaborationRepository {
 
   @override
   Future<Invitation> inviteMember(InviteMemberInput input) async {
+    if (_invitationApi != null) {
+      await _delay(200, 400);
+      final invitation = await _invitationApi.createInvitation(input);
+      await _upsertApiInvitation(invitation);
+      return invitation;
+    }
+
     await _delay(500, 900);
     final memberId = 'member-${_uuid.v4()}';
     final invitationId = 'invite-${_uuid.v4()}';
@@ -260,7 +495,7 @@ class FakeCollaborationRepository implements CollaborationRepository {
     final member = BusinessMember(
       id: memberId,
       fullName: input.fullName.trim(),
-      phoneOrEmail: input.phoneOrEmail.trim(),
+      phoneOrEmail: formatPhoneOrEmailContact(input.phoneOrEmail),
       status: MemberStatus.pending,
       role: input.role,
       invitationId: invitationId,
@@ -282,6 +517,7 @@ class FakeCollaborationRepository implements CollaborationRepository {
 
     _members.add(member);
     _invitations.add(invitation);
+    await _persistState();
     return invitation;
   }
 
@@ -297,10 +533,11 @@ class FakeCollaborationRepository implements CollaborationRepository {
     }
     final updated = _members[index].copyWith(
       fullName: input.fullName.trim(),
-      phoneOrEmail: input.phoneOrEmail.trim(),
+      phoneOrEmail: formatPhoneOrEmailContact(input.phoneOrEmail),
       role: input.role,
     );
     _members[index] = updated;
+    await _persistState();
     return updated;
   }
 
@@ -316,6 +553,7 @@ class FakeCollaborationRepository implements CollaborationRepository {
     _invitations.removeWhere(
       (invite) => invite.memberId == member.id && invite.status.isActive,
     );
+    await _persistState();
   }
 
   @override
@@ -327,6 +565,7 @@ class FakeCollaborationRepository implements CollaborationRepository {
     }
     final updated = _members[index].copyWith(role: role);
     _members[index] = updated;
+    await _persistState();
     return updated;
   }
 
@@ -468,6 +707,7 @@ class FakeCollaborationRepository implements CollaborationRepository {
         joinedAt: DateTime.now(),
       );
     }
+    await _persistState();
     return updatedInvite;
   }
 
@@ -489,6 +729,7 @@ class FakeCollaborationRepository implements CollaborationRepository {
     final updatedInvite = invite.copyWith(status: InvitationStatus.rejected);
     _invitations[index] = updatedInvite;
     _members.removeWhere((member) => member.id == invite.memberId);
+    await _persistState();
     return updatedInvite;
   }
 
@@ -510,7 +751,94 @@ class FakeCollaborationRepository implements CollaborationRepository {
     final updatedInvite = invite.copyWith(status: InvitationStatus.cancelled);
     _invitations[index] = updatedInvite;
     _members.removeWhere((member) => member.id == invite.memberId);
+    await _persistState();
     return updatedInvite;
+  }
+
+  @override
+  Future<Invitation> reinviteInvitation(String invitationId) async {
+    if (_invitationApi != null) {
+      await _delay(200, 400);
+      final member = _memberForInvitation(invitationId);
+      if (member == null) {
+        throw const CollaborationNotFoundException('Member not found');
+      }
+
+      final existingInvitation = _invitationById(invitationId) ??
+          _activeInvitationForContact(member.phoneOrEmail);
+
+      final newInvitation = await _invitationApi.resendInvitation(
+        invitationId: invitationId,
+        input: InviteMemberInput(
+          fullName: member.fullName,
+          phoneOrEmail: member.phoneOrEmail,
+          role: member.role,
+        ),
+        existingInvitation: existingInvitation,
+      );
+
+      if (existingInvitation != null &&
+          existingInvitation.id != newInvitation.id) {
+        final index = _invitations.indexWhere(
+          (invite) => invite.id == existingInvitation.id,
+        );
+        if (index != -1 && _invitations[index].status.isActive) {
+          _invitations[index] = _invitations[index].copyWith(
+            status: InvitationStatus.cancelled,
+          );
+        }
+      }
+
+      await _upsertApiInvitation(newInvitation);
+      return newInvitation;
+    }
+
+    await _delay(500, 900);
+    final index = _invitations.indexWhere(
+      (invite) => invite.id == invitationId,
+    );
+    if (index == -1) {
+      throw const CollaborationNotFoundException('Invitation not found');
+    }
+
+    final old = _invitations[index];
+    if (old.status == InvitationStatus.accepted) {
+      throw const CollaborationConflictException(
+        'This member has already joined',
+      );
+    }
+
+    final now = DateTime.now();
+    final newInvitationId = 'invite-${_uuid.v4()}';
+    final newInviteCode = _generateInviteCode();
+
+    _invitations[index] = old.copyWith(status: InvitationStatus.cancelled);
+
+    final newInvitation = Invitation(
+      id: newInvitationId,
+      inviteCode: newInviteCode,
+      memberId: old.memberId,
+      fullName: old.fullName,
+      phoneOrEmail: old.phoneOrEmail,
+      role: old.role,
+      channel: old.channel,
+      sentAt: now,
+      expiresAt: now.add(const Duration(days: 7)),
+      status: InvitationStatus.pending,
+    );
+    _invitations.add(newInvitation);
+
+    final memberIndex = _members.indexWhere((member) => member.id == old.memberId);
+    if (memberIndex != -1) {
+      _members[memberIndex] = _members[memberIndex].copyWith(
+        invitationId: newInvitationId,
+        invitedAt: now,
+        status: MemberStatus.pending,
+      );
+    }
+
+    await _persistState();
+    return newInvitation;
   }
 
   @override

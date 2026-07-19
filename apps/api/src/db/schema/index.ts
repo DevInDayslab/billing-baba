@@ -2,6 +2,8 @@ export * from './accounting/relations';
 export * from './accounting/tables';
 export * from './business/relations';
 export * from './business/tables';
+export * from './collaboration/relations';
+export * from './collaboration/tables';
 export * from './columns';
 export * from './crm/relations';
 export * from './crm/tables';

@@ -9,6 +9,54 @@ part of 'collaboration_repository_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(collaborationCache)
+final collaborationCacheProvider = CollaborationCacheProvider._();
+
+final class CollaborationCacheProvider
+    extends
+        $FunctionalProvider<
+          CollaborationCache,
+          CollaborationCache,
+          CollaborationCache
+        >
+    with $Provider<CollaborationCache> {
+  CollaborationCacheProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'collaborationCacheProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$collaborationCacheHash();
+
+  @$internal
+  @override
+  $ProviderElement<CollaborationCache> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CollaborationCache create(Ref ref) {
+    return collaborationCache(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CollaborationCache value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CollaborationCache>(value),
+    );
+  }
+}
+
+String _$collaborationCacheHash() =>
+    r'6bf4c63103789d26adb822628bde2df9a209aa89';
+
 @ProviderFor(collaborationRepository)
 final collaborationRepositoryProvider = CollaborationRepositoryProvider._();
 
@@ -55,7 +103,7 @@ final class CollaborationRepositoryProvider
 }
 
 String _$collaborationRepositoryHash() =>
-    r'3da25dafe8b2820b01acdef335a30062fe2a7523';
+    r'06321ef8fadedbb54f1291b9fd60d7f4e278cdb3';
 
 @ProviderFor(collaborationService)
 final collaborationServiceProvider = CollaborationServiceProvider._();

@@ -8,6 +8,8 @@ abstract final class AppConfig {
   static const _defaultApiBaseUrl =
       'https://billing-baba-production-6b5e.up.railway.app';
 
+  static const _defaultWebsiteUrl = 'https://billingbaba.com';
+
   /// Resolved at runtime: `--dart-define=API_BASE_URL` overrides `.env`.
   static String get apiBaseUrl {
     const fromDefine = String.fromEnvironment('API_BASE_URL');
@@ -39,6 +41,21 @@ abstract final class AppConfig {
       dotenv.env['DEBUG']?.toLowerCase() == 'true' ||
       dotenv.env['APP_ENV']?.toLowerCase() == 'development';
 
+  /// Public website base URL used for collaboration invite links.
+  static String get websiteUrl {
+    const fromDefine = String.fromEnvironment('WEBSITE_URL');
+    if (fromDefine.isNotEmpty) return fromDefine;
+    final fromEnv = dotenv.env['WEBSITE_URL']?.trim();
+    if (fromEnv != null && fromEnv.isNotEmpty) return fromEnv;
+    return _defaultWebsiteUrl;
+  }
+
+  /// Builds `https://example.com/invite/{code}` from [inviteCode].
+  static String inviteLinkForCode(String inviteCode) {
+    final base = websiteUrl.replaceAll(RegExp(r'/+$'), '');
+    return '$base/invite/$inviteCode';
+  }
+
   /// Default OTP for local development when MSG91 is not configured.
   static String get devOtp => dotenv.env['DEV_OTP']?.trim() ?? '123456';
 
@@ -48,6 +65,7 @@ abstract final class AppConfig {
     debugPrint(
       '[CONFIG] API_BASE_URL=$apiBaseUrl (source: $apiBaseUrlSource)',
     );
+    debugPrint('[CONFIG] WEBSITE_URL=$websiteUrl');
     debugPrint('[CONFIG] ENABLE_DEV_LOGIN=$enableDevLogin');
     debugPrint('[CONFIG] APP_ENV=${dotenv.env['APP_ENV'] ?? '(unset)'}');
     debugPrint('[CONFIG] DEBUG=${dotenv.env['DEBUG'] ?? '(unset)'}');

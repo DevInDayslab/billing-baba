@@ -25,4 +25,6 @@ abstract final class StorageKeys {
   static const dashboardSideWidgets = 'dashboard_side_widgets';
   static const printSettings = 'print_settings';
   static const recentSearchPageIds = 'recent_search_page_ids';
+  static const collaborationMembers = 'collaboration_members';
+  static const collaborationInvitations = 'collaboration_invitations';
 }

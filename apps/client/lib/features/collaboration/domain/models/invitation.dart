@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/features/collaboration/domain/models/role.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -16,6 +17,8 @@ enum InvitationChannel {
 enum InvitationStatus {
   @JsonValue('pending')
   pending,
+  @JsonValue('opened')
+  opened,
   @JsonValue('accepted')
   accepted,
   @JsonValue('expired')
@@ -24,18 +27,33 @@ enum InvitationStatus {
   cancelled,
   @JsonValue('rejected')
   rejected,
+  @JsonValue('left')
+  left,
 }
 
 extension InvitationStatusX on InvitationStatus {
   String get displayLabel => switch (this) {
     InvitationStatus.pending => 'Pending',
+    InvitationStatus.opened => 'Pending',
     InvitationStatus.accepted => 'Accepted',
     InvitationStatus.expired => 'Expired',
     InvitationStatus.cancelled => 'Cancelled',
     InvitationStatus.rejected => 'Rejected',
+    InvitationStatus.left => 'Left',
   };
 
-  bool get isActive => this == InvitationStatus.pending;
+  bool get isActive =>
+      this == InvitationStatus.pending || this == InvitationStatus.opened;
+
+  bool get isPollable =>
+      this == InvitationStatus.pending || this == InvitationStatus.opened;
+
+  bool get isTerminal =>
+      this == InvitationStatus.accepted ||
+      this == InvitationStatus.rejected ||
+      this == InvitationStatus.left ||
+      this == InvitationStatus.expired ||
+      this == InvitationStatus.cancelled;
 }
 
 @freezed
@@ -58,9 +76,11 @@ abstract class Invitation with _$Invitation {
 }
 
 extension InvitationX on Invitation {
-  String get inviteLink => 'https://billingbaba.app/invite/$inviteCode';
+  String get inviteLink => AppConfig.inviteLinkForCode(inviteCode);
 
   bool get isExpired =>
       status == InvitationStatus.expired ||
-      (status == InvitationStatus.pending && DateTime.now().isAfter(expiresAt));
+      ((status == InvitationStatus.pending ||
+              status == InvitationStatus.opened) &&
+          DateTime.now().isAfter(expiresAt));
 }

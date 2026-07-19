@@ -157,6 +157,17 @@ export const Schema = {
   // Health
   HealthResponse: 'HealthResponse',
   DatabaseHealthResponse: 'DatabaseHealthResponse',
+
+  // Collaboration
+  CreateInvitationRequest: 'CreateInvitationRequest',
+  InvitationResponse: 'InvitationResponse',
+  InvitationPublicResponse: 'InvitationPublicResponse',
+  AcceptInvitationResponse: 'AcceptInvitationResponse',
+  SharedCompanyResponse: 'SharedCompanyResponse',
+  PendingInvitationResponse: 'PendingInvitationResponse',
+  InvitationTokenParams: 'InvitationTokenParams',
+  InvitationIdParams: 'InvitationIdParams',
+  CompanyMemberIdParams: 'CompanyMemberIdParams',
 } as const;
 
 export type ResourceOps = {

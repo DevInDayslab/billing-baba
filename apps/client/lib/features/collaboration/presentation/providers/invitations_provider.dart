@@ -3,6 +3,7 @@ import 'package:billing_baba/features/collaboration/application/collaboration_se
 import 'package:billing_baba/features/collaboration/domain/models/invitation.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/collaboration_init_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/company_access_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_directory_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/members_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -33,6 +34,8 @@ class Invitations extends _$Invitations {
     await reload(showLoading: false);
     await ref.read(membersProvider.notifier).reload(showLoading: false);
     ref.invalidate(companyAccessProvider);
+    ref.invalidate(companyDirectoryProvider);
+    ref.invalidate(collaborationCompaniesProvider);
     return invitation;
   }
 
@@ -51,6 +54,17 @@ class Invitations extends _$Invitations {
     await reload(showLoading: false);
     await ref.read(membersProvider.notifier).reload(showLoading: false);
     ref.invalidate(companyAccessProvider);
+    return invitation;
+  }
+
+  Future<Invitation> reinvite(String invitationId) async {
+    final service = ref.read(collaborationServiceProvider);
+    final invitation = await service.reinviteInvitation(invitationId);
+    await reload(showLoading: false);
+    await ref.read(membersProvider.notifier).reload(showLoading: false);
+    ref.invalidate(companyAccessProvider);
+    ref.invalidate(companyDirectoryProvider);
+    ref.invalidate(collaborationCompaniesProvider);
     return invitation;
   }
 }
@@ -85,6 +99,8 @@ class LastInvitation extends _$LastInvitation {
     await ref.read(invitationsProvider.notifier).reload(showLoading: false);
     await ref.read(membersProvider.notifier).reload(showLoading: false);
     ref.invalidate(companyAccessProvider);
+    ref.invalidate(companyDirectoryProvider);
+    ref.invalidate(collaborationCompaniesProvider);
     return result;
   }
 }
