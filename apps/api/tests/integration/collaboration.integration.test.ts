@@ -6,6 +6,7 @@ import {
   createTestApp,
   getAuthHeaders,
   jsonAuthHeaders,
+  login,
   uniqueSuffix,
 } from '../helpers/app';
 import { canRunDbTests, INTEGRATION_TIMEOUT_MS } from '../helpers/env';
@@ -19,56 +20,20 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
 
   beforeAll(async () => {
     app = await createTestApp();
+    ownerToken = await login(app);
+
     const config = loadAppConfig();
-
-    const loginResponse = await app.inject({
-      method: 'POST',
-      url: `${config.apiPrefix}/auth/dev-login`,
-      payload: {},
-    });
-    const loginBody = loginResponse.json() as {
-      data: {
-        access_token: string;
-        refresh_token: string;
-        businesses?: Array<{ id: string }>;
-      };
-    };
-    ownerToken = loginBody.data.access_token;
-
     const me = await app.inject({
       method: 'GET',
       url: `${config.apiPrefix}/auth/me`,
       headers: jsonAuthHeaders(ownerToken),
     });
+    expect(me.statusCode).toBe(200);
     const meBody = me.json() as {
       data: { businesses: Array<{ id: string }> };
     };
     businessId = meBody.data.businesses[0]?.id ?? '';
-
-    if (!businessId) {
-      const created = await app.inject({
-        method: 'POST',
-        url: `${config.apiPrefix}/businesses`,
-        headers: jsonAuthHeaders(ownerToken),
-        payload: {
-          name: `Collab Biz ${suffix}`,
-          state_code: '27',
-        },
-      });
-      businessId = (created.json() as { data: { id: string } }).data.id;
-    }
-
-    const refresh = await app.inject({
-      method: 'POST',
-      url: `${config.apiPrefix}/auth/refresh`,
-      headers: { 'content-type': 'application/json' },
-      payload: {
-        refresh_token: loginBody.data.refresh_token,
-        business_id: businessId,
-      },
-    });
-    ownerToken = (refresh.json() as { data: { access_token: string } }).data
-      .access_token;
+    expect(businessId).toBeTruthy();
   });
 
   afterAll(async () => {
