@@ -17,6 +17,7 @@ import {
   phoneLookupVariants,
   verifyMsg91WidgetAccessToken,
 } from './msg91-widget.service';
+import { AccountAvatarService } from '../business/business-branding.service';
 
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -392,7 +393,17 @@ export class AuthService {
       user,
       businesses,
       selected_business: selectedBusiness,
-      profile: buildProfileResponse(accountRow),
+      profile: {
+        ...buildProfileResponse(accountRow),
+        avatar_url: await new AccountAvatarService({
+          config: this.config,
+          authRepository: this.repository,
+        }).resolveAvatarUrl(
+          accountRow.id,
+          accountRow.avatarMediaAssetId,
+          accountRow.avatarUrl,
+        ),
+      },
     };
   }
 }

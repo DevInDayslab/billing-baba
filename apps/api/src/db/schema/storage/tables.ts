@@ -19,9 +19,7 @@ export const mediaAssets = pgTable(
   'media_assets',
   {
     id: uuidPrimaryKey(),
-    businessId: uuid('business_id')
-      .notNull()
-      .references(() => businesses.id),
+    businessId: uuid('business_id').references(() => businesses.id),
     storageKey: text('storage_key').notNull(),
     bucket: text('bucket').notNull(),
     purpose: text('purpose').notNull(),

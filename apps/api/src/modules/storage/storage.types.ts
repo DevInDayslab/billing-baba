@@ -7,7 +7,7 @@ import type {
 /** API / service-facing media asset metadata. */
 export type StorageAsset = {
   id: string;
-  businessId: string;
+  businessId: string | null;
   storageKey: string;
   bucket: string;
   purpose: StoragePurpose;
@@ -54,9 +54,14 @@ export type CreateUploadIntentInput = {
   checksum?: string | null;
 };
 
+export type StorageValidationPolicy = {
+  maxBytes: number;
+  allowedMimes: readonly string[];
+};
+
 export type MediaAssetRow = {
   id: string;
-  businessId: string;
+  businessId: string | null;
   storageKey: string;
   bucket: string;
   purpose: string;

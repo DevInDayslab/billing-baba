@@ -18,6 +18,8 @@ class BusinessProfileModel {
     this.language = 'en',
     this.logoUrl,
     this.signatureUrl,
+    this.stampUrl,
+    this.upiQrUrl,
   });
 
   factory BusinessProfileModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,8 @@ class BusinessProfileModel {
       language: json['language'] as String? ?? 'en',
       logoUrl: json['logo_url'] as String?,
       signatureUrl: json['signature_url'] as String?,
+      stampUrl: json['stamp_url'] as String?,
+      upiQrUrl: json['upi_qr_url'] as String?,
     );
   }
 
@@ -57,6 +61,8 @@ class BusinessProfileModel {
   final String language;
   final String? logoUrl;
   final String? signatureUrl;
+  final String? stampUrl;
+  final String? upiQrUrl;
 
   String get initial {
     final trimmed = name.trim();
@@ -81,6 +87,8 @@ class BusinessProfileModel {
     'language': language,
     'logo_url': logoUrl,
     'signature_url': signatureUrl,
+    'stamp_url': stampUrl,
+    'upi_qr_url': upiQrUrl,
   };
 }
 

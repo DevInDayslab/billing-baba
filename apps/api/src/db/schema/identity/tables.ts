@@ -23,6 +23,7 @@ export const accounts = pgTable(
     name: text('name'),
     email: text('email'),
     avatarUrl: text('avatar_url'),
+    avatarMediaAssetId: uuid('avatar_media_asset_id'),
     timezone: text('timezone').notNull().default('Asia/Kolkata'),
     language: text('language').notNull().default('en'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),

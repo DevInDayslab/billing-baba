@@ -137,9 +137,64 @@ Business tables (`businesses.logo_url`, `item_images`, etc.) are **not** modifie
 | `src/db/schema/storage/tables.ts` | `media_assets` |
 | `docs/04-backend/storage.md` | This document |
 
+## Phase 2 — Business branding & account avatar
+
+Phase 2 binds `media_assets` to business branding fields and account avatars. Business modules use **`BusinessBrandingService` / `AccountAvatarService`**, which call **`StorageService` only** (never S3 SDK).
+
+### Database (`0024_business_branding_media`)
+
+| Table | Columns |
+|-------|---------|
+| `businesses` | `logo_media_asset_id`, `signature_media_asset_id`, `stamp_media_asset_id`, `upi_qr_media_asset_id` |
+| `accounts` | `avatar_media_asset_id` |
+| `media_assets` | `business_id` nullable (account-scoped avatars) |
+
+Legacy URL columns (`logo_url`, `signature_url`, `avatar_url`) remain as denormalized cache populated when an upload completes.
+
+### Business branding API
+
+All routes require JWT + business scope. **Owner/manager** only for mutations.
+
+| Method | Path | Body (intent) | Body (complete) |
+|--------|------|---------------|-----------------|
+| POST | `/business/logo` | `{ mime_type, file_size }` | `{ intent_id }` |
+| DELETE | `/business/logo` | — | — |
+| POST | `/business/signature` | same | same |
+| DELETE | `/business/signature` | — | — |
+| POST | `/business/stamp` | same | same |
+| DELETE | `/business/stamp` | — | — |
+| POST | `/business/upi-qr` | same | same |
+| DELETE | `/business/upi-qr` | — | — |
+
+### Account avatar API
+
+| Method | Path |
+|--------|------|
+| POST | `/auth/me/avatar` |
+| DELETE | `/auth/me/avatar` |
+
+### Validation policies
+
+| Asset | Max size | MIME |
+|-------|----------|------|
+| Logo | 2 MB | PNG, JPEG, WEBP |
+| Signature | 1 MB | PNG |
+| Stamp | 1 MB | PNG |
+| UPI QR | 1 MB | PNG |
+| Avatar | 2 MB | PNG, JPEG, WEBP |
+
+### Upload flow (business modules)
+
+1. `POST /business/{asset}` with `mime_type` + `file_size` → presigned PUT intent  
+2. Client PUT bytes to Railway  
+3. `POST /business/{asset}` with `intent_id` → complete + bind `media_asset` to entity  
+4. `GET /business/profile` and `GET /auth/me` resolve fresh download URLs via `StorageService`
+
+Storage keys for branding: `{env}/businesses/{businessId}/branding/{kind}/{assetId}.{ext}`  
+Account avatars: `{env}/accounts/{accountId}/avatar/{assetId}.{ext}`
+
 ## Future phases
 
-2. Core uploads (logo, signature, item images, party face/attachments, expenses, OCR source persistence)  
 3. Generated PDFs for share / WhatsApp  
 4. WhatsApp `sendMedia`  
 5. Document attachments, KYC docs, thumbs, backup archives  

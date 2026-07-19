@@ -1,9 +1,16 @@
+import 'dart:typed_data';
+
+import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/storage/media_upload_client.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/business/application/business_profile_controller.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/data/business_branding_repository.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
+import 'package:billing_baba/features/business/presentation/widgets/branding_image_uploader.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +24,9 @@ class EditProfilePage extends ConsumerStatefulWidget {
 
 class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   static const _saveButtonColor = Color(0xFFD32F2F);
+
+  static const _pngOnly = {'image/png'};
+  static const _logoMimes = {'image/png', 'image/jpeg', 'image/webp'};
 
   static const _businessTypes = [
     'Retail',
@@ -73,6 +83,18 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   String? _profileSeed;
   String? _hydratedProfileId;
 
+  String? _logoUrl;
+  String? _signatureUrl;
+  String? _stampUrl;
+  String? _upiQrUrl;
+
+  bool _uploadingLogo = false;
+  bool _uploadingSignature = false;
+  bool _uploadingStamp = false;
+  bool _uploadingUpiQr = false;
+
+  BusinessBrandingRepository? _brandingRepository;
+
   @override
   void initState() {
     super.initState();
@@ -82,7 +104,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       if (profile != null && mounted) {
         setState(() => _hydrateFromProfile(profile));
       }
+      _initRepository();
     });
+  }
+
+  Future<void> _initRepository() async {
+    final api = await ref.read(apiClientProvider.future);
+    if (!mounted) return;
+    setState(() => _brandingRepository = BusinessBrandingRepository(api.dio));
   }
 
   @override
@@ -112,6 +141,142 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _state = profile.state;
     _profileSeed = profile.id;
     _hydratedProfileId = profile.id;
+    _logoUrl = profile.logoUrl;
+    _signatureUrl = profile.signatureUrl;
+    _stampUrl = profile.stampUrl;
+    _upiQrUrl = profile.upiQrUrl;
+  }
+
+  Future<void> _refreshProfile() async {
+    final service = await ref.read(businessServiceProvider.future);
+    final profile = await service.fetchBusinessProfile(forceRefresh: true);
+    ref.read(businessProfileProvider.notifier).replaceWith(profile);
+    if (mounted) {
+      setState(() => _hydrateFromProfile(profile));
+    }
+  }
+
+  Future<({Uint8List bytes, String mimeType})?> _pickImageBytes(
+    Set<String> allowedMimes,
+    int maxBytes,
+  ) async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: _extensionsForMimes(allowedMimes),
+      withData: true,
+    );
+
+    final file = result?.files.single;
+    if (file == null || file.bytes == null) return null;
+
+    final mime = mimeTypeFromFilename(file.name);
+    if (!isAllowedMime(mime, allowedMimes)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unsupported file type: ${file.name}')),
+        );
+      }
+      return null;
+    }
+
+    if (file.bytes!.length > maxBytes) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'File is too large (max ${(maxBytes / (1024 * 1024)).toStringAsFixed(0)} MB)',
+            ),
+          ),
+        );
+      }
+      return null;
+    }
+
+    return (bytes: file.bytes!, mimeType: mime);
+  }
+
+  List<String> _extensionsForMimes(Set<String> mimes) {
+    final extensions = <String>[];
+    if (mimes.contains('image/png')) extensions.add('png');
+    if (mimes.contains('image/jpeg')) {
+      extensions.addAll(['jpg', 'jpeg']);
+    }
+    if (mimes.contains('image/webp')) extensions.add('webp');
+    return extensions;
+  }
+
+  Future<void> _uploadBranding({
+    required Set<String> allowedMimes,
+    required int maxBytes,
+    required Future<Map<String, dynamic>> Function(
+      BusinessBrandingRepository repo,
+      Uint8List bytes,
+      String mimeType,
+    )
+    upload,
+    required void Function(bool value) setUploading,
+    required void Function(String? url) setUrl,
+  }) async {
+    final repo = _brandingRepository;
+    if (repo == null) return;
+
+    final picked = await _pickImageBytes(allowedMimes, maxBytes);
+    if (picked == null) return;
+
+    setUploading(true);
+    setState(() {});
+
+    try {
+      final result = await upload(repo, picked.bytes, picked.mimeType);
+      setUrl(result['url'] as String?);
+      await _refreshProfile();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image uploaded successfully')),
+        );
+      }
+    } on Exception catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e')),
+        );
+      }
+    } finally {
+      setUploading(false);
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _deleteBranding({
+    required Future<void> Function(BusinessBrandingRepository repo) delete,
+    required void Function(bool value) setUploading,
+    required void Function(String? url) setUrl,
+  }) async {
+    final repo = _brandingRepository;
+    if (repo == null) return;
+
+    setUploading(true);
+    setState(() {});
+
+    try {
+      await delete(repo);
+      setUrl(null);
+      await _refreshProfile();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image removed')),
+        );
+      }
+    } on Exception catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Delete failed: $e')),
+        );
+      }
+    } finally {
+      setUploading(false);
+      if (mounted) setState(() {});
+    }
   }
 
   List<String> _dropdownOptions(List<String> options, String? selected) {
@@ -169,6 +334,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       _businessCategory = profile.businessCategory;
       _state = profile.state;
       _profileSeed = profile.id;
+      _logoUrl = profile.logoUrl;
+      _signatureUrl = profile.signatureUrl;
+      _stampUrl = profile.stampUrl;
+      _upiQrUrl = profile.upiQrUrl;
       _phoneController.text =
           Validators.normalizeIndianPhone(profile.phone) ?? '';
       _pincodeController.text =
@@ -247,10 +416,33 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _LogoPlaceholder(
-                            name: displayName,
-                            logoUrl: profile.logoUrl,
-                            seed: _profileSeed ?? profile.id,
+                          SizedBox(
+                            width: 120,
+                            child: BrandingImageUploader(
+                              label: 'Logo',
+                              imageUrl: _logoUrl,
+                              isUploading: _uploadingLogo,
+                              shape: BrandingImageShape.circle,
+                              width: 100,
+                              placeholder: BusinessAvatar(
+                                name: displayName,
+                                seed: _profileSeed ?? profile.id,
+                                diameter: 96,
+                              ),
+                              onUpload: () => _uploadBranding(
+                                allowedMimes: _logoMimes,
+                                maxBytes: 2 * 1024 * 1024,
+                                upload: (repo, bytes, mime) =>
+                                    repo.uploadLogo(bytes: bytes, mimeType: mime),
+                                setUploading: (v) => _uploadingLogo = v,
+                                setUrl: (url) => _logoUrl = url,
+                              ),
+                              onDelete: () => _deleteBranding(
+                                delete: (repo) => repo.deleteLogo(),
+                                setUploading: (v) => _uploadingLogo = v,
+                                setUrl: (url) => _logoUrl = url,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: AppSpacing.lg),
                           Expanded(
@@ -377,12 +569,86 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                     keyboardType: TextInputType.number,
                                   ),
                                 ),
-                                const SizedBox(height: AppSpacing.md),
-                                const _LabeledField(
-                                  label: 'Add Signature',
-                                  child: _SignatureUploadBox(),
-                                ),
                               ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      const _SectionHeader(title: 'Branding'),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: BrandingImageUploader(
+                              label: 'Signature',
+                              imageUrl: _signatureUrl,
+                              isUploading: _uploadingSignature,
+                              height: 80,
+                              onUpload: () => _uploadBranding(
+                                allowedMimes: _pngOnly,
+                                maxBytes: 1024 * 1024,
+                                upload: (repo, bytes, mime) => repo.uploadSignature(
+                                  bytes: bytes,
+                                  mimeType: mime,
+                                ),
+                                setUploading: (v) => _uploadingSignature = v,
+                                setUrl: (url) => _signatureUrl = url,
+                              ),
+                              onDelete: () => _deleteBranding(
+                                delete: (repo) => repo.deleteSignature(),
+                                setUploading: (v) => _uploadingSignature = v,
+                                setUrl: (url) => _signatureUrl = url,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: BrandingImageUploader(
+                              label: 'Stamp',
+                              imageUrl: _stampUrl,
+                              isUploading: _uploadingStamp,
+                              height: 80,
+                              onUpload: () => _uploadBranding(
+                                allowedMimes: _pngOnly,
+                                maxBytes: 1024 * 1024,
+                                upload: (repo, bytes, mime) => repo.uploadStamp(
+                                  bytes: bytes,
+                                  mimeType: mime,
+                                ),
+                                setUploading: (v) => _uploadingStamp = v,
+                                setUrl: (url) => _stampUrl = url,
+                              ),
+                              onDelete: () => _deleteBranding(
+                                delete: (repo) => repo.deleteStamp(),
+                                setUploading: (v) => _uploadingStamp = v,
+                                setUrl: (url) => _stampUrl = url,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: BrandingImageUploader(
+                              label: 'UPI QR',
+                              imageUrl: _upiQrUrl,
+                              isUploading: _uploadingUpiQr,
+                              height: 120,
+                              onUpload: () => _uploadBranding(
+                                allowedMimes: _pngOnly,
+                                maxBytes: 1024 * 1024,
+                                upload: (repo, bytes, mime) => repo.uploadUpiQr(
+                                  bytes: bytes,
+                                  mimeType: mime,
+                                ),
+                                setUploading: (v) => _uploadingUpiQr = v,
+                                setUrl: (url) => _upiQrUrl = url,
+                              ),
+                              onDelete: () => _deleteBranding(
+                                delete: (repo) => repo.deleteUpiQr(),
+                                setUploading: (v) => _uploadingUpiQr = v,
+                                setUrl: (url) => _upiQrUrl = url,
+                              ),
                             ),
                           ),
                         ],
@@ -634,185 +900,5 @@ class _OutlinedDropdown<T> extends StatelessWidget {
           .toList(),
       onChanged: onChanged,
     );
-  }
-}
-
-class _LogoPlaceholder extends StatelessWidget {
-  const _LogoPlaceholder({
-    required this.name,
-    required this.logoUrl,
-    required this.seed,
-  });
-
-  final String name;
-  final String? logoUrl;
-  final String seed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        CustomPaint(
-          painter: _DashedBorderPainter(
-            shape: _DashedBorderShape.circle,
-            color: const Color(0xFFBDBDBD),
-          ),
-          child: SizedBox(
-            width: 100,
-            height: 100,
-            child: Center(
-              child: logoUrl == null
-                  ? BusinessAvatar(
-                      name: name,
-                      seed: seed,
-                      diameter: 96,
-                    )
-                  : const Text(
-                      'Add Logo',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        const Text(
-          'Logo upload coming soon',
-          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-        ),
-      ],
-    );
-  }
-}
-
-class _SignatureUploadBox extends StatelessWidget {
-  const _SignatureUploadBox();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _DashedBorderPainter(
-        shape: _DashedBorderShape.rectangle,
-        color: const Color(0xFFBDBDBD),
-        borderRadius: AppRadius.sm,
-      ),
-      child: const SizedBox(
-        width: double.infinity,
-        height: 80,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.upload, color: AppColors.textSecondary, size: 24),
-            SizedBox(height: AppSpacing.xs),
-            Text(
-              'Coming Soon',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-enum _DashedBorderShape { circle, rectangle }
-
-class _DashedBorderPainter extends CustomPainter {
-  _DashedBorderPainter({
-    required this.shape,
-    required this.color,
-    this.borderRadius = 0,
-  });
-
-  final _DashedBorderShape shape;
-  final Color color;
-  final double borderRadius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    const dashWidth = 6.0;
-    const dashSpace = 4.0;
-
-    if (shape == _DashedBorderShape.circle) {
-      _drawDashedCircle(canvas, size, paint, dashWidth, dashSpace);
-    } else {
-      _drawDashedRect(canvas, size, paint, dashWidth, dashSpace);
-    }
-  }
-
-  void _drawDashedCircle(
-    Canvas canvas,
-    Size size,
-    Paint paint,
-    double dashWidth,
-    double dashSpace,
-  ) {
-    final radius = size.shortestSide / 2 - paint.strokeWidth;
-    final center = Offset(size.width / 2, size.height / 2);
-    final circumference = 2 * 3.141592653589793 * radius;
-    final dashCount = (circumference / (dashWidth + dashSpace)).floor();
-
-    for (var i = 0; i < dashCount; i++) {
-      final startAngle = (i * (dashWidth + dashSpace)) / radius;
-      final sweepAngle = dashWidth / radius;
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        sweepAngle,
-        false,
-        paint,
-      );
-    }
-  }
-
-  void _drawDashedRect(
-    Canvas canvas,
-    Size size,
-    Paint paint,
-    double dashWidth,
-    double dashSpace,
-  ) {
-    final rect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        paint.strokeWidth / 2,
-        paint.strokeWidth / 2,
-        size.width - paint.strokeWidth,
-        size.height - paint.strokeWidth,
-      ),
-      Radius.circular(borderRadius),
-    );
-
-    final path = Path()..addRRect(rect);
-    final metrics = path.computeMetrics();
-
-    for (final metric in metrics) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final next = distance + dashWidth;
-        canvas.drawPath(
-          metric.extractPath(distance, next.clamp(0, metric.length)),
-          paint,
-        );
-        distance = next + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
-    return oldDelegate.shape != shape ||
-        oldDelegate.color != color ||
-        oldDelegate.borderRadius != borderRadius;
   }
 }

@@ -46,10 +46,34 @@ export function buildStoragePath(params: BuildStoragePathParams): string {
   const purposeDir = PURPOSE_PATH_SEGMENTS[purpose];
   const segments = [environment, 'businesses', businessId, purposeDir];
 
-  if (ownerType && ownerId) {
-    segments.push(ownerType, ownerId);
+  if (ownerType) {
+    segments.push(ownerType);
+    if (ownerId) {
+      segments.push(ownerId);
+    }
   }
 
   segments.push(`${assetId}.${ext}`);
   return segments.join('/');
+}
+
+export type BuildAccountStoragePathParams = {
+  environment: AppConfig['environment'];
+  accountId: string;
+  assetId: string;
+  mimeType: string;
+};
+
+/**
+ * Account-scoped storage keys (avatars).
+ * Format: {env}/accounts/{accountId}/avatar/{assetId}.{ext}
+ */
+export function buildAccountStoragePath(
+  params: BuildAccountStoragePathParams,
+): string {
+  const { environment, accountId, assetId, mimeType } = params;
+  const ext = extensionForMimeType(mimeType);
+  return [environment, 'accounts', accountId, 'avatar', `${assetId}.${ext}`].join(
+    '/',
+  );
 }

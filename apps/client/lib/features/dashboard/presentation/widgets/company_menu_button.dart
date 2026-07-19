@@ -53,11 +53,15 @@ class _CompanyMenuButtonState extends ConsumerState<CompanyMenuButton> {
             targetAnchor: Alignment.bottomRight,
             followerAnchor: Alignment.topRight,
             offset: const Offset(0, AppSpacing.xs),
-            child: CompanyProfileMenuCard(
+            child:             CompanyProfileMenuCard(
               companyName: business.name,
               onEditProfile: () {
                 _removeMenu();
                 context.go(AppRoutes.editProfile);
+              },
+              onMyProfile: () {
+                _removeMenu();
+                context.go(AppRoutes.userProfile);
               },
               onSwitchCompany: () {
                 _removeMenu();
@@ -170,6 +174,7 @@ class CompanyProfileMenuCard extends StatelessWidget {
   const CompanyProfileMenuCard({
     required this.companyName,
     required this.onEditProfile,
+    required this.onMyProfile,
     required this.onSwitchCompany,
     required this.onLogout,
     super.key,
@@ -177,6 +182,7 @@ class CompanyProfileMenuCard extends StatelessWidget {
 
   final String companyName;
   final VoidCallback onEditProfile;
+  final VoidCallback onMyProfile;
   final VoidCallback onSwitchCompany;
   final VoidCallback onLogout;
 
@@ -228,6 +234,11 @@ class CompanyProfileMenuCard extends StatelessWidget {
               icon: Icons.edit_outlined,
               label: 'Edit Profile',
               onTap: onEditProfile,
+            ),
+            _CompanyMenuItem(
+              icon: Icons.person_outline,
+              label: 'My Profile',
+              onTap: onMyProfile,
             ),
             _CompanyMenuItem(
               icon: Icons.autorenew,

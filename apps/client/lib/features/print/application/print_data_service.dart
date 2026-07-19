@@ -93,7 +93,11 @@ class PrintDataService {
 
     final partyFuture = _loadParty(document.partyId);
     final linesFuture = _enrichSalesLines(document.lines);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
 
     late final PrintableParty? party;
     late final List<PrintableLineItem> lines;
@@ -136,7 +140,11 @@ class PrintDataService {
 
     final partyFuture = _loadParty(document.partyId);
     final linesFuture = _enrichPurchaseLines(document.lines);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
 
     late final PrintableParty? party;
     late final List<PrintableLineItem> lines;
@@ -183,7 +191,11 @@ class PrintDataService {
     final company = PrintableCompany(profile: profile);
 
     final partyFuture = _loadParty(payment.partyId);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
     final allocationsFuture = _enrichAllocations(payment.allocations);
 
     late final PrintableParty? party;
@@ -230,7 +242,11 @@ class PrintDataService {
     final company = PrintableCompany(profile: profile);
 
     final partyFuture = _loadParty(expense.partyId);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
 
     late final PrintableParty? party;
     late final PrintableAssets assets;
@@ -276,7 +292,11 @@ class PrintDataService {
     final company = PrintableCompany(profile: profile);
 
     final partyFuture = _loadParty(batch.partyId);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
 
     late final PrintableParty? party;
     late final PrintableAssets assets;
@@ -319,7 +339,11 @@ class PrintDataService {
     final company = PrintableCompany(profile: profile);
 
     final partyFuture = _loadParty(batch.partyId);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
 
     late final PrintableParty? party;
     late final PrintableAssets assets;
@@ -362,7 +386,11 @@ class PrintDataService {
     final company = PrintableCompany(profile: profile);
 
     final partyFuture = _loadParty(order.partyId);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
     final materialNamesFuture = _loadJobWorkMaterialNames(order.rawMaterials);
 
     late final PrintableParty? party;
@@ -465,14 +493,17 @@ class PrintDataService {
   Future<PrintableAssets> _loadAssets(
     String? logoUrl,
     String? signatureUrl,
+    String? stampUrl,
   ) async {
     final results = await Future.wait([
       _imageCache.getBytes(logoUrl),
       _imageCache.getBytes(signatureUrl),
+      _imageCache.getBytes(stampUrl),
     ]);
     return PrintableAssets(
       logoBytes: results[0],
       signatureBytes: results[1],
+      stampBytes: results[2],
     );
   }
 

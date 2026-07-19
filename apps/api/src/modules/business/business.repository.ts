@@ -12,6 +12,7 @@ import type {
   CreateBusinessBody,
   UpdateBusinessProfileBody,
 } from './business.schema';
+import type { BrandingKind } from './business-branding.constants';
 import type {
   BusinessDetail,
   BusinessListItem,
@@ -168,6 +169,10 @@ export class BusinessRepository {
         language: businesses.language,
         logoUrl: businesses.logoUrl,
         signatureUrl: businesses.signatureUrl,
+        logoMediaAssetId: businesses.logoMediaAssetId,
+        signatureMediaAssetId: businesses.signatureMediaAssetId,
+        stampMediaAssetId: businesses.stampMediaAssetId,
+        upiQrMediaAssetId: businesses.upiQrMediaAssetId,
       })
       .from(businesses)
       .where(
@@ -313,6 +318,10 @@ export class BusinessRepository {
       language: string;
       logoUrl: string | null;
       signatureUrl: string | null;
+      logoMediaAssetId?: string | null;
+      signatureMediaAssetId?: string | null;
+      stampMediaAssetId?: string | null;
+      upiQrMediaAssetId?: string | null;
     },
     ownerName: string | null,
   ): BusinessProfile {
@@ -333,7 +342,69 @@ export class BusinessRepository {
       language: business.language,
       logo_url: business.logoUrl,
       signature_url: business.signatureUrl,
+      stamp_url: null,
+      upi_qr_url: null,
     };
+  }
+
+  async getBrandingBindings(businessId: string): Promise<{
+    logoMediaAssetId: string | null;
+    signatureMediaAssetId: string | null;
+    stampMediaAssetId: string | null;
+    upiQrMediaAssetId: string | null;
+  }> {
+    const [row] = await this.db
+      .select({
+        logoMediaAssetId: businesses.logoMediaAssetId,
+        signatureMediaAssetId: businesses.signatureMediaAssetId,
+        stampMediaAssetId: businesses.stampMediaAssetId,
+        upiQrMediaAssetId: businesses.upiQrMediaAssetId,
+      })
+      .from(businesses)
+      .where(and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)))
+      .limit(1);
+
+    return {
+      logoMediaAssetId: row?.logoMediaAssetId ?? null,
+      signatureMediaAssetId: row?.signatureMediaAssetId ?? null,
+      stampMediaAssetId: row?.stampMediaAssetId ?? null,
+      upiQrMediaAssetId: row?.upiQrMediaAssetId ?? null,
+    };
+  }
+
+  async getBrandingMediaAssetId(
+    businessId: string,
+    kind: BrandingKind,
+  ): Promise<string | null> {
+    const bindings = await this.getBrandingBindings(businessId);
+    return brandingColumnValue(bindings, kind);
+  }
+
+  async bindBrandingAsset(
+    businessId: string,
+    kind: BrandingKind,
+    assetId: string,
+    url: string,
+  ): Promise<void> {
+    await this.db
+      .update(businesses)
+      .set({
+        ...brandingBindSet(kind, assetId, url),
+        updatedAt: new Date(),
+        syncVersion: sql`${businesses.syncVersion} + 1`,
+      })
+      .where(and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)));
+  }
+
+  async clearBrandingAsset(businessId: string, kind: BrandingKind): Promise<void> {
+    await this.db
+      .update(businesses)
+      .set({
+        ...brandingClearSet(kind),
+        updatedAt: new Date(),
+        syncVersion: sql`${businesses.syncVersion} + 1`,
+      })
+      .where(and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)));
   }
 
   async createWithBootstrap(
@@ -439,5 +510,66 @@ export class BusinessRepository {
         is_shared: false,
       };
     });
+  }
+}
+
+function brandingColumnValue(
+  bindings: {
+    logoMediaAssetId: string | null;
+    signatureMediaAssetId: string | null;
+    stampMediaAssetId: string | null;
+    upiQrMediaAssetId: string | null;
+  },
+  kind: BrandingKind,
+): string | null {
+  switch (kind) {
+    case 'logo':
+      return bindings.logoMediaAssetId;
+    case 'signature':
+      return bindings.signatureMediaAssetId;
+    case 'stamp':
+      return bindings.stampMediaAssetId;
+    case 'upi_qr':
+      return bindings.upiQrMediaAssetId;
+  }
+}
+
+function brandingBindSet(
+  kind: BrandingKind,
+  assetId: string,
+  url: string,
+): Record<string, string | null> {
+  switch (kind) {
+    case 'logo':
+      return {
+        logoMediaAssetId: assetId,
+        logoUrl: url,
+      };
+    case 'signature':
+      return {
+        signatureMediaAssetId: assetId,
+        signatureUrl: url,
+      };
+    case 'stamp':
+      return {
+        stampMediaAssetId: assetId,
+      };
+    case 'upi_qr':
+      return {
+        upiQrMediaAssetId: assetId,
+      };
+  }
+}
+
+function brandingClearSet(kind: BrandingKind): Record<string, null> {
+  switch (kind) {
+    case 'logo':
+      return { logoMediaAssetId: null, logoUrl: null };
+    case 'signature':
+      return { signatureMediaAssetId: null, signatureUrl: null };
+    case 'stamp':
+      return { stampMediaAssetId: null };
+    case 'upi_qr':
+      return { upiQrMediaAssetId: null };
   }
 }

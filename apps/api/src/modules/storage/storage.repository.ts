@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { mediaAssets } from '../../db/schema/storage/tables';
 import { BusinessMembershipRepository } from '../../shared/repositories/business-membership.repository';
@@ -6,7 +6,7 @@ import type { MediaAssetRow } from './storage.types';
 
 export type InsertMediaAssetValues = {
   id: string;
-  businessId: string;
+  businessId: string | null;
   storageKey: string;
   bucket: string;
   purpose: string;
@@ -126,6 +126,82 @@ export class MediaAssetRepository {
           eq(mediaAssets.businessId, businessId),
           eq(mediaAssets.isDeleted, false),
           eq(mediaAssets.status, 'pending'),
+        ),
+      )
+      .returning(selectColumns);
+
+    return row ?? null;
+  }
+
+  async findByIdForAccount(
+    accountId: string,
+    id: string,
+  ): Promise<MediaAssetRow | null> {
+    const [row] = await this.db
+      .select(selectColumns)
+      .from(mediaAssets)
+      .where(
+        and(
+          eq(mediaAssets.id, id),
+          isNull(mediaAssets.businessId),
+          eq(mediaAssets.ownerType, 'avatar'),
+          eq(mediaAssets.ownerId, accountId),
+          eq(mediaAssets.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return row ?? null;
+  }
+
+  async markReadyForAccount(
+    accountId: string,
+    id: string,
+    values: MarkReadyValues,
+  ): Promise<MediaAssetRow | null> {
+    const [row] = await this.db
+      .update(mediaAssets)
+      .set({
+        status: 'ready',
+        etag: values.etag,
+        fileSize: values.fileSize,
+        ...(values.mimeType !== undefined ? { mimeType: values.mimeType } : {}),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(mediaAssets.id, id),
+          isNull(mediaAssets.businessId),
+          eq(mediaAssets.ownerType, 'avatar'),
+          eq(mediaAssets.ownerId, accountId),
+          eq(mediaAssets.isDeleted, false),
+          eq(mediaAssets.status, 'pending'),
+        ),
+      )
+      .returning(selectColumns);
+
+    return row ?? null;
+  }
+
+  async softDeleteForAccount(
+    accountId: string,
+    id: string,
+  ): Promise<MediaAssetRow | null> {
+    const now = new Date();
+    const [row] = await this.db
+      .update(mediaAssets)
+      .set({
+        isDeleted: true,
+        deletedAt: now,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(mediaAssets.id, id),
+          isNull(mediaAssets.businessId),
+          eq(mediaAssets.ownerType, 'avatar'),
+          eq(mediaAssets.ownerId, accountId),
+          eq(mediaAssets.isDeleted, false),
         ),
       )
       .returning(selectColumns);

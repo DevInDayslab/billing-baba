@@ -4,6 +4,7 @@ import 'package:billing_baba/features/auth/presentation/pages/splash_page.dart';
 import 'package:billing_baba/features/auth/presentation/pages/verify_otp_page.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/presentation/pages/business_list_page.dart';
+import 'package:billing_baba/features/auth/presentation/pages/user_profile_page.dart';
 import 'package:billing_baba/features/business/presentation/pages/edit_profile_page.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
 import 'package:billing_baba/features/collaboration/guards/access_denied_page.dart';
@@ -540,6 +541,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.editProfile,
             builder: (context, state) => const EditProfilePage(),
+          ),
+          GoRoute(
+            path: AppRoutes.userProfile,
+            builder: (context, state) => const UserProfilePage(),
           ),
         ],
       ),

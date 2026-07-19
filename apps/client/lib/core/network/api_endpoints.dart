@@ -4,6 +4,11 @@ abstract final class ApiEndpoints {
   static const businesses = '/api/v1/businesses';
   static String business(String id) => '$businesses/$id';
   static const businessProfile = '/api/v1/business/profile';
+  static const businessLogo = '/api/v1/business/logo';
+  static const businessSignature = '/api/v1/business/signature';
+  static const businessStamp = '/api/v1/business/stamp';
+  static const businessUpiQr = '/api/v1/business/upi-qr';
+  static const authAvatar = '/api/v1/auth/me/avatar';
   static const parties = '/api/v1/parties';
   static String party(String id) => '/api/v1/parties/$id';
   static String partyDeleteStatus(String id) => '/api/v1/parties/$id/delete-status';

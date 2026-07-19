@@ -21,9 +21,13 @@ import type {
   CreateUploadIntentInput,
   DownloadResult,
   StorageAsset,
+  StorageValidationPolicy,
   UploadIntent,
 } from './storage.types';
-import { buildStoragePath } from './storage-path.builder';
+import {
+  buildAccountStoragePath,
+  buildStoragePath,
+} from './storage-path.builder';
 
 export type StorageServiceDeps = {
   config: AppConfig;
@@ -101,12 +105,17 @@ export class StorageService {
     }
   }
 
-  private validateMimeAndSize(mimeType: string, fileSize: number): void {
-    if (
-      !ALLOWED_STORAGE_MIME_TYPES.includes(mimeType as AllowedStorageMimeType)
-    ) {
+  private validateMimeAndSize(
+    mimeType: string,
+    fileSize: number,
+    policy?: StorageValidationPolicy,
+  ): void {
+    const allowedMimes = policy?.allowedMimes ?? ALLOWED_STORAGE_MIME_TYPES;
+    const maxBytes = policy?.maxBytes ?? this.config.storageMaxFileBytes;
+
+    if (!allowedMimes.includes(mimeType)) {
       throw new StorageValidationError(
-        `Unsupported MIME type: ${mimeType}. Allowed: ${ALLOWED_STORAGE_MIME_TYPES.join(', ')}`,
+        `Unsupported MIME type: ${mimeType}. Allowed: ${allowedMimes.join(', ')}`,
         { mime_type: ['MIME type is not allowed'] },
       );
     }
@@ -117,9 +126,9 @@ export class StorageService {
       });
     }
 
-    if (fileSize > this.config.storageMaxFileBytes) {
+    if (fileSize > maxBytes) {
       throw new StorageValidationError(
-        `File size exceeds the ${this.config.storageMaxFileBytes} byte limit`,
+        `File size exceeds the ${maxBytes} byte limit`,
         { file_size: ['File too large'] },
       );
     }
@@ -129,9 +138,10 @@ export class StorageService {
     businessId: string,
     accountId: string,
     input: CreateUploadIntentInput,
+    policy?: StorageValidationPolicy,
   ): Promise<UploadIntent> {
     await this.assertBusinessAccess(businessId, accountId);
-    this.validateMimeAndSize(input.mimeType, input.fileSize);
+    this.validateMimeAndSize(input.mimeType, input.fileSize, policy);
 
     const provider = this.requireProvider();
     const assetId = randomUUID();
@@ -188,7 +198,7 @@ export class StorageService {
       storageKey,
       headers: upload.headers,
       expiresAt: upload.expiresAt.toISOString(),
-      maxBytes: this.config.storageMaxFileBytes,
+      maxBytes: policy?.maxBytes ?? this.config.storageMaxFileBytes,
       mimeType: input.mimeType,
     };
   }
@@ -415,6 +425,223 @@ export class StorageService {
       ownerId: existing.ownerId,
       checksum: input.checksum,
     });
+  }
+
+  async createAccountUploadIntent(
+    accountId: string,
+    input: {
+      mimeType: string;
+      fileSize: number;
+      checksum?: string | null;
+    },
+    policy: StorageValidationPolicy,
+  ): Promise<UploadIntent> {
+    this.validateMimeAndSize(input.mimeType, input.fileSize, policy);
+
+    const provider = this.requireProvider();
+    const assetId = randomUUID();
+    const storageKey = buildAccountStoragePath({
+      environment: this.config.environment,
+      accountId,
+      assetId,
+      mimeType: input.mimeType,
+    });
+
+    await this.repository.insert({
+      id: assetId,
+      businessId: null,
+      storageKey,
+      bucket: provider.bucket,
+      purpose: 'branding',
+      visibility: 'authenticated',
+      mimeType: input.mimeType,
+      fileSize: input.fileSize,
+      checksum: input.checksum ?? null,
+      ownerType: 'avatar',
+      ownerId: accountId,
+      status: 'pending',
+      uploadedBy: accountId,
+    });
+
+    const upload = await provider.createUploadUrl({
+      key: storageKey,
+      mimeType: input.mimeType,
+      expiresInSeconds: this.config.storageUploadUrlTtlSeconds,
+      contentLength: input.fileSize,
+    });
+
+    this.log.info(
+      {
+        event: 'storage.account_upload_intent',
+        accountId,
+        intentId: assetId,
+        mimeType: input.mimeType,
+        fileSize: input.fileSize,
+        storageKey,
+      },
+      'Account avatar upload intent created',
+    );
+
+    return {
+      intentId: assetId,
+      uploadUrl: upload.url,
+      storageKey,
+      headers: upload.headers,
+      expiresAt: upload.expiresAt.toISOString(),
+      maxBytes: policy.maxBytes,
+      mimeType: input.mimeType,
+    };
+  }
+
+  async completeAccountUpload(
+    accountId: string,
+    intentId: string,
+  ): Promise<StorageAsset> {
+    const provider = this.requireProvider();
+
+    const pending = await this.repository.findByIdForAccount(accountId, intentId);
+    if (!pending || pending.status !== 'pending') {
+      throw new StorageNotFoundError(
+        'Upload intent not found or already completed',
+      );
+    }
+
+    let head: Awaited<ReturnType<StorageProvider['head']>>;
+    try {
+      head = await provider.head(pending.storageKey);
+    } catch (error) {
+      this.log.error(
+        {
+          event: 'storage.account_upload_complete_failed',
+          accountId,
+          intentId,
+          storageKey: pending.storageKey,
+          error: error instanceof Error ? error.message : 'unknown',
+        },
+        'Storage HEAD failed during account upload complete',
+      );
+      throw new StorageUploadFailedError(
+        'Failed to verify uploaded object',
+        502,
+      );
+    }
+
+    if (!head.exists) {
+      throw new StorageUploadFailedError(
+        'Uploaded object was not found in storage. Complete the PUT to the upload URL first.',
+      );
+    }
+
+    if (
+      head.contentType &&
+      normalizeMime(head.contentType) !== normalizeMime(pending.mimeType)
+    ) {
+      throw new StorageUploadFailedError(
+        `Uploaded Content-Type (${head.contentType}) does not match declared MIME type (${pending.mimeType})`,
+      );
+    }
+
+    const verifiedSize = head.contentLength ?? pending.fileSize;
+
+    const ready = await this.repository.markReadyForAccount(accountId, intentId, {
+      etag: head.etag ?? null,
+      fileSize: verifiedSize,
+      mimeType: head.contentType
+        ? normalizeMime(head.contentType)
+        : pending.mimeType,
+    });
+
+    if (!ready) {
+      throw new StorageNotFoundError(
+        'Upload intent not found or already completed',
+      );
+    }
+
+    this.log.info(
+      {
+        event: 'storage.account_upload_complete',
+        accountId,
+        intentId,
+        storageKey: pending.storageKey,
+        fileSize: verifiedSize,
+      },
+      'Account avatar upload completed',
+    );
+
+    return toStorageAsset(ready);
+  }
+
+  async getAccountDownloadUrl(
+    accountId: string,
+    assetId: string,
+  ): Promise<DownloadResult> {
+    const provider = this.requireProvider();
+
+    const row = await this.repository.findByIdForAccount(accountId, assetId);
+    if (!row || row.status !== 'ready') {
+      throw new StorageNotFoundError();
+    }
+
+    const download = await provider.createDownloadUrl({
+      key: row.storageKey,
+      expiresInSeconds: this.config.storageDownloadUrlTtlSeconds,
+    });
+
+    return {
+      url: download.url,
+      expiresAt: download.expiresAt.toISOString(),
+      visibility: row.visibility as StorageAsset['visibility'],
+    };
+  }
+
+  async deleteAccountAsset(accountId: string, assetId: string): Promise<void> {
+    const provider = this.requireProvider();
+
+    const deleted = await this.repository.softDeleteForAccount(accountId, assetId);
+    if (!deleted) {
+      throw new StorageNotFoundError();
+    }
+
+    try {
+      await provider.delete(deleted.storageKey);
+    } catch (error) {
+      this.log.warn(
+        {
+          event: 'storage.account_delete_object_failed',
+          accountId,
+          assetId,
+          storageKey: deleted.storageKey,
+          error: error instanceof Error ? error.message : 'unknown',
+        },
+        'Failed to delete account object from storage provider (row soft-deleted)',
+      );
+    }
+
+    this.log.info(
+      {
+        event: 'storage.account_delete',
+        accountId,
+        assetId,
+        storageKey: deleted.storageKey,
+      },
+      'Account storage asset deleted',
+    );
+  }
+
+  /** Resolve a download URL for a ready business asset (caller must authorize). */
+  async resolveBusinessAssetUrl(
+    businessId: string,
+    accountId: string,
+    assetId: string,
+  ): Promise<string> {
+    const result = await this.getDownloadUrl(businessId, accountId, assetId);
+    return result.url;
+  }
+
+  /** Resolve a download URL for a ready account avatar. */
+  async resolveAccountAssetUrl(accountId: string, assetId: string): Promise<string> {
+    const result = await this.getAccountDownloadUrl(accountId, assetId);
+    return result.url;
   }
 
   private buildPublicUrl(storageKey: string): string {

@@ -32,4 +32,6 @@ export type BusinessProfile = {
   language: string;
   logo_url: string | null;
   signature_url: string | null;
+  stamp_url: string | null;
+  upi_qr_url: string | null;
 };
