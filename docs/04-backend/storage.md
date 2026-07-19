@@ -346,7 +346,41 @@ Public (no auth):
 
 Storage paths use `reports`, `sales`, `purchases`, or `payments` purpose segments under `documents/generated_{kind}/{source_id}/`.
 
+## Phase 8 — WhatsApp media
+
+Business modules resolve media URLs via **`NotificationMediaService`** before calling **`NotificationService`**. Notification code never uploads files — it only passes signed URLs to the provider.
+
+### Flow
+
+```
+InvoiceShareService (or future payment/share modules)
+  → NotificationMediaService.resolve*PdfUrl / resolveBrandingLogoUrl
+  → StorageService.getBusinessAssetDownloadUrl (signed URL)
+  → NotificationService.safeSendMedia()
+  → TwilioWhatsAppProvider.sendMedia({ mediaUrl })
+```
+
+### Supported media
+
+| Use case | Resolver | Generated kind |
+|----------|----------|----------------|
+| Invoice / bill / POS / sales return PDF | `resolveSaleDocumentPdfUrl` | `invoice_pdf` |
+| Estimate PDF | `resolveSaleDocumentPdfUrl` | `estimate_pdf` |
+| Delivery challan PDF | `resolveSaleDocumentPdfUrl` | `delivery_challan_pdf` |
+| Payment receipt PDF | `resolvePaymentReceiptPdfUrl` | `receipt_pdf` |
+| Company logo (website + future templates) | `resolveBrandingLogoUrl` | branding asset |
+
+Cache entries are skipped when `source_version` no longer matches the parent entity.
+
+### Public website
+
+`GET /public/invoices/:token` includes:
+
+- `company.logo_url` — signed branding download URL
+- `pdf_download_path` — path to `GET /public/generated-documents/:token/file` (302 to signed object URL)
+
+The marketing website renders the logo and enables **Download PDF** when a cached generated document exists.
+
 ## Future phases
 
-4. WhatsApp `sendMedia` with cached generated PDFs  
 5. Thumbnails, compression, backup archives  

@@ -39,6 +39,7 @@ export type PublicInvoice = {
     phone: string | null;
     email: string | null;
     state_code: string;
+    logo_url: string | null;
   };
   customer: {
     name: string;
@@ -50,6 +51,7 @@ export type PublicInvoice = {
   lines: PublicInvoiceLine[];
   share_url: string;
   expires_at: string | null;
+  pdf_download_path: string | null;
 };
 
 export function usePublicInvoice(token: string | undefined) {

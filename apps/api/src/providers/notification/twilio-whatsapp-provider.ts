@@ -5,6 +5,7 @@ import type {
   NotificationProvider,
   NotificationSendError,
   NotificationSendResult,
+  SendMediaParams,
   SendTemplateParams,
   SendTextParams,
 } from './notification-provider';
@@ -153,6 +154,38 @@ export class TwilioWhatsAppProvider implements NotificationProvider {
         from: this.from,
         to: toResult.address,
         body: params.body,
+      });
+
+      return this.awaitDelivery(message.sid);
+    } catch (error) {
+      return {
+        success: false,
+        error: mapTwilioError(error),
+      };
+    }
+  }
+
+  async sendMedia(params: SendMediaParams): Promise<NotificationSendResult> {
+    const toResult = this.resolveTo(params.to);
+    if (!toResult.ok) return toResult.result;
+
+    if (!params.mediaUrl?.trim()) {
+      return {
+        success: false,
+        error: {
+          code: 'PROVIDER_ERROR',
+          message: 'mediaUrl is required',
+          retryable: false,
+        },
+      };
+    }
+
+    try {
+      const message = await this.client.messages.create({
+        from: this.from,
+        to: toResult.address,
+        body: params.body,
+        mediaUrl: [params.mediaUrl],
       });
 
       return this.awaitDelivery(message.sid);

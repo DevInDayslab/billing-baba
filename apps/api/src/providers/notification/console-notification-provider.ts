@@ -2,6 +2,7 @@ import { maskPhoneE164 } from '../../shared/utils/phone-number';
 import type {
   NotificationProvider,
   NotificationSendResult,
+  SendMediaParams,
   SendTextParams,
 } from './notification-provider';
 
@@ -35,6 +36,24 @@ export class ConsoleNotificationProvider implements NotificationProvider {
     return {
       success: true,
       providerMessageId: `console-${Date.now()}`,
+    };
+  }
+
+  async sendMedia(params: SendMediaParams): Promise<NotificationSendResult> {
+    const masked = maskPhoneE164(params.to);
+    console.log('==============================');
+    console.log(`[${this.name}] OUTBOUND MEDIA`);
+    console.log(`To: ${masked}`);
+    console.log(`Media URL: ${params.mediaUrl}`);
+    if (params.body) {
+      console.log('----');
+      console.log(params.body);
+    }
+    console.log('==============================');
+
+    return {
+      success: true,
+      providerMessageId: `console-media-${Date.now()}`,
     };
   }
 }

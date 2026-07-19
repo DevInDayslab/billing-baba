@@ -12,6 +12,8 @@ export type SaleInvoiceNotificationInput = {
   invoiceUrl: string;
   companyName?: string;
   invoiceId?: string | null;
+  /** HTTPS URL resolved via StorageService for WhatsApp media attachment. */
+  mediaUrl?: string | null;
 };
 
 export function buildSaleInvoiceNotification(

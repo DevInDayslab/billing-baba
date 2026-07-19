@@ -4,6 +4,7 @@ import { AppError } from '../../shared/errors/app-error';
 import { normalizeIndianMobile } from '../../shared/utils/phone-number';
 import { OutstandingRepository } from '../accounting/outstanding.repository';
 import type { NotificationService } from '../notifications/notification.service';
+import { NotificationMediaService } from '../notifications/notification-media.service';
 import { getSharedNotificationService } from '../notifications/notification-service.factory';
 import { InvoiceShareRepository } from './invoice-share.repository';
 import type {
@@ -38,6 +39,7 @@ export class InvoiceShareService {
   private readonly repository: InvoiceShareRepository;
   private readonly outstandingRepository: OutstandingRepository;
   private readonly notificationService: NotificationService;
+  private readonly mediaService: NotificationMediaService;
   private readonly config: AppConfig;
 
   constructor(config: AppConfig, notificationService?: NotificationService) {
@@ -53,6 +55,7 @@ export class InvoiceShareService {
     this.outstandingRepository = new OutstandingRepository(db);
     this.notificationService =
       notificationService ?? getSharedNotificationService(config);
+    this.mediaService = new NotificationMediaService({ config });
     this.config = config;
   }
 
@@ -163,6 +166,15 @@ export class InvoiceShareService {
       paidAmount,
     );
 
+    const [logoUrl, pdfMeta] = await Promise.all([
+      this.mediaService.resolveBrandingLogoUrl(share.businessId),
+      this.mediaService.resolvePublicSaleDocumentPdfMeta(
+        share.businessId,
+        share.invoiceId,
+        document.documentType,
+      ),
+    ]);
+
     return {
       token: share.token,
       invoice: {
@@ -187,6 +199,7 @@ export class InvoiceShareService {
         phone: company.phone,
         email: company.email,
         state_code: company.stateCode,
+        logo_url: logoUrl,
       },
       customer: party
         ? {
@@ -212,6 +225,7 @@ export class InvoiceShareService {
       })),
       share_url: buildInvoiceShareUrl(this.config.websiteUrl, share.token),
       expires_at: share.expiresAt?.toISOString() ?? null,
+      pdf_download_path: pdfMeta?.downloadPath ?? null,
     };
   }
 
@@ -245,6 +259,12 @@ export class InvoiceShareService {
       document.documentNumber ??
       `${document.documentSeries}-${document.id.slice(0, 8)}`;
 
+    const pdfMediaUrl = await this.mediaService.resolveSaleDocumentPdfUrl(
+      businessId,
+      invoiceId,
+      document.documentType,
+    );
+
     const result = await this.notificationService.sendSaleInvoice(
       { phone },
       {
@@ -254,6 +274,7 @@ export class InvoiceShareService {
         invoiceUrl: link.share_url,
         companyName: company.name,
         invoiceId: document.id,
+        mediaUrl: pdfMediaUrl,
       },
       {
         idempotencyKey: `invoice:${invoiceId}`,
@@ -266,6 +287,7 @@ export class InvoiceShareService {
       deduped: result.deduped === true,
       share_url: link.share_url,
       token: link.token,
+      media_attached: Boolean(pdfMediaUrl && result.success),
       error: result.error
         ? { code: result.error.code, message: result.error.message }
         : undefined,

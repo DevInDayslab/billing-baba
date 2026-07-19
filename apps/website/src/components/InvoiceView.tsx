@@ -1,6 +1,7 @@
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import type { PublicInvoice } from '../api/invoices';
+import { getApiV1Url } from '../api/client';
 
 function formatMoney(value: string): string {
   const numeric = Number.parseFloat(value);
@@ -50,6 +51,9 @@ export function InvoiceView({ invoice }: InvoiceViewProps) {
   const invoiceLabel =
     doc.document_number ?? doc.document_series;
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const pdfDownloadUrl = invoice.pdf_download_path
+    ? getApiV1Url(invoice.pdf_download_path.replace(/^\/api\/v1/, ''))
+    : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -74,7 +78,15 @@ export function InvoiceView({ invoice }: InvoiceViewProps) {
       <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm print:shadow-none">
         <header className="border-b border-slate-100 px-6 py-6 sm:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
+            <div className="flex gap-4">
+              {invoice.company.logo_url ? (
+                <img
+                  src={invoice.company.logo_url}
+                  alt={`${invoice.company.name} logo`}
+                  className="h-16 w-16 shrink-0 rounded-xl border border-slate-200 bg-white object-contain p-1"
+                />
+              ) : null}
+              <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
                 Tax Invoice
               </p>
@@ -92,6 +104,7 @@ export function InvoiceView({ invoice }: InvoiceViewProps) {
                 ) : null}
                 {invoice.company.phone ? <p>Phone: {invoice.company.phone}</p> : null}
                 {invoice.company.email ? <p>Email: {invoice.company.email}</p> : null}
+              </div>
               </div>
             </div>
 
@@ -263,9 +276,22 @@ export function InvoiceView({ invoice }: InvoiceViewProps) {
         </button>
         <button
           type="button"
-          disabled
-          title="PDF download coming soon"
-          className="cursor-not-allowed rounded-xl bg-slate-900/40 px-4 py-3 text-sm font-semibold text-white"
+          disabled={!pdfDownloadUrl}
+          onClick={() => {
+            if (pdfDownloadUrl) {
+              window.open(pdfDownloadUrl, '_blank', 'noopener,noreferrer');
+            }
+          }}
+          title={
+            pdfDownloadUrl
+              ? 'Download invoice PDF'
+              : 'PDF not available yet'
+          }
+          className={
+            pdfDownloadUrl
+              ? 'rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800'
+              : 'cursor-not-allowed rounded-xl bg-slate-900/40 px-4 py-3 text-sm font-semibold text-white'
+          }
         >
           Download PDF
         </button>

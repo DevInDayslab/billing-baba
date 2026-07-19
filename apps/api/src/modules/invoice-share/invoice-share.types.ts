@@ -36,6 +36,7 @@ export type PublicInvoiceDto = {
     phone: string | null;
     email: string | null;
     state_code: string;
+    logo_url: string | null;
   };
   customer: {
     name: string;
@@ -47,6 +48,7 @@ export type PublicInvoiceDto = {
   lines: PublicInvoiceLineDto[];
   share_url: string;
   expires_at: string | null;
+  pdf_download_path: string | null;
 };
 
 export type InvoiceShareLinkDto = {
@@ -61,6 +63,7 @@ export type NotifyDispatchDto = {
   deduped?: boolean;
   share_url?: string;
   token?: string;
+  media_attached?: boolean;
   error?: {
     code: string;
     message: string;
