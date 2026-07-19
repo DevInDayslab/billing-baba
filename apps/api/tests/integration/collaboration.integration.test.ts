@@ -7,7 +7,7 @@ import {
   getAuthHeaders,
   jsonAuthHeaders,
   login,
-  uniqueSuffix,
+  uniqueIndianMobile,
 } from '../helpers/app';
 import { canRunDbTests, INTEGRATION_TIMEOUT_MS } from '../helpers/env';
 
@@ -15,8 +15,7 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
   let app: FastifyInstance;
   let ownerToken: string;
   let businessId: string;
-  const suffix = uniqueSuffix();
-  const inviteePhone = `+9199${suffix.padStart(8, '0').slice(-8)}`;
+  const inviteePhone = uniqueIndianMobile('9');
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -99,7 +98,7 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
     async () => {
       const config = loadAppConfig();
       const prefix = `${config.apiPrefix}/collaboration`;
-      const rejectPhone = `+9198${suffix.padStart(8, '1').slice(-8)}`;
+      const rejectPhone = uniqueIndianMobile('8');
 
       const created = await app.inject({
         method: 'POST',
@@ -137,7 +136,7 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
     async () => {
       const config = loadAppConfig();
       const prefix = `${config.apiPrefix}/collaboration`;
-      const reinvitePhone = `+9197${suffix.padStart(8, '2').slice(-8)}`;
+      const reinvitePhone = uniqueIndianMobile('7');
 
       const created = await app.inject({
         method: 'POST',
@@ -178,7 +177,7 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
     async () => {
       const config = loadAppConfig();
       const prefix = `${config.apiPrefix}/collaboration`;
-      const cancelPhone = `+9196${suffix.padStart(8, '3').slice(-8)}`;
+      const cancelPhone = uniqueIndianMobile('6');
 
       const created = await app.inject({
         method: 'POST',
@@ -228,7 +227,7 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
     async () => {
       const config = loadAppConfig();
       const prefix = `${config.apiPrefix}/collaboration`;
-      const memberPhone = `+9194${suffix.padStart(8, '5').slice(-8)}`;
+      const memberPhone = uniqueIndianMobile('9');
 
       const created = await app.inject({
         method: 'POST',
