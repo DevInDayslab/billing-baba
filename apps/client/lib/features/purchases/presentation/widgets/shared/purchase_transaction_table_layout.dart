@@ -39,14 +39,14 @@ const purchaseTransactionActionsColWidth2 = 97.0;
 
 /// Expenses split-panel layout — compact fixed columns so Party Name gets room.
 const expenseTransactionDateColWidth = 150.0;
-const expenseTransactionInvoiceColWidth = 115.0;
-const expenseTransactionPartyColMinWidth = 160.0;
+const expenseTransactionInvoiceColWidth = 130.0;
+const expenseTransactionPartyColMinWidth = 180.0;
 const expenseTransactionPartyColFlex = 2;
-const expenseTransactionPaymentColWidth = 105.0;
-const expenseTransactionAmountColWidth = 92.0;
-const expenseTransactionBalanceColWidth = 92.0;
-const expenseTransactionDueDateColWidth = 95.0;
-const expenseTransactionStatusColWidth = 88.0;
+const expenseTransactionPaymentColWidth = 140.0;
+const expenseTransactionAmountColWidth = 105.0;
+const expenseTransactionBalanceColWidth = 105.0;
+const expenseTransactionDueDateColWidth = 115.0;
+const expenseTransactionStatusColWidth = 100.0;
 
 const double expenseTransactionStandardMinTableWidth =
     expenseTransactionDateColWidth +

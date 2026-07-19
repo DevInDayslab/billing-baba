@@ -222,13 +222,22 @@ class _AllTransactionsRow extends StatelessWidget {
           ReportAlignedCell.fixed(
             80,
             alignment: Alignment.centerRight,
-            child: Text(formatReportCurrencyCompact(row.total)),
+            child: Text(
+              formatReportCurrencyCompact(row.total),
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
           ),
           ReportAlignedCell.fixed(
             90,
             alignment: Alignment.centerRight,
             child: Text(
               row.received > 0 ? formatReportCurrencyCompact(row.received) : '',
+              style: row.received > 0
+                  ? const TextStyle(
+                      color: Color(0xFF2E7D32),
+                      fontWeight: FontWeight.w500,
+                    )
+                  : null,
             ),
           ),
           ReportAlignedCell.fixed(
@@ -236,6 +245,12 @@ class _AllTransactionsRow extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Text(
               row.balance > 0 ? formatReportCurrencyCompact(row.balance) : '',
+              style: row.balance > 0
+                  ? const TextStyle(
+                      color: Color(0xFFC62828),
+                      fontWeight: FontWeight.w500,
+                    )
+                  : null,
             ),
           ),
           ReportAlignedCell.fixed(

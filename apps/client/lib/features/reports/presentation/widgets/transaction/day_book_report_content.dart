@@ -266,6 +266,12 @@ class _DayBookRow extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Text(
               row.moneyIn > 0 ? formatReportCurrencyCompact(row.moneyIn) : '',
+              style: row.moneyIn > 0
+                  ? const TextStyle(
+                      color: Color(0xFF2E7D32),
+                      fontWeight: FontWeight.w500,
+                    )
+                  : null,
             ),
           ),
           ReportAlignedCell.fixed(
@@ -273,6 +279,12 @@ class _DayBookRow extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: Text(
               row.moneyOut > 0 ? formatReportCurrencyCompact(row.moneyOut) : '',
+              style: row.moneyOut > 0
+                  ? const TextStyle(
+                      color: Color(0xFFC62828),
+                      fontWeight: FontWeight.w500,
+                    )
+                  : null,
             ),
           ),
           ReportAlignedCell.fixed(

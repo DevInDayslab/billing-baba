@@ -237,7 +237,15 @@ class SaleInvoiceTableRows {
         _DataCell(child: Text(invoice.paymentType)),
         _DataCell(
           alignment: Alignment.centerRight,
-          child: Text(_currencyFormat.format(invoice.amount)),
+          child: Text(
+            _currencyFormat.format(invoice.amount),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF2E7D32), // debit = green (money out from party)
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
         ),
         _DataCell(
           alignment: Alignment.centerRight,
@@ -245,7 +253,21 @@ class SaleInvoiceTableRows {
         ),
         _DataCell(
           alignment: Alignment.centerRight,
-          child: Text(_currencyFormat.format(invoice.balance)),
+          child: Text(
+            _currencyFormat.format(invoice.balance),
+            style: invoice.balance > 0
+                ? const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFFC62828), // outstanding balance = red
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  )
+                : const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+          ),
         ),
         _DataCell(
           child: Text(

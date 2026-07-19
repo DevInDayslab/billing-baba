@@ -6,7 +6,7 @@ import 'package:billing_baba/core/widgets/close_form_dialog.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
-import 'package:billing_baba/features/pricing/providers/item_api_tier_prices_provider.dart';
+import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/print/presentation/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/add_sale_footer.dart';
@@ -77,16 +77,8 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Sale item picker needs the full catalog, not an inventory-tab search subset.
-      unawaited(
-        ref.read(inventoryItemsProvider.notifier).refresh().then((_) async {
-          final items = ref.read(inventoryItemsProvider).value ?? [];
-          if (items.isEmpty) return;
-          await ref
-              .read(itemApiTierPricesProvider.notifier)
-              .preloadForItemIds(items.map((item) => item.id));
-        }),
-      );
+      // Warm the inventory catalog so the item picker opens instantly.
+      unawaited(ref.read(inventoryItemsProvider.notifier).refresh());
     });
     if (widget.invoiceId != null) {
       WidgetsBinding.instance.addPostFrameCallback(
@@ -585,6 +577,20 @@ class _FormFields extends ConsumerStatefulWidget {
 }
 
 class _FormFieldsState extends ConsumerState<_FormFields> {
+  @override
+  void initState() {
+    super.initState();
+    // Preload party list as soon as the form mounts so data is ready
+    // before the user taps the party field.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final partiesAsync = ref.read(partyPickerListProvider);
+      if (!partiesAsync.hasValue || (partiesAsync.value?.isEmpty ?? true)) {
+        ref.read(partyPickerListProvider.future).ignore();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final form = ref.watch(

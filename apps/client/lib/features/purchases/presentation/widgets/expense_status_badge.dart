@@ -2,9 +2,14 @@ import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:flutter/material.dart';
 
 class ExpenseStatusBadge extends StatelessWidget {
-  const ExpenseStatusBadge({required this.status, super.key});
+  const ExpenseStatusBadge({
+    required this.status,
+    this.plain = false,
+    super.key,
+  });
 
   final ExpenseStatus status;
+  final bool plain;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +30,17 @@ class ExpenseStatusBadge extends StatelessWidget {
         const Color(0xFFE65100),
       ),
     };
+
+    if (plain) {
+      return Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: textColor,
+        ),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

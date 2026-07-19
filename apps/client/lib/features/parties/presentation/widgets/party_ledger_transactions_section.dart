@@ -1,12 +1,8 @@
-import 'dart:async' show unawaited;
-
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
+import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_list_tile.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_list_table.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
@@ -22,6 +18,17 @@ import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
+const _zebraRowBg = Color(0xFFFAFAFA);
+const double _cellHorizontalPadding = AppSpacing.sm;
+
+const _typeColWidth = 132.0;
+const _referenceColWidth = 128.0;
+const _dateColWidth = 148.0;
+const _totalColWidth = 100.0;
+const _balanceColWidth = 160.0;
+const _dueDateColWidth = 108.0;
+const _statusColWidth = 128.0;
+const _actionsColWidth = 72.0;
 
 enum PartyTransactionSortColumn {
   type,
@@ -138,14 +145,6 @@ class _PartyLedgerTransactionsSectionState
       _tableState = _tableState.toggleSort(column);
     });
   }
-
-  bool _isSorted(PartyTransactionSortColumn column) =>
-      _tableState.sortColumn == column &&
-      _tableState.sortDirection != PartyTransactionSortDirection.none;
-
-  bool _sortAscending(PartyTransactionSortColumn column) =>
-      _tableState.sortColumn == column &&
-      _tableState.sortDirection == PartyTransactionSortDirection.ascending;
 
   double _transactionTotal(PartyLedgerTransactionModel transaction) =>
       transaction.total > 0
@@ -352,31 +351,34 @@ class _PartyLedgerTransactionsSectionState
     }
   }
 
-  List<InventoryListColumn> _buildColumns(
+  List<ResizableDataColumn> _buildColumns(
     List<PartyLedgerTransactionModel> sourceTransactions,
   ) {
-    InventoryListColumn column({
+    ResizableDataColumn column({
       required String label,
-      required int flex,
+      required double initialWidth,
       required PartyTransactionSortColumn sortColumn,
       required ColumnFilter filterConfig,
       required Object? initialFilter,
       required ValueChanged<FilterResult?> onApply,
-      bool alignEnd = false,
+      double minWidth = 72,
+      double maxWidth = 420,
     }) {
-      return InventoryListColumn(
-        label: label,
-        flex: flex,
-        alignEnd: alignEnd,
-        sortable: true,
-        isSorted: _isSorted(sortColumn),
-        sortAscending: _sortAscending(sortColumn),
-        onSort: () => _toggleSort(sortColumn),
-        trailing: TableColumnFilterTrigger(
-          config: filterConfig,
-          iconOnly: true,
-          initialValue: initialFilter,
-          onApply: onApply,
+      return ResizableDataColumn(
+        initialWidth: initialWidth,
+        minWidth: minWidth,
+        maxWidth: maxWidth,
+        header: _PartyLedgerColumnHeader(
+          label: label,
+          sortColumn: sortColumn,
+          tableState: _tableState,
+          onSort: () => _toggleSort(sortColumn),
+          filter: TableColumnFilterTrigger(
+            config: filterConfig,
+            iconOnly: true,
+            initialValue: initialFilter,
+            onApply: onApply,
+          ),
         ),
       );
     }
@@ -386,8 +388,8 @@ class _PartyLedgerTransactionsSectionState
 
     return [
       column(
-        label: 'TYPE',
-        flex: 2,
+        label: 'Type',
+        initialWidth: _typeColWidth,
         sortColumn: PartyTransactionSortColumn.type,
         filterConfig: ColumnFilter(
           id: 'type',
@@ -404,8 +406,8 @@ class _PartyLedgerTransactionsSectionState
         }),
       ),
       column(
-        label: 'REFERENCE NUMBER',
-        flex: 2,
+        label: 'Reference Number',
+        initialWidth: _referenceColWidth,
         sortColumn: PartyTransactionSortColumn.reference,
         filterConfig: const ColumnFilter(
           id: 'reference',
@@ -422,8 +424,8 @@ class _PartyLedgerTransactionsSectionState
         }),
       ),
       column(
-        label: 'DATE',
-        flex: 2,
+        label: 'Date',
+        initialWidth: _dateColWidth,
         sortColumn: PartyTransactionSortColumn.date,
         filterConfig: const ColumnFilter(
           id: 'date',
@@ -439,10 +441,9 @@ class _PartyLedgerTransactionsSectionState
         }),
       ),
       column(
-        label: 'TOTAL',
-        flex: 2,
+        label: 'Total',
+        initialWidth: _totalColWidth,
         sortColumn: PartyTransactionSortColumn.total,
-        alignEnd: true,
         filterConfig: const ColumnFilter(
           id: 'total',
           title: 'Total',
@@ -457,10 +458,10 @@ class _PartyLedgerTransactionsSectionState
         }),
       ),
       column(
-        label: 'BALANCE / OUTSTANDING',
-        flex: 2,
+        label: 'Balance / Outstanding',
+        initialWidth: _balanceColWidth,
+        minWidth: 120,
         sortColumn: PartyTransactionSortColumn.balance,
-        alignEnd: true,
         filterConfig: const ColumnFilter(
           id: 'balance',
           title: 'Balance / Outstanding',
@@ -475,8 +476,8 @@ class _PartyLedgerTransactionsSectionState
         }),
       ),
       column(
-        label: 'DUE DATE',
-        flex: 2,
+        label: 'Due Date',
+        initialWidth: _dueDateColWidth,
         sortColumn: PartyTransactionSortColumn.dueDate,
         filterConfig: const ColumnFilter(
           id: 'due_date',
@@ -492,8 +493,8 @@ class _PartyLedgerTransactionsSectionState
         }),
       ),
       column(
-        label: 'STATUS',
-        flex: 2,
+        label: 'Status',
+        initialWidth: _statusColWidth,
         sortColumn: PartyTransactionSortColumn.status,
         filterConfig: ColumnFilter(
           id: 'status',
@@ -509,10 +510,83 @@ class _PartyLedgerTransactionsSectionState
           );
         }),
       ),
-      const InventoryListColumn(
-        label: 'ACTIONS',
+      const ResizableDataColumn(
+        initialWidth: _actionsColWidth,
+        minWidth: _actionsColWidth,
+        maxWidth: _actionsColWidth,
+        resizable: false,
+        header: _HeaderCell(label: 'Actions'),
       ),
     ];
+  }
+
+  List<ResizableDataRow> _buildRows(
+    List<PartyLedgerTransactionModel> transactions,
+  ) {
+    return [
+      for (var i = 0; i < transactions.length; i++)
+        _buildRow(transactions[i], i),
+    ];
+  }
+
+  ResizableDataRow _buildRow(
+    PartyLedgerTransactionModel transaction,
+    int index,
+  ) {
+    final total = _transactionTotal(transaction);
+    final status = _transactionStatus(transaction);
+
+    return ResizableDataRow(
+      backgroundColor: index.isOdd ? _zebraRowBg : Colors.transparent,
+      onTap: () => navigateToPartyLedgerTransaction(context, transaction),
+      cells: [
+        _DataCell(child: Text(transaction.type)),
+        _DataCell(
+          child: Text(
+            PartyModel.displayOrDash(transaction.referenceNumber),
+          ),
+        ),
+        _DataCell(
+          child: Text(
+            DateTimeUtils.formatDisplayDateTime(transaction.createdAt),
+          ),
+        ),
+        _DataCell(
+          alignment: Alignment.centerRight,
+          child: Text(
+            _currencyFormat.format(total),
+            style: TextStyle(
+              color: transaction.credit > 0
+                  ? const Color(0xFFC62828)
+                  : transaction.debit > 0
+                      ? const Color(0xFF2E7D32)
+                      : null,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+        _DataCell(
+          alignment: Alignment.centerRight,
+          child: Text(
+            _currencyFormat.format(_transactionBalance(transaction)),
+            style: const TextStyle(
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+        _DataCell(child: Text(_dueDateLabel(transaction))),
+        _DataCell(
+          child: _PartyTransactionStatusChip(status: status),
+        ),
+        _DataCell(
+          child: Center(
+            child: PartyLedgerTransactionActionsMenu(
+              transaction: transaction,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -566,84 +640,236 @@ class _PartyLedgerTransactionsSectionState
         ),
         const Divider(height: 1, color: _cardBorder),
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: InventoryItemListTable<PartyLedgerTransactionModel>(
-              includeTrailingSpace: false,
-              columns: _buildColumns(sourceTransactions),
-              items: filteredTransactions,
-              itemsAsync: widget.transactionsAsync,
-              onRefresh: widget.onRefresh,
-              emptyMessage: isFiltered
-                  ? 'No matching transactions'
-                  : 'No transactions yet',
-              itemBuilder: (context, transaction, index) {
-                final total = _transactionTotal(transaction);
-                final status = _transactionStatus(transaction);
-
-                return InventoryDetailListTile(
-                  index: index,
-                  onTap: () => navigateToPartyLedgerTransaction(
-                    context,
-                    transaction,
+          child: widget.transactionsAsync.when(
+            skipLoadingOnReload: true,
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Could not load transactions: $error',
+                    style: const TextStyle(color: AppColors.error),
+                    textAlign: TextAlign.center,
                   ),
-                  onDoubleTapDown: (details) {
-                    unawaited(
-                      PartyLedgerTransactionActionsMenu.showAtPosition(
-                        context: context,
-                        ref: ref,
-                        transaction: transaction,
-                        globalPosition: details.globalPosition,
-                      ),
-                    );
-                  },
-                  flexValues: const [2, 2, 2, 2, 2, 2, 2, 1],
-                  alignEnds: const [
-                    false,
-                    false,
-                    false,
-                    true,
-                    true,
-                    false,
-                    false,
-                    false,
-                  ],
-                  cells: [
-                    InventoryListValueText(value: transaction.type),
-                    InventoryListValueText(
-                      value: PartyModel.displayOrDash(
-                        transaction.referenceNumber,
-                      ),
-                    ),
-                    InventoryListValueText(
-                      value: DateTimeUtils.formatDisplayDateTime(
-                        transaction.createdAt,
-                      ),
-                    ),
-                    InventoryListValueText(
-                      value: _currencyFormat.format(total),
-                      textAlign: TextAlign.right,
-                    ),
-                    InventoryListValueText(
-                      value: _currencyFormat.format(
-                        _transactionBalance(transaction),
-                      ),
-                      textAlign: TextAlign.right,
-                    ),
-                    InventoryListValueText(value: _dueDateLabel(transaction)),
-                    _PartyTransactionStatusChip(status: status),
-                    Center(
-                      child: PartyLedgerTransactionActionsMenu(
-                        transaction: transaction,
-                      ),
-                    ),
-                  ],
-                );
-              },
+                  const SizedBox(height: AppSpacing.sm),
+                  OutlinedButton(
+                    onPressed: widget.onRefresh,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
+            data: (_) {
+              final columns = _buildColumns(sourceTransactions);
+              final rows = _buildRows(filteredTransactions);
+
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  final table = SizedBox(
+                    width: constraints.maxWidth,
+                    child: ResizableDataTable(
+                      columns: columns,
+                      rows: filteredTransactions.isEmpty ? const [] : rows,
+                    ),
+                  );
+
+                  if (filteredTransactions.isEmpty) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        table,
+                        Expanded(
+                          child: _EmptyTransactionsState(
+                            isFiltered: isFiltered,
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return RefreshIndicator(
+                    onRefresh: widget.onRefresh,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: table,
+                    ),
+                  );
+                },
+              );
+            },
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PartyLedgerColumnHeader extends StatelessWidget {
+  const _PartyLedgerColumnHeader({
+    required this.label,
+    required this.sortColumn,
+    required this.tableState,
+    required this.onSort,
+    this.filter,
+  });
+
+  final String label;
+  final PartyTransactionSortColumn sortColumn;
+  final PartyTransactionTableState tableState;
+  final VoidCallback onSort;
+  final Widget? filter;
+
+  static const _headerStyle = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.3,
+    color: AppColors.textSecondary,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final isSorted =
+        tableState.sortColumn == sortColumn &&
+        tableState.sortDirection != PartyTransactionSortDirection.none;
+
+    final sortIcon = switch (tableState.sortDirection) {
+      PartyTransactionSortDirection.ascending => Icons.arrow_upward,
+      PartyTransactionSortDirection.descending => Icons.arrow_downward,
+      _ => Icons.arrow_upward,
+    };
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              onTap: onSort,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      label.toUpperCase(),
+                      style: _headerStyle,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                  if (isSorted) ...[
+                    const SizedBox(width: 2),
+                    Icon(
+                      sortIcon,
+                      size: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          ?filter,
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderCell extends StatelessWidget {
+  const _HeaderCell({required this.label});
+
+  final String label;
+
+  static const _headerStyle = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.3,
+    color: AppColors.textSecondary,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: _cellHorizontalPadding,
+        vertical: AppSpacing.sm,
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: _headerStyle,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      ),
+    );
+  }
+}
+
+class _DataCell extends StatelessWidget {
+  const _DataCell({
+    required this.child,
+    this.alignment = Alignment.centerLeft,
+  });
+
+  final Widget child;
+  final Alignment alignment;
+
+  static const _dataStyle = TextStyle(
+    fontSize: 13,
+    color: AppColors.textPrimary,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTextStyle(
+      style: _dataStyle,
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: _cellHorizontalPadding,
+          vertical: AppSpacing.sm,
+        ),
+        child: Align(alignment: alignment, child: child),
+      ),
+    );
+  }
+}
+
+class _EmptyTransactionsState extends StatelessWidget {
+  const _EmptyTransactionsState({required this.isFiltered});
+
+  final bool isFiltered;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 36,
+              color: AppColors.textSecondary.withValues(alpha: 0.45),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              isFiltered ? 'No matching transactions' : 'No transactions yet',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -656,7 +882,7 @@ class _PartyTransactionStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (status == '—') {
-      return InventoryListValueText(value: status);
+      return Text(status);
     }
 
     final normalized = status.trim().toLowerCase();

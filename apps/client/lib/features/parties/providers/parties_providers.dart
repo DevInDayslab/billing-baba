@@ -6,7 +6,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 export 'parties_selection_providers.dart';
 
 /// Full party list for searchable pickers — ignores Parties page filters/search.
+/// keepAlive so the fetched list survives navigation and the party picker
+/// is instant on every open after the first load.
 final partyPickerListProvider = FutureProvider<List<PartyModel>>((ref) async {
+  ref.keepAlive();
+
+  // Reuse partyListProvider data when already loaded (also keepAlive),
+  // avoiding a duplicate API call.
+  final cachedParties = ref.read(partyListProvider).asData?.value;
+  if (cachedParties != null && cachedParties.isNotEmpty) {
+    return cachedParties;
+  }
+
+  // First load or cache miss — fetch fresh from API.
   final service = await ref.watch(partyServiceProvider.future);
   return service.fetchParties();
 });

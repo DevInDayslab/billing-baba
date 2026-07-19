@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_order_model.dart';
@@ -14,17 +15,8 @@ import 'package:intl/intl.dart';
 
 const _noColWidth = 110.0;
 const _typeColWidth = 106.0;
-
-const double _minTableWidth =
-    _noColWidth +
-    purchaseTransactionDateOnlyColWidth +
-    purchaseTransactionPartyColMinWidth +
-    purchaseTransactionDueDateColWidth +
-    purchaseTransactionAmountColWidth +
-    purchaseTransactionBalanceColWidth +
-    _typeColWidth +
-    purchaseTransactionStatusColWidth +
-    purchaseTransactionActionsColWidth3;
+const _zebraRowBg = Color(0xFFFAFAFA);
+const double _cellHorizontalPadding = AppSpacing.sm;
 
 class PurchaseOrderTable extends ConsumerWidget {
   const PurchaseOrderTable({super.key});
@@ -107,42 +99,24 @@ class PurchaseOrderTable extends ConsumerWidget {
             ),
           ),
           const Divider(height: 1, color: purchaseTransactionTableCardBorder),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final tableWidth = constraints.maxWidth.clamp(
-                _minTableWidth,
-                double.infinity,
-              );
-
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  width: tableWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const _TableHeaderRow(),
-                      if (paginated.items.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(AppSpacing.xl),
-                          child: Center(
-                            child: Text(
-                              'No purchase orders found',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                        )
-                      else
-                        for (final order in paginated.items)
-                          _buildRow(context, ref, order),
-                    ],
+          if (paginated.items.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.xl),
+              child: Center(
+                child: Text(
+                  'No purchase orders found',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            )
+          else
+            _PurchaseOrderTransactionsTable(
+              items: paginated.items,
+              onBuildRow: (order, index) =>
+                  _buildRow(context, ref, order, index),
+            ),
           if (paginated.totalPages > 1) ...[
             const Divider(height: 1, color: purchaseTransactionTableCardBorder),
             _PaginationRow(
@@ -155,64 +129,48 @@ class PurchaseOrderTable extends ConsumerWidget {
     );
   }
 
-  Widget _buildRow(
+  ResizableDataRow _buildRow(
     BuildContext context,
     WidgetRef ref,
     PurchaseOrderModel order,
+    int index,
   ) {
-    return PurchaseTransactionTableDataRow(
-      children: [
-        PurchaseTransactionTableCell(
-          width: _noColWidth,
-          child: Text(order.orderNo),
-        ),
-        PurchaseTransactionTableCell(
-          width: purchaseTransactionDateOnlyColWidth,
-          child: Text(_dateFormat.format(order.date)),
-        ),
-        Expanded(
-          child: PurchaseTransactionTableCell(
-            child: Text(
-              order.partyName,
-              overflow: TextOverflow.ellipsis,
-            ),
+    return ResizableDataRow(
+      backgroundColor: index.isOdd ? _zebraRowBg : Colors.transparent,
+      cells: [
+        _DataCell(child: Text(order.orderNo)),
+        _DataCell(child: Text(_dateFormat.format(order.date))),
+        _DataCell(
+          child: Text(
+            order.partyName,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
-        PurchaseTransactionTableCell(
-          width: purchaseTransactionDueDateColWidth,
-          child: Text(_dateFormat.format(order.dueDate)),
-        ),
-        PurchaseTransactionTableCell(
-          width: purchaseTransactionAmountColWidth,
+        _DataCell(child: Text(_dateFormat.format(order.dueDate))),
+        _DataCell(
           alignment: Alignment.centerRight,
           child: Text(
             _currencyFormat.format(order.amount),
             style: purchaseTransactionAmountTextStyle,
           ),
         ),
-        PurchaseTransactionTableCell(
-          width: purchaseTransactionBalanceColWidth,
+        _DataCell(
           alignment: Alignment.centerRight,
           child: Text(
             _currencyFormat.format(order.balanceDue),
             style: purchaseTransactionAmountTextStyle,
           ),
         ),
-        PurchaseTransactionTableCell(
-          width: _typeColWidth,
+        _DataCell(
           child: Text(
             order.type,
             overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
-        PurchaseTransactionTableCell(
-          width: purchaseTransactionStatusColWidth,
-          child: PurchaseOrderStatusBadge(status: order.status),
-        ),
-        PurchaseTransactionTableCell(
-          width: purchaseTransactionActionsColWidth3,
-          showDivider: false,
-          alignment: Alignment.center,
+        _DataCell(child: PurchaseOrderStatusBadge(status: order.status)),
+        _DataCell(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -265,11 +223,45 @@ class PurchaseOrderTable extends ConsumerWidget {
   }
 }
 
-class _TableHeaderRow extends ConsumerWidget {
-  const _TableHeaderRow();
+class _PurchaseOrderTransactionsTable extends ConsumerWidget {
+  const _PurchaseOrderTransactionsTable({
+    required this.items,
+    required this.onBuildRow,
+  });
+
+  final List<PurchaseOrderModel> items;
+  final ResizableDataRow Function(PurchaseOrderModel order, int index) onBuildRow;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final columns = _PurchaseOrderTableColumns.build(ref: ref);
+    final rows = [
+      for (var i = 0; i < items.length; i++) onBuildRow(items[i], i),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: SizedBox(
+            width: constraints.maxWidth,
+            child: ResizableDataTable(
+              columns: columns,
+              rows: rows,
+              headerBackgroundColor: purchaseTransactionTableHeaderBg,
+              rowBorderColor: purchaseTransactionTableRowBorder,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PurchaseOrderTableColumns {
+  const _PurchaseOrderTableColumns._();
+
+  static List<ResizableDataColumn> build({required WidgetRef ref}) {
     final filters = ref.watch(purchaseOrderFiltersProvider);
     final filtersNotifier = ref.read(purchaseOrderFiltersProvider.notifier);
     final partyOptions = ref.watch(purchaseOrderPartyOptionsProvider);
@@ -293,157 +285,141 @@ class _TableHeaderRow extends ConsumerWidget {
       onClearDueDateRange: filtersNotifier.clearDueDateRange,
     );
 
-    return PurchaseTransactionTableHeaderRow(
-      children: [
-        PurchaseTransactionTableCell(
-          width: _noColWidth,
-          child: purchaseColumnFilterCell(
-            label: 'No.',
-            kind: PurchaseColumnFilterKind.documentNo,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.documentNo,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: purchaseOrderStatusOptions,
-            selectedStatus: filters.selectedStatus,
-            documentNoHint: 'Search no.',
-          ),
+    Widget filterHeader(
+      String label,
+      PurchaseColumnFilterKind kind, {
+      Alignment alignment = Alignment.centerLeft,
+      String documentNoHint = 'Search',
+    }) {
+      return purchaseColumnFilterCell(
+        label: label,
+        kind: kind,
+        headerStyle: purchaseTransactionTableHeaderStyle,
+        isActive: purchaseColumnFilterIsActive(
+          kind,
+          columns,
+          selectedStatus: filters.selectedStatus,
         ),
-        PurchaseTransactionTableCell(
-          width: purchaseTransactionDateOnlyColWidth,
-          child: purchaseColumnFilterCell(
-            label: 'Date',
-            kind: PurchaseColumnFilterKind.date,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.date,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: purchaseOrderStatusOptions,
-            selectedStatus: filters.selectedStatus,
-          ),
+        columns: columns,
+        actions: actions,
+        partyOptions: partyOptions,
+        statusOptions: purchaseOrderStatusOptions,
+        selectedStatus: filters.selectedStatus,
+        alignment: alignment,
+        documentNoHint: documentNoHint,
+        typeOptions: typeOptions,
+      );
+    }
+
+    return [
+      ResizableDataColumn(
+        initialWidth: _noColWidth,
+        minWidth: 80,
+        header: filterHeader(
+          'No.',
+          PurchaseColumnFilterKind.documentNo,
+          documentNoHint: 'Search no.',
         ),
-        Expanded(
-          child: PurchaseTransactionTableCell(
-            child: purchaseColumnFilterCell(
-              label: 'Party',
-              kind: PurchaseColumnFilterKind.partyName,
-              headerStyle: purchaseTransactionTableHeaderStyle,
-              isActive: purchaseColumnFilterIsActive(
-                PurchaseColumnFilterKind.partyName,
-                columns,
-              ),
-              columns: columns,
-              actions: actions,
-              partyOptions: partyOptions,
-              statusOptions: purchaseOrderStatusOptions,
-              selectedStatus: filters.selectedStatus,
-            ),
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: purchaseTransactionDueDateColWidth,
-          child: purchaseColumnFilterCell(
-            label: 'Due Date',
-            kind: PurchaseColumnFilterKind.dueDate,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.dueDate,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: purchaseOrderStatusOptions,
-            selectedStatus: filters.selectedStatus,
-          ),
-        ),
-        PurchaseTransactionTableCell(
-          width: purchaseTransactionAmountColWidth,
+      ),
+      ResizableDataColumn(
+        initialWidth: purchaseTransactionDateOnlyColWidth,
+        minWidth: 96,
+        header: filterHeader('Date', PurchaseColumnFilterKind.date),
+      ),
+      ResizableDataColumn(
+        initialWidth: purchaseTransactionPartyColMinWidth,
+        minWidth: 120,
+        maxWidth: 420,
+        header: filterHeader('Party', PurchaseColumnFilterKind.partyName),
+      ),
+      ResizableDataColumn(
+        initialWidth: purchaseTransactionDueDateColWidth,
+        minWidth: 96,
+        header: filterHeader('Due Date', PurchaseColumnFilterKind.dueDate),
+      ),
+      ResizableDataColumn(
+        initialWidth: purchaseTransactionAmountColWidth,
+        minWidth: 80,
+        header: filterHeader(
+          'Amount',
+          PurchaseColumnFilterKind.amount,
           alignment: Alignment.centerRight,
-          child: purchaseColumnFilterCell(
-            label: 'Amount',
-            kind: PurchaseColumnFilterKind.amount,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.amount,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: purchaseOrderStatusOptions,
-            selectedStatus: filters.selectedStatus,
-            alignment: Alignment.centerRight,
-          ),
         ),
-        PurchaseTransactionTableCell(
-          width: purchaseTransactionBalanceColWidth,
+      ),
+      ResizableDataColumn(
+        initialWidth: purchaseTransactionBalanceColWidth,
+        minWidth: 80,
+        header: filterHeader(
+          'Balance',
+          PurchaseColumnFilterKind.balanceDue,
           alignment: Alignment.centerRight,
-          child: purchaseColumnFilterCell(
-            label: 'Balance',
-            kind: PurchaseColumnFilterKind.balanceDue,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.balanceDue,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: purchaseOrderStatusOptions,
-            selectedStatus: filters.selectedStatus,
-            alignment: Alignment.centerRight,
-          ),
         ),
-        PurchaseTransactionTableCell(
-          width: _typeColWidth,
-          child: purchaseColumnFilterCell(
-            label: 'Type',
-            kind: PurchaseColumnFilterKind.typeName,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnFilterIsActive(
-              PurchaseColumnFilterKind.typeName,
-              columns,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: purchaseOrderStatusOptions,
-            selectedStatus: filters.selectedStatus,
-            typeOptions: typeOptions,
-          ),
+      ),
+      ResizableDataColumn(
+        initialWidth: _typeColWidth,
+        minWidth: 88,
+        header: filterHeader('Type', PurchaseColumnFilterKind.typeName),
+      ),
+      ResizableDataColumn(
+        initialWidth: purchaseTransactionStatusColWidth,
+        minWidth: 88,
+        header: filterHeader('Status', PurchaseColumnFilterKind.status),
+      ),
+      const ResizableDataColumn(
+        initialWidth: purchaseTransactionActionsColWidth3,
+        minWidth: purchaseTransactionActionsColWidth3,
+        maxWidth: purchaseTransactionActionsColWidth3,
+        resizable: false,
+        header: _HeaderCell(label: 'Actions'),
+      ),
+    ];
+  }
+}
+
+class _HeaderCell extends StatelessWidget {
+  const _HeaderCell({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: _cellHorizontalPadding,
+        vertical: AppSpacing.sm,
+      ),
+      child: Text(
+        label,
+        style: purchaseTransactionTableHeaderStyle,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
+      ),
+    );
+  }
+}
+
+class _DataCell extends StatelessWidget {
+  const _DataCell({
+    required this.child,
+    this.alignment = Alignment.centerLeft,
+  });
+
+  final Widget child;
+  final Alignment alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTextStyle(
+      style: purchaseTransactionTableDataStyle,
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: _cellHorizontalPadding,
+          vertical: AppSpacing.sm,
         ),
-        PurchaseTransactionTableCell(
-          width: purchaseTransactionStatusColWidth,
-          child: purchaseColumnFilterCell(
-            label: 'Status',
-            kind: PurchaseColumnFilterKind.status,
-            headerStyle: purchaseTransactionTableHeaderStyle,
-            isActive: purchaseColumnStatusFilterIsActive(
-              filters.selectedStatus,
-            ),
-            columns: columns,
-            actions: actions,
-            partyOptions: partyOptions,
-            statusOptions: purchaseOrderStatusOptions,
-            selectedStatus: filters.selectedStatus,
-          ),
-        ),
-        const PurchaseTransactionTableCell(
-          width: purchaseTransactionActionsColWidth3,
-          showDivider: false,
-          alignment: Alignment.center,
-          child: Text('Actions', style: purchaseTransactionTableHeaderStyle),
-        ),
-      ],
+        child: Align(alignment: alignment, child: child),
+      ),
     );
   }
 }

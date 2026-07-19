@@ -225,12 +225,24 @@ class _PurchaseRow extends StatelessWidget {
           ReportAlignedCell.fixed(
             100,
             alignment: Alignment.centerRight,
-            child: Text(formatReportCurrencyCompact(purchase.amount)),
+            child: Text(
+              formatReportCurrencyCompact(purchase.amount),
+              style: const TextStyle(
+                color: Color(0xFFC62828),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           ReportAlignedCell.fixed(
             100,
             alignment: Alignment.centerRight,
-            child: Text(formatReportCurrencyCompact(purchase.balance)),
+            child: Text(
+              formatReportCurrencyCompact(purchase.balance),
+              style: TextStyle(
+                color: purchase.balance > 0 ? const Color(0xFFC62828) : null,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),

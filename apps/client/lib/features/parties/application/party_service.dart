@@ -400,11 +400,58 @@ class PartyService {
     PartyListFilter filter = PartyListFilter.all,
     PartyTypeFilter typeFilter = PartyTypeFilter.all,
   }) async {
+    // Split multi-word queries into individual words.
+    // Backend does single-substring ILIKE, so "distributor b" won't match
+    // "Britannia Distributor". We fetch results for each word separately,
+    // then intersect by id so only parties matching ALL words are returned.
+    final words = searchQuery?.trim().split(RegExp(r'\s+'))
+          .where((w) => w.isNotEmpty)
+          .toList() ??
+        [];
+
+    // Single word or empty — use existing single-fetch logic
+    if (words.length <= 1) {
+      return _fetchAllPages(
+        searchQuery: words.isEmpty ? null : words.first,
+        filter: filter,
+      );
+    }
+
+    // Multi-word: fetch each word independently, then intersect results
+    final wordResults = await Future.wait(
+      words.map(
+        (word) => _fetchAllPages(searchQuery: word, filter: filter),
+      ),
+    );
+
+    // Start with the first word's result set
+    final firstIds = wordResults.first.map((p) => p.id).toSet();
+
+    // Keep only parties whose id appears in every word's result set
+    final intersectedIds = wordResults.skip(1).fold(
+      firstIds,
+      (ids, wordParties) {
+        final wordIds = wordParties.map((p) => p.id).toSet();
+        return ids.intersection(wordIds);
+      },
+    );
+
+    // Return de-duped parties from the first result set that passed intersection
+    final seen = <String>{};
+    return wordResults.first
+        .where((p) => intersectedIds.contains(p.id) && seen.add(p.id))
+        .toList();
+  }
+
+  /// Fetches all pages for a single search term from the backend.
+  Future<List<PartyDto>> _fetchAllPages({
+    String? searchQuery,
+    PartyListFilter filter = PartyListFilter.all,
+  }) async {
     final allParties = <PartyDto>[];
     var page = 1;
     const limit = 100;
     var total = 0;
-
     do {
       final response = await _repository.listParties(
         PartyListQuery.fromFilter(
@@ -417,10 +464,8 @@ class PartyService {
       total = response.total;
       page++;
     } while (allParties.length < total);
-
     final seen = <String>{};
     allParties.retainWhere((p) => seen.add(p.id));
-
     return allParties;
   }
 
@@ -431,15 +476,28 @@ class PartyService {
     PartyTypeFilter typeFilter,
   ) {
     final query = searchQuery?.trim().toLowerCase() ?? '';
+    // Split query into individual words for order-independent matching.
+    // e.g. "Delhi ABC" matches "ABC Traders Delhi" because both words are found.
+    final queryWords = query.isEmpty
+        ? <String>[]
+        : query.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
 
     final filtered = parties.where((party) {
       if (!typeFilter.matches(party.partyType)) return false;
 
-      if (query.isNotEmpty) {
-        final matchesName = party.name.toLowerCase().contains(query);
-        final matchesPhone = party.phone.toLowerCase().contains(query);
-        final matchesGstin = party.gstin.toLowerCase().contains(query);
-        if (!matchesName && !matchesPhone && !matchesGstin) return false;
+      if (queryWords.isNotEmpty) {
+        // Build a single searchable string from all party fields
+        final searchableText = [
+          party.name,
+          party.phone,
+          party.gstin,
+        ].join(' ').toLowerCase();
+
+        // Every word must appear somewhere in the combined text
+        final allWordsMatch = queryWords.every(
+          (word) => searchableText.contains(word),
+        );
+        if (!allWordsMatch) return false;
       }
 
       return switch (filter) {
@@ -449,7 +507,8 @@ class PartyService {
         PartyListFilter.active => party.isActive,
         PartyListFilter.inactive => !party.isActive,
       };
-    }).toList()..sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
+    }).toList()
+      ..sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
     return filtered;
   }
 

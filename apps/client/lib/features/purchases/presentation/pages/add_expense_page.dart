@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
@@ -24,14 +27,27 @@ const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _addExpenseRed = Color(0xFFD32F2F);
 
-class AddExpensePage extends ConsumerWidget {
+class AddExpensePage extends ConsumerStatefulWidget {
   const AddExpensePage({this.expenseId, super.key});
 
   final String? expenseId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addExpenseFormProvider(expenseId: expenseId));
+  ConsumerState<AddExpensePage> createState() => _AddExpensePageState();
+}
+
+class _AddExpensePageState extends ConsumerState<AddExpensePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(ref.read(inventoryItemsProvider.notifier).refresh());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final form = ref.watch(addExpenseFormProvider(expenseId: widget.expenseId));
     final isBusy = form.isSaving || form.isLoading;
 
     return Stack(
@@ -70,24 +86,24 @@ class AddExpensePage extends ConsumerWidget {
                           _sectionGap,
                           0,
                         ),
-                        child: _PageHeader(expenseId: expenseId),
+                        child: _PageHeader(expenseId: widget.expenseId),
                       ),
                       const SizedBox(height: _sectionGap),
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: _sectionGap,
                         ),
-                        child: _FormFields(expenseId: expenseId),
+                        child: _FormFields(expenseId: widget.expenseId),
                       ),
                       const SizedBox(height: _sectionGap),
-                      ExpenseLineItemsTable(expenseId: expenseId),
+                      ExpenseLineItemsTable(expenseId: widget.expenseId),
                       const Divider(height: 1, color: _cardBorder),
                       Padding(
                         padding: const EdgeInsets.all(_sectionGap),
-                        child: AddExpenseFooter(expenseId: expenseId),
+                        child: AddExpenseFooter(expenseId: widget.expenseId),
                       ),
                       const Divider(height: 1, color: _cardBorder),
-                      _BottomActionBar(expenseId: expenseId),
+                      _BottomActionBar(expenseId: widget.expenseId),
                     ],
                   ),
                 ),
