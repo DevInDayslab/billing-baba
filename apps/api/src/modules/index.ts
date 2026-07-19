@@ -8,11 +8,15 @@ import { crmModule } from './crm';
 import { dashboardModule } from './dashboard';
 import { createHealthModule } from './health';
 import { inventoryModule } from './inventory';
+import {
+  createPartyReminderRoutes,
+  createPublicInvoiceRoutes,
+} from './invoice-share';
 import { jobWorkModule } from './job-work';
 import { partiesModule } from './parties';
 import { purchasesModule } from './purchases';
 import { reportsModule } from './reports';
-import { salesModule } from './sales';
+import { createSalesModule } from './sales';
 import { settingsModule } from './settings';
 import { syncModule } from './sync';
 
@@ -27,9 +31,12 @@ export async function registerModules(
       await api.register(businessModule, { prefix: '/businesses' });
       await api.register(businessProfileModule, { prefix: '/business' });
       await api.register(partiesModule, { prefix: '/parties' });
+      await api.register(createPartyReminderRoutes(config), {
+        prefix: '/parties',
+      });
       await api.register(crmModule, { prefix: '/crm' });
       await api.register(inventoryModule, { prefix: '/inventory' });
-      await api.register(salesModule, { prefix: '/sales' });
+      await api.register(createSalesModule(config), { prefix: '/sales' });
       await api.register(jobWorkModule, { prefix: '/job-work' });
       await api.register(purchasesModule, { prefix: '/purchases' });
       await api.register(accountingModule, { prefix: '/accounting' });
@@ -39,6 +46,9 @@ export async function registerModules(
       await api.register(syncModule, { prefix: '/sync' });
       await api.register(createCollaborationModule(config), {
         prefix: '/collaboration',
+      });
+      await api.register(createPublicInvoiceRoutes(config), {
+        prefix: '/public/invoices',
       });
     },
     { prefix: config.apiPrefix },

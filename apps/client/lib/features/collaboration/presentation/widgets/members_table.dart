@@ -22,7 +22,7 @@ typedef MemberRoleChangeCallback =
 
 enum _PendingMemberAction { reinvite, cancelInvitation }
 
-class MembersTable extends StatelessWidget {
+class MembersTable extends StatefulWidget {
   const MembersTable({
     required this.membersAsync,
     required this.onRefresh,
@@ -42,21 +42,34 @@ class MembersTable extends StatelessWidget {
   final ValueChanged<BusinessMember>? onReinvite;
   final MemberRoleChangeCallback? onRoleChange;
 
+  @override
+  State<MembersTable> createState() => _MembersTableState();
+}
+
+class _MembersTableState extends State<MembersTable> {
+  final _verticalScrollController = ScrollController();
+
   static const _cellPadding = EdgeInsets.symmetric(horizontal: 12);
   static final _dateFormat = DateFormat('dd MMM yyyy');
 
   @override
+  void dispose() {
+    _verticalScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return membersAsync.when(
+    return widget.membersAsync.when(
       skipLoadingOnReload: true,
       loading: () => const SalesLoadingState(),
       error: (error, _) => SalesErrorState(
         message: CollaborationErrorMapper.messageFor(error),
-        onRetry: onRefresh,
+        onRetry: widget.onRefresh,
       ),
       data: (members) {
         if (members.isEmpty) {
-          return CollaborationEmptyState(onInvitePressed: onInvite);
+          return CollaborationEmptyState(onInvitePressed: widget.onInvite);
         }
 
         return DecoratedBox(
@@ -71,8 +84,10 @@ class MembersTable extends StatelessWidget {
               vertical: AppSpacing.sm,
             ),
             child: Scrollbar(
+              controller: _verticalScrollController,
               thumbVisibility: true,
               child: SingleChildScrollView(
+                controller: _verticalScrollController,
                 child: ResizableDataTable(
                   columns: [
                     _column('NAME', 160),
@@ -111,7 +126,7 @@ class MembersTable extends StatelessWidget {
                           _tableCell(
                             _RoleCell(
                               member: member,
-                              onRoleChange: onRoleChange,
+                              onRoleChange: widget.onRoleChange,
                             ),
                           ),
                           _tableCell(
@@ -136,9 +151,9 @@ class MembersTable extends StatelessWidget {
                           _tableCell(
                             _MemberActionsCell(
                               member: member,
-                              onEdit: onEdit,
-                              onDelete: onDelete,
-                              onReinvite: onReinvite,
+                              onEdit: widget.onEdit,
+                              onDelete: widget.onDelete,
+                              onReinvite: widget.onReinvite,
                             ),
                             alignment: Alignment.center,
                           ),

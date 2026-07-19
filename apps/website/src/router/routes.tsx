@@ -3,6 +3,7 @@ import { MainLayout } from '../layouts/MainLayout';
 import { MarketingLayout } from '../layouts/MarketingLayout';
 import { AcceptedPage } from '../pages/AcceptedPage';
 import { InvitePage } from '../pages/InvitePage';
+import { InvoicePage } from '../pages/InvoicePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { RejectedPage } from '../pages/RejectedPage';
 import { ContactPage } from '../pages/marketing/ContactPage';
@@ -33,6 +34,10 @@ export function AppRoutes() {
         <Route path="/invite/:token" element={<InvitePage />} />
         <Route path="/invite/:token/accepted" element={<AcceptedPage />} />
         <Route path="/invite/:token/rejected" element={<RejectedPage />} />
+      </Route>
+
+      <Route element={<MainLayout subtitle="Shared invoice" maxWidthClassName="max-w-3xl" />}>
+        <Route path="/invoice/:token" element={<InvoicePage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

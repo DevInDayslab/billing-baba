@@ -21,6 +21,8 @@ function formatZodError(error: ZodError): Record<string, string[]> {
 }
 
 export function createInvitationController(config: AppConfig) {
+  const service = new InvitationService(config);
+
   return {
     create: async (
       request: FastifyRequest,
@@ -34,7 +36,6 @@ export function createInvitationController(config: AppConfig) {
         }
 
         const body = createInvitationBodySchema.parse(request.body);
-        const service = new InvitationService(config);
         const data = await service.createInvitation(
           businessId,
           accountId,
@@ -59,7 +60,6 @@ export function createInvitationController(config: AppConfig) {
       reply: FastifyReply,
     ): Promise<FastifyReply> => {
       const { token } = invitationTokenParamsSchema.parse(request.params);
-      const service = new InvitationService(config);
       const data = await service.getInvitationByToken(token);
       return sendData(reply, data);
     },
@@ -69,7 +69,6 @@ export function createInvitationController(config: AppConfig) {
       reply: FastifyReply,
     ): Promise<FastifyReply> => {
       const { token } = invitationTokenParamsSchema.parse(request.params);
-      const service = new InvitationService(config);
       const data = await service.acceptInvitation(token);
       return sendData(reply, data);
     },
@@ -79,7 +78,6 @@ export function createInvitationController(config: AppConfig) {
       reply: FastifyReply,
     ): Promise<FastifyReply> => {
       const { token } = invitationTokenParamsSchema.parse(request.params);
-      const service = new InvitationService(config);
       const data = await service.rejectInvitation(token);
       return sendData(reply, data);
     },
@@ -95,7 +93,6 @@ export function createInvitationController(config: AppConfig) {
       }
 
       const { id } = invitationIdParamsSchema.parse(request.params);
-      const service = new InvitationService(config);
       const data = await service.reinvite(id, businessId, accountId);
       return sendData(reply, data, 201);
     },
@@ -110,7 +107,6 @@ export function createInvitationController(config: AppConfig) {
         throw new AppError('UNAUTHORIZED', 'Business context required', 401);
       }
 
-      const service = new InvitationService(config);
       const data = await service.listInvitations(businessId, accountId);
       return sendData(reply, data);
     },
@@ -126,7 +122,6 @@ export function createInvitationController(config: AppConfig) {
       }
 
       const { id } = invitationIdParamsSchema.parse(request.params);
-      const service = new InvitationService(config);
       const data = await service.cancelInvitation(id, businessId, accountId);
       return sendData(reply, data);
     },

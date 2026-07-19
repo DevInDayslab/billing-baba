@@ -2,7 +2,7 @@ const API_ORIGIN = (
   import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'
 ).replace(/\/$/, '');
 
-const COLLABORATION_API_BASE = `${API_ORIGIN}/api/v1/collaboration`;
+const API_V1_BASE = `${API_ORIGIN}/api/v1`;
 
 export type ApiError = {
   code: string;
@@ -20,22 +20,30 @@ export class ApiRequestError extends Error {
   }
 }
 
+type ApiFetchOptions = RequestInit & {
+  /** Absolute path under /api/v1, e.g. /collaboration/invitations/:token */
+  basePath?: string;
+};
+
 export async function apiFetch<T>(
   path: string,
-  init?: RequestInit,
+  init?: ApiFetchOptions,
 ): Promise<T> {
   const method = (init?.method ?? 'GET').toUpperCase();
   const hasBody = init?.body != null;
   const needsJsonBody =
     !hasBody && (method === 'POST' || method === 'PUT' || method === 'PATCH');
 
-  const response = await fetch(`${COLLABORATION_API_BASE}${path}`, {
-    ...init,
+  const { basePath, ...fetchInit } = init ?? {};
+  const root = basePath ? `${API_V1_BASE}${basePath}` : `${API_V1_BASE}/collaboration`;
+
+  const response = await fetch(`${root}${path}`, {
+    ...fetchInit,
     method,
-    body: hasBody ? init.body : needsJsonBody ? '{}' : undefined,
+    body: hasBody ? fetchInit.body : needsJsonBody ? '{}' : undefined,
     headers: {
       ...(needsJsonBody || hasBody ? { 'content-type': 'application/json' } : {}),
-      ...init?.headers,
+      ...fetchInit.headers,
     },
   });
 
