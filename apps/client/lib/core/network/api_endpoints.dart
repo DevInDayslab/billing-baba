@@ -70,6 +70,8 @@ abstract final class ApiEndpoints {
   static String inventoryPriceHistoryRecord(String id) =>
       '$inventoryPriceHistory/$id';
 
+  static const barcodeGeminiLookup = '$inventory/barcode/lookup';
+
   static const sales = '/api/v1/sales';
   static const salesDocuments = '$sales/sales-documents';
   static const fixedAssetSales = '$sales/fixed-asset-sales';

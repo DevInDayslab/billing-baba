@@ -7,6 +7,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_se
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Basic details block — shared Product / Service grid (Vyapar-aligned).
@@ -117,6 +118,8 @@ class GeneralInformationSection extends StatelessWidget {
                 label: codeLabel,
                 child: TextField(
                   controller: itemCodeController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   style: saleFieldTextStyle,
                   decoration: buildSaleFieldDecoration(
                     hint: codeLabel,
