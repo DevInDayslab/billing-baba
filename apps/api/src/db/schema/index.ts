@@ -25,5 +25,6 @@ export * from './sales/relations';
 export * from './sales/tables';
 export * from './settings/relations';
 export * from './settings/tables';
+export * from './storage/tables';
 export * from './sync/relations';
 export * from './sync/tables';

@@ -35,6 +35,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-020: Job Work Out Domain](#adr-020-job-work-out-domain)
 - [ADR-021: Sales Document Attachments Deferred](#adr-021-sales-document-attachments-deferred)
 - [ADR-022: Provider-Agnostic Outbound Notifications](#adr-022-provider-agnostic-outbound-notifications)
+- [ADR-023: Provider-Agnostic Object Storage](#adr-023-provider-agnostic-object-storage)
 
 ---
 
@@ -64,6 +65,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 | ADR-020 | Job Work Out Domain | July 2026 | Accepted |
 | ADR-021 | Sales Document Attachments Deferred | July 2026 | Accepted |
 | ADR-022 | Provider-Agnostic Outbound Notifications | July 2026 | Accepted |
+| ADR-023 | Provider-Agnostic Object Storage | July 2026 | Accepted |
 
 ---
 
@@ -1044,6 +1046,52 @@ Collaboration invitations and future customer messaging (payment reminders, invo
 |-------------|------------------|
 | Call Twilio SDK from InvitationService | Vendor lock-in; crashes business flows on API errors |
 | Meta Cloud API only | Extra app review; Twilio already provisioned |
+
+---
+
+## ADR-023: Provider-Agnostic Object Storage
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+### Context
+
+Billing Baba needs logos, item images, party documents, expense receipts, and (later) WhatsApp/PDF media. Hardcoding the AWS SDK in business modules would couple domain logic to Railway S3 and block future R2/MinIO/GCS swaps. Proxying file bytes through Fastify would waste bandwidth and memory.
+
+### Decision
+
+- Introduce `StorageProvider` (presigned upload/download, head, delete, copy, move, exists) with `RailwayS3Provider` as the first implementation.
+- Business modules call `StorageService` only — never import `@aws-sdk/*`.
+- Clients upload **directly** to Railway via presigned PUT; the API only creates intents and verifies via HEAD on complete.
+- Registry table `media_assets` stores metadata (`storage_key`, purpose, visibility, MIME, size, etag, owner, status). Soft delete.
+- Generic HTTP surface: `/storage/uploads`, `/storage/uploads/complete`, `/storage/files/:id`, `/storage/files/:id/url`, `DELETE /storage/files/:id`.
+- Domain uploads (logo, items, parties, …) bind in later phases — not in the foundation PR.
+
+### Consequences
+
+**Positive:**
+
+- One upload pipeline for every future module
+- Provider can be swapped without touching sales/inventory/parties
+- API never proxies large binaries
+
+**Negative:**
+
+- Clients must support two-step upload (intent → PUT → complete)
+- Incomplete S3 env fails startup (all-or-nothing); empty env disables storage with 503
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Multipart upload through Fastify | Memory pressure; duplicates Railway bandwidth |
+| Store blobs in PostgreSQL/SQLite | Poor fit for large binaries; sync cost |
+| Per-module S3 helpers | Duplicates policy and path rules |
+
+**References:** [04-backend/storage.md](04-backend/storage.md) · [ADR-022](#adr-022-provider-agnostic-outbound-notifications)
 
 ---
 

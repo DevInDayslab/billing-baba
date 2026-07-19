@@ -1,0 +1,443 @@
+import { randomUUID } from 'node:crypto';
+import type { AppConfig } from '../../config/app_config';
+import { getDb } from '../../db/client';
+import type { StorageProvider } from '../../providers/storage';
+import { createStorageProvider } from '../../providers/storage';
+import { AppError } from '../../shared/errors/app-error';
+import {
+  ALLOWED_STORAGE_MIME_TYPES,
+  type AllowedStorageMimeType,
+} from './storage.constants';
+import {
+  StorageConfigurationError,
+  StorageNotFoundError,
+  StoragePermissionError,
+  StorageUploadFailedError,
+  StorageValidationError,
+} from './storage.errors';
+import { toStorageAsset } from './storage.mapper';
+import { MediaAssetRepository } from './storage.repository';
+import type {
+  CreateUploadIntentInput,
+  DownloadResult,
+  StorageAsset,
+  UploadIntent,
+} from './storage.types';
+import { buildStoragePath } from './storage-path.builder';
+
+export type StorageServiceDeps = {
+  config: AppConfig;
+  repository?: MediaAssetRepository;
+  provider?: StorageProvider;
+  logger?: {
+    info: (obj: object, msg?: string) => void;
+    warn: (obj: object, msg?: string) => void;
+    error: (obj: object, msg?: string) => void;
+  };
+};
+
+type Logger = NonNullable<StorageServiceDeps['logger']>;
+
+const noopLogger: Logger = {
+  info: () => undefined,
+  warn: () => undefined,
+  error: () => undefined,
+};
+
+export class StorageService {
+  private readonly config: AppConfig;
+  private readonly repository: MediaAssetRepository;
+  private readonly provider: StorageProvider | null;
+  private readonly log: Logger;
+
+  constructor(deps: StorageServiceDeps) {
+    this.config = deps.config;
+    this.log = deps.logger ?? noopLogger;
+
+    if (deps.repository) {
+      this.repository = deps.repository;
+    } else {
+      const db = getDb();
+      if (!db) {
+        throw new AppError(
+          'DATABASE_NOT_CONFIGURED',
+          'Database is not configured',
+          503,
+        );
+      }
+      this.repository = new MediaAssetRepository(db);
+    }
+
+    if (deps.provider) {
+      this.provider = deps.provider;
+    } else if (deps.config.storageConfigured) {
+      this.provider = createStorageProvider(deps.config);
+    } else {
+      this.provider = null;
+    }
+  }
+
+  private requireProvider(): StorageProvider {
+    if (!this.provider) {
+      throw new StorageConfigurationError(
+        'Object storage is not configured. Set S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY.',
+      );
+    }
+    return this.provider;
+  }
+
+  private async assertBusinessAccess(
+    businessId: string,
+    accountId: string,
+  ): Promise<void> {
+    const hasAccess = await this.repository.hasBusinessMembership(
+      businessId,
+      accountId,
+    );
+    if (!hasAccess) {
+      throw new StoragePermissionError(
+        'You do not have access to this business',
+      );
+    }
+  }
+
+  private validateMimeAndSize(mimeType: string, fileSize: number): void {
+    if (
+      !ALLOWED_STORAGE_MIME_TYPES.includes(mimeType as AllowedStorageMimeType)
+    ) {
+      throw new StorageValidationError(
+        `Unsupported MIME type: ${mimeType}. Allowed: ${ALLOWED_STORAGE_MIME_TYPES.join(', ')}`,
+        { mime_type: ['MIME type is not allowed'] },
+      );
+    }
+
+    if (!Number.isFinite(fileSize) || fileSize <= 0) {
+      throw new StorageValidationError('file_size must be a positive number', {
+        file_size: ['Must be greater than 0'],
+      });
+    }
+
+    if (fileSize > this.config.storageMaxFileBytes) {
+      throw new StorageValidationError(
+        `File size exceeds the ${this.config.storageMaxFileBytes} byte limit`,
+        { file_size: ['File too large'] },
+      );
+    }
+  }
+
+  async createUploadIntent(
+    businessId: string,
+    accountId: string,
+    input: CreateUploadIntentInput,
+  ): Promise<UploadIntent> {
+    await this.assertBusinessAccess(businessId, accountId);
+    this.validateMimeAndSize(input.mimeType, input.fileSize);
+
+    const provider = this.requireProvider();
+    const assetId = randomUUID();
+    const storageKey = buildStoragePath({
+      environment: this.config.environment,
+      businessId,
+      purpose: input.purpose,
+      assetId,
+      mimeType: input.mimeType,
+      ownerType: input.ownerType,
+      ownerId: input.ownerId,
+    });
+
+    await this.repository.insert({
+      id: assetId,
+      businessId,
+      storageKey,
+      bucket: provider.bucket,
+      purpose: input.purpose,
+      visibility: input.visibility,
+      mimeType: input.mimeType,
+      fileSize: input.fileSize,
+      checksum: input.checksum ?? null,
+      ownerType: input.ownerType ?? null,
+      ownerId: input.ownerId ?? null,
+      status: 'pending',
+      uploadedBy: accountId,
+    });
+
+    const upload = await provider.createUploadUrl({
+      key: storageKey,
+      mimeType: input.mimeType,
+      expiresInSeconds: this.config.storageUploadUrlTtlSeconds,
+      contentLength: input.fileSize,
+    });
+
+    this.log.info(
+      {
+        event: 'storage.upload_intent',
+        businessId,
+        intentId: assetId,
+        purpose: input.purpose,
+        visibility: input.visibility,
+        mimeType: input.mimeType,
+        fileSize: input.fileSize,
+        storageKey,
+      },
+      'Storage upload intent created',
+    );
+
+    return {
+      intentId: assetId,
+      uploadUrl: upload.url,
+      storageKey,
+      headers: upload.headers,
+      expiresAt: upload.expiresAt.toISOString(),
+      maxBytes: this.config.storageMaxFileBytes,
+      mimeType: input.mimeType,
+    };
+  }
+
+  async completeUpload(
+    businessId: string,
+    accountId: string,
+    intentId: string,
+  ): Promise<StorageAsset> {
+    await this.assertBusinessAccess(businessId, accountId);
+    const provider = this.requireProvider();
+
+    const pending = await this.repository.findById(businessId, intentId);
+    if (!pending || pending.status !== 'pending') {
+      throw new StorageNotFoundError(
+        'Upload intent not found or already completed',
+      );
+    }
+
+    let head: Awaited<ReturnType<StorageProvider['head']>>;
+    try {
+      head = await provider.head(pending.storageKey);
+    } catch (error) {
+      this.log.error(
+        {
+          event: 'storage.upload_complete_failed',
+          businessId,
+          intentId,
+          storageKey: pending.storageKey,
+          error: error instanceof Error ? error.message : 'unknown',
+        },
+        'Storage HEAD failed during upload complete',
+      );
+      throw new StorageUploadFailedError(
+        'Failed to verify uploaded object',
+        502,
+      );
+    }
+
+    if (!head.exists) {
+      throw new StorageUploadFailedError(
+        'Uploaded object was not found in storage. Complete the PUT to the upload URL first.',
+      );
+    }
+
+    if (
+      head.contentType &&
+      normalizeMime(head.contentType) !== normalizeMime(pending.mimeType)
+    ) {
+      throw new StorageUploadFailedError(
+        `Uploaded Content-Type (${head.contentType}) does not match declared MIME type (${pending.mimeType})`,
+      );
+    }
+
+    if (
+      head.contentLength !== undefined &&
+      head.contentLength > this.config.storageMaxFileBytes
+    ) {
+      throw new StorageUploadFailedError(
+        `Uploaded object exceeds the ${this.config.storageMaxFileBytes} byte limit`,
+      );
+    }
+
+    // Allow small variance only when ContentLength is present; prefer declared size if missing.
+    const verifiedSize = head.contentLength ?? pending.fileSize;
+
+    const ready = await this.repository.markReady(businessId, intentId, {
+      etag: head.etag ?? null,
+      fileSize: verifiedSize,
+      mimeType: head.contentType
+        ? normalizeMime(head.contentType)
+        : pending.mimeType,
+    });
+
+    if (!ready) {
+      throw new StorageNotFoundError(
+        'Upload intent not found or already completed',
+      );
+    }
+
+    this.log.info(
+      {
+        event: 'storage.upload_complete',
+        businessId,
+        intentId,
+        storageKey: pending.storageKey,
+        fileSize: verifiedSize,
+        etag: head.etag ?? null,
+      },
+      'Storage upload completed',
+    );
+
+    return toStorageAsset(ready);
+  }
+
+  async getAsset(
+    businessId: string,
+    accountId: string,
+    assetId: string,
+  ): Promise<StorageAsset> {
+    await this.assertBusinessAccess(businessId, accountId);
+    const row = await this.repository.findById(businessId, assetId);
+    if (!row || row.status !== 'ready') {
+      throw new StorageNotFoundError();
+    }
+    return toStorageAsset(row);
+  }
+
+  async getDownloadUrl(
+    businessId: string,
+    accountId: string,
+    assetId: string,
+  ): Promise<DownloadResult> {
+    await this.assertBusinessAccess(businessId, accountId);
+    const provider = this.requireProvider();
+
+    const row = await this.repository.findById(businessId, assetId);
+    if (!row || row.status !== 'ready') {
+      throw new StorageNotFoundError();
+    }
+
+    if (row.visibility === 'public') {
+      const url = this.buildPublicUrl(row.storageKey);
+      return {
+        url,
+        expiresAt: null,
+        visibility: 'public',
+      };
+    }
+
+    const download = await provider.createDownloadUrl({
+      key: row.storageKey,
+      expiresInSeconds: this.config.storageDownloadUrlTtlSeconds,
+    });
+
+    return {
+      url: download.url,
+      expiresAt: download.expiresAt.toISOString(),
+      visibility: row.visibility as StorageAsset['visibility'],
+    };
+  }
+
+  async deleteAsset(
+    businessId: string,
+    accountId: string,
+    assetId: string,
+  ): Promise<void> {
+    await this.assertBusinessAccess(businessId, accountId);
+    const provider = this.requireProvider();
+
+    const deleted = await this.repository.softDelete(businessId, assetId);
+    if (!deleted) {
+      throw new StorageNotFoundError();
+    }
+
+    try {
+      await provider.delete(deleted.storageKey);
+    } catch (error) {
+      this.log.warn(
+        {
+          event: 'storage.delete_object_failed',
+          businessId,
+          assetId,
+          storageKey: deleted.storageKey,
+          error: error instanceof Error ? error.message : 'unknown',
+        },
+        'Failed to delete object from storage provider (row soft-deleted)',
+      );
+    }
+
+    this.log.info(
+      {
+        event: 'storage.delete',
+        businessId,
+        assetId,
+        storageKey: deleted.storageKey,
+      },
+      'Storage asset deleted',
+    );
+  }
+
+  /**
+   * Soft-delete an existing ready asset and create a new upload intent
+   * for the same purpose/owner. Service-only (no HTTP route in Phase 1).
+   */
+  async replaceAsset(
+    businessId: string,
+    accountId: string,
+    assetId: string,
+    input: {
+      mimeType: string;
+      fileSize: number;
+      checksum?: string | null;
+      visibility?: CreateUploadIntentInput['visibility'];
+    },
+  ): Promise<UploadIntent> {
+    await this.assertBusinessAccess(businessId, accountId);
+
+    const existing = await this.repository.findById(businessId, assetId);
+    if (!existing || existing.status !== 'ready') {
+      throw new StorageNotFoundError();
+    }
+
+    await this.deleteAsset(businessId, accountId, assetId);
+
+    this.log.info(
+      {
+        event: 'storage.replace',
+        businessId,
+        replacedAssetId: assetId,
+        purpose: existing.purpose,
+      },
+      'Storage asset replace started',
+    );
+
+    return this.createUploadIntent(businessId, accountId, {
+      purpose: existing.purpose as CreateUploadIntentInput['purpose'],
+      visibility:
+        input.visibility ??
+        (existing.visibility as CreateUploadIntentInput['visibility']),
+      mimeType: input.mimeType,
+      fileSize: input.fileSize,
+      ownerType: existing.ownerType,
+      ownerId: existing.ownerId,
+      checksum: input.checksum,
+    });
+  }
+
+  private buildPublicUrl(storageKey: string): string {
+    if (this.config.s3PublicBaseUrl) {
+      return `${this.config.s3PublicBaseUrl.replace(/\/$/, '')}/${storageKey}`;
+    }
+
+    const endpoint = this.config.s3Endpoint?.replace(/\/$/, '') ?? '';
+    const bucket = this.config.s3Bucket ?? '';
+    const base =
+      endpoint.startsWith('http://') || endpoint.startsWith('https://')
+        ? endpoint
+        : `${this.config.s3Ssl ? 'https' : 'http'}://${endpoint}`;
+
+    if (this.config.s3ForcePathStyle) {
+      return `${base}/${bucket}/${storageKey}`;
+    }
+    const host = base.replace(/^https?:\/\//, '');
+    const scheme = this.config.s3Ssl ? 'https' : 'http';
+    return `${scheme}://${bucket}.${host}/${storageKey}`;
+  }
+}
+
+function normalizeMime(value: string): string {
+  return value.split(';')[0]?.trim().toLowerCase() ?? value.toLowerCase();
+}

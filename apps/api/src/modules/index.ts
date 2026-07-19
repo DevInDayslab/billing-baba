@@ -19,6 +19,7 @@ import { purchasesModule } from './purchases';
 import { reportsModule } from './reports';
 import { createSalesModule } from './sales';
 import { settingsModule } from './settings';
+import { createStorageModule } from './storage';
 import { syncModule } from './sync';
 
 export async function registerModules(
@@ -46,6 +47,7 @@ export async function registerModules(
       await api.register(dashboardModule, { prefix: '/dashboard' });
       await api.register(reportsModule, { prefix: '/reports' });
       await api.register(settingsModule, { prefix: '/settings' });
+      await api.register(createStorageModule(config), { prefix: '/storage' });
       await api.register(syncModule, { prefix: '/sync' });
       await api.register(createCollaborationModule(config), {
         prefix: '/collaboration',

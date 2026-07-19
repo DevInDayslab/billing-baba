@@ -62,6 +62,15 @@ export const TAG_CATALOG: Array<{ name: string; description: string }> = [
     name: 'Job Work',
     description: 'Manufacturing and job-work orders.',
   },
+  {
+    name: 'Collaboration',
+    description: 'Team invitations and multi-user access.',
+  },
+  {
+    name: 'Storage',
+    description:
+      'Object storage upload intents, signed URLs, and media assets.',
+  },
 ];
 
 const HTTP_METHODS = new Set([
