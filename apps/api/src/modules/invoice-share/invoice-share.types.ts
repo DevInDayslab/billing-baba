@@ -59,8 +59,8 @@ export type InvoiceShareLinkDto = {
 export type NotifyDispatchDto = {
   notified: boolean;
   deduped?: boolean;
-  share_url: string;
-  token: string;
+  share_url?: string;
+  token?: string;
   error?: {
     code: string;
     message: string;
