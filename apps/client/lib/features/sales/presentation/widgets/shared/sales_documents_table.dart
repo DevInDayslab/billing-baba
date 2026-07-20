@@ -117,12 +117,17 @@ class SalesDocumentsTable extends ConsumerWidget {
               message: SalesErrorMapper.messageFor(error),
               onRetry: notifier.refresh,
             ),
-            data: (_) => _SalesDocumentsTableBody(
-              config: config,
-              items: paginated.items,
-              statusOptions: statusOptions,
-              isFiltered: isFiltered,
-            ),
+            data: (_) {
+              if (documentsAsync.isReloading) {
+                return const SalesLoadingState();
+              }
+              return _SalesDocumentsTableBody(
+                config: config,
+                items: paginated.items,
+                statusOptions: statusOptions,
+                isFiltered: isFiltered,
+              );
+            },
           ),
           const Divider(height: 1, color: salesCardBorder),
           SalesPaginationRow(scope: config.scope),

@@ -64,7 +64,6 @@ class PosReturnService {
         );
       }
 
-      final _ = await _remote.finalizeDocument(returnDoc.id);
       await _remote.finalizeDocument(returnDoc.id);
       final finalizedDto = await _remote.getDocument(returnDoc.id);
 

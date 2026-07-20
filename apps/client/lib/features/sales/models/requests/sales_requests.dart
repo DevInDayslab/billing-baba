@@ -3,6 +3,7 @@ class SalesDocumentListQuery {
     this.page = 1,
     this.limit = 20,
     this.documentType,
+    this.documentSeries,
     this.status,
     this.partyId,
     this.from,
@@ -15,6 +16,7 @@ class SalesDocumentListQuery {
   final int page;
   final int limit;
   final String? documentType;
+  final String? documentSeries;
   final String? status;
   final String? partyId;
   final String? from;
@@ -28,6 +30,7 @@ class SalesDocumentListQuery {
       'page': page,
       'limit': limit,
       if (documentType != null) 'document_type': documentType,
+      if (documentSeries != null) 'document_series': documentSeries,
       if (status != null) 'status': status,
       if (partyId != null) 'party_id': partyId,
       if (from != null) 'from': from,

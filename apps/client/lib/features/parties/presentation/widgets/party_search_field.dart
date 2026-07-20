@@ -171,11 +171,9 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
             child: Material(
               elevation: 4,
               borderRadius: BorderRadius.circular(8),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: renderBox.size.width,
-                  maxHeight: 280,
-                ),
+              child: SizedBox(
+                width: renderBox.size.width,
+                height: 280,
                 child: _buildOverlayContent(),
               ),
             ),
@@ -192,7 +190,6 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     final filtered = _filteredParties;
 
     return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
           padding: const EdgeInsets.all(AppSpacing.sm),
@@ -205,26 +202,19 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
             },
           ),
         ),
-        Flexible(
+        Expanded(
           child: partiesAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.lg),
-              child: Center(child: CircularProgressIndicator()),
-            ),
+            loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(PartyErrorMapper.messageFor(error)),
             ),
             data: (_) {
               if (filtered.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.all(AppSpacing.md),
-                  child: Text('No parties found'),
-                );
+                return const Center(child: Text('No parties found'));
               }
 
               return ListView.builder(
-                shrinkWrap: true,
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
                   final party = filtered[index];
@@ -257,6 +247,12 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
 
   @override
   Widget build(BuildContext context) {
+    // OverlayEntry does not rebuild when async providers resolve; refresh it
+    // manually so the loading spinner is replaced with party results.
+    ref.listen(partyPickerListProvider, (_, __) {
+      _overlayEntry?.markNeedsBuild();
+    });
+
     final displayValue = widget.value.isEmpty
         ? widget.emptyPlaceholder
         : widget.value;

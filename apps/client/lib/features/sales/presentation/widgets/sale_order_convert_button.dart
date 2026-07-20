@@ -28,30 +28,12 @@ class SaleOrderConvertButton extends ConsumerWidget {
 
   bool get _canConvert => order.documentStatus == SalesDocumentStatus.finalized;
 
-  bool get _isCompleted =>
-      order.documentStatus == SalesDocumentStatus.converted;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (_isCompleted)
-          const Flexible(
-            child: Text(
-              'Converted To Invoice',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: _convertColor,
-                decoration: TextDecoration.underline,
-                decorationColor: _convertColor,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          )
-        else if (_canConvert)
-          _ConvertMenuButton(order: order),
+        if (_canConvert) _ConvertMenuButton(order: order),
         SaleDocumentActionsMenuButton(
           document: order,
           config: SaleDocumentActionsConfig.saleOrder(

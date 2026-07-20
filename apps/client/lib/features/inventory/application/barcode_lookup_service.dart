@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/constants/app_constants.dart';
-import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
+import 'package:billing_baba/features/inventory/application/barcode_confidence.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
@@ -57,6 +57,17 @@ class BarcodeLookupService {
       _logLookupError('Inventory barcode lookup failed', error, stackTrace);
     }
 
+    if (!BarcodeConfidence.isEligibleForExternalLookup(trimmed)) {
+      debugPrint(
+        '[BarcodeService] Skipping external lookup: barcode failed GTIN confidence check',
+      );
+      final result = BarcodeLookupResult.notFound(hadError: hadError);
+      debugPrint(
+        '[BarcodeService] Final result: found=${result.found}, source=${result.source}, name=${result.itemName}',
+      );
+      return result;
+    }
+
     debugPrint('[BarcodeService] Trying Open Food Facts...');
 
     try {
@@ -82,7 +93,7 @@ class BarcodeLookupService {
 
     try {
       final geminiData = await _remoteDataSource.geminiBarcodeLookup(trimmed);
-      if (geminiData['found'] == true) {
+      if (_isHighConfidenceGeminiMatch(trimmed, geminiData)) {
         final result = BarcodeLookupResult.fromGemini(geminiData);
         debugPrint(
           '[BarcodeService] Final result: found=${result.found}, source=${result.source}, name=${result.itemName}',
@@ -113,18 +124,28 @@ class BarcodeLookupService {
     List<ItemListDto> items,
     String barcode,
   ) {
-    final normalized = InventorySearchEngine.normalize(barcode);
-    if (normalized.isEmpty) return null;
-
     for (final item in items) {
-      final itemBarcode = item.barcode?.trim();
-      if (itemBarcode != null &&
-          itemBarcode.isNotEmpty &&
-          InventorySearchEngine.normalize(itemBarcode) == normalized) {
+      if (BarcodeConfidence.isExactBarcodeMatch(barcode, item.barcode)) {
         return item;
       }
     }
     return null;
+  }
+
+  static bool _isHighConfidenceGeminiMatch(
+    String barcode,
+    Map<String, dynamic> data,
+  ) {
+    if (data['found'] != true) return false;
+    if (!BarcodeConfidence.isEligibleForExternalLookup(barcode)) return false;
+
+    final itemName = (data['itemName'] as String?)?.trim() ?? '';
+    if (itemName.length < 3) return false;
+
+    final confidence = data['confidence'];
+    if (confidence is! num || confidence < 0.85) return false;
+
+    return true;
   }
 
   Future<BarcodeLookupResult?> _lookupOpenFoodFacts(String barcode) async {
@@ -144,6 +165,16 @@ class BarcodeLookupService {
 
     final data = response.data;
     if (data == null || data['status'] != 1) return null;
+
+    final responseCode = data['code'];
+    if (responseCode is! String && responseCode is! num) return null;
+    if (!BarcodeConfidence.isExactBarcodeMatch(
+      barcode,
+      responseCode.toString(),
+    )) {
+      debugPrint('[BarcodeService] OFF code mismatch for barcode=$barcode');
+      return null;
+    }
 
     final product = data['product'];
     if (product is! Map<String, dynamic>) return null;

@@ -1,6 +1,7 @@
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:flutter/material.dart';
 
 class SaleFixedAssetLineItem {
@@ -94,6 +95,7 @@ class AddSaleFaFormState {
     this.isLoading = false,
     this.isSaving = false,
     this.saveError,
+    this.taxOption = 'NONE',
   });
 
   final String? batchId;
@@ -122,6 +124,7 @@ class AddSaleFaFormState {
   final bool isLoading;
   final bool isSaving;
   final String? saveError;
+  final String taxOption;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -132,11 +135,17 @@ class AddSaleFaFormState {
   double get subtotal =>
       items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
 
-  double get totalTax =>
-      items.fold<double>(0, (sum, item) => sum + item.lineTax);
+  double get totalTax => resolveSaleFaTotalTax(
+    taxOption: taxOption,
+    subtotal: subtotal,
+    items: items,
+  );
 
-  double get rawGrandTotal =>
-      items.fold<double>(0, (sum, item) => sum + item.amount);
+  double get rawGrandTotal => resolveSaleFaRawGrandTotal(
+    taxOption: taxOption,
+    subtotal: subtotal,
+    items: items,
+  );
 
   double get roundOffAmount {
     if (!roundOff) return 0;
@@ -194,6 +203,7 @@ class AddSaleFaFormState {
     bool? isSaving,
     String? saveError,
     bool clearSaveError = false,
+    String? taxOption,
   }) {
     return AddSaleFaFormState(
       batchId: batchId ?? this.batchId,
@@ -222,6 +232,7 @@ class AddSaleFaFormState {
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
+      taxOption: taxOption ?? this.taxOption,
     );
   }
 }

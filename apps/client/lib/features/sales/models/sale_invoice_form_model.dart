@@ -1,4 +1,6 @@
+import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:flutter/material.dart';
 
 enum SaleType { cash, credit }
@@ -182,6 +184,7 @@ class AddSaleFormState {
     this.isSaving = false,
     this.attachedSaleOrderIds = const [],
     this.partyPriceTier,
+    this.taxOption = 'NONE',
   });
 
   final String? documentId;
@@ -226,6 +229,7 @@ class AddSaleFormState {
   final bool isSaving;
   final List<String> attachedSaleOrderIds;
   final String? partyPriceTier;
+  final String taxOption;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -234,11 +238,17 @@ class AddSaleFormState {
   double get subtotal =>
       items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
 
-  double get totalTax =>
-      items.fold<double>(0, (sum, item) => sum + item.lineTax);
+  double get totalTax => resolveSaleTotalTax(
+    taxOption: taxOption,
+    subtotal: subtotal,
+    items: items,
+  );
 
-  double get rawGrandTotal =>
-      items.fold<double>(0, (sum, item) => sum + item.amount);
+  double get rawGrandTotal => resolveSaleRawGrandTotal(
+    taxOption: taxOption,
+    subtotal: subtotal,
+    items: items,
+  );
 
   double get roundOffAmount {
     if (!roundOff) return 0;
@@ -302,6 +312,13 @@ class AddSaleFormState {
       partyRequired &&
       (partyId == null || partyId!.isEmpty);
 
+  bool get phoneHasError =>
+      showValidationErrors && Validators.requiredPhone(phone) != null;
+
+  String? get phoneErrorMessage => Validators.requiredPhone(phone);
+
+  bool get hasValidPhone => Validators.requiredPhone(phone) == null;
+
   AddSaleFormState copyWith({
     String? documentId,
     String? partyId,
@@ -349,6 +366,7 @@ class AddSaleFormState {
     bool clearAttachedSaleOrderIds = false,
     String? partyPriceTier,
     bool clearPartyPriceTier = false,
+    String? taxOption,
   }) {
     return AddSaleFormState(
       documentId: clearDocumentId ? null : (documentId ?? this.documentId),
@@ -398,6 +416,7 @@ class AddSaleFormState {
       partyPriceTier: clearPartyPriceTier
           ? null
           : (partyPriceTier ?? this.partyPriceTier),
+      taxOption: taxOption ?? this.taxOption,
     );
   }
 }

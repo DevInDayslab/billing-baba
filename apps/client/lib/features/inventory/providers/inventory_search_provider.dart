@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/application/barcode_confidence.dart';
 import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_brands_provider.dart';
@@ -51,15 +52,13 @@ InventoryItem? findInventoryItemByBarcodeOrQuery(
   final trimmed = query.trim();
   if (trimmed.isEmpty) return null;
 
-  final normalized = InventorySearchEngine.normalize(trimmed);
   for (final item in items) {
-    final barcode = item.barcode?.trim();
-    if (barcode != null &&
-        barcode.isNotEmpty &&
-        InventorySearchEngine.normalize(barcode) == normalized) {
+    if (BarcodeConfidence.isExactBarcodeMatch(trimmed, item.barcode)) {
       return item;
     }
   }
+
+  if (BarcodeConfidence.isBarcodeLike(trimmed)) return null;
 
   return engine.searchItems(items, query: trimmed).firstOrNull;
 }

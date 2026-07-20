@@ -1,8 +1,14 @@
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/features/sales/utils/sale_price_input.dart';
+import 'package:billing_baba/features/sales/utils/sale_quantity_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Compact numeric field with stable controller lifecycle for table rows.
+///
+/// Keeps the raw text while focused so partial values like `1.` are not
+/// overwritten by parsed parent state. Selects all text on focus for quick
+/// replacement.
 class CompactNumberField extends StatefulWidget {
   const CompactNumberField({
     required this.value,
@@ -10,6 +16,9 @@ class CompactNumberField extends StatefulWidget {
     this.hintText,
     this.focusNode,
     this.selectAllOnFocus = true,
+    this.borderless = false,
+    this.integerOnly = false,
+    this.useFieldBox = true,
     super.key,
   });
 
@@ -18,6 +27,9 @@ class CompactNumberField extends StatefulWidget {
   final String? hintText;
   final FocusNode? focusNode;
   final bool selectAllOnFocus;
+  final bool borderless;
+  final bool integerOnly;
+  final bool useFieldBox;
 
   @override
   State<CompactNumberField> createState() => CompactNumberFieldState();
@@ -87,7 +99,7 @@ class CompactNumberFieldState extends State<CompactNumberField> {
   }
 
   void _commitValue() {
-    final parsed = double.tryParse(_controller.text.trim());
+    final parsed = _parseText(_controller.text);
     if (parsed == null) {
       _controller.text = _formatValue(widget.value);
       return;
@@ -101,37 +113,57 @@ class CompactNumberFieldState extends State<CompactNumberField> {
     }
   }
 
-  String _formatValue(double value) {
-    if (value == 0) return '';
-    if (value == value.roundToDouble()) {
-      return value.toInt().toString();
+  double? _parseText(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return 0;
+    if (widget.integerOnly) {
+      final parsed = int.tryParse(trimmed);
+      return parsed?.toDouble();
     }
-    return value.toString();
+    return double.tryParse(trimmed);
+  }
+
+  String _formatValue(double value) {
+    if (widget.integerOnly) {
+      return SaleQuantityInput.format(value);
+    }
+    return SalePriceInput.format(value);
+  }
+
+  void _handleChanged(String text) {
+    final parsed = _parseText(text);
+    if (parsed != null) {
+      widget.onChanged(parsed);
+      return;
+    }
+    if (text.trim().isEmpty) {
+      widget.onChanged(0);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    final field = TextField(
       controller: _controller,
       focusNode: _focusNode,
-      style: saleFieldTextStyle.copyWith(fontSize: 13),
+      style: saleFieldTextStyle.copyWith(fontSize: 12, height: 1),
+      textAlignVertical: TextAlignVertical.center,
       decoration: buildSaleFieldDecoration(
         hint: widget.hintText,
         compact: true,
+        borderless: widget.borderless,
       ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-      ],
-      onChanged: (text) {
-        final parsed = double.tryParse(text.trim());
-        if (parsed != null) {
-          widget.onChanged(parsed);
-        } else if (text.trim().isEmpty) {
-          widget.onChanged(0);
-        }
-      },
+      keyboardType: widget.integerOnly
+          ? SaleQuantityInput.integerKeyboardType
+          : SalePriceInput.keyboardType,
+      inputFormatters: widget.integerOnly
+          ? SaleQuantityInput.integerFormatters
+          : SalePriceInput.formatters,
+      onChanged: _handleChanged,
       onSubmitted: (_) => _commitValue(),
     );
+
+    if (!widget.useFieldBox) return field;
+    return SaleCompactFieldBox(child: field);
   }
 }
