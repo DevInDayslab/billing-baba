@@ -49,7 +49,7 @@ final class InventoryRepositoryProvider
 }
 
 String _$inventoryRepositoryHash() =>
-    r'a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3';
+    r'27bd44ca8d4bd9c2072f3216fd7e69b67bab56a7';
 
 @ProviderFor(barcodeLookupService)
 final barcodeLookupServiceProvider = BarcodeLookupServiceProvider._();
@@ -91,7 +91,7 @@ final class BarcodeLookupServiceProvider
 }
 
 String _$barcodeLookupServiceHash() =>
-    r'b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4';
+    r'023e740fa407365557f70db31f2ab4fe432d9126';
 
 @ProviderFor(BarcodeImportLookupError)
 final barcodeImportLookupErrorProvider = BarcodeImportLookupErrorProvider._();
@@ -126,7 +126,7 @@ final class BarcodeImportLookupErrorProvider
 }
 
 String _$barcodeImportLookupErrorHash() =>
-    r'c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5';
+    r'70ec578515efe301a212052227c0b19aa6e9d893';
 
 abstract class _$BarcodeImportLookupError extends $Notifier<bool> {
   bool build();
@@ -178,14 +178,15 @@ final class BarcodeImportProvider
   }
 }
 
-String _$barcodeImportHash() => r'8f3c2a1b9d4e5f60718293a4b5c6d7e8f9a0b1c2';
+String _$barcodeImportHash() => r'd729b4fdafacd5d7eaea4f15443fb80e7b914104';
 
 abstract class _$BarcodeImport extends $Notifier<List<BarcodeImportRow>> {
   List<BarcodeImportRow> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<List<BarcodeImportRow>, List<BarcodeImportRow>>;
+    final ref =
+        this.ref as $Ref<List<BarcodeImportRow>, List<BarcodeImportRow>>;
     final element =
         ref.element
             as $ClassProviderElement<

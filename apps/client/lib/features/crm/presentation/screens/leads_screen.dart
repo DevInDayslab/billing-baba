@@ -191,6 +191,61 @@ class _LeadsScreenState extends ConsumerState<LeadsScreen> {
     await _saveLead(input);
   }
 
+  Future<void> _deleteSelectedLeads() async {
+    if (_selectedLeadKeys.isEmpty) return;
+
+    final count = _selectedLeadKeys.length;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(count == 1 ? 'Delete lead?' : 'Delete $count leads?'),
+        content: Text(
+          count == 1
+              ? 'Are you sure you want to delete the selected lead?'
+              : 'Are you sure you want to delete the selected leads?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final notifier = ref.read(leadsProvider.notifier);
+      for (final leadId in _selectedLeadKeys.toList()) {
+        await notifier.deleteLead(leadId);
+      }
+      if (!mounted) return;
+      setState(() => _selectedLeadKeys.clear());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            count == 1
+                ? 'Lead deleted successfully'
+                : '$count leads deleted successfully',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(LeadErrorMapper.messageFor(error)),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   List<_ColumnDef> get _visibleColumns {
     final visible = _allColumns
         .where((column) => !_hiddenColumns.contains(column.id))
@@ -536,6 +591,10 @@ class _LeadsScreenState extends ConsumerState<LeadsScreen> {
                     padding: EdgeInsets.symmetric(horizontal: pagePadding),
                     child: _LeadsTitleBar(
                       onAddLead: _openAddLeadDialog,
+                      onDelete: _selectedLeadKeys.isEmpty
+                          ? null
+                          : _deleteSelectedLeads,
+                      selectedCount: _selectedLeadKeys.length,
                       isCompact: isCompact,
                     ),
                   ),
@@ -998,10 +1057,14 @@ class _FilterSubOptionTile extends StatelessWidget {
 class _LeadsTitleBar extends StatelessWidget {
   const _LeadsTitleBar({
     required this.onAddLead,
+    this.onDelete,
+    this.selectedCount = 0,
     this.isCompact = false,
   });
 
   final VoidCallback onAddLead;
+  final VoidCallback? onDelete;
+  final int selectedCount;
   final bool isCompact;
 
   static const _titleStyle = TextStyle(
@@ -1035,6 +1098,29 @@ class _LeadsTitleBar extends StatelessWidget {
       ),
     ];
 
+    final deleteButton = onDelete == null
+        ? null
+        : OutlinedButton.icon(
+            onPressed: onDelete,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _addLeadRed,
+              side: const BorderSide(color: _addLeadRed),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.md,
+              ),
+              minimumSize: const Size(0, 42),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            icon: const Icon(Icons.delete_outline, size: 20),
+            label: Text(
+              selectedCount > 1 ? 'Delete ($selectedCount)' : 'Delete',
+            ),
+          );
+
     if (isCompact) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1046,6 +1132,10 @@ class _LeadsTitleBar extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
+          if (deleteButton != null) ...[
+            SizedBox(width: double.infinity, child: deleteButton),
+            const SizedBox(height: AppSpacing.sm),
+          ],
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
@@ -1062,6 +1152,10 @@ class _LeadsTitleBar extends StatelessWidget {
     return Row(
       children: [
         const Expanded(child: Text('Leads', style: _titleStyle)),
+        if (deleteButton != null) ...[
+          deleteButton,
+          const SizedBox(width: AppSpacing.sm),
+        ],
         FilledButton.icon(
           onPressed: onAddLead,
           style: _addLeadButtonStyle,

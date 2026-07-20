@@ -30,21 +30,14 @@ Future<ExportSheet> buildSalesDocumentExportSheet(
         page: page,
         limit: PaginatedFetch.defaultPageSize,
         documentType: scope.documentType.apiValue,
+        documentSeries: scope.documentSeries,
         status: _documentStatusFromFilterLabel(filters.selectedStatus),
         from: dateRange?.start.toUtc().toIso8601String(),
         to: dateRange?.end.toUtc().toIso8601String(),
         q: search.trim().isEmpty ? null : search.trim(),
       );
       final result = await service.fetchInvoicesPage(query);
-      var filtered = result.items;
-      if (scope.documentSeries != null) {
-        filtered = filtered
-            .where(
-              (item) => item.documentSeries == scope.documentSeries,
-            )
-            .toList();
-      }
-      return (items: filtered, totalPages: result.totalPages);
+      return (items: result.items, totalPages: result.totalPages);
     },
   );
 

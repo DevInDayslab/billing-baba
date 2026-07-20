@@ -59,6 +59,9 @@ export class SalesDocumentRepository {
     if (params.documentType) {
       filters.push(eq(salesDocuments.documentType, params.documentType));
     }
+    if (params.documentSeries) {
+      filters.push(eq(salesDocuments.documentSeries, params.documentSeries));
+    }
     if (params.status) {
       filters.push(eq(salesDocuments.status, params.status));
     }

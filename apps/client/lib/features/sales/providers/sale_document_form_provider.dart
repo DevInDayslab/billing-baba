@@ -9,6 +9,7 @@ import 'package:billing_baba/features/sales/models/sales_document_draft_input.da
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/providers/estimate_quotation_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -191,7 +192,10 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
   }
 
   void updateTaxOption(String value) {
-    state = state.copyWith(taxOption: value);
+    state = state.copyWith(
+      taxOption: value,
+      items: applyBillTaxOptionToSaleItems(state.items, value),
+    );
   }
 
   void toggleRoundOff({required bool value}) {
@@ -277,7 +281,13 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
-    state = state.copyWith(items: items, clearSaveError: true);
+    final clearBillTax =
+        item.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
+    state = state.copyWith(
+      items: items,
+      taxOption: clearBillTax ? 'NONE' : state.taxOption,
+      clearSaveError: true,
+    );
   }
 
   void selectCatalogItem(int index, SaleItemOption catalogItem) {
@@ -328,6 +338,7 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
       notes: _buildNotes(),
       godownId: state.godownId,
       items: state.items,
+      taxOption: state.taxOption,
     );
   }
 

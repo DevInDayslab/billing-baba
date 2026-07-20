@@ -5,6 +5,7 @@ import 'package:billing_baba/features/export/application/export_service.dart';
 import 'package:billing_baba/features/export/models/export_request.dart';
 import 'package:billing_baba/features/export/models/export_sheet.dart';
 import 'package:billing_baba/features/export/presentation/providers/export_providers.dart';
+import 'package:billing_baba/features/export/presentation/widgets/export_loading_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -122,21 +123,23 @@ abstract final class ExportActions {
     )
     action,
   ) async {
-    try {
-      final container = ProviderScope.containerOf(context);
-      final service = container.read(exportServiceProvider);
-      final output = container.read(exportOutputServiceProvider);
-      await action(service, output);
-    } on ExportException catch (error) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
-    } on Object catch (error) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(OutputErrorMapper.exportMessage(error))),
-      );
-    }
+    await ExportLoadingScope.runGuarded(context, () async {
+      try {
+        final container = ProviderScope.containerOf(context);
+        final service = container.read(exportServiceProvider);
+        final output = container.read(exportOutputServiceProvider);
+        await action(service, output);
+      } on ExportException catch (error) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      } on Object catch (error) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(OutputErrorMapper.exportMessage(error))),
+        );
+      }
+    });
   }
 }

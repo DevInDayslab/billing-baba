@@ -20,29 +20,12 @@ class DeliveryChallanConvertButton extends ConsumerWidget {
   bool get _canConvert =>
       challan.documentStatus == SalesDocumentStatus.finalized;
 
-  bool get _isConverted =>
-      challan.documentStatus == SalesDocumentStatus.converted;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (_isConverted)
-          const Flexible(
-            child: Text(
-              'Converted To Sale',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: _convertColor,
-                decoration: TextDecoration.underline,
-                decorationColor: _convertColor,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          )
-        else if (_canConvert)
+        if (_canConvert)
           Material(
             color: Colors.transparent,
             child: InkWell(

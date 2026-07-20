@@ -13,6 +13,7 @@ import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dar
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sale_invoices_provider.g.dart';
@@ -263,13 +264,56 @@ PaginatedSaleInvoices paginateSaleInvoiceItems(
   );
 }
 
+final _saleInvoiceSearchDateFormat = DateFormat('dd/MM/yyyy, HH:mm');
+final _saleInvoiceSearchDueDateFormat = DateFormat('dd/MM/yyyy');
+final _saleInvoiceSearchCurrencyFormat = NumberFormat.currency(
+  locale: 'en_IN',
+  symbol: '₹ ',
+  decimalDigits: 0,
+);
+
+String _saleInvoiceStatusLabel(SaleInvoiceStatus status) => switch (status) {
+  SaleInvoiceStatus.paid => 'Paid',
+  SaleInvoiceStatus.unpaid => 'Unpaid',
+  SaleInvoiceStatus.partiallyPaid => 'Partial',
+  SaleInvoiceStatus.overdue => 'Overdue',
+  SaleInvoiceStatus.cancelled => 'Cancelled',
+};
+
+String _saleInvoiceSearchHaystack(SaleInvoiceModel invoice) {
+  return [
+    _saleInvoiceSearchDateFormat.format(invoice.date),
+    invoice.invoiceNo,
+    invoice.partyName,
+    invoice.transactionType,
+    invoice.paymentType,
+    _saleInvoiceSearchCurrencyFormat.format(invoice.amount),
+    invoice.amount.toString(),
+    _saleInvoiceSearchCurrencyFormat.format(invoice.loyaltyRedeemed),
+    invoice.loyaltyRedeemed.toString(),
+    _saleInvoiceSearchCurrencyFormat.format(invoice.balance),
+    invoice.balance.toString(),
+    if (invoice.dueDate != null)
+      _saleInvoiceSearchDueDateFormat.format(invoice.dueDate!),
+    _saleInvoiceStatusLabel(invoice.status),
+    invoice.user,
+    invoice.godown,
+    invoice.firm,
+  ].join(' ').toLowerCase();
+}
+
 List<SaleInvoiceModel> applySaleInvoiceClientFilters(
   List<SaleInvoiceModel> invoices,
-  SaleInvoiceFiltersState filters,
-) {
+  SaleInvoiceFiltersState filters, {
+  String searchQuery = '',
+}) {
   final paymentStatus = _paymentStatusFromFilterLabel(filters.selectedStatus);
+  final search = searchQuery.trim().toLowerCase();
 
   return invoices.where((invoice) {
+    if (search.isNotEmpty && !_saleInvoiceSearchHaystack(invoice).contains(search)) {
+      return false;
+    }
     if (filters.dateColumnFilter != null &&
         !filters.dateColumnFilter!.matches(invoice.date)) {
       return false;
@@ -435,7 +479,10 @@ class SaleInvoiceSearchQuery extends _$SaleInvoiceSearchQuery {
   @override
   String build() => '';
 
-  void setQuery(String value) => state = value;
+  void setQuery(String value) {
+    state = value;
+    ref.read(saleInvoiceFiltersProvider.notifier).setPage(1);
+  }
 }
 
 @riverpod
@@ -460,10 +507,11 @@ PaginatedSaleInvoices _allInvoicesPage(List<SaleInvoiceModel> allInvoices) {
 List<SaleInvoiceModel> _allInvoicesFromAsync(
   AsyncValue<PaginatedSaleInvoices> invoicesAsync,
 ) {
+  final previousItems = invoicesAsync.value?.items;
   return invoicesAsync.when(
     data: (page) => page.items,
-    loading: () => const [],
-    error: (_, _) => const [],
+    loading: () => previousItems ?? const [],
+    error: (_, _) => previousItems ?? const [],
   );
 }
 
@@ -476,25 +524,25 @@ class SaleInvoices extends _$SaleInvoices {
         (filters) => (filters.timeRangeOption, filters.customDateRange),
       ),
     );
-    ref.watch(saleInvoiceSearchQueryProvider);
     final allInvoices = await _fetchAllInvoices();
     return _allInvoicesPage(allInvoices);
   }
 
   Future<List<SaleInvoiceModel>> _fetchAllInvoices() async {
     final filters = ref.read(saleInvoiceFiltersProvider);
-    final search = ref.read(saleInvoiceSearchQueryProvider);
     final service = await ref.read(salesServiceProvider.future);
+    final partyNames = await service.fetchPartyNameMap();
 
     return PaginatedFetch.fetchAll<SaleInvoiceModel>(
       fetchPage: (page) async {
         final result = await service.fetchInvoicesPage(
           _buildListQuery(
             filters,
-            search,
+            '',
             page: page,
             limit: PaginatedFetch.defaultPageSize,
           ),
+          partyNames: partyNames,
         );
         return (items: result.items, totalPages: result.totalPages);
       },
@@ -691,7 +739,12 @@ class SaleInvoiceFilters extends _$SaleInvoiceFilters {
 List<SaleInvoiceModel> filteredSaleInvoices(Ref ref) {
   final allInvoices = _allInvoicesFromAsync(ref.watch(saleInvoicesProvider));
   final filters = ref.watch(saleInvoiceFiltersProvider);
-  return applySaleInvoiceClientFilters(allInvoices, filters);
+  final searchQuery = ref.watch(saleInvoiceSearchQueryProvider);
+  return applySaleInvoiceClientFilters(
+    allInvoices,
+    filters,
+    searchQuery: searchQuery,
+  );
 }
 
 @riverpod

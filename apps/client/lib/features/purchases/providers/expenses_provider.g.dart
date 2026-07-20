@@ -680,7 +680,7 @@ final class FilteredExpenseCategoriesProvider
 }
 
 String _$filteredExpenseCategoriesHash() =>
-    r'5e2f634503debe8534f301ab0c73759cf63d63fe';
+    r'4579d7c02ff7779257010641bdec9bfdbbde1793';
 
 @ProviderFor(categoryExpenseTransactions)
 final categoryExpenseTransactionsProvider =
@@ -816,7 +816,7 @@ final class FilteredExpenseItemsProvider
 }
 
 String _$filteredExpenseItemsHash() =>
-    r'd00530f65cf32c11126c04ffbff59804c280d76b';
+    r'99b75c05eda6b11fa4ed20772bcd295e71e9413e';
 
 @ProviderFor(itemExpenseTransactions)
 final itemExpenseTransactionsProvider = ItemExpenseTransactionsFamily._();

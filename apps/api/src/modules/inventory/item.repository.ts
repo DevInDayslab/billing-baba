@@ -136,7 +136,7 @@ export class ItemRepository {
     }
 
     if (params.barcode) {
-      filters.push(ilike(items.barcode, `%${params.barcode}%`));
+      filters.push(eq(items.barcode, params.barcode));
     }
 
     const whereClause = and(...filters);

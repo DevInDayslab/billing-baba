@@ -1,5 +1,6 @@
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:flutter/material.dart';
 
 class CreditNoteFormState {
@@ -26,6 +27,7 @@ class CreditNoteFormState {
     this.isDirty = false,
     this.isSaving = false,
     this.saveError,
+    this.taxOption = 'NONE',
   });
 
   final String? documentId;
@@ -50,13 +52,26 @@ class CreditNoteFormState {
   final bool isDirty;
   final bool isSaving;
   final String? saveError;
+  final String taxOption;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
   double get paymentAmount => payments.isNotEmpty ? payments.first.amount : 0;
 
-  double get rawGrandTotal =>
-      items.fold<double>(0, (sum, item) => sum + item.amount);
+  double get subtotal =>
+      items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
+
+  double get totalTax => resolveSaleTotalTax(
+    taxOption: taxOption,
+    subtotal: subtotal,
+    items: items,
+  );
+
+  double get rawGrandTotal => resolveSaleRawGrandTotal(
+    taxOption: taxOption,
+    subtotal: subtotal,
+    items: items,
+  );
 
   double get roundOffAmount {
     if (!roundOff) return 0;
@@ -105,6 +120,7 @@ class CreditNoteFormState {
     bool? isSaving,
     String? saveError,
     bool clearSaveError = false,
+    String? taxOption,
   }) {
     return CreditNoteFormState(
       documentId: documentId ?? this.documentId,
@@ -129,6 +145,7 @@ class CreditNoteFormState {
       isDirty: isDirty ?? this.isDirty,
       isSaving: isSaving ?? this.isSaving,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
+      taxOption: taxOption ?? this.taxOption,
     );
   }
 }

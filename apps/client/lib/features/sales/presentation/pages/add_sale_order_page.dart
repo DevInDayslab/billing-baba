@@ -19,6 +19,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropd
 import 'package:billing_baba/features/sales/providers/sale_order_form_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_order_tabs_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -390,6 +391,12 @@ class _FormFields extends ConsumerWidget {
               initialValue: form.phoneNo,
               hintText: 'Phone number',
               keyboardType: TextInputType.phone,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
+              hasError: form.phoneHasError,
+              errorText: form.phoneErrorMessage,
               onChanged: notifier.updatePhoneNo,
             ),
           ),
@@ -671,6 +678,9 @@ class _SaleTextField extends StatefulWidget {
     this.hintText,
     this.keyboardType,
     this.compact = false,
+    this.hasError = false,
+    this.errorText,
+    this.inputFormatters,
   });
 
   final String initialValue;
@@ -678,6 +688,9 @@ class _SaleTextField extends StatefulWidget {
   final String? hintText;
   final TextInputType? keyboardType;
   final bool compact;
+  final bool hasError;
+  final String? errorText;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   State<_SaleTextField> createState() => _SaleTextFieldState();
@@ -717,8 +730,12 @@ class _SaleTextFieldState extends State<_SaleTextField> {
       decoration: buildSaleFieldDecoration(
         hint: widget.hintText,
         compact: widget.compact,
+        hasError: widget.hasError,
+      ).copyWith(
+        errorText: widget.hasError ? widget.errorText : null,
       ),
       keyboardType: widget.keyboardType,
+      inputFormatters: widget.inputFormatters,
       onChanged: widget.onChanged,
     );
   }

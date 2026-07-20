@@ -13,6 +13,7 @@ import 'package:billing_baba/features/sales/models/payment_in_model.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:billing_baba/features/sales/models/sale_document_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
@@ -63,18 +64,22 @@ class SalesService {
     return {for (final party in parties) party.id: party.name};
   }
 
+  /// Shared party lookup for batched invoice page fetches.
+  Future<Map<String, String>> fetchPartyNameMap() => _partyNameMap();
+
   Future<PaginatedSaleInvoices> fetchInvoicesPage(
-    SalesDocumentListQuery query,
-  ) async {
+    SalesDocumentListQuery query, {
+    Map<String, String>? partyNames,
+  }) async {
     try {
-      final partyNames = await _partyNameMap();
+      final resolvedPartyNames = partyNames ?? await _partyNameMap();
       final response = await _repository.listDocuments(query);
       final items = response.documents
           .map(
             (dto) => SalesDocumentMapper.toInvoiceModel(
               dto,
               partyName: dto.partyId != null
-                  ? (partyNames[dto.partyId] ?? '')
+                  ? (resolvedPartyNames[dto.partyId] ?? '')
                   : '',
             ),
           )
@@ -127,15 +132,18 @@ class SalesService {
     return page.items;
   }
 
-  Future<PaginatedPaymentIn> fetchPaymentsPage(PaymentListQuery query) async {
+  Future<PaginatedPaymentIn> fetchPaymentsPage(
+    PaymentListQuery query, {
+    Map<String, String>? partyNames,
+  }) async {
     try {
-      final partyNames = await _partyNameMap();
+      final resolvedPartyNames = partyNames ?? await _partyNameMap();
       final response = await _repository.listPayments(query);
       final items = response.payments
           .map(
             (dto) => SalesDocumentMapper.toPaymentInModel(
               dto,
-              partyName: partyNames[dto.partyId] ?? '',
+              partyName: resolvedPartyNames[dto.partyId] ?? '',
             ),
           )
           .toList();
@@ -216,6 +224,7 @@ class SalesService {
         items: input.items,
         itemNameToId: itemNameToId,
         existingLines: document.lines,
+        taxOption: input.taxOption,
       );
 
       return _repository.getDocument(document.id);
@@ -243,6 +252,7 @@ class SalesService {
             ? form.attachedSaleOrderIds.first
             : null,
         items: form.items,
+        taxOption: form.taxOption,
       ),
       itemNameToId: itemNameToId,
     );
@@ -339,6 +349,7 @@ class SalesService {
     required List<SaleLineItem> items,
     required Map<String, String> itemNameToId,
     required List<SalesDocumentLineDto> existingLines,
+    String taxOption = 'NONE',
   }) async {
     final existingIds = existingLines.map((line) => line.id).toSet();
     final keptServerIds = <String>{};
@@ -359,6 +370,11 @@ class SalesService {
           ? 'Pcs'
           : rawUnit;
 
+      final taxPercent = effectiveSaleLineTaxPercent(
+        taxOption: taxOption,
+        lineTaxPercent: line.taxPercent,
+      );
+
       final request = CreateSalesLineRequest(
         itemId: itemId,
         quantity: line.qty.toStringAsFixed(4),
@@ -367,8 +383,8 @@ class SalesService {
         discountAmount:
             (line.qty * line.pricePerUnit * (line.discountPercent / 100))
                 .toStringAsFixed(4),
-        taxRate: line.taxPercent.toStringAsFixed(4),
-        taxType: line.taxPercent > 0 ? 'cgst_sgst' : 'none',
+        taxRate: taxPercent.toStringAsFixed(4),
+        taxType: taxPercent > 0 ? 'cgst_sgst' : 'none',
         sortOrder: i,
       );
 

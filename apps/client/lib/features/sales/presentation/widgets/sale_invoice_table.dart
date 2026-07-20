@@ -9,6 +9,7 @@ import 'package:billing_baba/features/sales/application/sales_error_mapper.dart'
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_status_badge.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_table_shared.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
-const _tableHeaderBg = Color(0xFFF5F7FA);
 const _zebraRowBg = Color(0xFFFAFAFA);
 
 const _dateColWidth = 148.0;
@@ -104,10 +104,7 @@ class SaleInvoiceTable extends ConsumerWidget {
           const Divider(height: 1, color: _cardBorder),
           invoicesAsync.when(
             skipLoadingOnReload: true,
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(child: CircularProgressIndicator()),
-            ),
+            loading: () => const SalesLoadingState(),
             error: (error, _) => Padding(
               padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
@@ -124,9 +121,12 @@ class SaleInvoiceTable extends ConsumerWidget {
                 ],
               ),
             ),
-            data: (_) => _SaleInvoiceTransactionsTable(
-              items: paginated.items,
-            ),
+            data: (_) {
+              if (invoicesAsync.isReloading) {
+                return const SalesLoadingState();
+              }
+              return _SaleInvoiceTransactionsTable(items: paginated.items);
+            },
           ),
           const Divider(height: 1, color: _cardBorder),
           if (paginated.totalPages > 1)
@@ -156,7 +156,9 @@ class _SaleInvoiceTransactionsTableState
   Widget build(BuildContext context) {
     final filters = ref.watch(saleInvoiceFiltersProvider);
     final selectedId = ref.watch(selectedSaleInvoiceIdProvider);
-    final hasActiveFilters = needsSaleInvoiceClientSideFiltering(filters);
+    final hasActiveFilters =
+        needsSaleInvoiceClientSideFiltering(filters) ||
+        ref.watch(saleInvoiceSearchQueryProvider).trim().isNotEmpty;
 
     final rows = [
       for (var i = 0; i < widget.items.length; i++)
@@ -890,14 +892,7 @@ class _PaginationRow extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          for (var page = 1; page <= totalPages; page++) ...[
-            if (page > 1) const SizedBox(width: AppSpacing.xs),
-            _PageNumber(
-              page: page,
-              isActive: page == currentPage,
-              onTap: () => filtersNotifier.setPage(page),
-            ),
-          ],
+          ..._buildPageNumbers(filtersNotifier),
           const SizedBox(width: AppSpacing.sm),
           TextButton(
             onPressed: canGoNext
@@ -916,6 +911,58 @@ class _PaginationRow extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildPageNumbers(SaleInvoiceFilters filtersNotifier) {
+    // Show at most 7 page buttons: first, last, current, and neighbours
+    // with ellipsis gaps — never renders more than 7 _PageNumber widgets
+    final pages = <Widget>[];
+
+    int rangeStart = (currentPage - 2).clamp(1, totalPages);
+    int rangeEnd = (currentPage + 2).clamp(1, totalPages);
+
+    // Always show first page
+    if (rangeStart > 1) {
+      pages.add(_PageNumber(
+        page: 1,
+        isActive: currentPage == 1,
+        onTap: () => filtersNotifier.setPage(1),
+      ));
+      if (rangeStart > 2) {
+        pages.add(const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4),
+          child: Text('...', style: TextStyle(color: AppColors.textSecondary)),
+        ));
+      }
+    }
+
+    // Middle window
+    for (var page = rangeStart; page <= rangeEnd; page++) {
+      if (pages.isNotEmpty) pages.add(const SizedBox(width: AppSpacing.xs));
+      pages.add(_PageNumber(
+        page: page,
+        isActive: page == currentPage,
+        onTap: () => filtersNotifier.setPage(page),
+      ));
+    }
+
+    // Always show last page
+    if (rangeEnd < totalPages) {
+      if (rangeEnd < totalPages - 1) {
+        pages.add(const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 4),
+          child: Text('...', style: TextStyle(color: AppColors.textSecondary)),
+        ));
+      }
+      pages.add(const SizedBox(width: AppSpacing.xs));
+      pages.add(_PageNumber(
+        page: totalPages,
+        isActive: currentPage == totalPages,
+        onTap: () => filtersNotifier.setPage(totalPages),
+      ));
+    }
+
+    return pages;
   }
 }
 

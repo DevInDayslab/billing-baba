@@ -85,7 +85,6 @@ class PosSaleService {
         lineDtos.add(lineDto);
       }
 
-      final _ = await _remote.finalizeDocument(docDto.id);
       await _remote.finalizeDocument(docDto.id);
       final finalizedDto = await _remote.getDocument(docDto.id);
 
@@ -233,8 +232,14 @@ class PosSaleService {
   }
 
   String _friendlyMessage(String message, int? statusCode) {
-    if (statusCode == 409) {
+    final normalized = message.toLowerCase();
+    if (statusCode == 422 &&
+        (normalized.contains('insufficient stock') ||
+            normalized.contains('insufficient_stock'))) {
       return 'Item out of stock. Please check quantities.';
+    }
+    if (statusCode == 409) {
+      return 'This sale could not be completed. Please try again.';
     }
     if (statusCode == 400) {
       return 'Validation error: $message';
@@ -242,7 +247,7 @@ class PosSaleService {
     if (statusCode == 500) {
       return 'Server error. Please try again.';
     }
-    if (statusCode == null && message.toLowerCase().contains('connection')) {
+    if (statusCode == null && normalized.contains('connection')) {
       return 'No connection. Check your internet and try again.';
     }
     return message;

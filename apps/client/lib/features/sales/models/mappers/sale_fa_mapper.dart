@@ -1,6 +1,7 @@
 import 'package:billing_baba/features/sales/models/dto/sale_fa_dto.dart';
 import 'package:billing_baba/features/sales/models/requests/sale_fa_requests.dart';
 import 'package:billing_baba/features/sales/models/sale_fa_form_model.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/models/sale_fa_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
@@ -137,6 +138,12 @@ class SaleFaMapper {
       final item = form.items[i];
       if (item.assetName.trim().isEmpty || item.qty <= 0) continue;
 
+      final taxPercent = effectiveSaleFaLineTaxPercent(
+        taxOption: form.taxOption,
+        lineTaxPercent: item.taxPercent,
+      );
+      final taxableItem = item.copyWith(taxPercent: taxPercent);
+
       assets.add(
         CreateSaleFaAssetRequest(
           id: _isUuid(item.id) ? item.id : null,
@@ -147,9 +154,9 @@ class SaleFaMapper {
               : item.description.trim(),
           salePrice: item.pricePerUnit.toStringAsFixed(4),
           qty: item.qty.toStringAsFixed(4),
-          taxRate: item.taxPercent.toStringAsFixed(4),
-          taxAmount: item.lineTax.toStringAsFixed(4),
-          lineTotal: item.amount.toStringAsFixed(4),
+          taxRate: taxPercent.toStringAsFixed(4),
+          taxAmount: taxableItem.lineTax.toStringAsFixed(4),
+          lineTotal: taxableItem.amount.toStringAsFixed(4),
           sortOrder: i,
         ),
       );

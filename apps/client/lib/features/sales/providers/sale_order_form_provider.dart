@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
@@ -12,6 +13,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_o
 import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -132,7 +134,7 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     state = state.copyWith(
       partyId: party.id,
       party: party.name,
-      phoneNo: party.phone,
+      phoneNo: Validators.normalizeIndianPhone(party.phone) ?? '',
       stateOfSupply: party.state.isNotEmpty ? party.state : state.stateOfSupply,
       clearSaveError: true,
     );
@@ -163,7 +165,10 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
   }
 
   void updatePhoneNo(String value) {
-    state = state.copyWith(phoneNo: value);
+    state = state.copyWith(
+      phoneNo: Validators.sanitizePhoneInput(value),
+      clearSaveError: true,
+    );
   }
 
   void updatePaymentType(String value) {
@@ -253,11 +258,25 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     state = state.copyWith(items: items);
   }
 
+  void updateTaxOption(String value) {
+    state = state.copyWith(
+      taxOption: value,
+      items: applyBillTaxOptionToSaleItems(state.items, value),
+      clearSaveError: true,
+    );
+  }
+
   void updateLineItem(int index, SaleLineItem item) {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
-    state = state.copyWith(items: items, clearSaveError: true);
+    final clearBillTax =
+        item.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
+    state = state.copyWith(
+      items: items,
+      taxOption: clearBillTax ? 'NONE' : state.taxOption,
+      clearSaveError: true,
+    );
   }
 
   void selectCatalogItem(int index, SaleItemOption catalogItem) {
@@ -305,6 +324,7 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     documentDate: state.orderDate,
     notes: state.description,
     items: state.items,
+    taxOption: state.taxOption,
   );
 
   Future<String?> save({bool stayOpen = false}) async {

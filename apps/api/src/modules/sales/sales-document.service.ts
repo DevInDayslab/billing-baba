@@ -65,6 +65,7 @@ export class SalesDocumentService extends SalesServiceBase {
       page: query.page,
       limit: query.limit,
       documentType: query.document_type,
+      documentSeries: query.document_series,
       status: query.status,
       partyId: query.party_id,
       posSessionId: query.pos_session_id,
@@ -78,6 +79,7 @@ export class SalesDocumentService extends SalesServiceBase {
     const summary = await this.repository.aggregateListSummary({
       businessId,
       documentType: query.document_type,
+      documentSeries: query.document_series,
       status: query.status,
       partyId: query.party_id,
       posSessionId: query.pos_session_id,

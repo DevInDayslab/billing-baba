@@ -601,7 +601,7 @@ class InventoryService {
         final stock = stockByItem[dto.id];
         return ItemMapper.fromListDto(
           dto,
-          quantity: _parseDecimal(dto.quantity) ?? stock?.quantity,
+          quantity: stock?.quantity ?? _parseDecimal(dto.quantity),
           stockValue: stock?.stockValue,
           reservedQuantity: _parseDecimal(dto.reservedQuantity),
           availableForSale: _parseDecimal(dto.availableForSale),
@@ -626,7 +626,7 @@ class InventoryService {
       final stock = StockLevelMapper.aggregateByItem(stockLevels)[id];
       return ItemMapper.fromDetailDto(
         dto,
-        quantity: _parseDecimal(dto.quantity) ?? stock?.quantity,
+        quantity: stock?.quantity ?? _parseDecimal(dto.quantity),
         stockValue: stock?.stockValue,
         reservedQuantity: _parseDecimal(dto.reservedQuantity),
         availableForSale: _parseDecimal(dto.availableForSale),

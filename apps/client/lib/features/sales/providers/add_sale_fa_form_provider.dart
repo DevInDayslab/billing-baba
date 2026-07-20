@@ -5,6 +5,7 @@ import 'package:billing_baba/features/sales/models/sale_fa_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/providers/sale_fa_provider.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -128,11 +129,25 @@ class AddSaleFaForm extends _$AddSaleFaForm {
     state = state.copyWith(items: items, isDirty: true);
   }
 
+  void updateTaxOption(String value) {
+    state = state.copyWith(
+      taxOption: value,
+      items: applyBillTaxOptionToSaleFaItems(state.items, value),
+      isDirty: true,
+    );
+  }
+
   void updateLineItem(int index, SaleFixedAssetLineItem item) {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
-    state = state.copyWith(items: items, isDirty: true);
+    final clearBillTax =
+        item.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
+    state = state.copyWith(
+      items: items,
+      taxOption: clearBillTax ? 'NONE' : state.taxOption,
+      isDirty: true,
+    );
   }
 
   void updatePaymentType(String type) {

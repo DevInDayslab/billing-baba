@@ -33,7 +33,7 @@ final class PurchaseOrdersProvider
   PurchaseOrders create() => PurchaseOrders();
 }
 
-String _$purchaseOrdersHash() => r'3c223a86981f98063f3a040d1fde8d1270494968';
+String _$purchaseOrdersHash() => r'28527b33d542313a863dddec04e00562133e67f4';
 
 abstract class _$PurchaseOrders
     extends $AsyncNotifier<PaginatedPurchaseOrders> {

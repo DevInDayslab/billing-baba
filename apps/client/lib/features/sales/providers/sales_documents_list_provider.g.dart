@@ -158,7 +158,7 @@ final class SalesDocumentFiltersProvider
 }
 
 String _$salesDocumentFiltersHash() =>
-    r'bb562c9b8cb9be20b5f74650dd38e4c0a0d0933d';
+    r'd4679eafa346ceece02cdb5b3185f9d182e55e1c';
 
 final class SalesDocumentFiltersFamily extends $Family
     with
@@ -250,7 +250,7 @@ final class SalesDocumentsListProvider
 }
 
 String _$salesDocumentsListHash() =>
-    r'61dd7c18b070ea9230e0f30176f48e1881161dd0';
+    r'b207bbe00cce53d82960a454d608ababcce9b34c';
 
 final class SalesDocumentsListFamily extends $Family
     with
@@ -369,7 +369,7 @@ final class FilteredSalesDocumentsProvider
 }
 
 String _$filteredSalesDocumentsHash() =>
-    r'c17af9f9f04c0861e344728c1a90086421052a86';
+    r'4d6cf9b44febc356add8f09b2a8306d5aca1f9e0';
 
 final class FilteredSalesDocumentsFamily extends $Family
     with

@@ -183,17 +183,11 @@ class _CreditNoteFooterState extends ConsumerState<CreditNoteFooter> {
                   SizedBox(
                     width: 72,
                     child: SaleGenericSelectDropdown(
-                      value: totalTax > 0
-                          ? taxLabelForPercent(
-                              form.items.isNotEmpty
-                                  ? form.items.first.taxPercent
-                                  : 0,
-                            )
-                          : 'NONE',
+                      value: form.taxOption,
                       options: SaleDropdownOptions.taxSlabs,
                       highlight: SaleDropdownHighlight.red,
                       compact: true,
-                      onSelected: (_) {},
+                      onSelected: notifier.updateTaxOption,
                     ),
                   ),
                   const Spacer(),

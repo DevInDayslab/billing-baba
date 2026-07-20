@@ -1,6 +1,7 @@
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart' as api;
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:flutter/material.dart';
 
 /// Document types that share the estimate/proforma form layout.
@@ -79,11 +80,17 @@ class SaleDocumentFormState {
   double get subtotal =>
       items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
 
-  double get taxAmount =>
-      items.fold<double>(0, (sum, item) => sum + item.lineTax);
+  double get taxAmount => resolveSaleTotalTax(
+    taxOption: taxOption,
+    subtotal: subtotal,
+    items: items,
+  );
 
-  double get rawGrandTotal =>
-      items.fold<double>(0, (sum, item) => sum + item.amount);
+  double get rawGrandTotal => resolveSaleRawGrandTotal(
+    taxOption: taxOption,
+    subtotal: subtotal,
+    items: items,
+  );
 
   double get roundOffAmount {
     if (!roundOff) return 0;

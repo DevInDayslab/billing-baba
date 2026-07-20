@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/inventory/application/barcode_confidence.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:flutter/foundation.dart';
 
@@ -282,6 +283,14 @@ class InventorySearchEngine {
   static int? _scoreEntry(InventorySearchIndexEntry entry, String rawQuery) {
     final normalizedQuery = normalize(rawQuery);
     if (normalizedQuery.isEmpty) return 0;
+
+    if (BarcodeConfidence.isBarcodeLike(rawQuery)) {
+      if (entry.normalizedBarcode.isNotEmpty &&
+          entry.normalizedBarcode == normalizedQuery) {
+        return 200000;
+      }
+      return null;
+    }
 
     final queryTokens = tokenizeQuery(normalizedQuery);
     if (queryTokens.isEmpty) return null;
