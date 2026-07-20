@@ -104,10 +104,67 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     await _saveContact(input);
   }
 
+  Future<void> _deleteSelectedContacts() async {
+    final selectedIds = ref.read(selectedContactIdsProvider);
+    if (selectedIds.isEmpty) return;
+
+    final count = selectedIds.length;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(count == 1 ? 'Delete contact?' : 'Delete $count contacts?'),
+        content: Text(
+          count == 1
+              ? 'Are you sure you want to delete the selected contact?'
+              : 'Are you sure you want to delete the selected contacts?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final notifier = ref.read(contactsProvider.notifier);
+      for (final contactId in selectedIds.toList()) {
+        await notifier.deleteContact(contactId);
+      }
+      if (!mounted) return;
+      ref.read(selectedContactIdsProvider.notifier).clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            count == 1
+                ? 'Contact deleted successfully'
+                : '$count contacts deleted successfully',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ContactErrorMapper.messageFor(error)),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final filters = ref.watch(contactFiltersProvider);
     final filtersNotifier = ref.read(contactFiltersProvider.notifier);
+    final selectedCount = ref.watch(selectedContactIdsProvider).length;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -128,6 +185,10 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                     padding: EdgeInsets.symmetric(horizontal: pagePadding),
                     child: _ContactsTitleBar(
                       onAddContact: _openAddContactDialog,
+                      onDelete: selectedCount == 0
+                          ? null
+                          : _deleteSelectedContacts,
+                      selectedCount: selectedCount,
                       isCompact: isCompact,
                     ),
                   ),
@@ -452,10 +513,14 @@ class _FilterCheckboxTile extends StatelessWidget {
 class _ContactsTitleBar extends StatelessWidget {
   const _ContactsTitleBar({
     required this.onAddContact,
+    this.onDelete,
+    this.selectedCount = 0,
     this.isCompact = false,
   });
 
   final VoidCallback onAddContact;
+  final VoidCallback? onDelete;
+  final int selectedCount;
   final bool isCompact;
 
   static const _titleStyle = TextStyle(
@@ -489,6 +554,29 @@ class _ContactsTitleBar extends StatelessWidget {
       ),
     ];
 
+    final deleteButton = onDelete == null
+        ? null
+        : OutlinedButton.icon(
+            onPressed: onDelete,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _addContactRed,
+              side: const BorderSide(color: _addContactRed),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.md,
+              ),
+              minimumSize: const Size(0, 42),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            icon: const Icon(Icons.delete_outline, size: 20),
+            label: Text(
+              selectedCount > 1 ? 'Delete ($selectedCount)' : 'Delete',
+            ),
+          );
+
     if (isCompact) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -500,6 +588,10 @@ class _ContactsTitleBar extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
+          if (deleteButton != null) ...[
+            SizedBox(width: double.infinity, child: deleteButton),
+            const SizedBox(height: AppSpacing.sm),
+          ],
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
@@ -516,6 +608,10 @@ class _ContactsTitleBar extends StatelessWidget {
     return Row(
       children: [
         const Expanded(child: Text('Contacts', style: _titleStyle)),
+        if (deleteButton != null) ...[
+          deleteButton,
+          const SizedBox(width: AppSpacing.sm),
+        ],
         FilledButton.icon(
           onPressed: onAddContact,
           style: _addContactButtonStyle,

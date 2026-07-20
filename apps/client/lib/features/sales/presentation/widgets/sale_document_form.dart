@@ -26,7 +26,7 @@ const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 
 /// Shared two-state form for Estimate/Quotation and Proforma Invoice.
-class SaleDocumentForm extends ConsumerWidget {
+class SaleDocumentForm extends ConsumerStatefulWidget {
   const SaleDocumentForm({
     required this.documentType,
     required this.route,
@@ -51,59 +51,113 @@ class SaleDocumentForm extends ConsumerWidget {
   final VoidCallback? onClose;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(saleDocumentFormProvider(documentType));
-    final scope = switch (documentType) {
+  ConsumerState<SaleDocumentForm> createState() => _SaleDocumentFormState();
+}
+
+class _SaleDocumentFormState extends ConsumerState<SaleDocumentForm> {
+  String get _closeFormTitle => switch (widget.documentType) {
+    SaleDocumentType.estimate => 'Close Estimate',
+    SaleDocumentType.proforma => 'Close Proforma Invoice',
+  };
+
+  Future<void> _handleBack() async {
+    final form = ref.read(saleDocumentFormProvider(widget.documentType));
+    if (!form.isFormOpen) return;
+
+    final confirmed = await showCloseFormDialog(
+      context,
+      title: _closeFormTitle,
+    );
+    if (!confirmed || !mounted) return;
+    ref
+        .read(saleDocumentFormProvider(widget.documentType).notifier)
+        .closeForm();
+    widget.onClose?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final form = ref.watch(saleDocumentFormProvider(widget.documentType));
+    final scope = switch (widget.documentType) {
       SaleDocumentType.estimate => estimateListScope(),
       SaleDocumentType.proforma => proformaListScope(),
     };
-    final tableConfig = switch (documentType) {
+    final tableConfig = switch (widget.documentType) {
       SaleDocumentType.estimate => estimateTableConfig(),
       SaleDocumentType.proforma => proformaTableConfig(),
     };
     final formNotifier = ref.read(
-      saleDocumentFormProvider(documentType).notifier,
+      saleDocumentFormProvider(widget.documentType).notifier,
     );
 
-    return ColoredBox(
-      color: AppColors.background,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SalePageTitleBar(currentRoute: route, onSettingsTap: () {}),
-            const SizedBox(height: AppSpacing.md),
-            if (form.isFormOpen || onClose != null)
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: AppRadius.lgBorder,
-                  border: Border.all(color: _cardBorder),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x0A000000),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
+    return PopScope(
+      canPop: !form.isFormOpen,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await _handleBack();
+      },
+      child: ColoredBox(
+        color: AppColors.background,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (form.isFormOpen)
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: _handleBack,
+                      icon: const Icon(Icons.arrow_back),
+                      color: AppColors.textSecondary,
+                      tooltip: 'Back',
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    Expanded(
+                      child: SalePageTitleBar(
+                        currentRoute: widget.route,
+                        onSettingsTap: () {},
+                      ),
                     ),
                   ],
+                )
+              else
+                SalePageTitleBar(
+                  currentRoute: widget.route,
+                  onSettingsTap: () {},
                 ),
-                child: _FormContent(
-                  documentType: documentType,
-                  pageTitle: pageTitle,
-                  onClose: onClose,
-                ),
-              )
-            else ...[
-              SalesDocumentsFilterBar(
-                scope: scope,
-                onAdd: formNotifier.openForm,
-                addButtonLabel: createButtonLabel,
-              ),
               const SizedBox(height: AppSpacing.md),
-              SalesDocumentsTable(config: tableConfig),
+              if (form.isFormOpen || widget.onClose != null)
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.lgBorder,
+                    border: Border.all(color: _cardBorder),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0A000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: _FormContent(
+                    documentType: widget.documentType,
+                    pageTitle: widget.pageTitle,
+                    onClose: widget.onClose,
+                  ),
+                )
+              else ...[
+                SalesDocumentsFilterBar(
+                  scope: scope,
+                  onAdd: formNotifier.openForm,
+                  addButtonLabel: widget.createButtonLabel,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                SalesDocumentsTable(config: tableConfig),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

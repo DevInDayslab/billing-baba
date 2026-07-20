@@ -22,7 +22,22 @@ class SaleLineItemTableLayout {
     SaleLineItemColumnVisibility visibility =
         SaleLineItemColumnVisibility.defaults,
   }) {
-    return _columnWidthsFor(availableWidth).applyVisibility(visibility);
+    final contentWidth = math.max(
+      availableWidth - horizontalPadding * 2,
+      320.0,
+    );
+    return _columnWidthsFor(contentWidth)
+        .applyVisibility(visibility)
+        .rescaleToFit(contentWidth, visibility);
+  }
+
+  /// Smallest width needed to render all visible columns at their floor sizes.
+  static double minimumVisibleWidth(
+    SaleLineItemColumnVisibility visibility,
+  ) {
+    return SaleLineItemColumnWidths.minimum
+        .applyVisibility(visibility)
+        .visibleTotalWithGaps(visibility);
   }
 
   static SaleLineItemColumnWidths _columnWidthsFor(double availableWidth) {
@@ -30,7 +45,7 @@ class SaleLineItemTableLayout {
     const gap = cellGap;
     final contentWidth = math.max(
       availableWidth - horizontalPadding * 2,
-      320,
+      320.0,
     );
     final preferredTotal = preferred.totalWithGaps(gap);
 
@@ -115,6 +130,8 @@ class SaleLineItemColumnWidths {
     amount: 52,
     actions: 24,
   );
+
+  static const minimum = _minimum;
 
   final double index;
   final double item;
@@ -227,6 +244,69 @@ class SaleLineItemColumnWidths {
     final values = _values;
     return values.fold<double>(0, (sum, value) => sum + value) +
         gap * (values.length - 1);
+  }
+
+  double visibleTotalWithGaps(
+    SaleLineItemColumnVisibility visibility, {
+    double gap = SaleLineItemTableLayout.cellGap,
+  }) {
+    final values = <double>[
+      index,
+      item,
+      qty,
+      amount,
+      actions,
+      for (final column in SaleLineItemColumn.values)
+        if (visibility.isVisible(column)) widthFor(column),
+    ];
+    return values.fold<double>(0, (sum, value) => sum + value) +
+        gap * (values.length - 1);
+  }
+
+  SaleLineItemColumnWidths rescaleToFit(
+    double maxWidth,
+    SaleLineItemColumnVisibility visibility,
+  ) {
+    final total = visibleTotalWithGaps(visibility);
+    if (total <= maxWidth || total <= 0) return this;
+
+    final factor = maxWidth / total;
+    double scale(double value) => value * factor;
+
+    return copyWith(
+      index: scale(index),
+      item: scale(item),
+      serial: visibility.isVisible(SaleLineItemColumn.serialNo)
+          ? scale(serial)
+          : 0,
+      description: visibility.isVisible(SaleLineItemColumn.description)
+          ? scale(description)
+          : 0,
+      batch: visibility.isVisible(SaleLineItemColumn.batch) ? scale(batch) : 0,
+      model: visibility.isVisible(SaleLineItemColumn.model) ? scale(model) : 0,
+      expDate: visibility.isVisible(SaleLineItemColumn.expDate)
+          ? scale(expDate)
+          : 0,
+      mfgDate: visibility.isVisible(SaleLineItemColumn.mfgDate)
+          ? scale(mfgDate)
+          : 0,
+      mrp: visibility.isVisible(SaleLineItemColumn.mrp) ? scale(mrp) : 0,
+      size: visibility.isVisible(SaleLineItemColumn.size) ? scale(size) : 0,
+      qty: scale(qty),
+      unit: visibility.isVisible(SaleLineItemColumn.unit) ? scale(unit) : 0,
+      price: visibility.isVisible(SaleLineItemColumn.price) ? scale(price) : 0,
+      discount: visibility.isVisible(SaleLineItemColumn.discount)
+          ? scale(discount)
+          : 0,
+      taxPercent: visibility.isVisible(SaleLineItemColumn.taxPercent)
+          ? scale(taxPercent)
+          : 0,
+      taxAmount: visibility.isVisible(SaleLineItemColumn.taxAmount)
+          ? scale(taxAmount)
+          : 0,
+      amount: scale(amount),
+      actions: scale(actions),
+    );
   }
 
   List<double> get _values => [
@@ -396,6 +476,55 @@ class SaleLineItemGridHeaderCell extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         maxLines: 2,
       ),
+    );
+  }
+}
+
+/// Row index cell: shows S.No. (or active bolt icon) and a delete control on hover.
+class SaleLineItemIndexCell extends StatefulWidget {
+  const SaleLineItemIndexCell({
+    required this.rowNumber,
+    required this.isActive,
+    this.onDelete,
+    super.key,
+  });
+
+  final int rowNumber;
+  final bool isActive;
+  final VoidCallback? onDelete;
+
+  @override
+  State<SaleLineItemIndexCell> createState() => _SaleLineItemIndexCellState();
+}
+
+class _SaleLineItemIndexCellState extends State<SaleLineItemIndexCell> {
+  bool _isHovered = false;
+
+  static const _indexStyle = TextStyle(
+    fontSize: 12,
+    color: AppColors.textSecondary,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: _isHovered && widget.onDelete != null
+          ? IconButton(
+              onPressed: widget.onDelete,
+              icon: const Icon(
+                Icons.delete_outline,
+                size: 16,
+                color: AppColors.error,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              tooltip: 'Delete row',
+            )
+          : widget.isActive
+              ? const Icon(Icons.bolt, size: 16, color: AppColors.primary)
+              : Text('${widget.rowNumber}', style: _indexStyle),
     );
   }
 }

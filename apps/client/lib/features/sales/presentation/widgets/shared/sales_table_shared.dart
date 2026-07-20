@@ -7,13 +7,15 @@ const salesCardBorder = Color(0xFFE0E0E0);
 const salesTableColGap = 12.0;
 
 class SalesLoadingState extends StatelessWidget {
-  const SalesLoadingState({super.key});
+  const SalesLoadingState({this.minHeight = 220, super.key});
+
+  final double minHeight;
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(AppSpacing.xl),
-      child: Center(child: CircularProgressIndicator()),
+    return SizedBox(
+      height: minHeight,
+      child: const Center(child: CircularProgressIndicator()),
     );
   }
 }

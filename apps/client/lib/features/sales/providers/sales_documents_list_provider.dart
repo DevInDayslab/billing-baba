@@ -152,21 +152,29 @@ DateTimeRange? _resolveTimeRange(
 SalesDocumentListQuery _buildFetchAllQuery(
   SalesDocumentListScope scope,
   SalesDocumentFiltersState filters,
-  String searchQuery,
-) {
+  String searchQuery, {
+  int? page,
+  int? limit,
+}) {
   final dateRange = _resolveTimeRange(
     filters.timeRangeOption,
     filters.customDateRange,
   );
 
   return SalesDocumentListQuery(
-    limit: PaginatedFetch.defaultPageSize,
+    page: page ?? filters.currentPage,
+    limit: limit ?? salesDocumentsPageSize,
     documentType: scope.documentType.apiValue,
+    documentSeries: scope.documentSeries,
     status: _documentStatusFromFilterLabel(filters.selectedStatus),
     from: dateRange?.start.toUtc().toIso8601String(),
     to: dateRange?.end.toUtc().toIso8601String(),
     q: searchQuery.trim().isEmpty ? null : searchQuery.trim(),
   );
+}
+
+bool needsSalesDocumentClientSideFiltering(SalesDocumentFiltersState filters) {
+  return filters.hasColumnFilters;
 }
 
 PaginatedSaleInvoices paginateSalesDocuments(
@@ -189,14 +197,29 @@ PaginatedSaleInvoices paginateSalesDocuments(
   );
 }
 
-List<SaleInvoiceModel> _applySeriesFilter(
+List<SaleInvoiceModel> _applySalesDocumentClientFilters(
   List<SaleInvoiceModel> items,
-  SalesDocumentListScope scope,
+  SalesDocumentFiltersState filters,
 ) {
-  if (scope.documentSeries == null) return items;
-  return items
-      .where((item) => item.documentSeries == scope.documentSeries)
-      .toList();
+  return items.where((item) {
+    if (filters.dateColumnFilter != null &&
+        !filters.dateColumnFilter!.matches(item.date)) {
+      return false;
+    }
+    if (filters.documentNoColumnFilter != null &&
+        !filters.documentNoColumnFilter!.matches(item.invoiceNo)) {
+      return false;
+    }
+    if (filters.partyNameColumnFilter != null &&
+        !filters.partyNameColumnFilter!.matches(item.partyName)) {
+      return false;
+    }
+    if (filters.amountColumnFilter != null &&
+        !filters.amountColumnFilter!.matches(item.amount)) {
+      return false;
+    }
+    return true;
+  }).toList();
 }
 
 @Riverpod(keepAlive: true)
@@ -278,59 +301,54 @@ class SalesDocumentFilters extends _$SalesDocumentFilters {
 class SalesDocumentsList extends _$SalesDocumentsList {
   @override
   Future<PaginatedSaleInvoices> build(SalesDocumentListScope scope) async {
-    ref.watch(
-      salesDocumentFiltersProvider(scope).select(
-        (filters) => (filters.timeRangeOption, filters.customDateRange),
-      ),
-    );
+    ref.watch(salesDocumentFiltersProvider(scope));
     ref.watch(salesDocumentSearchQueryProvider(scope));
-    final allItems = await _fetchAllDocuments(scope);
-    return PaginatedSaleInvoices(
-      items: allItems,
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: allItems.length,
-    );
+    return _fetchPage();
   }
 
-  Future<List<SaleInvoiceModel>> _fetchAllDocuments(
-    SalesDocumentListScope scope,
-  ) async {
+  Future<PaginatedSaleInvoices> _fetchPage() async {
     final filters = ref.read(salesDocumentFiltersProvider(scope));
     final search = ref.read(salesDocumentSearchQueryProvider(scope));
     final service = await ref.read(salesServiceProvider.future);
-    final baseQuery = _buildFetchAllQuery(scope, filters, search);
+    final partyNames = await service.fetchPartyNameMap();
 
-    final allItems = await PaginatedFetch.fetchAll<SaleInvoiceModel>(
-      fetchPage: (page) async {
-        final result = await service.fetchInvoicesPage(
-          SalesDocumentListQuery(
-            page: page,
-            limit: baseQuery.limit,
-            documentType: baseQuery.documentType,
-            status: baseQuery.status,
-            from: baseQuery.from,
-            to: baseQuery.to,
-            q: baseQuery.q,
-          ),
-        );
-        return (items: result.items, totalPages: result.totalPages);
-      },
+    if (needsSalesDocumentClientSideFiltering(filters)) {
+      final allItems = await PaginatedFetch.fetchAll<SaleInvoiceModel>(
+        fetchPage: (page) async {
+          final result = await service.fetchInvoicesPage(
+            _buildFetchAllQuery(
+              scope,
+              filters,
+              search,
+              page: page,
+              limit: PaginatedFetch.defaultPageSize,
+            ),
+            partyNames: partyNames,
+          );
+          return (items: result.items, totalPages: result.totalPages);
+        },
+      );
+      final filtered = _applySalesDocumentClientFilters(allItems, filters);
+      return paginateSalesDocuments(filtered, filters.currentPage);
+    }
+
+    final page = await service.fetchInvoicesPage(
+      _buildFetchAllQuery(scope, filters, search),
+      partyNames: partyNames,
     );
-    return _applySeriesFilter(allItems, scope);
+    final filtered = _applySalesDocumentClientFilters(page.items, filters);
+    return PaginatedSaleInvoices(
+      items: filtered,
+      currentPage: page.currentPage,
+      totalPages: page.totalPages,
+      totalItems: page.totalItems,
+      summary: page.summary,
+    );
   }
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final allItems = await _fetchAllDocuments(scope);
-      return PaginatedSaleInvoices(
-        items: allItems,
-        currentPage: 1,
-        totalPages: 1,
-        totalItems: allItems.length,
-      );
-    });
+    state = await AsyncValue.guard(_fetchPage);
   }
 
   Future<String?> deleteDraft(String documentId) async {
@@ -434,45 +452,13 @@ void _invalidateRelatedLists(
   }
 }
 
-List<SaleInvoiceModel> _applySalesDocumentClientFilters(
-  List<SaleInvoiceModel> items,
-  SalesDocumentFiltersState filters,
-) {
-  final status = _documentStatusFromFilterLabel(filters.selectedStatus);
-
-  return items.where((item) {
-    if (status != null && item.documentStatus.apiValue != status) {
-      return false;
-    }
-    if (filters.dateColumnFilter != null &&
-        !filters.dateColumnFilter!.matches(item.date)) {
-      return false;
-    }
-    if (filters.documentNoColumnFilter != null &&
-        !filters.documentNoColumnFilter!.matches(item.invoiceNo)) {
-      return false;
-    }
-    if (filters.partyNameColumnFilter != null &&
-        !filters.partyNameColumnFilter!.matches(item.partyName)) {
-      return false;
-    }
-    if (filters.amountColumnFilter != null &&
-        !filters.amountColumnFilter!.matches(item.amount)) {
-      return false;
-    }
-    return true;
-  }).toList();
-}
-
 @riverpod
 List<SaleInvoiceModel> filteredSalesDocuments(
   Ref ref,
   SalesDocumentListScope scope,
 ) {
-  final allItems =
-      ref.watch(salesDocumentsListProvider(scope)).value?.items ?? [];
-  final filters = ref.watch(salesDocumentFiltersProvider(scope));
-  return _applySalesDocumentClientFilters(allItems, filters);
+  return ref.watch(salesDocumentsListProvider(scope)).value?.items ??
+      const [];
 }
 
 @riverpod
@@ -480,9 +466,15 @@ PaginatedSaleInvoices paginatedSalesDocuments(
   Ref ref,
   SalesDocumentListScope scope,
 ) {
-  final filtered = ref.watch(filteredSalesDocumentsProvider(scope));
-  final filters = ref.watch(salesDocumentFiltersProvider(scope));
-  return paginateSalesDocuments(filtered, filters.currentPage);
+  return ref.watch(salesDocumentsListProvider(scope)).maybeWhen(
+    data: (page) => page,
+    orElse: () => const PaginatedSaleInvoices(
+      items: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+    ),
+  );
 }
 
 @Riverpod(keepAlive: true)

@@ -42,7 +42,7 @@ final class JobWorkOutSearchQueryProvider
 }
 
 String _$jobWorkOutSearchQueryHash() =>
-    r'8f2a1c4d9e7b3a6f5c0d8e1b2a4f6c9d0e3b5a7f';
+    r'10689bbfa47937f2a9682ccfb86290919326e7c9';
 
 abstract class _$JobWorkOutSearchQuery extends $Notifier<String> {
   String build();
@@ -94,8 +94,7 @@ final class JobWorkOutFiltersProvider
   }
 }
 
-String _$jobWorkOutFiltersHash() =>
-    r'1a3b5c7d9e0f2a4b6c8d0e2f4a6b8c0d2e4f6a8b';
+String _$jobWorkOutFiltersHash() => r'690b293ef2d99b7fe0e7d2b4e2d9eb9356e6e3c8';
 
 abstract class _$JobWorkOutFilters extends $Notifier<JobWorkOutFiltersState> {
   JobWorkOutFiltersState build();
@@ -162,7 +161,7 @@ final class FilteredJobWorkOrdersProvider
 }
 
 String _$filteredJobWorkOrdersHash() =>
-    r'2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c';
+    r'cfc0a8376cada441c45a1bcf5a0d2dcca746b1d8';
 
 @ProviderFor(JobWorkOrdersList)
 final jobWorkOrdersListProvider = JobWorkOrdersListProvider._();

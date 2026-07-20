@@ -36,6 +36,7 @@ export const listSalesDocumentsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   document_type: z.enum(salesDocumentTypeValues).optional(),
+  document_series: z.string().trim().min(1).max(20).optional(),
   status: z.enum(documentStatusValues).optional(),
   party_id: z.uuid().optional(),
   pos_session_id: z.uuid().optional(),

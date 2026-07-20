@@ -42,6 +42,7 @@ String saleItemDefaultUnit(SaleItemOption item) {
 }
 
 const _maxDropdownItems = 150;
+const _overlayMinHeight = 240.0;
 
 /// Item name field with autocomplete overlay on focus.
 class ItemNameAutocompleteField extends ConsumerStatefulWidget {
@@ -71,6 +72,7 @@ class ItemNameAutocompleteFieldState
   final FocusNode _focusNode = FocusNode();
   OverlayEntry? _overlayEntry;
   late final TextEditingController _controller;
+  var _waitingForItems = false;
 
   static final _priceFormat = NumberFormat.currency(
     locale: 'en_IN',
@@ -135,9 +137,60 @@ class ItemNameAutocompleteFieldState
 
       final itemsAsync = ref.read(inventoryItemsProvider);
       if (!itemsAsync.hasValue || (itemsAsync.value?.isEmpty ?? true)) {
-        unawaited(ref.read(inventoryItemsProvider.notifier).refresh());
+        setState(() => _waitingForItems = true);
+        unawaited(
+          ref.read(inventoryItemsProvider.notifier).refresh().whenComplete(() {
+            if (!mounted) return;
+            setState(() => _waitingForItems = false);
+            _overlayEntry?.markNeedsBuild();
+          }),
+        );
       }
     }
+  }
+
+  bool _shouldShowItemsLoading(AsyncValue<List<InventoryItem>> itemsAsync) {
+    return _waitingForItems || !itemsAsync.hasValue || itemsAsync.isLoading;
+  }
+
+  Widget _buildLoadingPanel(double width) {
+    return SizedBox(
+      width: width < 420 ? 420 : width,
+      height: _overlayMinHeight,
+      child: const Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  Widget _buildOverlayScaffold({
+    required double triggerWidth,
+    required Widget child,
+  }) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              _removeOverlay();
+              _focusNode.unfocus();
+            },
+          ),
+        ),
+        CompositedTransformFollower(
+          link: _layerLink,
+          showWhenUnlinked: false,
+          offset: const Offset(0, 38),
+          child: Material(
+            elevation: 4,
+            shadowColor: Colors.black26,
+            borderRadius: AppRadius.mdBorder,
+            clipBehavior: Clip.antiAlias,
+            color: AppColors.surface,
+            child: child,
+          ),
+        ),
+      ],
+    );
   }
 
   List<SaleItemOption> _buildItemOptions(List<InventoryItem> inventory) {
@@ -171,103 +224,44 @@ class ItemNameAutocompleteFieldState
     _overlayEntry = OverlayEntry(
       builder: (overlayContext) {
         final itemsAsync = ref.watch(inventoryItemsProvider);
+        final panelWidth = triggerWidth < 420 ? 420.0 : triggerWidth;
+
+        if (_shouldShowItemsLoading(itemsAsync)) {
+          return _buildOverlayScaffold(
+            triggerWidth: triggerWidth,
+            child: _buildLoadingPanel(panelWidth),
+          );
+        }
+
         return itemsAsync.when(
-          loading: () => Stack(
-            children: [
-              Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    _removeOverlay();
-                    _focusNode.unfocus();
-                  },
-                ),
-              ),
-              CompositedTransformFollower(
-                link: _layerLink,
-                showWhenUnlinked: false,
-                offset: const Offset(0, 38),
-                child: Material(
-                  elevation: 4,
-                  shadowColor: Colors.black26,
-                  borderRadius: AppRadius.mdBorder,
-                  clipBehavior: Clip.antiAlias,
-                  color: AppColors.surface,
-                  child: SizedBox(
-                    width: triggerWidth < 420 ? 420 : triggerWidth,
-                    child: const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          loading: () => _buildOverlayScaffold(
+            triggerWidth: triggerWidth,
+            child: _buildLoadingPanel(panelWidth),
           ),
-          error: (error, _) => Stack(
-            children: [
-              Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    _removeOverlay();
-                    _focusNode.unfocus();
-                  },
+          error: (error, _) => _buildOverlayScaffold(
+            triggerWidth: triggerWidth,
+            child: SizedBox(
+              width: panelWidth,
+              height: _overlayMinHeight,
+              child: const Padding(
+                padding: EdgeInsets.all(12),
+                child: Text(
+                  'Failed to load items',
+                  style: TextStyle(color: AppColors.error),
                 ),
               ),
-              CompositedTransformFollower(
-                link: _layerLink,
-                showWhenUnlinked: false,
-                offset: const Offset(0, 38),
-                child: Material(
-                  elevation: 4,
-                  shadowColor: Colors.black26,
-                  borderRadius: AppRadius.mdBorder,
-                  clipBehavior: Clip.antiAlias,
-                  color: AppColors.surface,
-                  child: SizedBox(
-                    width: triggerWidth < 420 ? 420 : triggerWidth,
-                    child: const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Text(
-                        'Failed to load items',
-                        style: TextStyle(color: AppColors.error),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
           data: (inventory) {
             final items = _buildItemOptions(inventory);
-            return Stack(
-              children: [
-                Positioned.fill(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      _removeOverlay();
-                      _focusNode.unfocus();
-                    },
-                  ),
-                ),
-                CompositedTransformFollower(
-                  link: _layerLink,
-                  showWhenUnlinked: false,
-                  offset: const Offset(0, 38),
-                  child: Material(
-                    elevation: 4,
-                    shadowColor: Colors.black26,
-                    borderRadius: AppRadius.mdBorder,
-                    clipBehavior: Clip.antiAlias,
-                    color: AppColors.surface,
-                    child: SizedBox(
-                      width: triggerWidth < 420 ? 420 : triggerWidth,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
+            return _buildOverlayScaffold(
+              triggerWidth: triggerWidth,
+              child: SizedBox(
+                width: panelWidth,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                           InkWell(
                             onTap: _openAddItemDialog,
                             child: const Padding(
@@ -496,11 +490,8 @@ class ItemNameAutocompleteFieldState
                           ),
                         ],
                       ),
-                    ),
-                  ),
                 ),
-              ],
-            );
+              );
           },
         );
       },

@@ -8,6 +8,7 @@ import 'package:billing_baba/features/sales/application/sales_error_mapper.dart'
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/payment_in_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/payment_in_status_badge.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_table_shared.dart';
 import 'package:billing_baba/features/sales/providers/payment_in_provider.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
@@ -85,10 +86,7 @@ class PaymentInTable extends ConsumerWidget {
           const Divider(height: 1, color: _cardBorder),
           recordsAsync.when(
             skipLoadingOnReload: true,
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(child: CircularProgressIndicator()),
-            ),
+            loading: () => const SalesLoadingState(),
             error: (error, _) => Padding(
               padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
@@ -105,7 +103,12 @@ class PaymentInTable extends ConsumerWidget {
                 ],
               ),
             ),
-            data: (_) => _PaymentInTransactionsTable(items: paginated.items),
+            data: (_) {
+              if (recordsAsync.isReloading) {
+                return const SalesLoadingState();
+              }
+              return _PaymentInTransactionsTable(items: paginated.items);
+            },
           ),
           const Divider(height: 1, color: _cardBorder),
           if (paginated.totalPages > 1)

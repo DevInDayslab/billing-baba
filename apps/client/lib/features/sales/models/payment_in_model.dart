@@ -74,16 +74,46 @@ class PaymentInModel {
   }
 }
 
+class PaymentInSummaryData {
+  const PaymentInSummaryData({
+    required this.totalAmount,
+    required this.receivedAmount,
+    this.growthPercent = 0,
+  });
+
+  final double totalAmount;
+  final double receivedAmount;
+  final double growthPercent;
+}
+
 class PaginatedPaymentIn {
   const PaginatedPaymentIn({
     required this.items,
     required this.currentPage,
     required this.totalPages,
     required this.totalItems,
+    this.summary,
   });
 
   final List<PaymentInModel> items;
   final int currentPage;
   final int totalPages;
   final int totalItems;
+  final PaymentInSummaryData? summary;
+
+  PaginatedPaymentIn copyWith({
+    List<PaymentInModel>? items,
+    int? currentPage,
+    int? totalPages,
+    int? totalItems,
+    PaymentInSummaryData? summary,
+  }) {
+    return PaginatedPaymentIn(
+      items: items ?? this.items,
+      currentPage: currentPage ?? this.currentPage,
+      totalPages: totalPages ?? this.totalPages,
+      totalItems: totalItems ?? this.totalItems,
+      summary: summary ?? this.summary,
+    );
+  }
 }

@@ -92,7 +92,7 @@ final class PartyTimelineProvider
   }
 }
 
-String _$partyTimelineHash() => r'9e3b32415c69ba1ae853519ea973856842d84030';
+String _$partyTimelineHash() => r'fd53c57f1a3205e309c20968fe884d234901348e';
 
 final class PartyTimelineFamily extends $Family
     with
@@ -182,7 +182,7 @@ final class PartyLedgerProvider
   }
 }
 
-String _$partyLedgerHash() => r'528a9936e8a3b05a0153782761d1ab3f67f34f45';
+String _$partyLedgerHash() => r'0a9fd32d17befc9939ccac5080107dd11869a4e9';
 
 final class PartyLedgerFamily extends $Family
     with

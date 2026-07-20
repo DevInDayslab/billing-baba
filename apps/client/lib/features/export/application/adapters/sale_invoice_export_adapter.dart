@@ -39,10 +39,14 @@ Future<List<SaleInvoiceModel>> _fetchAllSaleInvoices({
 }) async {
   return PaginatedFetch.fetchAll(
     fetchPage: (page) async {
-      final query = _buildSaleInvoiceQuery(filters, search, page: page);
+      final query = _buildSaleInvoiceQuery(filters, page: page);
       final result = await service.fetchInvoicesPage(query);
       return (
-        items: applySaleInvoiceClientFilters(result.items, filters),
+        items: applySaleInvoiceClientFilters(
+          result.items,
+          filters,
+          searchQuery: search,
+        ),
         totalPages: result.totalPages,
       );
     },
@@ -50,8 +54,7 @@ Future<List<SaleInvoiceModel>> _fetchAllSaleInvoices({
 }
 
 SalesDocumentListQuery _buildSaleInvoiceQuery(
-  SaleInvoiceFiltersState filters,
-  String search, {
+  SaleInvoiceFiltersState filters, {
   required int page,
 }) {
   final dateRange = resolveExportTimeRange(
@@ -66,7 +69,6 @@ SalesDocumentListQuery _buildSaleInvoiceQuery(
     status: _documentStatusFromFilterLabel(filters.selectedStatus),
     from: dateRange?.start.toUtc().toIso8601String(),
     to: dateRange?.end.toUtc().toIso8601String(),
-    q: search.trim().isEmpty ? null : search.trim(),
   );
 }
 

@@ -10,6 +10,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_o
 import 'package:billing_baba/features/sales/providers/delivery_challan_provider.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -204,7 +205,10 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
   }
 
   void updateTaxOption(String value) {
-    state = state.copyWith(taxOption: value);
+    state = state.copyWith(
+      taxOption: value,
+      items: applyBillTaxOptionToSaleItems(state.items, value),
+    );
   }
 
   void updateTermsTitle(String value) {
@@ -290,7 +294,13 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
-    state = state.copyWith(items: items, clearSaveError: true);
+    final clearBillTax =
+        item.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
+    state = state.copyWith(
+      items: items,
+      taxOption: clearBillTax ? 'NONE' : state.taxOption,
+      clearSaveError: true,
+    );
   }
 
   void selectCatalogItem(int index, SaleItemOption catalogItem) {
@@ -340,6 +350,7 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     notes: _buildNotes(),
     godownId: state.godownId,
     items: state.items,
+    taxOption: state.taxOption,
   );
 
   String? _buildNotes() {

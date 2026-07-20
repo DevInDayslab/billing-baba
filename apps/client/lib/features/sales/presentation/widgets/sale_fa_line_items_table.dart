@@ -2,10 +2,10 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/models/sale_fa_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/compact_number_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/providers/add_sale_fa_form_provider.dart';
-import 'package:billing_baba/features/sales/utils/sale_quantity_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -367,28 +367,26 @@ class _LineItemRow extends ConsumerWidget {
               item.copyWith(description: value),
             ),
           ),
-          _CompactNumberField(
-            initialValue: SaleQuantityInput.format(item.qty),
+          CompactNumberField(
+            value: item.qty,
             hintText: '0',
             integerOnly: true,
+            useFieldBox: false,
             onChanged: (value) => notifier.updateLineItem(
               index,
-              item.copyWith(qty: SaleQuantityInput.parse(value)),
+              item.copyWith(qty: value),
             ),
           ),
           Row(
             children: [
               Expanded(
-                child: _CompactNumberField(
-                  initialValue: item.pricePerUnit == 0
-                      ? ''
-                      : item.pricePerUnit.toString(),
+                child: CompactNumberField(
+                  value: item.pricePerUnit,
                   hintText: '0',
+                  useFieldBox: false,
                   onChanged: (value) => notifier.updateLineItem(
                     index,
-                    item.copyWith(
-                      pricePerUnit: double.tryParse(value) ?? 0,
-                    ),
+                    item.copyWith(pricePerUnit: value),
                   ),
                 ),
               ),
@@ -530,67 +528,6 @@ class _CompactTextFieldState extends State<_CompactTextField> {
         hint: widget.hintText,
         compact: true,
       ),
-      onChanged: widget.onChanged,
-    );
-  }
-}
-
-class _CompactNumberField extends StatefulWidget {
-  const _CompactNumberField({
-    required this.initialValue,
-    required this.onChanged,
-    this.hintText,
-    this.integerOnly = false,
-  });
-
-  final String initialValue;
-  final ValueChanged<String> onChanged;
-  final String? hintText;
-  final bool integerOnly;
-
-  @override
-  State<_CompactNumberField> createState() => _CompactNumberFieldState();
-}
-
-class _CompactNumberFieldState extends State<_CompactNumberField> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
-  }
-
-  @override
-  void didUpdateWidget(_CompactNumberField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.initialValue != oldWidget.initialValue &&
-        widget.initialValue != _controller.text) {
-      _controller.text = widget.initialValue;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: _controller,
-      style: saleFieldTextStyle.copyWith(fontSize: 13),
-      decoration: buildSaleFieldDecoration(
-        hint: widget.hintText,
-        compact: true,
-      ),
-      keyboardType: widget.integerOnly
-          ? SaleQuantityInput.integerKeyboardType
-          : SaleQuantityInput.decimalKeyboardType,
-      inputFormatters: widget.integerOnly
-          ? SaleQuantityInput.integerFormatters
-          : SaleQuantityInput.decimalFormatters,
       onChanged: widget.onChanged,
     );
   }

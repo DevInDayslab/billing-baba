@@ -97,6 +97,21 @@ void main() {
       expect(engine.searchIds('8901234567890'), [sampleItem.id]);
     });
 
+    test('does not fuzzy-match barcode-like queries to unrelated items', () {
+      final rankedEngine = InventorySearchEngine.build(
+        items: const [
+          sampleItem,
+          InventorySearchableFields(
+            id: 'item-2',
+            name: 'Maggi 2-Min Noodles',
+            hsn: '1902',
+          ),
+        ],
+      );
+
+      expect(rankedEngine.searchIds('1234567890123'), isEmpty);
+    });
+
     test('matches category and brand fields', () {
       expect(engine.searchIds('dairy'), [sampleItem.id]);
       expect(engine.searchIds('amul butter'), isEmpty);
