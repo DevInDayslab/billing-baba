@@ -157,7 +157,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   Future<Uint8List?> _pickImageBytes(Set<String> allowedMimes, int maxBytes) async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: _extensionsForMimes(allowedMimes),
       withData: true,
