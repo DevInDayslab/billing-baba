@@ -10,10 +10,9 @@ import 'package:billing_baba/features/pos/repositories/pos_repository.dart';
 
 class ApiPosRepository implements PosRepository {
   ApiPosRepository({
-    required PosSaleService posSaleService,
-    required InventoryService inventoryService,
-  }) : _posSaleService = posSaleService,
-       _inventoryService = inventoryService;
+    required this._posSaleService,
+    required this._inventoryService,
+  });
 
   final PosSaleService _posSaleService;
   final InventoryService _inventoryService;
@@ -41,7 +40,6 @@ class ApiPosRepository implements PosRepository {
         items: cart.items,
         payments: cart.payments,
         customerName: cart.customerName,
-        notes: null,
       );
     } on PosRepositoryException {
       rethrow;
