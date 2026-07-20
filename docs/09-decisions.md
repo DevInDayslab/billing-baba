@@ -36,6 +36,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-021: Sales Document Attachments](#adr-021-sales-document-attachments)
 - [ADR-022: Provider-Agnostic Outbound Notifications](#adr-022-provider-agnostic-outbound-notifications)
 - [ADR-023: Provider-Agnostic Object Storage](#adr-023-provider-agnostic-object-storage)
+- [ADR-024: Invoice Artifact System](#adr-024-invoice-artifact-system)
 
 ---
 
@@ -66,6 +67,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 | ADR-021 | Sales Document Attachments | July 2026 | Superseded |
 | ADR-022 | Provider-Agnostic Outbound Notifications | July 2026 | Accepted |
 | ADR-023 | Provider-Agnostic Object Storage | July 2026 | Accepted |
+| ADR-024 | Invoice Artifact System | July 2026 | Accepted |
 
 ---
 
@@ -1018,7 +1020,7 @@ Collaboration invitations and future customer messaging (payment reminders, invo
 - Select provider via `NOTIFICATION_PROVIDER=console|twilio`.
 - Keep user-visible copy in shared templates under `src/notifications/`.
 - Public invoice sharing uses cryptographically random `invoice_share_tokens` and website route `/invoice/:token`.
-- WhatsApp invoice/payment notify calls `GeneratedDocumentService.ensure()` before `sendMedia`; PDFs are generated server-side on cache miss (see [storage.md](04-backend/storage.md)).
+- WhatsApp invoice notify calls `InvoiceArtifactService` to ensure the PDF and attach a **temporary preview PNG** (not the PDF). See [ADR-024](#adr-024-invoice-artifact-system).
 
 ### Consequences
 
@@ -1083,6 +1085,69 @@ Billing Baba needs logos, item images, party documents, expense receipts, and (l
 | Per-module S3 helpers | Duplicates policy and path rules |
 
 **References:** [04-backend/storage.md](04-backend/storage.md) · [ADR-022](#adr-022-provider-agnostic-outbound-notifications)
+
+---
+
+## ADR-024: Invoice Artifact System
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+### Context
+
+Invoice sharing needs a Vyapar-like experience: WhatsApp preview image, public webpage, PDF download, and Scan-to-Pay UPI QR. Duplicating PDF/image/QR logic across notify, share, and website paths would drift from a single source of truth.
+
+### Decision
+
+- Introduce **`InvoiceArtifactService`** as the facade for PDF ensure, temporary preview PNG, share metadata, and payment QR orchestration.
+- The **PDF remains the only permanent document** (cached via `GeneratedDocumentService`).
+- Preview PNGs are generated on demand (SVG → sharp), uploaded temporarily, sent via Twilio `sendMedia`, then deleted (plus `*/previews/*` 24h lifecycle).
+- **`PaymentQrService`** builds `upi://pay` payloads from current `businesses.upi_id` and invoice due amount — never stored.
+- Public HTML is not stored; `apps/website` renders `/invoice/:token` from JSON.
+- Share tokens support expiry, revocation, and regeneration (one active token per invoice).
+
+```mermaid
+flowchart TD
+  Invoice[SalesDocument] --> GDS[GeneratedDocumentService]
+  GDS --> IAS[InvoiceArtifactService]
+  IAS --> PDF[Cached invoice.pdf]
+  IAS --> Preview[Preview PNG temp]
+  IAS --> Meta[Share metadata]
+  IAS --> PQS[PaymentQrService]
+  PQS --> QR[Dynamic UPI QR]
+  Preview --> Storage[StorageService]
+  Storage --> Twilio[Twilio sendMedia]
+  Meta --> Website[apps/website]
+  PDF --> Website
+  QR --> Website
+```
+
+### Consequences
+
+**Positive:**
+
+- Business modules never generate invoice images/QR directly
+- WhatsApp gets a compact preview; customers open the full invoice for PDF/pay
+- Public page stays light and token-gated
+
+**Negative:**
+
+- Preview rendering adds CPU cost on notify (target under 500ms)
+- Companies must set text `upi_id` for Scan to Pay (separate from uploaded UPI QR image)
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Attach PDF on WhatsApp | Poor mobile preview; not Vyapar-like |
+| Screenshot PDF for preview | Fragile, slow, layout-dependent |
+| Store HTML/QR permanently | Unnecessary; stale risk; storage cost |
+| Server-rendered public HTML | Website SPA already owns public UX |
+
+**References:** [generated-documents.md](04-backend/generated-documents.md) · [notifications.md](04-backend/notifications.md) · [public-invoices.md](04-backend/public-invoices.md) · [storage.md](04-backend/storage.md)
 
 ---
 

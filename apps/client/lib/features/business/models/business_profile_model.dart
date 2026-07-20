@@ -20,6 +20,7 @@ class BusinessProfileModel {
     this.signatureUrl,
     this.stampUrl,
     this.upiQrUrl,
+    this.upiId,
   });
 
   factory BusinessProfileModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +43,7 @@ class BusinessProfileModel {
       signatureUrl: json['signature_url'] as String?,
       stampUrl: json['stamp_url'] as String?,
       upiQrUrl: json['upi_qr_url'] as String?,
+      upiId: json['upi_id'] as String?,
     );
   }
 
@@ -63,6 +65,7 @@ class BusinessProfileModel {
   final String? signatureUrl;
   final String? stampUrl;
   final String? upiQrUrl;
+  final String? upiId;
 
   String get initial {
     final trimmed = name.trim();
@@ -89,6 +92,7 @@ class BusinessProfileModel {
     'signature_url': signatureUrl,
     'stamp_url': stampUrl,
     'upi_qr_url': upiQrUrl,
+    'upi_id': upiId,
   };
 }
 
@@ -103,6 +107,7 @@ class UpdateBusinessProfileRequest {
     this.state,
     this.pincode,
     this.address,
+    this.upiId,
   });
 
   final String name;
@@ -114,6 +119,7 @@ class UpdateBusinessProfileRequest {
   final String? state;
   final String? pincode;
   final String? address;
+  final String? upiId;
 
   Map<String, dynamic> toJson() => {
     'name': name.trim(),
@@ -129,6 +135,7 @@ class UpdateBusinessProfileRequest {
       'pincode': pincode!.trim(),
     if (address != null && address!.trim().isNotEmpty)
       'address': address!.trim(),
+    if (upiId != null && upiId!.trim().isNotEmpty) 'upi_id': upiId!.trim(),
   };
 }
 
@@ -143,6 +150,7 @@ class UpdateBusinessProfileInput {
     this.state,
     this.pincode,
     this.address,
+    this.upiId,
   });
 
   final String name;
@@ -154,6 +162,7 @@ class UpdateBusinessProfileInput {
   final String? state;
   final String? pincode;
   final String? address;
+  final String? upiId;
 
   UpdateBusinessProfileRequest toRequest() => UpdateBusinessProfileRequest(
     name: name,
@@ -169,5 +178,6 @@ class UpdateBusinessProfileInput {
     state: state?.trim().isEmpty ?? true ? null : state?.trim(),
     pincode: Validators.normalizePincode(pincode),
     address: address?.trim().isEmpty ?? true ? null : address?.trim(),
+    upiId: upiId?.trim().isEmpty ?? true ? null : upiId?.trim(),
   );
 }

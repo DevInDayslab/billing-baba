@@ -2,6 +2,7 @@ import { describe, expect, mock, test } from 'bun:test';
 import type { AppConfig } from '../../../src/config/app_config';
 import { AppError } from '../../../src/shared/errors/app-error';
 import { GeneratedDocumentService } from '../../../src/modules/generated-documents/generated-document.service';
+import { InvoiceArtifactService } from '../../../src/modules/invoice-artifacts/invoice-artifact.service';
 import { InvoiceShareService } from '../../../src/modules/invoice-share/invoice-share.service';
 
 function baseConfig(): AppConfig {
@@ -55,12 +56,13 @@ function finalizedDocument() {
 function shareRepository() {
   return {
     findSalesDocument: async () => finalizedDocument(),
-    findBusiness: async () => ({ name: 'Acme' }),
+    findBusiness: async () => ({ name: 'Acme', upiId: 'shop@upi' }),
     findParty: async () => ({ name: 'Customer', mobile: '+919876543210' }),
     findActiveTokenForInvoice: async () => ({
       token: 'share-token',
       invoiceId,
       expiresAt: new Date('2027-01-01T00:00:00.000Z'),
+      revokedAt: null,
     }),
   };
 }
@@ -74,10 +76,7 @@ describe('InvoiceShareService.notifySaleInvoice', () => {
       notificationService: {
         sendSaleInvoice,
       } as never,
-      mediaService: {
-        resolveSaleDocumentPdfUrl: async () =>
-          'https://cdn.example.com/invoice.pdf',
-      } as never,
+      mediaService: {} as never,
       generatedDocuments: {
         ensure: async () => {
           throw new AppError(
@@ -87,6 +86,15 @@ describe('InvoiceShareService.notifySaleInvoice', () => {
           );
         },
       } as unknown as GeneratedDocumentService,
+      artifacts: {
+        ensurePdf: async () => {
+          throw new AppError(
+            'PDF_GENERATION_FAILED',
+            'Generation failed',
+            500,
+          );
+        },
+      } as unknown as InvoiceArtifactService,
     });
 
     const result = await service.notifySaleInvoice(
@@ -100,8 +108,7 @@ describe('InvoiceShareService.notifySaleInvoice', () => {
     expect(sendSaleInvoice).not.toHaveBeenCalled();
   });
 
-  test('ensures PDF before sending WhatsApp media', async () => {
-    let ensured = false;
+  test('does not send WhatsApp when preview generation fails', async () => {
     const sendSaleInvoice = mock(async () => ({ success: true, deduped: false }));
 
     const service = new InvoiceShareService(baseConfig(), {
@@ -109,16 +116,50 @@ describe('InvoiceShareService.notifySaleInvoice', () => {
       notificationService: {
         sendSaleInvoice,
       } as never,
-      mediaService: {
-        resolveSaleDocumentPdfUrl: async () =>
-          'https://cdn.example.com/invoice.pdf',
+      mediaService: {} as never,
+      artifacts: {
+        ensurePdf: async () => ({ cached: true }),
+        generatePreview: async () => {
+          throw new Error('render failed');
+        },
+      } as unknown as InvoiceArtifactService,
+    });
+
+    const result = await service.notifySaleInvoice(
+      businessId,
+      invoiceId,
+      accountId,
+    );
+
+    expect(result.notified).toBe(false);
+    expect(result.error?.code).toBe('PREVIEW_GENERATION_FAILED');
+    expect(sendSaleInvoice).not.toHaveBeenCalled();
+  });
+
+  test('sends PNG preview URL and deletes temporary artifact on success', async () => {
+    const sendSaleInvoice = mock(async () => ({ success: true, deduped: false }));
+    const deleteTemporaryArtifacts = mock(async () => undefined);
+    let ensured = false;
+
+    const service = new InvoiceShareService(baseConfig(), {
+      repository: shareRepository() as never,
+      notificationService: {
+        sendSaleInvoice,
       } as never,
-      generatedDocuments: {
-        ensure: async () => {
+      mediaService: {} as never,
+      artifacts: {
+        ensurePdf: async () => {
           ensured = true;
           return { cached: true };
         },
-      } as unknown as GeneratedDocumentService,
+        generatePreview: async () => Buffer.from('png'),
+        uploadTemporaryPreview: async () => ({
+          mediaAssetId: 'preview-asset',
+          downloadUrl: 'https://cdn.example.com/preview.png',
+          expiresAt: null,
+        }),
+        deleteTemporaryArtifacts,
+      } as unknown as InvoiceArtifactService,
     });
 
     const result = await service.notifySaleInvoice(
@@ -131,5 +172,15 @@ describe('InvoiceShareService.notifySaleInvoice', () => {
     expect(result.notified).toBe(true);
     expect(result.media_attached).toBe(true);
     expect(sendSaleInvoice).toHaveBeenCalled();
+    const call = sendSaleInvoice.mock.calls[0] as unknown as [
+      unknown,
+      { mediaUrl: string },
+    ];
+    expect(call[1].mediaUrl).toBe('https://cdn.example.com/preview.png');
+    expect(deleteTemporaryArtifacts).toHaveBeenCalledWith(
+      businessId,
+      accountId,
+      'preview-asset',
+    );
   });
 });

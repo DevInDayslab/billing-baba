@@ -798,6 +798,8 @@ export class StorageService {
       ownerId?: string | null;
       extension?: string;
       policy?: StorageValidationPolicy;
+      /** When set, use this key instead of the default UUID-based path. */
+      storageKeyOverride?: string;
     },
   ): Promise<StorageAsset> {
     await this.assertBusinessAccess(businessId, accountId);
@@ -809,16 +811,18 @@ export class StorageService {
 
     const provider = this.requireProvider();
     const assetId = randomUUID();
-    const storageKey = buildStoragePath({
-      environment: this.config.environment,
-      businessId,
-      purpose: input.purpose,
-      assetId,
-      mimeType: input.mimeType,
-      ownerType: input.ownerType,
-      ownerId: input.ownerId,
-      extension: input.extension,
-    });
+    const storageKey =
+      input.storageKeyOverride ??
+      buildStoragePath({
+        environment: this.config.environment,
+        businessId,
+        purpose: input.purpose,
+        assetId,
+        mimeType: input.mimeType,
+        ownerType: input.ownerType,
+        ownerId: input.ownerId,
+        extension: input.extension,
+      });
 
     await this.repository.insert({
       id: assetId,

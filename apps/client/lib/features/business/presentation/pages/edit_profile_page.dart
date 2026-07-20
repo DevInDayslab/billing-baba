@@ -76,6 +76,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
   final _pincodeController = TextEditingController();
+  final _upiIdController = TextEditingController();
 
   String? _businessType;
   String? _businessCategory;
@@ -122,6 +123,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _emailController.dispose();
     _addressController.dispose();
     _pincodeController.dispose();
+    _upiIdController.dispose();
     super.dispose();
   }
 
@@ -136,6 +138,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _addressController.text = profile.address ?? '';
     _pincodeController.text =
         Validators.normalizePincode(profile.pincode) ?? '';
+    _upiIdController.text = profile.upiId ?? '';
     _businessType = profile.businessType;
     _businessCategory = profile.businessCategory;
     _state = profile.state;
@@ -299,6 +302,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       businessCategory: _businessCategory,
       state: _state,
       pincode: Validators.normalizePincode(_pincodeController.text),
+      upiId: _upiIdController.text,
     );
 
     final updated = await ref
@@ -652,6 +656,16 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _upiIdController,
+                        decoration: InputDecoration(
+                          labelText: 'UPI ID',
+                          hintText: 'merchant@upi',
+                          errorText: formState.errorFor('upi_id'),
+                          border: const OutlineInputBorder(),
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       const Divider(color: Color(0xFFE0E0E0)),

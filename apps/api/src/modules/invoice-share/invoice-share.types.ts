@@ -12,6 +12,12 @@ export type PublicInvoiceLineDto = {
   line_total: string;
 };
 
+export type PublicInvoiceLoyaltyDto = {
+  earned_points: string;
+  redeemed_points: string;
+  points_available: string | null;
+};
+
 export type PublicInvoiceDto = {
   token: string;
   invoice: {
@@ -28,6 +34,7 @@ export type PublicInvoiceDto = {
     paid_amount: string;
     due_amount: string;
     payment_status: 'unpaid' | 'partial' | 'paid';
+    loyalty: PublicInvoiceLoyaltyDto | null;
   };
   company: {
     name: string;
@@ -37,6 +44,7 @@ export type PublicInvoiceDto = {
     email: string | null;
     state_code: string;
     logo_url: string | null;
+    upi_id: string | null;
   };
   customer: {
     name: string;
@@ -46,6 +54,17 @@ export type PublicInvoiceDto = {
     state_code: string | null;
   } | null;
   lines: PublicInvoiceLineDto[];
+  payment: {
+    upi_id: string | null;
+    due_amount: string;
+    scan_to_pay_enabled: boolean;
+  };
+  share: {
+    url: string;
+    token: string;
+    expires_at: string | null;
+  };
+  /** @deprecated Prefer share.url — kept for website backward compatibility */
   share_url: string;
   expires_at: string | null;
   pdf_download_path: string | null;
@@ -68,4 +87,13 @@ export type NotifyDispatchDto = {
     code: string;
     message: string;
   };
+};
+
+export type PaymentQrJsonDto = {
+  qr_data_url: string;
+  amount: string;
+  merchant: string;
+  upi_id: string;
+  invoice_number: string;
+  upi_payload: string;
 };

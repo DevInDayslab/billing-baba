@@ -358,6 +358,20 @@ export class GeneratedDocumentService {
           input.mimeType as keyof typeof GENERATED_MIME_EXTENSIONS
         ],
       policy: GENERATED_DOCUMENT_POLICY,
+      ...(input.documentKind === 'invoice_pdf' &&
+      input.sourceType === 'sale_document'
+        ? {
+            storageKeyOverride: [
+              this.config.environment,
+              'businesses',
+              businessId,
+              'sales',
+              input.sourceId,
+              'generated',
+              'invoice.pdf',
+            ].join('/'),
+          }
+        : {}),
     });
 
     const saved = await this.repository.upsert({

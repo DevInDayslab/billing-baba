@@ -34,4 +34,6 @@ export type BusinessProfile = {
   signature_url: string | null;
   stamp_url: string | null;
   upi_qr_url: string | null;
+  /** UPI VPA for Scan-to-Pay (e.g. merchant@upi) */
+  upi_id: string | null;
 };

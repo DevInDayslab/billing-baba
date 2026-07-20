@@ -60,11 +60,83 @@ export function createInvoiceShareController(config: AppConfig) {
       }
     },
 
+    getPaymentQr: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { token } = invoiceShareTokenParamSchema.parse(request.params);
+        const query = request.query as { format?: string };
+        const { png, json } = await service.getPaymentQr(token);
+
+        if (query.format === 'json') {
+          return sendData(reply, json);
+        }
+
+        return reply
+          .header('Content-Type', 'image/png')
+          .header('Cache-Control', 'no-store')
+          .send(png);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid invoice token',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
     createShareLink: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const { id } = invoiceIdParamSchema.parse(request.params);
         const data = await service.ensureShareLink(businessId, id, accountId);
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid request',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    revokeShareLink: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { businessId } = requireAuthContext(request);
+        const { id } = invoiceIdParamSchema.parse(request.params);
+        const data = await service.revokeShareLink(businessId, id);
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid request',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    regenerateShareLink: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { accountId, businessId } = requireAuthContext(request);
+        const { id } = invoiceIdParamSchema.parse(request.params);
+        const data = await service.regenerateShareLink(
+          businessId,
+          id,
+          accountId,
+        );
         return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {

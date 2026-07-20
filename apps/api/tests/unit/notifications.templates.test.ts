@@ -58,5 +58,6 @@ describe('notification templates', () => {
     expect(sale.type).toBe('sale_invoice');
     expect(sale.body).toContain('#INV-1');
     expect(sale.body).toContain('https://billingbaba.com/invoice/x');
+    expect(sale.body).toContain('Open Full Invoice');
   });
 });

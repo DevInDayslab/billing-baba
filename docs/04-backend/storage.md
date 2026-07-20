@@ -342,46 +342,41 @@ Public (no auth):
 | CSV | 20 MB | `text/csv` |
 | Excel | 20 MB | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` |
 
-Storage paths use `reports`, `sales`, `purchases`, or `payments` purpose segments under `documents/generated_{kind}/{source_id}/`.
+Storage paths use `reports`, `sales`, `purchases`, or `payments` purpose segments. New invoice PDFs use the canonical key:
+
+```
+{env}/businesses/{businessId}/sales/{saleId}/generated/invoice.pdf
+```
+
+See **[generated-documents.md](./generated-documents.md)** for cache semantics.
 
 ## Phase 8 — WhatsApp media
 
-Business modules resolve media via **`GeneratedDocumentService.ensure()`** (notify/public) or **`NotificationMediaService`** (URL lookup only). Notification code never uploads files — it only passes signed URLs to the provider.
-
-### Flow (WhatsApp invoice notify)
+Invoice WhatsApp notify attaches a **temporary preview PNG**, not the PDF. See **[notifications.md](./notifications.md)** and **[ADR-024](../09-decisions.md#adr-024-invoice-artifact-system)**.
 
 ```
 POST /sales-documents/:id/notify
-  → InvoiceShareService.ensureSaleDocumentPdf()
-  → GeneratedDocumentService.ensure()   // lookup → server PDF or client bytes
-  → StorageService.storeFromBuffer (on miss)
-  → NotificationMediaService.resolveSaleDocumentPdfUrl()
-  → NotificationService.sendSaleInvoice({ mediaUrl })
-  → TwilioWhatsAppProvider.sendMedia
+  → InvoiceArtifactService.ensurePdf()
+  → InvoiceArtifactService.generatePreview()
+  → StorageService.storeFromBuffer (temporary sales/{saleId}/previews/*.png)
+  → NotificationService.sendSaleInvoice({ mediaUrl: previewSignedUrl })
+  → delete temporary preview on success
 ```
 
-If PDF ensure/generation fails, the API returns `{ notified: false, error: { code: 'PDF_GENERATION_FAILED' } }` and **does not** call `sendMedia` without a URL.
+### Permanent vs temporary objects
 
-### Supported media
+| Artifact | Persistence | Path pattern |
+|----------|-------------|--------------|
+| Invoice PDF | Permanent (cached until `source_version` changes) | `{env}/businesses/{id}/sales/{saleId}/generated/invoice.pdf` |
+| WhatsApp preview PNG | Temporary | `{env}/businesses/{id}/sales/{saleId}/previews/{uuid}.png` |
+| UPI payment QR | Never stored | Generated per request |
+| Public HTML | Never stored | Website SPA fetches JSON |
 
-| Use case | Resolver | Generated kind |
-|----------|----------|----------------|
-| Invoice / bill / POS / sales return PDF | `resolveSaleDocumentPdfUrl` | `invoice_pdf` |
-| Estimate PDF | `resolveSaleDocumentPdfUrl` | `estimate_pdf` |
-| Delivery challan PDF | `resolveSaleDocumentPdfUrl` | `delivery_challan_pdf` |
-| Payment receipt PDF | `resolvePaymentReceiptPdfUrl` | `receipt_pdf` |
-| Company logo (website + future templates) | `resolveBrandingLogoUrl` | branding asset |
-
-Cache entries are skipped when `source_version` no longer matches the parent entity.
+Configure an object-storage lifecycle rule on `*/previews/*` with **24 hour expiry** as a safety net when eager delete fails.
 
 ### Public website
 
-`GET /public/invoices/:token` includes:
-
-- `company.logo_url` — signed branding download URL
-- `pdf_download_path` — path to `GET /public/generated-documents/:token/file` (302 to signed object URL)
-
-The marketing website renders the logo and enables **Download PDF** when a cached generated document exists.
+See **[public-invoices.md](./public-invoices.md)**. `GET /public/invoices/:token` includes logo URL, payment/UPI metadata, and `pdf_download_path`.
 
 ## Phase 9 — Image processing
 

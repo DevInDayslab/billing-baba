@@ -173,6 +173,7 @@ export class BusinessRepository {
         signatureMediaAssetId: businesses.signatureMediaAssetId,
         stampMediaAssetId: businesses.stampMediaAssetId,
         upiQrMediaAssetId: businesses.upiQrMediaAssetId,
+        upiId: businesses.upiId,
       })
       .from(businesses)
       .where(
@@ -256,6 +257,9 @@ export class BusinessRepository {
           businessType: input.business_type?.trim() || null,
           businessCategory: input.business_category?.trim() || null,
           pincode: input.pincode?.trim() || null,
+          ...(input.upi_id !== undefined
+            ? { upiId: input.upi_id?.trim() || null }
+            : {}),
           ...(stateCode ? { stateCode } : {}),
           updatedAt: new Date(),
           syncVersion: sql`${businesses.syncVersion} + 1`,
@@ -279,6 +283,7 @@ export class BusinessRepository {
           language: businesses.language,
           logoUrl: businesses.logoUrl,
           signatureUrl: businesses.signatureUrl,
+          upiId: businesses.upiId,
         });
 
       if (!updated) {
@@ -322,6 +327,7 @@ export class BusinessRepository {
       signatureMediaAssetId?: string | null;
       stampMediaAssetId?: string | null;
       upiQrMediaAssetId?: string | null;
+      upiId?: string | null;
     },
     ownerName: string | null,
   ): BusinessProfile {
@@ -344,6 +350,7 @@ export class BusinessRepository {
       signature_url: business.signatureUrl,
       stamp_url: null,
       upi_qr_url: null,
+      upi_id: business.upiId ?? null,
     };
   }
 
