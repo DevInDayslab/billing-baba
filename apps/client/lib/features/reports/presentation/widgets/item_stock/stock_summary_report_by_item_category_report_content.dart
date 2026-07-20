@@ -295,7 +295,8 @@ class _StockSummaryReportByItemCategoryReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -354,8 +355,7 @@ class _StockSummaryReportByItemCategoryReportContentState
                                     ),
                                   ],
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     headerChildren: const [
                                       Expanded(
                                         child: ReportAlignedHeaderCell(
@@ -447,7 +447,8 @@ class _StockSummaryReportByItemCategoryReportContentState
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

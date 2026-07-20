@@ -821,9 +821,11 @@ class AddSaleForm extends _$AddSaleForm {
 
       var earnedLoyaltyPoints = 0;
       var pointsAvailable = 0.0;
+      var loyaltyPointsUsedForExpense = 0.0;
       if (finalize) {
         final invoiceTotal = state.invoiceTotal;
         final loyaltyPointsUsed = state.loyaltyPointsUsed;
+        loyaltyPointsUsedForExpense = loyaltyPointsUsed;
         final loyaltyPointsAvailable = state.loyaltyPointsAvailable;
         final party = partyId != null ? await _resolveParty(partyId) : null;
 
@@ -878,6 +880,12 @@ class AddSaleForm extends _$AddSaleForm {
       }
 
       await _refreshAfterSaleMutation();
+      if (finalize && loyaltyPointsUsedForExpense > 0) {
+        refreshAfterExpense(
+          ref,
+          context: (partyId: state.partyId, itemIds: const []),
+        );
+      }
       if (state.attachedSaleOrderIds.isNotEmpty) {
         ref.invalidate(saleOrdersProvider);
       }

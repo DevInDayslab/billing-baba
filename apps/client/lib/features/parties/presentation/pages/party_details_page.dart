@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
-import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
@@ -14,60 +13,10 @@ import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-const _successSnackBarColor = Color(0xFF2E7D32);
 const _compactBreakpoint = 800.0;
 
 Future<void> _openAddPartyDialog(BuildContext context, WidgetRef ref) async {
-  final result = await showAddPartyDialog(context);
-  if (!context.mounted || result == null) return;
-
-  final messenger = ScaffoldMessenger.maybeOf(context);
-
-  try {
-    await ref.read(partyListProvider.notifier).createParty(result);
-    if (!context.mounted) return;
-    messenger?.showSnackBar(
-      SnackBar(
-        content: Text(
-          'Party "${result.partyName}" saved successfully',
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: _successSnackBarColor,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  } on PartyOfflineException {
-    if (!context.mounted) return;
-    messenger?.showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Party saved offline. It will sync when you are back online.',
-        ),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  } on ApiValidationException catch (e) {
-    if (!context.mounted) return;
-    messenger?.showSnackBar(
-      SnackBar(
-        content: Text(e.message),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  } on PartyException catch (e) {
-    if (!context.mounted) return;
-    messenger?.showSnackBar(
-      SnackBar(
-        content: Text(e.message),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
+  await showAddPartyDialog(context);
 }
 
 class PartyDetailsPage extends ConsumerStatefulWidget {

@@ -264,64 +264,53 @@ class _PartyDetailHeader extends ConsumerWidget {
                     Row(
                       children: [
                         Flexible(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 3),
-                            child: Row(
-                              children: [
-                                Flexible(
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  party.name,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: party.isActive
+                                        ? AppColors.textPrimary
+                                        : AppColors.textSecondary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (!party.isActive) ...[
+                                const SizedBox(width: AppSpacing.sm),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade200,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                   child: Text(
-                                    party.name,
+                                    'Inactive',
                                     style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: party.isActive
-                                          ? AppColors.textPrimary
-                                          : AppColors.textSecondary,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey.shade600,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                if (!party.isActive) ...[
-                                  const SizedBox(width: AppSpacing.sm),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade200,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      'Inactive',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ],
-                            ),
+                              if (canEditParty) ...[
+                                _PartyHeaderActionIcon(
+                                  icon: Icons.edit_outlined,
+                                  tooltip: 'Edit party',
+                                  onPressed: () =>
+                                      PartyActions.edit(context, ref, party),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                        if (canEditParty) ...[
-                          const SizedBox(width: AppSpacing.sm),
-                          IconButton(
-                            onPressed: () =>
-                                PartyActions.edit(context, ref, party),
-                            icon: const Icon(Icons.edit_outlined, size: 20),
-                            tooltip: 'Edit party',
-                            color: AppColors.textSecondary,
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                            constraints: const BoxConstraints(
-                              minWidth: 28,
-                              minHeight: 28,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                     if (showLoyalty) ...[
@@ -488,8 +477,10 @@ class _PartyHeaderActionIcon extends StatelessWidget {
       tooltip: tooltip,
       color: iconWidget == null ? AppColors.textSecondary : null,
       padding: EdgeInsets.zero,
-      visualDensity: VisualDensity.compact,
-      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+      constraints: const BoxConstraints(
+        minWidth: kMinInteractiveDimension,
+        minHeight: kMinInteractiveDimension,
+      ),
     );
   }
 }

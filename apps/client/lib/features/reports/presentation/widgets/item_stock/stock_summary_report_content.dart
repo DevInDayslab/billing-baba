@@ -189,7 +189,8 @@ class StockSummaryReportContent extends ConsumerWidget {
                         ),
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -237,8 +238,7 @@ class StockSummaryReportContent extends ConsumerWidget {
                                     ),
                                   ],
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     headerChildren: const [
                                       Expanded(
                                         child: ReportAlignedHeaderCell(
@@ -318,7 +318,8 @@ class StockSummaryReportContent extends ConsumerWidget {
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

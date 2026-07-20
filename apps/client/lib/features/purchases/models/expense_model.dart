@@ -3,7 +3,16 @@ enum ExpenseStatus { paid, pending, partial }
 enum ExpenseCategoryType { direct, indirect }
 
 /// Determines which transaction columns to show in the detail panel.
-enum ExpenseCategoryVariant { standard, loyaltyRedeemed }
+enum ExpenseCategoryVariant { standard, loyaltyRedeemed, paymentInDiscount }
+
+extension ExpenseCategoryVariantX on ExpenseCategoryVariant {
+  /// Indirect expenses created automatically from sales/payments — not manual.
+  bool get isSyncOnly =>
+      this == ExpenseCategoryVariant.loyaltyRedeemed ||
+      this == ExpenseCategoryVariant.paymentInDiscount;
+
+  bool get isManual => !isSyncOnly;
+}
 
 class ExpenseCategoryModel {
   const ExpenseCategoryModel({
@@ -43,6 +52,8 @@ class ExpenseTransactionModel {
     this.status,
     this.loyaltyPoints,
     this.loyaltyValue,
+    this.categoryVariant = ExpenseCategoryVariant.standard,
+    this.isSyncManaged = false,
   });
 
   final String id;
@@ -58,6 +69,8 @@ class ExpenseTransactionModel {
   final ExpenseStatus? status;
   final double? loyaltyPoints;
   final double? loyaltyValue;
+  final ExpenseCategoryVariant categoryVariant;
+  final bool isSyncManaged;
 }
 
 class ExpenseItemModel {

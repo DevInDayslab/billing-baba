@@ -3,6 +3,7 @@ export type PaymentRecord = {
   party_id: string;
   direction: 'received' | 'paid';
   amount: string;
+  discount_amount: string;
   payment_mode: string;
   payment_date: string;
   reference_number: string | null;
@@ -26,6 +27,7 @@ export type PaymentInsertValues = {
   partyId: string;
   direction: 'received' | 'paid';
   amount: string;
+  discountAmount?: string;
   paymentMode: 'cash' | 'upi' | 'card' | 'cheque' | 'bank_transfer' | 'other';
   paymentDate?: Date;
   referenceNumber?: string | null;

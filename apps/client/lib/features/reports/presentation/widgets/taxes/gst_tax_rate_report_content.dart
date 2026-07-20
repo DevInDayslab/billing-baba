@@ -99,7 +99,7 @@ class GstTaxRateReportContent extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
-                          child: SingleChildScrollView(
+                          child: ReportTableArea(
                             child: ReportSyncScrollTable(
                               minWidth: 980,
                               headerChildren: const [
@@ -189,7 +189,8 @@ class GstTaxRateReportContent extends ConsumerWidget {
                               ],
                             ),
                           ),
-                        ),
+                        
+                          ),
                       ],
                     ),
                   ),

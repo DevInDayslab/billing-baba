@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
@@ -11,31 +12,14 @@ import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
-class OtherIncomeReportContent extends ConsumerStatefulWidget {
+class OtherIncomeReportContent extends ConsumerWidget {
   const OtherIncomeReportContent({super.key});
 
   @override
-  ConsumerState<OtherIncomeReportContent> createState() =>
-      _OtherIncomeReportContentState();
-}
-
-class _OtherIncomeReportContentState
-    extends ConsumerState<OtherIncomeReportContent> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7),
-    end: DateTime(2026, 7, 31),
-  );
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = ref.watch(otherIncomeReportProvider);
 
     return ReportAsyncBody(
@@ -145,13 +129,7 @@ class _OtherIncomeReportContentState
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  child: _DateRangeFilter(
-                    datePickerKey: _datePickerKey,
-                    dateRange: _dateRange,
-                    dateFormat: _dateFormat,
-                    onRangeSelected: (range) =>
-                        setState(() => _dateRange = range),
-                  ),
+                  child: const ReportFromToDateFilter(),
                 ),
               ),
               Expanded(
@@ -197,13 +175,13 @@ class _OtherIncomeReportContentState
                           ),
                         ),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? _emptyTable(
                                   message:
                                       'No other income records found for the selected period.',
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     headerChildren: _incomeHeaders,
                                     rows: [
                                       for (var i = 0; i < rows.length; i++)
@@ -264,7 +242,8 @@ class _OtherIncomeReportContentState
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         _TotalFooter(
                           label: 'Total Amount: ',
                           amount: formatReportCurrency(totalAmount),
@@ -335,26 +314,11 @@ class _OtherIncomeReportContentState
   }
 }
 
-class OtherIncomeCategoryReportContent extends ConsumerStatefulWidget {
+class OtherIncomeCategoryReportContent extends ConsumerWidget {
   const OtherIncomeCategoryReportContent({super.key});
 
   @override
-  ConsumerState<OtherIncomeCategoryReportContent> createState() =>
-      _OtherIncomeCategoryReportContentState();
-}
-
-class _OtherIncomeCategoryReportContentState
-    extends ConsumerState<OtherIncomeCategoryReportContent> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7),
-    end: DateTime(2026, 7, 31),
-  );
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = ref.watch(otherIncomeByCategoryReportProvider);
 
     return ReportAsyncBody(
@@ -440,14 +404,7 @@ class _OtherIncomeCategoryReportContentState
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  child: _DateRangeFilter(
-                    datePickerKey: _datePickerKey,
-                    dateRange: _dateRange,
-                    dateFormat: _dateFormat,
-                    onRangeSelected: (range) =>
-                        setState(() => _dateRange = range),
-                    fromLabel: 'From',
-                  ),
+                  child: const ReportFromToDateFilter(betweenLabel: 'From'),
                 ),
               ),
               Expanded(
@@ -480,10 +437,10 @@ class _OtherIncomeCategoryReportContentState
                           ),
                         ),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? _categoryEmptyTable()
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     headerChildren: _categoryHeaders,
                                     rows: [
                                       for (var i = 0; i < rows.length; i++)
@@ -516,7 +473,8 @@ class _OtherIncomeCategoryReportContentState
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         _TotalFooter(
                           label: 'Total Income: ',
                           amount: formatReportCurrency(totalIncome),
@@ -574,26 +532,11 @@ class _OtherIncomeCategoryReportContentState
   }
 }
 
-class OtherIncomeItemReportContent extends ConsumerStatefulWidget {
+class OtherIncomeItemReportContent extends ConsumerWidget {
   const OtherIncomeItemReportContent({super.key});
 
   @override
-  ConsumerState<OtherIncomeItemReportContent> createState() =>
-      _OtherIncomeItemReportContentState();
-}
-
-class _OtherIncomeItemReportContentState
-    extends ConsumerState<OtherIncomeItemReportContent> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7),
-    end: DateTime(2026, 7, 31),
-  );
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = ref.watch(otherIncomeByItemReportProvider);
 
     return ReportAsyncBody(
@@ -679,14 +622,7 @@ class _OtherIncomeItemReportContentState
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  child: _DateRangeFilter(
-                    datePickerKey: _datePickerKey,
-                    dateRange: _dateRange,
-                    dateFormat: _dateFormat,
-                    onRangeSelected: (range) =>
-                        setState(() => _dateRange = range),
-                    fromLabel: 'From',
-                  ),
+                  child: const ReportFromToDateFilter(betweenLabel: 'From'),
                 ),
               ),
               Expanded(
@@ -719,10 +655,10 @@ class _OtherIncomeItemReportContentState
                           ),
                         ),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? _itemEmptyTable()
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     headerChildren: _itemHeaders,
                                     rows: [
                                       for (var i = 0; i < rows.length; i++)
@@ -753,7 +689,8 @@ class _OtherIncomeItemReportContentState
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         _TotalFooter(
                           label: 'Total Income: ',
                           amount: formatReportCurrency(totalIncome),
@@ -798,85 +735,6 @@ class _OtherIncomeItemReportContentState
               style: TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DateRangeFilter extends StatelessWidget {
-  const _DateRangeFilter({
-    required this.datePickerKey,
-    required this.dateRange,
-    required this.dateFormat,
-    required this.onRangeSelected,
-    this.fromLabel = 'Between',
-  });
-
-  final GlobalKey<SaleDateRangePickerAnchorState> datePickerKey;
-  final DateTimeRange dateRange;
-  final DateFormat dateFormat;
-  final ValueChanged<DateTimeRange> onRangeSelected;
-  final String fromLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          fromLabel,
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        const Icon(
-          Icons.calendar_today_outlined,
-          size: 16,
-          color: AppColors.textSecondary,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          dateFormat.format(dateRange.start),
-          style: const TextStyle(fontSize: 13),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        const Text(
-          'to',
-          style: TextStyle(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        SaleDateRangePickerAnchor(
-          key: datePickerKey,
-          initialRange: dateRange,
-          onRangeSelected: onRangeSelected,
-          child: InkWell(
-            onTap: () => datePickerKey.currentState?.toggle(),
-            borderRadius: BorderRadius.circular(4),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    dateFormat.format(dateRange.end),
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ],
               ),
             ),
           ),

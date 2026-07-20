@@ -148,7 +148,8 @@ class PartyWiseProfitLossReportContent extends ConsumerWidget {
                           ),
                         ),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Center(
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
@@ -172,8 +173,7 @@ class PartyWiseProfitLossReportContent extends ConsumerWidget {
                                     ],
                                   ),
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     minWidth: 600,
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
@@ -253,7 +253,8 @@ class PartyWiseProfitLossReportContent extends ConsumerWidget {
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

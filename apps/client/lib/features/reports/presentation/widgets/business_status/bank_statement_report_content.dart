@@ -3,6 +3,7 @@ import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
@@ -11,29 +12,13 @@ import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
-class BankStatementReportContent extends ConsumerStatefulWidget {
+class BankStatementReportContent extends ConsumerWidget {
   const BankStatementReportContent({super.key});
 
-  @override
-  ConsumerState<BankStatementReportContent> createState() =>
-      _BankStatementReportContentState();
-}
-
-class _BankStatementReportContentState
-    extends ConsumerState<BankStatementReportContent> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7),
-    end: DateTime(2026, 7, 31),
-  );
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
   static const _selectBankLabel = 'Select bank account';
   static const List<String> _bankOptions = [
     _selectBankLabel,
@@ -43,7 +28,7 @@ class _BankStatementReportContentState
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(reportFiltersProvider);
     final selectedBank = filters.bankName ?? _selectBankLabel;
     final bankSelected = selectedBank != _selectBankLabel;
@@ -189,62 +174,7 @@ class _BankStatementReportContentState
                           ),
                         ],
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.calendar_today_outlined,
-                            size: 16,
-                            color: AppColors.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _dateFormat.format(_dateRange.start),
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          const Text(
-                            'to',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          SaleDateRangePickerAnchor(
-                            key: _datePickerKey,
-                            initialRange: _dateRange,
-                            onRangeSelected: (range) =>
-                                setState(() => _dateRange = range),
-                            child: InkWell(
-                              onTap: () =>
-                                  _datePickerKey.currentState?.toggle(),
-                              borderRadius: BorderRadius.circular(4),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 2,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_today_outlined,
-                                      size: 16,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      _dateFormat.format(_dateRange.end),
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      const ReportFromToDateFilter(betweenLabel: ''),
                     ],
                   ),
                 ),
@@ -279,7 +209,8 @@ class _BankStatementReportContentState
                           ),
                         ),
                         Expanded(
-                          child: !bankSelected
+                          child: ReportTableArea(
+                            child: !bankSelected
                               ? const Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -373,8 +304,7 @@ class _BankStatementReportContentState
                                     ),
                                   ],
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
                                         label: 'DATE',
@@ -475,7 +405,8 @@ class _BankStatementReportContentState
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

@@ -1,8 +1,11 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ReportSearchField extends StatelessWidget {
+class ReportSearchField extends ConsumerStatefulWidget {
   const ReportSearchField({
     this.hintText = 'Search...',
     this.onChanged,
@@ -13,11 +16,57 @@ class ReportSearchField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
 
   @override
+  ConsumerState<ReportSearchField> createState() => _ReportSearchFieldState();
+}
+
+class _ReportSearchFieldState extends ConsumerState<ReportSearchField> {
+  late final TextEditingController _controller;
+  final _debouncer = Debouncer();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: ref.read(reportFiltersProvider).searchQuery,
+    );
+  }
+
+  @override
+  void dispose() {
+    _debouncer.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debouncer.run(() {
+      if (!mounted) return;
+      if (widget.onChanged != null) {
+        widget.onChanged!(value);
+      } else {
+        ref.read(reportFiltersProvider.notifier).setSearchQuery(value);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    ref.listen(reportFiltersProvider.select((s) => s.searchQuery), (
+      _,
+      next,
+    ) {
+      if (_controller.text != next) {
+        _debouncer.cancel();
+        _controller.text = next;
+        _controller.selection = TextSelection.collapsed(offset: next.length);
+      }
+    });
+
     return TextField(
-      onChanged: onChanged,
+      controller: _controller,
+      onChanged: _onSearchChanged,
       decoration: InputDecoration(
-        hintText: hintText,
+        hintText: widget.hintText,
         hintStyle: const TextStyle(
           fontSize: 13,
           color: AppColors.textSecondary,

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
+import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_fonts.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
 import 'package:billing_baba/features/settings/utils/thermal_pdf_page_format.dart';
@@ -271,7 +272,7 @@ class InvoicePdfBuilder {
     doc.addPage(
       pw.MultiPage(
         pageFormat: pageFormat,
-        margin: const pw.EdgeInsets.all(15 * PdfPageFormat.mm),
+        margin: PdfPageProfile.transactionInvoice.pageMargins,
         build: (context) => [
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,

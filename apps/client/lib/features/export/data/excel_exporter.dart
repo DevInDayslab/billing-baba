@@ -14,13 +14,18 @@ class ExcelExporter {
   Uint8List export(ExportRequest request) {
     final excel = Excel.createExcel();
 
-    // Remove default sheet if we're adding named ones.
-    if (request.sheets.isNotEmpty) {
-      excel.delete('Sheet1');
-    }
-
     for (final sheet in request.sheets) {
       _writeSheet(excel, sheet);
+    }
+
+    // Remove the default empty sheet after writing named sheets so Excel opens
+    // on the populated worksheet (matches import-items export flow).
+    if (request.sheets.isNotEmpty &&
+        excel.sheets.keys.contains('Sheet1') &&
+        request.sheets.every(
+          (sheet) => _safeSheetName(sheet.name) != 'Sheet1',
+        )) {
+      excel.delete('Sheet1');
     }
 
     if (excel.sheets.isEmpty) {

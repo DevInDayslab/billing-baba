@@ -1,6 +1,11 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
+import { EXPENSE_SOURCE_TYPES } from '../purchases/expense-category.constants';
+import {
+  deleteLinkedExpense,
+  syncPaymentInDiscountExpense,
+} from '../purchases/expense-sync.service';
 import { PaymentRepository } from './payment.repository';
 import type {
   CreateAllocationBody,
@@ -132,6 +137,7 @@ export class PaymentService {
         partyId: input.party_id,
         direction: input.direction,
         amount: input.amount,
+        discountAmount: input.discount_amount ?? '0',
         paymentMode: input.payment_mode,
         paymentDate: input.payment_date
           ? new Date(input.payment_date)
@@ -189,6 +195,30 @@ export class PaymentService {
       }
 
       const full = await repo.findById(businessId, payment.id, true);
+      if (!full) {
+        throw new AppError('NOT_FOUND', 'Payment not found', 404);
+      }
+
+      if (
+        input.direction === 'received' &&
+        parseMoney(input.discount_amount ?? '0') > 0
+      ) {
+        await syncPaymentInDiscountExpense(tx as unknown as typeof this.db, {
+          businessId,
+          userId,
+          paymentId: payment.id,
+          partyId: input.party_id,
+          expenseDate: (input.payment_date ?? new Date().toISOString()).slice(
+            0,
+            10,
+          ),
+          referenceNumber: input.reference_number ?? null,
+          paymentMode: input.payment_mode,
+          discountAmount: input.discount_amount ?? '0',
+          balanceDue: input.balance_after_payment ?? '0',
+        });
+      }
+
       return full!;
     });
   }
@@ -222,6 +252,13 @@ export class PaymentService {
     paymentId: string,
   ): Promise<void> {
     await this.assertBusinessAccess(businessId, accountId);
+
+    await deleteLinkedExpense(this.db, {
+      businessId,
+      userId,
+      sourceReferenceId: paymentId,
+      sourceReferenceType: EXPENSE_SOURCE_TYPES.paymentInDiscount,
+    });
 
     const deleted = await this.repository.softDelete(
       businessId,

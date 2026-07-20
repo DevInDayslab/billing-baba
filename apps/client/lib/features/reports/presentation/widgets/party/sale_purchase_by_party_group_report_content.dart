@@ -154,7 +154,8 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
                           ),
                         ),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Center(
                                   child: Text(
                                     'No data available for the selected period.',
@@ -164,8 +165,7 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
                                     ),
                                   ),
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     minWidth: 700,
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
@@ -265,7 +265,8 @@ class SalePurchaseByPartyGroupReportContent extends ConsumerWidget {
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

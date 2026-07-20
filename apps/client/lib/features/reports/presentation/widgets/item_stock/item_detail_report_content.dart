@@ -3,17 +3,16 @@ import 'package:billing_baba/features/inventory/providers/inventory_items_provid
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 class ItemDetailReportContent extends ConsumerStatefulWidget {
   const ItemDetailReportContent({super.key});
@@ -25,21 +24,7 @@ class ItemDetailReportContent extends ConsumerStatefulWidget {
 
 class _ItemDetailReportContentState
     extends ConsumerState<ItemDetailReportContent> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   bool _hideInactiveDates = false;
-  late DateTimeRange _dateRange;
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
-
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _dateRange = DateTimeRange(
-      start: DateTime(now.year, now.month),
-      end: DateTime(now.year, now.month, now.day),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,70 +124,7 @@ class _ItemDetailReportContentState
                     runSpacing: AppSpacing.sm,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'From',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          const Icon(
-                            Icons.calendar_today_outlined,
-                            size: 16,
-                            color: AppColors.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _dateFormat.format(_dateRange.start),
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          const Text(
-                            'To',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          SaleDateRangePickerAnchor(
-                            key: _datePickerKey,
-                            initialRange: _dateRange,
-                            onRangeSelected: (range) =>
-                                setState(() => _dateRange = range),
-                            child: InkWell(
-                              onTap: () =>
-                                  _datePickerKey.currentState?.toggle(),
-                              borderRadius: BorderRadius.circular(4),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 2,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_today_outlined,
-                                      size: 16,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      _dateFormat.format(_dateRange.end),
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      const ReportFromToDateFilter(betweenLabel: 'From'),
                       ReportIconActionButton(
                         icon: Icons.table_chart_outlined,
                         tooltip: 'Excel',
@@ -319,7 +241,8 @@ class _ItemDetailReportContentState
                         const Divider(height: 1, color: reportCardBorder),
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
-                          child:
+                          child: ReportTableArea(
+                            child:
                               selectedItemId == null || selectedItemId.isEmpty
                               ? const Column(
                                   crossAxisAlignment:
@@ -416,8 +339,7 @@ class _ItemDetailReportContentState
                                     ),
                                   ],
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
                                         label: 'DATE',
@@ -502,7 +424,8 @@ class _ItemDetailReportContentState
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         if (report != null)
                           ReportPaginationBar(
                             page: report.meta.page,

@@ -180,7 +180,8 @@ class LowStockSummaryReportContent extends ConsumerWidget {
                           ),
                         ),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -223,8 +224,7 @@ class LowStockSummaryReportContent extends ConsumerWidget {
                                     ),
                                   ],
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     headerChildren: const [
                                       Expanded(
                                         child: ReportAlignedHeaderCell(
@@ -286,7 +286,8 @@ class LowStockSummaryReportContent extends ConsumerWidget {
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         ReportPaginationBar(
                           page: report.meta.page,
                           totalPages: report.meta.totalPages,

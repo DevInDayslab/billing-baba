@@ -68,7 +68,7 @@ class AllTransactionsReportContent extends ConsumerWidget {
 
         return ColoredBox(
           color: AppColors.background,
-          child: SingleChildScrollView(
+          child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -91,86 +91,93 @@ class AllTransactionsReportContent extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                ReportCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Row(
-                          children: [
-                            const SizedBox(
-                              width: 180,
-                              child: ReportTransactionTypeFilter(),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: ReportSearchField(
-                                onChanged: ref
-                                    .read(reportFiltersProvider.notifier)
-                                    .setSearchQuery,
+                Expanded(
+                  child: ReportCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Row(
+                            children: [
+                              const SizedBox(
+                                width: 180,
+                                child: ReportTransactionTypeFilter(),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: ReportSearchField(
+                                  onChanged: ref
+                                      .read(reportFiltersProvider.notifier)
+                                      .setSearchQuery,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1, color: reportCardBorder),
+                        Expanded(
+                          child: ReportTableArea(
+                            child: ReportSyncScrollTable(
+                              minWidth: 900,
+                              headerChildren: const [
+                                ReportAlignedHeaderCell(label: '#', width: 40),
+                                ReportAlignedHeaderCell(label: 'DATE', width: 90),
+                                ReportAlignedHeaderCell(label: 'REF NO.', width: 90),
+                                Expanded(
+                                  child: ReportAlignedHeaderCell(label: 'PARTY NAME'),
+                                ),
+                                ReportAlignedHeaderCell(label: 'CATEGORY', width: 90),
+                                ReportAlignedHeaderCell(label: 'TYPE', width: 80),
+                                ReportAlignedHeaderCell(
+                                  label: 'TOTAL',
+                                  width: 80,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'RECEIVED',
+                                  width: 90,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'BALANCE',
+                                  width: 80,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(label: 'DUE DATE', width: 90),
+                                ReportAlignedHeaderCell(label: 'STATUS', width: 80),
+                                ReportAlignedHeaderCell(
+                                  label: 'PRINT',
+                                  width: 60,
+                                  showFilter: false,
+                                ),
+                              ],
+                              rows: [
+                                for (var i = 0; i < rows.length; i++)
+                                  _AllTransactionsRow(row: rows[i], index: i),
+                              ],
+                              emptyState: const ReportEmptyTableState(
+                                message: 'No transactions to display.',
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                      const Divider(height: 1, color: reportCardBorder),
-                      ReportSyncScrollTable(
-                        headerChildren: const [
-                          ReportAlignedHeaderCell(label: '#', width: 40),
-                          ReportAlignedHeaderCell(label: 'DATE', width: 90),
-                          ReportAlignedHeaderCell(label: 'REF NO.', width: 90),
-                          Expanded(
-                            child: ReportAlignedHeaderCell(label: 'PARTY NAME'),
-                          ),
-                          ReportAlignedHeaderCell(label: 'CATEGORY', width: 90),
-                          ReportAlignedHeaderCell(label: 'TYPE', width: 80),
-                          ReportAlignedHeaderCell(
-                            label: 'TOTAL',
-                            width: 80,
-                            alignment: Alignment.centerRight,
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'RECEIVED',
-                            width: 90,
-                            alignment: Alignment.centerRight,
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'BALANCE',
-                            width: 80,
-                            alignment: Alignment.centerRight,
-                          ),
-                          ReportAlignedHeaderCell(label: 'DUE DATE', width: 90),
-                          ReportAlignedHeaderCell(label: 'STATUS', width: 80),
-                          ReportAlignedHeaderCell(
-                            label: 'PRINT',
-                            width: 60,
-                            showFilter: false,
-                          ),
-                        ],
-                        rows: [
-                          for (var i = 0; i < rows.length; i++)
-                            _AllTransactionsRow(row: rows[i], index: i),
-                        ],
-                        emptyState: const ReportEmptyTableState(
-                          message: 'No transactions to display.',
+                        ReportPaginationBar(
+                          page: report.meta.page,
+                          totalPages: report.meta.totalPages,
+                          onPrevious: report.meta.page > 1
+                              ? () => ref
+                                    .read(allTransactionsReportProvider.notifier)
+                                    .goToPage(report.meta.page - 1)
+                              : null,
+                          onNext: report.meta.page < report.meta.totalPages
+                              ? () => ref
+                                    .read(allTransactionsReportProvider.notifier)
+                                    .goToPage(report.meta.page + 1)
+                              : null,
                         ),
-                      ),
-                      ReportPaginationBar(
-                        page: report.meta.page,
-                        totalPages: report.meta.totalPages,
-                        onPrevious: report.meta.page > 1
-                            ? () => ref
-                                  .read(allTransactionsReportProvider.notifier)
-                                  .goToPage(report.meta.page - 1)
-                            : null,
-                        onNext: report.meta.page < report.meta.totalPages
-                            ? () => ref
-                                  .read(allTransactionsReportProvider.notifier)
-                                  .goToPage(report.meta.page + 1)
-                            : null,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],

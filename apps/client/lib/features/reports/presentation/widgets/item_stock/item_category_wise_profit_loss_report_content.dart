@@ -2,16 +2,15 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 class ItemCategoryWiseProfitLossReportContent extends ConsumerStatefulWidget {
   const ItemCategoryWiseProfitLossReportContent({super.key});
@@ -23,23 +22,9 @@ class ItemCategoryWiseProfitLossReportContent extends ConsumerStatefulWidget {
 
 class _ItemCategoryWiseProfitLossReportContentState
     extends ConsumerState<ItemCategoryWiseProfitLossReportContent> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   String _firm = 'ALL FIRMS';
   bool _showInactiveCategories = false;
   bool _categoriesHavingSale = false;
-  late DateTimeRange _dateRange;
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
-
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _dateRange = DateTimeRange(
-      start: DateTime(now.year, now.month),
-      end: DateTime(now.year, now.month, now.day),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,70 +96,7 @@ class _ItemCategoryWiseProfitLossReportContentState
                         selected: _firm,
                         onSelected: (value) => setState(() => _firm = value),
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            'From',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          const Icon(
-                            Icons.calendar_today_outlined,
-                            size: 16,
-                            color: AppColors.textSecondary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _dateFormat.format(_dateRange.start),
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          const Text(
-                            'To',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          SaleDateRangePickerAnchor(
-                            key: _datePickerKey,
-                            initialRange: _dateRange,
-                            onRangeSelected: (range) =>
-                                setState(() => _dateRange = range),
-                            child: InkWell(
-                              onTap: () =>
-                                  _datePickerKey.currentState?.toggle(),
-                              borderRadius: BorderRadius.circular(4),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 2,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_today_outlined,
-                                      size: 16,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      _dateFormat.format(_dateRange.end),
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                      const ReportFromToDateFilter(betweenLabel: 'From'),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -263,7 +185,8 @@ class _ItemCategoryWiseProfitLossReportContentState
                         ),
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -334,8 +257,7 @@ class _ItemCategoryWiseProfitLossReportContentState
                                     ),
                                   ],
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     minWidth: 1180,
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
@@ -466,7 +388,8 @@ class _ItemCategoryWiseProfitLossReportContentState
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

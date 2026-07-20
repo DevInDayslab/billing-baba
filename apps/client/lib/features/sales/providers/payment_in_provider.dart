@@ -702,6 +702,11 @@ class PaymentInForm extends _$PaymentInForm {
         amount: payment.receivedAmount,
       );
 
+      final balanceAfterPayment = (state.balanceDue -
+              payment.receivedAmount -
+              payment.discount)
+          .clamp(0, double.infinity);
+
       final created = await service.createPayment(
         CreatePaymentRequest(
           partyId: state.partyId!,
@@ -713,6 +718,12 @@ class PaymentInForm extends _$PaymentInForm {
           notes: payment.description.trim().isEmpty
               ? null
               : payment.description,
+          discountAmount: payment.discount > 0
+              ? payment.discount.toStringAsFixed(4)
+              : null,
+          balanceAfterPayment: payment.discount > 0
+              ? balanceAfterPayment.toStringAsFixed(4)
+              : null,
           allocations: allocations,
         ),
       );
@@ -723,6 +734,12 @@ class PaymentInForm extends _$PaymentInForm {
         ref,
         context: (partyId: payment.partyId, itemIds: const []),
       );
+      if (payment.discount > 0) {
+        refreshAfterExpense(
+          ref,
+          context: (partyId: payment.partyId, itemIds: const []),
+        );
+      }
       final paymentId = created.id;
       reset();
       // Fire-and-forget WhatsApp notify when local settings allow.

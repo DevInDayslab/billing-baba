@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:billing_baba/features/print/models/printable_document.dart';
 import 'package:billing_baba/features/print/models/printable_document_kind.dart';
+import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_fonts.dart';
 import 'package:billing_baba/features/print/templates/print_template.dart';
 import 'package:billing_baba/features/print/templates/voucher/voucher_layout_config.dart';
@@ -27,8 +28,8 @@ class A4VoucherTemplate implements PrintTemplate {
     pdf.addPage(
       pw.MultiPage(
         pageTheme: pw.PageTheme(
-          pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.fromLTRB(40, 40, 40, 52),
+          pageFormat: PdfPageProfile.transaction.pageFormat,
+          margin: PdfPageProfile.transaction.pageMargins,
           buildBackground: (context) =>
               VoucherPdfSections.watermark(document.metadata.status) ??
               pw.SizedBox(),

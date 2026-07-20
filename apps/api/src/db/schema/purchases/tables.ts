@@ -119,6 +119,11 @@ export const expenses = pgTable('expenses', {
   attachments: jsonb('attachments').$type<string[]>().default([]),
   expenseDate: date('expense_date').notNull(),
   paymentMode: paymentModeEnum('payment_mode'),
+  sourceReferenceId: uuid('source_reference_id'),
+  sourceReferenceType: text('source_reference_type'),
+  loyaltyPoints: money('loyalty_points'),
+  dueDate: date('due_date'),
+  balanceDue: money('balance_due').default('0'),
 });
 
 export const purchaseFaBatches = pgTable('purchase_fa_batches', {

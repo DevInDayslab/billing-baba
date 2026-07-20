@@ -8,6 +8,8 @@ import {
 } from '../../db/schema/identity/tables';
 import { categories, godowns } from '../../db/schema/inventory/tables';
 import { expenseCategories } from '../../db/schema/purchases/tables';
+import { SYSTEM_EXPENSE_CATEGORIES } from '../purchases/expense-category.constants';
+import { ensureSystemExpenseCategories } from '../purchases/expense-sync.service';
 import {
   DEV_BUSINESS_ADDRESS,
   DEV_BUSINESS_GSTIN,
@@ -152,11 +154,14 @@ export class AuthRepository {
         { businessId: business.id, name: 'Services' },
       ]);
 
-      await tx.insert(expenseCategories).values([
-        { businessId: business.id, name: 'Rent', isSystem: true },
-        { businessId: business.id, name: 'Utilities', isSystem: true },
-        { businessId: business.id, name: 'Salaries', isSystem: true },
-      ]);
+      await tx.insert(expenseCategories).values(
+        SYSTEM_EXPENSE_CATEGORIES.map((category) => ({
+          businessId: business.id,
+          name: category.name,
+          categoryType: category.categoryType,
+          isSystem: true,
+        })),
+      );
 
       return {
         userId: user.id,
@@ -210,24 +215,7 @@ export class AuthRepository {
       ]);
     }
 
-    const [expenseCategory] = await this.db
-      .select({ id: expenseCategories.id })
-      .from(expenseCategories)
-      .where(
-        and(
-          eq(expenseCategories.businessId, businessId),
-          eq(expenseCategories.isDeleted, false),
-        ),
-      )
-      .limit(1);
-
-    if (!expenseCategory) {
-      await this.db.insert(expenseCategories).values([
-        { businessId, name: 'Rent', isSystem: true },
-        { businessId, name: 'Utilities', isSystem: true },
-        { businessId, name: 'Salaries', isSystem: true },
-      ]);
-    }
+    await ensureSystemExpenseCategories(this.db, businessId);
   }
 
   async findMembershipsByAccountId(

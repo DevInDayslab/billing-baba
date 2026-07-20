@@ -1,6 +1,7 @@
 import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/requests/report_requests.dart';
 import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_load_helper.dart';
 import 'package:billing_baba/features/reports/providers/report_refresh_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -17,7 +18,7 @@ class SaleReport extends _$SaleReport {
   Future<SaleReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -43,7 +44,7 @@ class PurchaseReport extends _$PurchaseReport {
   Future<PurchaseReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -69,7 +70,7 @@ class StockSummaryReport extends _$StockSummaryReport {
   Future<StockSummaryReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -95,7 +96,7 @@ class LowStockReport extends _$LowStockReport {
   Future<LowStockReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -121,7 +122,7 @@ class PartyOutstandingReport extends _$PartyOutstandingReport {
   Future<PartyOutstandingReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -147,7 +148,7 @@ class PartyStatementReport extends _$PartyStatementReport {
   Future<PartyStatementReportData?> build() async {
     final filters = ref.watch(reportFiltersProvider);
     if (filters.partyId == null) return null;
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -169,7 +170,7 @@ class DayBookReport extends _$DayBookReport {
   Future<DayBookReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -189,7 +190,7 @@ class AllTransactionsReport extends _$AllTransactionsReport {
   Future<AllTransactionsReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -215,7 +216,7 @@ class ProfitLossReport extends _$ProfitLossReport {
   Future<ProfitLossReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -235,7 +236,7 @@ class Gstr1Report extends _$Gstr1Report {
   Future<GstrReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -255,7 +256,7 @@ class Gstr2Report extends _$Gstr2Report {
   Future<GstrReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -275,7 +276,7 @@ class Gstr3bReport extends _$Gstr3bReport {
   Future<Gstr3bReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -295,7 +296,7 @@ class TrialBalanceReport extends _$TrialBalanceReport {
   Future<TrialBalanceReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {
@@ -315,7 +316,7 @@ class BalanceSheetReport extends _$BalanceSheetReport {
   Future<BalanceSheetReportData> build() async {
     ref.watch(reportFiltersProvider);
     ref.watch(reportDataEpochProvider);
-    return _load();
+    return runReportLoad(ref, _load);
   }
 
   Future<void> refresh() async {

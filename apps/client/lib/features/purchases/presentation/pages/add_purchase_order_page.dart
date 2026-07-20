@@ -4,9 +4,11 @@ import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_order_form_model.dart';
+import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/add_purchase_order_footer.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_order_line_items_table.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_page_title_bar.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/transaction_form_busy_overlay.dart';
 import 'package:billing_baba/features/purchases/providers/add_purchase_order_form_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/godown_label_selector.dart';
@@ -17,8 +19,6 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_single_dat
 import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _addPurchaseRed = Color(0xFFD32F2F);
@@ -31,7 +31,6 @@ class AddPurchaseOrderPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addPurchaseOrderFormProvider(orderId: orderId));
-    final isBusy = form.isSaving || form.isLoading;
 
     return Stack(
       children: [
@@ -45,6 +44,12 @@ class AddPurchaseOrderPage extends ConsumerWidget {
                 PurchasePageTitleBar(
                   currentRoute: AppRoutes.purchaseOrder,
                   onSettingsTap: () {},
+                  onBack: () => leaveTransactionFormPage(
+                    context: context,
+                    isDirty: form.isDirty,
+                    isSaving: form.isSaving,
+                    listRoute: AppRoutes.purchaseOrder,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 DecoratedBox(
@@ -98,13 +103,15 @@ class AddPurchaseOrderPage extends ConsumerWidget {
             ),
           ),
         ),
-        if (isBusy)
-          Positioned.fill(
-            child: ColoredBox(
-              color: Colors.black.withValues(alpha: 0.12),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
+        Positioned.fill(
+          child: TransactionFormBusyOverlay(
+            isLoading: form.isLoading,
+            isSaving: form.isSaving,
+            savingLabel: orderId == null
+                ? 'Saving purchase order…'
+                : 'Updating purchase order…',
           ),
+        ),
       ],
     );
   }
@@ -323,7 +330,14 @@ class _BottomActionBar extends ConsumerWidget {
         children: [
           const Spacer(),
           OutlinedButton(
-            onPressed: isSaving ? null : () => _handleCancel(context, ref),
+            onPressed: isSaving
+                ? null
+                : () => leaveTransactionFormPage(
+                    context: context,
+                    isDirty: form.isDirty,
+                    isSaving: form.isSaving,
+                    listRoute: AppRoutes.purchaseOrder,
+                  ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               side: const BorderSide(color: _cardBorder),
@@ -381,52 +395,18 @@ class _BottomActionBar extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleCancel(BuildContext context, WidgetRef ref) async {
-    final form = ref.read(addPurchaseOrderFormProvider(orderId: orderId));
-    if (form.isDirty) {
-      final discard = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Discard changes?'),
-          content: const Text(
-            'You have unsaved changes. Are you sure you want to leave?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Keep editing'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Discard'),
-            ),
-          ],
-        ),
-      );
-      if (discard != true || !context.mounted) return;
-    }
-    if (context.mounted) context.pop();
-  }
-
   Future<void> _handleSave(
     BuildContext context,
     WidgetRef ref,
     AddPurchaseOrderForm notifier,
   ) async {
-    if (ref.read(addPurchaseOrderFormProvider(orderId: orderId)).isSaving) {
-      return;
-    }
-
-    final error = await notifier.saveOrder();
-    if (!context.mounted) return;
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
-      return;
-    }
-
-    context.go(AppRoutes.purchaseOrder);
+    final form = ref.read(addPurchaseOrderFormProvider(orderId: orderId));
+    await handleTransactionFormSave(
+      context: context,
+      isSaving: form.isSaving,
+      save: notifier.saveOrder,
+      listRoute: AppRoutes.purchaseOrder,
+    );
   }
 
   Future<void> _handlePrintPreview(

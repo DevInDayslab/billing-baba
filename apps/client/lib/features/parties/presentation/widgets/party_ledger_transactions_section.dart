@@ -7,15 +7,18 @@ import 'package:billing_baba/features/parties/application/party_ledger_service.d
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/utils/party_transaction_navigation.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_export_actions.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_ledger_transaction_actions_menu.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/parties/utils/party_ledger_pdf_builder.dart';
+import 'package:billing_baba/features/print/application/print_output_service.dart';
+import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
+import 'package:billing_baba/features/print/models/printable_pdf.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_table_shared.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:printing/printing.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _zebraRowBg = Color(0xFFFAFAFA);
@@ -293,6 +296,27 @@ class _PartyLedgerTransactionsSectionState
     return rows;
   }
 
+  Future<void> _exportPartyLedger(BuildContext context) async {
+    final party = ref.read(selectedPartyProvider);
+    if (party == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Party details are not available'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final transactions = widget.transactionsAsync.value ?? const [];
+
+    await PartyExportActions.exportLedgerTransactions(
+      context,
+      partyName: party.name,
+      transactions: transactions,
+    );
+  }
+
   Future<void> _printPartyLedger(BuildContext context) async {
     final party = ref.read(selectedPartyProvider);
     if (party == null) {
@@ -331,10 +355,13 @@ class _PartyLedgerTransactionsSectionState
       if (!context.mounted) return;
 
       final safeName = party.name.replaceAll(RegExp(r'[^\w\-]+'), '_');
-      await Printing.layoutPdf(
-        onLayout: (_) async => bytes,
-        name: 'Party_Ledger_$safeName',
-        dynamicLayout: false,
+      await PrintOutputService().previewDocument(
+        context,
+        PrintablePdf(
+          bytes: bytes,
+          name: 'Party_Ledger_$safeName',
+          profile: PdfPageProfile.transactionCompact,
+        ),
       );
     } on Object catch (error) {
       if (!context.mounted) return;
@@ -626,14 +653,7 @@ class _PartyLedgerTransactionsSectionState
                 tooltip: 'Print',
               ),
               SalesXlsChip(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Export coming soon'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
+                onTap: () => _exportPartyLedger(context),
               ),
             ],
           ),

@@ -243,6 +243,7 @@ class ReportFiltersState {
     this.searchQuery = '',
     this.currentPage = 1,
     this.pageSize = 20,
+    this.isTableLoading = false,
   });
 
   final ReportPeriod period;
@@ -265,8 +266,78 @@ class ReportFiltersState {
   final String searchQuery;
   final int currentPage;
   final int pageSize;
+  final bool isTableLoading;
 
   String get periodLabel => period.label;
+
+  /// Resolves the visible date range for UI controls from period + custom range.
+  DateTimeRange get effectiveDateRange {
+    if (period == ReportPeriod.custom && customDateRange != null) {
+      return customDateRange!;
+    }
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    return switch (period) {
+      ReportPeriod.today => DateTimeRange(start: today, end: today),
+      ReportPeriod.yesterday => () {
+        final yesterday = today.subtract(const Duration(days: 1));
+        return DateTimeRange(start: yesterday, end: yesterday);
+      }(),
+      ReportPeriod.thisWeek => () {
+        final start = today.subtract(Duration(days: today.weekday - 1));
+        return DateTimeRange(
+          start: start,
+          end: start.add(const Duration(days: 6)),
+        );
+      }(),
+      ReportPeriod.lastWeek => () {
+        final thisWeekStart = today.subtract(
+          Duration(days: today.weekday - 1),
+        );
+        final lastWeekStart = thisWeekStart.subtract(const Duration(days: 7));
+        return DateTimeRange(
+          start: lastWeekStart,
+          end: lastWeekStart.add(const Duration(days: 6)),
+        );
+      }(),
+      ReportPeriod.thisMonth => currentMonthDateRange(),
+      ReportPeriod.lastMonth => () {
+        final firstOfMonth = DateTime(now.year, now.month);
+        final lastMonthEnd = firstOfMonth.subtract(const Duration(days: 1));
+        return DateTimeRange(
+          start: DateTime(lastMonthEnd.year, lastMonthEnd.month),
+          end: lastMonthEnd,
+        );
+      }(),
+      ReportPeriod.thisQuarter => () {
+        final quarter = ((now.month - 1) ~/ 3) + 1;
+        final startMonth = (quarter - 1) * 3 + 1;
+        return DateTimeRange(
+          start: DateTime(now.year, startMonth),
+          end: DateTime(now.year, startMonth + 3, 0),
+        );
+      }(),
+      ReportPeriod.thisYear => DateTimeRange(
+        start: DateTime(now.year),
+        end: DateTime(now.year, 12, 31),
+      ),
+      ReportPeriod.allTime => DateTimeRange(
+        start: DateTime(2000),
+        end: today,
+      ),
+      ReportPeriod.custom => customDateRange ?? currentMonthDateRange(),
+    };
+  }
+
+  static DateTimeRange currentMonthDateRange() {
+    final now = DateTime.now();
+    return DateTimeRange(
+      start: DateTime(now.year, now.month),
+      end: DateTime(now.year, now.month + 1, 0),
+    );
+  }
 
   ReportQuery toQuery({int? page, int? limit, String? format}) {
     return ReportQuery(
@@ -316,6 +387,7 @@ class ReportFiltersState {
     String? searchQuery,
     int? currentPage,
     int? pageSize,
+    bool? isTableLoading,
     bool clearPartyId = false,
     bool clearGodownId = false,
     bool clearItemId = false,
@@ -355,6 +427,7 @@ class ReportFiltersState {
       searchQuery: searchQuery ?? this.searchQuery,
       currentPage: currentPage ?? this.currentPage,
       pageSize: pageSize ?? this.pageSize,
+      isTableLoading: isTableLoading ?? this.isTableLoading,
     );
   }
 }

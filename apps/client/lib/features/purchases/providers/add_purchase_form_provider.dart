@@ -512,6 +512,13 @@ class AddPurchaseForm extends _$AddPurchaseForm {
 
       ref.invalidate(purchaseBillsProvider);
       await _refreshAfterPurchaseMutation();
+      ref
+          .read(purchaseBillSaveSuccessMessageProvider.notifier)
+          .setMessage(
+            billId == null
+                ? 'Purchase bill saved successfully.'
+                : 'Purchase bill updated successfully.',
+          );
       ref.invalidateSelf();
       return null;
     } catch (error) {

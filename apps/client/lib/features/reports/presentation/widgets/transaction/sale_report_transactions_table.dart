@@ -1,7 +1,10 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/providers/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/providers/report_load_helper.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_status_badge.dart';
@@ -35,135 +38,156 @@ class SaleReportTransactionsTable extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = ref.watch(saleReportProvider);
+    final isTableLoading = ref.watch(
+      reportFiltersProvider.select((filters) => filters.isTableLoading),
+    );
+    final isReloading = reportIsTableReloading(reportAsync, isTableLoading);
 
-    return reportAsync.when(
-      loading: () => const SizedBox(
-        height: 200,
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (_, _) => const SizedBox.shrink(),
-      data: (report) {
-        final invoices = report.rows;
-        final meta = report.meta;
+    return ReportReloadScope(
+      isReloading: isReloading,
+      child: reportAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => const SizedBox.shrink(),
+        data: (report) {
+          final invoices = report.rows;
+          final meta = report.meta;
 
-        return Column(
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: _cardBorder),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    child: Row(
-                      children: [
-                        const Text(
-                          'Transactions',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text('${meta.total} total'),
-                      ],
-                    ),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: _cardBorder),
                   ),
-                  const Divider(height: 1, color: _cardBorder),
-                  ReportSyncScrollTable(
-                    minWidth: _minTableWidth,
-                    emptyState: const Padding(
-                      padding: EdgeInsets.all(AppSpacing.lg),
-                      child: Center(
-                        child: Text(
-                          'No transactions to show',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                        child: Row(
+                          children: [
+                            const Text(
+                              'Transactions',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text('${meta.total} total'),
+                          ],
                         ),
                       ),
-                    ),
-                    headerChildren: const [
-                      ReportAlignedHeaderCell(
-                        label: 'Date',
-                        width: _dateColWidth,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md,
+                          0,
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                        ),
+                        child: const ReportSearchField(
+                          hintText: 'Search invoices...',
+                        ),
                       ),
-                      ReportAlignedHeaderCell(
-                        label: 'Invoice no',
-                        width: _invoiceColWidth,
-                      ),
+                      const Divider(height: 1, color: _cardBorder),
                       Expanded(
-                        child: ReportAlignedHeaderCell(label: 'Party Name'),
-                      ),
-                      ReportAlignedHeaderCell(
-                        label: 'Transaction',
-                        width: _transactionColWidth,
-                      ),
-                      ReportAlignedHeaderCell(
-                        label: 'Payment Type',
-                        width: _paymentColWidth,
-                      ),
-                      ReportAlignedHeaderCell(
-                        label: 'Status',
-                        width: _statusColWidth,
-                      ),
-                      ReportAlignedHeaderCell(
-                        label: 'Amount',
-                        width: _amountColWidth,
-                        alignment: Alignment.centerRight,
-                      ),
-                      ReportAlignedHeaderCell(
-                        label: 'Balance',
-                        width: _balanceColWidth,
-                        alignment: Alignment.centerRight,
-                      ),
-                      ReportAlignedHeaderCell(
-                        label: 'Actions',
-                        width: _actionsColWidth,
-                        showFilter: false,
-                      ),
-                    ],
-                    rows: [
-                      for (var i = 0; i < invoices.length; i++)
-                        ReportAlignedRowStrip(
-                          index: i,
-                          child: _InvoiceDataRow(invoice: invoices[i]),
+                        child: ReportTableArea(
+                          child: ReportSyncScrollTable(
+                            minWidth: _minTableWidth,
+                            emptyState: const Padding(
+                              padding: EdgeInsets.all(AppSpacing.lg),
+                              child: Center(
+                                child: Text(
+                                  'No transactions to show',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            headerChildren: const [
+                              ReportAlignedHeaderCell(
+                                label: 'Date',
+                                width: _dateColWidth,
+                              ),
+                              ReportAlignedHeaderCell(
+                                label: 'Invoice no',
+                                width: _invoiceColWidth,
+                              ),
+                              Expanded(
+                                child: ReportAlignedHeaderCell(
+                                  label: 'Party Name',
+                                ),
+                              ),
+                              ReportAlignedHeaderCell(
+                                label: 'Transaction',
+                                width: _transactionColWidth,
+                              ),
+                              ReportAlignedHeaderCell(
+                                label: 'Payment Type',
+                                width: _paymentColWidth,
+                              ),
+                              ReportAlignedHeaderCell(
+                                label: 'Status',
+                                width: _statusColWidth,
+                              ),
+                              ReportAlignedHeaderCell(
+                                label: 'Amount',
+                                width: _amountColWidth,
+                                alignment: Alignment.centerRight,
+                              ),
+                              ReportAlignedHeaderCell(
+                                label: 'Balance',
+                                width: _balanceColWidth,
+                                alignment: Alignment.centerRight,
+                              ),
+                              ReportAlignedHeaderCell(
+                                label: 'Actions',
+                                width: _actionsColWidth,
+                                showFilter: false,
+                              ),
+                            ],
+                            rows: [
+                              for (var i = 0; i < invoices.length; i++)
+                                ReportAlignedRowStrip(
+                                  index: i,
+                                  child: _InvoiceDataRow(invoice: invoices[i]),
+                                ),
+                            ],
+                          ),
                         ),
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-            ReportPaginationBar(
-              page: meta.page,
-              totalPages: meta.totalPages,
-              onPrevious: meta.page > 1
-                  ? () => ref
-                        .read(saleReportProvider.notifier)
-                        .goToPage(
-                          meta.page - 1,
-                        )
-                  : null,
-              onNext: meta.page < meta.totalPages
-                  ? () => ref
-                        .read(saleReportProvider.notifier)
-                        .goToPage(
-                          meta.page + 1,
-                        )
-                  : null,
-            ),
-          ],
-        );
-      },
+              ReportPaginationBar(
+                page: meta.page,
+                totalPages: meta.totalPages,
+                onPrevious: meta.page > 1
+                    ? () => ref
+                          .read(saleReportProvider.notifier)
+                          .goToPage(meta.page - 1)
+                    : null,
+                onNext: meta.page < meta.totalPages
+                    ? () => ref
+                          .read(saleReportProvider.notifier)
+                          .goToPage(meta.page + 1)
+                    : null,
+              ),
+            ],
+          );
+        },
+        skipLoadingOnReload: true,
+      ),
     );
   }
 }
@@ -215,9 +239,7 @@ class _InvoiceDataRow extends StatelessWidget {
           child: Text(
             formatReportCurrencyCompact(invoice.balance),
             style: TextStyle(
-              color: invoice.balance > 0
-                  ? const Color(0xFFC62828)
-                  : null,
+              color: invoice.balance > 0 ? const Color(0xFFC62828) : null,
               fontWeight: FontWeight.w500,
             ),
           ),

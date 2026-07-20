@@ -13,6 +13,11 @@ export type ExpenseRecord = {
   attachments: string[];
   expense_date: string;
   payment_mode: string | null;
+  source_reference_id: string | null;
+  source_reference_type: string | null;
+  loyalty_points: string | null;
+  due_date: string | null;
+  balance_due: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -30,6 +35,11 @@ export type ExpenseInsertValues = {
   attachments?: string[];
   expenseDate: string;
   paymentMode?: string | null;
+  sourceReferenceId?: string | null;
+  sourceReferenceType?: string | null;
+  loyaltyPoints?: string | null;
+  dueDate?: string | null;
+  balanceDue?: string | null;
   createdBy?: string | null;
   updatedBy?: string | null;
 };
@@ -46,6 +56,11 @@ export type ExpenseUpdateValues = {
   attachments?: string[];
   expenseDate?: string;
   paymentMode?: string | null;
+  sourceReferenceId?: string | null;
+  sourceReferenceType?: string | null;
+  loyaltyPoints?: string | null;
+  dueDate?: string | null;
+  balanceDue?: string | null;
   updatedBy?: string | null;
 };
 
@@ -80,6 +95,11 @@ export type ExpenseRow = {
   attachments: string[] | null;
   expenseDate: string;
   paymentMode: string | null;
+  sourceReferenceId: string | null;
+  sourceReferenceType: string | null;
+  loyaltyPoints: string | null;
+  dueDate: string | null;
+  balanceDue: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

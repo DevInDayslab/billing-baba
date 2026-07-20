@@ -21,7 +21,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
 export 'party_error_mapper.dart'
-    show PartyException, PartyHasDependenciesException, PartyOfflineException;
+    show
+        PartyException,
+        PartyBusinessNotSelectedException,
+        PartyHasDependenciesException,
+        PartyOfflineException;
 
 part 'party_service.g.dart';
 
@@ -381,6 +385,28 @@ class PartyService {
     final businessId = _businessId;
     if (businessId == null || businessId.isEmpty) return;
     await _cache.savePartyGroupNames(businessId, names);
+  }
+
+  /// All locally cached parties with extensions — ignores Parties page filters.
+  Future<List<PartyModel>> loadAllCachedParties() async {
+    final businessId = _businessId;
+    if (businessId == null || businessId.isEmpty) return [];
+    return _loadFromCache(businessId);
+  }
+
+  /// Cached parties for group discovery; fetches unfiltered when cache is empty.
+  Future<List<PartyModel>> loadPartiesForGroupDiscovery() async {
+    final businessId = _businessId;
+    if (businessId == null || businessId.isEmpty) return [];
+
+    final cached = await _loadFromCache(businessId);
+    if (cached.isNotEmpty) return cached;
+
+    try {
+      return await fetchParties();
+    } on Object {
+      return const [];
+    }
   }
 
   Future<void> _fetchPartyInBackground(
@@ -743,15 +769,23 @@ class PartyList extends _$PartyList {
     });
   }
 
-  Future<PartyModel> createParty(AddPartyResult result) async {
+  Future<PartyModel> createParty(
+    AddPartyResult result, {
+    bool selectCreated = true,
+  }) async {
     final service = await ref.read(partyServiceProvider.future);
     try {
       final created = await service.createParty(result);
-      _upsertInState(created);
-      ref.read(selectedPartyIdProvider.notifier).selected = created.id;
-      await service.rememberSelectedParty(created.id);
+      if (!_upsertInState(created)) {
+        await refresh();
+        _upsertInState(created);
+      }
+      if (selectCreated) {
+        ref.read(selectedPartyIdProvider.notifier).selected = created.id;
+        await service.rememberSelectedParty(created.id);
+      }
       ref.read(partyDetailProvider(created.id).notifier).setParty(created);
-      refreshAfterPartyMutation(ref);
+      refreshAfterPartyMutation(ref, refreshList: false);
       return created;
     } on PartyOfflineException {
       await refresh();
@@ -773,7 +807,7 @@ class PartyList extends _$PartyList {
       );
       _upsertInState(updated);
       ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
-      refreshAfterPartyMutation(ref);
+      refreshAfterPartyMutation(ref, refreshList: false);
       return updated;
     } on PartyOfflineException {
       await refresh();
@@ -828,7 +862,7 @@ class PartyList extends _$PartyList {
       final updated = await service.setPartyActive(partyId, isActive: true);
       _upsertInState(updated);
       ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
-      refreshAfterPartyMutation(ref);
+      refreshAfterPartyMutation(ref, refreshList: false);
       return updated;
     } on PartyOfflineException {
       await refresh();
@@ -858,17 +892,18 @@ class PartyList extends _$PartyList {
     }
   }
 
-  void _upsertInState(PartyModel party) {
+  bool _upsertInState(PartyModel party) {
     final current = state.asData?.value;
-    if (current == null) return;
+    if (current == null) return false;
     final index = current.indexWhere((item) => item.id == party.id);
     if (index == -1) {
       state = AsyncData([...current, party]);
-      return;
+      return true;
     }
     final next = List<PartyModel>.from(current);
     next[index] = party;
     state = AsyncData(next);
+    return true;
   }
 
   void _removeFromState(String partyId) {

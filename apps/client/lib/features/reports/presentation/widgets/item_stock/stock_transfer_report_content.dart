@@ -2,42 +2,21 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class StockTransferReportContent extends ConsumerStatefulWidget {
+class StockTransferReportContent extends ConsumerWidget {
   const StockTransferReportContent({super.key});
 
   @override
-  ConsumerState<StockTransferReportContent> createState() =>
-      _StockTransferReportContentState();
-}
-
-class _StockTransferReportContentState
-    extends ConsumerState<StockTransferReportContent> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  late DateTimeRange _dateRange;
-
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _dateRange = DateTimeRange(
-      start: DateTime(now.year, now.month),
-      end: DateTime(now.year, now.month + 1, 0),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = ref.watch(stockTransferReportProvider);
 
     return ReportAsyncBody(
@@ -149,24 +128,7 @@ class _StockTransferReportContentState
                             runSpacing: AppSpacing.sm,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              const Text(
-                                'Between',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              SaleDateRangePickerAnchor(
-                                key: _datePickerKey,
-                                initialRange: _dateRange,
-                                onRangeSelected: (range) =>
-                                    setState(() => _dateRange = range),
-                                child: SaleFilterChip(
-                                  label: formatSaleDateRangeLabel(_dateRange),
-                                  onTap: () =>
-                                      _datePickerKey.currentState?.toggle(),
-                                ),
-                              ),
+                              const ReportDateRangeChipFilter(),
                               const SizedBox(
                                 width: 240,
                                 child: ReportSearchField(
@@ -178,7 +140,8 @@ class _StockTransferReportContentState
                         ),
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -250,8 +213,7 @@ class _StockTransferReportContentState
                                     ),
                                   ],
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     minWidth: 1040,
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
@@ -372,7 +334,8 @@ class _StockTransferReportContentState
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

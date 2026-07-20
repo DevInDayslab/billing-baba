@@ -339,64 +339,37 @@ abstract final class PartyLedgerTransactionTableActions {
         );
       case PartyLedgerTransactionKind.saleReturn:
         final request = PrintRequest.creditNote(referenceId);
-        if (action == 'print') {
-          await DocumentPrintActions.print(
-            context,
-            ref,
-            request,
-            filename: filename,
-          );
-        } else {
-          await DocumentPrintActions.preview(
-            context,
-            ref,
-            request,
-            filename: filename,
-          );
-        }
+        await DocumentPrintActions.preview(
+          context,
+          ref,
+          request,
+          filename: filename,
+        );
       case PartyLedgerTransactionKind.purchaseBill:
         final request = PrintRequest.purchaseBill(referenceId);
-        if (action == 'print') {
-          await DocumentPrintActions.print(
-            context,
-            ref,
-            request,
-            filename: filename,
-          );
-        } else {
-          await DocumentPrintActions.preview(
-            context,
-            ref,
-            request,
-            filename: filename,
-          );
-        }
+        await DocumentPrintActions.preview(
+          context,
+          ref,
+          request,
+          filename: filename,
+        );
       case PartyLedgerTransactionKind.purchaseReturn:
         final request = PrintRequest.debitNote(referenceId);
-        if (action == 'print') {
-          await DocumentPrintActions.print(
-            context,
-            ref,
-            request,
-            filename: filename,
-          );
-        } else {
-          await DocumentPrintActions.preview(
-            context,
-            ref,
-            request,
-            filename: filename,
-          );
-        }
+        await DocumentPrintActions.preview(
+          context,
+          ref,
+          request,
+          filename: filename,
+        );
       case PartyLedgerTransactionKind.paymentIn:
-        await VoucherPrintActions.printPaymentIn(
+        await VoucherPrintActions.previewPaymentIn(
           context,
           ref,
           referenceId,
           filename: filename,
         );
       case PartyLedgerTransactionKind.paymentOut:
-        await VoucherPrintActions.printPaymentOut(
+        await VoucherPrintActions.previewPaymentOut(
           context,
           ref,
           referenceId,

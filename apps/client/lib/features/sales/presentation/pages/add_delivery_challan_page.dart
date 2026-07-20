@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/close_form_dialog.dart';
@@ -19,8 +20,6 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropd
 import 'package:billing_baba/features/sales/providers/delivery_challan_form_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 
@@ -72,7 +71,7 @@ class _AddDeliveryChallanPageState
     );
     if (!confirmed || !mounted) return;
     ref.read(deliveryChallanFormProvider.notifier).resetForm();
-    context.go(AppRoutes.saleDeliveryChallan);
+    returnToTransactionList(context, AppRoutes.saleDeliveryChallan);
   }
 
   @override
@@ -111,6 +110,7 @@ class _AddDeliveryChallanPageState
                   child: SalePageTitleBar(
                     currentRoute: AppRoutes.saleDeliveryChallan,
                     onSettingsTap: () {},
+                    onBack: _handleClose,
                   ),
                 ),
                 Expanded(
@@ -165,7 +165,10 @@ class _AddDeliveryChallanPageState
                               ref
                                   .read(deliveryChallanFormProvider.notifier)
                                   .resetForm();
-                              context.go(AppRoutes.saleDeliveryChallan);
+                              returnToTransactionList(
+                                context,
+                                AppRoutes.saleDeliveryChallan,
+                              );
                             },
                           ),
                         ],

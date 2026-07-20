@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/close_form_dialog.dart';
@@ -19,8 +20,6 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropd
 import 'package:billing_baba/features/sales/providers/sale_document_form_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 const SaleDocumentType _documentType = SaleDocumentType.estimate;
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
@@ -71,7 +70,7 @@ class _AddEstimatePageState extends ConsumerState<AddEstimatePage> {
     );
     if (!confirmed || !mounted) return;
     ref.read(saleDocumentFormProvider(_documentType).notifier).resetForm();
-    context.go(AppRoutes.saleEstimateQuotation);
+    returnToTransactionList(context, AppRoutes.saleEstimateQuotation);
   }
 
   @override
@@ -108,6 +107,7 @@ class _AddEstimatePageState extends ConsumerState<AddEstimatePage> {
               child: SalePageTitleBar(
                 currentRoute: AppRoutes.saleEstimateQuotation,
                 onSettingsTap: () {},
+                onBack: _handleClose,
               ),
             ),
             Expanded(
@@ -159,8 +159,10 @@ class _AddEstimatePageState extends ConsumerState<AddEstimatePage> {
                       const Divider(height: 1, color: _cardBorder),
                       _EstimateBottomActionBar(
                         isEditing: _isEditing,
-                        onSaved: () =>
-                            context.go(AppRoutes.saleEstimateQuotation),
+                        onSaved: () => returnToTransactionList(
+                          context,
+                          AppRoutes.saleEstimateQuotation,
+                        ),
                       ),
                     ],
                   ),

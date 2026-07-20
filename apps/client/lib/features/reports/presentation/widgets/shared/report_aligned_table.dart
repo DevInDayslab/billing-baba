@@ -47,23 +47,56 @@ class ReportSyncScrollTable extends StatelessWidget {
         final tableWidth = constraints.maxWidth.isFinite
             ? math.max(constraints.maxWidth, minWidth)
             : minWidth;
+        final hasBoundedHeight = constraints.maxHeight.isFinite;
+
+        final header = _TableHeaderStrip(children: headerChildren);
+
+        final Widget body;
+        if (rows.isEmpty && emptyState != null) {
+          body = emptyState!;
+        } else {
+          body = Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: rows,
+          );
+        }
+
+        final Widget tableColumn;
+        if (hasBoundedHeight) {
+          tableColumn = SizedBox(
+            height: constraints.maxHeight,
+            width: tableWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                header,
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: body,
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          tableColumn = SizedBox(
+            width: tableWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                header,
+                body,
+              ],
+            ),
+          );
+        }
 
         return ClipRect(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: tableWidth,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _TableHeaderStrip(children: headerChildren),
-                  if (rows.isEmpty && emptyState != null)
-                    emptyState!
-                  else
-                    ...rows,
-                ],
-              ),
-            ),
+            child: tableColumn,
           ),
         );
       },

@@ -1,5 +1,5 @@
 import type { FastifyError, FastifyInstance } from 'fastify';
-import { AppError } from '../shared/errors';
+import { AppError, serializeErrorForLog } from '../shared/errors';
 import type { ApiErrorResponse } from '../shared/types';
 
 function buildErrorResponse(
@@ -48,7 +48,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
         ? { validation: error.validation }
         : {};
 
-    request.log.error({ err: error, ...validation });
+    request.log.error({ ...serializeErrorForLog(error), ...validation });
 
     const statusCode = error.statusCode ?? 500;
     const message =

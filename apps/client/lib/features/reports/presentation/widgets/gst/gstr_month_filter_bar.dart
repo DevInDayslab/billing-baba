@@ -69,6 +69,11 @@ class _GstrMonthFilterBarState extends ConsumerState<GstrMonthFilterBar> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(reportFiltersProvider, (_, __) {
+      if (!mounted) return;
+      setState(_syncFromFilters);
+    });
+
     return Wrap(
       spacing: AppSpacing.lg,
       runSpacing: AppSpacing.sm,

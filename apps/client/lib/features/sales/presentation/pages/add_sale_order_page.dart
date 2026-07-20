@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
@@ -20,8 +21,6 @@ import 'package:billing_baba/features/sales/providers/sale_order_form_provider.d
 import 'package:billing_baba/features/sales/providers/sale_order_tabs_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 
@@ -69,6 +68,10 @@ class _AddSaleOrderPageState extends ConsumerState<AddSaleOrderPage> {
     if (mounted) {
       setState(() => _initialized = true);
     }
+  }
+
+  void _handleBack() {
+    returnToTransactionList(context, AppRoutes.saleOrder);
   }
 
   @override
@@ -123,6 +126,7 @@ class _AddSaleOrderPageState extends ConsumerState<AddSaleOrderPage> {
             child: SalePageTitleBar(
               currentRoute: AppRoutes.saleOrder,
               onSettingsTap: () {},
+              onBack: _handleBack,
             ),
           ),
           if (_supportsTabs) ...[
@@ -578,7 +582,7 @@ class _BottomActionBar extends ConsumerWidget {
           );
       return;
     }
-    context.pop();
+    returnToTransactionList(context, AppRoutes.saleOrder);
   }
 }
 
