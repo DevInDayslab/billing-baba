@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
@@ -21,8 +22,6 @@ import 'package:billing_baba/features/sales/providers/credit_note_tabs_provider.
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 
@@ -93,6 +92,10 @@ class _AddCreditNotePageState extends ConsumerState<AddCreditNotePage> {
     }
   }
 
+  void _handleBack() {
+    returnToTransactionList(context, AppRoutes.saleReturnCreditNote);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_supportsTabs) {
@@ -141,6 +144,7 @@ class _AddCreditNotePageState extends ConsumerState<AddCreditNotePage> {
             child: SalePageTitleBar(
               currentRoute: AppRoutes.saleReturnCreditNote,
               onSettingsTap: () {},
+              onBack: _handleBack,
             ),
           ),
           if (_supportsTabs) ...[
@@ -617,7 +621,7 @@ class _BottomActionBar extends ConsumerWidget {
           );
       return;
     }
-    context.go(AppRoutes.saleReturnCreditNote);
+    returnToTransactionList(context, AppRoutes.saleReturnCreditNote);
   }
 }
 

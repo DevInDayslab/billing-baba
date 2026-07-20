@@ -11,6 +11,7 @@ class SalePageTitleBar extends ConsumerStatefulWidget {
   const SalePageTitleBar({
     required this.currentRoute,
     this.onSettingsTap,
+    this.onBack,
     this.addButtonLabel,
     this.onAddTap,
     this.addButtonColor,
@@ -19,6 +20,7 @@ class SalePageTitleBar extends ConsumerStatefulWidget {
 
   final String currentRoute;
   final VoidCallback? onSettingsTap;
+  final VoidCallback? onBack;
   final String? addButtonLabel;
   final VoidCallback? onAddTap;
   final Color? addButtonColor;
@@ -69,6 +71,16 @@ class _SalePageTitleBarState extends ConsumerState<SalePageTitleBar> {
 
         return Row(
           children: [
+            if (widget.onBack != null) ...[
+              IconButton(
+                onPressed: widget.onBack,
+                icon: const Icon(Icons.arrow_back),
+                color: AppColors.textSecondary,
+                tooltip: 'Back',
+                visualDensity: VisualDensity.compact,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+            ],
             Expanded(
               child: SalePageSwitcherMenu(
                 currentRoute: widget.currentRoute,

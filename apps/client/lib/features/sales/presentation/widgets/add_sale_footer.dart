@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
+const _compactBreakpoint = 900.0;
 
 class AddSaleFooter extends ConsumerStatefulWidget {
   const AddSaleFooter({this.sessionKey = 'default', super.key});
@@ -63,267 +64,135 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
     final isCredit = form.saleType == SaleType.credit;
     final attachmentService = ref.watch(documentAttachmentServiceProvider).value;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final termsSection = _TermsSection(
+      title: form.termsTitle,
+      notes: form.termsText,
+      onTitleChanged: notifier.updateTermsTitle,
+      onNotesChanged: notifier.updateTermsText,
+    );
+    final attachmentsSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          flex: 2,
-          child: _TermsSection(
-            title: form.termsTitle,
-            notes: form.termsText,
-            onTitleChanged: notifier.updateTermsTitle,
-            onNotesChanged: notifier.updateTermsText,
-          ),
+        _AttachmentActionButton(
+          icon: Icons.description_outlined,
+          label: 'ADD DESCRIPTION',
+          onPressed: () => setState(() => _showDescription = true),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 2,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _AttachmentActionButton(
-                icon: Icons.description_outlined,
-                label: 'ADD DESCRIPTION',
-                onPressed: () => setState(() => _showDescription = true),
-              ),
-              if (_showDescription) ...[
-                const SizedBox(height: 8),
-                _DescriptionField(
-                  initialValue: form.description,
-                  onChanged: notifier.updateDescription,
-                ),
-              ],
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _AttachmentActionButton(
-                      icon: Icons.camera_alt_outlined,
-                      label: 'ADD IMAGE',
-                      onPressed: () => _promptAddImage(
-                        context,
-                        notifier,
-                        form.attachedImages.length,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _AttachmentActionButton(
-                      icon: Icons.attach_file_outlined,
-                      label: 'ADD DOCUMENT',
-                      filled: true,
-                      onPressed: () => _promptAddDocument(
-                        context,
-                        notifier,
-                        form.attachedDocuments.length,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (form.attachedImages.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                SaleFormAttachmentChipList(
-                  attachments: form.attachedImages,
-                  attachmentService: attachmentService,
-                  onRemove: (id) => transactionRemoveAttachment(
-                    ref: ref,
-                    attachments: form.attachedImages,
-                    id: id,
-                    onRemoved: notifier.removeImage,
-                  ),
-                  onRename: (id, name) => transactionRenameAttachment(
-                    ref: ref,
-                    attachments: form.attachedImages,
-                    id: id,
-                    name: name,
-                    onRenamed: notifier.updateImage,
-                  ),
-                ),
-              ],
-              if (form.attachedDocuments.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                SaleFormAttachmentChipList(
-                  attachments: form.attachedDocuments,
-                  attachmentService: attachmentService,
-                  onRemove: (id) => transactionRemoveAttachment(
-                    ref: ref,
-                    attachments: form.attachedDocuments,
-                    id: id,
-                    onRemoved: notifier.removeDocument,
-                  ),
-                  onRename: (id, name) => transactionRenameAttachment(
-                    ref: ref,
-                    attachments: form.attachedDocuments,
-                    id: id,
-                    name: name,
-                    onRenamed: notifier.updateDocument,
-                  ),
-                ),
-              ],
-            ],
+        if (_showDescription) ...[
+          const SizedBox(height: 8),
+          _DescriptionField(
+            initialValue: form.description,
+            onChanged: notifier.updateDescription,
           ),
+        ],
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _AttachmentActionButton(
+                icon: Icons.camera_alt_outlined,
+                label: 'ADD IMAGE',
+                onPressed: () => _promptAddImage(
+                  context,
+                  notifier,
+                  form.attachedImages.length,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _AttachmentActionButton(
+                icon: Icons.attach_file_outlined,
+                label: 'ADD DOCUMENT',
+                filled: true,
+                onPressed: () => _promptAddDocument(
+                  context,
+                  notifier,
+                  form.attachedDocuments.length,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
-        SizedBox(
-          width: 260,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Text(
-                    'Tax',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 72,
-                    child: SaleGenericSelectDropdown(
-                      value: totalTax > 0
-                          ? taxLabelForPercent(
-                              form.items.isNotEmpty
-                                  ? form.items.first.taxPercent
-                                  : 0,
-                            )
-                          : 'NONE',
-                      options: SaleDropdownOptions.taxSlabs,
-                      highlight: SaleDropdownHighlight.red,
-                      compact: true,
-                      onSelected: (_) {},
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: 72,
-                    child: _AmountField(
-                      value: totalTax,
-                      readOnly: true,
-                      onChanged: (_) {},
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Checkbox(
-                    value: form.roundOff,
-                    onChanged: (value) =>
-                        notifier.toggleRoundOff(value: value ?? false),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  const Text(
-                    'Round Off',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: 72,
-                    child: _AmountField(
-                      value: form.roundOffAmount,
-                      readOnly: !form.roundOff,
-                      onChanged: (_) {},
-                    ),
-                  ),
-                ],
-              ),
-              if (form.showLoyaltySection) ...[
-                const SizedBox(height: 8),
-                _LoyaltyPointsSection(
-                  form: form,
-                  notifier: notifier,
-                  currencyFormat: _currencyFormat,
-                ),
-              ],
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: _cardBorder),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  children: [
-                    const Text(
-                      'Total',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      width: 100,
-                      child: _AmountField(
-                        value: grandTotal,
-                        readOnly: true,
-                        onChanged: (_) {},
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isCredit) ...[
-                const SizedBox(height: 8),
-                _CreditSummarySection(
-                  form: form,
-                  notifier: notifier,
-                  currencyFormat: _currencyFormat,
-                ),
-              ] else ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 120,
-                      child: SaleGenericSelectDropdown(
-                        value: form.paymentType,
-                        options: SaleDropdownOptions.paymentTypes,
-                        highlight: SaleDropdownHighlight.blue,
-                        compact: true,
-                        onSelected: notifier.updatePaymentType,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _AmountField(
-                        value: form.paymentAmount,
-                        onChanged: notifier.updatePaymentAmount,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                InkWell(
-                  onTap: notifier.addPaymentType,
-                  borderRadius: BorderRadius.circular(4),
-                  child: const Text(
-                    '+ Add Payment type',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ],
+        if (form.attachedImages.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          SaleFormAttachmentChipList(
+            attachments: form.attachedImages,
+            attachmentService: attachmentService,
+            onRemove: (id) => transactionRemoveAttachment(
+              ref: ref,
+              attachments: form.attachedImages,
+              id: id,
+              onRemoved: notifier.removeImage,
+            ),
+            onRename: (id, name) => transactionRenameAttachment(
+              ref: ref,
+              attachments: form.attachedImages,
+              id: id,
+              name: name,
+              onRenamed: notifier.updateImage,
+            ),
           ),
-        ),
+        ],
+        if (form.attachedDocuments.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          SaleFormAttachmentChipList(
+            attachments: form.attachedDocuments,
+            attachmentService: attachmentService,
+            onRemove: (id) => transactionRemoveAttachment(
+              ref: ref,
+              attachments: form.attachedDocuments,
+              id: id,
+              onRemoved: notifier.removeDocument,
+            ),
+            onRename: (id, name) => transactionRenameAttachment(
+              ref: ref,
+              attachments: form.attachedDocuments,
+              id: id,
+              name: name,
+              onRenamed: notifier.updateDocument,
+            ),
+          ),
+        ],
       ],
+    );
+    final totalsSection = _TotalsSection(
+      form: form,
+      notifier: notifier,
+      totalTax: totalTax,
+      grandTotal: grandTotal,
+      isCredit: isCredit,
+      currencyFormat: _currencyFormat,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < _compactBreakpoint;
+
+        if (isCompact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              termsSection,
+              const SizedBox(height: 16),
+              attachmentsSection,
+              const SizedBox(height: 16),
+              totalsSection,
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 2, child: termsSection),
+            const SizedBox(width: 16),
+            Expanded(flex: 2, child: attachmentsSection),
+            const SizedBox(width: 16),
+            SizedBox(width: 260, child: totalsSection),
+          ],
+        );
+      },
     );
   }
 
@@ -356,6 +225,176 @@ class _AddSaleFooterState extends ConsumerState<AddSaleFooter> {
           .read(addSaleFormProvider(sessionKey: widget.sessionKey))
           .documentId,
       onAdded: notifier.addDocument,
+    );
+  }
+}
+
+class _TotalsSection extends StatelessWidget {
+  const _TotalsSection({
+    required this.form,
+    required this.notifier,
+    required this.totalTax,
+    required this.grandTotal,
+    required this.isCredit,
+    required this.currencyFormat,
+  });
+
+  final AddSaleFormState form;
+  final AddSaleForm notifier;
+  final double totalTax;
+  final double grandTotal;
+  final bool isCredit;
+  final NumberFormat currencyFormat;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            const Text(
+              'Tax',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 72,
+              child: SaleGenericSelectDropdown(
+                value: form.taxOption,
+                options: SaleDropdownOptions.taxSlabs,
+                highlight: SaleDropdownHighlight.red,
+                compact: true,
+                onSelected: notifier.updateTaxOption,
+              ),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: 72,
+              child: _AmountField(
+                value: totalTax,
+                readOnly: true,
+                onChanged: (_) {},
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Checkbox(
+              value: form.roundOff,
+              onChanged: (value) =>
+                  notifier.toggleRoundOff(value: value ?? false),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+            const Text(
+              'Round Off',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: 72,
+              child: _AmountField(
+                value: form.roundOffAmount,
+                readOnly: !form.roundOff,
+                onChanged: (_) {},
+              ),
+            ),
+          ],
+        ),
+        if (form.showLoyaltySection) ...[
+          const SizedBox(height: 8),
+          _LoyaltyPointsSection(
+            form: form,
+            notifier: notifier,
+            currencyFormat: currencyFormat,
+          ),
+        ],
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
+          ),
+          decoration: BoxDecoration(
+            border: Border.all(color: _cardBorder),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            children: [
+              const Text(
+                'Total',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const Spacer(),
+              SizedBox(
+                width: 100,
+                child: _AmountField(
+                  value: grandTotal,
+                  readOnly: true,
+                  onChanged: (_) {},
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (isCredit) ...[
+          const SizedBox(height: 8),
+          _CreditSummarySection(
+            form: form,
+            notifier: notifier,
+            currencyFormat: currencyFormat,
+          ),
+        ] else ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              SizedBox(
+                width: 120,
+                child: SaleGenericSelectDropdown(
+                  value: form.paymentType,
+                  options: SaleDropdownOptions.paymentTypes,
+                  highlight: SaleDropdownHighlight.blue,
+                  compact: true,
+                  onSelected: notifier.updatePaymentType,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _AmountField(
+                  value: form.paymentAmount,
+                  onChanged: notifier.updatePaymentAmount,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          InkWell(
+            onTap: notifier.addPaymentType,
+            borderRadius: BorderRadius.circular(4),
+            child: const Text(
+              '+ Add Payment type',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

@@ -85,7 +85,7 @@ class _Gstr9ReportContentState extends ConsumerState<Gstr9ReportContent> {
 
         return ColoredBox(
           color: AppColors.background,
-          child: SingleChildScrollView(
+          child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -135,66 +135,70 @@ class _Gstr9ReportContentState extends ConsumerState<Gstr9ReportContent> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                ReportCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.md,
-                          AppSpacing.md,
-                          AppSpacing.md,
-                          AppSpacing.sm,
-                        ),
-                        child: Row(
-                          children: [
-                            const Text(
-                              'GSTR9 REPORT',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                                letterSpacing: 0.4,
-                              ),
+                Expanded(
+                  child: ReportCard(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpacing.md,
+                              AppSpacing.md,
+                              AppSpacing.md,
+                              AppSpacing.sm,
                             ),
-                            const Spacer(),
-                            Checkbox(
-                              value: _considerNonTaxExempted,
-                              onChanged: (value) => setState(
-                                () => _considerNonTaxExempted = value ?? false,
-                              ),
-                              visualDensity: VisualDensity.compact,
+                            child: Row(
+                              children: [
+                                const Text(
+                                  'GSTR9 REPORT',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Checkbox(
+                                  value: _considerNonTaxExempted,
+                                  onChanged: (value) => setState(
+                                    () => _considerNonTaxExempted = value ?? false,
+                                  ),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                const Text(
+                                  'CONSIDER NON-TAX AS EXEMPTED',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textSecondary,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const Text(
-                              'CONSIDER NON-TAX AS EXEMPTED',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textSecondary,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                          const Divider(height: 1, color: reportCardBorder),
+                          const _SectionBanner(title: 'Pt. I Basic Details'),
+                          _BasicDetailsTable(
+                            financialYear: _financialYear,
+                            borderColor: _gstr9Border,
+                          ),
+                          const _SectionBanner(
+                            title:
+                                'Pt. II Details Of Outward And Inward Supplies '
+                                'Declared During The Financial Year',
+                            trailing: '(Amount in Rupees in All Tables)',
+                          ),
+                          _OutwardSuppliesTable(
+                            borderColor: _gstr9Border,
+                            supplyRows: supplyRows,
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
                       ),
-                      const Divider(height: 1, color: reportCardBorder),
-                      const _SectionBanner(title: 'Pt. I Basic Details'),
-                      _BasicDetailsTable(
-                        financialYear: _financialYear,
-                        borderColor: _gstr9Border,
-                      ),
-                      const _SectionBanner(
-                        title:
-                            'Pt. II Details Of Outward And Inward Supplies '
-                            'Declared During The Financial Year',
-                        trailing: '(Amount in Rupees in All Tables)',
-                      ),
-                      _OutwardSuppliesTable(
-                        borderColor: _gstr9Border,
-                        supplyRows: supplyRows,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                    ],
+                    ),
                   ),
                 ),
               ],

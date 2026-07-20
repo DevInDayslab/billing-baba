@@ -8,6 +8,7 @@ class PurchasePageTitleBar extends StatefulWidget {
   const PurchasePageTitleBar({
     required this.currentRoute,
     this.onSettingsTap,
+    this.onBack,
     this.addButtonLabel,
     this.onAddTap,
     super.key,
@@ -15,6 +16,7 @@ class PurchasePageTitleBar extends StatefulWidget {
 
   final String currentRoute;
   final VoidCallback? onSettingsTap;
+  final VoidCallback? onBack;
   final String? addButtonLabel;
   final VoidCallback? onAddTap;
 
@@ -51,6 +53,16 @@ class _PurchasePageTitleBarState extends State<PurchasePageTitleBar> {
 
     return Row(
       children: [
+        if (widget.onBack != null) ...[
+          IconButton(
+            onPressed: widget.onBack,
+            icon: const Icon(Icons.arrow_back),
+            color: AppColors.textSecondary,
+            tooltip: 'Back',
+            visualDensity: VisualDensity.compact,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+        ],
         PurchasePageSwitcherMenu(
           currentRoute: widget.currentRoute,
           child: MouseRegion(

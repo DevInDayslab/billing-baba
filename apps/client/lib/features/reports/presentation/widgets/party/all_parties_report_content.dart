@@ -75,7 +75,7 @@ class AllPartiesReportContent extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: SingleChildScrollView(
+                child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: ReportCard(
                     child: Column(
@@ -120,69 +120,73 @@ class AllPartiesReportContent extends ConsumerWidget {
                                 .setSearchQuery,
                           ),
                         ),
-                        ReportSyncScrollTable(
-                          minWidth: 860,
-                          emptyState: const SizedBox(
-                            height: 220,
-                            child: Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'No parties to display.',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textSecondary,
-                                    ),
+                        Expanded(
+                          child: ReportTableArea(
+                            child: ReportSyncScrollTable(
+                              minWidth: 860,
+                              emptyState: const SizedBox(
+                                height: 220,
+                                child: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'No parties to display.',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                      SizedBox(height: AppSpacing.xs),
+                                      Text(
+                                        'Add parties to see them here.',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  SizedBox(height: AppSpacing.xs),
-                                  Text(
-                                    'Add parties to see them here.',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
+                              headerChildren: const [
+                                ReportAlignedHeaderCell(label: '#', width: 40),
+                                Expanded(
+                                  child: ReportAlignedHeaderCell(
+                                    label: 'PARTY NAME',
+                                  ),
+                                ),
+                                ReportAlignedHeaderCell(label: 'EMAIL', width: 140),
+                                ReportAlignedHeaderCell(
+                                  label: 'PHONE NO.',
+                                  width: 110,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'RECEIVABLE BALANCE',
+                                  width: 140,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'PAYABLE BALANCE',
+                                  width: 130,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'CREDIT LIMIT',
+                                  width: 110,
+                                  alignment: Alignment.centerRight,
+                                ),
+                              ],
+                              rows: [
+                                for (var i = 0; i < parties.length; i++)
+                                  ReportAlignedRowStrip(
+                                    index: i,
+                                    child: _PartyRow(index: i, party: parties[i]),
+                                  ),
+                              ],
                             ),
                           ),
-                          headerChildren: const [
-                            ReportAlignedHeaderCell(label: '#', width: 40),
-                            Expanded(
-                              child: ReportAlignedHeaderCell(
-                                label: 'PARTY NAME',
-                              ),
-                            ),
-                            ReportAlignedHeaderCell(label: 'EMAIL', width: 140),
-                            ReportAlignedHeaderCell(
-                              label: 'PHONE NO.',
-                              width: 110,
-                            ),
-                            ReportAlignedHeaderCell(
-                              label: 'RECEIVABLE BALANCE',
-                              width: 140,
-                              alignment: Alignment.centerRight,
-                            ),
-                            ReportAlignedHeaderCell(
-                              label: 'PAYABLE BALANCE',
-                              width: 130,
-                              alignment: Alignment.centerRight,
-                            ),
-                            ReportAlignedHeaderCell(
-                              label: 'CREDIT LIMIT',
-                              width: 110,
-                              alignment: Alignment.centerRight,
-                            ),
-                          ],
-                          rows: [
-                            for (var i = 0; i < parties.length; i++)
-                              ReportAlignedRowStrip(
-                                index: i,
-                                child: _PartyRow(index: i, party: parties[i]),
-                              ),
-                          ],
                         ),
                         ReportPaginationBar(
                           page: report.meta.page,

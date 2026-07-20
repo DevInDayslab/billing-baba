@@ -3,6 +3,7 @@ class SalesDocumentListQuery {
     this.page = 1,
     this.limit = 20,
     this.documentType,
+    this.documentSeries,
     this.status,
     this.partyId,
     this.from,
@@ -15,6 +16,7 @@ class SalesDocumentListQuery {
   final int page;
   final int limit;
   final String? documentType;
+  final String? documentSeries;
   final String? status;
   final String? partyId;
   final String? from;
@@ -28,6 +30,7 @@ class SalesDocumentListQuery {
       'page': page,
       'limit': limit,
       if (documentType != null) 'document_type': documentType,
+      if (documentSeries != null) 'document_series': documentSeries,
       if (status != null) 'status': status,
       if (partyId != null) 'party_id': partyId,
       if (from != null) 'from': from,
@@ -120,6 +123,8 @@ class CreatePaymentRequest {
     this.paymentDate,
     this.referenceNumber,
     this.notes,
+    this.discountAmount,
+    this.balanceAfterPayment,
     this.shortPaymentHandling,
     this.allocations = const [],
     this.source = 'manual',
@@ -132,6 +137,8 @@ class CreatePaymentRequest {
   final String? paymentDate;
   final String? referenceNumber;
   final String? notes;
+  final String? discountAmount;
+  final String? balanceAfterPayment;
   final String? shortPaymentHandling;
   final List<PaymentAllocationRequest> allocations;
   final String source;
@@ -144,6 +151,9 @@ class CreatePaymentRequest {
     if (paymentDate != null) 'payment_date': paymentDate,
     if (referenceNumber != null) 'reference_number': referenceNumber,
     if (notes != null) 'notes': notes,
+    if (discountAmount != null && discountAmount != '0.0000')
+      'discount_amount': discountAmount,
+    if (balanceAfterPayment != null) 'balance_after_payment': balanceAfterPayment,
     if (shortPaymentHandling != null)
       'short_payment_handling': shortPaymentHandling,
     'source': source,

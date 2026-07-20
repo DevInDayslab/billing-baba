@@ -10,6 +10,7 @@ import 'package:billing_baba/features/parties/providers/party_group_providers.da
 import 'package:billing_baba/features/parties/providers/parties_selection_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shimmer/shimmer.dart';
 
 const _groupListAmountHeaderWidth = 88.0;
 
@@ -21,6 +22,7 @@ class PartyGroupListPanel extends ConsumerWidget {
     final summaries = ref.watch(partyGroupSummariesProvider);
     final selectedGroup = ref.watch(selectedPartyGroupProvider);
     final searchQuery = ref.watch(partyGroupSearchQueryProvider);
+    final isLoading = ref.watch(partyGroupsPageLoadingProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,7 +60,9 @@ class PartyGroupListPanel extends ConsumerWidget {
           ],
         ),
         Expanded(
-          child: summaries.isEmpty
+          child: isLoading
+              ? const _PartyGroupListSkeleton()
+              : summaries.isEmpty
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
@@ -93,6 +97,28 @@ class PartyGroupListPanel extends ConsumerWidget {
                 ),
         ),
       ],
+    );
+  }
+}
+
+class _PartyGroupListSkeleton extends StatelessWidget {
+  const _PartyGroupListSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: ListView.builder(
+        itemCount: 8,
+        itemBuilder: (context, index) => Container(
+          height: inventoryItemListRowHeight,
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: inventoryCardBorder)),
+          ),
+          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        ),
+      ),
     );
   }
 }

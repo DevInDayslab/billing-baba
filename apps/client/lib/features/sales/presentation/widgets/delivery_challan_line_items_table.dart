@@ -2,12 +2,12 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/compact_number_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_item_serial_no_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_line_items_table_layout.dart';
 import 'package:billing_baba/features/sales/providers/delivery_challan_form_provider.dart';
-import 'package:billing_baba/features/sales/utils/sale_quantity_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -47,8 +47,8 @@ class _DeliveryChallanLineItemsTableState
     }
 
     final totalQty = items.fold<double>(0, (sum, item) => sum + item.qty);
-    final totalTax = items.fold<double>(0, (sum, item) => sum + item.lineTax);
-    final totalAmount = items.fold<double>(0, (sum, item) => sum + item.amount);
+    final totalTax = form.taxAmount;
+    final totalAmount = form.rawGrandTotal;
 
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -420,13 +420,13 @@ class _LineItemRow extends ConsumerWidget {
                 ),
                 SaleLineItemGridCell(
                   width: widths.mrp,
-                  child: _CompactNumberField(
-                    initialValue: item.mrp == 0 ? '' : item.mrp.toString(),
+                  child: CompactNumberField(
+                    value: item.mrp,
                     hintText: '0',
                     borderless: _gridBorderless,
                     onChanged: (value) => notifier.updateLineItem(
                       index,
-                      item.copyWith(mrp: double.tryParse(value) ?? 0),
+                      item.copyWith(mrp: value),
                     ),
                   ),
                 ),
@@ -444,14 +444,14 @@ class _LineItemRow extends ConsumerWidget {
                 ),
                 SaleLineItemGridCell(
                   width: widths.qty,
-                  child: _CompactNumberField(
-                    initialValue: SaleQuantityInput.format(item.qty),
+                  child: CompactNumberField(
+                    value: item.qty,
                     hintText: '0',
                     borderless: _gridBorderless,
                     integerOnly: true,
                     onChanged: (value) => notifier.updateLineItem(
                       index,
-                      item.copyWith(qty: SaleQuantityInput.parse(value)),
+                      item.copyWith(qty: value),
                     ),
                   ),
                 ),
@@ -473,17 +473,13 @@ class _LineItemRow extends ConsumerWidget {
                 ),
                 SaleLineItemGridCell(
                   width: widths.price,
-                  child: _CompactNumberField(
-                    initialValue: item.pricePerUnit == 0
-                        ? ''
-                        : item.pricePerUnit.toString(),
+                  child: CompactNumberField(
+                    value: item.pricePerUnit,
                     hintText: '0',
                     borderless: _gridBorderless,
                     onChanged: (value) => notifier.updateLineItem(
                       index,
-                      item.copyWith(
-                        pricePerUnit: double.tryParse(value) ?? 0,
-                      ),
+                      item.copyWith(pricePerUnit: value),
                     ),
                   ),
                 ),
@@ -740,72 +736,5 @@ class _CompactTextFieldState extends State<_CompactTextField> {
         onChanged: widget.onChanged,
       ),
     );
-  }
-}
-
-class _CompactNumberField extends StatefulWidget {
-  const _CompactNumberField({
-    required this.initialValue,
-    required this.onChanged,
-    this.hintText,
-    this.borderless = false,
-    this.integerOnly = false,
-  });
-
-  final String initialValue;
-  final ValueChanged<String> onChanged;
-  final String? hintText;
-  final bool borderless;
-  final bool integerOnly;
-
-  @override
-  State<_CompactNumberField> createState() => _CompactNumberFieldState();
-}
-
-class _CompactNumberFieldState extends State<_CompactNumberField> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
-  }
-
-  @override
-  void didUpdateWidget(_CompactNumberField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.initialValue != oldWidget.initialValue &&
-        widget.initialValue != _controller.text) {
-      _controller.text = widget.initialValue;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final field = TextField(
-      controller: _controller,
-      style: saleFieldTextStyle.copyWith(fontSize: 12, height: 1),
-      textAlignVertical: TextAlignVertical.center,
-      decoration: buildSaleFieldDecoration(
-        hint: widget.hintText,
-        compact: true,
-        borderless: widget.borderless,
-      ),
-      keyboardType: widget.integerOnly
-          ? SaleQuantityInput.integerKeyboardType
-          : SaleQuantityInput.decimalKeyboardType,
-      inputFormatters: widget.integerOnly
-          ? SaleQuantityInput.integerFormatters
-          : SaleQuantityInput.decimalFormatters,
-      onChanged: widget.onChanged,
-    );
-
-    return SaleCompactFieldBox(child: field);
   }
 }

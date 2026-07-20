@@ -4,10 +4,12 @@ import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_fa_form_model.dart';
+import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/add_purchase_fa_footer.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/payment_out_dialog.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_fa_line_items_table.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_page_title_bar.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/transaction_form_busy_overlay.dart';
 import 'package:billing_baba/features/purchases/providers/add_purchase_fa_form_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
@@ -17,8 +19,6 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_single_dat
 import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _linkPaymentGreen = Color(0xFF2E7D32);
@@ -32,7 +32,6 @@ class AddPurchaseFaPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final form = ref.watch(addPurchaseFaFormProvider(batchId: batchId));
-    final isBusy = form.isSaving || form.isLoading;
 
     return Stack(
       children: [
@@ -46,6 +45,12 @@ class AddPurchaseFaPage extends ConsumerWidget {
                 PurchasePageTitleBar(
                   currentRoute: AppRoutes.purchaseFa,
                   onSettingsTap: () {},
+                  onBack: () => leaveTransactionFormPage(
+                    context: context,
+                    isDirty: form.isDirty,
+                    isSaving: form.isSaving,
+                    listRoute: AppRoutes.purchaseFa,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 DecoratedBox(
@@ -99,13 +104,15 @@ class AddPurchaseFaPage extends ConsumerWidget {
             ),
           ),
         ),
-        if (isBusy)
-          Positioned.fill(
-            child: ColoredBox(
-              color: Colors.black.withValues(alpha: 0.12),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
+        Positioned.fill(
+          child: TransactionFormBusyOverlay(
+            isLoading: form.isLoading,
+            isSaving: form.isSaving,
+            savingLabel: batchId == null
+                ? 'Saving purchase FA…'
+                : 'Updating purchase FA…',
           ),
+        ),
       ],
     );
   }
@@ -369,7 +376,14 @@ class _BottomActionBar extends ConsumerWidget {
             const SizedBox(width: AppSpacing.sm),
           ],
           OutlinedButton(
-            onPressed: () => _handleCancel(context, ref),
+            onPressed: form.isSaving
+                ? null
+                : () => leaveTransactionFormPage(
+                    context: context,
+                    isDirty: form.isDirty,
+                    isSaving: form.isSaving,
+                    listRoute: AppRoutes.purchaseFa,
+                  ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               side: const BorderSide(color: _cardBorder),
@@ -417,39 +431,14 @@ class _BottomActionBar extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleCancel(BuildContext context, WidgetRef ref) async {
-    final form = ref.read(addPurchaseFaFormProvider(batchId: batchId));
-    if (form.isDirty) {
-      final discard = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Discard changes?'),
-          content: const Text(
-            'You have unsaved changes. Are you sure you want to leave?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Keep editing'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Discard'),
-            ),
-          ],
-        ),
-      );
-      if (discard != true || !context.mounted) return;
-    }
-    if (context.mounted) context.pop();
-  }
-
   Future<void> _handleLinkPayment(
     BuildContext context,
     WidgetRef ref,
     AddPurchaseFaForm notifier,
     AddPurchaseFaFormState form,
   ) async {
+    if (form.isSaving) return;
+
     if (form.partyId == null || form.partyId!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a party first')),
@@ -461,9 +450,7 @@ class _BottomActionBar extends ConsumerWidget {
       final error = await notifier.save();
       if (!context.mounted) return;
       if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error)),
-        );
+        showTransactionFormSaveError(context, error);
         return;
       }
     }
@@ -481,20 +468,13 @@ class _BottomActionBar extends ConsumerWidget {
     WidgetRef ref,
     AddPurchaseFaForm notifier,
   ) async {
-    if (ref.read(addPurchaseFaFormProvider(batchId: batchId)).isSaving) {
-      return;
-    }
-
-    final error = await notifier.save();
-    if (!context.mounted) return;
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
-      return;
-    }
-
-    context.go(AppRoutes.purchaseFa);
+    final form = ref.read(addPurchaseFaFormProvider(batchId: batchId));
+    await handleTransactionFormSave(
+      context: context,
+      isSaving: form.isSaving,
+      save: notifier.save,
+      listRoute: AppRoutes.purchaseFa,
+    );
   }
 }
 

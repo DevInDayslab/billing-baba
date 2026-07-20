@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
+import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/pos/application/pos_sale_service.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
@@ -60,11 +61,14 @@ class ApiPosRepository implements PosRepository {
     return null;
   }
 
-  PosItem _mapInventoryItem(InventoryItem item) => mapInventoryItemToPosItem(item);
+  PosItem _mapInventoryItem(InventoryItem item) =>
+      mapInventoryItemToPosItem(item);
 }
 
 PosItem mapInventoryItemToPosItem(InventoryItem item) {
-  final stock = (item.availableForSale ?? item.quantity ?? 0).round();
+  final stock = InventoryStockCalculator.metricsFromItem(
+    item,
+  ).availableForSale.round();
   return PosItem(
     id: item.id,
     name: item.name,

@@ -5,6 +5,7 @@ import 'package:billing_baba/features/reports/presentation/widgets/shared/report
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_summary_card.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/transaction_report_filter_bar.dart';
@@ -75,7 +76,7 @@ class PurchaseReportContent extends ConsumerWidget {
 
         return ColoredBox(
           color: AppColors.background,
-          child: SingleChildScrollView(
+          child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -90,6 +91,10 @@ class PurchaseReportContent extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const TransactionReportFilterBar(),
+                      const SizedBox(height: AppSpacing.sm),
+                      const ReportSearchField(
+                        hintText: 'Search purchases...',
+                      ),
                       const SizedBox(height: AppSpacing.sm),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -119,55 +124,61 @@ class PurchaseReportContent extends ConsumerWidget {
                   trendUp: false,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                if (report.rows.isEmpty)
-                  SaleEmptyStateCard(
-                    illustration: const SaleGeometricIllustration(
-                      circleColor: Color(0xFFE8F5E9),
-                      shapeColor: Color(0xFF81C784),
-                      shapeIcon: Icons.shopping_basket_outlined,
-                    ),
-                    title: 'No Transactions to show',
-                    description: "You haven't added any purchases yet.",
-                    buttonLabel: 'Add Purchase',
-                    buttonColor: reportAddRed,
-                    buttonIcon: Icons.add,
-                    onPressed: () => context.push(AppRoutes.purchase),
-                  )
-                else
-                  ReportCard(
-                    child: ReportSyncScrollTable(
-                      minWidth: 840,
-                      headerChildren: const [
-                        ReportAlignedHeaderCell(label: 'DATE', width: 100),
-                        ReportAlignedHeaderCell(
-                          label: 'INVOICE NO',
-                          width: 120,
+                Expanded(
+                  child: report.rows.isEmpty
+                      ? SaleEmptyStateCard(
+                          illustration: const SaleGeometricIllustration(
+                            circleColor: Color(0xFFE8F5E9),
+                            shapeColor: Color(0xFF81C784),
+                            shapeIcon: Icons.shopping_basket_outlined,
+                          ),
+                          title: 'No Transactions to show',
+                          description: "You haven't added any purchases yet.",
+                          buttonLabel: 'Add Purchase',
+                          buttonColor: reportAddRed,
+                          buttonIcon: Icons.add,
+                          onPressed: () => context.push(AppRoutes.purchase),
+                        )
+                      : ReportTableArea(
+                          child: ReportCard(
+                            child: ReportSyncScrollTable(
+                              minWidth: 840,
+                              headerChildren: const [
+                                ReportAlignedHeaderCell(label: 'DATE', width: 100),
+                                ReportAlignedHeaderCell(
+                                  label: 'INVOICE NO',
+                                  width: 120,
+                                ),
+                                Expanded(
+                                  child: ReportAlignedHeaderCell(label: 'PARTY'),
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'PAYMENT TYPE',
+                                  width: 120,
+                                ),
+                                ReportAlignedHeaderCell(label: 'STATUS', width: 100),
+                                ReportAlignedHeaderCell(
+                                  label: 'AMOUNT',
+                                  width: 100,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'BALANCE',
+                                  width: 100,
+                                  alignment: Alignment.centerRight,
+                                ),
+                              ],
+                              rows: [
+                                for (var i = 0; i < report.rows.length; i++)
+                                  _PurchaseRow(
+                                    purchase: report.rows[i],
+                                    index: i,
+                                  ),
+                              ],
+                            ),
+                          ),
                         ),
-                        Expanded(
-                          child: ReportAlignedHeaderCell(label: 'PARTY'),
-                        ),
-                        ReportAlignedHeaderCell(
-                          label: 'PAYMENT TYPE',
-                          width: 120,
-                        ),
-                        ReportAlignedHeaderCell(label: 'STATUS', width: 100),
-                        ReportAlignedHeaderCell(
-                          label: 'AMOUNT',
-                          width: 100,
-                          alignment: Alignment.centerRight,
-                        ),
-                        ReportAlignedHeaderCell(
-                          label: 'BALANCE',
-                          width: 100,
-                          alignment: Alignment.centerRight,
-                        ),
-                      ],
-                      rows: [
-                        for (var i = 0; i < report.rows.length; i++)
-                          _PurchaseRow(purchase: report.rows[i], index: i),
-                      ],
-                    ),
-                  ),
+                ),
                 ReportPaginationBar(
                   page: report.meta.page,
                   totalPages: report.meta.totalPages,

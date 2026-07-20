@@ -43,12 +43,12 @@ PurchaseColumnFilterActions expenseTransactionFilterActions(
 class ExpenseResizableTable extends ConsumerWidget {
   const ExpenseResizableTable({
     required this.transactions,
-    required this.isLoyalty,
+    this.variant = ExpenseCategoryVariant.standard,
     super.key,
   });
 
   final List<ExpenseTransactionModel> transactions;
-  final bool isLoyalty;
+  final ExpenseCategoryVariant variant;
 
   static final _dateFormat = DateFormat('dd/MM/yyyy');
   static final _dateTimeFormat = DateFormat('dd/MM/yyyy, HH:mm');
@@ -66,26 +66,44 @@ class ExpenseResizableTable extends ConsumerWidget {
     final partyOptions = ref.watch(expenseTransactionPartyOptionsProvider);
     final actions = expenseTransactionFilterActions(notifier);
 
-    final tableColumns = isLoyalty
-        ? _buildLoyaltyColumns(filters, notifier, partyOptions)
-        : _buildStandardColumns(
-            filters,
-            notifier,
-            partyOptions,
-            actions,
-            ref,
-          );
+    final tableColumns = switch (variant) {
+      ExpenseCategoryVariant.loyaltyRedeemed => _buildLoyaltyColumns(
+        filters,
+        notifier,
+        partyOptions,
+      ),
+      ExpenseCategoryVariant.paymentInDiscount => _buildPaymentInDiscountColumns(
+        filters,
+        notifier,
+        partyOptions,
+        actions,
+      ),
+      ExpenseCategoryVariant.standard => _buildStandardColumns(
+        filters,
+        notifier,
+        partyOptions,
+        actions,
+        ref,
+      ),
+    };
 
     final rows = [
       for (var i = 0; i < transactions.length; i++)
         ResizableDataRow(
-          onTap: () => context.push(
-            '${AppRoutes.editExpense}/${transactions[i].id}',
-          ),
+          onTap: transactions[i].isSyncManaged
+              ? null
+              : () => context.push(
+                  '${AppRoutes.editExpense}/${transactions[i].id}',
+                ),
           backgroundColor: i.isOdd ? _zebraRowBg : Colors.transparent,
-          cells: isLoyalty
-              ? _loyaltyCells(transactions[i])
-              : _standardCells(transactions[i]),
+          cells: switch (variant) {
+            ExpenseCategoryVariant.loyaltyRedeemed =>
+              _loyaltyCells(transactions[i]),
+            ExpenseCategoryVariant.paymentInDiscount =>
+              _paymentInDiscountCells(transactions[i]),
+            ExpenseCategoryVariant.standard =>
+              _standardCells(transactions[i]),
+          },
         ),
     ];
 
@@ -274,6 +292,94 @@ class ExpenseResizableTable extends ConsumerWidget {
     ];
   }
 
+  List<ResizableDataColumn> _buildPaymentInDiscountColumns(
+    ExpenseFiltersState filters,
+    ExpenseFilters notifier,
+    List<String> partyOptions,
+    PurchaseColumnFilterActions actions,
+  ) {
+    final columns = filters.columnFilters;
+    return [
+      ResizableDataColumn(
+        initialWidth: expenseTransactionDateColWidth,
+        minWidth: 96,
+        header: purchaseColumnFilterCell(
+          label: 'Date',
+          kind: PurchaseColumnFilterKind.date,
+          headerStyle: _expenseTableHeaderStyle,
+          isActive: purchaseColumnFilterIsActive(
+            PurchaseColumnFilterKind.date,
+            columns,
+          ),
+          columns: columns,
+          actions: actions,
+          partyOptions: partyOptions,
+          statusOptions: expenseTransactionStatusOptions,
+          selectedStatus: filters.selectedStatus,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: expenseTransactionInvoiceColWidth,
+        header: purchaseColumnFilterCell(
+          label: 'Payment no.',
+          kind: PurchaseColumnFilterKind.documentNo,
+          headerStyle: _expenseTableHeaderStyle,
+          isActive: purchaseColumnFilterIsActive(
+            PurchaseColumnFilterKind.documentNo,
+            columns,
+          ),
+          columns: columns,
+          actions: actions,
+          partyOptions: partyOptions,
+          statusOptions: expenseTransactionStatusOptions,
+          selectedStatus: filters.selectedStatus,
+          documentNoHint: 'Search payment no',
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: expenseTransactionPartyColMinWidth,
+        minWidth: 100,
+        maxWidth: 400,
+        header: purchaseColumnFilterCell(
+          label: 'Party',
+          kind: PurchaseColumnFilterKind.partyName,
+          headerStyle: _expenseTableHeaderStyle,
+          isActive: purchaseColumnFilterIsActive(
+            PurchaseColumnFilterKind.partyName,
+            columns,
+          ),
+          columns: columns,
+          actions: actions,
+          partyOptions: partyOptions,
+          statusOptions: expenseTransactionStatusOptions,
+          selectedStatus: filters.selectedStatus,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: expenseTransactionPaymentColWidth,
+        header: purchaseColumnFilterCell(
+          label: 'Payment type',
+          kind: PurchaseColumnFilterKind.paymentType,
+          headerStyle: _expenseTableHeaderStyle,
+          isActive: purchaseColumnFilterIsActive(
+            PurchaseColumnFilterKind.paymentType,
+            columns,
+          ),
+          columns: columns,
+          actions: actions,
+          partyOptions: partyOptions,
+          statusOptions: expenseTransactionStatusOptions,
+          selectedStatus: filters.selectedStatus,
+        ),
+      ),
+      ResizableDataColumn(
+        initialWidth: expenseTransactionAmountColWidth,
+        resizable: false,
+        header: _plainHeaderCell('Discount amount'),
+      ),
+    ];
+  }
+
   List<Widget> _standardCells(ExpenseTransactionModel tx) {
     return [
       _ExpenseDataCell(
@@ -346,6 +452,36 @@ class ExpenseResizableTable extends ConsumerWidget {
         child: Text(
           _currencyFormat.format(tx.loyaltyValue ?? 0),
           overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _paymentInDiscountCells(ExpenseTransactionModel tx) {
+    return [
+      _ExpenseDataCell(
+        child: Text(
+          tx.date.hour == 0 && tx.date.minute == 0
+              ? _dateFormat.format(tx.date)
+              : _dateTimeFormat.format(tx.date),
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+      _ExpenseDataCell(
+        child: Text(tx.transactionNo, overflow: TextOverflow.ellipsis),
+      ),
+      _ExpenseDataCell(
+        child: Text(tx.party, overflow: TextOverflow.ellipsis, maxLines: 1),
+      ),
+      _ExpenseDataCell(
+        child: Text(tx.paymentType ?? '', overflow: TextOverflow.ellipsis),
+      ),
+      _ExpenseDataCell(
+        alignment: Alignment.centerRight,
+        child: Text(
+          _currencyFormat.format(tx.amount ?? 0),
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.right,
         ),
       ),
     ];

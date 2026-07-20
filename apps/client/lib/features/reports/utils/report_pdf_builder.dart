@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_fonts.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_theme.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_widgets.dart';
@@ -20,9 +21,9 @@ abstract final class ReportPdfBuilder {
     final pdf = pw.Document();
     pdf.addPage(
       pw.MultiPage(
-        pageTheme: const pw.PageTheme(
-          pageFormat: PdfPageFormat.a4,
-          margin: pw.EdgeInsets.fromLTRB(36, 36, 36, 48),
+        pageTheme: pw.PageTheme(
+          pageFormat: PdfPageProfile.transactionCompact.pageFormat,
+          margin: PdfPageProfile.transactionCompact.pageMargins,
         ),
         header: (context) {
           if (context.pageNumber != 1) return pw.SizedBox();

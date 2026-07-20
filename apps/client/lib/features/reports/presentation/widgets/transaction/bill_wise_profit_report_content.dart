@@ -69,7 +69,7 @@ class BillWiseProfitReportContent extends ConsumerWidget {
 
         return ColoredBox(
           color: AppColors.background,
-          child: SingleChildScrollView(
+          child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,159 +92,165 @@ class BillWiseProfitReportContent extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                ReportCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          AppSpacing.md,
-                          AppSpacing.md,
-                          AppSpacing.md,
-                          AppSpacing.sm,
-                        ),
-                        child: Text(
-                          'PROFIT ON SALE INVOICES',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            letterSpacing: 0.4,
+                Expanded(
+                  child: ReportCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.md,
+                            AppSpacing.sm,
+                          ),
+                          child: Text(
+                            'PROFIT ON SALE INVOICES',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              letterSpacing: 0.4,
+                            ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                        ),
-                        child: Row(
-                          children: [
-                            const Text(
-                              'FILTERS',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textSecondary,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                          ),
+                          child: Row(
+                            children: [
+                              const Text(
+                                'FILTERS',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: TextField(
-                                onChanged: ref
-                                    .read(reportFiltersProvider.notifier)
-                                    .setSearchQuery,
-                                decoration: InputDecoration(
-                                  hintText: 'Party filter',
-                                  hintStyle: const TextStyle(fontSize: 13),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.md,
-                                    vertical: 10,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppRadius.sm,
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: TextField(
+                                  onChanged: ref
+                                      .read(reportFiltersProvider.notifier)
+                                      .setSearchQuery,
+                                  decoration: InputDecoration(
+                                    hintText: 'Party filter',
+                                    hintStyle: const TextStyle(fontSize: 13),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.md,
+                                      vertical: 10,
                                     ),
-                                    borderSide: const BorderSide(
-                                      color: reportCardBorder,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.sm,
+                                      ),
+                                      borderSide: const BorderSide(
+                                        color: reportCardBorder,
+                                      ),
                                     ),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppRadius.sm,
-                                    ),
-                                    borderSide: const BorderSide(
-                                      color: reportCardBorder,
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.sm,
+                                      ),
+                                      borderSide: const BorderSide(
+                                        color: reportCardBorder,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      const Divider(height: 1, color: reportCardBorder),
-                      ReportSyncScrollTable(
-                        minWidth: 800,
-                        headerChildren: const [
-                          ReportAlignedHeaderCell(label: 'DATE', width: 90),
-                          ReportAlignedHeaderCell(
-                            label: 'INVOICE NO',
-                            width: 110,
-                          ),
-                          Expanded(
-                            child: ReportAlignedHeaderCell(label: 'PARTY'),
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'TOTAL SALE AMOUNT',
-                            width: 140,
-                            alignment: Alignment.centerRight,
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'PROFIT (+) / LOSS (-)',
-                            width: 140,
-                            alignment: Alignment.centerRight,
-                          ),
-                          ReportAlignedHeaderCell(
-                            label: 'DETAILS',
-                            width: 80,
-                            showFilter: false,
-                          ),
-                        ],
-                        rows: [
-                          for (var i = 0; i < rows.length; i++)
-                            _BillWiseProfitRow(row: rows[i], index: i),
-                        ],
-                        emptyState: const SizedBox(
-                          height: 160,
-                          child: Center(
-                            child: Text(
-                              'No data for selected period',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
+                            ],
                           ),
                         ),
-                      ),
-                      const Divider(height: 1, color: reportCardBorder),
-                      Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Summary',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Row(
-                              children: [
-                                Text(
-                                  'Total Sale Amount: '
-                                  '${formatReportCurrency(totalSale)}',
-                                  style: const TextStyle(fontSize: 13),
+                        const SizedBox(height: AppSpacing.sm),
+                        const Divider(height: 1, color: reportCardBorder),
+                        Expanded(
+                          child: ReportTableArea(
+                            child: ReportSyncScrollTable(
+                              minWidth: 800,
+                              headerChildren: const [
+                                ReportAlignedHeaderCell(label: 'DATE', width: 90),
+                                ReportAlignedHeaderCell(
+                                  label: 'INVOICE NO',
+                                  width: 110,
                                 ),
-                                const SizedBox(width: AppSpacing.xl),
-                                Text(
-                                  'Total Profit(+)/Loss(-): '
-                                  '${formatReportCurrency(totalProfit)}',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: reportTeal,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                Expanded(
+                                  child: ReportAlignedHeaderCell(label: 'PARTY'),
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'TOTAL SALE AMOUNT',
+                                  width: 140,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'PROFIT (+) / LOSS (-)',
+                                  width: 140,
+                                  alignment: Alignment.centerRight,
+                                ),
+                                ReportAlignedHeaderCell(
+                                  label: 'DETAILS',
+                                  width: 80,
+                                  showFilter: false,
                                 ),
                               ],
+                              rows: [
+                                for (var i = 0; i < rows.length; i++)
+                                  _BillWiseProfitRow(row: rows[i], index: i),
+                              ],
+                              emptyState: const SizedBox(
+                                height: 160,
+                                child: Center(
+                                  child: Text(
+                                    'No data for selected period',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                        const Divider(height: 1, color: reportCardBorder),
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Summary',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              Row(
+                                children: [
+                                  Text(
+                                    'Total Sale Amount: '
+                                    '${formatReportCurrency(totalSale)}',
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                  const SizedBox(width: AppSpacing.xl),
+                                  Text(
+                                    'Total Profit(+)/Loss(-): '
+                                    '${formatReportCurrency(totalProfit)}',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: reportTeal,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 ReportPaginationBar(

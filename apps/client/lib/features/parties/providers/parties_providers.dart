@@ -40,6 +40,15 @@ final partiesListProvider = Provider<List<PartyModel>>((ref) {
       );
 });
 
+/// Unfiltered parties for group membership and group-name discovery.
+/// Rebuilds when [partyListProvider] changes so CRUD stays in sync.
+final allPartiesListProvider = FutureProvider<List<PartyModel>>((ref) async {
+  ref.keepAlive();
+  ref.watch(partyListProvider);
+  final service = await ref.watch(partyServiceProvider.future);
+  return service.loadPartiesForGroupDiscovery();
+});
+
 class PartyBalanceSummary {
   const PartyBalanceSummary({
     required this.totalReceivable,

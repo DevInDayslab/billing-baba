@@ -25,7 +25,8 @@ class ExpenseCategoryDropdown extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(expenseCategoriesProvider);
     final categories = categoriesAsync.maybeWhen(
-      data: (items) => items,
+      data: (items) =>
+          items.where((category) => category.variant.isManual).toList(),
       orElse: () => const <ExpenseCategoryModel>[],
     );
     final options = [

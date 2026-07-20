@@ -122,28 +122,21 @@ class PaymentInFiltersState {
 }
 
 bool needsPaymentInClientSideFiltering(PaymentInFiltersState filters) {
-  return filters.dateColumnFilter != null ||
-      filters.refNoColumnFilter != null ||
-      filters.partyNameColumnFilter != null ||
-      filters.totalAmountColumnFilter != null ||
-      filters.receivedAmountColumnFilter != null ||
-      filters.paymentTypeColumnFilter != null ||
+  return filters.hasColumnFilters ||
       filters.selectedStatus != 'All Status' ||
       filters.selectedUser != 'All Users' ||
       filters.selectedFirm != 'All Firms' ||
       filters.searchQuery.trim().isNotEmpty;
 }
 
-class PaymentInSummaryData {
-  const PaymentInSummaryData({
-    required this.totalAmount,
-    required this.receivedAmount,
-    this.growthPercent = 0,
-  });
-
-  final double totalAmount;
-  final double receivedAmount;
-  final double growthPercent;
+extension on PaymentInFiltersState {
+  bool get hasColumnFilters =>
+      dateColumnFilter != null ||
+      refNoColumnFilter != null ||
+      partyNameColumnFilter != null ||
+      totalAmountColumnFilter != null ||
+      receivedAmountColumnFilter != null ||
+      paymentTypeColumnFilter != null;
 }
 
 PaymentInStatus? _statusFromFilterLabel(String label) => switch (label) {
@@ -187,19 +180,44 @@ DateTimeRange? _resolveTimeRange(
   };
 }
 
-PaymentListQuery _buildPaymentListQuery(PaymentInFiltersState filters) {
+PaymentListQuery _buildFetchAllQuery(PaymentInFiltersState filters) {
   final dateRange = _resolveTimeRange(
     filters.timeRangeOption,
     filters.customDateRange,
   );
 
   return PaymentListQuery(
-    page: filters.currentPage,
-    limit: paymentInPageSize,
+    limit: PaginatedFetch.defaultPageSize,
     direction: 'received',
     partyId: filters.partyId,
     from: dateRange?.start.toUtc().toIso8601String(),
     to: dateRange?.end.toUtc().toIso8601String(),
+  );
+}
+
+PaginatedPaymentIn _allPaymentInPage(List<PaymentInModel> records) {
+  return PaginatedPaymentIn(
+    items: records,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: records.length,
+  );
+}
+
+PaymentInSummaryData _computePaymentInSummary(List<PaymentInModel> records) {
+  final totalAmount = records.fold<double>(
+    0,
+    (sum, record) => sum + record.totalAmount,
+  );
+  final receivedAmount = records.fold<double>(
+    0,
+    (sum, record) => sum + record.receivedAmount,
+  );
+
+  return PaymentInSummaryData(
+    totalAmount: totalAmount,
+    receivedAmount: receivedAmount,
+    growthPercent: totalAmount > 0 ? 100 : 0,
   );
 }
 
@@ -285,40 +303,6 @@ PaginatedPaymentIn _paginatePaymentInRecords(
   );
 }
 
-PaginatedPaymentIn _allPaymentInPage(List<PaymentInModel> records) {
-  return PaginatedPaymentIn(
-    items: records,
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: records.length,
-  );
-}
-
-List<PaymentInModel> _allPaymentInFromAsync(
-  AsyncValue<PaginatedPaymentIn> recordsAsync,
-) {
-  return recordsAsync.when(
-    data: (page) => page.items,
-    loading: () => const [],
-    error: (_, _) => const [],
-  );
-}
-
-PaymentListQuery _buildFetchAllQuery(PaymentInFiltersState filters) {
-  final dateRange = _resolveTimeRange(
-    filters.timeRangeOption,
-    filters.customDateRange,
-  );
-
-  return PaymentListQuery(
-    limit: PaginatedFetch.defaultPageSize,
-    direction: 'received',
-    partyId: filters.partyId,
-    from: dateRange?.start.toUtc().toIso8601String(),
-    to: dateRange?.end.toUtc().toIso8601String(),
-  );
-}
-
 @Riverpod(keepAlive: true)
 class PaymentInRecords extends _$PaymentInRecords {
   @override
@@ -339,6 +323,7 @@ class PaymentInRecords extends _$PaymentInRecords {
   Future<List<PaymentInModel>> _fetchAllRecords() async {
     final filters = ref.read(paymentInFiltersProvider);
     final service = await ref.read(salesServiceProvider.future);
+    final partyNames = await service.fetchPartyNameMap();
     final baseQuery = _buildFetchAllQuery(filters);
 
     return PaginatedFetch.fetchAll<PaymentInModel>(
@@ -352,6 +337,7 @@ class PaymentInRecords extends _$PaymentInRecords {
             from: baseQuery.from,
             to: baseQuery.to,
           ),
+          partyNames: partyNames,
         );
         return (items: pageResult.items, totalPages: pageResult.totalPages);
       },
@@ -478,7 +464,8 @@ class PaymentInFilters extends _$PaymentInFilters {
 
 @riverpod
 List<PaymentInModel> filteredPaymentInRecords(Ref ref) {
-  final allRecords = _allPaymentInFromAsync(ref.watch(paymentInRecordsProvider));
+  final allRecords =
+      ref.watch(paymentInRecordsProvider).value?.items ?? const [];
   final filters = ref.watch(paymentInFiltersProvider);
   return _applyClientFilters(allRecords, filters);
 }
@@ -493,20 +480,7 @@ PaginatedPaymentIn paginatedPaymentInRecords(Ref ref) {
 @riverpod
 PaymentInSummaryData paymentInSummary(Ref ref) {
   final records = ref.watch(filteredPaymentInRecordsProvider);
-  final totalAmount = records.fold<double>(
-    0,
-    (sum, record) => sum + record.totalAmount,
-  );
-  final receivedAmount = records.fold<double>(
-    0,
-    (sum, record) => sum + record.receivedAmount,
-  );
-
-  return PaymentInSummaryData(
-    totalAmount: totalAmount,
-    receivedAmount: receivedAmount,
-    growthPercent: totalAmount > 0 ? 100 : 0,
-  );
+  return _computePaymentInSummary(records);
 }
 
 class PaymentInFormState {
@@ -773,6 +747,11 @@ class PaymentInForm extends _$PaymentInForm {
         amount: payment.receivedAmount,
       );
 
+      final balanceAfterPayment = (state.balanceDue -
+              payment.receivedAmount -
+              payment.discount)
+          .clamp(0, double.infinity);
+
       final created = await service.createPayment(
         CreatePaymentRequest(
           partyId: state.partyId!,
@@ -784,6 +763,12 @@ class PaymentInForm extends _$PaymentInForm {
           notes: payment.description.trim().isEmpty
               ? null
               : payment.description,
+          discountAmount: payment.discount > 0
+              ? payment.discount.toStringAsFixed(4)
+              : null,
+          balanceAfterPayment: payment.discount > 0
+              ? balanceAfterPayment.toStringAsFixed(4)
+              : null,
           allocations: allocations,
         ),
       );
@@ -794,6 +779,12 @@ class PaymentInForm extends _$PaymentInForm {
         ref,
         context: (partyId: payment.partyId, itemIds: const []),
       );
+      if (payment.discount > 0) {
+        refreshAfterExpense(
+          ref,
+          context: (partyId: payment.partyId, itemIds: const []),
+        );
+      }
       final paymentId = created.id;
       final synced = await syncTransactionAttachments(
         ref,

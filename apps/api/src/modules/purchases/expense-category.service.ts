@@ -1,6 +1,7 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { ExpenseCategoryRepository } from './expense-category.repository';
+import { ensureSystemExpenseCategories } from './expense-sync.service';
 import type {
   CreateExpenseCategoryBody,
   ListExpenseCategoriesQuery,
@@ -10,6 +11,7 @@ import type { ExpenseCategoryRecord } from './expense-category.types';
 import { PurchasesServiceBase } from './purchases.base-service';
 
 export class ExpenseCategoryService extends PurchasesServiceBase {
+  private readonly db: NonNullable<ReturnType<typeof getDb>>;
   private readonly repository: ExpenseCategoryRepository;
 
   constructor() {
@@ -22,6 +24,7 @@ export class ExpenseCategoryService extends PurchasesServiceBase {
         503,
       );
     }
+    this.db = db;
     this.repository = new ExpenseCategoryRepository(db);
   }
 
@@ -34,6 +37,7 @@ export class ExpenseCategoryService extends PurchasesServiceBase {
     meta: { page: number; limit: number; total: number };
   }> {
     await this.assertBusinessAccess(businessId, accountId);
+    await ensureSystemExpenseCategories(this.db, businessId);
     const result = await this.repository.list({
       businessId,
       page: query.page,

@@ -40,7 +40,7 @@ class _BalanceSheetReportContentState
 
         return ColoredBox(
           color: AppColors.background,
-          child: SingleChildScrollView(
+          child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -103,58 +103,62 @@ class _BalanceSheetReportContentState
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                ReportCard(
-                  child: _horizontalView
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: _BalanceColumn(
-                                      title: 'Assets',
-                                      items: report.assets,
-                                    ),
+                Expanded(
+                  child: ReportCard(
+                    child: SingleChildScrollView(
+                      child: _horizontalView
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                IntrinsicHeight(
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(
+                                        child: _BalanceColumn(
+                                          title: 'Assets',
+                                          items: report.assets,
+                                        ),
+                                      ),
+                                      const VerticalDivider(
+                                        width: 1,
+                                        color: reportCardBorder,
+                                      ),
+                                      Expanded(
+                                        child: _BalanceColumn(
+                                          title: 'Equities & Liabilities',
+                                          items: report.liabilities,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const VerticalDivider(
-                                    width: 1,
-                                    color: reportCardBorder,
-                                  ),
-                                  Expanded(
-                                    child: _BalanceColumn(
-                                      title: 'Equities & Liabilities',
-                                      items: report.liabilities,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                                _BalanceFooter(
+                                  assetsTotal: report.assetsTotal,
+                                  liabilitiesTotal: report.liabilitiesTotal,
+                                ),
+                              ],
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _BalanceColumn(
+                                  title: 'Assets',
+                                  items: report.assets,
+                                ),
+                                const Divider(height: 1, color: reportCardBorder),
+                                _BalanceColumn(
+                                  title: 'Equities & Liabilities',
+                                  items: report.liabilities,
+                                ),
+                                _BalanceFooter(
+                                  assetsTotal: report.assetsTotal,
+                                  liabilitiesTotal: report.liabilitiesTotal,
+                                ),
+                              ],
                             ),
-                            _BalanceFooter(
-                              assetsTotal: report.assetsTotal,
-                              liabilitiesTotal: report.liabilitiesTotal,
-                            ),
-                          ],
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _BalanceColumn(
-                              title: 'Assets',
-                              items: report.assets,
-                            ),
-                            const Divider(height: 1, color: reportCardBorder),
-                            _BalanceColumn(
-                              title: 'Equities & Liabilities',
-                              items: report.liabilities,
-                            ),
-                            _BalanceFooter(
-                              assetsTotal: report.assetsTotal,
-                              liabilitiesTotal: report.liabilitiesTotal,
-                            ),
-                          ],
-                        ),
+                    ),
+                  ),
                 ),
               ],
             ),

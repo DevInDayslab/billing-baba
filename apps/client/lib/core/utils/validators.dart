@@ -82,6 +82,13 @@ abstract final class Validators {
     return null;
   }
 
+  /// Strips non-digits and caps length at 10 for phone inputs.
+  static String sanitizePhoneInput(String value) {
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    if (digits.length <= 10) return digits;
+    return digits.substring(0, 10);
+  }
+
   /// Returns a 10-digit Indian mobile number when possible.
   static String? normalizeIndianPhone(String? value) {
     if (value == null || value.trim().isEmpty) return null;

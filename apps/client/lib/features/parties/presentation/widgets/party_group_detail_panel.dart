@@ -25,6 +25,7 @@ class PartyGroupDetailPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(selectedPartyGroupSummaryProvider);
     final parties = ref.watch(partiesInSelectedGroupProvider);
+    final isLoading = ref.watch(partyGroupMembersLoadingProvider);
 
     if (summary == null) {
       return const SizedBox.shrink();
@@ -48,7 +49,9 @@ class PartyGroupDetailPanel extends ConsumerWidget {
           ],
         ),
         Expanded(
-          child: parties.isEmpty
+          child: isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : parties.isEmpty
               ? const Center(
                   child: Text(
                     'No parties in this group yet.',

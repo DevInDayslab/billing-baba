@@ -141,7 +141,8 @@ class TaxInvoiceReportContent extends ConsumerWidget {
                         ),
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? Center(
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
@@ -316,6 +317,7 @@ class TaxInvoiceReportContent extends ConsumerWidget {
                                     ),
                                   ],
                                 ),
+                          ),
                         ),
                       ],
                     ),

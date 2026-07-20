@@ -10,7 +10,6 @@ import 'package:billing_baba/features/parties/presentation/widgets/party_group_d
 import 'package:billing_baba/features/parties/presentation/widgets/party_group_list_panel.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_page_title_bar.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
-import 'package:billing_baba/features/parties/providers/parties_selection_providers.dart';
 import 'package:billing_baba/features/parties/providers/party_groups_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +57,12 @@ class _PartyGroupsPageState extends ConsumerState<PartyGroupsPage> {
   }
 
   Future<void> _initializePage() async {
-    await ref.read(partyListProvider.notifier).refresh();
+    final partiesAsync = ref.read(partyListProvider);
+    if (!partiesAsync.hasValue) {
+      await ref.read(partyListProvider.notifier).refresh();
+    }
+    await ref.read(partyGroupsProvider.notifier).sync();
+    await ref.read(allPartiesListProvider.future);
     if (!mounted) return;
     _ensureSelection();
   }
@@ -83,6 +87,8 @@ class _PartyGroupsPageState extends ConsumerState<PartyGroupsPage> {
       if (selected != null && next.contains(selected)) return;
       if (next.isNotEmpty) {
         ref.read(selectedPartyGroupProvider.notifier).selected = next.first;
+      } else {
+        ref.read(selectedPartyGroupProvider.notifier).selected = null;
       }
     });
 

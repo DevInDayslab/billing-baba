@@ -1,5 +1,7 @@
+import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:flutter/material.dart';
 
 class SaleOrderFormState {
@@ -28,6 +30,7 @@ class SaleOrderFormState {
     this.godown = 'Main Location',
     this.phoneNo = '',
     this.saveError,
+    this.taxOption = 'NONE',
   });
 
   final bool isFormOpen;
@@ -54,15 +57,22 @@ class SaleOrderFormState {
   final String godown;
   final String phoneNo;
   final String? saveError;
+  final String taxOption;
 
   double get subtotal =>
       items.fold<double>(0, (sum, item) => sum + item.lineSubtotal);
 
-  double get taxAmount =>
-      items.fold<double>(0, (sum, item) => sum + item.lineTax);
+  double get taxAmount => resolveSaleTotalTax(
+    taxOption: taxOption,
+    subtotal: subtotal,
+    items: items,
+  );
 
-  double get rawGrandTotal =>
-      items.fold<double>(0, (sum, item) => sum + item.amount);
+  double get rawGrandTotal => resolveSaleRawGrandTotal(
+    taxOption: taxOption,
+    subtotal: subtotal,
+    items: items,
+  );
 
   double get roundOffAmount {
     if (!roundOff) return 0;
@@ -78,6 +88,11 @@ class SaleOrderFormState {
 
   bool get partyHasError => showValidationErrors && party.trim().isEmpty;
 
+  bool get phoneHasError =>
+      showValidationErrors && Validators.requiredPhone(phoneNo) != null;
+
+  String? get phoneErrorMessage => Validators.requiredPhone(phoneNo);
+
   bool get hasValidLineItems =>
       items.any((item) => item.itemName.trim().isNotEmpty);
 
@@ -87,7 +102,8 @@ class SaleOrderFormState {
       party.trim().isNotEmpty &&
       partyId != null &&
       partyId!.isNotEmpty &&
-      hasValidLineItems;
+      hasValidLineItems &&
+      Validators.requiredPhone(phoneNo) == null;
 
   SaleOrderFormState copyWith({
     bool? isFormOpen,
@@ -115,6 +131,7 @@ class SaleOrderFormState {
     String? phoneNo,
     String? saveError,
     bool clearSaveError = false,
+    String? taxOption,
   }) {
     return SaleOrderFormState(
       isFormOpen: isFormOpen ?? this.isFormOpen,
@@ -141,6 +158,7 @@ class SaleOrderFormState {
       godown: godown ?? this.godown,
       phoneNo: phoneNo ?? this.phoneNo,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
+      taxOption: taxOption ?? this.taxOption,
     );
   }
 }

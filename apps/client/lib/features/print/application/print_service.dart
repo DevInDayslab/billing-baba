@@ -4,6 +4,7 @@ import 'package:billing_baba/features/print/application/print_data_service.dart'
 import 'package:billing_baba/features/print/application/print_output_service.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/models/printable_document.dart';
+import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/models/printable_pdf.dart';
 import 'package:billing_baba/features/print/templates/template_registry.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
@@ -14,6 +15,8 @@ import 'package:flutter/material.dart';
 
 export 'package:billing_baba/features/print/application/print_exception.dart'
     show PrintException;
+export 'package:billing_baba/features/print/models/pdf_page_profile.dart'
+    show PdfPageProfile, PdfProfileKind;
 export 'package:billing_baba/features/print/models/printable_pdf.dart'
     show PrintablePdf;
 
@@ -41,7 +44,11 @@ class PrintService {
   Future<PrintablePdf> prepare(PrintRequest request, {String? name}) async {
     final settings = await _loadSettings();
     final bytes = await _renderPdf(request, settings: settings);
-    return PrintablePdf(bytes: bytes, name: name ?? _defaultFilename(request));
+    return PrintablePdf(
+      bytes: bytes,
+      name: name ?? _defaultFilename(request),
+      profile: PdfPageProfile.forPrintSettings(settings),
+    );
   }
 
   Future<Uint8List> _renderPdf(
@@ -72,11 +79,26 @@ class PrintService {
     final settings = await _loadSettings();
     final bytes = await _renderPdf(request, settings: settings);
     if (!context.mounted) return;
-    await _outputService.preview(
-      context: context,
-      bytes: bytes,
-      name: name ?? _defaultFilename(request),
+    await _outputService.previewDocument(
+      context,
+      _documentFromBytes(
+        bytes: bytes,
+        name: name ?? _defaultFilename(request),
+        settings: settings,
+      ),
       format: layoutPdfFormatFor(settings),
+    );
+  }
+
+  PrintablePdf _documentFromBytes({
+    required Uint8List bytes,
+    required String name,
+    required PrintSettings settings,
+  }) {
+    return PrintablePdf(
+      bytes: bytes,
+      name: name,
+      profile: PdfPageProfile.forPrintSettings(settings),
     );
   }
 
@@ -87,16 +109,17 @@ class PrintService {
   }) async {
     final settings = await _loadSettings();
     final bytes = await _renderPdf(request, settings: settings);
-    final resolvedName = name ?? _defaultFilename(request);
-
-    for (var copy = 0; copy < settings.numberOfCopies; copy++) {
-      await _outputService.print(
-        context: context,
+    if (!context.mounted) return;
+    await _outputService.printDocument(
+      context: context,
+      document: _documentFromBytes(
         bytes: bytes,
-        name: resolvedName,
-        format: layoutPdfFormatFor(settings),
-      );
-    }
+        name: name ?? _defaultFilename(request),
+        settings: settings,
+      ),
+      format: layoutPdfFormatFor(settings),
+      copies: settings.numberOfCopies,
+    );
   }
 
   Future<void> share(PrintRequest request, {String? filename}) async {

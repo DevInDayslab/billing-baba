@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/close_form_dialog.dart';
@@ -23,12 +24,13 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropd
 import 'package:billing_baba/features/sales/providers/add_sale_form_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_tabs_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _addressFieldLines = 3;
+const _compactBreakpoint = 900.0;
+const _narrowBreakpoint = 720.0;
 
 class AddSalePage extends ConsumerStatefulWidget {
   const AddSalePage({
@@ -147,7 +149,7 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
   }
 
   void _navigateBackToSaleInvoices() {
-    context.go(AppRoutes.saleInvoices);
+    returnToTransactionList(context, AppRoutes.saleInvoices);
   }
 
   void _navigateToSaleInvoices() {
@@ -219,6 +221,7 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
               child: SalePageTitleBar(
                 currentRoute: AppRoutes.saleInvoices,
                 onSettingsTap: () {},
+                onBack: _handleClose,
               ),
             ),
             if (_supportsTabs) ...[
@@ -343,114 +346,171 @@ class _PageHeaderState extends ConsumerState<_PageHeader> {
       addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
     );
     final isAutoNumber = form.invoiceNumberMode == InvoiceNumberMode.auto;
-
-    return Row(
-      children: [
-        Text(
-          widget.readOnly
-              ? 'View Sale'
-              : (widget.isEditing ? 'Edit Sale' : 'Sale'),
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        if (!widget.readOnly)
-          _SaleTypeToggle(
-            saleType: form.saleType,
-            onChanged: notifier.toggleSaleType,
-          ),
-        const Spacer(),
-        if (!widget.readOnly) ...[
-          _InlineHeaderField(
-            label: 'Invoice Number',
-            fieldWidth: 80,
-            child: _SaleTextField(
-              initialValue: isAutoNumber ? 'Auto' : form.invoiceNumber,
-              hintText: 'Invoice number',
-              readOnly: isAutoNumber,
-              filled: isAutoNumber,
-              compact: true,
-              onChanged: notifier.updateInvoiceNumber,
-            ),
-          ),
-          const SizedBox(width: _sectionGap),
-          _InlineHeaderField(
-            label: 'Invoice Date',
-            fieldWidth: 120,
-            child: SaleSingleDatePickerAnchor(
-              key: _invoiceDatePickerKey,
-              selectedDate: form.invoiceDate,
-              onDateSelected: notifier.updateInvoiceDate,
-              child: _PickerField(
-                value: formatSaleSingleDate(form.invoiceDate),
-                icon: Icons.calendar_today_outlined,
-                compact: true,
-                onTap: () => _invoiceDatePickerKey.currentState?.toggle(),
-              ),
-            ),
-          ),
-          const SizedBox(width: _sectionGap),
-          _InlineHeaderField(
-            label: 'Time',
-            fieldWidth: 100,
-            child: SaleTimeDropdown(
-              value: form.invoiceTime,
-              compact: true,
-              onSelected: notifier.updateInvoiceTime,
-            ),
-          ),
-          if (form.saleType == SaleType.credit) ...[
-            const SizedBox(width: _sectionGap),
-            _InlineHeaderField(
-              label: 'Due Date',
-              fieldWidth: 120,
-              child: SaleSingleDatePickerAnchor(
-                key: _dueDatePickerKey,
-                selectedDate: form.dueDate,
-                onDateSelected: notifier.updateDueDate,
-                child: _PickerField(
-                  value: form.dueDate != null
-                      ? formatSaleSingleDate(form.dueDate)
-                      : 'Select Date',
-                  icon: Icons.calendar_today_outlined,
-                  isPlaceholder: form.dueDate == null,
-                  compact: true,
-                  onTap: () => _dueDatePickerKey.currentState?.toggle(),
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(width: _sectionGap),
-          _InlineHeaderField(
-            label: 'State of supply',
-            fieldWidth: 140,
-            child: SaleGenericSelectDropdown(
-              value: form.stateOfSupply,
-              options: SaleDropdownOptions.indianStates,
-              hintText: 'Select state',
-              maxMenuHeight: 280,
-              compact: true,
-              onSelected: notifier.updateStateOfSupply,
-            ),
-          ),
-          const SizedBox(width: _sectionGap),
-          _GodownSelector(
-            value: form.godown,
-            onSelected: notifier.updateGodown,
-          ),
-        ],
-        IconButton(
-          onPressed: widget.onClose,
-          icon: const Icon(Icons.close, size: 20),
-          color: AppColors.textSecondary,
-          tooltip: 'Close',
-          visualDensity: VisualDensity.compact,
-        ),
-      ],
+    final title = widget.readOnly
+        ? 'View Sale'
+        : (widget.isEditing ? 'Edit Sale' : 'Sale');
+    final closeButton = IconButton(
+      onPressed: widget.onClose,
+      icon: const Icon(Icons.close, size: 20),
+      color: AppColors.textSecondary,
+      tooltip: 'Close',
+      visualDensity: VisualDensity.compact,
     );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < _compactBreakpoint;
+        final headerFields = widget.readOnly
+            ? const <Widget>[]
+            : _buildHeaderFields(
+                form: form,
+                notifier: notifier,
+                isAutoNumber: isAutoNumber,
+              );
+
+        if (isCompact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  if (!widget.readOnly)
+                    _SaleTypeToggle(
+                      saleType: form.saleType,
+                      onChanged: notifier.toggleSaleType,
+                    ),
+                  const Spacer(),
+                  closeButton,
+                ],
+              ),
+              if (headerFields.isNotEmpty) ...[
+                const SizedBox(height: _sectionGap),
+                Wrap(
+                  spacing: _sectionGap,
+                  runSpacing: 12,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: headerFields,
+                ),
+              ],
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            if (!widget.readOnly)
+              _SaleTypeToggle(
+                saleType: form.saleType,
+                onChanged: notifier.toggleSaleType,
+              ),
+            const Spacer(),
+            for (var i = 0; i < headerFields.length; i++) ...[
+              if (i > 0) const SizedBox(width: _sectionGap),
+              headerFields[i],
+            ],
+            closeButton,
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> _buildHeaderFields({
+    required AddSaleFormState form,
+    required AddSaleForm notifier,
+    required bool isAutoNumber,
+  }) {
+    return [
+      _InlineHeaderField(
+        label: 'Invoice Number',
+        fieldWidth: 80,
+        child: _SaleTextField(
+          initialValue: isAutoNumber ? 'Auto' : form.invoiceNumber,
+          hintText: 'Invoice number',
+          readOnly: isAutoNumber,
+          filled: isAutoNumber,
+          compact: true,
+          onChanged: notifier.updateInvoiceNumber,
+        ),
+      ),
+      _InlineHeaderField(
+        label: 'Invoice Date',
+        fieldWidth: 120,
+        child: SaleSingleDatePickerAnchor(
+          key: _invoiceDatePickerKey,
+          selectedDate: form.invoiceDate,
+          onDateSelected: notifier.updateInvoiceDate,
+          child: _PickerField(
+            value: formatSaleSingleDate(form.invoiceDate),
+            icon: Icons.calendar_today_outlined,
+            compact: true,
+            onTap: () => _invoiceDatePickerKey.currentState?.toggle(),
+          ),
+        ),
+      ),
+      _InlineHeaderField(
+        label: 'Time',
+        fieldWidth: 100,
+        child: SaleTimeDropdown(
+          value: form.invoiceTime,
+          compact: true,
+          onSelected: notifier.updateInvoiceTime,
+        ),
+      ),
+      if (form.saleType == SaleType.credit)
+        _InlineHeaderField(
+          label: 'Due Date',
+          fieldWidth: 120,
+          child: SaleSingleDatePickerAnchor(
+            key: _dueDatePickerKey,
+            selectedDate: form.dueDate,
+            onDateSelected: notifier.updateDueDate,
+            child: _PickerField(
+              value: form.dueDate != null
+                  ? formatSaleSingleDate(form.dueDate)
+                  : 'Select Date',
+              icon: Icons.calendar_today_outlined,
+              isPlaceholder: form.dueDate == null,
+              compact: true,
+              onTap: () => _dueDatePickerKey.currentState?.toggle(),
+            ),
+          ),
+        ),
+      _InlineHeaderField(
+        label: 'State of supply',
+        fieldWidth: 140,
+        child: SaleGenericSelectDropdown(
+          value: form.stateOfSupply,
+          options: SaleDropdownOptions.indianStates,
+          hintText: 'Select state',
+          maxMenuHeight: 280,
+          compact: true,
+          onSelected: notifier.updateStateOfSupply,
+        ),
+      ),
+      _GodownSelector(
+        value: form.godown,
+        onSelected: notifier.updateGodown,
+      ),
+    ];
   }
 }
 
@@ -600,109 +660,129 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
       addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < _narrowBreakpoint;
+        final billingNameField = BillingNamePartySearchField(
+          value: form.billingName,
+          hasError: form.partyHasError,
+          emptyPlaceholder: 'Billing Name (Optional)',
+          onSelected: notifier.updateBillingName,
+          onPartySelected: notifier.applyPartyDetails,
+          onPartySelectedWithId: (partyId, name) => notifier.updateParty(
+            partyId: partyId,
+            partyName: name,
+          ),
+          onPartyCreated: (party) {
+            notifier.updateBillingName(party.partyName);
+            if (party.phone.isNotEmpty) {
+              notifier.updatePhone(party.phone);
+            }
+            if (party.billingAddress.isNotEmpty) {
+              notifier.updateAddresses(billing: party.billingAddress);
+            }
+            if (party.shippingAddress.isNotEmpty) {
+              notifier.updateAddresses(shipping: party.shippingAddress);
+            }
+            if (party.gstin.isNotEmpty) {
+              notifier.updateGstin(party.gstin);
+            }
+            if (party.email.isNotEmpty) {
+              notifier.updateEmail(party.email);
+            }
+            if (party.state.isNotEmpty) {
+              notifier.updateStateOfSupply(party.state);
+            }
+          },
+        );
+        final phoneField = _LabeledField(
+          label: 'Phone No.',
+          child: _SaleTextField(
+            initialValue: form.phone,
+            hintText: 'Phone number',
+            keyboardType: TextInputType.phone,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(10),
+            ],
+            hasError: form.phoneHasError,
+            errorText: form.phoneErrorMessage,
+            onChanged: notifier.updatePhone,
+          ),
+        );
+        final billingAddressField = _LabeledField(
+          label: 'Billing Address',
+          child: _SaleTextField(
+            initialValue: form.billingAddress,
+            hintText: 'Billing address',
+            minLines: _addressFieldLines,
+            maxLines: _addressFieldLines,
+            onChanged: (value) => notifier.updateAddresses(billing: value),
+          ),
+        );
+        final shippingAddressField = _LabeledField(
+          label: 'Shipping Address',
+          child: _SaleTextField(
+            initialValue: form.shippingAddress,
+            hintText: 'Shipping address',
+            minLines: _addressFieldLines,
+            maxLines: _addressFieldLines,
+            onChanged: (value) => notifier.updateAddresses(shipping: value),
+          ),
+        );
+        final eWayBillField = _LabeledField(
+          label: 'E-Way Bill No.',
+          child: _SaleTextField(
+            initialValue: form.eWayBillNo,
+            hintText: 'E-Way bill number',
+            minLines: _addressFieldLines,
+            maxLines: _addressFieldLines,
+            onChanged: notifier.updateEWayBillNo,
+          ),
+        );
+
+        if (isNarrow) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              billingNameField,
+              const SizedBox(height: _sectionGap),
+              phoneField,
+              const SizedBox(height: _sectionGap),
+              billingAddressField,
+              const SizedBox(height: _sectionGap),
+              shippingAddressField,
+              const SizedBox(height: _sectionGap),
+              eWayBillField,
+            ],
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: BillingNamePartySearchField(
-                value: form.billingName,
-                hasError: form.partyHasError,
-                emptyPlaceholder: 'Billing Name (Optional)',
-                onSelected: notifier.updateBillingName,
-                onPartySelected: notifier.applyPartyDetails,
-                onPartySelectedWithId: (partyId, name) => notifier.updateParty(
-                  partyId: partyId,
-                  partyName: name,
-                ),
-                onPartyCreated: (party) {
-                  notifier.updateBillingName(party.partyName);
-                  if (party.phone.isNotEmpty) {
-                    notifier.updatePhone(party.phone);
-                  }
-                  if (party.billingAddress.isNotEmpty) {
-                    notifier.updateAddresses(billing: party.billingAddress);
-                  }
-                  if (party.shippingAddress.isNotEmpty) {
-                    notifier.updateAddresses(shipping: party.shippingAddress);
-                  }
-                  if (party.gstin.isNotEmpty) {
-                    notifier.updateGstin(party.gstin);
-                  }
-                  if (party.email.isNotEmpty) {
-                    notifier.updateEmail(party.email);
-                  }
-                  if (party.state.isNotEmpty) {
-                    notifier.updateStateOfSupply(party.state);
-                  }
-                },
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: billingNameField),
+                const SizedBox(width: _sectionGap),
+                Expanded(child: phoneField),
+              ],
             ),
-            const SizedBox(width: _sectionGap),
-            Expanded(
-              child: _LabeledField(
-                label: 'Phone No.',
-                child: _SaleTextField(
-                  initialValue: form.phone,
-                  hintText: 'Phone number',
-                  keyboardType: TextInputType.phone,
-                  onChanged: notifier.updatePhone,
-                ),
-              ),
+            const SizedBox(height: _sectionGap),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 2, child: billingAddressField),
+                const SizedBox(width: _sectionGap),
+                Expanded(flex: 2, child: shippingAddressField),
+                const SizedBox(width: _sectionGap),
+                Expanded(child: eWayBillField),
+              ],
             ),
           ],
-        ),
-        const SizedBox(height: _sectionGap),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 2,
-              child: _LabeledField(
-                label: 'Billing Address',
-                child: _SaleTextField(
-                  initialValue: form.billingAddress,
-                  hintText: 'Billing address',
-                  minLines: _addressFieldLines,
-                  maxLines: _addressFieldLines,
-                  onChanged: (value) =>
-                      notifier.updateAddresses(billing: value),
-                ),
-              ),
-            ),
-            const SizedBox(width: _sectionGap),
-            Expanded(
-              flex: 2,
-              child: _LabeledField(
-                label: 'Shipping Address',
-                child: _SaleTextField(
-                  initialValue: form.shippingAddress,
-                  hintText: 'Shipping address',
-                  minLines: _addressFieldLines,
-                  maxLines: _addressFieldLines,
-                  onChanged: (value) =>
-                      notifier.updateAddresses(shipping: value),
-                ),
-              ),
-            ),
-            const SizedBox(width: _sectionGap),
-            Expanded(
-              child: _LabeledField(
-                label: 'E-Way Bill No.',
-                child: _SaleTextField(
-                  initialValue: form.eWayBillNo,
-                  hintText: 'E-Way bill number',
-                  minLines: _addressFieldLines,
-                  maxLines: _addressFieldLines,
-                  onChanged: notifier.updateEWayBillNo,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -732,34 +812,34 @@ class _BottomActionBar extends ConsumerWidget {
         horizontal: _sectionGap,
         vertical: AppSpacing.sm,
       ),
-      child: Row(
-        children: [
-          if (!isCash)
-            OutlinedButton.icon(
-              onPressed: isSaving
-                  ? null
-                  : () => _handlePrintPreview(context, ref),
-              icon: const Icon(Icons.print_outlined, size: 16),
-              label: const Text(
-                'Print / Preview',
-                style: TextStyle(fontSize: 13),
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                side: const BorderSide(color: _cardBorder),
-              ),
-            ),
-          const Spacer(),
-          ShareMenuButton(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < _narrowBreakpoint;
+          final printButton = !isCash
+              ? OutlinedButton.icon(
+                  onPressed: isSaving
+                      ? null
+                      : () => _handlePrintPreview(context, ref),
+                  icon: const Icon(Icons.print_outlined, size: 16),
+                  label: const Text(
+                    'Print / Preview',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    side: const BorderSide(color: _cardBorder),
+                  ),
+                )
+              : null;
+          final shareButton = ShareMenuButton(
             onChannelSelected: isSaving
                 ? null
                 : (_) => _handleSaveAndShare(context, ref),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          FilledButton(
+          );
+          final saveButton = FilledButton(
             onPressed: isSaving
                 ? null
                 : () => _handleSave(context, ref, notifier),
@@ -788,8 +868,40 @@ class _BottomActionBar extends ConsumerWidget {
                     ],
                   )
                 : const Text('Save', style: TextStyle(fontSize: 13)),
-          ),
-        ],
+          );
+
+          if (isNarrow) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (printButton != null) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: printButton,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+                Row(
+                  children: [
+                    shareButton,
+                    const Spacer(),
+                    saveButton,
+                  ],
+                ),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              if (printButton != null) printButton,
+              const Spacer(),
+              shareButton,
+              const SizedBox(width: AppSpacing.sm),
+              saveButton,
+            ],
+          );
+        },
       ),
     );
   }
@@ -1042,6 +1154,9 @@ class _SaleTextField extends StatefulWidget {
     this.readOnly = false,
     this.filled = false,
     this.compact = false,
+    this.hasError = false,
+    this.errorText,
+    this.inputFormatters,
   });
 
   final String initialValue;
@@ -1053,6 +1168,9 @@ class _SaleTextField extends StatefulWidget {
   final bool readOnly;
   final bool filled;
   final bool compact;
+  final bool hasError;
+  final String? errorText;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   State<_SaleTextField> createState() => _SaleTextFieldState();
@@ -1094,8 +1212,12 @@ class _SaleTextFieldState extends State<_SaleTextField> {
         hint: widget.hintText,
         filled: widget.filled,
         compact: widget.compact,
+        hasError: widget.hasError,
+      ).copyWith(
+        errorText: widget.hasError ? widget.errorText : null,
       ),
       keyboardType: widget.keyboardType,
+      inputFormatters: widget.inputFormatters,
       minLines: widget.minLines,
       maxLines: widget.maxLines,
       onChanged: widget.onChanged,

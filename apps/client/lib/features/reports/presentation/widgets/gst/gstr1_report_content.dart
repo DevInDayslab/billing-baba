@@ -156,7 +156,8 @@ class _Gstr1ReportContentState extends ConsumerState<Gstr1ReportContent> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Center(
                                   child: Text(
                                     'No data to display for the selected period.',
@@ -176,11 +177,12 @@ class _Gstr1ReportContentState extends ConsumerState<Gstr1ReportContent> {
                                           )
                                         : _Gstr1ColumnLayout.minWidth;
 
-                                    return SingleChildScrollView(
+                                    return ClipRect(
                                       child: SingleChildScrollView(
                                         scrollDirection: Axis.horizontal,
                                         child: SizedBox(
                                           width: tableWidth,
+                                          height: constraints.maxHeight,
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.stretch,
@@ -188,18 +190,29 @@ class _Gstr1ReportContentState extends ConsumerState<Gstr1ReportContent> {
                                               const _Gstr1TableHeader(
                                                 headerStyle: _headerStyle,
                                               ),
-                                              for (
-                                                var i = 0;
-                                                i < rows.length;
-                                                i++
-                                              )
-                                                ReportAlignedRowStrip(
-                                                  index: i,
-                                                  child: _Gstr1DataRow(
-                                                    index: i + 1,
-                                                    row: rows[i],
+                                              Expanded(
+                                                child: SingleChildScrollView(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .stretch,
+                                                    children: [
+                                                      for (
+                                                        var i = 0;
+                                                        i < rows.length;
+                                                        i++
+                                                      )
+                                                        ReportAlignedRowStrip(
+                                                          index: i,
+                                                          child: _Gstr1DataRow(
+                                                            index: i + 1,
+                                                            row: rows[i],
+                                                          ),
+                                                        ),
+                                                    ],
                                                   ),
                                                 ),
+                                              ),
                                             ],
                                           ),
                                         ),
@@ -207,6 +220,7 @@ class _Gstr1ReportContentState extends ConsumerState<Gstr1ReportContent> {
                                     );
                                   },
                                 ),
+                          ),
                         ),
                       ],
                     ),

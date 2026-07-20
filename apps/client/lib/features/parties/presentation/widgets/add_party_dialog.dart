@@ -2,6 +2,7 @@ import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/core/widgets/text_input_dialog.dart';
+import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
@@ -16,6 +17,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_se
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 export 'package:billing_baba/features/parties/models/add_party_result.dart';
@@ -25,7 +27,6 @@ const _cardBorder = Color(0xFFE0E0E0);
 const _gstLeftColumnWidth = 220.0;
 const _defaultDecimal = '0.00';
 const _defaultState = 'Andhra Pradesh';
-const _successSnackBarColor = Color(0xFF2E7D32);
 
 /// Shows the Add Party modal from sale forms and party pickers.
 Future<AddPartyResult?> showAddPartyDialog(BuildContext context) {
@@ -164,6 +165,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   String? _loyaltyBalanceError;
   String _partyType = 'customer';
   String _defaultPriceTier = PriceTier.retail;
+  bool _isSaving = false;
 
   String _savedBillingAddressLine = '';
   String _savedBillingCity = '';
@@ -251,7 +253,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _partyType = party.partyType;
     _gstinController.text = party.gstin;
     if (party.phone != '+91 00000 00000') {
-      _phoneController.text = party.phone;
+      final normalizedPhone = PartyModel.normalizePhone(party.phone);
+      if (normalizedPhone.isNotEmpty) {
+        _phoneController.text = normalizedPhone;
+      }
     }
     _emailController.text = party.email;
     _billingAddressController.text = party.billingAddress;
@@ -577,84 +582,148 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     });
   }
 
-  void _showSaveSnackBar({
+  void _showSaveFeedback({
     required String message,
-    required Color backgroundColor,
+    required bool isError,
   }) {
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    if (messenger == null) return;
-
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: backgroundColor,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    if (!mounted) return;
+    if (isError) {
+      showTransactionErrorToast(context, message: message);
+      return;
+    }
+    showTransactionSuccessToast(context, message: message);
   }
 
   Future<void> _save({required bool saveAndNew}) async {
+    if (_isSaving) return;
     if (!_validate()) return;
 
     final result = _buildResult();
 
     if (_isEditMode) {
+      await _updateParty(result);
+      return;
+    }
+
+    await _createParty(
+      result,
+      resetForm: saveAndNew,
+      selectCreated: !saveAndNew,
+    );
+  }
+
+  Future<void> _updateParty(AddPartyResult result) async {
+    final party = widget.partyToEdit;
+    if (party == null) return;
+
+    setState(() => _isSaving = true);
+
+    try {
+      await ref.read(partyListProvider.notifier).updateParty(
+            party.id,
+            result,
+            isActive: party.isActive,
+          );
+      if (!mounted) return;
+
+      _showSaveFeedback(
+        message: 'Party "${result.partyName}" updated successfully',
+        isError: false,
+      );
       Navigator.of(context).pop(result);
-      return;
+    } on PartyOfflineException {
+      if (!mounted) return;
+      _showSaveFeedback(
+        message: 'Update saved offline. It will sync when you are back online.',
+        isError: false,
+      );
+      Navigator.of(context).pop(result);
+      ref.invalidate(partyListProvider);
+    } on ApiValidationException catch (e) {
+      if (!mounted) return;
+      _applyApiValidationErrors(e);
+      _showSaveFeedback(message: e.message, isError: true);
+    } on PartyException catch (e) {
+      if (!mounted) return;
+      _showSaveFeedback(message: e.message, isError: true);
+    } on PartyBusinessNotSelectedException {
+      if (!mounted) return;
+      _showSaveFeedback(
+        message: 'Business not selected. Please select a business first.',
+        isError: true,
+      );
+    } on Object catch (_) {
+      if (!mounted) return;
+      _showSaveFeedback(
+        message: 'Failed to update party. Please try again.',
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
-
-    if (saveAndNew) {
-      await _createParty(result, resetForm: true);
-      return;
-    }
-
-    Navigator.of(context).pop(result);
   }
 
   Future<void> _createParty(
     AddPartyResult result, {
     required bool resetForm,
+    required bool selectCreated,
   }) async {
+    setState(() => _isSaving = true);
+
     try {
-      await ref.read(partyListProvider.notifier).createParty(result);
-      _showSaveSnackBar(
+      await ref.read(partyListProvider.notifier).createParty(
+            result,
+            selectCreated: selectCreated,
+          );
+      if (!mounted) return;
+
+      _showSaveFeedback(
         message: 'Party "${result.partyName}" saved successfully',
-        backgroundColor: _successSnackBarColor,
+        isError: false,
       );
+
       if (resetForm) {
         _resetFormAfterSave();
-      } else if (mounted) {
+      } else {
         Navigator.of(context).pop(result);
       }
     } on PartyOfflineException {
-      _showSaveSnackBar(
+      if (!mounted) return;
+      _showSaveFeedback(
         message: 'Party saved offline. It will sync when you are back online.',
-        backgroundColor: Colors.orange.shade800,
+        isError: false,
       );
       if (resetForm) {
         _resetFormAfterSave();
-      } else if (mounted) {
+      } else {
         Navigator.of(context).pop(result);
       }
       ref.invalidate(partyListProvider);
     } on ApiValidationException catch (e) {
+      if (!mounted) return;
       _applyApiValidationErrors(e);
-      _showSaveSnackBar(
-        message: e.message,
-        backgroundColor: AppColors.error,
+      _showSaveFeedback(message: e.message, isError: true);
+    } on PartyException catch (e) {
+      if (!mounted) return;
+      _showSaveFeedback(message: e.message, isError: true);
+    } on PartyBusinessNotSelectedException {
+      if (!mounted) return;
+      _showSaveFeedback(
+        message: 'Business not selected. Please select a business first.',
+        isError: true,
       );
     } on Object catch (_) {
-      _showSaveSnackBar(
+      if (!mounted) return;
+      _showSaveFeedback(
         message: 'Failed to save party. Please try again.',
-        backgroundColor: AppColors.error,
+        isError: true,
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
 
@@ -676,8 +745,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _creditLimitController.clear();
     _additionalField1Controller.clear();
     _additionalField2Controller.clear();
+    final defaultState = _resolvedBusinessState();
     setState(() {
-      final defaultState = _resolvedBusinessState();
       _gstType = 'Unregistered/Consumer';
       _state = defaultState;
       _billingDetailState = defaultState;
@@ -710,8 +779,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       _creditLimitError = null;
       _loyaltyBalanceError = null;
       _partyType = 'customer';
-      _tabController.index = 0;
+      _defaultPriceTier = PriceTier.retail;
     });
+    // Must not change TabController.index inside setState — AnimatedBuilder
+    // listens to the controller and would rebuild during this frame.
+    if (_tabController.index != 0) {
+      _tabController.index = 0;
+    }
     _applyCreateDefaults();
   }
 
@@ -721,51 +795,66 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       color: AppColors.surface,
       borderRadius: AppRadius.lgBorder,
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Stack(
         children: [
-          _buildHeader(),
-          const Divider(height: 1, color: _cardBorder),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    FormSpacing.page,
-                    FormSpacing.section,
-                    FormSpacing.page,
-                    FormSpacing.section,
-                  ),
-                  child: _buildTopFields(),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: FormSpacing.page,
-                  ),
-                  child: _buildTabBar(),
-                ),
-                const Divider(height: 1, color: _cardBorder),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(FormSpacing.page),
-                    child: AnimatedBuilder(
-                      animation: _tabController,
-                      builder: (context, _) {
-                        return switch (_tabController.index) {
-                          0 => _buildGstAddressTab(),
-                          1 => _buildCreditBalanceTab(),
-                          _ => _buildAdditionalFieldsTab(),
-                        };
-                      },
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeader(),
+              const Divider(height: 1, color: _cardBorder),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        FormSpacing.page,
+                        FormSpacing.section,
+                        FormSpacing.page,
+                        FormSpacing.section,
+                      ),
+                      child: _buildTopFields(),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: FormSpacing.page,
+                      ),
+                      child: _buildTabBar(),
+                    ),
+                    const Divider(height: 1, color: _cardBorder),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(FormSpacing.page),
+                        child: AnimatedBuilder(
+                          animation: _tabController,
+                          builder: (context, _) {
+                            return switch (_tabController.index) {
+                              0 => _buildGstAddressTab(),
+                              1 => _buildCreditBalanceTab(),
+                              _ => _buildAdditionalFieldsTab(),
+                            };
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: _cardBorder),
+              _buildFooter(),
+            ],
+          ),
+          if (_isSaving)
+            Positioned.fill(
+              child: AbsorbPointer(
+                child: ColoredBox(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  child: const Center(
+                    child: CircularProgressIndicator(),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-          const Divider(height: 1, color: _cardBorder),
-          _buildFooter(),
         ],
       ),
     );
@@ -789,7 +878,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               ),
             ),
             IconButton(
-              onPressed: () {
+              onPressed: _isSaving ? null : () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Party settings coming soon')),
                 );
@@ -800,7 +889,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               visualDensity: VisualDensity.compact,
             ),
             IconButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
               icon: const Icon(Icons.close, color: AppColors.textSecondary),
               visualDensity: VisualDensity.compact,
             ),
@@ -843,7 +932,12 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     final phoneField = _buildInlineTextField(
       controller: _phoneController,
       hint: 'Phone Number',
-      keyboardType: TextInputType.phone,
+      keyboardType: TextInputType.number,
+      maxLength: 10,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(10),
+      ],
       hasError: _phoneError != null,
       errorText: _phoneError,
       onChanged: (_) {
@@ -959,6 +1053,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     String? errorText,
     bool autofocus = false,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    int? maxLength,
     Widget? suffixIcon,
     ValueChanged<String>? onChanged,
   }) {
@@ -970,6 +1066,17 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           autofocus: autofocus,
           style: saleFieldTextStyle,
           keyboardType: keyboardType,
+          inputFormatters: inputFormatters,
+          maxLength: maxLength,
+          buildCounter:
+              maxLength == null
+                  ? null
+                  : (
+                    context, {
+                    required currentLength,
+                    required isFocused,
+                    maxLength,
+                  }) => null,
           decoration: buildSaleFieldDecoration(
             hint: hint,
             hasError: hasError,
@@ -1815,7 +1922,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             final isNarrow = constraints.maxWidth < 480;
 
             final saveButton = FilledButton(
-              onPressed: () => _save(saveAndNew: false),
+              onPressed: _isSaving ? null : () => _save(saveAndNew: false),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(
@@ -1834,7 +1941,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             );
 
             final saveAndNewButton = OutlinedButton(
-              onPressed: () => _save(saveAndNew: true),
+              onPressed: _isSaving ? null : () => _save(saveAndNew: true),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 side: const BorderSide(color: AppColors.primary),
@@ -1854,7 +1961,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             );
 
             final deleteButton = OutlinedButton(
-              onPressed: _confirmAndDeleteParty,
+              onPressed: _isSaving ? null : _confirmAndDeleteParty,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
                 side: const BorderSide(color: AppColors.error),

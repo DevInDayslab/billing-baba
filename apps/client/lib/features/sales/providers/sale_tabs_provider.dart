@@ -49,11 +49,14 @@ class SaleTabsState {
   }
 }
 
-int _tabCounter = 0;
-
-int _nextSaleNumber() {
-  _tabCounter += 1;
-  return _tabCounter;
+int _nextAvailableSaleNumber(List<SaleTab> tabs, {required int maxTabs}) {
+  final used = tabs.map((tab) => tab.saleNumber).toSet();
+  for (var number = 1; number <= maxTabs; number++) {
+    if (!used.contains(number)) {
+      return number;
+    }
+  }
+  return maxTabs;
 }
 
 String _sessionKeyForSaleNumber(int saleNumber) => 'sale_tab_$saleNumber';
@@ -66,7 +69,7 @@ class SaleTabs extends _$SaleTabs {
 
   @override
   SaleTabsState build({String? initialDocumentId}) {
-    final saleNumber = _nextSaleNumber();
+    final saleNumber = _nextAvailableSaleNumber(const [], maxTabs: maxTabs);
     final sessionKey =
         initialDocumentId ?? _sessionKeyForSaleNumber(saleNumber);
     return SaleTabsState(
@@ -89,7 +92,7 @@ class SaleTabs extends _$SaleTabs {
 
   void addTab() {
     if (!canAddTab) return;
-    final saleNumber = _nextSaleNumber();
+    final saleNumber = _nextAvailableSaleNumber(state.tabs, maxTabs: maxTabs);
     final newTab = SaleTab(
       sessionKey: _sessionKeyForSaleNumber(saleNumber),
       label: 'Sale $saleNumber',

@@ -53,6 +53,11 @@ class ExpenseDto {
     this.taxRate,
     this.attachments = const [],
     this.paymentMode,
+    this.sourceReferenceId,
+    this.sourceReferenceType,
+    this.loyaltyPoints,
+    this.dueDate,
+    this.balanceDue,
   });
 
   factory ExpenseDto.fromJson(Map<String, dynamic> json) {
@@ -75,6 +80,11 @@ class ExpenseDto {
             )
           : const [],
       paymentMode: json['payment_mode'] as String?,
+      sourceReferenceId: json['source_reference_id'] as String?,
+      sourceReferenceType: json['source_reference_type'] as String?,
+      loyaltyPoints: json['loyalty_points'] as String?,
+      dueDate: json['due_date'] as String?,
+      balanceDue: json['balance_due'] as String?,
       createdAt: json['created_at'] as String,
       updatedAt: json['updated_at'] as String,
     );
@@ -94,6 +104,11 @@ class ExpenseDto {
   final String? taxRate;
   final List<String> attachments;
   final String? paymentMode;
+  final String? sourceReferenceId;
+  final String? sourceReferenceType;
+  final String? loyaltyPoints;
+  final String? dueDate;
+  final String? balanceDue;
   final String createdAt;
   final String updatedAt;
 }

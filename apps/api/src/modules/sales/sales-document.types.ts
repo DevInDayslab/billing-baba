@@ -65,6 +65,7 @@ export type SalesDocumentsListSummary = {
 export type ListSalesDocumentsFilterParams = {
   businessId: string;
   documentType?: SalesDocumentType;
+  documentSeries?: string;
   status?: DocumentStatus;
   partyId?: string;
   posSessionId?: string;

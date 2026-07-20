@@ -93,7 +93,7 @@ class GstTaxReportContent extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
-                          child: SingleChildScrollView(
+                          child: ReportTableArea(
                             child: ReportSyncScrollTable(
                               minWidth: 720,
                               headerChildren: const [
@@ -146,7 +146,8 @@ class GstTaxReportContent extends ConsumerWidget {
                               ],
                             ),
                           ),
-                        ),
+                        
+                          ),
                         ReportPaginationBar(
                           page: report.meta.page,
                           totalPages: report.meta.totalPages,

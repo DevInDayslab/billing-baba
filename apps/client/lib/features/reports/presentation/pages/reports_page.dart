@@ -13,6 +13,7 @@ import 'package:billing_baba/features/reports/models/taxes_report_subsection.dar
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/report_content_panel.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/reports_nav_panel.dart';
+import 'package:billing_baba/features/reports/providers/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/providers/reports_nav_intent_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,6 +55,7 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
     final intent = ref.read(reportsNavIntentProvider.notifier).consume();
     if (intent == null || !mounted) return;
 
+    ref.read(reportFiltersProvider.notifier).resetForReportSwitch();
     setState(() {
       _navGroup = intent.group;
       if (intent.transactionSub != null) {
@@ -86,6 +88,39 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
       if (intent.loanAccountsSub != null) {
         _selectedLoanAccountsSub = intent.loanAccountsSub!;
       }
+    });
+  }
+
+  void _selectReport({
+    required ReportNavGroup group,
+    TransactionReportSubSection? transactionSub,
+    PartyReportSubSection? partySub,
+    GstReportSubSection? gstSub,
+    ItemStockReportSubSection? itemStockSub,
+    BusinessStatusReportSubSection? businessStatusSub,
+    TaxesReportSubSection? taxesSub,
+    ExpenseReportSubSection? expenseSub,
+    SalePurchaseOrderReportSubSection? salePurchaseOrderSub,
+    OtherIncomeReportSubSection? otherIncomeSub,
+    LoanAccountsReportSubSection? loanAccountsSub,
+  }) {
+    ref.read(reportFiltersProvider.notifier).resetForReportSwitch();
+    setState(() {
+      _navGroup = group;
+      if (transactionSub != null) _selectedTransactionSub = transactionSub;
+      if (partySub != null) _selectedPartySub = partySub;
+      if (gstSub != null) _selectedGstSub = gstSub;
+      if (itemStockSub != null) _selectedItemStockSub = itemStockSub;
+      if (businessStatusSub != null) {
+        _selectedBusinessStatusSub = businessStatusSub;
+      }
+      if (taxesSub != null) _selectedTaxesSub = taxesSub;
+      if (expenseSub != null) _selectedExpenseSub = expenseSub;
+      if (salePurchaseOrderSub != null) {
+        _selectedSalePurchaseOrderSub = salePurchaseOrderSub;
+      }
+      if (otherIncomeSub != null) _selectedOtherIncomeSub = otherIncomeSub;
+      if (loanAccountsSub != null) _selectedLoanAccountsSub = loanAccountsSub;
     });
   }
 
@@ -133,67 +168,46 @@ class _ReportsPageState extends ConsumerState<ReportsPage> {
                               _selectedSalePurchaseOrderSub,
                           selectedOtherIncomeSub: _selectedOtherIncomeSub,
                           selectedLoanAccountsSub: _selectedLoanAccountsSub,
-                          onTransactionSubSelected: (sub) {
-                            setState(() {
-                              _navGroup = ReportNavGroup.transaction;
-                              _selectedTransactionSub = sub;
-                            });
-                          },
-                          onPartySubSelected: (sub) {
-                            setState(() {
-                              _navGroup = ReportNavGroup.party;
-                              _selectedPartySub = sub;
-                            });
-                          },
-                          onGstSubSelected: (sub) {
-                            setState(() {
-                              _navGroup = ReportNavGroup.gst;
-                              _selectedGstSub = sub;
-                            });
-                          },
-                          onItemStockSubSelected: (sub) {
-                            setState(() {
-                              _navGroup = ReportNavGroup.itemStock;
-                              _selectedItemStockSub = sub;
-                            });
-                          },
-                          onBusinessStatusSubSelected: (sub) {
-                            setState(() {
-                              _navGroup = ReportNavGroup.businessStatus;
-                              _selectedBusinessStatusSub = sub;
-                            });
-                          },
-                          onTaxesSubSelected: (sub) {
-                            setState(() {
-                              _navGroup = ReportNavGroup.taxes;
-                              _selectedTaxesSub = sub;
-                            });
-                          },
-                          onExpenseSubSelected: (sub) {
-                            setState(() {
-                              _navGroup = ReportNavGroup.expenseReport;
-                              _selectedExpenseSub = sub;
-                            });
-                          },
-                          onSalePurchaseOrderSubSelected: (sub) {
-                            setState(() {
-                              _navGroup =
-                                  ReportNavGroup.salePurchaseOrderReport;
-                              _selectedSalePurchaseOrderSub = sub;
-                            });
-                          },
-                          onOtherIncomeSubSelected: (sub) {
-                            setState(() {
-                              _navGroup = ReportNavGroup.otherIncomeReport;
-                              _selectedOtherIncomeSub = sub;
-                            });
-                          },
-                          onLoanAccountsSubSelected: (sub) {
-                            setState(() {
-                              _navGroup = ReportNavGroup.loanAccounts;
-                              _selectedLoanAccountsSub = sub;
-                            });
-                          },
+                          onTransactionSubSelected: (sub) => _selectReport(
+                            group: ReportNavGroup.transaction,
+                            transactionSub: sub,
+                          ),
+                          onPartySubSelected: (sub) => _selectReport(
+                            group: ReportNavGroup.party,
+                            partySub: sub,
+                          ),
+                          onGstSubSelected: (sub) => _selectReport(
+                            group: ReportNavGroup.gst,
+                            gstSub: sub,
+                          ),
+                          onItemStockSubSelected: (sub) => _selectReport(
+                            group: ReportNavGroup.itemStock,
+                            itemStockSub: sub,
+                          ),
+                          onBusinessStatusSubSelected: (sub) => _selectReport(
+                            group: ReportNavGroup.businessStatus,
+                            businessStatusSub: sub,
+                          ),
+                          onTaxesSubSelected: (sub) => _selectReport(
+                            group: ReportNavGroup.taxes,
+                            taxesSub: sub,
+                          ),
+                          onExpenseSubSelected: (sub) => _selectReport(
+                            group: ReportNavGroup.expenseReport,
+                            expenseSub: sub,
+                          ),
+                          onSalePurchaseOrderSubSelected: (sub) => _selectReport(
+                            group: ReportNavGroup.salePurchaseOrderReport,
+                            salePurchaseOrderSub: sub,
+                          ),
+                          onOtherIncomeSubSelected: (sub) => _selectReport(
+                            group: ReportNavGroup.otherIncomeReport,
+                            otherIncomeSub: sub,
+                          ),
+                          onLoanAccountsSubSelected: (sub) => _selectReport(
+                            group: ReportNavGroup.loanAccounts,
+                            loanAccountsSub: sub,
+                          ),
                         ),
                       ),
                       const VerticalDivider(

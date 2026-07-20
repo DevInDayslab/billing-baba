@@ -5,6 +5,8 @@ import 'package:billing_baba/core/attachments/transaction_attachment_actions.dar
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
+import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/transaction_form_busy_overlay.dart';
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/core/attachments/document_attachment_providers.dart';
@@ -105,9 +107,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
     );
     if (!mounted) return;
     if (result.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.error!)),
-      );
+      showTransactionFormSaveError(context, result.error!);
       return;
     }
 
@@ -140,9 +140,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
           );
       if (!mounted) return;
       if (result.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.error!)),
-        );
+        showTransactionFormSaveError(context, result.error!);
         return;
       }
       paymentId = result.paymentId;
@@ -173,9 +171,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
           );
       if (!mounted) return;
       if (result.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.error!)),
-        );
+        showTransactionFormSaveError(context, result.error!);
         return;
       }
       paymentId = result.paymentId;
@@ -584,12 +580,9 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
           ),
         ),
         if (isSaving)
-          Positioned.fill(
-            child: ColoredBox(
-              color: Colors.black.withValues(alpha: 0.12),
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
+          const Positioned.fill(
+            child: TransactionFormSaveOverlay(
+              label: 'Saving payment out…',
             ),
           ),
       ],

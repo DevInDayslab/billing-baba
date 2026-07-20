@@ -41,6 +41,11 @@ export class ExpenseRepository {
       attachments: expenses.attachments,
       expenseDate: expenses.expenseDate,
       paymentMode: expenses.paymentMode,
+      sourceReferenceId: expenses.sourceReferenceId,
+      sourceReferenceType: expenses.sourceReferenceType,
+      loyaltyPoints: expenses.loyaltyPoints,
+      dueDate: expenses.dueDate,
+      balanceDue: expenses.balanceDue,
       createdAt: expenses.createdAt,
       updatedAt: expenses.updatedAt,
     };
@@ -173,6 +178,11 @@ export class ExpenseRepository {
         paymentMode: (values.paymentMode ?? null) as
           | (typeof expenses.paymentMode.enumValues)[number]
           | null,
+        sourceReferenceId: values.sourceReferenceId ?? null,
+        sourceReferenceType: values.sourceReferenceType ?? null,
+        loyaltyPoints: values.loyaltyPoints ?? null,
+        dueDate: values.dueDate ?? null,
+        balanceDue: values.balanceDue ?? '0',
         createdBy: values.createdBy ?? null,
         updatedBy: values.updatedBy ?? null,
       })
@@ -226,6 +236,19 @@ export class ExpenseRepository {
                 | null,
             }
           : {}),
+        ...(values.sourceReferenceId !== undefined
+          ? { sourceReferenceId: values.sourceReferenceId }
+          : {}),
+        ...(values.sourceReferenceType !== undefined
+          ? { sourceReferenceType: values.sourceReferenceType }
+          : {}),
+        ...(values.loyaltyPoints !== undefined
+          ? { loyaltyPoints: values.loyaltyPoints }
+          : {}),
+        ...(values.dueDate !== undefined ? { dueDate: values.dueDate } : {}),
+        ...(values.balanceDue !== undefined
+          ? { balanceDue: values.balanceDue }
+          : {}),
         ...(values.updatedBy !== undefined
           ? { updatedBy: values.updatedBy }
           : {}),
@@ -271,6 +294,41 @@ export class ExpenseRepository {
       );
 
     return existing;
+  }
+
+  async findBySourceReference(
+    businessId: string,
+    sourceReferenceId: string,
+    sourceReferenceType: string,
+  ): Promise<ExpenseRecord | null> {
+    const [row] = await this.baseJoin()
+      .where(
+        and(
+          eq(expenses.businessId, businessId),
+          eq(expenses.sourceReferenceId, sourceReferenceId),
+          eq(expenses.sourceReferenceType, sourceReferenceType),
+          eq(expenses.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return row ? toExpenseRecord(row as ExpenseRow) : null;
+  }
+
+  async softDeleteBySource(
+    businessId: string,
+    sourceReferenceId: string,
+    sourceReferenceType: string,
+    userId: string | null,
+  ): Promise<void> {
+    const existing = await this.findBySourceReference(
+      businessId,
+      sourceReferenceId,
+      sourceReferenceType,
+    );
+    if (!existing) return;
+
+    await this.softDelete(businessId, existing.id, userId);
   }
 
   async categoryExists(

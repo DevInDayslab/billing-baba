@@ -3,6 +3,9 @@ import {
   logGeminiApiError,
   logGeminiRequestStart,
 } from '../../shared/gemini/gemini-client';
+import {
+  isEligibleForExternalLookup,
+} from './barcode-confidence';
 
 const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
 const GEMINI_REQUEST_TIMEOUT_MS = 30_000;
@@ -16,6 +19,7 @@ export interface BarcodeGeminiResult {
   taxPercent?: string;
   baseUnit?: string;
   incTax?: boolean;
+  confidence?: number;
 }
 
 function buildBarcodeLookupPrompt(barcode: string): string {
@@ -28,6 +32,8 @@ STRICT RULES:
 - If you have ANY doubt, return { "found": false }
 - Do NOT guess, infer, or use similar barcodes
 - Do NOT return a product just because the barcode format looks valid
+- Include a confidence score from 0.0 to 1.0 reflecting certainty for this exact barcode
+- Only return found=true when confidence is at least 0.85
 - For Indian products, defaultMrp is the standard Maximum Retail Price printed on the
   package in Indian Rupees (₹). Return it as a numeric string without the ₹ symbol.
   Example: "28" for Tata Salt 1kg. If unknown, return empty string.
@@ -43,7 +49,8 @@ If CERTAIN about the product identity: return ONLY this JSON:
   "defaultMrp": "MRP in rupees as numeric string, or empty string if unknown",
   "taxPercent": "GST % as string if certain for this product category, else empty string",
   "baseUnit": "unit or empty string",
-  "incTax": true
+  "incTax": true,
+  "confidence": 0.95
 }
 
 If NOT certain: return ONLY:
@@ -82,6 +89,15 @@ function asOptionalString(value: unknown): string | undefined {
   return str.length > 0 ? str : undefined;
 }
 
+function asOptionalNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value.trim());
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return undefined;
+}
+
 function normalizeGeminiResult(parsed: unknown): BarcodeGeminiResult {
   if (typeof parsed !== 'object' || parsed === null) {
     return { found: false };
@@ -101,18 +117,27 @@ function normalizeGeminiResult(parsed: unknown): BarcodeGeminiResult {
     taxPercent: asOptionalString(record.taxPercent),
     baseUnit: asOptionalString(record.baseUnit),
     incTax: typeof record.incTax === 'boolean' ? record.incTax : undefined,
+    confidence: asOptionalNumber(record.confidence),
   };
 }
 
-function validateGeminiConfidence(result: BarcodeGeminiResult): BarcodeGeminiResult {
-  if (result.found && result.itemName) {
-    const name = result.itemName.toLowerCase().trim();
-    if (name.length < 3) {
-      return { found: false };
-    }
+function validateGeminiConfidence(
+  barcode: string,
+  result: BarcodeGeminiResult,
+): BarcodeGeminiResult {
+  if (!result.found) {
+    return { found: false };
   }
 
-  if (result.found && !result.itemName?.trim()) {
+  if (!isEligibleForExternalLookup(barcode)) {
+    return { found: false };
+  }
+
+  if (!result.itemName?.trim() || result.itemName.trim().length < 3) {
+    return { found: false };
+  }
+
+  if (result.confidence === undefined || result.confidence < 0.85) {
     return { found: false };
   }
 
@@ -130,6 +155,12 @@ function logGeminiLookupResult(
 
 export class BarcodeGeminiService {
   async lookupBarcode(barcode: string): Promise<BarcodeGeminiResult> {
+    if (!isEligibleForExternalLookup(barcode)) {
+      const result = { found: false };
+      logGeminiLookupResult(barcode, result);
+      return result;
+    }
+
     try {
       const client = getGeminiDeveloperClient();
       const model = DEFAULT_MODEL;
@@ -158,7 +189,7 @@ export class BarcodeGeminiService {
 
       const parsed = extractJsonFromText(text);
       const normalized = normalizeGeminiResult(parsed);
-      const result = validateGeminiConfidence(normalized);
+      const result = validateGeminiConfidence(barcode, normalized);
       logGeminiLookupResult(barcode, result);
       return result;
     } catch (error) {

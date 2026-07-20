@@ -18,6 +18,10 @@ class PartyActionsMenuButton extends ConsumerWidget {
     final canRecord = PartyActions.canRecordPayment(party);
 
     return SalesActionMenuButton(
+      iconButtonConstraints: const BoxConstraints(
+        minWidth: kMinInteractiveDimension,
+        minHeight: kMinInteractiveDimension,
+      ),
       items: [
         SalesActionMenuItem(
           label: 'View Party',

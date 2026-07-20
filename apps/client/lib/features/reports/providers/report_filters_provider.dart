@@ -50,7 +50,16 @@ class ReportFilters extends _$ReportFilters {
   }
 
   void setSearchQuery(String query) {
-    state = state.copyWith(searchQuery: query, currentPage: 1);
+    state = state.copyWith(
+      searchQuery: query,
+      currentPage: 1,
+      isTableLoading: true,
+    );
+  }
+
+  void clearTableLoading() {
+    if (!state.isTableLoading) return;
+    state = state.copyWith(isTableLoading: false);
   }
 
   void setPage(int page) {
@@ -145,6 +154,16 @@ class ReportFilters extends _$ReportFilters {
     state = state.copyWith(
       format: format,
       clearFormat: format == null || format.isEmpty,
+    );
+  }
+
+  /// Clears report-specific filters when navigating between reports.
+  void resetForReportSwitch() {
+    state = ReportFiltersState(
+      period: state.period,
+      customDateRange: state.customDateRange,
+      selectedDate: state.selectedDate,
+      pageSize: state.pageSize,
     );
   }
 }

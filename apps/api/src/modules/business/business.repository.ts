@@ -4,6 +4,7 @@ import { businesses } from '../../db/schema/business/tables';
 import { users } from '../../db/schema/identity/tables';
 import { categories, godowns } from '../../db/schema/inventory/tables';
 import { expenseCategories } from '../../db/schema/purchases/tables';
+import { SYSTEM_EXPENSE_CATEGORIES } from '../purchases/expense-category.constants';
 import {
   businessSettings,
   documentNumberSequences,
@@ -493,11 +494,14 @@ export class BusinessRepository {
         fiscalYear,
       });
 
-      await tx.insert(expenseCategories).values([
-        { businessId: business.id, name: 'Rent', isSystem: true },
-        { businessId: business.id, name: 'Utilities', isSystem: true },
-        { businessId: business.id, name: 'Salaries', isSystem: true },
-      ]);
+      await tx.insert(expenseCategories).values(
+        SYSTEM_EXPENSE_CATEGORIES.map((category) => ({
+          businessId: business.id,
+          name: category.name,
+          categoryType: category.categoryType,
+          isSystem: true,
+        })),
+      );
 
       await tx.insert(categories).values([
         { businessId: business.id, name: 'General' },

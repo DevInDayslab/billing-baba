@@ -60,6 +60,7 @@ export const payments = pgTable('payments', {
   source: paymentSourceEnum('source').notNull().default('manual'),
   referenceNumber: text('reference_number'),
   notes: text('notes'),
+  discountAmount: money('discount_amount').notNull().default('0'),
   shortPaymentHandling: shortPaymentHandlingEnum('short_payment_handling'),
 });
 

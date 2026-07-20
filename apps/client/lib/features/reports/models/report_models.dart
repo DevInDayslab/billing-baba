@@ -126,6 +126,8 @@ class ReportPartyStatementEntry {
     required this.date,
     required this.type,
     required this.refNo,
+    required this.debit,
+    required this.credit,
     required this.total,
     required this.balance,
   });
@@ -133,6 +135,8 @@ class ReportPartyStatementEntry {
   final DateTime date;
   final String type;
   final String refNo;
+  final double debit;
+  final double credit;
   final double total;
   final double balance;
 }

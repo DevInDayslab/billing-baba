@@ -4,6 +4,7 @@ import 'package:billing_baba/core/attachments/document_attachment_entity_type.da
 import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
 import 'package:billing_baba/features/loyalty/loyalty_points_calculator.dart';
@@ -21,6 +22,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/item_name_autoc
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -306,8 +308,9 @@ class AddSaleForm extends _$AddSaleForm {
   }
 
   void updatePhone(String value) {
-    state = state.copyWith(phone: value, isDirty: true);
-    _tryMatchPartyByPhone(value);
+    final sanitized = Validators.sanitizePhoneInput(value);
+    state = state.copyWith(phone: sanitized, isDirty: true, clearSaveError: true);
+    _tryMatchPartyByPhone(sanitized);
   }
 
   void _tryMatchPartyByPhone(String phone) {
@@ -424,7 +427,7 @@ class AddSaleForm extends _$AddSaleForm {
     state = state.copyWith(
       partyId: party.id,
       billingName: party.name,
-      phone: party.phone,
+      phone: Validators.normalizeIndianPhone(party.phone) ?? '',
       billingAddress: party.billingAddress.isNotEmpty
           ? party.billingAddress
           : party.addressLine,
@@ -589,6 +592,15 @@ class AddSaleForm extends _$AddSaleForm {
     );
   }
 
+  void updateTaxOption(String value) {
+    state = state.copyWith(
+      taxOption: value,
+      items: applyBillTaxOptionToSaleItems(state.items, value),
+      isDirty: true,
+      clearSaveError: true,
+    );
+  }
+
   void addLineItem() {
     final items = [...state.items, SaleLineItem.empty(id: _nextLineItemId())];
     state = state.copyWith(items: items, isDirty: true);
@@ -607,7 +619,14 @@ class AddSaleForm extends _$AddSaleForm {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
-    state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
+    final clearBillTax =
+        item.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
+    state = state.copyWith(
+      items: items,
+      taxOption: clearBillTax ? 'NONE' : state.taxOption,
+      isDirty: true,
+      clearSaveError: true,
+    );
   }
 
   void selectCatalogItem(int index, SaleItemOption catalogItem) {
@@ -767,8 +786,9 @@ class AddSaleForm extends _$AddSaleForm {
   bool validate({bool finalize = false}) {
     final hasLines = state.hasValidLineItems;
     final hasParty = state.partyId != null && state.partyId!.isNotEmpty;
+    final hasPhone = state.hasValidPhone;
 
-    final isValid = hasLines && (!finalize || hasParty);
+    final isValid = hasLines && hasPhone && (!finalize || hasParty);
     if (!isValid) {
       state = state.copyWith(showValidationErrors: true);
     }
@@ -842,9 +862,11 @@ class AddSaleForm extends _$AddSaleForm {
 
       var earnedLoyaltyPoints = 0;
       var pointsAvailable = 0.0;
+      var loyaltyPointsUsedForExpense = 0.0;
       if (finalize) {
         final invoiceTotal = state.invoiceTotal;
         final loyaltyPointsUsed = state.loyaltyPointsUsed;
+        loyaltyPointsUsedForExpense = loyaltyPointsUsed;
         final loyaltyPointsAvailable = state.loyaltyPointsAvailable;
         final party = partyId != null ? await _resolveParty(partyId) : null;
 
@@ -918,6 +940,12 @@ class AddSaleForm extends _$AddSaleForm {
       }
 
       await _refreshAfterSaleMutation();
+      if (finalize && loyaltyPointsUsedForExpense > 0) {
+        refreshAfterExpense(
+          ref,
+          context: (partyId: state.partyId, itemIds: const []),
+        );
+      }
       if (state.attachedSaleOrderIds.isNotEmpty) {
         ref.invalidate(saleOrdersProvider);
       }

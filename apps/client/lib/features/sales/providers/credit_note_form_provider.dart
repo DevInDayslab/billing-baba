@@ -12,6 +12,7 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_o
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
+import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -268,11 +269,27 @@ class CreditNoteForm extends _$CreditNoteForm {
     state = state.copyWith(items: items, isDirty: true);
   }
 
+  void updateTaxOption(String value) {
+    state = state.copyWith(
+      taxOption: value,
+      items: applyBillTaxOptionToSaleItems(state.items, value),
+      isDirty: true,
+      clearSaveError: true,
+    );
+  }
+
   void updateLineItem(int index, SaleLineItem item) {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
-    state = state.copyWith(items: items, isDirty: true, clearSaveError: true);
+    final clearBillTax =
+        item.taxPercent > 0 && isBillLevelTaxActive(state.taxOption);
+    state = state.copyWith(
+      items: items,
+      taxOption: clearBillTax ? 'NONE' : state.taxOption,
+      isDirty: true,
+      clearSaveError: true,
+    );
   }
 
   void selectCatalogItem(int index, SaleItemOption catalogItem) {
@@ -318,6 +335,7 @@ class CreditNoteForm extends _$CreditNoteForm {
     notes: state.description,
     items: state.items,
     godownId: state.godownId,
+    taxOption: state.taxOption,
   );
 
   Future<String?> save() async {
@@ -368,7 +386,7 @@ class CreditNoteForm extends _$CreditNoteForm {
 @riverpod
 double creditNoteTotalTax(Ref ref, {String sessionKey = 'default'}) {
   final form = ref.watch(creditNoteFormProvider(sessionKey: sessionKey));
-  return form.items.fold<double>(0, (sum, item) => sum + item.lineTax);
+  return form.totalTax;
 }
 
 @riverpod

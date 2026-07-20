@@ -25,6 +25,8 @@ import { businesses } from '../schema/business/tables';
 import { users } from '../schema/identity/tables';
 import { godowns } from '../schema/inventory/tables';
 import { expenseCategories } from '../schema/purchases/tables';
+import { SYSTEM_EXPENSE_CATEGORIES } from '../../modules/purchases/expense-category.constants';
+import { ensureSystemExpenseCategories } from '../../modules/purchases/expense-sync.service';
 import {
   businessSettings,
   documentNumberSequences,
@@ -166,18 +168,7 @@ async function bootstrapBusinessEssentials(
     });
   }
 
-  const expenseCategoryRows = await db
-    .select({ id: expenseCategories.id, name: expenseCategories.name })
-    .from(expenseCategories)
-    .where(eq(expenseCategories.businessId, businessId));
-
-  if (expenseCategoryRows.length === 0) {
-    await db.insert(expenseCategories).values([
-      { businessId, name: 'Rent', isSystem: true },
-      { businessId, name: 'Utilities', isSystem: true },
-      { businessId, name: 'Salaries', isSystem: true },
-    ]);
-  }
+  await ensureSystemExpenseCategories(db, businessId);
 
   const sequences = [
     { documentSeries: 'INV', prefix: 'INV' },

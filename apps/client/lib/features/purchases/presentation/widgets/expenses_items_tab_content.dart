@@ -260,7 +260,7 @@ class _ItemDetailPanel extends ConsumerWidget {
                   )
                 : ExpenseResizableTable(
                     transactions: transactions,
-                    isLoyalty: false,
+                    variant: transactions.first.categoryVariant,
                   ),
           ),
         ),
