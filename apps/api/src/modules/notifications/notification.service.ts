@@ -179,6 +179,24 @@ export class NotificationService {
     options: NotifyOptions,
   ): Promise<NotificationSendResult> {
     const content = buildPaymentReceivedNotification(input);
+    const mediaUrl = input.mediaUrl?.trim();
+
+    if (mediaUrl && this.provider.sendMedia) {
+      return this.safeSendMedia({
+        to: recipient.phone,
+        body: content.body,
+        mediaUrl,
+        notificationType: content.type,
+        idempotencyKey: options.idempotencyKey,
+        companyId: options.companyId,
+        metadata: {
+          notificationType: content.type,
+          companyName: input.companyName,
+          hasMedia: true,
+        },
+      });
+    }
+
     return this.safeSend({
       to: recipient.phone,
       body: content.body,

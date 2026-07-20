@@ -19,6 +19,7 @@ import {
   resolveGeneratedSourceVersion,
 } from './generated-document.entity-resolver';
 import { toGeneratedDocumentResponse } from './generated-document.mapper';
+import { GeneratedDocumentPdfGenerator } from './generated-document.pdf-generator';
 import { GeneratedDocumentRepository } from './generated-document.repository';
 import type {
   GeneratedDocumentResponse,
@@ -41,6 +42,7 @@ export type GeneratedDocumentServiceDeps = {
     sourceType: GeneratedDocumentSourceType,
     sourceId: string,
   ) => Promise<void>;
+  pdfGenerator?: GeneratedDocumentPdfGenerator;
 };
 
 function requireDb() {
@@ -82,6 +84,7 @@ export class GeneratedDocumentService {
   private readonly assertKindMatchesSourceFn: NonNullable<
     GeneratedDocumentServiceDeps['assertKindMatchesSource']
   >;
+  private readonly pdfGenerator: GeneratedDocumentPdfGenerator;
 
   constructor(deps: GeneratedDocumentServiceDeps) {
     const db = requireDb();
@@ -95,6 +98,8 @@ export class GeneratedDocumentService {
       new StorageService({
         config: deps.config,
       });
+    this.pdfGenerator =
+      deps.pdfGenerator ?? new GeneratedDocumentPdfGenerator({ db });
     this.resolveSourceVersionFn =
       deps.resolveSourceVersion ??
       (async (businessId, sourceType, sourceId) => {
@@ -156,6 +161,64 @@ export class GeneratedDocumentService {
     return this.enrichRow(businessId, accountId, existing, true);
   }
 
+  /**
+   * Lookup cache, optionally store client bytes, or generate PDF server-side.
+   */
+  async ensure(
+    businessId: string,
+    accountId: string,
+    input: {
+      documentKind: GeneratedDocumentKind;
+      sourceType: GeneratedDocumentSourceType;
+      sourceId: string;
+      contentBase64?: string;
+      fileName?: string;
+      forceRegenerate?: boolean;
+    },
+  ): Promise<GeneratedDocumentResponse> {
+    if (input.contentBase64) {
+      const mimeType = MIME_FOR_GENERATED_KIND[input.documentKind];
+      return this.ensureStored(businessId, accountId, {
+        documentKind: input.documentKind,
+        sourceType: input.sourceType,
+        sourceId: input.sourceId,
+        fileName: input.fileName ?? `${input.documentKind}.pdf`,
+        mimeType,
+        contentBase64: input.contentBase64,
+        forceRegenerate: input.forceRegenerate,
+      });
+    }
+
+    const cached = await this.lookup(
+      businessId,
+      accountId,
+      input.documentKind,
+      input.sourceType,
+      input.sourceId,
+    );
+    if (cached && !input.forceRegenerate) {
+      return cached;
+    }
+
+    const { buffer, fileName } = await this.pdfGenerator.generate(
+      businessId,
+      input.documentKind,
+      input.sourceType,
+      input.sourceId,
+    );
+
+    const mimeType = MIME_FOR_GENERATED_KIND[input.documentKind];
+    return this.storeBuffer(businessId, accountId, {
+      documentKind: input.documentKind,
+      sourceType: input.sourceType,
+      sourceId: input.sourceId,
+      fileName: input.fileName ?? fileName,
+      mimeType,
+      buffer,
+      forceRegenerate: input.forceRegenerate ?? Boolean(cached),
+    });
+  }
+
   async ensureStored(
     businessId: string,
     accountId: string,
@@ -212,6 +275,63 @@ export class GeneratedDocumentService {
       throw new AppError('VALIDATION_ERROR', 'Generated file is too large', 400);
     }
 
+    return this.storeBuffer(businessId, accountId, {
+      documentKind: input.documentKind,
+      sourceType: input.sourceType,
+      sourceId: input.sourceId,
+      fileName: input.fileName,
+      mimeType: input.mimeType,
+      buffer,
+      forceRegenerate: input.forceRegenerate ?? Boolean(existing?.mediaAssetId),
+    });
+  }
+
+  private async storeBuffer(
+    businessId: string,
+    accountId: string,
+    input: {
+      documentKind: GeneratedDocumentKind;
+      sourceType: GeneratedDocumentSourceType;
+      sourceId: string;
+      fileName: string;
+      mimeType: string;
+      buffer: Buffer;
+      forceRegenerate?: boolean;
+    },
+  ): Promise<GeneratedDocumentResponse> {
+    await this.assertAccess(businessId, accountId);
+    await this.assertKindMatchesSourceFn(
+      businessId,
+      input.documentKind,
+      input.sourceType,
+      input.sourceId,
+    );
+
+    const current = await this.resolveSourceVersionFn(
+      businessId,
+      input.sourceType,
+      input.sourceId,
+    );
+
+    const existing = await this.repository.findBySource(
+      businessId,
+      input.documentKind,
+      input.sourceType,
+      input.sourceId,
+    );
+
+    if (
+      !input.forceRegenerate &&
+      existing?.mediaAssetId &&
+      existing.sourceVersion === current.sourceVersion
+    ) {
+      return this.enrichRow(businessId, accountId, existing, true);
+    }
+
+    if (input.buffer.length > GENERATED_DOCUMENT_POLICY.maxBytes) {
+      throw new AppError('VALIDATION_ERROR', 'Generated file is too large', 400);
+    }
+
     if (existing?.mediaAssetId) {
       try {
         await this.storage.deleteAsset(
@@ -230,10 +350,13 @@ export class GeneratedDocumentService {
       purpose: storagePurposeForGeneratedKind(input.documentKind),
       visibility: 'private',
       mimeType: input.mimeType,
-      buffer,
+      buffer: input.buffer,
       ownerType: ownerTypeForGeneratedKind(input.documentKind),
       ownerId: input.sourceId,
-      extension: GENERATED_MIME_EXTENSIONS[input.mimeType as keyof typeof GENERATED_MIME_EXTENSIONS],
+      extension:
+        GENERATED_MIME_EXTENSIONS[
+          input.mimeType as keyof typeof GENERATED_MIME_EXTENSIONS
+        ],
       policy: GENERATED_DOCUMENT_POLICY,
     });
 

@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
@@ -67,6 +69,11 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
       final service = await ref.read(salesServiceProvider.future);
       final loaded = await service.loadSaleDocumentForm(documentId);
       final items = await _resolveItemNames(loaded.items);
+      final attachments = await loadTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.saleOrder.apiValue,
+        entityId: documentId,
+      );
       final now = DateTime.now();
       state = SaleOrderFormState(
         isFormOpen: true,
@@ -80,6 +87,8 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
         stateOfSupply: loaded.stateOfSupply,
         items: items,
         description: loaded.description,
+        attachedImages: attachments.images,
+        attachedDocuments: attachments.documents,
       );
     } catch (error) {
       state = state.copyWith(
@@ -317,10 +326,19 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
         _draftInput(),
         itemNameToId: _itemNameToId(),
       );
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.saleOrder.apiValue,
+        entityId: document.id,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
       ref.invalidate(salesDocumentsListProvider(saleOrderListScope()));
       ref.invalidate(saleOrdersProvider);
       state = state.copyWith(
         documentId: document.id,
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
         isSaving: false,
         isFormOpen: stayOpen,
       );
@@ -338,9 +356,21 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
       final service = await ref.read(salesServiceProvider.future);
-      await service.finalizeDocumentDraft(
+      final document = await service.finalizeDocumentDraft(
         _draftInput(),
         itemNameToId: _itemNameToId(),
+      );
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.saleOrder.apiValue,
+        entityId: document.id,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
+      state = state.copyWith(
+        documentId: document.id,
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
       );
       ref.invalidate(salesDocumentsListProvider(saleOrderListScope()));
       ref.invalidate(saleOrdersProvider);

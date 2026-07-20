@@ -7,6 +7,8 @@ import { and, eq } from 'drizzle-orm';
 import { AppError } from '../../shared/errors/app-error';
 import { sendData } from '../../shared/http/response';
 import { normalizeIndianMobile } from '../../shared/utils/phone-number';
+import { GeneratedDocumentService } from '../generated-documents/generated-document.service';
+import { NotificationMediaService } from '../notifications/notification-media.service';
 import { getSharedNotificationService } from '../notifications/notification-service.factory';
 
 const paymentIdParamSchema = z.object({
@@ -97,6 +99,41 @@ export function createPaymentNotifyHandler(config: AppConfig) {
       throw new AppError('NOT_FOUND', 'Company not found', 404);
     }
 
+    const generatedDocuments = new GeneratedDocumentService({ config });
+    const mediaService = new NotificationMediaService({ config });
+
+    try {
+      await generatedDocuments.ensure(businessId, accountId, {
+        documentKind: 'receipt_pdf',
+        sourceType: 'payment',
+        sourceId: paymentId,
+      });
+    } catch (error) {
+      const message =
+        error instanceof AppError
+          ? error.message
+          : 'Failed to generate receipt PDF';
+      return sendData(reply, {
+        notified: false,
+        error: { code: 'PDF_GENERATION_FAILED', message },
+      });
+    }
+
+    const receiptMediaUrl = await mediaService.resolvePaymentReceiptPdfUrl(
+      businessId,
+      paymentId,
+    );
+
+    if (!receiptMediaUrl) {
+      return sendData(reply, {
+        notified: false,
+        error: {
+          code: 'PDF_NOT_CACHED',
+          message: 'Receipt PDF could not be prepared for WhatsApp delivery',
+        },
+      });
+    }
+
     const service = getSharedNotificationService(config);
     const result = await service.sendPaymentReceived(
       { phone: phoneResult.e164 },
@@ -105,6 +142,7 @@ export function createPaymentNotifyHandler(config: AppConfig) {
         companyName: company.name,
         amount: payment.amount,
         paymentId: payment.id,
+        mediaUrl: receiptMediaUrl,
       },
       {
         idempotencyKey: `payment_received:${payment.id}`,
@@ -115,6 +153,7 @@ export function createPaymentNotifyHandler(config: AppConfig) {
     return sendData(reply, {
       notified: result.success,
       deduped: result.deduped === true,
+      media_attached: Boolean(receiptMediaUrl && result.success),
       error: result.error
         ? { code: result.error.code, message: result.error.message }
         : undefined,

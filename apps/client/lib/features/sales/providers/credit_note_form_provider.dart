@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
@@ -52,6 +54,11 @@ class CreditNoteForm extends _$CreditNoteForm {
       final service = await ref.read(salesServiceProvider.future);
       final loaded = await service.loadSaleDocumentForm(documentId);
       final items = await _resolveItemNames(loaded.items);
+      final attachments = await loadTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.sale.apiValue,
+        entityId: documentId,
+      );
       state = CreditNoteFormState(
         documentId: loaded.documentId,
         partyId: loaded.partyId,
@@ -61,6 +68,8 @@ class CreditNoteForm extends _$CreditNoteForm {
         stateOfSupply: loaded.stateOfSupply,
         items: items,
         description: loaded.description,
+        attachedImages: attachments.images,
+        attachedDocuments: attachments.documents,
       );
     } catch (error) {
       state = state.copyWith(saveError: SalesErrorMapper.messageFor(error));
@@ -322,6 +331,13 @@ class CreditNoteForm extends _$CreditNoteForm {
         itemNameToId: _itemNameToId(),
         godownId: state.godownId,
       );
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.sale.apiValue,
+        entityId: document.id,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
       ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
       await refreshAfterSaleReturn(
         ref,
@@ -335,6 +351,8 @@ class CreditNoteForm extends _$CreditNoteForm {
       );
       state = state.copyWith(
         documentId: document.id,
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
         isSaving: false,
         isDirty: false,
       );

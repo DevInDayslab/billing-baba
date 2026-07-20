@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
@@ -173,7 +175,17 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       final service = await ref.read(purchaseServiceProvider.future);
       final loaded = await service.loadPurchaseBillForm(documentId);
       final items = await _resolveItemNames(loaded.items);
-      state = loaded.copyWith(items: items, isLoading: false);
+      final attachments = await loadTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.purchase.apiValue,
+        entityId: documentId,
+      );
+      state = loaded.copyWith(
+        items: items,
+        attachedImages: attachments.images,
+        attachedDocuments: attachments.documents,
+        isLoading: false,
+      );
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
@@ -429,9 +441,18 @@ class AddPurchaseForm extends _$AddPurchaseForm {
         input.copyWith(partyId: state.partyId),
         itemNameToId: _itemNameToId(),
       );
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.purchase.apiValue,
+        entityId: document.id,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
       state = state.copyWith(
         documentId: document.id,
         items: bindPurchaseServerLineIds(state.items, document.lines),
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
         isSaving: false,
         isDirty: false,
       );
@@ -478,9 +499,18 @@ class AddPurchaseForm extends _$AddPurchaseForm {
         );
       }
 
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.purchase.apiValue,
+        entityId: document.id,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
       state = state.copyWith(
         documentId: document.id,
         items: bindPurchaseServerLineIds(state.items, document.lines),
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
         isSaving: false,
         isDirty: false,
       );

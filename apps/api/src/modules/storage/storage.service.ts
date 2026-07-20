@@ -4,6 +4,7 @@ import { getDb } from '../../db/client';
 import type { StorageProvider } from '../../providers/storage';
 import { createStorageProvider } from '../../providers/storage';
 import { AppError } from '../../shared/errors/app-error';
+import { ImageService } from '../images/image.service';
 import {
   ALLOWED_STORAGE_MIME_TYPES,
   type AllowedStorageMimeType,
@@ -380,9 +381,39 @@ export class StorageService {
     businessId: string,
     accountId: string,
     assetId: string,
+    options: { skipVariantCleanup?: boolean } = {},
   ): Promise<void> {
     await this.assertBusinessAccess(businessId, accountId);
     const provider = this.requireProvider();
+
+    const existing = await this.repository.findById(businessId, assetId);
+    if (!existing || existing.status !== 'ready') {
+      throw new StorageNotFoundError();
+    }
+
+    if (!options.skipVariantCleanup && existing.purpose !== 'derivatives') {
+      try {
+        const imageService = new ImageService({
+          config: this.config,
+          storage: this,
+        });
+        await imageService.deleteVariantsForSource(
+          businessId,
+          accountId,
+          assetId,
+        );
+      } catch (error) {
+        this.log.warn(
+          {
+            event: 'storage.variant_cleanup_failed',
+            businessId,
+            assetId,
+            error: error instanceof Error ? error.message : 'unknown',
+          },
+          'Failed to delete image variants for source asset',
+        );
+      }
+    }
 
     const deleted = await this.repository.softDelete(businessId, assetId);
     if (!deleted) {

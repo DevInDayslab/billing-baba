@@ -163,4 +163,67 @@ describe('ImageService', () => {
       service.processSourceAsset(businessId, accountId, sourceAssetId),
     ).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
   });
+
+  test('deleteVariantsForSource removes derivative assets and variant rows', async () => {
+    const deletedAssetIds: string[] = [];
+    const softDeletedVariantIds: string[] = [];
+    let softDeletedSource = false;
+
+    const storage = {
+      deleteAsset: mock(
+        async (
+          _businessId: string,
+          _accountId: string,
+          assetId: string,
+          options?: { skipVariantCleanup?: boolean },
+        ) => {
+          deletedAssetIds.push(`${assetId}:${options?.skipVariantCleanup ? 'skip' : 'full'}`);
+        },
+      ),
+    } as unknown as StorageService;
+
+    const repository = {
+      listBySource: async () => [
+        {
+          id: 'variant-row-1',
+          businessId,
+          sourceMediaAssetId: sourceAssetId,
+          variant: 'thumbnail',
+          mediaAssetId: '77777777-7777-7777-7777-777777777777',
+          width: 150,
+          height: 112,
+          fileSize: 900,
+          mimeType: 'image/webp',
+          storageKey: 'derivatives/thumb.webp',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
+      softDeleteVariant: async (id: string) => {
+        softDeletedVariantIds.push(id);
+      },
+      softDeleteBySourceAssetId: async () => {
+        softDeletedSource = true;
+      },
+    } as unknown as ImageVariantRepository;
+
+    const service = new ImageService({
+      config: baseConfig(),
+      storage,
+      repository,
+      membership: { hasBusinessMembership: async () => true },
+    });
+
+    await service.deleteVariantsForSource(
+      businessId,
+      accountId,
+      sourceAssetId,
+    );
+
+    expect(deletedAssetIds).toEqual([
+      '77777777-7777-7777-7777-777777777777:skip',
+    ]);
+    expect(softDeletedVariantIds).toEqual(['variant-row-1']);
+    expect(softDeletedSource).toBe(true);
+  });
 });

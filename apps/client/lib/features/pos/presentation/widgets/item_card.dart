@@ -3,7 +3,7 @@ import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_category_style.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_styles.dart';
 import 'package:billing_baba/features/pos/providers/pos_cart_provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -49,11 +49,11 @@ class ItemCard extends ConsumerWidget {
                   child: item.imageUrl != null && item.imageUrl!.isNotEmpty
                       ? ClipRRect(
                           borderRadius: AppRadius.smBorder,
-                          child: CachedNetworkImage(
+                          child: AppNetworkImage(
                             imageUrl: item.imageUrl!,
                             fit: BoxFit.cover,
                             width: double.infinity,
-                            placeholder: (_, _) => Center(
+                            placeholder: Center(
                               child: Icon(
                                 PosCategoryStyle.icon(item.category),
                                 size: 36,
@@ -61,7 +61,7 @@ class ItemCard extends ConsumerWidget {
                                     .withValues(alpha: 0.7),
                               ),
                             ),
-                            errorWidget: (_, _, _) => Center(
+                            errorWidget: Center(
                               child: Icon(
                                 PosCategoryStyle.icon(item.category),
                                 size: 36,

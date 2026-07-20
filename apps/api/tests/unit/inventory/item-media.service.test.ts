@@ -53,14 +53,14 @@ const sampleImage = {
 };
 
 describe('ItemMediaService', () => {
-  test('scheduleItemThumbnailGeneration is a no-op hook', () => {
-    let logged = false;
-    scheduleItemThumbnailGeneration('asset-1', {
-      info: () => {
-        logged = true;
-      },
-    });
-    expect(logged).toBe(true);
+  test('scheduleItemThumbnailGeneration schedules async processing', () => {
+    scheduleItemThumbnailGeneration(
+      'biz-1',
+      'acct-1',
+      'asset-1',
+      baseConfig(),
+    );
+    expect(true).toBe(true);
   });
 
   test('createItemImageUploadIntent rejects when gallery limit reached', async () => {

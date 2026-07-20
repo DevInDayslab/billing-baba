@@ -1,6 +1,7 @@
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { ImageService } from '../images/image.service';
 import { StorageNotFoundError } from '../storage/storage.errors';
 import { StorageService } from '../storage/storage.service';
 import type { UploadIntent } from '../storage/storage.types';
@@ -52,26 +53,50 @@ function requireDb() {
   return db;
 }
 
-/** Hook for future thumbnail worker — no-op in Phase 3. */
+/** Generates WEBP variants asynchronously after gallery/rack uploads complete. */
 export function scheduleItemThumbnailGeneration(
+  businessId: string,
+  accountId: string,
   mediaAssetId: string,
+  config: AppConfig,
   logger?: ItemMediaServiceDeps['logger'],
 ): void {
-  logger?.info(
-    { event: 'item.thumbnail_scheduled', mediaAssetId },
-    'Item thumbnail generation scheduled',
-  );
+  void (async () => {
+    try {
+      const imageService = new ImageService({ config });
+      await imageService.processSourceAsset(
+        businessId,
+        accountId,
+        mediaAssetId,
+      );
+      logger?.info(
+        { event: 'item.thumbnail_generated', mediaAssetId },
+        'Item image variants generated',
+      );
+    } catch (error) {
+      logger?.info(
+        {
+          event: 'item.thumbnail_failed',
+          mediaAssetId,
+          error: error instanceof Error ? error.message : 'unknown',
+        },
+        'Item image variant generation failed',
+      );
+    }
+  })();
 }
 
 export class ItemMediaService extends InventoryServiceBase {
   private readonly items: ItemRepository;
   private readonly locations: ItemLocationRepository;
   private readonly storage: StorageService;
+  private readonly config: AppConfig;
   private readonly log: ItemMediaServiceDeps['logger'];
 
   constructor(deps: ItemMediaServiceDeps) {
     super();
     const db = requireDb();
+    this.config = deps.config;
     this.items = deps.itemRepository ?? new ItemRepository(db);
     this.locations = deps.locationRepository ?? new ItemLocationRepository(db);
     this.storage =
@@ -168,7 +193,13 @@ export class ItemMediaService extends InventoryServiceBase {
       updatedBy: userId ?? null,
     });
 
-    scheduleItemThumbnailGeneration(asset.id, this.log);
+    scheduleItemThumbnailGeneration(
+      businessId,
+      accountId,
+      asset.id,
+      this.config,
+      this.log,
+    );
 
     if (options.replacesImageId) {
       await this.deleteItemImageMedia(
@@ -378,7 +409,13 @@ export class ItemMediaService extends InventoryServiceBase {
       userId ?? null,
     );
 
-    scheduleItemThumbnailGeneration(asset.id, this.log);
+    scheduleItemThumbnailGeneration(
+      businessId,
+      accountId,
+      asset.id,
+      this.config,
+      this.log,
+    );
 
     if (previousAssetId && previousAssetId !== asset.id) {
       try {

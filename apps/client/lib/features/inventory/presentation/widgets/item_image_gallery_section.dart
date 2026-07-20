@@ -5,14 +5,14 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 const _itemImageAllowedMimes = {'image/png', 'image/jpeg', 'image/webp'};
-const _itemImageMaxBytes = 2 * 1024 * 1024;
+const int _itemImageMaxBytes = 2 * 1024 * 1024;
 const _maxGalleryImages = 20;
 const _thumbSize = 88.0;
 
@@ -245,7 +245,7 @@ class _ItemImageGallerySectionState
                   if (index == sorted.length) {
                     return _AddImageTile(
                       key: const ValueKey('add-image'),
-                      onTap: _isUploading ? null : () => _upload(),
+                      onTap: _isUploading ? null : _upload,
                       label: 'Add',
                     );
                   }
@@ -315,16 +315,16 @@ class _GalleryThumb extends StatelessWidget {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      CachedNetworkImage(
+                      AppNetworkImage(
                         imageUrl: image.imageUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (_, _) => ColoredBox(
+                        memCacheWidth: (_thumbSize * 2).round(),
+                        placeholder: ColoredBox(
                           color: Colors.grey.shade200,
                           child: const Center(
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                         ),
-                        errorWidget: (_, _, _) => ColoredBox(
+                        errorWidget: ColoredBox(
                           color: Colors.grey.shade200,
                           child: const Icon(Icons.broken_image_outlined),
                         ),
@@ -429,7 +429,7 @@ class _AddImageTile extends StatelessWidget {
           width: _thumbSize,
           height: _thumbSize,
           decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFFBDBDBD), style: BorderStyle.solid),
+            border: Border.all(color: const Color(0xFFBDBDBD)),
             borderRadius: AppRadius.smBorder,
             color: Colors.grey.shade50,
           ),

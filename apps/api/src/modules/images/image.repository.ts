@@ -205,4 +205,31 @@ export class ImageVariantRepository {
       storageKey: asset?.storageKey ?? '',
     };
   }
+
+  async softDeleteBySourceAssetId(sourceMediaAssetId: string): Promise<void> {
+    await this.db
+      .update(mediaImageVariants)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(mediaImageVariants.sourceMediaAssetId, sourceMediaAssetId),
+          eq(mediaImageVariants.isDeleted, false),
+        ),
+      );
+  }
+
+  async softDeleteVariant(id: string): Promise<void> {
+    await this.db
+      .update(mediaImageVariants)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(mediaImageVariants.id, id));
+  }
 }

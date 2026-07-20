@@ -587,28 +587,6 @@ export class ItemService extends InventoryServiceBase {
     return updated;
   }
 
-  async deleteItemImage(
-    businessId: string,
-    accountId: string,
-    userId: string | undefined,
-    itemId: string,
-    imageId: string,
-  ): Promise<void> {
-    await this.assertBusinessAccess(businessId, accountId);
-    await this.assertItemExists(businessId, itemId);
-
-    const deleted = await this.repository.softDeleteImage(
-      businessId,
-      itemId,
-      imageId,
-      userId ?? null,
-    );
-
-    if (!deleted) {
-      throw new AppError('NOT_FOUND', 'Item image not found', 404);
-    }
-  }
-
   async getItemTierPrices(
     businessId: string,
     accountId: string,

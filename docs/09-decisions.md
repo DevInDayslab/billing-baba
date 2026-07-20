@@ -1018,7 +1018,7 @@ Collaboration invitations and future customer messaging (payment reminders, invo
 - Select provider via `NOTIFICATION_PROVIDER=console|twilio`.
 - Keep user-visible copy in shared templates under `src/notifications/`.
 - Public invoice sharing uses cryptographically random `invoice_share_tokens` and website route `/invoice/:token`.
-- Phase 1 sends text-only WhatsApp; media/PDF deferred.
+- WhatsApp invoice/payment notify calls `GeneratedDocumentService.ensure()` before `sendMedia`; PDFs are generated server-side on cache miss (see [storage.md](04-backend/storage.md)).
 
 ### Consequences
 

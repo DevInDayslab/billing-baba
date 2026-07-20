@@ -49,12 +49,11 @@ export function createGeneratedDocumentController(config: AppConfig) {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const body = ensureGeneratedDocumentBodySchema.parse(request.body);
-        const data = await service.ensureStored(businessId, accountId, {
+        const data = await service.ensure(businessId, accountId, {
           documentKind: body.document_kind,
           sourceType: body.source_type,
           sourceId: body.source_id,
           fileName: body.file_name,
-          mimeType: body.mime_type,
           contentBase64: body.content_base64,
           forceRegenerate: body.force_regenerate,
         });

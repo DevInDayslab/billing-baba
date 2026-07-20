@@ -6,6 +6,10 @@ import { OutstandingRepository } from '../accounting/outstanding.repository';
 import type { NotificationService } from '../notifications/notification.service';
 import { NotificationMediaService } from '../notifications/notification-media.service';
 import { getSharedNotificationService } from '../notifications/notification-service.factory';
+import {
+  GeneratedDocumentService,
+} from '../generated-documents/generated-document.service';
+import { generatedKindForSalesDocumentType } from '../notifications/notification-media.service';
 import { InvoiceShareRepository } from './invoice-share.repository';
 import type {
   InvoiceShareLinkDto,
@@ -35,14 +39,26 @@ function requireValidPhone(raw: string | null | undefined): string {
   return result.e164;
 }
 
+export type InvoiceShareServiceDeps = {
+  config: AppConfig;
+  repository?: InvoiceShareRepository;
+  notificationService?: NotificationService;
+  mediaService?: NotificationMediaService;
+  generatedDocuments?: GeneratedDocumentService;
+};
+
 export class InvoiceShareService {
   private readonly repository: InvoiceShareRepository;
   private readonly outstandingRepository: OutstandingRepository;
   private readonly notificationService: NotificationService;
   private readonly mediaService: NotificationMediaService;
+  private readonly generatedDocuments: GeneratedDocumentService;
   private readonly config: AppConfig;
 
-  constructor(config: AppConfig, notificationService?: NotificationService) {
+  constructor(
+    config: AppConfig,
+    deps: Omit<InvoiceShareServiceDeps, 'config'> = {},
+  ) {
     const db = getDb();
     if (!db) {
       throw new AppError(
@@ -51,12 +67,39 @@ export class InvoiceShareService {
         503,
       );
     }
-    this.repository = new InvoiceShareRepository(db);
+    this.repository = deps.repository ?? new InvoiceShareRepository(db);
     this.outstandingRepository = new OutstandingRepository(db);
     this.notificationService =
-      notificationService ?? getSharedNotificationService(config);
-    this.mediaService = new NotificationMediaService({ config });
+      deps.notificationService ?? getSharedNotificationService(config);
+    this.mediaService =
+      deps.mediaService ?? new NotificationMediaService({ config });
+    this.generatedDocuments =
+      deps.generatedDocuments ?? new GeneratedDocumentService({ config });
     this.config = config;
+  }
+
+  /** @deprecated Use constructor(config, deps) */
+  static create(
+    config: AppConfig,
+    notificationService?: NotificationService,
+  ): InvoiceShareService {
+    return new InvoiceShareService(config, { notificationService });
+  }
+
+  private async ensureSaleDocumentPdf(
+    businessId: string,
+    accountId: string,
+    invoiceId: string,
+    documentType: string,
+  ): Promise<void> {
+    const kind = generatedKindForSalesDocumentType(documentType);
+    if (!kind) return;
+
+    await this.generatedDocuments.ensure(businessId, accountId, {
+      documentKind: kind,
+      sourceType: 'sale_document',
+      sourceId: invoiceId,
+    });
   }
 
   async ensureShareLink(
@@ -166,6 +209,19 @@ export class InvoiceShareService {
       paidAmount,
     );
 
+    if (share.createdBy) {
+      try {
+        await this.ensureSaleDocumentPdf(
+          share.businessId,
+          share.createdBy,
+          share.invoiceId,
+          document.documentType,
+        );
+      } catch {
+        // Public page still renders when PDF generation fails.
+      }
+    }
+
     const [logoUrl, pdfMeta] = await Promise.all([
       this.mediaService.resolveBrandingLogoUrl(share.businessId),
       this.mediaService.resolvePublicSaleDocumentPdfMeta(
@@ -259,11 +315,59 @@ export class InvoiceShareService {
       document.documentNumber ??
       `${document.documentSeries}-${document.id.slice(0, 8)}`;
 
+    const kind = generatedKindForSalesDocumentType(document.documentType);
+    if (!kind) {
+      return {
+        notified: false,
+        share_url: link.share_url,
+        token: link.token,
+        error: {
+          code: 'PDF_GENERATION_UNSUPPORTED',
+          message: 'This document type cannot be sent with a PDF attachment',
+        },
+      };
+    }
+
+    try {
+      await this.ensureSaleDocumentPdf(
+        businessId,
+        accountId,
+        invoiceId,
+        document.documentType,
+      );
+    } catch (error) {
+      const message =
+        error instanceof AppError
+          ? error.message
+          : 'Failed to generate invoice PDF';
+      return {
+        notified: false,
+        share_url: link.share_url,
+        token: link.token,
+        error: {
+          code: 'PDF_GENERATION_FAILED',
+          message,
+        },
+      };
+    }
+
     const pdfMediaUrl = await this.mediaService.resolveSaleDocumentPdfUrl(
       businessId,
       invoiceId,
       document.documentType,
     );
+
+    if (!pdfMediaUrl) {
+      return {
+        notified: false,
+        share_url: link.share_url,
+        token: link.token,
+        error: {
+          code: 'PDF_NOT_CACHED',
+          message: 'Invoice PDF could not be prepared for WhatsApp delivery',
+        },
+      };
+    }
 
     const result = await this.notificationService.sendSaleInvoice(
       { phone },

@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 enum BrandingImageShape { circle, rectangle }
@@ -63,15 +63,15 @@ class BrandingImageUploader extends StatelessWidget {
                     borderRadius: shape == BrandingImageShape.circle
                         ? BorderRadius.circular(height / 2)
                         : AppRadius.smBorder,
-                    child: CachedNetworkImage(
+                    child: AppNetworkImage(
                       imageUrl: imageUrl!,
                       width: width ?? double.infinity,
                       height: height,
                       fit: BoxFit.contain,
-                      placeholder: (_, _) => const Center(
+                      placeholder: const Center(
                         child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                      errorWidget: (_, _, _) => placeholder ??
+                      errorWidget: placeholder ??
                           const Icon(
                             Icons.broken_image_outlined,
                             color: AppColors.textSecondary,

@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
@@ -8,6 +10,7 @@ import 'package:billing_baba/features/purchases/models/requests/purchase_request
 import 'package:billing_baba/features/purchases/presentation/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
+import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -584,6 +587,8 @@ class PaymentOutFormState {
     this.discount = 0,
     this.description = '',
     this.showDescriptionField = false,
+    this.attachedImages = const [],
+    this.attachedDocuments = const [],
     this.showValidationErrors = false,
     this.saveError,
     this.isSaving = false,
@@ -601,6 +606,8 @@ class PaymentOutFormState {
   final double discount;
   final String description;
   final bool showDescriptionField;
+  final List<SaleFormAttachment> attachedImages;
+  final List<SaleFormAttachment> attachedDocuments;
   final bool showValidationErrors;
   final String? saveError;
   final bool isSaving;
@@ -627,6 +634,8 @@ class PaymentOutFormState {
     double? discount,
     String? description,
     bool? showDescriptionField,
+    List<SaleFormAttachment>? attachedImages,
+    List<SaleFormAttachment>? attachedDocuments,
     bool? showValidationErrors,
     String? saveError,
     bool clearSaveError = false,
@@ -645,6 +654,8 @@ class PaymentOutFormState {
       discount: discount ?? this.discount,
       description: description ?? this.description,
       showDescriptionField: showDescriptionField ?? this.showDescriptionField,
+      attachedImages: attachedImages ?? this.attachedImages,
+      attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
       isSaving: isSaving ?? this.isSaving,
@@ -719,6 +730,49 @@ class PaymentOutForm extends _$PaymentOutForm {
     state = state.copyWith(showDescriptionField: !state.showDescriptionField);
   }
 
+  void addImage(SaleFormAttachment attachment) {
+    state = state.copyWith(
+      attachedImages: [...state.attachedImages, attachment],
+    );
+  }
+
+  void removeImage(String id) {
+    state = state.copyWith(
+      attachedImages: state.attachedImages.where((item) => item.id != id).toList(),
+    );
+  }
+
+  void updateImage(String id, String name) {
+    state = state.copyWith(
+      attachedImages: [
+        for (final image in state.attachedImages)
+          if (image.id == id) image.copyWith(name: name) else image,
+      ],
+    );
+  }
+
+  void addDocument(SaleFormAttachment attachment) {
+    state = state.copyWith(
+      attachedDocuments: [...state.attachedDocuments, attachment],
+    );
+  }
+
+  void removeDocument(String id) {
+    state = state.copyWith(
+      attachedDocuments:
+          state.attachedDocuments.where((item) => item.id != id).toList(),
+    );
+  }
+
+  void updateDocument(String id, String name) {
+    state = state.copyWith(
+      attachedDocuments: [
+        for (final document in state.attachedDocuments)
+          if (document.id == id) document.copyWith(name: name) else document,
+      ],
+    );
+  }
+
   Future<({String? error, String? paymentId})> savePayment({
     bool showSuccessMessage = true,
   }) async {
@@ -769,6 +823,19 @@ class PaymentOutForm extends _$PaymentOutForm {
           .refreshAllRelated(silent: true);
       refreshAfterPaymentOut(ref);
       final paymentId = created.id;
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.paymentOut.apiValue,
+        entityId: paymentId,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
+      if (synced != null) {
+        state = state.copyWith(
+          attachedImages: synced.images,
+          attachedDocuments: synced.documents,
+        );
+      }
       state = state.copyWith(isSaving: false);
       reset();
       if (showSuccessMessage) {

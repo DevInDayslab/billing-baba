@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
@@ -615,6 +617,23 @@ class PaymentInForm extends _$PaymentInForm {
     state = _initialPaymentInFormState();
   }
 
+  Future<void> loadPaymentAttachmentsForEdit(String paymentId) async {
+    if (state.attachedImages.isNotEmpty ||
+        state.attachedDocuments.isNotEmpty) {
+      return;
+    }
+
+    final attachments = await loadTransactionAttachments(
+      ref,
+      entityType: DocumentAttachmentEntityType.paymentIn.apiValue,
+      entityId: paymentId,
+    );
+    state = state.copyWith(
+      attachedImages: attachments.images,
+      attachedDocuments: attachments.documents,
+    );
+  }
+
   Future<void> updateParty(String name, {String? partyId}) async {
     state = state.copyWith(
       party: name,
@@ -776,6 +795,19 @@ class PaymentInForm extends _$PaymentInForm {
         context: (partyId: payment.partyId, itemIds: const []),
       );
       final paymentId = created.id;
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.paymentIn.apiValue,
+        entityId: paymentId,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
+      if (synced != null) {
+        state = state.copyWith(
+          attachedImages: synced.images,
+          attachedDocuments: synced.documents,
+        );
+      }
       reset();
       // Fire-and-forget WhatsApp notify when local settings allow.
       // ignore: unawaited_futures

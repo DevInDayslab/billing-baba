@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
@@ -48,8 +50,17 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
       final service = await ref.read(purchaseServiceProvider.future);
       final loaded = await service.loadPurchaseOrderForm(documentId);
       final items = await _resolveItemNames(loaded.items);
+      final attachments = await loadTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.purchaseOrder.apiValue,
+        entityId: documentId,
+      );
       state = _mapBillFormToOrderForm(
-        loaded.copyWith(items: items),
+        loaded.copyWith(
+          items: items,
+          attachedImages: attachments.images,
+          attachedDocuments: attachments.documents,
+        ),
       ).copyWith(isLoading: false);
     } catch (error) {
       state = state.copyWith(
@@ -75,6 +86,8 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
       description: bill.description,
       items: bill.items,
       payments: bill.payments,
+      attachedImages: bill.attachedImages,
+      attachedDocuments: bill.attachedDocuments,
     );
   }
 
@@ -309,20 +322,35 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
         items: state.items,
       );
 
+      late final String savedDocumentId;
       if (finalize) {
         final document = await service.finalizeDocumentDraft(
           input,
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
         );
-        state = state.copyWith(documentId: document.id, isSaving: false);
+        savedDocumentId = document.id;
       } else {
         final document = await service.saveDocumentDraft(
           input,
           itemNameToId: _itemNameToId(),
         );
-        state = state.copyWith(documentId: document.id, isSaving: false);
+        savedDocumentId = document.id;
       }
+
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.purchaseOrder.apiValue,
+        entityId: savedDocumentId,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
+      state = state.copyWith(
+        documentId: savedDocumentId,
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
+        isSaving: false,
+      );
 
       ref.invalidate(purchaseOrdersProvider);
       await ref.read(purchaseOrdersProvider.notifier).refresh();

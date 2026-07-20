@@ -1,4 +1,3 @@
-import 'package:billing_baba/core/attachments/attachment_sync_helper.dart';
 import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -105,19 +104,6 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
     final paymentId = result.paymentId;
     if (paymentId != null) {
       _savedPaymentId = paymentId;
-      final formState = ref.read(paymentInFormProvider);
-      final service = await readDocumentAttachmentService(ref);
-      if (service != null) {
-        await syncPendingAttachments(
-          service: service,
-          entityType: DocumentAttachmentEntityType.paymentIn.apiValue,
-          entityId: paymentId,
-          attachments: [
-            ...formState.attachedImages,
-            ...formState.attachedDocuments,
-          ],
-        );
-      }
     }
 
     if (previewAfterSave && paymentId != null) {

@@ -274,4 +274,57 @@ describe('GeneratedDocumentService', () => {
       code: 'DOCUMENT_STALE',
     });
   });
+
+  test('ensure generates PDF server-side when cache miss and no client bytes', async () => {
+    let uploaded = false;
+    const repository = {
+      findBySource: async () => null,
+      upsert: async () => sampleRow({ sourceVersion: 2 }),
+      findById: async () => sampleRow({ sourceVersion: 2 }),
+      findByPublicToken: async () => null,
+      softDelete: async () => true,
+      getMediaAssetId: async () => '55555555-5555-5555-5555-555555555555',
+    } as unknown as GeneratedDocumentRepository;
+
+    const storage = {
+      storeFromBuffer: async () => {
+        uploaded = true;
+        return { id: '66666666-6666-6666-6666-666666666666' };
+      },
+      deleteAsset: async () => undefined,
+      resolveBusinessAssetUrl: async () => 'https://signed.example/generated.pdf',
+      getBusinessAssetDownloadUrl: async () => ({
+        url: 'https://signed.example/generated.pdf',
+        expiresAt: new Date().toISOString(),
+        visibility: 'private' as const,
+      }),
+    } as unknown as StorageService;
+
+    const pdfGenerator = {
+      generate: async () => ({
+        buffer: Buffer.from('%PDF-1.4 generated'),
+        fileName: 'invoice-test.pdf',
+      }),
+    };
+
+    const service = new GeneratedDocumentService({
+      config: baseConfig(),
+      repository,
+      storage,
+      membership,
+      resolveSourceVersion,
+      assertKindMatchesSource: noopKindAssert,
+      pdfGenerator: pdfGenerator as never,
+    });
+
+    const result = await service.ensure(businessId, accountId, {
+      documentKind: 'invoice_pdf',
+      sourceType: 'sale_document',
+      sourceId,
+    });
+
+    expect(uploaded).toBe(true);
+    expect(result.cached).toBe(false);
+    expect(result.download_url).toBe('https://signed.example/generated.pdf');
+  });
 });

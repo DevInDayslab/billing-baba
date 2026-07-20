@@ -1,6 +1,7 @@
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { ImageService } from '../images/image.service';
 import { StorageNotFoundError } from '../storage/storage.errors';
 import { StorageService } from '../storage/storage.service';
 import { MediaAssetRepository } from '../storage/storage.repository';
@@ -44,6 +45,7 @@ function requireDb() {
 }
 
 export class DocumentAttachmentService {
+  private readonly config: AppConfig;
   private readonly repository: DocumentAttachmentRepository;
   private readonly storage: StorageService;
   private readonly membership: Pick<MediaAssetRepository, 'hasBusinessMembership'>;
@@ -51,6 +53,7 @@ export class DocumentAttachmentService {
 
   constructor(deps: DocumentAttachmentServiceDeps) {
     const db = requireDb();
+    this.config = deps.config;
     this.repository =
       deps.repository ?? new DocumentAttachmentRepository(db);
     this.membership =
@@ -199,6 +202,24 @@ export class DocumentAttachmentService {
         options.replacesAttachmentId,
         { skipNotFound: true },
       );
+    }
+
+    if (attachmentKindFromMime(asset.mimeType) === 'image') {
+      void (async () => {
+        try {
+          const imageService = new ImageService({
+            config: this.config,
+            storage: this.storage,
+          });
+          await imageService.processSourceAsset(
+            businessId,
+            accountId,
+            asset.id,
+          );
+        } catch {
+          // Best-effort variant generation for transaction images.
+        }
+      })();
     }
 
     const [enriched] = await this.enrichRows(businessId, accountId, [

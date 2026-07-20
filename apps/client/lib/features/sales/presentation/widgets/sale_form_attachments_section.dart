@@ -4,7 +4,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/text_input_dialog.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -293,7 +293,7 @@ class _AttachmentChip extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (context) => Dialog(
-        child: CachedNetworkImage(imageUrl: url, fit: BoxFit.contain),
+        child: AppNetworkImage(imageUrl: url, fit: BoxFit.contain),
       ),
     );
   }
@@ -325,11 +325,12 @@ class _AttachmentThumb extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
-      child: CachedNetworkImage(
+      child: AppNetworkImage(
         imageUrl: url,
         width: 32,
         height: 32,
         fit: BoxFit.cover,
+        memCacheWidth: 64,
       ),
     );
   }

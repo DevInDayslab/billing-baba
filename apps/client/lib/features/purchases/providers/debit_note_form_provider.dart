@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
@@ -87,6 +89,12 @@ class DebitNoteForm extends _$DebitNoteForm {
         return saleLine;
       }).toList();
 
+      final attachments = await loadTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.purchase.apiValue,
+        entityId: documentId,
+      );
+
       state = DebitNoteFormState(
         documentId: loaded.documentId,
         partyId: loaded.partyId,
@@ -98,6 +106,8 @@ class DebitNoteForm extends _$DebitNoteForm {
         items: items.isEmpty
             ? [SaleLineItem.empty(id: _nextDebitNoteLineItemId())]
             : items,
+        attachedImages: attachments.images,
+        attachedDocuments: attachments.documents,
       );
     } catch (error) {
       state = state.copyWith(
@@ -316,18 +326,34 @@ class DebitNoteForm extends _$DebitNoteForm {
         items: _toPurchaseLines(state.items),
       );
 
+      late final String savedDocumentId;
       if (finalize) {
-        await service.finalizeDocumentDraft(
+        final document = await service.finalizeDocumentDraft(
           input,
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
         );
+        savedDocumentId = document.id;
       } else {
-        await service.saveDocumentDraft(
+        final document = await service.saveDocumentDraft(
           input,
           itemNameToId: _itemNameToId(),
         );
+        savedDocumentId = document.id;
       }
+
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.purchase.apiValue,
+        entityId: savedDocumentId,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
+      state = state.copyWith(
+        documentId: savedDocumentId,
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
+      );
 
       ref.invalidate(purchaseReturnsProvider);
       await refreshAfterPurchaseReturn(

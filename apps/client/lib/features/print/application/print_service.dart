@@ -20,14 +20,11 @@ export 'package:billing_baba/features/print/models/printable_pdf.dart'
 /// Orchestrates data loading, template rendering, and PDF output.
 class PrintService {
   PrintService({
-    required PrintDataService dataService,
-    required PrintOutputService outputService,
-    required TemplateRegistry templateRegistry,
-    required PrintSettingsRepository printSettingsRepository,
-  })  : _dataService = dataService,
-        _outputService = outputService,
-        _templateRegistry = templateRegistry,
-        _printSettingsRepository = printSettingsRepository;
+    required this._dataService,
+    required this._outputService,
+    required this._templateRegistry,
+    required this._printSettingsRepository,
+  });
 
   final PrintDataService _dataService;
   final PrintOutputService _outputService;
@@ -114,11 +111,17 @@ class PrintService {
   Future<String?> save(PrintRequest request, {String? filename}) async {
     final settings = await _loadSettings();
     final bytes = await _renderPdf(request, settings: settings);
-    return _outputService.save(
-      bytes: bytes,
+    return saveBytes(
+      bytes,
       filename: filename ?? '${_defaultFilename(request)}.pdf',
     );
   }
+
+  Future<String?> saveBytes(
+    Uint8List bytes, {
+    required String filename,
+  }) =>
+      _outputService.save(bytes: bytes, filename: filename);
 
   String _defaultFilename(PrintRequest request) {
     return switch (request) {

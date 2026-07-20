@@ -256,6 +256,33 @@ export class ImageService {
       download.expiresAt,
     );
   }
+
+  async deleteVariantsForSource(
+    businessId: string,
+    accountId: string,
+    sourceMediaAssetId: string,
+  ): Promise<void> {
+    const rows = await this.repository.listBySource(
+      businessId,
+      sourceMediaAssetId,
+    );
+
+    for (const row of rows) {
+      try {
+        await this.storage.deleteAsset(
+          businessId,
+          accountId,
+          row.mediaAssetId,
+          { skipVariantCleanup: true },
+        );
+      } catch {
+        // Best-effort derivative cleanup.
+      }
+      await this.repository.softDeleteVariant(row.id);
+    }
+
+    await this.repository.softDeleteBySourceAssetId(sourceMediaAssetId);
+  }
 }
 
 export { ImageNotFoundError, ImageValidationError };

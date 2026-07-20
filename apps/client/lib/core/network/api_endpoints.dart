@@ -216,6 +216,13 @@ abstract final class ApiEndpoints {
   static const reportsTrialBalance = '$reports/trial-balance';
   static const reportsBalanceSheet = '$reports/balance-sheet';
 
+  static const generatedDocuments = '/api/v1/generated-documents';
+  static const generatedDocumentsLookup = '$generatedDocuments/lookup';
+  static const generatedDocumentsEnsure = '$generatedDocuments/ensure';
+  static String generatedDocumentUrl(String id) => '$generatedDocuments/$id/url';
+  static String generatedDocumentRegenerate(String id) =>
+      '$generatedDocuments/$id/regenerate';
+
   static const collaboration = '/api/v1/collaboration';
   static const collaborationInvitations = '$collaboration/invitations';
   static const collaborationCompaniesShared =

@@ -8,13 +8,11 @@ Provider-agnostic object storage platform for Billing Baba. Binary files live in
 
 ## Phase 1 scope
 
-This document describes the **storage foundation** only:
+This document covers the **production storage platform**: provider abstraction, metadata, generated documents, image variants, transaction attachments, and WhatsApp media resolution.
 
-- `StorageProvider` / `RailwayS3Provider`
-- `StorageService` + `media_assets`
-- Generic `/storage/*` API (presigned upload / complete / download / delete)
+**Implemented:** branding assets, item gallery/rack photos, polymorphic transaction attachments, generated PDFs (client upload + server `ensure()`), image variant processing, delete cascade for derivatives.
 
-**Not in Phase 1:** company logo, item images, party attachments, expense receipts, OCR persistence, WhatsApp media, invoice PDFs, Flutter clients, thumbnails, compression.
+**Out of scope (future):** party/KYC attachments, offline attachment queue, CDN fronting, orphan S3 GC sweeper.
 
 ## Architecture
 
@@ -348,17 +346,21 @@ Storage paths use `reports`, `sales`, `purchases`, or `payments` purpose segment
 
 ## Phase 8 — WhatsApp media
 
-Business modules resolve media URLs via **`NotificationMediaService`** before calling **`NotificationService`**. Notification code never uploads files — it only passes signed URLs to the provider.
+Business modules resolve media via **`GeneratedDocumentService.ensure()`** (notify/public) or **`NotificationMediaService`** (URL lookup only). Notification code never uploads files — it only passes signed URLs to the provider.
 
-### Flow
+### Flow (WhatsApp invoice notify)
 
 ```
-InvoiceShareService (or future payment/share modules)
-  → NotificationMediaService.resolve*PdfUrl / resolveBrandingLogoUrl
-  → StorageService.getBusinessAssetDownloadUrl (signed URL)
-  → NotificationService.safeSendMedia()
-  → TwilioWhatsAppProvider.sendMedia({ mediaUrl })
+POST /sales-documents/:id/notify
+  → InvoiceShareService.ensureSaleDocumentPdf()
+  → GeneratedDocumentService.ensure()   // lookup → server PDF or client bytes
+  → StorageService.storeFromBuffer (on miss)
+  → NotificationMediaService.resolveSaleDocumentPdfUrl()
+  → NotificationService.sendSaleInvoice({ mediaUrl })
+  → TwilioWhatsAppProvider.sendMedia
 ```
+
+If PDF ensure/generation fails, the API returns `{ notified: false, error: { code: 'PDF_GENERATION_FAILED' } }` and **does not** call `sendMedia` without a URL.
 
 ### Supported media
 
@@ -432,6 +434,31 @@ POST /storage/images/:sourceAssetId/process
 
 Re-processing overwrites existing derivative objects at the same storage key.
 
+### Auto-trigger (production)
+
+After a ready image upload completes, variants are generated **asynchronously** (failures are logged; upload completion still succeeds):
+
+- Item gallery + rack photo: `ItemMediaService.scheduleItemThumbnailGeneration` → `ImageService.processSourceAsset`
+- Transaction attachment images: `DocumentAttachmentService.completeUpload` when `attachment_kind === 'image'`
+
+### Delete cascade
+
+`StorageService.deleteAsset` soft-deletes the source asset, deletes the S3 object, and calls `ImageService.deleteVariantsForSource` first (skipped for `purpose: derivatives` and when `skipVariantCleanup: true`). Derivative `media_assets` rows and S3 objects are removed; `media_image_variants` rows are soft-deleted.
+
+## Generated documents — server-side PDF ensure
+
+`POST /generated-documents/ensure` orchestrates cache lookup, optional client bytes (`content_base64`), or **server PDF generation** via `GeneratedDocumentPdfGenerator` (pdfkit MVP templates).
+
+| Step | Behavior |
+|------|----------|
+| 1 | `lookup` — return cached row when `source_version` matches |
+| 2 | Client bytes provided | existing `ensureStored` path (Flutter offline sync) |
+| 3 | Cache miss, no bytes | render PDF from DB entities → `storeFromBuffer` |
+| 4 | Return row with signed + public URLs |
+
+Server templates mirror public invoice data — not Flutter print pixel-parity (known gap).
+
 ## Future phases
 
 6. Backup archives, OCR persistence  
+7. Pending-upload TTL sweeper, full orphan S3 GC
