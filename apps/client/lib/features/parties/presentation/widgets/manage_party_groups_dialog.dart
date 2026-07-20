@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/text_input_dialog.dart';
+import 'package:billing_baba/features/parties/providers/parties_selection_providers.dart';
 import 'package:billing_baba/features/parties/providers/party_groups_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
@@ -61,6 +62,12 @@ class _ManagePartyGroupsDialogState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not rename group')),
       );
+      return;
+    }
+
+    final trimmed = newName.trim();
+    if (ref.read(selectedPartyGroupProvider) == currentName) {
+      ref.read(selectedPartyGroupProvider.notifier).selected = trimmed;
     }
   }
 

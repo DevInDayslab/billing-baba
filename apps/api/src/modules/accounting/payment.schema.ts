@@ -41,6 +41,8 @@ export const createPaymentBodySchema = z.object({
   party_id: z.uuid(),
   direction: z.enum(paymentDirectionValues),
   amount: moneyString,
+  discount_amount: moneyString.optional(),
+  balance_after_payment: moneyString.optional(),
   payment_mode: z.enum(paymentModeValues),
   payment_date: z.iso.datetime().optional(),
   reference_number: z.string().trim().max(100).optional().nullable(),

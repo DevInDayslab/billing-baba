@@ -151,7 +151,8 @@ class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
                         ),
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
-                          child: ReportSyncScrollTable(
+                          child: ReportTableArea(
+                            child: ReportSyncScrollTable(
                             minWidth: 800,
                             headerChildren: const [
                               Expanded(
@@ -197,6 +198,7 @@ class _DayBookReportContentState extends ConsumerState<DayBookReportContent> {
                               ),
                             ),
                           ),
+                        ),
                         ),
                         ReportMoneySummaryFooter(
                           items: [

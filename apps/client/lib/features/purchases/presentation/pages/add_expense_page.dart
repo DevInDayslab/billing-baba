@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
@@ -7,12 +8,14 @@ import 'package:billing_baba/features/inventory/providers/inventory_items_provid
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
+import 'package:billing_baba/features/purchases/presentation/utils/transaction_form_save_flow.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/add_expense_category_dialog.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/add_expense_footer.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/expense_line_items_table.dart';
 import 'package:billing_baba/features/purchases/presentation/widgets/purchase_page_title_bar.dart';
+import 'package:billing_baba/features/purchases/presentation/widgets/shared/transaction_form_busy_overlay.dart';
 import 'package:billing_baba/features/purchases/providers/add_expense_form_provider.dart';
-import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
+import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
@@ -21,8 +24,6 @@ import 'package:billing_baba/features/sales/presentation/widgets/sale_single_dat
 import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _addExpenseRed = Color(0xFFD32F2F);
@@ -48,7 +49,6 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
   @override
   Widget build(BuildContext context) {
     final form = ref.watch(addExpenseFormProvider(expenseId: widget.expenseId));
-    final isBusy = form.isSaving || form.isLoading;
 
     return Stack(
       children: [
@@ -59,8 +59,14 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const PurchasePageTitleBar(
+                PurchasePageTitleBar(
                   currentRoute: AppRoutes.purchaseExpenses,
+                  onBack: () => leaveTransactionFormPage(
+                    context: context,
+                    isDirty: form.isDirty,
+                    isSaving: form.isSaving,
+                    listRoute: AppRoutes.purchaseExpenses,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 DecoratedBox(
@@ -111,13 +117,15 @@ class _AddExpensePageState extends ConsumerState<AddExpensePage> {
             ),
           ),
         ),
-        if (isBusy)
-          Positioned.fill(
-            child: ColoredBox(
-              color: Colors.black.withValues(alpha: 0.12),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
+        Positioned.fill(
+          child: TransactionFormBusyOverlay(
+            isLoading: form.isLoading,
+            isSaving: form.isSaving,
+            savingLabel: widget.expenseId == null
+                ? 'Saving expense…'
+                : 'Updating expense…',
           ),
+        ),
       ],
     );
   }
@@ -351,6 +359,15 @@ class _BottomActionBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
+          if (expenseId != null)
+            TextButton.icon(
+              onPressed: isSaving
+                  ? null
+                  : () => _handleDelete(context, ref),
+              icon: const Icon(Icons.delete_outline, size: 16),
+              label: const Text('Delete', style: TextStyle(fontSize: 13)),
+              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            ),
           const Spacer(),
           if (resolvedId != null) ...[
             OutlinedButton.icon(
@@ -376,7 +393,14 @@ class _BottomActionBar extends ConsumerWidget {
             const SizedBox(width: AppSpacing.sm),
           ],
           OutlinedButton(
-            onPressed: isSaving ? null : () => _handleCancel(context, ref),
+            onPressed: isSaving
+                ? null
+                : () => leaveTransactionFormPage(
+                    context: context,
+                    isDirty: form.isDirty,
+                    isSaving: form.isSaving,
+                    listRoute: AppRoutes.purchaseExpenses,
+                  ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               side: const BorderSide(color: _cardBorder),
@@ -424,44 +448,33 @@ class _BottomActionBar extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleCancel(BuildContext context, WidgetRef ref) async {
-    final form = ref.read(addExpenseFormProvider(expenseId: expenseId));
-    if (form.isDirty) {
-      final discard = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Discard changes?'),
-          content: const Text(
-            'You have unsaved changes. Are you sure you want to leave?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Keep editing'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Discard'),
-            ),
-          ],
+  Future<void> _handleDelete(BuildContext context, WidgetRef ref) async {
+    if (expenseId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete expense?'),
+        content: const Text(
+          'This expense will be permanently removed. This action cannot be undone.',
         ),
-      );
-      if (discard != true || !context.mounted) return;
-    }
-    if (context.mounted) context.pop();
-  }
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
 
-  Future<void> _handleSave(
-    BuildContext context,
-    WidgetRef ref,
-    AddExpenseForm notifier,
-  ) async {
-    if (ref.read(addExpenseFormProvider(expenseId: expenseId)).isSaving) {
-      return;
-    }
-
-    final form = ref.read(addExpenseFormProvider(expenseId: expenseId));
-    final error = await notifier.saveExpense();
+    final error = await ref
+        .read(expenseTransactionsProvider.notifier)
+        .deleteExpense(expenseId!);
     if (!context.mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -470,17 +483,28 @@ class _BottomActionBar extends ConsumerWidget {
       return;
     }
 
-    if (form.gstEnabled && expenseId == null) {
-      ref
-          .read(purchaseBillSaveSuccessMessageProvider.notifier)
-          .setMessage(
-            'Purchase bill saved successfully.',
-          );
-      context.go(AppRoutes.purchaseBills);
-      return;
-    }
+    ref
+        .read(expenseSaveSuccessMessageProvider.notifier)
+        .setMessage('Expense deleted successfully.');
+    returnToTransactionList(context, AppRoutes.purchaseExpenses);
+  }
 
-    context.go(AppRoutes.purchaseExpenses);
+  Future<void> _handleSave(
+    BuildContext context,
+    WidgetRef ref,
+    AddExpenseForm notifier,
+  ) async {
+    final form = ref.read(addExpenseFormProvider(expenseId: expenseId));
+    final listRoute = form.gstEnabled && expenseId == null
+        ? AppRoutes.purchaseBills
+        : AppRoutes.purchaseExpenses;
+
+    await handleTransactionFormSave(
+      context: context,
+      isSaving: form.isSaving,
+      save: notifier.saveExpense,
+      listRoute: listRoute,
+    );
   }
 }
 

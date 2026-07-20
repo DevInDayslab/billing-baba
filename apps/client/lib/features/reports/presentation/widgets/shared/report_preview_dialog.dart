@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/platform_file_output.dart';
 import 'package:billing_baba/features/print/application/print_output_service.dart';
+import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/models/printable_pdf.dart';
 import 'package:billing_baba/features/export/presentation/widgets/export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
@@ -188,8 +189,14 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
   Future<void> _print(BuildContext context) async {
     final bytes = await _buildPdfBytes();
     if (!context.mounted) return;
-    await _printOutput.printDocument(
-      PrintablePdf(bytes: bytes, name: widget.filenameBase),
+    await _printOutput.printToDevice(
+      context: context,
+      document: PrintablePdf(
+        bytes: bytes,
+        name: widget.filenameBase,
+        profile: PdfPageProfile.transactionCompact,
+      ),
+      format: PdfPageProfile.transactionCompact.printFormat,
     );
   }
 
@@ -557,13 +564,15 @@ class _ReportPdfPreviewPane extends StatelessWidget {
         meta: meta,
       ),
       pdfFileName: '$filenameBase.pdf',
+      initialPageFormat: PdfPageProfile.transactionCompact.pageFormat,
+      maxPageWidth: PdfPageProfile.transactionCompact.previewMaxPageWidth,
       allowPrinting: false,
       allowSharing: false,
       useActions: false,
       canChangePageFormat: false,
       canChangeOrientation: false,
       canDebug: false,
-      dynamicLayout: false,
+      dynamicLayout: PdfPageProfile.transactionCompact.previewDynamicLayout,
       loadingWidget: const Center(child: CircularProgressIndicator()),
       onError: (context, error) => Center(
         child: Padding(

@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/utils/platform_file_output.dart';
 import 'package:billing_baba/features/print/models/printable_pdf.dart';
+import 'package:billing_baba/features/print/presentation/widgets/document_pdf_preview_dialog.dart';
 import 'package:billing_baba/features/settings/utils/thermal_pdf_page_format.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,25 +11,35 @@ enum _ThermalOutputAction { savePdf, saveImage, printToPrinter }
 
 /// Native print, preview, share, and save for generated PDF bytes.
 class PrintOutputService {
-  /// Opens the PDF in the system's default PDF viewer.
-  ///
-  /// `context` is accepted for call-site compatibility but is not used.
+  /// Opens an in-app PDF preview for [bytes].
   Future<void> preview({
     required BuildContext context,
     required Uint8List bytes,
     String name = 'document',
     PdfPageFormat? format,
+    int copies = 1,
   }) {
     return previewDocument(
+      context,
       PrintablePdf(bytes: bytes, name: name),
+      format: format,
+      copies: copies,
     );
   }
 
-  /// Opens a pre-rendered PDF in the system's default PDF viewer.
-  Future<void> previewDocument(PrintablePdf document) {
-    return PlatformFileOutput.openInDefaultViewer(
-      bytes: document.bytes,
-      filename: document.filename,
+  /// Opens an in-app PDF preview with Print, Download, and Share actions.
+  Future<void> previewDocument(
+    BuildContext context,
+    PrintablePdf document, {
+    PdfPageFormat? format,
+    int copies = 1,
+  }) {
+    if (!context.mounted) return Future.value();
+    return showDocumentPdfPreviewDialog(
+      context: context,
+      document: document,
+      copies: copies,
+      outputService: this,
     );
   }
 
@@ -50,29 +61,68 @@ class PrintOutputService {
     }
 
     await printDocument(
-      PrintablePdf(bytes: bytes, name: name),
+      context: context,
+      document: PrintablePdf(bytes: bytes, name: name),
       format: format,
     );
   }
 
-  /// Shows the platform-native print dialog for a pre-rendered PDF.
-  ///
-  /// Uses [Printing.layoutPdf] when the platform supports printing. Falls back
-  /// to the native share sheet, then to the default PDF viewer so the user can
-  /// print from there on unsupported or constrained devices.
-  Future<void> printDocument(
-    PrintablePdf document, {
+  /// Opens the in-app PDF preview for a pre-rendered document.
+  Future<void> printDocument({
+    required BuildContext context,
+    required PrintablePdf document,
     PdfPageFormat? format,
+    int copies = 1,
+  }) {
+    return previewDocument(
+      context,
+      document,
+      format: format,
+      copies: copies,
+    );
+  }
+
+  /// Sends [document] to a selected printer without the OS print setup dialog.
+  ///
+  /// Falls back to share, then save, when no printer is available.
+  Future<void> printToDevice({
+    required BuildContext context,
+    required PrintablePdf document,
+    PdfPageFormat? format,
+    int copies = 1,
   }) async {
+    final pageFormat =
+        format ?? document.profile.printFormat;
     final info = await Printing.info();
 
-    if (info.canPrint) {
-      await Printing.layoutPdf(
-        onLayout: (_) async => document.bytes,
-        name: document.name,
-        format: format ?? PdfPageFormat.standard,
-        dynamicLayout: false,
+    if (info.canListPrinters && context.mounted) {
+      final printer = await Printing.pickPrinter(
+        context: context,
+        title: 'Select printer',
       );
+      if (printer == null) return;
+
+      for (var copy = 0; copy < copies; copy++) {
+        await Printing.directPrintPdf(
+          printer: printer,
+          onLayout: (_) async => document.bytes,
+          name: document.name,
+          format: pageFormat,
+          dynamicLayout: false,
+        );
+      }
+      return;
+    }
+
+    if (info.canPrint && !PlatformFileOutput.isDesktop) {
+      for (var copy = 0; copy < copies; copy++) {
+        await Printing.layoutPdf(
+          onLayout: (_) async => document.bytes,
+          name: document.name,
+          format: pageFormat,
+          dynamicLayout: false,
+        );
+      }
       return;
     }
 
@@ -81,12 +131,32 @@ class PrintOutputService {
         bytes: document.bytes,
         filename: document.filename,
       );
-      if (shared) return;
+      if (shared) {
+        if (context.mounted) {
+          _showPrintFallbackSnackBar(
+            context,
+            'No printer available. Shared PDF instead.',
+          );
+        }
+        return;
+      }
     }
 
-    await PlatformFileOutput.openInDefaultViewer(
+    final path = await save(
       bytes: document.bytes,
       filename: document.filename,
+    );
+    if (!context.mounted) return;
+
+    final message = path != null
+        ? 'No printer available. PDF saved to $path'
+        : 'No printer available. Download or share the PDF instead.';
+    _showPrintFallbackSnackBar(context, message);
+  }
+
+  void _showPrintFallbackSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 

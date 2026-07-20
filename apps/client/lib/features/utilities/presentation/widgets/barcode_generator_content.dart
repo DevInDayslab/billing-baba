@@ -5,6 +5,7 @@ import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/print/application/print_exception.dart';
+import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/models/printable_pdf.dart';
 import 'package:billing_baba/features/print/presentation/providers/print_providers.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
@@ -47,12 +48,13 @@ class _BarcodeGeneratorContentState
           layout: layout,
         ),
         name: 'barcode-labels',
+        profile: PdfPageProfile.barcode,
       );
       if (!mounted) return;
 
       final output = ref.read(printOutputServiceProvider);
       if (preview) {
-        await output.previewDocument(document);
+        await output.previewDocument(context, document);
       } else {
         final path = await output.save(
           bytes: document.bytes,

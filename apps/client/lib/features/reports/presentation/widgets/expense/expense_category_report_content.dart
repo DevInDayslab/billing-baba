@@ -3,6 +3,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
@@ -10,32 +11,15 @@ import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
-class ExpenseCategoryReportContent extends ConsumerStatefulWidget {
+class ExpenseCategoryReportContent extends ConsumerWidget {
   const ExpenseCategoryReportContent({super.key});
 
   @override
-  ConsumerState<ExpenseCategoryReportContent> createState() =>
-      _ExpenseCategoryReportContentState();
-}
-
-class _ExpenseCategoryReportContentState
-    extends ConsumerState<ExpenseCategoryReportContent> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
-  DateTimeRange _dateRange = DateTimeRange(
-    start: DateTime(2026, 7),
-    end: DateTime(2026, 7, 31),
-  );
-
-  static final _dateFormat = DateFormat('dd/MM/yyyy');
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final reportAsync = ref.watch(expenseByCategoryReportProvider);
 
     return ReportAsyncBody(
@@ -125,71 +109,9 @@ class _ExpenseCategoryReportContentState
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  child: SingleChildScrollView(
+                  child: const SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'From',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        const Icon(
-                          Icons.calendar_today_outlined,
-                          size: 16,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _dateFormat.format(_dateRange.start),
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        const Text(
-                          'to',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        SaleDateRangePickerAnchor(
-                          key: _datePickerKey,
-                          initialRange: _dateRange,
-                          onRangeSelected: (range) =>
-                              setState(() => _dateRange = range),
-                          child: InkWell(
-                            onTap: () => _datePickerKey.currentState?.toggle(),
-                            borderRadius: BorderRadius.circular(4),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 2,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.calendar_today_outlined,
-                                    size: 16,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _dateFormat.format(_dateRange.end),
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: ReportFromToDateFilter(betweenLabel: 'From'),
                   ),
                 ),
               ),
@@ -251,7 +173,8 @@ class _ExpenseCategoryReportContentState
                           ),
                         ),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -288,8 +211,7 @@ class _ExpenseCategoryReportContentState
                                     ),
                                   ],
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     headerChildren: const [
                                       Expanded(
                                         child: ReportAlignedHeaderCell(
@@ -335,7 +257,8 @@ class _ExpenseCategoryReportContentState
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

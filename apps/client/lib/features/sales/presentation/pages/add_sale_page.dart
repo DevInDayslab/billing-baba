@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/close_form_dialog.dart';
@@ -25,8 +26,6 @@ import 'package:billing_baba/features/sales/providers/sale_tabs_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _addressFieldLines = 3;
@@ -150,11 +149,7 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
   }
 
   void _navigateBackToSaleInvoices() {
-    if (context.canPop()) {
-      context.pop();
-      return;
-    }
-    context.go(AppRoutes.saleInvoices);
+    returnToTransactionList(context, AppRoutes.saleInvoices);
   }
 
   void _navigateToSaleInvoices() {
@@ -223,22 +218,10 @@ class _AddSalePageState extends ConsumerState<AddSalePage> {
                 AppSpacing.md,
                 0,
               ),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: _handleClose,
-                    icon: const Icon(Icons.arrow_back),
-                    color: AppColors.textSecondary,
-                    tooltip: 'Back',
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  Expanded(
-                    child: SalePageTitleBar(
-                      currentRoute: AppRoutes.saleInvoices,
-                      onSettingsTap: () {},
-                    ),
-                  ),
-                ],
+              child: SalePageTitleBar(
+                currentRoute: AppRoutes.saleInvoices,
+                onSettingsTap: () {},
+                onBack: _handleClose,
               ),
             ),
             if (_supportsTabs) ...[

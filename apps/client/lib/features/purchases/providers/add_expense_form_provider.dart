@@ -5,6 +5,7 @@ import 'package:billing_baba/features/purchases/application/expense_service.dart
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/expense_form_model.dart';
+import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/models/mappers/purchase_document_mapper.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
@@ -388,6 +389,9 @@ class AddExpenseForm extends _$AddExpenseForm {
 
     ref.invalidate(purchaseBillsProvider);
     await ref.read(purchaseBillsProvider.notifier).refresh();
+    ref
+        .read(purchaseBillSaveSuccessMessageProvider.notifier)
+        .setMessage('Purchase bill saved successfully.');
     return null;
   }
 
@@ -405,12 +409,20 @@ class AddExpenseForm extends _$AddExpenseForm {
       return 'Category is required';
     }
 
+    final categories = await ref.read(expenseCategoriesProvider.future);
+    final selectedCategory =
+        categories.where((category) => category.id == categoryId).firstOrNull;
+    if (selectedCategory?.variant.isSyncOnly == true) {
+      return 'Loyalty redeemed and payment-in discount expenses are '
+          'created automatically';
+    }
+
     state = state.copyWith(isSaving: true, clearSaveError: true);
 
     try {
       if (state.gstEnabled && state.expenseId == null) {
         final gstError = await _saveGstExpenseAsPurchaseBill();
-        state = state.copyWith(isSaving: false);
+        state = state.copyWith(isSaving: false, isDirty: gstError == null);
         return gstError;
       }
 
@@ -471,7 +483,7 @@ class AddExpenseForm extends _$AddExpenseForm {
       ref
           .read(expenseSaveSuccessMessageProvider.notifier)
           .setMessage('Expense saved successfully');
-      state = state.copyWith(isSaving: false);
+      state = state.copyWith(isSaving: false, isDirty: false);
       ref.invalidateSelf();
       return null;
     } catch (error) {
@@ -498,7 +510,10 @@ double addExpenseTotalTax(Ref ref, {String? expenseId}) {
 List<String> expenseCategoryOptions(Ref ref) {
   final categoriesAsync = ref.watch(expenseCategoriesProvider);
   return categoriesAsync.maybeWhen(
-    data: (categories) => categories.map((c) => c.name).toList(),
+    data: (categories) => categories
+        .where((category) => category.variant.isManual)
+        .map((c) => c.name)
+        .toList(),
     orElse: () => const <String>[],
   );
 }

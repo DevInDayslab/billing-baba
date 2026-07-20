@@ -310,13 +310,16 @@ class _CategoryDetailPanel extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: transactions.isEmpty
-                ? const InventoryListEmptyState(
-                    message: 'No transactions in this category',
+                ? InventoryListEmptyState(
+                    message: category.variant.isSyncOnly
+                        ? 'Transactions appear here automatically when '
+                              'loyalty points are redeemed or payment-in '
+                              'discounts are given'
+                        : 'No transactions in this category',
                   )
                 : ExpenseResizableTable(
                     transactions: transactions,
-                    isLoyalty: category.variant ==
-                        ExpenseCategoryVariant.loyaltyRedeemed,
+                    variant: category.variant,
                   ),
           ),
         ),

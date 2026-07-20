@@ -164,7 +164,8 @@ class _CashFlowReportContentState extends ConsumerState<CashFlowReportContent> {
                         ),
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
-                          child: ReportSyncScrollTable(
+                          child: ReportTableArea(
+                            child: ReportSyncScrollTable(
                             minWidth: 900,
                             headerChildren: const [
                               ReportAlignedHeaderCell(label: 'DATE', width: 90),
@@ -219,6 +220,7 @@ class _CashFlowReportContentState extends ConsumerState<CashFlowReportContent> {
                               ),
                             ),
                           ),
+                        ),
                         ),
                         ReportMoneySummaryFooter(
                           items: [

@@ -43,6 +43,85 @@ void main() {
       expect(model.balance, 0);
     });
 
+    test('maps loyalty redeemed category variant', () {
+      const dto = ExpenseCategoryDto(
+        id: 'cat-loyalty',
+        name: 'Loyalty Redeemed',
+        categoryType: 'indirect',
+        isSystem: true,
+        expenseCount: 1,
+        totalAmount: '100.0000',
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      );
+
+      final model = ExpenseMapper.toCategoryModel(dto);
+      expect(model.variant, ExpenseCategoryVariant.loyaltyRedeemed);
+    });
+
+    test('maps payment-in discount category variant', () {
+      const dto = ExpenseCategoryDto(
+        id: 'cat-discount',
+        name: 'Payment-in Discount',
+        categoryType: 'indirect',
+        isSystem: true,
+        expenseCount: 2,
+        totalAmount: '50.0000',
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      );
+
+      final model = ExpenseMapper.toCategoryModel(dto);
+      expect(model.variant, ExpenseCategoryVariant.paymentInDiscount);
+    });
+
+    test('maps loyalty expense transaction fields', () {
+      const dto = ExpenseDto(
+        id: '550e8400-e29b-41d4-a716-446655440002',
+        categoryId: 'cat-loyalty',
+        amount: '150.0000',
+        expenseDate: '2026-07-05',
+        partyName: 'Ravi Traders',
+        categoryName: 'Loyalty Redeemed',
+        referenceNumber: 'INV-1001',
+        loyaltyPoints: '150.0000',
+        sourceReferenceId: 'sale-1',
+        sourceReferenceType: 'sale_loyalty_redemption',
+        paymentMode: 'cash',
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      );
+
+      final model = ExpenseMapper.toTransactionModel(dto);
+      expect(model.loyaltyPoints, 150);
+      expect(model.loyaltyValue, 150);
+      expect(model.transactionNo, 'INV-1001');
+      expect(model.categoryVariant, ExpenseCategoryVariant.loyaltyRedeemed);
+      expect(model.isSyncManaged, isTrue);
+    });
+
+    test('maps payment-in discount transaction fields', () {
+      const dto = ExpenseDto(
+        id: '550e8400-e29b-41d4-a716-446655440003',
+        categoryId: 'cat-discount',
+        amount: '25.0000',
+        expenseDate: '2026-07-05',
+        partyName: 'Ravi Traders',
+        categoryName: 'Payment-in Discount',
+        referenceNumber: 'PAY-1001',
+        sourceReferenceId: 'pay-1',
+        sourceReferenceType: 'payment_in_discount',
+        paymentMode: 'cash',
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      );
+
+      final model = ExpenseMapper.toTransactionModel(dto);
+      expect(model.categoryVariant, ExpenseCategoryVariant.paymentInDiscount);
+      expect(model.isSyncManaged, isTrue);
+      expect(model.amount, 25);
+    });
+
     test('maps unpaid expense when payment mode is missing', () {
       const dto = ExpenseDto(
         id: '550e8400-e29b-41d4-a716-446655440001',

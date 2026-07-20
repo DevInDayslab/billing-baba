@@ -86,6 +86,8 @@ abstract final class ReportMapper {
       date: DateTime.tryParse(dto.date) ?? DateTime.now(),
       type: dto.type,
       refNo: dto.refNo,
+      debit: _parseAmount(dto.debit),
+      credit: _parseAmount(dto.credit),
       total: amount,
       balance: _parseAmount(dto.balance),
     );

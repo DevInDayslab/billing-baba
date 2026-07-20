@@ -1,4 +1,3 @@
-import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/application/party_delete_status_service.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
@@ -28,62 +27,7 @@ abstract final class PartyActions {
     WidgetRef ref,
     PartyModel party,
   ) async {
-    final result = await showEditPartyDialog(context, party: party);
-    if (result == null || !context.mounted) return;
-
-    final messenger = ScaffoldMessenger.maybeOf(context);
-
-    try {
-      await ref
-          .read(partyListProvider.notifier)
-          .updateParty(
-            party.id,
-            result,
-            isActive: party.isActive,
-          );
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Party "${result.partyName}" updated successfully',
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          backgroundColor: _successSnackBarColor,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on PartyOfflineException {
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Update saved offline. It will sync when you are back online.',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on ApiValidationException catch (e) {
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on PartyException catch (e) {
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    await showEditPartyDialog(context, party: party);
   }
 
   static Future<void> delete(
@@ -229,56 +173,7 @@ abstract final class PartyActions {
     WidgetRef ref,
     PartyModel party,
   ) async {
-    final result = await showDuplicatePartyDialog(context, party: party);
-    if (result == null || !context.mounted) return;
-
-    final messenger = ScaffoldMessenger.maybeOf(context);
-
-    try {
-      await ref.read(partyListProvider.notifier).createParty(result);
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text(
-            'Party "${result.partyName}" saved successfully',
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          backgroundColor: _successSnackBarColor,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on PartyOfflineException {
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Party saved offline. It will sync when you are back online.',
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on ApiValidationException catch (e) {
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on PartyException catch (e) {
-      if (!context.mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    await showDuplicatePartyDialog(context, party: party);
   }
 
   static Future<void> receivePayment(

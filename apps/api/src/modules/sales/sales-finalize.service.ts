@@ -10,7 +10,9 @@ import {
   recordMovementAndUpdateStock,
 } from '../inventory/inventory-stock.service';
 import { LoyaltyService } from '../loyalty/loyalty.service';
+import { RUPEES_PER_REDEEMED_POINT } from '../loyalty/loyalty.utils';
 import type { SaleLoyaltyResult } from '../loyalty/loyalty.types';
+import { syncLoyaltyRedeemedExpense } from '../purchases/expense-sync.service';
 import type { SalesDocumentRepository } from './sales-document.repository';
 import type { SalesDocumentType } from './sales-document.types';
 import { assignDocumentNumber } from './sales-numbering.service';
@@ -286,6 +288,23 @@ export async function finalizeSalesDocument(
           userId: params.userId,
         });
       }
+    }
+
+    if (document.partyId && loyalty) {
+      const redeemedPoints = parseFloat(loyalty.redeemed_points || '0');
+      const loyaltyValue = normalizeMoney(
+        redeemedPoints * RUPEES_PER_REDEEMED_POINT,
+      );
+      await syncLoyaltyRedeemedExpense(tx as unknown as Database, {
+        businessId: params.businessId,
+        userId: params.userId,
+        documentId: params.documentId,
+        documentNumber,
+        partyId: document.partyId,
+        expenseDate: document.documentDate.toISOString().slice(0, 10),
+        loyaltyPointsRedeemed: loyalty.redeemed_points,
+        loyaltyValueRedeemed: loyaltyValue,
+      });
     }
 
     return {

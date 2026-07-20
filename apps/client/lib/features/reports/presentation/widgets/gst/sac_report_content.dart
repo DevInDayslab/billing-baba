@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_data_row.dart';
@@ -9,7 +10,6 @@ import 'package:billing_baba/features/reports/providers/report_filters_provider.
 import 'package:billing_baba/features/reports/providers/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,20 +22,8 @@ class SacReportContent extends ConsumerStatefulWidget {
 }
 
 class _SacReportContentState extends ConsumerState<SacReportContent> {
-  final _datePickerKey = GlobalKey<SaleDateRangePickerAnchorState>();
   String _timeRange = 'This Month';
   String _firm = 'All Firms';
-  late DateTimeRange _dateRange;
-
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _dateRange = DateTimeRange(
-      start: DateTime(now.year, now.month),
-      end: DateTime(now.year, now.month + 1, 0),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,23 +97,7 @@ class _SacReportContentState extends ConsumerState<SacReportContent> {
                         onSelected: (value) =>
                             setState(() => _timeRange = value),
                       ),
-                      const Text(
-                        'Between',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      SaleDateRangePickerAnchor(
-                        key: _datePickerKey,
-                        initialRange: _dateRange,
-                        onRangeSelected: (range) =>
-                            setState(() => _dateRange = range),
-                        child: SaleFilterChip(
-                          label: formatSaleDateRangeLabel(_dateRange),
-                          onTap: () => _datePickerKey.currentState?.toggle(),
-                        ),
-                      ),
+                      const ReportDateRangeChipFilter(),
                       SaleFilterDropdown(
                         label: _firm,
                         options: const ['All Firms', 'Firm A', 'Firm B'],
@@ -199,7 +171,8 @@ class _SacReportContentState extends ConsumerState<SacReportContent> {
                           ),
                         ),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Center(
                                   child: Text(
                                     'No data available for SAC report.',
@@ -209,8 +182,7 @@ class _SacReportContentState extends ConsumerState<SacReportContent> {
                                     ),
                                   ),
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     minWidth: 900,
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
@@ -342,7 +314,8 @@ class _SacReportContentState extends ConsumerState<SacReportContent> {
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

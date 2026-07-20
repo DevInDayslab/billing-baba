@@ -26,10 +26,12 @@ class SalesActionMenuItem {
 class SalesActionMenuButton extends StatefulWidget {
   const SalesActionMenuButton({
     required this.items,
+    this.iconButtonConstraints,
     super.key,
   });
 
   final List<SalesActionMenuItem> items;
+  final BoxConstraints? iconButtonConstraints;
 
   @override
   State<SalesActionMenuButton> createState() => _SalesActionMenuButtonState();
@@ -100,7 +102,9 @@ class _SalesActionMenuButtonState extends State<SalesActionMenuButton> {
           icon: const Icon(Icons.more_vert, size: 18),
           color: AppColors.textSecondary,
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          constraints:
+              widget.iconButtonConstraints ??
+              const BoxConstraints(minWidth: 32, minHeight: 32),
           tooltip: 'Actions',
         );
       },

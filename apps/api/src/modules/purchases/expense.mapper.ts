@@ -16,6 +16,11 @@ export function toExpenseRecord(row: ExpenseRow): ExpenseRecord {
     attachments: row.attachments ?? [],
     expense_date: row.expenseDate,
     payment_mode: row.paymentMode,
+    source_reference_id: row.sourceReferenceId,
+    source_reference_type: row.sourceReferenceType,
+    loyalty_points: row.loyaltyPoints,
+    due_date: row.dueDate,
+    balance_due: row.balanceDue,
     created_at: row.createdAt.toISOString(),
     updated_at: row.updatedAt.toISOString(),
   };

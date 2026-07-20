@@ -91,7 +91,8 @@ class SalePurchaseOrdersReportContent extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -154,8 +155,7 @@ class SalePurchaseOrdersReportContent extends ConsumerWidget {
                                     ),
                                   ],
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
                                         label: 'DATE',
@@ -263,7 +263,8 @@ class SalePurchaseOrdersReportContent extends ConsumerWidget {
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md,

@@ -231,7 +231,8 @@ class _ItemWiseDiscountReportContentState
                         ),
                         const Divider(height: 1, color: reportCardBorder),
                         Expanded(
-                          child: rows.isEmpty
+                          child: ReportTableArea(
+                            child: rows.isEmpty
                               ? const Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -295,8 +296,7 @@ class _ItemWiseDiscountReportContentState
                                     ),
                                   ],
                                 )
-                              : SingleChildScrollView(
-                                  child: ReportSyncScrollTable(
+                              : ReportSyncScrollTable(
                                     headerChildren: const [
                                       ReportAlignedHeaderCell(
                                         label: '#',
@@ -406,7 +406,8 @@ class _ItemWiseDiscountReportContentState
                                     ],
                                   ),
                                 ),
-                        ),
+                        
+                          ),
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: const BoxDecoration(

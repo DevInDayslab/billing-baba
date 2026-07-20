@@ -135,6 +135,7 @@ void invalidatePaymentOutLists(Ref ref) {
 }
 
 void invalidateExpenseLists(Ref ref) {
+  ref.invalidate(expenseCategoriesProvider);
   ref.invalidate(expenseTransactionsProvider);
 }
 
@@ -270,8 +271,10 @@ Future<void> refreshAfterPurchaseReturn(
 }
 
 /// After party create/edit.
-void refreshAfterPartyMutation(Ref ref) {
-  invalidatePartyBalances(ref);
+void refreshAfterPartyMutation(Ref ref, {bool refreshList = true}) {
+  if (refreshList) {
+    invalidatePartyBalances(ref);
+  }
   invalidateDashboard(ref);
 }
 

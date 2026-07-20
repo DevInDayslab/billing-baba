@@ -78,7 +78,7 @@ class _PartyReportByItemContentState
 
         return ColoredBox(
           color: AppColors.background,
-          child: SingleChildScrollView(
+          child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -160,11 +160,10 @@ class _PartyReportByItemContentState
                       .setSearchQuery,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                ReportCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ReportSyncScrollTable(
+                Expanded(
+                  child: ReportCard(
+                    child: ReportTableArea(
+                      child: ReportSyncScrollTable(
                         minWidth: 700,
                         emptyState: SizedBox(
                           height: 200,
@@ -251,7 +250,7 @@ class _PartyReportByItemContentState
                             ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
                 if (report != null)

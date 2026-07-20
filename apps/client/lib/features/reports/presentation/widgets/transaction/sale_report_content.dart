@@ -71,7 +71,7 @@ class SaleReportContent extends ConsumerWidget {
 
         return ColoredBox(
           color: AppColors.background,
-          child: SingleChildScrollView(
+          child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -98,7 +98,7 @@ class SaleReportContent extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
                 const SaleReportSummaryCard(),
                 const SizedBox(height: AppSpacing.md),
-                const SaleReportTransactionsTable(),
+                const Expanded(child: SaleReportTransactionsTable()),
               ],
             ),
           ),
