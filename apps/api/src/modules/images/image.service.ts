@@ -1,22 +1,15 @@
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { MediaProcessingService } from '../media-processing/media-processing.service';
 import { StorageService } from '../storage/storage.service';
 import type { MediaAssetRepository } from '../storage/storage.repository';
 import {
-  IMAGE_OUTPUT_MIME,
-  IMAGE_WEBP_QUALITY,
   isSourceImageMimeType,
   type ImageVariant,
 } from './image.constants';
 import { ImageNotFoundError, ImageValidationError } from './image.errors';
-import { buildImageVariantStoragePath } from './image-path.builder';
 import { toImageVariantResponse } from './image.mapper';
-import {
-  generateImageVariants,
-  readImageDimensions,
-  validateImageDimensions,
-} from './image.processor';
 import { ImageVariantRepository } from './image.repository';
 import type { ImageVariantsResponse } from './image.types';
 
@@ -24,9 +17,8 @@ export type ImageServiceDeps = {
   config: AppConfig;
   storage?: StorageService;
   repository?: ImageVariantRepository;
+  mediaProcessing?: MediaProcessingService;
   membership?: Pick<MediaAssetRepository, 'hasBusinessMembership'>;
-  generateVariants?: typeof generateImageVariants;
-  readDimensions?: typeof readImageDimensions;
 };
 
 function requireDb() {
@@ -45,9 +37,8 @@ export class ImageService {
   private readonly config: AppConfig;
   private readonly storage: StorageService;
   private readonly repository: ImageVariantRepository;
+  private readonly mediaProcessing: MediaProcessingService;
   private readonly membership: Pick<MediaAssetRepository, 'hasBusinessMembership'>;
-  private readonly generateVariants: typeof generateImageVariants;
-  private readonly readDimensions: typeof readImageDimensions;
 
   constructor(deps: ImageServiceDeps) {
     this.config = deps.config;
@@ -58,13 +49,17 @@ export class ImageService {
       });
     this.repository =
       deps.repository ?? new ImageVariantRepository(requireDb());
+    this.mediaProcessing =
+      deps.mediaProcessing ??
+      new MediaProcessingService({
+        config: deps.config,
+        storage: this.storage,
+      });
     this.membership =
       deps.membership ??
       ({
         hasBusinessMembership: async () => true,
       } as Pick<MediaAssetRepository, 'hasBusinessMembership'>);
-    this.generateVariants = deps.generateVariants ?? generateImageVariants;
-    this.readDimensions = deps.readDimensions ?? readImageDimensions;
   }
 
   private async assertAccess(
@@ -102,94 +97,8 @@ export class ImageService {
       );
     }
 
-    const buffer = await this.storage.getObjectBuffer(
-      businessId,
-      accountId,
-      sourceAssetId,
-    );
-
-    const dimensions = await this.readDimensions(buffer);
-    validateImageDimensions(dimensions);
-
-    const processed = await this.generateVariants(buffer, {
-      webpQuality: IMAGE_WEBP_QUALITY,
-    });
-
-    const stored: ImageVariantsResponse['variants'] = [];
-
-    for (const item of processed) {
-      const existing = await this.repository.findBySourceAndVariant(
-        businessId,
-        sourceAssetId,
-        item.variant,
-      );
-
-      let assetId: string;
-      let storageKey: string;
-
-      if (existing) {
-        const asset = await this.storage.replaceObjectBuffer(
-          businessId,
-          accountId,
-          existing.mediaAssetId,
-          item.buffer,
-          IMAGE_OUTPUT_MIME,
-        );
-        assetId = asset.id;
-        storageKey = existing.storageKey;
-      } else {
-        storageKey = buildImageVariantStoragePath({
-          environment: this.config.environment,
-          businessId,
-          sourceAssetId,
-          variant: item.variant,
-        });
-
-        const asset = await this.storage.storeDerivativeFromBuffer(
-          businessId,
-          accountId,
-          {
-            storageKey,
-            mimeType: IMAGE_OUTPUT_MIME,
-            buffer: item.buffer,
-            visibility: source.visibility,
-            sourceAssetId,
-          },
-        );
-        assetId = asset.id;
-      }
-
-      const record = await this.repository.upsertVariant({
-        businessId,
-        sourceMediaAssetId: sourceAssetId,
-        variant: item.variant,
-        mediaAssetId: assetId,
-        width: item.width,
-        height: item.height,
-        fileSize: item.fileSize,
-        mimeType: IMAGE_OUTPUT_MIME,
-      });
-
-      const download = await this.storage.getDownloadUrl(
-        businessId,
-        accountId,
-        assetId,
-      );
-
-      stored.push(
-        toImageVariantResponse(
-          { ...record, storageKey },
-          download.url,
-          this.storage.resolvePublicCdnUrl(storageKey),
-          download.expiresAt,
-        ),
-      );
-    }
-
-    return {
-      source_media_asset_id: sourceAssetId,
-      variants: stored,
-    };
+    await this.mediaProcessing.processAsset(businessId, accountId, sourceAssetId);
+    return this.listVariants(businessId, accountId, sourceAssetId);
   }
 
   async listVariants(
@@ -262,26 +171,11 @@ export class ImageService {
     accountId: string,
     sourceMediaAssetId: string,
   ): Promise<void> {
-    const rows = await this.repository.listBySource(
+    await this.mediaProcessing.deleteVariantsForSource(
       businessId,
+      accountId,
       sourceMediaAssetId,
     );
-
-    for (const row of rows) {
-      try {
-        await this.storage.deleteAsset(
-          businessId,
-          accountId,
-          row.mediaAssetId,
-          { skipVariantCleanup: true },
-        );
-      } catch {
-        // Best-effort derivative cleanup.
-      }
-      await this.repository.softDeleteVariant(row.id);
-    }
-
-    await this.repository.softDeleteBySourceAssetId(sourceMediaAssetId);
   }
 }
 

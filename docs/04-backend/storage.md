@@ -385,32 +385,22 @@ The marketing website renders the logo and enables **Download PDF** when a cache
 
 ## Phase 9 — Image processing
 
-Server-side derivative generation via **`ImageService`**, integrated with **`StorageService`**. Business modules are unchanged — they continue uploading originals; callers invoke the image API when variants are needed.
+Server-side derivative generation via **`MediaProcessingService`** (see **[media-processing.md](./media-processing.md)**), integrated with **`StorageService`**. Business modules are unchanged — they upload via storage; processing runs automatically after upload completes.
 
 ### Features
 
-- Automatic thumbnail + responsive variants: `thumbnail` (150px), `small` (320px), `medium` (768px), `large` (1280px)
-- WEBP output with compression (quality 82)
-- EXIF stripped via auto-orient + WEBP encode
-- Dimension validation (max 8000px edge, 40 MP total)
-- Stable derivative storage keys for future CDN fronting
+- Policy-driven optimization (item, logo, avatar, attachment, rack photo)
+- Staging upload → canonical replace → delete staging
+- Variants: `thumbnail` (256px), `medium` (800px), `original` (policy max, default 1600px)
+- WEBP q82 / JPEG q84 fallback; lossless WEBP / PNG for transparency
+- EXIF stripped via auto-orient + re-encode
+- Dimension validation (max 8000px edge, 64MP decompression guard)
+- UUID-based processed keys: `{assetId}-{thumb|medium|original}.webp`
 
-### Schema (`0028_media_image_variants`)
+### Schema
 
-| Column | Purpose |
-|--------|---------|
-| `source_media_asset_id` | Original `media_assets` row |
-| `variant` | `thumbnail` \| `small` \| `medium` \| `large` |
-| `media_asset_id` | Stored derivative (`purpose: derivatives`) |
-| `width`, `height`, `file_size` | Output metadata |
-
-### Storage paths
-
-```
-{env}/businesses/{businessId}/derivatives/{sourceAssetId}/{variant}.webp
-```
-
-When `S3_PUBLIC_BASE_URL` is set, responses include `cdn_url` using the stable key (CDN-ready).
+- `0028_media_image_variants` — variant index table
+- `0029_media_processing_metadata` — processing columns on `media_assets`
 
 ### API
 
@@ -418,32 +408,17 @@ Prefix: `/api/v1/storage/images` (JWT + business scope)
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/storage/images/:sourceAssetId/process` | Generate all variants from a ready image asset |
+| POST | `/storage/images/:sourceAssetId/process` | Re-run processing |
 | GET | `/storage/images/:sourceAssetId/variants` | List variants + signed URLs |
 | GET | `/storage/images/:sourceAssetId/variants/:variant/url` | Single variant download URL |
 
-### Flow
+### Auto-trigger
 
-```
-POST /storage/images/:sourceAssetId/process
-  → StorageService.getObjectBuffer (source)
-  → sharp: orient, resize, WEBP, strip metadata
-  → StorageService.storeDerivativeFromBuffer (per variant)
-  → media_image_variants upsert
-```
-
-Re-processing overwrites existing derivative objects at the same storage key.
-
-### Auto-trigger (production)
-
-After a ready image upload completes, variants are generated **asynchronously** (failures are logged; upload completion still succeeds):
-
-- Item gallery + rack photo: `ItemMediaService.scheduleItemThumbnailGeneration` → `ImageService.processSourceAsset`
-- Transaction attachment images: `DocumentAttachmentService.completeUpload` when `attachment_kind === 'image'`
+After a ready **image** upload completes, `MediaProcessingService.schedule` runs **asynchronously** from `StorageService.completeUpload` / `completeAccountUpload`. Failures are logged; upload completion still succeeds.
 
 ### Delete cascade
 
-`StorageService.deleteAsset` soft-deletes the source asset, deletes the S3 object, and calls `ImageService.deleteVariantsForSource` first (skipped for `purpose: derivatives` and when `skipVariantCleanup: true`). Derivative `media_assets` rows and S3 objects are removed; `media_image_variants` rows are soft-deleted.
+`StorageService.deleteAsset` calls `MediaProcessingService.deleteVariantsForSource` (variant rows, child assets, staging keys).
 
 ## Generated documents — server-side PDF ensure
 

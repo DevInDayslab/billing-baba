@@ -23,5 +23,6 @@ describe('drizzle migration journal', () => {
     const itemMediaIndex = tags.indexOf('0025_item_media');
     expect(tags[itemMediaIndex - 1]).toBe('0024_business_branding_media');
     expect(tags[itemMediaIndex + 1]).toBe('0026_document_attachments');
+    expect(tags).toContain('0029_media_processing_metadata');
   });
 });

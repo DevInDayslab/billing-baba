@@ -15,6 +15,8 @@ export type ItemTierPriceRecord = {
 export type ItemImageRecord = {
   id: string;
   image_url: string;
+  thumbnail_url?: string | null;
+  medium_url?: string | null;
   sort_order: number;
   is_primary: boolean;
   created_at: string;

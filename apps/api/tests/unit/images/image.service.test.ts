@@ -1,8 +1,8 @@
 import { describe, expect, mock, test } from 'bun:test';
-import sharp from 'sharp';
 import type { AppConfig } from '../../../src/config/app_config';
 import { ImageService } from '../../../src/modules/images/image.service';
 import type { ImageVariantRepository } from '../../../src/modules/images/image.repository';
+import type { MediaProcessingService } from '../../../src/modules/media-processing/media-processing.service';
 import type { StorageService } from '../../../src/modules/storage/storage.service';
 import type { StorageAsset } from '../../../src/modules/storage/storage.types';
 
@@ -61,38 +61,13 @@ const sourceAsset: StorageAsset = {
 };
 
 describe('ImageService', () => {
-  test('processSourceAsset stores all variants and returns download URLs', async () => {
-    const sourceBuffer = await sharp({
-      create: {
-        width: 1200,
-        height: 900,
-        channels: 3,
-        background: { r: 255, g: 0, b: 0 },
-      },
-    })
-      .jpeg()
-      .toBuffer();
-
-    const storedAssetIds: string[] = [];
-    let storeCount = 0;
+  test('processSourceAsset delegates to MediaProcessingService and returns variants', async () => {
+    const processAsset = mock(async () => undefined);
 
     const storage = {
       getAsset: mock(async () => sourceAsset),
-      getObjectBuffer: mock(async () => sourceBuffer),
-      storeDerivativeFromBuffer: mock(async () => {
-        storeCount += 1;
-        const id = `variant-asset-${storeCount}`;
-        storedAssetIds.push(id);
-        return {
-          ...sourceAsset,
-          id,
-          mimeType: 'image/webp',
-          purpose: 'derivatives',
-        };
-      }),
-      replaceObjectBuffer: mock(async () => sourceAsset),
       getDownloadUrl: mock(async () => ({
-        url: `https://cdn.example.com/${storeCount}.webp`,
+        url: 'https://cdn.example.com/thumb.webp',
         expiresAt: new Date().toISOString(),
         visibility: 'authenticated' as const,
       })),
@@ -100,28 +75,34 @@ describe('ImageService', () => {
     } as unknown as StorageService;
 
     const repository = {
-      findBySourceAndVariant: mock(async () => null),
-      upsertVariant: mock(async (values) => ({
-        id: `row-${values.variant}`,
-        businessId,
-        sourceMediaAssetId: sourceAssetId,
-        variant: values.variant,
-        mediaAssetId: values.mediaAssetId,
-        width: values.width,
-        height: values.height,
-        fileSize: values.fileSize,
-        mimeType: values.mimeType,
-        storageKey: `derivatives/${values.variant}.webp`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })),
-      listBySource: mock(async () => []),
+      listBySource: mock(async () => [
+        {
+          id: 'row-thumbnail',
+          businessId,
+          sourceMediaAssetId: sourceAssetId,
+          variant: 'thumbnail',
+          mediaAssetId: '77777777-7777-7777-7777-777777777777',
+          width: 256,
+          height: 192,
+          fileSize: 900,
+          mimeType: 'image/webp',
+          storageKey: 'items/asset-thumb.webp',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]),
     } as unknown as ImageVariantRepository;
+
+    const mediaProcessing = {
+      processAsset,
+      deleteVariantsForSource: mock(async () => undefined),
+    } as unknown as MediaProcessingService;
 
     const service = new ImageService({
       config: baseConfig(),
       storage,
       repository,
+      mediaProcessing,
     });
 
     const result = await service.processSourceAsset(
@@ -130,13 +111,14 @@ describe('ImageService', () => {
       sourceAssetId,
     );
 
-    expect(result.source_media_asset_id).toBe(sourceAssetId);
-    expect(result.variants).toHaveLength(4);
-    expect(storage.storeDerivativeFromBuffer).toHaveBeenCalledTimes(4);
-    expect(result.variants.every((item) => item.mime_type === 'image/webp')).toBe(
-      true,
+    expect(processAsset).toHaveBeenCalledWith(
+      businessId,
+      accountId,
+      sourceAssetId,
     );
-    expect(result.variants[0]?.cdn_url).toContain('https://cdn.example.com/');
+    expect(result.source_media_asset_id).toBe(sourceAssetId);
+    expect(result.variants).toHaveLength(1);
+    expect(result.variants[0]?.variant).toBe('thumbnail');
   });
 
   test('processSourceAsset rejects non-image sources', async () => {
@@ -151,12 +133,12 @@ describe('ImageService', () => {
       config: baseConfig(),
       storage,
       repository: {
-        findBySourceAndVariant: async () => null,
-        upsertVariant: async () => {
-          throw new Error('should not run');
-        },
         listBySource: async () => [],
       } as unknown as ImageVariantRepository,
+      mediaProcessing: {
+        processAsset: async () => undefined,
+        deleteVariantsForSource: async () => undefined,
+      } as unknown as MediaProcessingService,
     });
 
     await expect(
@@ -164,54 +146,17 @@ describe('ImageService', () => {
     ).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
   });
 
-  test('deleteVariantsForSource removes derivative assets and variant rows', async () => {
-    const deletedAssetIds: string[] = [];
-    const softDeletedVariantIds: string[] = [];
-    let softDeletedSource = false;
-
-    const storage = {
-      deleteAsset: mock(
-        async (
-          _businessId: string,
-          _accountId: string,
-          assetId: string,
-          options?: { skipVariantCleanup?: boolean },
-        ) => {
-          deletedAssetIds.push(`${assetId}:${options?.skipVariantCleanup ? 'skip' : 'full'}`);
-        },
-      ),
-    } as unknown as StorageService;
-
-    const repository = {
-      listBySource: async () => [
-        {
-          id: 'variant-row-1',
-          businessId,
-          sourceMediaAssetId: sourceAssetId,
-          variant: 'thumbnail',
-          mediaAssetId: '77777777-7777-7777-7777-777777777777',
-          width: 150,
-          height: 112,
-          fileSize: 900,
-          mimeType: 'image/webp',
-          storageKey: 'derivatives/thumb.webp',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ],
-      softDeleteVariant: async (id: string) => {
-        softDeletedVariantIds.push(id);
-      },
-      softDeleteBySourceAssetId: async () => {
-        softDeletedSource = true;
-      },
-    } as unknown as ImageVariantRepository;
+  test('deleteVariantsForSource delegates to MediaProcessingService', async () => {
+    const deleteVariantsForSource = mock(async () => undefined);
 
     const service = new ImageService({
       config: baseConfig(),
-      storage,
-      repository,
-      membership: { hasBusinessMembership: async () => true },
+      storage: {} as StorageService,
+      repository: {} as ImageVariantRepository,
+      mediaProcessing: {
+        processAsset: async () => undefined,
+        deleteVariantsForSource,
+      } as unknown as MediaProcessingService,
     });
 
     await service.deleteVariantsForSource(
@@ -220,10 +165,10 @@ describe('ImageService', () => {
       sourceAssetId,
     );
 
-    expect(deletedAssetIds).toEqual([
-      '77777777-7777-7777-7777-777777777777:skip',
-    ]);
-    expect(softDeletedVariantIds).toEqual(['variant-row-1']);
-    expect(softDeletedSource).toBe(true);
+    expect(deleteVariantsForSource).toHaveBeenCalledWith(
+      businessId,
+      accountId,
+      sourceAssetId,
+    );
   });
 });

@@ -2,7 +2,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { mediaAssets } from '../../db/schema/storage/tables';
 import { BusinessMembershipRepository } from '../../shared/repositories/business-membership.repository';
-import type { MediaAssetRow } from './storage.types';
+import type { MediaAssetRow, ProcessingStatus } from './storage.types';
 
 export type InsertMediaAssetValues = {
   id: string;
@@ -18,12 +18,30 @@ export type InsertMediaAssetValues = {
   ownerId?: string | null;
   status: string;
   uploadedBy?: string | null;
+  stagingStorageKey?: string | null;
+  processingStatus?: ProcessingStatus;
 };
 
 export type MarkReadyValues = {
   etag: string | null;
   fileSize: number;
   mimeType?: string;
+};
+
+export type UpdateAfterProcessingValues = {
+  storageKey: string;
+  mimeType: string;
+  fileSize: number;
+  width: number;
+  height: number;
+  format: string;
+  variantType: string;
+  parentAssetId?: string | null;
+  originalSize: number | null;
+  optimizedSize: number | null;
+  compressionRatio: number | null;
+  processingStatus: ProcessingStatus;
+  stagingStorageKey: string | null;
 };
 
 const selectColumns = {
@@ -41,6 +59,17 @@ const selectColumns = {
   ownerId: mediaAssets.ownerId,
   status: mediaAssets.status,
   uploadedBy: mediaAssets.uploadedBy,
+  width: mediaAssets.width,
+  height: mediaAssets.height,
+  format: mediaAssets.format,
+  variantType: mediaAssets.variantType,
+  parentAssetId: mediaAssets.parentAssetId,
+  originalSize: mediaAssets.originalSize,
+  optimizedSize: mediaAssets.optimizedSize,
+  compressionRatio: mediaAssets.compressionRatio,
+  processedAt: mediaAssets.processedAt,
+  processingStatus: mediaAssets.processingStatus,
+  stagingStorageKey: mediaAssets.stagingStorageKey,
   createdAt: mediaAssets.createdAt,
   updatedAt: mediaAssets.updatedAt,
   deletedAt: mediaAssets.deletedAt,
@@ -78,6 +107,8 @@ export class MediaAssetRepository {
         ownerId: values.ownerId ?? null,
         status: values.status,
         uploadedBy: values.uploadedBy ?? null,
+        stagingStorageKey: values.stagingStorageKey ?? null,
+        processingStatus: values.processingStatus ?? 'pending',
       })
       .returning(selectColumns);
 
@@ -117,6 +148,7 @@ export class MediaAssetRepository {
         status: 'ready',
         etag: values.etag,
         fileSize: values.fileSize,
+        originalSize: values.fileSize,
         ...(values.mimeType !== undefined ? { mimeType: values.mimeType } : {}),
         updatedAt: new Date(),
       })
@@ -131,6 +163,48 @@ export class MediaAssetRepository {
       .returning(selectColumns);
 
     return row ?? null;
+  }
+
+  async updateProcessingStatus(
+    id: string,
+    processingStatus: ProcessingStatus,
+  ): Promise<void> {
+    await this.db
+      .update(mediaAssets)
+      .set({
+        processingStatus,
+        updatedAt: new Date(),
+        ...(processingStatus === 'ready'
+          ? { processedAt: new Date() }
+          : {}),
+      })
+      .where(eq(mediaAssets.id, id));
+  }
+
+  async updateAfterProcessing(
+    id: string,
+    values: UpdateAfterProcessingValues,
+  ): Promise<void> {
+    await this.db
+      .update(mediaAssets)
+      .set({
+        storageKey: values.storageKey,
+        mimeType: values.mimeType,
+        fileSize: values.fileSize,
+        width: values.width,
+        height: values.height,
+        format: values.format,
+        variantType: values.variantType,
+        parentAssetId: values.parentAssetId ?? null,
+        originalSize: values.originalSize,
+        optimizedSize: values.optimizedSize,
+        compressionRatio: values.compressionRatio,
+        processingStatus: values.processingStatus,
+        stagingStorageKey: values.stagingStorageKey,
+        processedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(mediaAssets.id, id));
   }
 
   async findByIdForAccount(
@@ -165,6 +239,7 @@ export class MediaAssetRepository {
         status: 'ready',
         etag: values.etag,
         fileSize: values.fileSize,
+        originalSize: values.fileSize,
         ...(values.mimeType !== undefined ? { mimeType: values.mimeType } : {}),
         updatedAt: new Date(),
       })
@@ -231,5 +306,17 @@ export class MediaAssetRepository {
       .returning(selectColumns);
 
     return row ?? null;
+  }
+
+  async listChildVariants(parentAssetId: string): Promise<MediaAssetRow[]> {
+    return this.db
+      .select(selectColumns)
+      .from(mediaAssets)
+      .where(
+        and(
+          eq(mediaAssets.parentAssetId, parentAssetId),
+          eq(mediaAssets.isDeleted, false),
+        ),
+      );
   }
 }

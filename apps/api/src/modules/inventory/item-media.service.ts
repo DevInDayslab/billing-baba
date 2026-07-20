@@ -2,6 +2,7 @@ import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { ImageService } from '../images/image.service';
+import type { ImageVariant } from '../media-processing/image/image.constants';
 import { StorageNotFoundError } from '../storage/storage.errors';
 import { StorageService } from '../storage/storage.service';
 import type { UploadIntent } from '../storage/storage.types';
@@ -18,6 +19,8 @@ import type { ItemImageRecord } from './item.types';
 export type ItemMediaAssetResponse = {
   id: string;
   image_url: string;
+  thumbnail_url?: string | null;
+  medium_url?: string | null;
   sort_order: number;
   is_primary: boolean;
   media_asset_id: string | null;
@@ -51,39 +54,6 @@ function requireDb() {
     );
   }
   return db;
-}
-
-/** Generates WEBP variants asynchronously after gallery/rack uploads complete. */
-export function scheduleItemThumbnailGeneration(
-  businessId: string,
-  accountId: string,
-  mediaAssetId: string,
-  config: AppConfig,
-  logger?: ItemMediaServiceDeps['logger'],
-): void {
-  void (async () => {
-    try {
-      const imageService = new ImageService({ config });
-      await imageService.processSourceAsset(
-        businessId,
-        accountId,
-        mediaAssetId,
-      );
-      logger?.info(
-        { event: 'item.thumbnail_generated', mediaAssetId },
-        'Item image variants generated',
-      );
-    } catch (error) {
-      logger?.info(
-        {
-          event: 'item.thumbnail_failed',
-          mediaAssetId,
-          error: error instanceof Error ? error.message : 'unknown',
-        },
-        'Item image variant generation failed',
-      );
-    }
-  })();
 }
 
 export class ItemMediaService extends InventoryServiceBase {
@@ -193,14 +163,6 @@ export class ItemMediaService extends InventoryServiceBase {
       updatedBy: userId ?? null,
     });
 
-    scheduleItemThumbnailGeneration(
-      businessId,
-      accountId,
-      asset.id,
-      this.config,
-      this.log,
-    );
-
     if (options.replacesImageId) {
       await this.deleteItemImageMedia(
         businessId,
@@ -305,12 +267,31 @@ export class ItemMediaService extends InventoryServiceBase {
         if (!mediaAssetId) return image;
 
         try {
-          const url = await this.storage.resolveBusinessAssetUrl(
-            businessId,
-            accountId,
-            mediaAssetId,
-          );
-          return { ...image, image_url: url };
+          const [url, thumbnailUrl, mediumUrl] = await Promise.all([
+            this.storage.resolveBusinessAssetUrl(
+              businessId,
+              accountId,
+              mediaAssetId,
+            ),
+            this.resolveVariantUrlOrSource(
+              businessId,
+              accountId,
+              mediaAssetId,
+              'thumbnail',
+            ),
+            this.resolveVariantUrlOrSource(
+              businessId,
+              accountId,
+              mediaAssetId,
+              'medium',
+            ),
+          ]);
+          return {
+            ...image,
+            image_url: url,
+            thumbnail_url: thumbnailUrl,
+            medium_url: mediumUrl,
+          };
         } catch {
           return image;
         }
@@ -331,13 +312,44 @@ export class ItemMediaService extends InventoryServiceBase {
     if (!primaryAssetId) return fallbackUrl;
 
     try {
-      return await this.storage.resolveBusinessAssetUrl(
+      return await this.resolveVariantUrlOrSource(
         businessId,
         accountId,
         primaryAssetId,
+        'thumbnail',
       );
     } catch {
       return fallbackUrl;
+    }
+  }
+
+  private imageService(): ImageService {
+    return new ImageService({
+      config: this.config,
+      storage: this.storage,
+    });
+  }
+
+  private async resolveVariantUrlOrSource(
+    businessId: string,
+    accountId: string,
+    mediaAssetId: string,
+    variant: ImageVariant,
+  ): Promise<string> {
+    try {
+      const variantUrl = await this.imageService().getVariantUrl(
+        businessId,
+        accountId,
+        mediaAssetId,
+        variant,
+      );
+      return variantUrl.url;
+    } catch {
+      return this.storage.resolveBusinessAssetUrl(
+        businessId,
+        accountId,
+        mediaAssetId,
+      );
     }
   }
 
@@ -407,14 +419,6 @@ export class ItemMediaService extends InventoryServiceBase {
       url,
       now,
       userId ?? null,
-    );
-
-    scheduleItemThumbnailGeneration(
-      businessId,
-      accountId,
-      asset.id,
-      this.config,
-      this.log,
     );
 
     if (previousAssetId && previousAssetId !== asset.id) {
@@ -491,6 +495,8 @@ export class ItemMediaService extends InventoryServiceBase {
     return {
       id: image.id,
       image_url: image.image_url,
+      thumbnail_url: image.thumbnail_url ?? null,
+      medium_url: image.medium_url ?? null,
       sort_order: image.sort_order,
       is_primary: image.is_primary,
       media_asset_id: mediaAssetId,

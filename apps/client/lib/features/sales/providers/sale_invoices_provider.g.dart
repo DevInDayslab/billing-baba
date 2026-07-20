@@ -356,7 +356,7 @@ final class SaleInvoicesProvider
   SaleInvoices create() => SaleInvoices();
 }
 
-String _$saleInvoicesHash() => r'485f51293bfe7a8608f78aa23a96dbca7e199dad';
+String _$saleInvoicesHash() => r'69e9917ef1268def638e9ba8f1bf415cdbc65720';
 
 abstract class _$SaleInvoices extends $AsyncNotifier<PaginatedSaleInvoices> {
   FutureOr<PaginatedSaleInvoices> build();

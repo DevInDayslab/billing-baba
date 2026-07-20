@@ -1220,6 +1220,44 @@ The party details page showed only `ledger_entries`-backed rows (invoices, bills
 
 ---
 
+### ADR-2026-03-20: Media processing staging and variant model
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-03-20 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+#### Context
+
+Phase 9 required production-grade image optimization without exposing raw uploads permanently. The initial `ImageService` implementation kept originals and used four derivative sizes under a separate `derivatives/` path.
+
+#### Decision
+
+- Introduce **`MediaProcessingService`** with policy-driven **`ImagePipeline`** (sharp).
+- Image uploads land on **staging keys**; after successful processing, the **canonical source is replaced** with the optimized original and staging is deleted.
+- Variants reduced to **`thumbnail` (256px), `medium` (800px), `original` (policy max)**.
+- Processed keys use UUID naming: `{assetId}-{thumb|medium|original}.webp` under the purpose directory.
+- Processing hooks live in **`StorageService.completeUpload`** — business modules stay unaware.
+- `media_assets` extended with processing metadata (`processing_status`, `staging_storage_key`, compression fields).
+
+#### Consequences
+
+- Smaller storage footprint and faster client loads (especially POS/list views).
+- Failed processing does not fail uploads; staging remains until retry.
+- Breaking change: `media_image_variant` enum drops `small` / `large` (pre-release data only).
+- PDFs and document-like assets skip processing via policy.
+
+#### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Keep raw originals forever | Conflicts with storage cost and privacy (EXIF) goals |
+| Domain modules call `ImageService` directly | Duplicated scheduling, easy to miss upload paths |
+| Four variant sizes (150–1280) | Spec targets three tiers; extra sizes add cost with diminishing returns |
+
+---
+
 ## ADR Template
 
 Use for future decisions. Do not remove.

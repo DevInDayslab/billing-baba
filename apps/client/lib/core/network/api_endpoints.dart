@@ -65,6 +65,13 @@ abstract final class ApiEndpoints {
   static String documentAttachment(String id) => '$documentAttachments/$id';
   static String documentAttachmentDownloadUrl(String id) =>
       '$documentAttachments/$id/url';
+
+  static const storageImages = '/api/v1/storage/images';
+  static String storageImageVariants(String sourceAssetId) =>
+      '$storageImages/$sourceAssetId/variants';
+  static String storageImageVariantUrl(String sourceAssetId, String variant) =>
+      '$storageImages/$sourceAssetId/variants/$variant/url';
+
   static String inventoryItemTierPrices(String itemId) =>
       '${inventoryItem(itemId)}/tier-prices';
   static String inventoryItemTierPrice(String itemId, String tier) =>

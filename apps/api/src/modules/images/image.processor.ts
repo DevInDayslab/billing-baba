@@ -1,13 +1,10 @@
-import sharp from 'sharp';
+import { IMAGE_POLICIES } from '../media-processing/media-processing.constants';
+import { runImagePipeline } from '../media-processing/pipeline/image-pipeline';
 import {
-  IMAGE_MAX_EDGE_PIXELS,
-  IMAGE_MAX_PIXEL_COUNT,
-  IMAGE_MIN_EDGE_PIXELS,
-  IMAGE_VARIANT_MAX_EDGE,
-  IMAGE_VARIANTS,
-} from './image.constants';
-import { ImageProcessingError, ImageValidationError } from './image.errors';
-import type { ImageDimensions, ProcessedImageVariant } from './image.types';
+  readImageMetadata,
+  validateImageDimensions,
+} from '../media-processing/pipeline/steps/read-metadata.step';
+import type { ProcessedImageVariant } from './image.types';
 
 export type ImageProcessorOptions = {
   webpQuality?: number;
@@ -15,76 +12,38 @@ export type ImageProcessorOptions = {
 
 export async function readImageDimensions(
   buffer: Buffer,
-): Promise<ImageDimensions> {
-  try {
-    const metadata = await sharp(buffer).metadata();
-    const width = metadata.width ?? 0;
-    const height = metadata.height ?? 0;
-    return { width, height };
-  } catch {
-    throw new ImageProcessingError('Unable to read image metadata');
-  }
+): Promise<{ width: number; height: number }> {
+  const metadata = await readImageMetadata(buffer);
+  return metadata.dimensions;
 }
 
-export function validateImageDimensions(dimensions: ImageDimensions): void {
-  const { width, height } = dimensions;
-
-  if (
-    width < IMAGE_MIN_EDGE_PIXELS ||
-    height < IMAGE_MIN_EDGE_PIXELS ||
-    !Number.isFinite(width) ||
-    !Number.isFinite(height)
-  ) {
-    throw new ImageValidationError('Image dimensions are invalid', {
-      dimensions: ['Width and height must be positive integers'],
-    });
-  }
-
-  if (width > IMAGE_MAX_EDGE_PIXELS || height > IMAGE_MAX_EDGE_PIXELS) {
-    throw new ImageValidationError(
-      `Image exceeds the ${IMAGE_MAX_EDGE_PIXELS}px edge limit`,
-      {
-        dimensions: [`Maximum edge length is ${IMAGE_MAX_EDGE_PIXELS}px`],
-      },
-    );
-  }
-
-  if (width * height > IMAGE_MAX_PIXEL_COUNT) {
-    throw new ImageValidationError(
-      `Image exceeds the ${IMAGE_MAX_PIXEL_COUNT} pixel limit`,
-      {
-        dimensions: [`Maximum pixel count is ${IMAGE_MAX_PIXEL_COUNT}`],
-      },
-    );
-  }
-}
+export { validateImageDimensions };
 
 export async function generateImageVariants(
   buffer: Buffer,
-  options: ImageProcessorOptions = {},
+  _options: ImageProcessorOptions = {},
 ): Promise<ProcessedImageVariant[]> {
-  const quality = options.webpQuality ?? 82;
-  const results: ProcessedImageVariant[] = [];
+  const pipelineResult = await runImagePipeline({
+    buffer,
+    mimeType: detectMimeFromBuffer(buffer),
+    policy: IMAGE_POLICIES.ITEM_IMAGE,
+  });
 
-  for (const variant of IMAGE_VARIANTS) {
-    const maxEdge = IMAGE_VARIANT_MAX_EDGE[variant];
-    const output = await sharp(buffer)
-      .rotate()
-      .resize(maxEdge, maxEdge, {
-        fit: 'inside',
-        withoutEnlargement: true,
-      })
-      .webp({ quality, effort: 4 })
-      .toBuffer({ resolveWithObject: true });
+  return pipelineResult.variants.map((item) => ({
+    variant: item.variant,
+    width: item.encoded.width,
+    height: item.encoded.height,
+    fileSize: item.encoded.fileSize,
+    buffer: item.encoded.buffer,
+  }));
+}
 
-    results.push({
-      variant,
-      width: output.info.width,
-      height: output.info.height,
-      fileSize: output.data.length,
-      buffer: output.data,
-    });
+function detectMimeFromBuffer(buffer: Buffer): string {
+  if (buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    return 'image/png';
   }
-
-  return results;
+  if (buffer.length >= 3 && buffer.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))) {
+    return 'image/jpeg';
+  }
+  return 'image/webp';
 }

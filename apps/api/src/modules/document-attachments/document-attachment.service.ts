@@ -1,7 +1,6 @@
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
-import { ImageService } from '../images/image.service';
 import { StorageNotFoundError } from '../storage/storage.errors';
 import { StorageService } from '../storage/storage.service';
 import { MediaAssetRepository } from '../storage/storage.repository';
@@ -202,24 +201,6 @@ export class DocumentAttachmentService {
         options.replacesAttachmentId,
         { skipNotFound: true },
       );
-    }
-
-    if (attachmentKindFromMime(asset.mimeType) === 'image') {
-      void (async () => {
-        try {
-          const imageService = new ImageService({
-            config: this.config,
-            storage: this.storage,
-          });
-          await imageService.processSourceAsset(
-            businessId,
-            accountId,
-            asset.id,
-          );
-        } catch {
-          // Best-effort variant generation for transaction images.
-        }
-      })();
     }
 
     const [enriched] = await this.enrichRows(businessId, accountId, [

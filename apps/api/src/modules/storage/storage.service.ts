@@ -4,7 +4,10 @@ import { getDb } from '../../db/client';
 import type { StorageProvider } from '../../providers/storage';
 import { createStorageProvider } from '../../providers/storage';
 import { AppError } from '../../shared/errors/app-error';
-import { ImageService } from '../images/image.service';
+import { buildStagingStoragePath } from '../media-processing/image/image-path.builder';
+import { shouldProcessAsset } from '../media-processing/media-processing.constants';
+import { MediaProcessingService } from '../media-processing/media-processing.service';
+import { scheduleMediaProcessing } from '../media-processing/media-processing.scheduler';
 import {
   ALLOWED_STORAGE_MIME_TYPES,
   type AllowedStorageMimeType,
@@ -28,6 +31,7 @@ import type {
 import {
   buildAccountStoragePath,
   buildStoragePath,
+  extensionForMimeType,
 } from './storage-path.builder';
 
 export type StorageServiceDeps = {
@@ -146,15 +150,30 @@ export class StorageService {
 
     const provider = this.requireProvider();
     const assetId = randomUUID();
-    const storageKey = buildStoragePath({
-      environment: this.config.environment,
-      businessId,
+    const ext = extensionForMimeType(input.mimeType);
+    const usesStaging = shouldProcessAsset({
       purpose: input.purpose,
-      assetId,
       mimeType: input.mimeType,
-      ownerType: input.ownerType,
-      ownerId: input.ownerId,
+      ownerType: input.ownerType ?? null,
+      businessId,
     });
+
+    const storageKey = usesStaging
+      ? buildStagingStoragePath({
+          environment: this.config.environment,
+          businessId,
+          assetId,
+          extension: ext,
+        })
+      : buildStoragePath({
+          environment: this.config.environment,
+          businessId,
+          purpose: input.purpose,
+          assetId,
+          mimeType: input.mimeType,
+          ownerType: input.ownerType,
+          ownerId: input.ownerId,
+        });
 
     await this.repository.insert({
       id: assetId,
@@ -170,6 +189,8 @@ export class StorageService {
       ownerId: input.ownerId ?? null,
       status: 'pending',
       uploadedBy: accountId,
+      stagingStorageKey: usesStaging ? storageKey : null,
+      processingStatus: usesStaging ? 'pending' : 'skipped',
     });
 
     const upload = await provider.createUploadUrl({
@@ -292,7 +313,17 @@ export class StorageService {
       'Storage upload completed',
     );
 
-    return toStorageAsset(ready);
+    const asset = toStorageAsset(ready);
+
+    if (MediaProcessingService.shouldProcess(asset)) {
+      scheduleMediaProcessing(this.createMediaProcessingService(), {
+        businessId,
+        accountId,
+        assetId: asset.id,
+      });
+    }
+
+    return asset;
   }
 
   async getAsset(
@@ -381,7 +412,10 @@ export class StorageService {
     businessId: string,
     accountId: string,
     assetId: string,
-    options: { skipVariantCleanup?: boolean } = {},
+    options: {
+      skipVariantCleanup?: boolean;
+      skipMediaProcessing?: boolean;
+    } = {},
   ): Promise<void> {
     await this.assertBusinessAccess(businessId, accountId);
     const provider = this.requireProvider();
@@ -391,17 +425,27 @@ export class StorageService {
       throw new StorageNotFoundError();
     }
 
-    if (!options.skipVariantCleanup && existing.purpose !== 'derivatives') {
+    if (!options.skipVariantCleanup && !options.skipMediaProcessing) {
       try {
-        const imageService = new ImageService({
-          config: this.config,
-          storage: this,
-        });
-        await imageService.deleteVariantsForSource(
+        const mediaProcessing = this.createMediaProcessingService();
+        await mediaProcessing.deleteVariantsForSource(
           businessId,
           accountId,
           assetId,
+          existing.stagingStorageKey,
         );
+
+        const children = await this.repository.listChildVariants(assetId);
+        for (const child of children) {
+          try {
+            await this.deleteAsset(businessId, accountId, child.id, {
+              skipVariantCleanup: true,
+              skipMediaProcessing: true,
+            });
+          } catch {
+            // Best-effort child cleanup.
+          }
+        }
       } catch (error) {
         this.log.warn(
           {
@@ -506,12 +550,28 @@ export class StorageService {
 
     const provider = this.requireProvider();
     const assetId = randomUUID();
-    const storageKey = buildAccountStoragePath({
-      environment: this.config.environment,
-      accountId,
-      assetId,
+    const ext = extensionForMimeType(input.mimeType);
+    const usesStaging = shouldProcessAsset({
+      purpose: 'branding',
       mimeType: input.mimeType,
+      ownerType: 'avatar',
+      businessId: null,
     });
+
+    const storageKey = usesStaging
+      ? buildStagingStoragePath({
+          environment: this.config.environment,
+          businessId: null,
+          accountId,
+          assetId,
+          extension: ext,
+        })
+      : buildAccountStoragePath({
+          environment: this.config.environment,
+          accountId,
+          assetId,
+          mimeType: input.mimeType,
+        });
 
     await this.repository.insert({
       id: assetId,
@@ -527,6 +587,8 @@ export class StorageService {
       ownerId: accountId,
       status: 'pending',
       uploadedBy: accountId,
+      stagingStorageKey: usesStaging ? storageKey : null,
+      processingStatus: usesStaging ? 'pending' : 'skipped',
     });
 
     const upload = await provider.createUploadUrl({
@@ -634,7 +696,17 @@ export class StorageService {
       'Account avatar upload completed',
     );
 
-    return toStorageAsset(ready);
+    const asset = toStorageAsset(ready);
+
+    if (MediaProcessingService.shouldProcess(asset)) {
+      scheduleMediaProcessing(this.createMediaProcessingService(), {
+        businessId: null,
+        accountId,
+        assetId: asset.id,
+      });
+    }
+
+    return asset;
   }
 
   async getAccountDownloadUrl(
@@ -762,6 +834,7 @@ export class StorageService {
       ownerId: input.ownerId ?? null,
       status: 'pending',
       uploadedBy: accountId,
+      processingStatus: 'skipped',
     });
 
     const put = await provider.putObject({
@@ -920,6 +993,108 @@ export class StorageService {
     }
 
     return toStorageAsset(ready);
+  }
+
+  /** Fetch object bytes by storage key (server-side processing). */
+  async getObjectBufferByKey(storageKey: string): Promise<Buffer> {
+    const provider = this.requireProvider();
+    const object = await provider.getObject(storageKey);
+    return object.body;
+  }
+
+  async putObjectAtKey(
+    storageKey: string,
+    buffer: Buffer,
+    mimeType: string,
+  ): Promise<void> {
+    const provider = this.requireProvider();
+    await provider.putObject({
+      key: storageKey,
+      body: buffer,
+      mimeType,
+    });
+  }
+
+  async deleteObjectByKey(storageKey: string): Promise<void> {
+    const provider = this.requireProvider();
+    await provider.delete(storageKey);
+  }
+
+  async storeProcessedVariant(input: {
+    businessId: string | null;
+    accountId: string;
+    sourceAssetId: string;
+    storageKey: string;
+    mimeType: string;
+    buffer: Buffer;
+    visibility: CreateUploadIntentInput['visibility'];
+    purpose: CreateUploadIntentInput['purpose'];
+    variantType: string;
+    ownerType: string | null;
+    ownerId: string | null;
+  }): Promise<string> {
+    const provider = this.requireProvider();
+    const assetId = randomUUID();
+
+    await this.repository.insert({
+      id: assetId,
+      businessId: input.businessId,
+      storageKey: input.storageKey,
+      bucket: provider.bucket,
+      purpose: input.purpose,
+      visibility: input.visibility,
+      mimeType: input.mimeType,
+      fileSize: input.buffer.length,
+      checksum: null,
+      ownerType: input.ownerType,
+      ownerId: input.ownerId,
+      status: 'pending',
+      uploadedBy: input.accountId,
+      processingStatus: 'ready',
+      variantType: input.variantType,
+      parentAssetId: input.sourceAssetId,
+    });
+
+    await provider.putObject({
+      key: input.storageKey,
+      body: input.buffer,
+      mimeType: input.mimeType,
+    });
+
+    if (input.businessId) {
+      const ready = await this.repository.markReady(input.businessId, assetId, {
+        etag: null,
+        fileSize: input.buffer.length,
+        mimeType: input.mimeType,
+      });
+      if (!ready) {
+        throw new StorageNotFoundError('Failed to mark processed variant ready');
+      }
+    } else {
+      const ready = await this.repository.markReadyForAccount(
+        input.accountId,
+        assetId,
+        {
+          etag: null,
+          fileSize: input.buffer.length,
+          mimeType: input.mimeType,
+        },
+      );
+      if (!ready) {
+        throw new StorageNotFoundError('Failed to mark processed variant ready');
+      }
+    }
+
+    return assetId;
+  }
+
+  private createMediaProcessingService(): MediaProcessingService {
+    return new MediaProcessingService({
+      config: this.config,
+      storage: this,
+      assetRepository: this.repository,
+      logger: this.log,
+    });
   }
 
   /** CDN-friendly public URL when S3_PUBLIC_BASE_URL is configured. */

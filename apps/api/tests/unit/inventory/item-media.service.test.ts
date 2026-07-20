@@ -8,7 +8,6 @@ import type { ItemLocationRepository } from '../../../src/modules/inventory/item
 import type { ItemRepository } from '../../../src/modules/inventory/item.repository';
 import {
   ItemMediaService,
-  scheduleItemThumbnailGeneration,
 } from '../../../src/modules/inventory/item-media.service';
 import { MAX_ITEM_GALLERY_IMAGES } from '../../../src/modules/inventory/item-media.constants';
 
@@ -53,16 +52,6 @@ const sampleImage = {
 };
 
 describe('ItemMediaService', () => {
-  test('scheduleItemThumbnailGeneration schedules async processing', () => {
-    scheduleItemThumbnailGeneration(
-      'biz-1',
-      'acct-1',
-      'asset-1',
-      baseConfig(),
-    );
-    expect(true).toBe(true);
-  });
-
   test('createItemImageUploadIntent rejects when gallery limit reached', async () => {
     const items = {
       exists: async () => true,

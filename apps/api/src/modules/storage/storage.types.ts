@@ -59,6 +59,13 @@ export type StorageValidationPolicy = {
   allowedMimes: readonly string[];
 };
 
+export type ProcessingStatus =
+  | 'pending'
+  | 'processing'
+  | 'ready'
+  | 'failed'
+  | 'skipped';
+
 export type MediaAssetRow = {
   id: string;
   businessId: string | null;
@@ -74,6 +81,17 @@ export type MediaAssetRow = {
   ownerId: string | null;
   status: string;
   uploadedBy: string | null;
+  width: number | null;
+  height: number | null;
+  format: string | null;
+  variantType: string | null;
+  parentAssetId: string | null;
+  originalSize: number | null;
+  optimizedSize: number | null;
+  compressionRatio: number | null;
+  processedAt: Date | null;
+  processingStatus: ProcessingStatus;
+  stagingStorageKey: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

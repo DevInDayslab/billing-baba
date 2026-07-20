@@ -1,20 +1,12 @@
-import type { AppConfig } from '../../config/app_config';
-import type { ImageVariant } from './image.constants';
+export { buildProcessedImagePath } from '../media-processing/image/image-path.builder';
 
-export type BuildImageVariantPathParams = {
-  environment: AppConfig['environment'];
+/** @deprecated Use buildProcessedImagePath — legacy derivative key builder */
+export function buildImageVariantStoragePath(params: {
+  environment: string;
   businessId: string;
   sourceAssetId: string;
-  variant: ImageVariant;
-};
-
-/**
- * Stable derivative keys for CDN cache invalidation.
- * {env}/businesses/{businessId}/derivatives/{sourceAssetId}/{variant}.webp
- */
-export function buildImageVariantStoragePath(
-  params: BuildImageVariantPathParams,
-): string {
+  variant: string;
+}): string {
   const { environment, businessId, sourceAssetId, variant } = params;
   return [
     environment,

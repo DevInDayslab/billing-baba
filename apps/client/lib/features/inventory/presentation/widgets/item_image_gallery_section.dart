@@ -5,6 +5,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
+import 'package:billing_baba/core/media/image_display_context.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -316,7 +317,9 @@ class _GalleryThumb extends StatelessWidget {
                     fit: StackFit.expand,
                     children: [
                       AppNetworkImage(
-                        imageUrl: image.imageUrl,
+                        imageUrl: image.urlForGrid(),
+                        sourceMediaAssetId: image.mediaAssetId,
+                        displayContext: ImageDisplayContext.galleryThumb,
                         memCacheWidth: (_thumbSize * 2).round(),
                         placeholder: ColoredBox(
                           color: Colors.grey.shade200,
