@@ -3,6 +3,7 @@ import 'package:billing_baba/features/parties/application/party_error_mapper.dar
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_avatar.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
@@ -220,6 +221,13 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
 
                   return ListTile(
                     dense: true,
+                    leading: PartyAvatar(
+                      name: party.name,
+                      seed: party.id,
+                      diameter: 32,
+                      profileImageUrl: party.profileImageUrl,
+                      profileMediaAssetId: party.profileMediaAssetId,
+                    ),
                     title: Text(party.name),
                     subtitle: subtitle.isEmpty ? null : Text(subtitle),
                     onTap: () => _selectParty(party),

@@ -22,8 +22,8 @@ import 'package:uuid/uuid.dart';
 
 export 'party_error_mapper.dart'
     show
-        PartyException,
         PartyBusinessNotSelectedException,
+        PartyException,
         PartyHasDependenciesException,
         PartyOfflineException;
 
@@ -421,6 +421,31 @@ class PartyService {
     }
   }
 
+  /// Writes profile image fields into the local party cache so detail reloads
+  /// do not flash back to a missing avatar after upload.
+  Future<void> persistPartyProfileImage(
+    String partyId, {
+    String? profileImageUrl,
+    String? profileMediaAssetId,
+  }) async {
+    final businessId = _businessId;
+    if (businessId == null || businessId.isEmpty) return;
+
+    final parties = await _cache.readParties(businessId);
+    if (parties.isEmpty) return;
+
+    final next = parties.map((json) {
+      if (json['id'] != partyId) return json;
+      return {
+        ...json,
+        'profile_image_url': profileImageUrl,
+        'profile_media_asset_id': profileMediaAssetId,
+      };
+    }).toList();
+
+    await _cache.saveParties(businessId, next);
+  }
+
   Future<List<PartyDto>> _fetchRemoteParties({
     String? searchQuery,
     PartyListFilter filter = PartyListFilter.all,
@@ -521,7 +546,7 @@ class PartyService {
 
         // Every word must appear somewhere in the combined text
         final allWordsMatch = queryWords.every(
-          (word) => searchableText.contains(word),
+          searchableText.contains,
         );
         if (!allWordsMatch) return false;
       }
@@ -890,6 +915,36 @@ class PartyList extends _$PartyList {
       await refresh();
       rethrow;
     }
+  }
+
+  /// Optimistically patch profile image fields after upload/delete.
+  void patchProfileImage(
+    String partyId, {
+    String? profileImageUrl,
+    String? profileMediaAssetId,
+    bool clear = false,
+  }) {
+    final current = state.asData?.value;
+    final existing = current?.where((p) => p.id == partyId).firstOrNull ??
+        ref.read(partyDetailProvider(partyId)).asData?.value;
+    if (existing == null) return;
+
+    final updated = existing.copyWith(
+      profileImageUrl: clear ? null : profileImageUrl,
+      profileMediaAssetId: clear ? null : profileMediaAssetId,
+      clearProfileImage: clear,
+    );
+    _upsertInState(updated);
+    ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
+    unawaited(
+      ref.read(partyServiceProvider.future).then(
+            (service) => service.persistPartyProfileImage(
+              partyId,
+              profileImageUrl: updated.profileImageUrl,
+              profileMediaAssetId: updated.profileMediaAssetId,
+            ),
+          ),
+    );
   }
 
   bool _upsertInState(PartyModel party) {

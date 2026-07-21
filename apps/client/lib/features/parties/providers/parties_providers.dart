@@ -11,9 +11,8 @@ export 'parties_selection_providers.dart';
 final partyPickerListProvider = FutureProvider<List<PartyModel>>((ref) async {
   ref.keepAlive();
 
-  // Reuse partyListProvider data when already loaded (also keepAlive),
-  // avoiding a duplicate API call.
-  final cachedParties = ref.read(partyListProvider).asData?.value;
+  // Stay in sync with the parties page list (including profile image patches).
+  final cachedParties = ref.watch(partyListProvider).asData?.value;
   if (cachedParties != null && cachedParties.isNotEmpty) {
     return cachedParties;
   }

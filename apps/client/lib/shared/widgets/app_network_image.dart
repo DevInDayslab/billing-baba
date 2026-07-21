@@ -200,6 +200,7 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
     return VisibilityDetector(
       key: Key('app-network-image-${widget.imageUrl}-$_retryKey'),
       onVisibilityChanged: (info) {
+        if (!mounted) return;
         final visible = info.visibleFraction > 0;
         if (visible != _isVisible) {
           setState(() => _isVisible = visible);

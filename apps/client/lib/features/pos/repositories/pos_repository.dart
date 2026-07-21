@@ -22,6 +22,8 @@ class PosCustomer {
     this.phone,
     this.outstanding = 0,
     this.creditLimit = 0,
+    this.profileImageUrl,
+    this.profileMediaAssetId,
   });
 
   final String id;
@@ -29,4 +31,6 @@ class PosCustomer {
   final String? phone;
   final double outstanding;
   final double creditLimit;
+  final String? profileImageUrl;
+  final String? profileMediaAssetId;
 }

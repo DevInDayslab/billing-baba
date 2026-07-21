@@ -1,9 +1,9 @@
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_search_provider.dart';
+import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/pos/application/pos_catalog.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
-import 'package:billing_baba/features/pos/providers/pos_repository_provider.dart';
 import 'package:billing_baba/features/pos/repositories/pos_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -63,7 +63,33 @@ List<PosItem> posFilteredCatalog(
 
 @riverpod
 Future<List<PosCustomer>> posCustomerSearch(Ref ref, String query) async {
-  final repository = await ref.watch(posRepositoryProvider.future);
-  if (query.isEmpty) return [];
-  return repository.searchCustomers(query);
+  final trimmed = query.trim();
+  if (trimmed.isEmpty) return [];
+
+  // Prefer parties list (includes profile images) over the stub POS repo.
+  final parties = await ref.watch(partyPickerListProvider.future);
+  final q = trimmed.toLowerCase();
+  return parties
+      .where(
+        (party) => party.partyType == 'customer' || party.partyType == 'both',
+      )
+      .where((party) {
+        final phone = party.phone.replaceAll(RegExp(r'\D'), '');
+        final queryDigits = trimmed.replaceAll(RegExp(r'\D'), '');
+        return party.name.toLowerCase().contains(q) ||
+            (queryDigits.isNotEmpty && phone.contains(queryDigits));
+      })
+      .take(20)
+      .map(
+        (party) => PosCustomer(
+          id: party.id,
+          name: party.name,
+          phone: party.phone.isEmpty ? null : party.phone,
+          outstanding: party.balance,
+          creditLimit: double.tryParse(party.creditLimit) ?? 0,
+          profileImageUrl: party.profileImageUrl,
+          profileMediaAssetId: party.profileMediaAssetId,
+        ),
+      )
+      .toList();
 }

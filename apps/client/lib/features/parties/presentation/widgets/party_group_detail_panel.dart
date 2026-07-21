@@ -7,6 +7,7 @@ import 'package:billing_baba/features/parties/models/party_group_summary.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/providers/party_group_providers.dart';
 import 'package:billing_baba/features/parties/providers/parties_selection_providers.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -217,12 +218,12 @@ class _PartyInGroupTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Row(
           children: [
-            Icon(
-              Icons.person_outline,
-              size: 16,
-              color: party.isActive
-                  ? Colors.grey.shade500
-                  : Colors.grey.shade400,
+            PartyAvatar(
+              name: party.name,
+              seed: party.id,
+              diameter: 28,
+              profileImageUrl: party.profileImageUrl,
+              profileMediaAssetId: party.profileMediaAssetId,
             ),
             const SizedBox(width: 8),
             Expanded(

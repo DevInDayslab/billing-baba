@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_avatar.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_panel.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_styles.dart';
@@ -292,6 +293,13 @@ class _CustomerSearchResults extends StatelessWidget {
               final customer = customers[index];
               return ListTile(
                 dense: true,
+                leading: PartyAvatar(
+                  name: customer.name,
+                  seed: customer.id,
+                  diameter: 32,
+                  profileImageUrl: customer.profileImageUrl,
+                  profileMediaAssetId: customer.profileMediaAssetId,
+                ),
                 title: Text(
                   customer.name,
                   style: const TextStyle(

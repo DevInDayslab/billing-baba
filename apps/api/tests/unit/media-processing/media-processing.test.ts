@@ -56,6 +56,28 @@ describe('media-processing.constants', () => {
     expect(policy.key).toBe('LOGO');
     expect(policy.maxEdge).toBe(1024);
   });
+
+  test('resolveImagePolicy maps party profile photos to AVATAR', () => {
+    const policy = resolveImagePolicy({
+      purpose: 'parties',
+      mimeType: 'image/jpeg',
+      ownerType: 'party',
+      businessId: '11111111-1111-1111-1111-111111111111',
+    });
+    expect(policy.key).toBe('AVATAR');
+    expect(policy.generateVariants).toBe(true);
+    expect(policy.maxEdge).toBe(512);
+  });
+
+  test('resolveImagePolicy maps other party uploads to ATTACHMENT', () => {
+    const policy = resolveImagePolicy({
+      purpose: 'parties',
+      mimeType: 'image/jpeg',
+      ownerType: 'kyc',
+      businessId: '11111111-1111-1111-1111-111111111111',
+    });
+    expect(policy.key).toBe('ATTACHMENT');
+  });
 });
 
 describe('media-processing pipeline validation', () => {

@@ -87,7 +87,6 @@ const ATTACHMENT_PURPOSES: StoragePurpose[] = [
   'sales',
   'purchases',
   'expenses',
-  'parties',
   'payments',
   'job_work',
   'documents',
@@ -113,6 +112,15 @@ export function resolveImagePolicy(input: ResolvePolicyInput): ImagePolicy {
 
   if (input.purpose === 'branding') {
     return IMAGE_POLICIES.LOGO;
+  }
+
+  // Party profile photos use the same thumb/medium/original pipeline as avatars.
+  // Other party-scoped uploads (KYC attachments) stay attachment-only.
+  if (input.purpose === 'parties') {
+    if (input.ownerType === 'party' || input.ownerType === 'profile') {
+      return IMAGE_POLICIES.AVATAR;
+    }
+    return IMAGE_POLICIES.ATTACHMENT;
   }
 
   if (input.purpose === 'items') {

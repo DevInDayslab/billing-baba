@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/media/image_display_context.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
@@ -12,7 +13,9 @@ import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_actions_menu_button.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_avatar.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_ledger_transactions_section.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_profile_image_preview_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_whatsapp_actions.dart';
 import 'package:billing_baba/features/parties/providers/party_reminder_schedule_provider.dart';
 import 'package:billing_baba/features/parties/repositories/party_reminder_schedule_repository.dart';
@@ -42,27 +45,46 @@ class PartyDetailPanel extends ConsumerWidget {
         message: PartyErrorMapper.messageFor(error),
         onRetry: () => ref.invalidate(partyDetailProvider(partyId)),
       ),
-      data: (party) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (usingCache)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.sm,
-                AppSpacing.md,
-                0,
+      data: (party) {
+        // Prefer the list row's profile image when it is newer (instant upload).
+        final listParty = ref
+            .watch(partyListProvider)
+            .asData
+            ?.value
+            .where((item) => item.id == party.id)
+            .firstOrNull;
+        final imageUrl =
+            listParty?.profileImageUrl ?? party.profileImageUrl;
+        final mediaId =
+            listParty?.profileMediaAssetId ?? party.profileMediaAssetId;
+        final displayParty = party.copyWith(
+          profileImageUrl: imageUrl,
+          profileMediaAssetId: mediaId,
+          clearProfileImage: imageUrl == null && mediaId == null,
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (usingCache)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                  0,
+                ),
+                child: _OfflineBanner(),
               ),
-              child: _OfflineBanner(),
+            Expanded(
+              child: _PartyDetailContent(
+                party: displayParty,
+                onBack: onBack,
+              ),
             ),
-          Expanded(
-            child: _PartyDetailContent(
-              party: party,
-              onBack: onBack,
-            ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }
@@ -176,7 +198,8 @@ class _PartyDetailHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final permissions = ref.watch(permissionServiceProvider);
     final canEditParty = permissions.canEdit(PermissionModule.party);
-    final canShareMessaging = permissions.canShare(PermissionModule.party) ||
+    final canShareMessaging =
+        permissions.canShare(PermissionModule.party) ||
         permissions.canShare(PermissionModule.sale);
     final outstanding = ledgerAsync.maybeWhen(
       data: (ledger) => ledger.summary.outstanding,
@@ -257,6 +280,30 @@ class _PartyDetailHeader extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.xs),
               ],
+              PartyAvatar(
+                name: party.name,
+                seed: party.id,
+                diameter: 56,
+                displayContext: ImageDisplayContext.detail,
+                profileImageUrl: party.profileImageUrl,
+                profileMediaAssetId: party.profileMediaAssetId,
+                onTap: () {
+                  final url = party.profileImageUrl?.trim();
+                  if (url == null || url.isEmpty) return;
+                  showPartyProfileImagePreviewDialog(
+                    context: context,
+                    imageUrl: url,
+                    mediaAssetId: party.profileMediaAssetId,
+                    onReplace: canEditParty
+                        ? () => PartyActions.edit(context, ref, party)
+                        : null,
+                    onRemove: canEditParty
+                        ? () => PartyActions.edit(context, ref, party)
+                        : null,
+                  );
+                },
+              ),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,11 +381,11 @@ class _PartyDetailHeader extends ConsumerWidget {
                 onPressed: !canShareMessaging
                     ? null
                     : () => PartyWhatsAppActions.sendPaymentReminderNow(
-                          context,
-                          ref,
-                          party,
-                          outstanding: outstanding,
-                        ),
+                        context,
+                        ref,
+                        party,
+                        outstanding: outstanding,
+                      ),
               ),
               _PartyHeaderActionIcon(
                 iconWidget: FaIcon(
@@ -354,11 +401,11 @@ class _PartyDetailHeader extends ConsumerWidget {
                 onPressed: !canShareMessaging
                     ? null
                     : () => PartyWhatsAppActions.sendPaymentReminderNow(
-                          context,
-                          ref,
-                          party,
-                          outstanding: outstanding,
-                        ),
+                        context,
+                        ref,
+                        party,
+                        outstanding: outstanding,
+                      ),
               ),
               _PartyHeaderActionIcon(
                 iconWidget: FaIcon(
@@ -374,11 +421,11 @@ class _PartyDetailHeader extends ConsumerWidget {
                 onPressed: !canShareMessaging
                     ? null
                     : () => PartyWhatsAppActions.showReminderDialog(
-                          context,
-                          ref,
-                          party,
-                          outstanding: outstanding,
-                        ),
+                        context,
+                        ref,
+                        party,
+                        outstanding: outstanding,
+                      ),
               ),
               PartyActionsMenuButton(party: party),
             ],
@@ -387,8 +434,9 @@ class _PartyDetailHeader extends ConsumerWidget {
             builder: (context) {
               final next = ref.watch(partyNextReminderProvider(party.id));
               if (next == null) return const SizedBox.shrink();
-              final dateLabel =
-                  DateFormat('dd MMM yyyy').format(next.nextReminderAt);
+              final dateLabel = DateFormat(
+                'dd MMM yyyy',
+              ).format(next.nextReminderAt);
               final freqSuffix = switch (next.frequency) {
                 PartyReminderFrequency.once => '',
                 PartyReminderFrequency.weekly => ' (Weekly)',
@@ -407,7 +455,11 @@ class _PartyDetailHeader extends ConsumerWidget {
               );
             },
           ),
-          const Divider(height: 20, thickness: 1, color: Color.fromARGB(98, 117, 117, 117)),
+          const Divider(
+            height: 20,
+            thickness: 1,
+            color: Color.fromARGB(98, 117, 117, 117),
+          ),
 
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,7 +486,6 @@ class _PartyDetailHeader extends ConsumerWidget {
                         label: line.label,
                         value: line.value,
                       ),
-                      
                   ],
                 ),
               ),

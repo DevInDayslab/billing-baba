@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
+import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
 import { sendData, sendPaginated } from '../../shared/http/response';
 import {
@@ -45,7 +46,9 @@ function requireAuthContext(request: FastifyRequest): {
   };
 }
 
-export function createPartyController() {
+export function createPartyController(config: AppConfig) {
+  const service = new PartyService(config);
+
   return {
     list: async (
       request: FastifyRequest,
@@ -54,7 +57,6 @@ export function createPartyController() {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const query = listPartiesQuerySchema.parse(request.query);
-        const service = new PartyService();
         const result = await service.listParties(businessId, accountId, query);
 
         return sendPaginated(reply, result.data, result.meta);
@@ -75,7 +77,6 @@ export function createPartyController() {
       try {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const body = createPartyBodySchema.parse(request.body);
-        const service = new PartyService();
         const data = await service.createParty(
           businessId,
           accountId,
@@ -100,7 +101,6 @@ export function createPartyController() {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const { id } = partyIdParamSchema.parse(request.params);
-        const service = new PartyService();
         const data = await service.getParty(businessId, accountId, id);
         return sendData(reply, data);
       } catch (error) {
@@ -120,7 +120,6 @@ export function createPartyController() {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const { id } = partyIdParamSchema.parse(request.params);
-        const service = new PartyService();
         const data = await service.getPartyDeleteStatus(
           businessId,
           accountId,
@@ -171,7 +170,6 @@ export function createPartyController() {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id } = partyIdParamSchema.parse(request.params);
         const body = updatePartyBodySchema.parse(request.body);
-        const service = new PartyService();
         const data = await service.updateParty(
           businessId,
           accountId,
@@ -197,7 +195,6 @@ export function createPartyController() {
       try {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id } = partyIdParamSchema.parse(request.params);
-        const service = new PartyService();
         const action = await service.deleteParty(
           businessId,
           accountId,

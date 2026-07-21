@@ -24,6 +24,8 @@ export type PartyRecord = {
   balance: string;
   is_active: boolean;
   notes: string | null;
+  profile_image_url: string | null;
+  profile_media_asset_id: string | null;
   created_at: string;
   updated_at: string;
 };

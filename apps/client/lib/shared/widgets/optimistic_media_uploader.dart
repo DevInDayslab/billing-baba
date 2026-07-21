@@ -175,6 +175,8 @@ class OptimisticMediaUploader extends StatelessWidget {
         fit: fit,
         borderRadius: borderRadius,
         memCacheWidth: cacheWidth,
+        // Dialogs/overlays often never report visibility; load immediately.
+        loadWhenVisible: false,
         placeholder: placeholder ?? _emptyState(),
         errorWidget: placeholder ?? _emptyState(),
       );

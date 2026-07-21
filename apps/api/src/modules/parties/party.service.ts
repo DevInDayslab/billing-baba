@@ -1,6 +1,8 @@
+import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { resolvePartyPricingTier } from '../../shared/pricing/pricing-tier';
+import { PartyProfileImageService } from './party-profile-image.service';
 import { PartyRepository } from './party.repository';
 import type {
   CreatePartyBody,
@@ -23,8 +25,9 @@ import {
 
 export class PartyService {
   private readonly repository: PartyRepository;
+  private readonly profileImages: PartyProfileImageService | null;
 
-  constructor() {
+  constructor(config?: AppConfig) {
     const db = getDb();
     if (!db) {
       throw new AppError(
@@ -34,6 +37,9 @@ export class PartyService {
       );
     }
     this.repository = new PartyRepository(db);
+    this.profileImages = config
+      ? new PartyProfileImageService({ config, repository: this.repository })
+      : null;
   }
 
   async listParties(
@@ -57,8 +63,16 @@ export class PartyService {
       order: query.order,
     });
 
+    const data = this.profileImages
+      ? await this.profileImages.enrichParties(
+          businessId,
+          accountId,
+          result.rows,
+        )
+      : result.rows;
+
     return {
-      data: result.rows,
+      data,
       meta: {
         page: query.page,
         limit: query.limit,
@@ -79,7 +93,7 @@ export class PartyService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    return party;
+    return this.enrich(businessId, accountId, party);
   }
 
   async createParty(
@@ -112,7 +126,7 @@ export class PartyService {
       await this.assertGstinAvailable(businessId, gstin);
     }
 
-    return this.repository.create({
+    const created = await this.repository.create({
       businessId,
       name: input.name.trim(),
       mobile,
@@ -130,6 +144,8 @@ export class PartyService {
       createdBy: userId ?? null,
       updatedBy: userId ?? null,
     });
+
+    return this.enrich(businessId, accountId, created);
   }
 
   async updateParty(
@@ -213,7 +229,7 @@ export class PartyService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    return updated;
+    return this.enrich(businessId, accountId, updated);
   }
 
   async getPartyDeleteStatus(
@@ -285,6 +301,15 @@ export class PartyService {
     }
 
     return 'deactivated';
+  }
+
+  private async enrich(
+    businessId: string,
+    accountId: string,
+    party: PartyRecord,
+  ): Promise<PartyRecord> {
+    if (!this.profileImages) return party;
+    return this.profileImages.enrichParty(businessId, accountId, party);
   }
 
   private async assertBusinessAccess(
