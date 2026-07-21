@@ -38,11 +38,11 @@ class CartRow extends ConsumerWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: PosCategoryStyle.backgroundColor(item.category),
+                    color: PosCategoryStyle.backgroundColor(item.categoryStyleKey),
                     borderRadius: AppRadius.smBorder,
                   ),
                   child: Icon(
-                    PosCategoryStyle.icon(item.category),
+                    PosCategoryStyle.icon(item.categoryStyleKey),
                     size: 16,
                     color: AppColors.textSecondary,
                   ),

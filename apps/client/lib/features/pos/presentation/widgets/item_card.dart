@@ -21,103 +21,142 @@ class ItemCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stockColor = item.stock <= 5 ? posNegativeColor : posPositiveColor;
+    final isOutOfStock = item.isOutOfStock;
+    final stockColor = isOutOfStock
+        ? posNegativeColor
+        : (item.stock <= 5 ? posNegativeColor : posPositiveColor);
+    final styleKey = item.categoryStyleKey;
 
     return Material(
       color: AppColors.surface,
       borderRadius: AppRadius.mdBorder,
       child: InkWell(
-        onTap: () => ref.read(posCartProvider.notifier).addItem(item),
+        onTap: isOutOfStock
+            ? null
+            : () => ref.read(posCartProvider.notifier).addItem(item),
         borderRadius: AppRadius.mdBorder,
-        hoverColor: posSelectedBackground.withValues(alpha: 0.5),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            borderRadius: AppRadius.mdBorder,
-            border: Border.all(color: posCardBorder),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: PosCategoryStyle.backgroundColor(item.category),
-                    borderRadius: AppRadius.smBorder,
-                  ),
-                  child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                      ? ClipRRect(
+        hoverColor: isOutOfStock
+            ? null
+            : posSelectedBackground.withValues(alpha: 0.5),
+        child: Opacity(
+          opacity: isOutOfStock ? 0.72 : 1,
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              borderRadius: AppRadius.mdBorder,
+              border: Border.all(
+                color: isOutOfStock ? posNegativeColor.withValues(alpha: 0.4) : posCardBorder,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: PosCategoryStyle.backgroundColor(styleKey),
                           borderRadius: AppRadius.smBorder,
-                          child: AppNetworkImage(
-                            imageUrl: item.imageUrl!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            placeholder: Center(
-                              child: Icon(
-                                PosCategoryStyle.icon(item.category),
-                                size: 36,
-                                color: AppColors.textSecondary
-                                    .withValues(alpha: 0.7),
+                        ),
+                        child: item.imageUrl != null && item.imageUrl!.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: AppRadius.smBorder,
+                                child: AppNetworkImage(
+                                  imageUrl: item.imageUrl!,
+                                  width: double.infinity,
+                                  placeholder: Center(
+                                    child: Icon(
+                                      PosCategoryStyle.icon(styleKey),
+                                      size: 36,
+                                      color: AppColors.textSecondary
+                                          .withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                  errorWidget: Center(
+                                    child: Icon(
+                                      PosCategoryStyle.icon(styleKey),
+                                      size: 36,
+                                      color: AppColors.textSecondary
+                                          .withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Icon(
+                                  PosCategoryStyle.icon(styleKey),
+                                  size: 36,
+                                  color: AppColors.textSecondary.withValues(alpha: 0.7),
+                                ),
+                              ),
+                      ),
+                      if (isOutOfStock)
+                        Positioned(
+                          left: 6,
+                          top: 6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: posNegativeColor,
+                              borderRadius: AppRadius.smBorder,
+                            ),
+                            child: const Text(
+                              'Out of Stock',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                            errorWidget: Center(
-                              child: Icon(
-                                PosCategoryStyle.icon(item.category),
-                                size: 36,
-                                color: AppColors.textSecondary
-                                    .withValues(alpha: 0.7),
-                              ),
-                            ),
-                          ),
-                        )
-                      : Center(
-                          child: Icon(
-                            PosCategoryStyle.icon(item.category),
-                            size: 36,
-                            color: AppColors.textSecondary.withValues(alpha: 0.7),
                           ),
                         ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                item.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: PosStyles.itemNameStyle,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                item.sku,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: PosStyles.metadataStyle.copyWith(fontSize: 10),
-              ),
-              const Spacer(),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _currencyFormat.format(item.price),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  item.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: PosStyles.itemNameStyle,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.sku,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: PosStyles.metadataStyle.copyWith(fontSize: 10),
+                ),
+                const Spacer(),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _currencyFormat.format(item.price),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: PosStyles.priceStyle,
+                      ),
+                    ),
+                    Text(
+                      isOutOfStock ? 'Out of Stock' : 'Stock: ${item.stock}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: PosStyles.priceStyle,
+                      style: PosStyles.metadataStyle.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: stockColor,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Stock: ${item.stock}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: PosStyles.metadataStyle.copyWith(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: stockColor,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
@@ -91,6 +93,8 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
         description: loaded.description,
         attachedImages: attachments.images,
         attachedDocuments: attachments.documents,
+        isLoading: false,
+        showValidationErrors: kResetValidationOnLoad,
       );
     } catch (error) {
       state = state.copyWith(
@@ -121,7 +125,16 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
   }
 
   void updateParty(String value) {
-    state = state.copyWith(party: value, clearSaveError: true);
+    final change = unlinkedPartyNameChange(
+      newName: value,
+      previousName: state.party,
+      currentPartyId: state.partyId,
+    );
+    state = state.copyWith(
+      party: change.partyName,
+      clearPartyId: change.clearPartyId,
+      clearSaveError: true,
+    );
   }
 
   void updatePartyWithId({required String partyId, required String partyName}) {
@@ -317,6 +330,16 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
     state = state.copyWith(items: items);
   }
 
+  String? _validationError() {
+    return buildTransactionValidationError(
+      hasValidLineItems: state.hasValidLineItems,
+      hasValidPhone: Validators.requiredPhone(state.phoneNo) == null,
+      hasValidParty: state.partyId != null && state.partyId!.isNotEmpty,
+      requirePhone: true,
+      requireParty: true,
+    );
+  }
+
   bool validate() {
     final isValid = state.isValid;
     if (!isValid) {
@@ -337,7 +360,8 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
   );
 
   Future<String?> save({bool stayOpen = false}) async {
-    if (!validate()) return 'Please fill required fields';
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
@@ -371,7 +395,8 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
   }
 
   Future<String?> finalize() async {
-    if (!validate()) return 'Please fill required fields';
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {

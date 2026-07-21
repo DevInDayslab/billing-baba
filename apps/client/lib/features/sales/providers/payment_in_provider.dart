@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
@@ -529,8 +531,20 @@ class PaymentInFormState {
       partyId!.isNotEmpty &&
       receivedAmount > 0;
 
+  bool get partyHasError => transactionPartyHasError(
+    showValidationErrors: showValidationErrors,
+    partyId: partyId,
+    partyName: party,
+  );
+
+  bool get amountHasError => transactionAmountHasError(
+    showValidationErrors: showValidationErrors,
+    amount: receivedAmount,
+  );
+
   PaymentInFormState copyWith({
     String? partyId,
+    bool clearPartyId = false,
     String? party,
     String? paymentType,
     String? receiptNo,
@@ -549,7 +563,7 @@ class PaymentInFormState {
     bool? isSaving,
   }) {
     return PaymentInFormState(
-      partyId: partyId ?? this.partyId,
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
       party: party ?? this.party,
       paymentType: paymentType ?? this.paymentType,
       receiptNo: receiptNo ?? this.receiptNo,
@@ -609,21 +623,40 @@ class PaymentInForm extends _$PaymentInForm {
   }
 
   Future<void> updateParty(String name, {String? partyId}) async {
+    final change = unlinkedPartyNameChange(
+      newName: name,
+      previousName: state.party,
+      currentPartyId: state.partyId,
+    );
+    final clearLink = partyId == null && change.clearPartyId;
     state = state.copyWith(
-      party: name,
+      party: change.partyName,
       partyId: partyId,
+      clearPartyId: clearLink,
       clearSaveError: true,
+      balanceDue: clearLink ? 0 : state.balanceDue,
     );
 
-    if (partyId != null && partyId.isNotEmpty) {
+    final linkedId = state.partyId;
+    if (linkedId != null && linkedId.isNotEmpty) {
       try {
         final service = await ref.read(salesServiceProvider.future);
-        final balanceDue = await service.fetchPartyBalanceDue(partyId);
+        final balanceDue = await service.fetchPartyBalanceDue(linkedId);
         state = state.copyWith(balanceDue: balanceDue);
       } catch (_) {
         // Balance lookup is best-effort for the dialog.
       }
     }
+  }
+
+  String? _validationError() {
+    return buildTransactionValidationError(
+      hasValidLineItems: true,
+      hasValidParty: state.partyId != null && state.partyId!.isNotEmpty,
+      hasValidAmount: state.receivedAmount > 0,
+      requireParty: true,
+      requireAmount: true,
+    );
   }
 
   void updatePaymentType(String value) {
@@ -733,9 +766,13 @@ class PaymentInForm extends _$PaymentInForm {
   }
 
   Future<({String? error, String? paymentId})> savePayment() async {
+    if (state.isSaving) {
+      return (error: null, paymentId: null);
+    }
+
     final payment = buildPaymentModel();
     if (payment == null) {
-      return (error: 'Please fill required fields', paymentId: null);
+      return (error: _validationError(), paymentId: null);
     }
 
     state = state.copyWith(isSaving: true, clearSaveError: true);

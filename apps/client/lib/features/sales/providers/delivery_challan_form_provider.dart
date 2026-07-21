@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
@@ -86,6 +88,8 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
         description: loaded.description,
         attachedImages: attachments.images,
         attachedDocuments: attachments.documents,
+        isLoading: false,
+        showValidationErrors: kResetValidationOnLoad,
       );
     } catch (error) {
       state = state.copyWith(
@@ -170,7 +174,16 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
   }
 
   void updateParty(String value) {
-    state = state.copyWith(party: value, clearSaveError: true);
+    final change = unlinkedPartyNameChange(
+      newName: value,
+      previousName: state.party,
+      currentPartyId: state.partyId,
+    );
+    state = state.copyWith(
+      party: change.partyName,
+      clearPartyId: change.clearPartyId,
+      clearSaveError: true,
+    );
   }
 
   void updatePartyWithId({required String partyId, required String partyName}) {
@@ -341,6 +354,14 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
     state = state.copyWith(items: items);
   }
 
+  String? _validationError() {
+    return buildTransactionValidationError(
+      hasValidLineItems: state.hasValidLineItems,
+      hasValidParty: state.partyId != null && state.partyId!.isNotEmpty,
+      requireParty: true,
+    );
+  }
+
   bool validate() {
     final isValid = state.isValid;
     if (!isValid) {
@@ -382,8 +403,8 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
       );
 
   Future<String?> save() async {
-    if (!validate()) return 'Please fill required fields';
-    if (state.isSaving) return 'Save already in progress';
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
@@ -421,8 +442,8 @@ class DeliveryChallanFormNotifier extends _$DeliveryChallanFormNotifier {
 
   /// Saves and finalizes the challan, then refreshes dashboard and party timeline.
   Future<String?> finalize() async {
-    if (!validate()) return 'Please fill required fields';
-    if (state.isSaving) return 'Save already in progress';
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {

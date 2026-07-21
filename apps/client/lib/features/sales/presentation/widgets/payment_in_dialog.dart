@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
@@ -195,19 +196,15 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                         children: [
                           _FloatingLabelField(
                             label: 'Party *',
-                            hasError:
-                                form.showValidationErrors &&
-                                form.party.trim().isEmpty,
+                            hasError: form.partyHasError,
                             child: BillingNamePartySearchField(
                               value: form.party,
                               emptyPlaceholder: 'Select Party',
                               onSelected: notifier.updateParty,
                               onPartySelectedWithId: (partyId, name) =>
                                   notifier.updateParty(name, partyId: partyId),
-                              hasError:
-                                  form.showValidationErrors &&
-                                  form.party.trim().isEmpty,
-                              errorMessage: 'Party is required',
+                              hasError: form.partyHasError,
+                              errorMessage: kPartyValidationMessage,
                             ),
                           ),
                           const SizedBox(height: _sectionGap),

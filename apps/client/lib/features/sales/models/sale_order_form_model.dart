@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
@@ -86,15 +87,26 @@ class SaleOrderFormState {
 
   double get balanceAmount => (total - advanceAmount).clamp(0, double.infinity);
 
-  bool get partyHasError => showValidationErrors && party.trim().isEmpty;
+  bool get partyHasError =>
+      transactionPartyHasError(
+        showValidationErrors: showValidationErrors,
+        partyId: partyId,
+        partyName: party,
+      );
 
   bool get phoneHasError =>
-      showValidationErrors && Validators.requiredPhone(phoneNo) != null;
+      transactionPhoneHasError(
+        showValidationErrors: showValidationErrors,
+        phone: phoneNo,
+      );
 
-  String? get phoneErrorMessage => Validators.requiredPhone(phoneNo);
+  String? get phoneErrorMessage => phoneValidationMessage(phoneNo);
 
-  bool get hasValidLineItems =>
-      items.any((item) => item.itemName.trim().isNotEmpty);
+  bool get hasValidLineItems => hasValidNamedLineItems<SaleLineItem>(
+    items: items,
+    nameOf: (item) => item.itemName,
+    qtyOf: (item) => item.qty,
+  );
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
@@ -131,12 +143,13 @@ class SaleOrderFormState {
     String? phoneNo,
     String? saveError,
     bool clearSaveError = false,
+    bool clearPartyId = false,
     String? taxOption,
   }) {
     return SaleOrderFormState(
       isFormOpen: isFormOpen ?? this.isFormOpen,
       documentId: documentId ?? this.documentId,
-      partyId: partyId ?? this.partyId,
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
       party: party ?? this.party,
       orderNo: orderNo ?? this.orderNo,
       orderDate: orderDate ?? this.orderDate,

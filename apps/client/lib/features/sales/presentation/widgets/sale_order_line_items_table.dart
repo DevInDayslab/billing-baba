@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
@@ -103,7 +104,7 @@ class _SaleOrderLineItemsTableState
           const Padding(
             padding: EdgeInsets.fromLTRB(12, 4, 12, 0),
             child: Text(
-              'Add at least one item with name and quantity',
+              kLineItemsValidationMessage,
               style: TextStyle(fontSize: 11, color: saleFieldErrorColor),
             ),
           ),

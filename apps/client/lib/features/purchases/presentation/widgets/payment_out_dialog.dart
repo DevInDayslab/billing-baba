@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
@@ -220,10 +221,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                             children: [
                               _FloatingLabelField(
                                 label: 'Party *',
-                                hasError:
-                                    form.showValidationErrors &&
-                                    (form.partyId == null ||
-                                        form.partyId!.isEmpty),
+                                hasError: form.partyHasError,
                                 child: BillingNamePartySearchField(
                                   value: form.party,
                                   emptyPlaceholder: 'Select Party',
@@ -233,11 +231,8 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                         name,
                                         partyId: partyId,
                                       ),
-                                  hasError:
-                                      form.showValidationErrors &&
-                                      (form.partyId == null ||
-                                          form.partyId!.isEmpty),
-                                  errorMessage: 'Please select a party',
+                                  hasError: form.partyHasError,
+                                  errorMessage: kPartyValidationMessage,
                                 ),
                               ),
                               if (form.partyId != null &&

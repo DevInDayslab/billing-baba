@@ -62,92 +62,166 @@ abstract class _$PosItemSearchQuery extends $Notifier<String> {
   }
 }
 
-@ProviderFor(posItems)
-final posItemsProvider = PosItemsProvider._();
+/// POS catalog derived from the shared inventory cache (single source of truth).
 
-final class PosItemsProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<PosItem>>,
-          List<PosItem>,
-          FutureOr<List<PosItem>>
-        >
-    with $FutureModifier<List<PosItem>>, $FutureProvider<List<PosItem>> {
-  PosItemsProvider._()
+@ProviderFor(posCatalog)
+final posCatalogProvider = PosCatalogProvider._();
+
+/// POS catalog derived from the shared inventory cache (single source of truth).
+
+final class PosCatalogProvider
+    extends $FunctionalProvider<List<PosItem>, List<PosItem>, List<PosItem>>
+    with $Provider<List<PosItem>> {
+  /// POS catalog derived from the shared inventory cache (single source of truth).
+  PosCatalogProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'posItemsProvider',
+        name: r'posCatalogProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$posItemsHash();
+  String debugGetCreateSourceHash() => _$posCatalogHash();
 
   @$internal
   @override
-  $FutureProviderElement<List<PosItem>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  $ProviderElement<List<PosItem>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
-  FutureOr<List<PosItem>> create(Ref ref) {
-    return posItems(ref);
+  List<PosItem> create(Ref ref) {
+    return posCatalog(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<PosItem> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<PosItem>>(value),
+    );
   }
 }
 
-String _$posItemsHash() => r'9c4f16de380b54f66668c2b141fda2ee54811470';
+String _$posCatalogHash() => r'303d24f2c21d9332b74c4789e70daeac2713b25f';
 
-@ProviderFor(posItemSearch)
-final posItemSearchProvider = PosItemSearchFamily._();
+/// Inventory categories that currently have at least one POS product.
 
-final class PosItemSearchProvider
+@ProviderFor(posCategories)
+final posCategoriesProvider = PosCategoriesProvider._();
+
+/// Inventory categories that currently have at least one POS product.
+
+final class PosCategoriesProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<PosItem>>,
-          List<PosItem>,
-          FutureOr<List<PosItem>>
+          List<PosCategoryOption>,
+          List<PosCategoryOption>,
+          List<PosCategoryOption>
         >
-    with $FutureModifier<List<PosItem>>, $FutureProvider<List<PosItem>> {
-  PosItemSearchProvider._({
-    required PosItemSearchFamily super.from,
-    required String super.argument,
+    with $Provider<List<PosCategoryOption>> {
+  /// Inventory categories that currently have at least one POS product.
+  PosCategoriesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'posCategoriesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$posCategoriesHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<PosCategoryOption>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<PosCategoryOption> create(Ref ref) {
+    return posCategories(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<PosCategoryOption> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<PosCategoryOption>>(value),
+    );
+  }
+}
+
+String _$posCategoriesHash() => r'147096d766b8c2a6d4f69b09f34c981cd98e64a1';
+
+/// Filtered POS catalog using inventory search (name, barcode/SKU, HSN).
+
+@ProviderFor(posFilteredCatalog)
+final posFilteredCatalogProvider = PosFilteredCatalogFamily._();
+
+/// Filtered POS catalog using inventory search (name, barcode/SKU, HSN).
+
+final class PosFilteredCatalogProvider
+    extends $FunctionalProvider<List<PosItem>, List<PosItem>, List<PosItem>>
+    with $Provider<List<PosItem>> {
+  /// Filtered POS catalog using inventory search (name, barcode/SKU, HSN).
+  PosFilteredCatalogProvider._({
+    required PosFilteredCatalogFamily super.from,
+    required ({String searchQuery, String? categoryId, bool inStockOnly})
+    super.argument,
   }) : super(
          retry: null,
-         name: r'posItemSearchProvider',
+         name: r'posFilteredCatalogProvider',
          isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$posItemSearchHash();
+  String debugGetCreateSourceHash() => _$posFilteredCatalogHash();
 
   @override
   String toString() {
-    return r'posItemSearchProvider'
+    return r'posFilteredCatalogProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
   @override
-  $FutureProviderElement<List<PosItem>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  $ProviderElement<List<PosItem>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
-  FutureOr<List<PosItem>> create(Ref ref) {
-    final argument = this.argument as String;
-    return posItemSearch(ref, argument);
+  List<PosItem> create(Ref ref) {
+    final argument =
+        this.argument
+            as ({String searchQuery, String? categoryId, bool inStockOnly});
+    return posFilteredCatalog(
+      ref,
+      searchQuery: argument.searchQuery,
+      categoryId: argument.categoryId,
+      inStockOnly: argument.inStockOnly,
+    );
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<PosItem> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<PosItem>>(value),
+    );
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PosItemSearchProvider && other.argument == argument;
+    return other is PosFilteredCatalogProvider && other.argument == argument;
   }
 
   @override
@@ -156,24 +230,43 @@ final class PosItemSearchProvider
   }
 }
 
-String _$posItemSearchHash() => r'31a25b00c0324e12e29e899b17ad171586ff024b';
+String _$posFilteredCatalogHash() =>
+    r'4250ebae8514c47ca5a6b432529ed7d2faf66680';
 
-final class PosItemSearchFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<PosItem>>, String> {
-  PosItemSearchFamily._()
+/// Filtered POS catalog using inventory search (name, barcode/SKU, HSN).
+
+final class PosFilteredCatalogFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          List<PosItem>,
+          ({String searchQuery, String? categoryId, bool inStockOnly})
+        > {
+  PosFilteredCatalogFamily._()
     : super(
         retry: null,
-        name: r'posItemSearchProvider',
+        name: r'posFilteredCatalogProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
 
-  PosItemSearchProvider call(String query) =>
-      PosItemSearchProvider._(argument: query, from: this);
+  /// Filtered POS catalog using inventory search (name, barcode/SKU, HSN).
+
+  PosFilteredCatalogProvider call({
+    required String searchQuery,
+    String? categoryId,
+    bool inStockOnly = false,
+  }) => PosFilteredCatalogProvider._(
+    argument: (
+      searchQuery: searchQuery,
+      categoryId: categoryId,
+      inStockOnly: inStockOnly,
+    ),
+    from: this,
+  );
 
   @override
-  String toString() => r'posItemSearchProvider';
+  String toString() => r'posFilteredCatalogProvider';
 }
 
 @ProviderFor(posCustomerSearch)

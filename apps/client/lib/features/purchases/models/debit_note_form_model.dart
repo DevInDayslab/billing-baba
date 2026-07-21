@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_model.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
@@ -72,8 +73,11 @@ class DebitNoteFormState {
   bool get partyHasError =>
       showValidationErrors && (partyId == null || partyId!.isEmpty);
 
-  bool get hasValidLineItems =>
-      items.any((item) => item.itemName.trim().isNotEmpty);
+  bool get hasValidLineItems => hasValidNamedLineItems<SaleLineItem>(
+    items: items,
+    nameOf: (item) => item.itemName,
+    qtyOf: (item) => item.qty,
+  );
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
@@ -104,10 +108,11 @@ class DebitNoteFormState {
     bool? isSaving,
     String? saveError,
     bool clearSaveError = false,
+    bool clearPartyId = false,
   }) {
     return DebitNoteFormState(
       documentId: documentId ?? this.documentId,
-      partyId: partyId ?? this.partyId,
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
       godownId: godownId ?? this.godownId,
       party: party ?? this.party,
       returnNo: returnNo ?? this.returnNo,

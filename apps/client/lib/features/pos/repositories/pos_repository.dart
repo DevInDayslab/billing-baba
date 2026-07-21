@@ -1,14 +1,7 @@
-import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/pos/providers/pos_cart_state.dart';
 
 abstract class PosRepository {
-  /// Fetch all available items (with stock levels)
-  Future<List<PosItem>> getItems();
-
-  /// Search items by name or SKU
-  Future<List<PosItem>> searchItems(String query);
-
   /// Submit a completed sale — deducts stock, creates ledger entry.
   Future<PosSale> submitSale({
     required PosCartState cart,

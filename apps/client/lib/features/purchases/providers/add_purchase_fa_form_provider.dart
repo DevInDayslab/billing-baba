@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_fa_service.dart';
@@ -56,9 +58,15 @@ class AddPurchaseFaForm extends _$AddPurchaseFaForm {
   }
 
   void updateParty(String value, {String? partyId}) {
+    final change = unlinkedPartyNameChange(
+      newName: value,
+      previousName: state.party,
+      currentPartyId: state.partyId,
+    );
     state = state.copyWith(
-      party: value,
-      partyId: partyId ?? state.partyId,
+      party: change.partyName,
+      partyId: partyId,
+      clearPartyId: partyId == null && change.clearPartyId,
       billingName: state.billingName.isEmpty ? value : state.billingName,
       isDirty: true,
       clearSaveError: true,
@@ -221,6 +229,19 @@ class AddPurchaseFaForm extends _$AddPurchaseFaForm {
     state = state.copyWith(roundOff: value, isDirty: true);
   }
 
+  String? _validationError() {
+    return buildTransactionValidationError(
+      hasValidLineItems: state.hasValidLineItems,
+      hasValidParty: state.partyId != null && state.partyId!.isNotEmpty,
+      requireParty: true,
+      fieldMessages: {
+        TransactionValidationField.party: 'Please select a party',
+        TransactionValidationField.lineItems:
+            'Add at least one asset with name and quantity',
+      },
+    );
+  }
+
   bool validate() {
     final isValid = state.isValid;
     if (!isValid) {
@@ -230,13 +251,8 @@ class AddPurchaseFaForm extends _$AddPurchaseFaForm {
   }
 
   Future<String?> save() async {
-    if (!validate()) {
-      if ((state.partyId == null || state.partyId!.isEmpty) &&
-          state.party.trim().isEmpty) {
-        return 'Please select a party';
-      }
-      return 'Add at least one asset with name and quantity';
-    }
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {

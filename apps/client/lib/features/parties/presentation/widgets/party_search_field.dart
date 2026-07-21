@@ -118,13 +118,27 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     if (!mounted || result == null) return;
 
     ref.invalidate(partyPickerListProvider);
+    ref.invalidate(partiesListProvider);
 
     if (!mounted) return;
     widget.onSelected(result.partyName);
-    final parties = ref.read(partiesListProvider);
-    final match = parties
+
+    PartyModel? match = ref
+        .read(partiesListProvider)
         .where((party) => party.name == result.partyName)
         .firstOrNull;
+
+    if (match == null) {
+      try {
+        final pickerParties = await ref.read(partyPickerListProvider.future);
+        match = pickerParties
+            .where((party) => party.name == result.partyName)
+            .firstOrNull;
+      } on Object {
+        // Picker refresh is best-effort after create.
+      }
+    }
+
     if (match != null) {
       widget.onPartySelected?.call(match);
       widget.onPartySelectedWithId?.call(match.id, match.name);

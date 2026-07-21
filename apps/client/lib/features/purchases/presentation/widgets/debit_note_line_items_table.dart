@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/purchases/providers/debit_note_form_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
@@ -52,7 +53,7 @@ class DebitNoteLineItemsTable extends ConsumerWidget {
           const Padding(
             padding: EdgeInsets.fromLTRB(12, 4, 12, 0),
             child: Text(
-              'Add at least one item with a name',
+              kLineItemsValidationMessage,
               style: TextStyle(fontSize: 11, color: saleFieldErrorColor),
             ),
           ),

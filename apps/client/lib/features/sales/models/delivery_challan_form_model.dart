@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
@@ -83,10 +84,18 @@ class DeliveryChallanFormState {
     return roundOff ? grand.roundToDouble() : grand;
   }
 
-  bool get partyHasError => showValidationErrors && party.trim().isEmpty;
+  bool get partyHasError =>
+      transactionPartyHasError(
+        showValidationErrors: showValidationErrors,
+        partyId: partyId,
+        partyName: party,
+      );
 
-  bool get hasValidLineItems =>
-      items.any((item) => item.itemName.trim().isNotEmpty);
+  bool get hasValidLineItems => hasValidNamedLineItems<SaleLineItem>(
+    items: items,
+    nameOf: (item) => item.itemName,
+    qtyOf: (item) => item.qty,
+  );
 
   bool get lineItemsHasError => showValidationErrors && !hasValidLineItems;
 
@@ -124,11 +133,12 @@ class DeliveryChallanFormState {
     String? saveError,
     bool clearDocumentId = false,
     bool clearSaveError = false,
+    bool clearPartyId = false,
   }) {
     return DeliveryChallanFormState(
       isFormOpen: isFormOpen ?? this.isFormOpen,
       documentId: clearDocumentId ? null : (documentId ?? this.documentId),
-      partyId: partyId ?? this.partyId,
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
       party: party ?? this.party,
       billingAddress: billingAddress ?? this.billingAddress,
       shippingAddress: shippingAddress ?? this.shippingAddress,

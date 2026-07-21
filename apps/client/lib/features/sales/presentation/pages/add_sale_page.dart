@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -666,6 +667,7 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
         final billingNameField = BillingNamePartySearchField(
           value: form.billingName,
           hasError: form.partyHasError,
+          errorMessage: kPartyValidationMessage,
           emptyPlaceholder: 'Billing Name (Optional)',
           onSelected: notifier.updateBillingName,
           onPartySelected: notifier.applyPartyDetails,

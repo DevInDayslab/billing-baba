@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/sales/application/sale_fa_service.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
@@ -51,9 +53,15 @@ class AddSaleFaForm extends _$AddSaleFaForm {
   }
 
   void updateParty(String value, {String? partyId}) {
+    final change = unlinkedPartyNameChange(
+      newName: value,
+      previousName: state.party,
+      currentPartyId: state.partyId,
+    );
     state = state.copyWith(
-      party: value,
-      partyId: partyId ?? state.partyId,
+      party: change.partyName,
+      partyId: partyId,
+      clearPartyId: partyId == null && change.clearPartyId,
       billingName: state.billingName.isEmpty ? value : state.billingName,
       isDirty: true,
       clearSaveError: true,
@@ -235,6 +243,19 @@ class AddSaleFaForm extends _$AddSaleFaForm {
     state = state.copyWith(roundOff: value, isDirty: true);
   }
 
+  String? _validationError() {
+    return buildTransactionValidationError(
+      hasValidLineItems: state.hasValidLineItems,
+      hasValidParty: state.partyId != null && state.partyId!.isNotEmpty,
+      requireParty: true,
+      fieldMessages: {
+        TransactionValidationField.party: 'Customer is required',
+        TransactionValidationField.lineItems:
+            'Add at least one asset with name and quantity',
+      },
+    );
+  }
+
   bool validate() {
     final isValid = state.isValid;
     if (!isValid) {
@@ -244,13 +265,8 @@ class AddSaleFaForm extends _$AddSaleFaForm {
   }
 
   Future<String?> save() async {
-    if (!validate()) {
-      if ((state.partyId == null || state.partyId!.isEmpty) &&
-          state.party.trim().isEmpty) {
-        return 'Customer is required';
-      }
-      return 'Add at least one asset with name and quantity';
-    }
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {

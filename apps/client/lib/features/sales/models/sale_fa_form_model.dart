@@ -203,11 +203,12 @@ class AddSaleFaFormState {
     bool? isSaving,
     String? saveError,
     bool clearSaveError = false,
+    bool clearPartyId = false,
     String? taxOption,
   }) {
     return AddSaleFaFormState(
       batchId: batchId ?? this.batchId,
-      partyId: partyId ?? this.partyId,
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
       party: party ?? this.party,
       billingName: billingName ?? this.billingName,
       billingAddress: billingAddress ?? this.billingAddress,

@@ -366,11 +366,12 @@ class AddSaleFormState {
     bool clearAttachedSaleOrderIds = false,
     String? partyPriceTier,
     bool clearPartyPriceTier = false,
+    bool clearPartyId = false,
     String? taxOption,
   }) {
     return AddSaleFormState(
       documentId: clearDocumentId ? null : (documentId ?? this.documentId),
-      partyId: partyId ?? this.partyId,
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
       billingName: billingName ?? this.billingName,
       phone: phone ?? this.phone,
       billingAddress: billingAddress ?? this.billingAddress,

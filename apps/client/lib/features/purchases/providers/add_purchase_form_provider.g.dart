@@ -58,7 +58,7 @@ final class AddPurchaseFormProvider
   }
 }
 
-String _$addPurchaseFormHash() => r'1e557c91cfd8d618b9bc10d486a09f436b10ea3a';
+String _$addPurchaseFormHash() => r'74e131e63615ee20e3177603c11f613302778482';
 
 final class AddPurchaseFormFamily extends $Family
     with

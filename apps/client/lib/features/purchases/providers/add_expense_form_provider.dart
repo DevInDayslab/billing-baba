@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
@@ -116,6 +118,7 @@ class AddExpenseForm extends _$AddExpenseForm {
         attachedDocuments: attachments.documents,
         isLoading: false,
         isDirty: false,
+        showValidationErrors: kResetValidationOnLoad,
       );
     } catch (error) {
       state = state.copyWith(
@@ -138,9 +141,15 @@ class AddExpenseForm extends _$AddExpenseForm {
   }
 
   void updateParty(String value, {String? partyId}) {
+    final change = unlinkedPartyNameChange(
+      newName: value,
+      previousName: state.party,
+      currentPartyId: state.partyId,
+    );
     state = state.copyWith(
-      party: value,
-      partyId: partyId ?? state.partyId,
+      party: change.partyName,
+      partyId: partyId,
+      clearPartyId: partyId == null && change.clearPartyId,
       isDirty: true,
     );
   }
@@ -291,6 +300,21 @@ class AddExpenseForm extends _$AddExpenseForm {
     state = state.copyWith(roundOff: value, isDirty: true);
   }
 
+  String? _validationError() {
+    return buildTransactionValidationError(
+      hasValidLineItems: state.items.any(
+        (item) => item.itemName.trim().isNotEmpty && item.qty > 0,
+      ),
+      hasValidCategory: state.category.trim().isNotEmpty,
+      hasValidParty: state.partyId != null && state.partyId!.isNotEmpty,
+      requireCategory: true,
+      requireParty: state.gstEnabled,
+      fieldMessages: state.gstEnabled
+          ? {TransactionValidationField.party: 'Please select a supplier'}
+          : null,
+    );
+  }
+
   bool validate() {
     final isValid = state.isValid;
     if (!isValid) {
@@ -406,13 +430,8 @@ class AddExpenseForm extends _$AddExpenseForm {
   }
 
   Future<String?> saveExpense() async {
-    if (!validate()) {
-      if (state.gstEnabled &&
-          (state.partyId == null || state.partyId!.isEmpty)) {
-        return 'Please select a supplier';
-      }
-      return 'Please fill required fields';
-    }
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
 
     final categoryId = state.categoryId;
     if (categoryId.isEmpty) {

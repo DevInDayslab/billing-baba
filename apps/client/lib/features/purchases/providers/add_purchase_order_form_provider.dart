@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
 import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
@@ -61,7 +63,10 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
           attachedImages: attachments.images,
           attachedDocuments: attachments.documents,
         ),
-      ).copyWith(isLoading: false);
+      ).copyWith(
+        isLoading: false,
+        showValidationErrors: kResetValidationOnLoad,
+      );
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
@@ -112,9 +117,15 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
   }
 
   void updateParty(String value, {String? partyId}) {
+    final change = unlinkedPartyNameChange(
+      newName: value,
+      previousName: state.party,
+      currentPartyId: state.partyId,
+    );
     state = state.copyWith(
-      party: value,
-      partyId: partyId ?? state.partyId,
+      party: change.partyName,
+      partyId: partyId,
+      clearPartyId: partyId == null && change.clearPartyId,
       billingName: state.billingName.isEmpty ? value : state.billingName,
       isDirty: true,
       clearSaveError: true,
@@ -290,6 +301,14 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
     state = state.copyWith(roundOff: value, isDirty: true);
   }
 
+  String? _validationError({bool finalize = false}) {
+    return buildTransactionValidationError(
+      hasValidLineItems: state.hasValidLineItems,
+      hasValidParty: state.partyId != null && state.partyId!.isNotEmpty,
+      requireParty: finalize,
+    );
+  }
+
   bool validate({bool finalize = false}) {
     final hasParty = state.partyId != null && state.partyId!.isNotEmpty;
     final isValid = state.hasValidLineItems && (!finalize || hasParty);
@@ -300,11 +319,9 @@ class AddPurchaseOrderForm extends _$AddPurchaseOrderForm {
   }
 
   Future<String?> saveOrder({bool finalize = true}) async {
+    if (state.isSaving) return null;
     if (!validate(finalize: finalize)) {
-      if (state.partyId == null || state.partyId!.isEmpty) {
-        return 'Please select a party';
-      }
-      return 'Add at least one item with name and quantity';
+      return _validationError(finalize: finalize);
     }
 
     state = state.copyWith(isSaving: true, clearSaveError: true);

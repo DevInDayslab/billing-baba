@@ -1085,7 +1085,7 @@ as String,
 /// @nodoc
 mixin _$ItemImageDto {
 
- String get id;@JsonKey(name: 'image_url') String get imageUrl;@JsonKey(name: 'thumbnail_url') String? get thumbnailUrl;@JsonKey(name: 'medium_url') String? get mediumUrl;@JsonKey(name: 'media_asset_id') String? get mediaAssetId;@JsonKey(name: 'sort_order') int get sortOrder;@JsonKey(name: 'is_primary') bool get isPrimary;@JsonKey(name: 'created_at') String get createdAt;@JsonKey(name: 'updated_at') String get updatedAt;
+ String get id;@JsonKey(name: 'image_url') String get imageUrl;@JsonKey(name: 'sort_order') int get sortOrder;@JsonKey(name: 'is_primary') bool get isPrimary;@JsonKey(name: 'created_at') String get createdAt;@JsonKey(name: 'updated_at') String get updatedAt;@JsonKey(name: 'thumbnail_url') String? get thumbnailUrl;@JsonKey(name: 'medium_url') String? get mediumUrl;@JsonKey(name: 'media_asset_id') String? get mediaAssetId;
 /// Create a copy of ItemImageDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1098,16 +1098,16 @@ $ItemImageDtoCopyWith<ItemImageDto> get copyWith => _$ItemImageDtoCopyWithImpl<I
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ItemImageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.thumbnailUrl, thumbnailUrl) || other.thumbnailUrl == thumbnailUrl)&&(identical(other.mediumUrl, mediumUrl) || other.mediumUrl == mediumUrl)&&(identical(other.mediaAssetId, mediaAssetId) || other.mediaAssetId == mediaAssetId)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isPrimary, isPrimary) || other.isPrimary == isPrimary)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ItemImageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isPrimary, isPrimary) || other.isPrimary == isPrimary)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.thumbnailUrl, thumbnailUrl) || other.thumbnailUrl == thumbnailUrl)&&(identical(other.mediumUrl, mediumUrl) || other.mediumUrl == mediumUrl)&&(identical(other.mediaAssetId, mediaAssetId) || other.mediaAssetId == mediaAssetId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,imageUrl,thumbnailUrl,mediumUrl,mediaAssetId,sortOrder,isPrimary,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,imageUrl,sortOrder,isPrimary,createdAt,updatedAt,thumbnailUrl,mediumUrl,mediaAssetId);
 
 @override
 String toString() {
-  return 'ItemImageDto(id: $id, imageUrl: $imageUrl, thumbnailUrl: $thumbnailUrl, mediumUrl: $mediumUrl, mediaAssetId: $mediaAssetId, sortOrder: $sortOrder, isPrimary: $isPrimary, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'ItemImageDto(id: $id, imageUrl: $imageUrl, sortOrder: $sortOrder, isPrimary: $isPrimary, createdAt: $createdAt, updatedAt: $updatedAt, thumbnailUrl: $thumbnailUrl, mediumUrl: $mediumUrl, mediaAssetId: $mediaAssetId)';
 }
 
 
@@ -1118,7 +1118,7 @@ abstract mixin class $ItemImageDtoCopyWith<$Res>  {
   factory $ItemImageDtoCopyWith(ItemImageDto value, $Res Function(ItemImageDto) _then) = _$ItemImageDtoCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'image_url') String imageUrl,@JsonKey(name: 'thumbnail_url') String? thumbnailUrl,@JsonKey(name: 'medium_url') String? mediumUrl,@JsonKey(name: 'media_asset_id') String? mediaAssetId,@JsonKey(name: 'sort_order') int sortOrder,@JsonKey(name: 'is_primary') bool isPrimary,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'updated_at') String updatedAt
+ String id,@JsonKey(name: 'image_url') String imageUrl,@JsonKey(name: 'sort_order') int sortOrder,@JsonKey(name: 'is_primary') bool isPrimary,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'updated_at') String updatedAt,@JsonKey(name: 'thumbnail_url') String? thumbnailUrl,@JsonKey(name: 'medium_url') String? mediumUrl,@JsonKey(name: 'media_asset_id') String? mediaAssetId
 });
 
 
@@ -1135,18 +1135,18 @@ class _$ItemImageDtoCopyWithImpl<$Res>
 
 /// Create a copy of ItemImageDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? imageUrl = null,Object? thumbnailUrl = freezed,Object? mediumUrl = freezed,Object? mediaAssetId = freezed,Object? sortOrder = null,Object? isPrimary = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? imageUrl = null,Object? sortOrder = null,Object? isPrimary = null,Object? createdAt = null,Object? updatedAt = null,Object? thumbnailUrl = freezed,Object? mediumUrl = freezed,Object? mediaAssetId = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,imageUrl: null == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
-as String,thumbnailUrl: freezed == thumbnailUrl ? _self.thumbnailUrl : thumbnailUrl // ignore: cast_nullable_to_non_nullable
-as String?,mediumUrl: freezed == mediumUrl ? _self.mediumUrl : mediumUrl // ignore: cast_nullable_to_non_nullable
-as String?,mediaAssetId: freezed == mediaAssetId ? _self.mediaAssetId : mediaAssetId // ignore: cast_nullable_to_non_nullable
-as String?,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
+as String,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
 as int,isPrimary: null == isPrimary ? _self.isPrimary : isPrimary // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as String,
+as String,thumbnailUrl: freezed == thumbnailUrl ? _self.thumbnailUrl : thumbnailUrl // ignore: cast_nullable_to_non_nullable
+as String?,mediumUrl: freezed == mediumUrl ? _self.mediumUrl : mediumUrl // ignore: cast_nullable_to_non_nullable
+as String?,mediaAssetId: freezed == mediaAssetId ? _self.mediaAssetId : mediaAssetId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -1231,10 +1231,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'medium_url')  String? mediumUrl, @JsonKey(name: 'media_asset_id')  String? mediaAssetId, @JsonKey(name: 'sort_order')  int sortOrder, @JsonKey(name: 'is_primary')  bool isPrimary, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'sort_order')  int sortOrder, @JsonKey(name: 'is_primary')  bool isPrimary, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'medium_url')  String? mediumUrl, @JsonKey(name: 'media_asset_id')  String? mediaAssetId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ItemImageDto() when $default != null:
-return $default(_that.id,_that.imageUrl,_that.thumbnailUrl,_that.mediumUrl,_that.mediaAssetId,_that.sortOrder,_that.isPrimary,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.imageUrl,_that.sortOrder,_that.isPrimary,_that.createdAt,_that.updatedAt,_that.thumbnailUrl,_that.mediumUrl,_that.mediaAssetId);case _:
   return orElse();
 
 }
@@ -1252,10 +1252,10 @@ return $default(_that.id,_that.imageUrl,_that.thumbnailUrl,_that.mediumUrl,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'medium_url')  String? mediumUrl, @JsonKey(name: 'media_asset_id')  String? mediaAssetId, @JsonKey(name: 'sort_order')  int sortOrder, @JsonKey(name: 'is_primary')  bool isPrimary, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'sort_order')  int sortOrder, @JsonKey(name: 'is_primary')  bool isPrimary, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'medium_url')  String? mediumUrl, @JsonKey(name: 'media_asset_id')  String? mediaAssetId)  $default,) {final _that = this;
 switch (_that) {
 case _ItemImageDto():
-return $default(_that.id,_that.imageUrl,_that.thumbnailUrl,_that.mediumUrl,_that.mediaAssetId,_that.sortOrder,_that.isPrimary,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.imageUrl,_that.sortOrder,_that.isPrimary,_that.createdAt,_that.updatedAt,_that.thumbnailUrl,_that.mediumUrl,_that.mediaAssetId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1272,10 +1272,10 @@ return $default(_that.id,_that.imageUrl,_that.thumbnailUrl,_that.mediumUrl,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'medium_url')  String? mediumUrl, @JsonKey(name: 'media_asset_id')  String? mediaAssetId, @JsonKey(name: 'sort_order')  int sortOrder, @JsonKey(name: 'is_primary')  bool isPrimary, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'image_url')  String imageUrl, @JsonKey(name: 'sort_order')  int sortOrder, @JsonKey(name: 'is_primary')  bool isPrimary, @JsonKey(name: 'created_at')  String createdAt, @JsonKey(name: 'updated_at')  String updatedAt, @JsonKey(name: 'thumbnail_url')  String? thumbnailUrl, @JsonKey(name: 'medium_url')  String? mediumUrl, @JsonKey(name: 'media_asset_id')  String? mediaAssetId)?  $default,) {final _that = this;
 switch (_that) {
 case _ItemImageDto() when $default != null:
-return $default(_that.id,_that.imageUrl,_that.thumbnailUrl,_that.mediumUrl,_that.mediaAssetId,_that.sortOrder,_that.isPrimary,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.imageUrl,_that.sortOrder,_that.isPrimary,_that.createdAt,_that.updatedAt,_that.thumbnailUrl,_that.mediumUrl,_that.mediaAssetId);case _:
   return null;
 
 }
@@ -1287,18 +1287,18 @@ return $default(_that.id,_that.imageUrl,_that.thumbnailUrl,_that.mediumUrl,_that
 @JsonSerializable()
 
 class _ItemImageDto implements ItemImageDto {
-  const _ItemImageDto({required this.id, @JsonKey(name: 'image_url') required this.imageUrl, @JsonKey(name: 'thumbnail_url') this.thumbnailUrl, @JsonKey(name: 'medium_url') this.mediumUrl, @JsonKey(name: 'media_asset_id') this.mediaAssetId, @JsonKey(name: 'sort_order') required this.sortOrder, @JsonKey(name: 'is_primary') required this.isPrimary, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt});
+  const _ItemImageDto({required this.id, @JsonKey(name: 'image_url') required this.imageUrl, @JsonKey(name: 'sort_order') required this.sortOrder, @JsonKey(name: 'is_primary') required this.isPrimary, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'updated_at') required this.updatedAt, @JsonKey(name: 'thumbnail_url') this.thumbnailUrl, @JsonKey(name: 'medium_url') this.mediumUrl, @JsonKey(name: 'media_asset_id') this.mediaAssetId});
   factory _ItemImageDto.fromJson(Map<String, dynamic> json) => _$ItemImageDtoFromJson(json);
 
 @override final  String id;
 @override@JsonKey(name: 'image_url') final  String imageUrl;
-@override@JsonKey(name: 'thumbnail_url') final  String? thumbnailUrl;
-@override@JsonKey(name: 'medium_url') final  String? mediumUrl;
-@override@JsonKey(name: 'media_asset_id') final  String? mediaAssetId;
 @override@JsonKey(name: 'sort_order') final  int sortOrder;
 @override@JsonKey(name: 'is_primary') final  bool isPrimary;
 @override@JsonKey(name: 'created_at') final  String createdAt;
 @override@JsonKey(name: 'updated_at') final  String updatedAt;
+@override@JsonKey(name: 'thumbnail_url') final  String? thumbnailUrl;
+@override@JsonKey(name: 'medium_url') final  String? mediumUrl;
+@override@JsonKey(name: 'media_asset_id') final  String? mediaAssetId;
 
 /// Create a copy of ItemImageDto
 /// with the given fields replaced by the non-null parameter values.
@@ -1313,16 +1313,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ItemImageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.thumbnailUrl, thumbnailUrl) || other.thumbnailUrl == thumbnailUrl)&&(identical(other.mediumUrl, mediumUrl) || other.mediumUrl == mediumUrl)&&(identical(other.mediaAssetId, mediaAssetId) || other.mediaAssetId == mediaAssetId)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isPrimary, isPrimary) || other.isPrimary == isPrimary)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ItemImageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.imageUrl, imageUrl) || other.imageUrl == imageUrl)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isPrimary, isPrimary) || other.isPrimary == isPrimary)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.thumbnailUrl, thumbnailUrl) || other.thumbnailUrl == thumbnailUrl)&&(identical(other.mediumUrl, mediumUrl) || other.mediumUrl == mediumUrl)&&(identical(other.mediaAssetId, mediaAssetId) || other.mediaAssetId == mediaAssetId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,imageUrl,thumbnailUrl,mediumUrl,mediaAssetId,sortOrder,isPrimary,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,imageUrl,sortOrder,isPrimary,createdAt,updatedAt,thumbnailUrl,mediumUrl,mediaAssetId);
 
 @override
 String toString() {
-  return 'ItemImageDto(id: $id, imageUrl: $imageUrl, thumbnailUrl: $thumbnailUrl, mediumUrl: $mediumUrl, mediaAssetId: $mediaAssetId, sortOrder: $sortOrder, isPrimary: $isPrimary, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'ItemImageDto(id: $id, imageUrl: $imageUrl, sortOrder: $sortOrder, isPrimary: $isPrimary, createdAt: $createdAt, updatedAt: $updatedAt, thumbnailUrl: $thumbnailUrl, mediumUrl: $mediumUrl, mediaAssetId: $mediaAssetId)';
 }
 
 
@@ -1333,7 +1333,7 @@ abstract mixin class _$ItemImageDtoCopyWith<$Res> implements $ItemImageDtoCopyWi
   factory _$ItemImageDtoCopyWith(_ItemImageDto value, $Res Function(_ItemImageDto) _then) = __$ItemImageDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'image_url') String imageUrl,@JsonKey(name: 'thumbnail_url') String? thumbnailUrl,@JsonKey(name: 'medium_url') String? mediumUrl,@JsonKey(name: 'media_asset_id') String? mediaAssetId,@JsonKey(name: 'sort_order') int sortOrder,@JsonKey(name: 'is_primary') bool isPrimary,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'updated_at') String updatedAt
+ String id,@JsonKey(name: 'image_url') String imageUrl,@JsonKey(name: 'sort_order') int sortOrder,@JsonKey(name: 'is_primary') bool isPrimary,@JsonKey(name: 'created_at') String createdAt,@JsonKey(name: 'updated_at') String updatedAt,@JsonKey(name: 'thumbnail_url') String? thumbnailUrl,@JsonKey(name: 'medium_url') String? mediumUrl,@JsonKey(name: 'media_asset_id') String? mediaAssetId
 });
 
 
@@ -1350,18 +1350,18 @@ class __$ItemImageDtoCopyWithImpl<$Res>
 
 /// Create a copy of ItemImageDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? imageUrl = null,Object? thumbnailUrl = freezed,Object? mediumUrl = freezed,Object? mediaAssetId = freezed,Object? sortOrder = null,Object? isPrimary = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? imageUrl = null,Object? sortOrder = null,Object? isPrimary = null,Object? createdAt = null,Object? updatedAt = null,Object? thumbnailUrl = freezed,Object? mediumUrl = freezed,Object? mediaAssetId = freezed,}) {
   return _then(_ItemImageDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,imageUrl: null == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
-as String,thumbnailUrl: freezed == thumbnailUrl ? _self.thumbnailUrl : thumbnailUrl // ignore: cast_nullable_to_non_nullable
-as String?,mediumUrl: freezed == mediumUrl ? _self.mediumUrl : mediumUrl // ignore: cast_nullable_to_non_nullable
-as String?,mediaAssetId: freezed == mediaAssetId ? _self.mediaAssetId : mediaAssetId // ignore: cast_nullable_to_non_nullable
-as String?,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
+as String,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
 as int,isPrimary: null == isPrimary ? _self.isPrimary : isPrimary // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as String,
+as String,thumbnailUrl: freezed == thumbnailUrl ? _self.thumbnailUrl : thumbnailUrl // ignore: cast_nullable_to_non_nullable
+as String?,mediumUrl: freezed == mediumUrl ? _self.mediumUrl : mediumUrl // ignore: cast_nullable_to_non_nullable
+as String?,mediaAssetId: freezed == mediaAssetId ? _self.mediaAssetId : mediaAssetId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

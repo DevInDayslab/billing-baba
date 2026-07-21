@@ -46,7 +46,7 @@ final class PosRepositoryProvider
   }
 }
 
-String _$posRepositoryHash() => r'6520390ee006cbc3c23fb9c90202eb057cbdc5b6';
+String _$posRepositoryHash() => r'f3f22cdbe480de106ad5b5c3572788ed596f2c59';
 
 @ProviderFor(activePosBusinessId)
 final activePosBusinessIdProvider = ActivePosBusinessIdProvider._();

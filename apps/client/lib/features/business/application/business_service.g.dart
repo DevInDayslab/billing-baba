@@ -270,4 +270,4 @@ final class SidebarBusinessProvider
   }
 }
 
-String _$sidebarBusinessHash() => r'e2738ae667f9bd01c384b5f3b967110c77c25a79';
+String _$sidebarBusinessHash() => r'592c70e79876d865db90fc7d62fcc22c8332bb0e';
