@@ -5,7 +5,7 @@
 #   - Manual run (workflow_dispatch) — builds the branch you select in the UI
 #   - Push to the `demo` branch
 #
-# Demo config is fully hardcoded below (production API + website + MSG91).
+# Demo config uses repository variables and secrets (see flutter-ci.yml).
 # Written via setup-flutter-env.sh to avoid PowerShell UTF-8 BOM issues with dotenv.
 
 name: Build Demo
@@ -24,6 +24,8 @@ jobs:
     name: Windows Release
     runs-on: windows-latest
     timeout-minutes: 45
+    env:
+      API_BASE_URL: ${{ vars.API_BASE_URL }}
 
     defaults:
       run:
@@ -39,14 +41,14 @@ jobs:
         working-directory: .
         env:
           FLUTTER_ENV_DIR: apps/client
-          APP_ENV: production
-          DEBUG: 'false'
-          ENABLE_DEV_LOGIN: 'false'
-          DEV_OTP: '123456'
-          API_BASE_URL: https://billing-baba-production-6b5e.up.railway.app
+          APP_ENV: ${{ vars.APP_ENV }}
+          DEBUG: ${{ vars.DEBUG }}
+          ENABLE_DEV_LOGIN: ${{ vars.ENABLE_DEV_LOGIN }}
+          DEV_OTP: ${{ vars.DEV_OTP }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
           WEBSITE_URL: https://billingbaba.com
-          MSG91_WIDGET_ID: '366468674b74383638333530'
-          MSG91_WIDGET_AUTH_TOKEN: '506896TywM6h0I69d61233P1'
+          MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
+          MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
         run: bash .github/scripts/setup-flutter-env.sh
 
       - name: Set up Flutter (stable, with SDK + pub cache)
@@ -66,7 +68,7 @@ jobs:
       - name: Build Windows release
         run: >
           flutter build windows --release
-          --dart-define=API_BASE_URL=https://billing-baba-production-6b5e.up.railway.app
+          --dart-define=API_BASE_URL=$env:API_BASE_URL
           --dart-define=WEBSITE_URL=https://billingbaba.com
 
       - name: Verify build output and package artifact
