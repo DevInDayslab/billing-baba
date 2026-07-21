@@ -5,9 +5,8 @@
 #   - Manual run (workflow_dispatch)
 #   - Push to the `demo` branch
 #
-# Configuration is injected at build time via a generated `.env` asset and
-# `--dart-define` (see AppConfig.apiBaseUrl). Values are hardcoded here
-# intentionally for internal demo builds — not stored in GitHub Secrets.
+# Demo config is fully hardcoded below (production API + website + MSG91).
+# Written via setup-flutter-env.sh to avoid PowerShell UTF-8 BOM issues with dotenv.
 
 name: Build Demo
 
@@ -25,6 +24,7 @@ jobs:
   build-windows:
     name: Windows Release
     runs-on: windows-latest
+    timeout-minutes: 45
 
     defaults:
       run:
@@ -36,18 +36,19 @@ jobs:
         with:
           ref: demo
 
-      # Demo/production config — bundled as a Flutter asset and read by flutter_dotenv.
-      - name: Inject demo environment configuration
-        shell: pwsh
-        run: |
-          @(
-            'APP_ENV=production',
-            'DEBUG=false',
-            'ENABLE_DEV_LOGIN=false',
-            'API_BASE_URL=https://billing-baba-production-6b5e.up.railway.app',
-            'MSG91_WIDGET_ID=366468674b74383638333530',
-            'MSG91_WIDGET_AUTH_TOKEN=506896TywM6h0I69d61233P1'
-          ) | Set-Content -Path .env -Encoding utf8
+      - name: Generate Flutter .env
+        working-directory: .
+        env:
+          FLUTTER_ENV_DIR: apps/client
+          APP_ENV: production
+          DEBUG: 'false'
+          ENABLE_DEV_LOGIN: 'false'
+          DEV_OTP: '123456'
+          API_BASE_URL: https://billing-baba-production-6b5e.up.railway.app
+          WEBSITE_URL: https://billingbaba.com
+          MSG91_WIDGET_ID: '366468674b74383638333530'
+          MSG91_WIDGET_AUTH_TOKEN: '506896TywM6h0I69d61233P1'
+        run: bash .github/scripts/setup-flutter-env.sh
 
       - name: Set up Flutter (stable, with SDK + pub cache)
         uses: subosito/flutter-action@v2
@@ -67,6 +68,7 @@ jobs:
         run: >
           flutter build windows --release
           --dart-define=API_BASE_URL=https://billing-baba-production-6b5e.up.railway.app
+          --dart-define=WEBSITE_URL=https://billingbaba.com
 
       - name: Verify build output and package artifact
         shell: pwsh
