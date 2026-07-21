@@ -609,7 +609,10 @@ export class CollaborationRepository {
       .update(companyMembers)
       .set({ role, updatedAt: now })
       .where(
-        and(eq(companyMembers.id, memberId), eq(companyMembers.status, 'active')),
+        and(
+          eq(companyMembers.id, memberId),
+          eq(companyMembers.status, 'active'),
+        ),
       )
       .returning();
 

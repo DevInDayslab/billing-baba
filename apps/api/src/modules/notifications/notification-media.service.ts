@@ -105,15 +105,15 @@ export class NotificationMediaService {
     businessId: string,
     fallbackUrl?: string | null,
   ): Promise<string | null> {
-    const bindings = await this.brandingRepository.getBrandingBindings(businessId);
+    const bindings =
+      await this.brandingRepository.getBrandingBindings(businessId);
     if (!bindings.logoMediaAssetId) {
       return fallbackUrl ?? null;
     }
     try {
-      return await this.storage.getBusinessAssetDownloadUrl(
-        businessId,
-        bindings.logoMediaAssetId,
-      ).then((r) => r.url);
+      return await this.storage
+        .getBusinessAssetDownloadUrl(businessId, bindings.logoMediaAssetId)
+        .then((r) => r.url);
     } catch {
       return fallbackUrl ?? null;
     }

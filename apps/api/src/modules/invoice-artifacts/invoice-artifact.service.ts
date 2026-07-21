@@ -2,9 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
-import {
-  GeneratedDocumentService,
-} from '../generated-documents/generated-document.service';
+import { GeneratedDocumentService } from '../generated-documents/generated-document.service';
 import { InvoiceShareRepository } from '../invoice-share/invoice-share.repository';
 import {
   buildInvoiceShareUrl,
@@ -65,12 +63,12 @@ export class InvoiceArtifactService {
     this.generatedDocuments =
       deps.generatedDocuments ??
       new GeneratedDocumentService({ config: deps.config });
-    this.storage =
-      deps.storage ?? new StorageService({ config: deps.config });
+    this.storage = deps.storage ?? new StorageService({ config: deps.config });
     this.repository =
       deps.repository ?? new InvoiceShareRepository(requireDb());
     this.mediaService =
-      deps.mediaService ?? new NotificationMediaService({ config: deps.config });
+      deps.mediaService ??
+      new NotificationMediaService({ config: deps.config });
     this.previewRenderer = deps.previewRenderer ?? new InvoicePreviewRenderer();
     this.paymentQr = deps.paymentQr ?? new PaymentQrService();
   }

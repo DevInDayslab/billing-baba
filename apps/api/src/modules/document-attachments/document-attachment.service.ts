@@ -47,17 +47,17 @@ export class DocumentAttachmentService {
   private readonly config: AppConfig;
   private readonly repository: DocumentAttachmentRepository;
   private readonly storage: StorageService;
-  private readonly membership: Pick<MediaAssetRepository, 'hasBusinessMembership'>;
+  private readonly membership: Pick<
+    MediaAssetRepository,
+    'hasBusinessMembership'
+  >;
   private readonly assertEntityExistsFn: DocumentAttachmentServiceDeps['assertEntityExists'];
 
   constructor(deps: DocumentAttachmentServiceDeps) {
     const db = requireDb();
     this.config = deps.config;
-    this.repository =
-      deps.repository ?? new DocumentAttachmentRepository(db);
-    this.membership =
-      deps.membership ??
-      new MediaAssetRepository(db);
+    this.repository = deps.repository ?? new DocumentAttachmentRepository(db);
+    this.membership = deps.membership ?? new MediaAssetRepository(db);
     this.assertEntityExistsFn =
       deps.assertEntityExists ??
       (async (businessId, entityType, entityId) => {

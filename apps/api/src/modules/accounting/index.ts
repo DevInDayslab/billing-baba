@@ -8,9 +8,7 @@ export type {
   PartyOutstandingBalance,
 } from './outstanding.types';
 
-export function createAccountingModule(
-  config: AppConfig,
-): FastifyPluginAsync {
+export function createAccountingModule(config: AppConfig): FastifyPluginAsync {
   return async (app) => {
     await app.register(createPaymentRoutes(config), { prefix: '/payments' });
   };

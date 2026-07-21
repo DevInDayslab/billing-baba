@@ -148,11 +148,9 @@ export class ItemMediaService extends InventoryServiceBase {
     );
 
     const existingCount = await this.items.countImages(businessId, itemId);
-    const isPrimary =
-      options.isPrimary ?? existingCount === 0;
+    const isPrimary = options.isPrimary ?? existingCount === 0;
     const sortOrder =
-      options.sortOrder ??
-      (existingCount > 0 ? existingCount : 0);
+      options.sortOrder ?? (existingCount > 0 ? existingCount : 0);
 
     const image = await this.items.addImage(businessId, itemId, {
       imageUrl: url,
@@ -402,8 +400,10 @@ export class ItemMediaService extends InventoryServiceBase {
       );
     }
 
-    const previousAssetId =
-      await this.locations.getPhotoMediaAssetId(businessId, locationId);
+    const previousAssetId = await this.locations.getPhotoMediaAssetId(
+      businessId,
+      locationId,
+    );
 
     const url = await this.storage.resolveBusinessAssetUrl(
       businessId,
@@ -454,7 +454,11 @@ export class ItemMediaService extends InventoryServiceBase {
       throw new AppError('NOT_FOUND', 'Rack photo not found', 404);
     }
 
-    await this.locations.clearPhotoAsset(businessId, locationId, userId ?? null);
+    await this.locations.clearPhotoAsset(
+      businessId,
+      locationId,
+      userId ?? null,
+    );
 
     try {
       await this.storage.deleteAsset(businessId, accountId, assetId);

@@ -14,7 +14,6 @@ import {
   shouldProcessAsset,
   type ImagePolicyKey,
 } from './media-processing.constants';
-import type { ImageVariant } from './image/image.constants';
 import type { ProcessedVariantOutput } from './media-processing.types';
 import type { ProcessingStatus } from '../storage/storage.types';
 import { ImageMediaProcessor } from './processors/image.processor';
@@ -202,7 +201,9 @@ export class MediaProcessingService {
     result: Awaited<ReturnType<ImageMediaProcessor['process']>>,
   ): Promise<void> {
     const policy = IMAGE_POLICIES[policyKey as Exclude<ImagePolicyKey, 'SKIP'>];
-    const originalVariant = result.variants.find((v) => v.variant === 'original');
+    const originalVariant = result.variants.find(
+      (v) => v.variant === 'original',
+    );
     if (!originalVariant) {
       throw new Error('Pipeline did not produce an original variant');
     }
@@ -225,7 +226,10 @@ export class MediaProcessingService {
       originalVariant.encoded.mimeType,
     );
 
-    if (row.storageKey !== originalPath && row.storageKey !== row.stagingStorageKey) {
+    if (
+      row.storageKey !== originalPath &&
+      row.storageKey !== row.stagingStorageKey
+    ) {
       try {
         await this.storage.deleteObjectByKey(row.storageKey);
       } catch {
@@ -251,7 +255,14 @@ export class MediaProcessingService {
     if (policy.generateVariants) {
       for (const item of result.variants) {
         if (item.variant === 'original') {
-          await this.upsertVariantRecord(row, accountId, item.variant, row.id, item, result);
+          await this.upsertVariantRecord(
+            row,
+            accountId,
+            item.variant,
+            row.id,
+            item,
+            result,
+          );
           continue;
         }
 
@@ -366,12 +377,20 @@ export class MediaProcessingService {
       }
       try {
         if (businessId) {
-          await this.storage.deleteAsset(businessId, accountId, variantRow.mediaAssetId, {
-            skipVariantCleanup: true,
-            skipMediaProcessing: true,
-          });
+          await this.storage.deleteAsset(
+            businessId,
+            accountId,
+            variantRow.mediaAssetId,
+            {
+              skipVariantCleanup: true,
+              skipMediaProcessing: true,
+            },
+          );
         } else {
-          await this.storage.deleteAccountAsset(accountId, variantRow.mediaAssetId);
+          await this.storage.deleteAccountAsset(
+            accountId,
+            variantRow.mediaAssetId,
+          );
         }
       } catch {
         // Best-effort variant cleanup.

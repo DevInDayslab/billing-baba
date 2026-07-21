@@ -7,9 +7,7 @@ import { InvoiceArtifactService } from '../invoice-artifacts/invoice-artifact.se
 import type { NotificationService } from '../notifications/notification.service';
 import { NotificationMediaService } from '../notifications/notification-media.service';
 import { getSharedNotificationService } from '../notifications/notification-service.factory';
-import {
-  GeneratedDocumentService,
-} from '../generated-documents/generated-document.service';
+import { GeneratedDocumentService } from '../generated-documents/generated-document.service';
 import { generatedKindForSalesDocumentType } from '../notifications/notification-media.service';
 import { MediaAssetRepository } from '../storage/storage.repository';
 import { InvoiceShareRepository } from './invoice-share.repository';
@@ -575,7 +573,8 @@ export class InvoiceShareService {
         token: link.token,
         error: {
           code: 'PREVIEW_GENERATION_FAILED',
-          message: 'Invoice preview could not be prepared for WhatsApp delivery',
+          message:
+            'Invoice preview could not be prepared for WhatsApp delivery',
         },
       };
     }

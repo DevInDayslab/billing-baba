@@ -1,10 +1,4 @@
-import {
-  index,
-  pgTable,
-  text,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { timestamptz, uuidPrimaryKey } from '../columns';
 import { businesses } from '../business/tables';
 

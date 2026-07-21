@@ -31,10 +31,7 @@ export class InvitationService {
   private readonly notificationService: NotificationService;
   private readonly config: AppConfig;
 
-  constructor(
-    config: AppConfig,
-    notificationService?: NotificationService,
-  ) {
+  constructor(config: AppConfig, notificationService?: NotificationService) {
     const db = getDb();
     if (!db) {
       throw new AppError(

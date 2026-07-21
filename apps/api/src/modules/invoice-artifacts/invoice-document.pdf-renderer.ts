@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Browser } from 'puppeteer-core';
+import type { Browser } from 'puppeteer-core' with {
+  'resolution-mode': 'import',
+};
 
 /** Prefer API assets; fall back when running from compiled dist. */
 function resolveFontPath(fileName: string): string {
@@ -118,7 +120,9 @@ function inr(value: string): string {
   return `<span class="money">₹${formatMoney(value)}</span>`;
 }
 
-function paymentStatusLabel(status: InvoiceDocumentModel['paymentStatus']): string {
+function paymentStatusLabel(
+  status: InvoiceDocumentModel['paymentStatus'],
+): string {
   switch (status) {
     case 'paid':
       return 'Paid';
@@ -129,7 +133,9 @@ function paymentStatusLabel(status: InvoiceDocumentModel['paymentStatus']): stri
   }
 }
 
-function paymentStatusClass(status: InvoiceDocumentModel['paymentStatus']): string {
+function paymentStatusClass(
+  status: InvoiceDocumentModel['paymentStatus'],
+): string {
   switch (status) {
     case 'paid':
       return 'badge-paid';
@@ -607,7 +613,11 @@ async function getBrowser(): Promise<Browser> {
       const args =
         process.platform === 'linux'
           ? (await import('@sparticuz/chromium')).default.args
-          : ['--no-sandbox', '--disable-setuid-sandbox', '--font-render-hinting=none'];
+          : [
+              '--no-sandbox',
+              '--disable-setuid-sandbox',
+              '--font-render-hinting=none',
+            ];
 
       return puppeteer.default.launch({
         executablePath,
@@ -634,8 +644,11 @@ export class InvoiceDocumentPdfRenderer {
     try {
       await page.setContent(html, { waitUntil: 'load' });
       await page.evaluate(async () => {
-        if (document.fonts?.ready) {
-          await document.fonts.ready;
+        const doc = (
+          globalThis as { document?: { fonts?: { ready?: Promise<void> } } }
+        ).document;
+        if (doc?.fonts?.ready) {
+          await doc.fonts.ready;
         }
       });
       const pdf = await page.pdf({

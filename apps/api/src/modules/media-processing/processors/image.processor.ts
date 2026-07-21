@@ -1,5 +1,11 @@
-import { IMAGE_POLICIES, type ImagePolicyKey } from '../media-processing.constants';
-import type { MediaProcessResult, MediaProcessingContext } from '../media-processing.types';
+import {
+  IMAGE_POLICIES,
+  type ImagePolicyKey,
+} from '../media-processing.constants';
+import type {
+  MediaProcessResult,
+  MediaProcessingContext,
+} from '../media-processing.types';
 import { runImagePipeline } from '../pipeline/image-pipeline';
 
 export type MediaProcessor = {

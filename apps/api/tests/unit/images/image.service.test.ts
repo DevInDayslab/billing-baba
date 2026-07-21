@@ -71,7 +71,9 @@ describe('ImageService', () => {
         expiresAt: new Date().toISOString(),
         visibility: 'authenticated' as const,
       })),
-      resolvePublicCdnUrl: mock((key: string) => `https://cdn.example.com/${key}`),
+      resolvePublicCdnUrl: mock(
+        (key: string) => `https://cdn.example.com/${key}`,
+      ),
     } as unknown as StorageService;
 
     const repository = {
@@ -159,11 +161,7 @@ describe('ImageService', () => {
       } as unknown as MediaProcessingService,
     });
 
-    await service.deleteVariantsForSource(
-      businessId,
-      accountId,
-      sourceAssetId,
-    );
+    await service.deleteVariantsForSource(businessId, accountId, sourceAssetId);
 
     expect(deleteVariantsForSource).toHaveBeenCalledWith(
       businessId,

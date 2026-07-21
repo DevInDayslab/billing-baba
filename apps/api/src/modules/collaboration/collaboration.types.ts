@@ -38,13 +38,7 @@ export type CompanyMemberDto = {
   id: string;
   full_name: string;
   phone_or_email: string;
-  status:
-    | 'pending'
-    | 'joined'
-    | 'left'
-    | 'rejected'
-    | 'expired'
-    | 'cancelled';
+  status: 'pending' | 'joined' | 'left' | 'rejected' | 'expired' | 'cancelled';
   role: CollaborationRole;
   is_owner: boolean;
   is_current_user: boolean;

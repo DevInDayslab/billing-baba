@@ -36,7 +36,9 @@ export async function registerModules(
       await api.register(createHealthModule(config));
       await api.register(createAuthModule(config), { prefix: '/auth' });
       await api.register(businessModule(config), { prefix: '/businesses' });
-      await api.register(businessProfileModule(config), { prefix: '/business' });
+      await api.register(businessProfileModule(config), {
+        prefix: '/business',
+      });
       await api.register(partiesModule(config), { prefix: '/parties' });
       await api.register(createPartyReminderRoutes(config), {
         prefix: '/parties',

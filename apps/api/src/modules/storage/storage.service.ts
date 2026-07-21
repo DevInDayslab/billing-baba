@@ -670,7 +670,10 @@ export class StorageService {
   ): Promise<StorageAsset> {
     const provider = this.requireProvider();
 
-    const pending = await this.repository.findByIdForAccount(accountId, intentId);
+    const pending = await this.repository.findByIdForAccount(
+      accountId,
+      intentId,
+    );
     if (!pending || pending.status !== 'pending') {
       throw new StorageNotFoundError(
         'Upload intent not found or already completed',
@@ -714,13 +717,17 @@ export class StorageService {
 
     const verifiedSize = head.contentLength ?? pending.fileSize;
 
-    const ready = await this.repository.markReadyForAccount(accountId, intentId, {
-      etag: head.etag ?? null,
-      fileSize: verifiedSize,
-      mimeType: head.contentType
-        ? normalizeMime(head.contentType)
-        : pending.mimeType,
-    });
+    const ready = await this.repository.markReadyForAccount(
+      accountId,
+      intentId,
+      {
+        etag: head.etag ?? null,
+        fileSize: verifiedSize,
+        mimeType: head.contentType
+          ? normalizeMime(head.contentType)
+          : pending.mimeType,
+      },
+    );
 
     if (!ready) {
       throw new StorageNotFoundError(
@@ -778,7 +785,10 @@ export class StorageService {
   async deleteAccountAsset(accountId: string, assetId: string): Promise<void> {
     const provider = this.requireProvider();
 
-    const deleted = await this.repository.softDeleteForAccount(accountId, assetId);
+    const deleted = await this.repository.softDeleteForAccount(
+      accountId,
+      assetId,
+    );
     if (!deleted) {
       throw new StorageNotFoundError();
     }
@@ -820,7 +830,10 @@ export class StorageService {
   }
 
   /** Resolve a download URL for a ready account avatar. */
-  async resolveAccountAssetUrl(accountId: string, assetId: string): Promise<string> {
+  async resolveAccountAssetUrl(
+    accountId: string,
+    assetId: string,
+  ): Promise<string> {
     const result = await this.getAccountDownloadUrl(accountId, assetId);
     return result.url;
   }
@@ -848,11 +861,7 @@ export class StorageService {
     },
   ): Promise<StorageAsset> {
     await this.assertBusinessAccess(businessId, accountId);
-    this.validateMimeAndSize(
-      input.mimeType,
-      input.buffer.length,
-      input.policy,
-    );
+    this.validateMimeAndSize(input.mimeType, input.buffer.length, input.policy);
 
     const provider = this.requireProvider();
     const storageKey =
@@ -1153,7 +1162,9 @@ export class StorageService {
         mimeType: input.mimeType,
       });
       if (!ready) {
-        throw new StorageNotFoundError('Failed to mark processed variant ready');
+        throw new StorageNotFoundError(
+          'Failed to mark processed variant ready',
+        );
       }
     } else {
       const ready = await this.repository.markReadyForAccount(
@@ -1166,7 +1177,9 @@ export class StorageService {
         },
       );
       if (!ready) {
-        throw new StorageNotFoundError('Failed to mark processed variant ready');
+        throw new StorageNotFoundError(
+          'Failed to mark processed variant ready',
+        );
       }
     }
 

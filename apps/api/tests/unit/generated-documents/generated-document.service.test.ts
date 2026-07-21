@@ -3,6 +3,7 @@ import type { AppConfig } from '../../../src/config/app_config';
 import { GeneratedDocumentRepository } from '../../../src/modules/generated-documents/generated-document.repository';
 import { GeneratedDocumentService } from '../../../src/modules/generated-documents/generated-document.service';
 import type { GeneratedDocumentRecord } from '../../../src/modules/generated-documents/generated-document.types';
+import { StorageNotFoundError } from '../../../src/modules/storage/storage.errors';
 import { StorageService } from '../../../src/modules/storage/storage.service';
 import type { MediaAssetRepository } from '../../../src/modules/storage/storage.repository';
 import type { StorageProvider } from '../../../src/providers/storage';
@@ -181,7 +182,7 @@ describe('GeneratedDocumentService', () => {
       assertKindMatchesSource: noopKindAssert,
     });
 
-  const result = await service.ensureStored(businessId, accountId, {
+    const result = await service.ensureStored(businessId, accountId, {
       documentKind: 'invoice_pdf',
       sourceType: 'sale_document',
       sourceId,
@@ -272,7 +273,9 @@ describe('GeneratedDocumentService', () => {
       assertKindMatchesSource: noopKindAssert,
     });
 
-    await expect(service.getPublicDocument('public-token-value')).rejects.toMatchObject({
+    await expect(
+      service.getPublicDocument('public-token-value'),
+    ).rejects.toMatchObject({
       code: 'DOCUMENT_STALE',
     });
   });
@@ -294,7 +297,8 @@ describe('GeneratedDocumentService', () => {
         return { id: '66666666-6666-6666-6666-666666666666' };
       },
       deleteAsset: async () => undefined,
-      resolveBusinessAssetUrl: async () => 'https://signed.example/generated.pdf',
+      resolveBusinessAssetUrl: async () =>
+        'https://signed.example/generated.pdf',
       getBusinessAssetDownloadUrl: async () => ({
         url: 'https://signed.example/generated.pdf',
         expiresAt: new Date().toISOString(),
@@ -381,9 +385,6 @@ describe('GeneratedDocumentService', () => {
   });
 
   test('resolveOrCreateSalePdfDownload generates when storage object missing', async () => {
-    const { StorageNotFoundError } = await import(
-      '../../../src/modules/storage/storage.errors'
-    );
     let uploaded = false;
     const repository = {
       findBySource: async () => sampleRow(),

@@ -13,14 +13,9 @@ import {
 import { getSharedNotificationService } from './notification-service.factory';
 
 const testBodySchema = z.object({
-  phone: z
-    .string()
-    .trim()
-    .min(8)
-    .max(20)
-    .refine(isValidIndianMobile, {
-      message: 'Phone must be a valid Indian mobile number',
-    }),
+  phone: z.string().trim().min(8).max(20).refine(isValidIndianMobile, {
+    message: 'Phone must be a valid Indian mobile number',
+  }),
 });
 
 export function createNotificationsModule(

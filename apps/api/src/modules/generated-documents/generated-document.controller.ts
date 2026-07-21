@@ -99,11 +99,16 @@ export function createGeneratedDocumentController(config: AppConfig) {
         const { accountId, businessId } = requireAuthContext(request);
         const params = generatedDocumentIdParamSchema.parse(request.params);
         const body = regenerateGeneratedDocumentBodySchema.parse(request.body);
-        const data = await service.regenerate(businessId, accountId, params.id, {
-          fileName: body.file_name,
-          mimeType: body.mime_type,
-          contentBase64: body.content_base64,
-        });
+        const data = await service.regenerate(
+          businessId,
+          accountId,
+          params.id,
+          {
+            fileName: body.file_name,
+            mimeType: body.mime_type,
+            contentBase64: body.content_base64,
+          },
+        );
         return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {
@@ -118,10 +123,7 @@ export function createGeneratedDocumentController(config: AppConfig) {
       }
     },
 
-    getPublicMetadata: async (
-      request: FastifyRequest,
-      reply: FastifyReply,
-    ) => {
+    getPublicMetadata: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const params = generatedDocumentPublicTokenParamSchema.parse(
           request.params,

@@ -12,7 +12,8 @@ import { createStockLevelRoutes } from './stock-level.routes';
 import { createUnitRoutes } from './unit.routes';
 import { createUnitConversionRoutes } from './unit-conversion.routes';
 
-export const inventoryModule = (config: AppConfig): FastifyPluginAsync =>
+export const inventoryModule =
+  (config: AppConfig): FastifyPluginAsync =>
   async (app) => {
     await app.register(createCategoryRoutes(), { prefix: '/categories' });
     await app.register(createBrandRoutes(), { prefix: '/brands' });
@@ -28,5 +29,7 @@ export const inventoryModule = (config: AppConfig): FastifyPluginAsync =>
     });
     await app.register(createStockLevelRoutes(), { prefix: '/stock-levels' });
     await app.register(createMovementRoutes(), { prefix: '/movements' });
-    await app.register(createPriceHistoryRoutes(), { prefix: '/price-history' });
+    await app.register(createPriceHistoryRoutes(), {
+      prefix: '/price-history',
+    });
   };

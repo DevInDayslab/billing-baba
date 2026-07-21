@@ -76,7 +76,11 @@ export function buildAccountStoragePath(
 ): string {
   const { environment, accountId, assetId, mimeType } = params;
   const ext = extensionForMimeType(mimeType);
-  return [environment, 'accounts', accountId, 'avatar', `${assetId}.${ext}`].join(
-    '/',
-  );
+  return [
+    environment,
+    'accounts',
+    accountId,
+    'avatar',
+    `${assetId}.${ext}`,
+  ].join('/');
 }

@@ -16,7 +16,11 @@ export function createImageRoutes(config: AppConfig): FastifyPluginAsync {
       { preHandler },
       controller.processSource,
     );
-    app.get('/:sourceAssetId/variants', { preHandler }, controller.listVariants);
+    app.get(
+      '/:sourceAssetId/variants',
+      { preHandler },
+      controller.listVariants,
+    );
     app.get(
       '/:sourceAssetId/variants/:variant/url',
       { preHandler },

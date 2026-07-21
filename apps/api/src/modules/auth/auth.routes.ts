@@ -13,8 +13,16 @@ export function createAuthRoutes(config: AppConfig): FastifyPluginAsync {
     app.post('/refresh', controller.refresh);
     app.post('/logout', { preHandler: authenticate }, controller.logout);
     app.get('/me', { preHandler: authenticate }, controller.me);
-    app.post('/me/avatar', { preHandler: authenticate }, brandingController.uploadAvatar);
-    app.delete('/me/avatar', { preHandler: authenticate }, brandingController.deleteAvatar);
+    app.post(
+      '/me/avatar',
+      { preHandler: authenticate },
+      brandingController.uploadAvatar,
+    );
+    app.delete(
+      '/me/avatar',
+      { preHandler: authenticate },
+      brandingController.deleteAvatar,
+    );
 
     if (config.enableDevLogin) {
       app.post('/dev-login', controller.devLogin);

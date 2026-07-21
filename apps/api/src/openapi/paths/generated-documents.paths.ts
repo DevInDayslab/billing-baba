@@ -38,12 +38,7 @@ export function buildGeneratedDocumentPaths() {
             required: true,
             schema: {
               type: 'string',
-              enum: [
-                'sale_document',
-                'purchase_document',
-                'payment',
-                'report',
-              ],
+              enum: ['sale_document', 'purchase_document', 'payment', 'report'],
             },
           },
           {

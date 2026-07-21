@@ -10,7 +10,10 @@ import {
 import { sourceAssetParamSchema, variantParamSchema } from './image.schema';
 import { ImageService } from './image.service';
 
-export function createImageController(config: AppConfig, service?: ImageService) {
+export function createImageController(
+  config: AppConfig,
+  service?: ImageService,
+) {
   const imageService = service ?? new ImageService({ config });
 
   return {

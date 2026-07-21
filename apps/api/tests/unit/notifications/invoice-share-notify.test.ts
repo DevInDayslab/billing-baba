@@ -69,7 +69,10 @@ function shareRepository() {
 
 describe('InvoiceShareService.notifySaleInvoice', () => {
   test('does not send WhatsApp media when PDF ensure fails', async () => {
-    const sendSaleInvoice = mock(async () => ({ success: true, deduped: false }));
+    const sendSaleInvoice = mock(async () => ({
+      success: true,
+      deduped: false,
+    }));
 
     const service = new InvoiceShareService(baseConfig(), {
       repository: shareRepository() as never,
@@ -79,20 +82,12 @@ describe('InvoiceShareService.notifySaleInvoice', () => {
       mediaService: {} as never,
       generatedDocuments: {
         ensure: async () => {
-          throw new AppError(
-            'PDF_GENERATION_FAILED',
-            'Generation failed',
-            500,
-          );
+          throw new AppError('PDF_GENERATION_FAILED', 'Generation failed', 500);
         },
       } as unknown as GeneratedDocumentService,
       artifacts: {
         ensurePdf: async () => {
-          throw new AppError(
-            'PDF_GENERATION_FAILED',
-            'Generation failed',
-            500,
-          );
+          throw new AppError('PDF_GENERATION_FAILED', 'Generation failed', 500);
         },
       } as unknown as InvoiceArtifactService,
     });
@@ -109,7 +104,10 @@ describe('InvoiceShareService.notifySaleInvoice', () => {
   });
 
   test('does not send WhatsApp when preview generation fails', async () => {
-    const sendSaleInvoice = mock(async () => ({ success: true, deduped: false }));
+    const sendSaleInvoice = mock(async () => ({
+      success: true,
+      deduped: false,
+    }));
 
     const service = new InvoiceShareService(baseConfig(), {
       repository: shareRepository() as never,
@@ -137,7 +135,10 @@ describe('InvoiceShareService.notifySaleInvoice', () => {
   });
 
   test('sends PNG preview URL and deletes temporary artifact on success', async () => {
-    const sendSaleInvoice = mock(async () => ({ success: true, deduped: false }));
+    const sendSaleInvoice = mock(async () => ({
+      success: true,
+      deduped: false,
+    }));
     const deleteTemporaryArtifacts = mock(async () => undefined);
     let ensured = false;
 

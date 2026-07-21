@@ -116,8 +116,10 @@ export class BusinessBrandingService {
       );
     }
 
-    const previousAssetId =
-      await this.repository.getBrandingMediaAssetId(businessId, kind);
+    const previousAssetId = await this.repository.getBrandingMediaAssetId(
+      businessId,
+      kind,
+    );
 
     const url = await this.storage.resolveBusinessAssetUrl(
       businessId,
@@ -256,7 +258,8 @@ export class AccountAvatarService {
   private readonly storage: StorageService;
 
   constructor(deps: AccountAvatarServiceDeps) {
-    this.authRepository = deps.authRepository ?? new AuthRepository(requireDb());
+    this.authRepository =
+      deps.authRepository ?? new AuthRepository(requireDb());
     this.storage =
       deps.storage ??
       new StorageService({

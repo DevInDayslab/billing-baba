@@ -117,7 +117,7 @@ class ImageService {
     await evictAppNetworkImage(url, cacheKey: cacheKey);
   }
 
-  Future<void> invalidateImage({
+  Future<void> invalidateImage(void unawaited, {
     String? url,
     String? cacheKey,
     String? mediaAssetId,

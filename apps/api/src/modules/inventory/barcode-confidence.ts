@@ -39,7 +39,10 @@ export function hasValidGtinChecksum(barcode: string): boolean {
   return calculated === checkDigit;
 }
 
-export function isExactBarcodeMatch(scanned: string, candidate?: string | null): boolean {
+export function isExactBarcodeMatch(
+  scanned: string,
+  candidate?: string | null,
+): boolean {
   const expected = normalizeBarcode(scanned);
   if (!expected) return false;
   const actual = normalizeBarcode(candidate ?? '');

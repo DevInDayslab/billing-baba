@@ -20,6 +20,8 @@ export type InsertMediaAssetValues = {
   uploadedBy?: string | null;
   stagingStorageKey?: string | null;
   processingStatus?: ProcessingStatus;
+  variantType?: string | null;
+  parentAssetId?: string | null;
 };
 
 export type MarkReadyValues = {
@@ -76,6 +78,10 @@ const selectColumns = {
   isDeleted: mediaAssets.isDeleted,
 };
 
+function toMediaAssetRow(row: unknown): MediaAssetRow {
+  return row as MediaAssetRow;
+}
+
 export class MediaAssetRepository {
   private readonly membership: BusinessMembershipRepository;
 
@@ -113,13 +119,15 @@ export class MediaAssetRepository {
         uploadedBy: values.uploadedBy ?? null,
         stagingStorageKey: values.stagingStorageKey ?? null,
         processingStatus: values.processingStatus ?? 'pending',
+        variantType: values.variantType ?? null,
+        parentAssetId: values.parentAssetId ?? null,
       })
       .returning(selectColumns);
 
     if (!row) {
       throw new Error('Failed to insert media asset');
     }
-    return row;
+    return toMediaAssetRow(row);
   }
 
   async findById(
@@ -138,7 +146,7 @@ export class MediaAssetRepository {
       )
       .limit(1);
 
-    return row ?? null;
+    return row ? toMediaAssetRow(row) : null;
   }
 
   /** Includes soft-deleted rows (public PDF repair / canonical overwrite). */
@@ -154,7 +162,7 @@ export class MediaAssetRepository {
       )
       .limit(1);
 
-    return row ?? null;
+    return row ? toMediaAssetRow(row) : null;
   }
 
   /** Includes soft-deleted rows — used to overwrite canonical storage keys. */
@@ -165,7 +173,7 @@ export class MediaAssetRepository {
       .where(eq(mediaAssets.storageKey, storageKey))
       .limit(1);
 
-    return row ?? null;
+    return row ? toMediaAssetRow(row) : null;
   }
 
   /**
@@ -210,7 +218,7 @@ export class MediaAssetRepository {
       .where(eq(mediaAssets.id, id))
       .returning(selectColumns);
 
-    return row ?? null;
+    return row ? toMediaAssetRow(row) : null;
   }
 
   async markReady(
@@ -238,7 +246,7 @@ export class MediaAssetRepository {
       )
       .returning(selectColumns);
 
-    return row ?? null;
+    return row ? toMediaAssetRow(row) : null;
   }
 
   async updateProcessingStatus(
@@ -250,9 +258,7 @@ export class MediaAssetRepository {
       .set({
         processingStatus,
         updatedAt: new Date(),
-        ...(processingStatus === 'ready'
-          ? { processedAt: new Date() }
-          : {}),
+        ...(processingStatus === 'ready' ? { processedAt: new Date() } : {}),
       })
       .where(eq(mediaAssets.id, id));
   }
@@ -301,7 +307,7 @@ export class MediaAssetRepository {
       )
       .limit(1);
 
-    return row ?? null;
+    return row ? toMediaAssetRow(row) : null;
   }
 
   async markReadyForAccount(
@@ -331,7 +337,7 @@ export class MediaAssetRepository {
       )
       .returning(selectColumns);
 
-    return row ?? null;
+    return row ? toMediaAssetRow(row) : null;
   }
 
   async softDeleteForAccount(
@@ -357,7 +363,7 @@ export class MediaAssetRepository {
       )
       .returning(selectColumns);
 
-    return row ?? null;
+    return row ? toMediaAssetRow(row) : null;
   }
 
   async softDelete(
@@ -381,11 +387,11 @@ export class MediaAssetRepository {
       )
       .returning(selectColumns);
 
-    return row ?? null;
+    return row ? toMediaAssetRow(row) : null;
   }
 
   async listChildVariants(parentAssetId: string): Promise<MediaAssetRow[]> {
-    return this.db
+    const rows = await this.db
       .select(selectColumns)
       .from(mediaAssets)
       .where(
@@ -394,5 +400,6 @@ export class MediaAssetRepository {
           eq(mediaAssets.isDeleted, false),
         ),
       );
+    return rows.map(toMediaAssetRow);
   }
 }

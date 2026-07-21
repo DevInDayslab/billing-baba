@@ -19,7 +19,9 @@ export type BuildStagingPathParams = {
 };
 
 /** Staging key before optimization: .../staging/{assetId}.{ext} */
-export function buildStagingStoragePath(params: BuildStagingPathParams): string {
+export function buildStagingStoragePath(
+  params: BuildStagingPathParams,
+): string {
   const { environment, businessId, accountId, assetId, extension } = params;
 
   if (businessId) {

@@ -92,7 +92,9 @@ export function createPaymentNotifyHandler(config: AppConfig) {
     const [company] = await db
       .select({ name: businesses.name })
       .from(businesses)
-      .where(and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)))
+      .where(
+        and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)),
+      )
       .limit(1);
 
     if (!company) {

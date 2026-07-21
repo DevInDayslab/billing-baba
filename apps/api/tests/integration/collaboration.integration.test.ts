@@ -263,9 +263,9 @@ describe.skipIf(!canRunDbTests)('Collaboration integration', () => {
         payload: { role: 'salesman' },
       });
       expect(roleUpdated.statusCode).toBe(200);
-      expect(
-        (roleUpdated.json() as { data: { role: string } }).data.role,
-      ).toBe('salesman');
+      expect((roleUpdated.json() as { data: { role: string } }).data.role).toBe(
+        'salesman',
+      );
 
       await app.inject({
         method: 'GET',

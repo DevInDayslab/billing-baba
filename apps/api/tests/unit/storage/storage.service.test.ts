@@ -16,6 +16,26 @@ import type {
   StorageProvider,
 } from '../../../src/providers/storage';
 
+function mediaAssetProcessingDefaults(now = new Date()) {
+  return {
+    width: null,
+    height: null,
+    format: null,
+    variantType: null,
+    parentAssetId: null,
+    originalSize: null,
+    optimizedSize: null,
+    compressionRatio: null,
+    processedAt: null,
+    processingStatus: 'pending' as const,
+    stagingStorageKey: null,
+    createdAt: now,
+    updatedAt: now,
+    deletedAt: null,
+    isDeleted: false,
+  };
+}
+
 function baseConfig(overrides: Partial<AppConfig> = {}): AppConfig {
   return {
     appName: 'test',
@@ -163,10 +183,7 @@ class FakeRepository {
       ownerId: values.ownerId ?? null,
       status: values.status,
       uploadedBy: values.uploadedBy ?? null,
-      createdAt: now,
-      updatedAt: now,
-      deletedAt: null,
-      isDeleted: false,
+      ...mediaAssetProcessingDefaults(now),
     };
     this.rows.set(row.id, row);
     return row;
@@ -518,8 +535,7 @@ describe('StorageService upload lifecycle', () => {
     const repo = new FakeRepository();
     const provider = new FakeProvider();
     const service = createService(repo, provider);
-    const key =
-      'test/businesses/biz/sales/sale-1/generated/invoice.pdf';
+    const key = 'test/businesses/biz/sales/sale-1/generated/invoice.pdf';
 
     const first = await service.storeFromBuffer('biz', 'acct', {
       purpose: 'sales',
@@ -556,8 +572,7 @@ describe('StorageService upload lifecycle', () => {
     const repo = new FakeRepository();
     const provider = new FakeProvider();
     const service = createService(repo, provider);
-    const key =
-      'test/businesses/biz/sales/sale-2/generated/invoice.pdf';
+    const key = 'test/businesses/biz/sales/sale-2/generated/invoice.pdf';
 
     const asset = await service.storeFromBuffer('biz', 'acct', {
       purpose: 'sales',
@@ -590,8 +605,7 @@ describe('StorageService upload lifecycle', () => {
     const repo = new FakeRepository();
     const provider = new FakeProvider();
     const service = createService(repo, provider);
-    const key =
-      'test/businesses/biz/sales/sale-3/generated/invoice.pdf';
+    const key = 'test/businesses/biz/sales/sale-3/generated/invoice.pdf';
 
     const asset = await service.storeFromBuffer('biz', 'acct', {
       purpose: 'sales',

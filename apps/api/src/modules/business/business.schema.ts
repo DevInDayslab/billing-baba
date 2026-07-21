@@ -95,8 +95,7 @@ export const updateBusinessProfileBodySchema = z.object({
     .transform((value) => (value === '' ? undefined : value))
     .refine(
       (value) =>
-        value === undefined ||
-        /^[\w.-]{2,60}@[\w.-]{2,40}$/.test(value),
+        value === undefined || /^[\w.-]{2,60}@[\w.-]{2,40}$/.test(value),
       { message: 'UPI ID must look like name@bank' },
     ),
 });

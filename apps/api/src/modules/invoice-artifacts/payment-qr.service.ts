@@ -1,8 +1,5 @@
 import QRCode from 'qrcode';
-import type {
-  PaymentQrInput,
-  PaymentQrResult,
-} from './invoice-artifact.types';
+import type { PaymentQrInput, PaymentQrResult } from './invoice-artifact.types';
 
 /**
  * Builds a standard Bharat UPI deep-link and renders a QR PNG on demand.

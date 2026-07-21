@@ -91,6 +91,8 @@ export function serializeErrorForLog(error: unknown): Record<string, unknown> {
     ...('query' in error && typeof error.query === 'string'
       ? { query: error.query }
       : {}),
-    ...('params' in error ? { params: (error as { params: unknown }).params } : {}),
+    ...('params' in error
+      ? { params: (error as { params: unknown }).params }
+      : {}),
   };
 }

@@ -21,12 +21,7 @@ export const MAX_DOCUMENT_ATTACHMENTS = 30;
 
 export const DOCUMENT_ATTACHMENT_POLICY: StorageValidationPolicy = {
   maxBytes: 10 * 1024 * 1024,
-  allowedMimes: [
-    'image/png',
-    'image/jpeg',
-    'image/webp',
-    'application/pdf',
-  ],
+  allowedMimes: ['image/png', 'image/jpeg', 'image/webp', 'application/pdf'],
 };
 
 const SALE_DOCUMENT_TYPES = {

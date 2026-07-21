@@ -12,7 +12,11 @@ export function scheduleMediaProcessing(
 ): void {
   void (async () => {
     try {
-      await service.processAsset(input.businessId, input.accountId, input.assetId);
+      await service.processAsset(
+        input.businessId,
+        input.accountId,
+        input.assetId,
+      );
     } catch {
       // Errors are logged inside MediaProcessingService.
     }

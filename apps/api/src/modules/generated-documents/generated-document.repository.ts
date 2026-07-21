@@ -7,7 +7,9 @@ import type {
 } from './generated-document.constants';
 import type { GeneratedDocumentRecord } from './generated-document.types';
 
-function mapRow(row: typeof generatedDocuments.$inferSelect): GeneratedDocumentRecord {
+function mapRow(
+  row: typeof generatedDocuments.$inferSelect,
+): GeneratedDocumentRecord {
   return {
     id: row.id,
     businessId: row.businessId,
@@ -159,10 +161,9 @@ export class GeneratedDocumentRepository {
     return Boolean(row);
   }
 
-  getMediaAssetId(
-    businessId: string,
-    id: string,
-  ): Promise<string | null> {
-    return this.findById(businessId, id).then((row) => row?.mediaAssetId ?? null);
+  getMediaAssetId(businessId: string, id: string): Promise<string | null> {
+    return this.findById(businessId, id).then(
+      (row) => row?.mediaAssetId ?? null,
+    );
   }
 }

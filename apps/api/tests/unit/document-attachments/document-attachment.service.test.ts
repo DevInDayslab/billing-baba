@@ -101,9 +101,9 @@ describe('DocumentAttachmentService', () => {
         ...sampleAttachment,
         id,
         media_asset_id:
-            id === '99999999-9999-9999-9999-999999999999'
-                ? '66666666-6666-6666-6666-666666666666'
-                : sampleAttachment.media_asset_id,
+          id === '99999999-9999-9999-9999-999999999999'
+            ? '66666666-6666-6666-6666-666666666666'
+            : sampleAttachment.media_asset_id,
       }),
       softDelete: async () => true,
     } as unknown as DocumentAttachmentRepository;

@@ -9,8 +9,15 @@ import type {
   ImagePipelineResult,
   ProcessedVariantOutput,
 } from '../media-processing.types';
-import { rejectAnimatedImage, readImageMetadata, validateImageDimensions } from './steps/read-metadata.step';
-import { validateBinarySignature, validateMimeType } from './steps/validate-mime.step';
+import {
+  rejectAnimatedImage,
+  readImageMetadata,
+  validateImageDimensions,
+} from './steps/read-metadata.step';
+import {
+  validateBinarySignature,
+  validateMimeType,
+} from './steps/validate-mime.step';
 import { encodeImageBuffer } from './steps/encode-image.step';
 
 export type RunImagePipelineInput = {

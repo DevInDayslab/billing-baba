@@ -4,10 +4,7 @@ import { AppError } from '../../shared/errors/app-error';
 import { MediaProcessingService } from '../media-processing/media-processing.service';
 import { StorageService } from '../storage/storage.service';
 import type { MediaAssetRepository } from '../storage/storage.repository';
-import {
-  isSourceImageMimeType,
-  type ImageVariant,
-} from './image.constants';
+import { isSourceImageMimeType, type ImageVariant } from './image.constants';
 import { ImageNotFoundError, ImageValidationError } from './image.errors';
 import { toImageVariantResponse } from './image.mapper';
 import { ImageVariantRepository } from './image.repository';
@@ -38,7 +35,10 @@ export class ImageService {
   private readonly storage: StorageService;
   private readonly repository: ImageVariantRepository;
   private readonly mediaProcessing: MediaProcessingService;
-  private readonly membership: Pick<MediaAssetRepository, 'hasBusinessMembership'>;
+  private readonly membership: Pick<
+    MediaAssetRepository,
+    'hasBusinessMembership'
+  >;
 
   constructor(deps: ImageServiceDeps) {
     this.config = deps.config;
@@ -71,7 +71,11 @@ export class ImageService {
       accountId,
     );
     if (!allowed) {
-      throw new AppError('FORBIDDEN', 'You do not have access to this business', 403);
+      throw new AppError(
+        'FORBIDDEN',
+        'You do not have access to this business',
+        403,
+      );
     }
   }
 
@@ -97,7 +101,11 @@ export class ImageService {
       );
     }
 
-    await this.mediaProcessing.processAsset(businessId, accountId, sourceAssetId);
+    await this.mediaProcessing.processAsset(
+      businessId,
+      accountId,
+      sourceAssetId,
+    );
     return this.listVariants(businessId, accountId, sourceAssetId);
   }
 

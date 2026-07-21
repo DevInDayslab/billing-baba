@@ -33,10 +33,7 @@ export type GeneratedDocumentPdfGeneratorDeps = {
   invoiceDocumentRenderer?: InvoiceDocumentPdfRenderer;
 };
 
-function defaultFileName(
-  kind: GeneratedDocumentKind,
-  label: string,
-): string {
+function defaultFileName(kind: GeneratedDocumentKind, label: string): string {
   const safe = label.replace(/[^\w.-]+/g, '_').slice(0, 80);
   return `${kind.replace('_pdf', '')}-${safe || 'document'}.pdf`;
 }
@@ -93,7 +90,9 @@ export class GeneratedDocumentPdfGenerator {
       deps.invoiceDocumentRenderer ?? new InvoiceDocumentPdfRenderer();
   }
 
-  resolveKindForSalesDocument(documentType: string): GeneratedDocumentKind | null {
+  resolveKindForSalesDocument(
+    documentType: string,
+  ): GeneratedDocumentKind | null {
     return generatedKindForSalesDocumentType(documentType);
   }
 
@@ -103,7 +102,10 @@ export class GeneratedDocumentPdfGenerator {
     sourceId: string,
     label?: string,
   ): string {
-    return defaultFileName(kind, label ?? `${sourceType}-${sourceId.slice(0, 8)}`);
+    return defaultFileName(
+      kind,
+      label ?? `${sourceType}-${sourceId.slice(0, 8)}`,
+    );
   }
 
   async generate(
@@ -114,11 +116,7 @@ export class GeneratedDocumentPdfGenerator {
   ): Promise<{ buffer: Buffer; fileName: string }> {
     switch (sourceType) {
       case 'sale_document':
-        return this.generateSaleDocumentPdf(
-          businessId,
-          sourceId,
-          documentKind,
-        );
+        return this.generateSaleDocumentPdf(businessId, sourceId, documentKind);
       case 'payment':
         if (documentKind !== 'receipt_pdf') {
           throw new AppError(
@@ -150,7 +148,9 @@ export class GeneratedDocumentPdfGenerator {
       throw new AppError('NOT_FOUND', 'Sales document not found', 404);
     }
 
-    const expectedKind = this.resolveKindForSalesDocument(document.documentType);
+    const expectedKind = this.resolveKindForSalesDocument(
+      document.documentType,
+    );
     if (!expectedKind || expectedKind !== documentKind) {
       throw new AppError(
         'VALIDATION_ERROR',

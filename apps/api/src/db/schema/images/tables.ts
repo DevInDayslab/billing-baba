@@ -38,7 +38,11 @@ export const mediaImageVariants = pgTable(
     fileSize: bigint('file_size', { mode: 'number' }).notNull(),
     mimeType: text('mime_type').notNull().default('image/webp'),
     processingDurationMs: integer('processing_duration_ms'),
-    compressionRatio: numeric('compression_ratio', { precision: 8, scale: 4 }),
+    compressionRatio: numeric('compression_ratio', {
+      precision: 8,
+      scale: 4,
+      mode: 'number',
+    }),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     updatedAt: timestamptz('updated_at').notNull().defaultNow(),
     deletedAt: timestamptz('deleted_at'),

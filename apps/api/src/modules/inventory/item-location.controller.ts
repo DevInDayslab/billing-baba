@@ -185,12 +185,7 @@ export function createItemLocationController(config: AppConfig) {
       try {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id } = itemLocationIdParamSchema.parse(request.params);
-        await mediaService.deleteRackPhoto(
-          businessId,
-          accountId,
-          userId,
-          id,
-        );
+        await mediaService.deleteRackPhoto(businessId, accountId, userId, id);
         return reply.status(204).send();
       } catch (error) {
         if (error instanceof ZodError) {

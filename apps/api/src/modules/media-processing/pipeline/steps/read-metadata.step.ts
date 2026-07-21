@@ -4,7 +4,10 @@ import {
   IMAGE_MAX_PIXEL_COUNT,
   IMAGE_MIN_EDGE_PIXELS,
 } from '../../image/image.constants';
-import { ImageProcessingError, ImageValidationError } from '../../../images/image.errors';
+import {
+  ImageProcessingError,
+  ImageValidationError,
+} from '../../../images/image.errors';
 import type { ImageDimensions } from '../../../images/image.types';
 
 export function createSharpInstance(buffer: Buffer): sharp.Sharp {

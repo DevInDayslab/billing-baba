@@ -46,7 +46,10 @@ export class DocumentAttachmentRepository {
           eq(documentAttachments.isDeleted, false),
         ),
       )
-      .orderBy(asc(documentAttachments.sortOrder), asc(documentAttachments.createdAt));
+      .orderBy(
+        asc(documentAttachments.sortOrder),
+        asc(documentAttachments.createdAt),
+      );
 
     return rows.map(toRecord);
   }
@@ -120,7 +123,9 @@ export class DocumentAttachmentRepository {
       .set({
         ...(patch.fileName !== undefined ? { fileName: patch.fileName } : {}),
         ...(patch.label !== undefined ? { label: patch.label } : {}),
-        ...(patch.updatedBy !== undefined ? { updatedBy: patch.updatedBy } : {}),
+        ...(patch.updatedBy !== undefined
+          ? { updatedBy: patch.updatedBy }
+          : {}),
         updatedAt: new Date(),
       })
       .where(
@@ -160,7 +165,9 @@ export class DocumentAttachmentRepository {
   }
 }
 
-function toRecord(row: typeof documentAttachments.$inferSelect): DocumentAttachmentRecord {
+function toRecord(
+  row: typeof documentAttachments.$inferSelect,
+): DocumentAttachmentRecord {
   return {
     id: row.id,
     business_id: row.businessId,

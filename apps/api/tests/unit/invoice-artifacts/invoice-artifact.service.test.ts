@@ -37,9 +37,24 @@ const businessId = '11111111-1111-1111-1111-111111111111';
 const accountId = '22222222-2222-2222-2222-222222222222';
 const invoiceId = '33333333-3333-3333-3333-333333333333';
 
+function sampleGeneratedDocumentResponse() {
+  return {
+    id: 'doc-1',
+    document_kind: 'invoice_pdf' as const,
+    source_type: 'sale_document' as const,
+    source_id: invoiceId,
+    source_version: 1,
+    file_name: 'invoice.pdf',
+    mime_type: 'application/pdf',
+    public_token: 'public-token',
+    cached: true,
+    generated_at: '2026-01-01T00:00:00.000Z',
+  };
+}
+
 describe('InvoiceArtifactService', () => {
   test('ensurePdf delegates to GeneratedDocumentService', async () => {
-    const ensure = mock(async () => ({ id: 'doc-1', cached: true }));
+    const ensure = mock(async () => sampleGeneratedDocumentResponse());
 
     const service = new InvoiceArtifactService({
       config: baseConfig(),
@@ -61,7 +76,7 @@ describe('InvoiceArtifactService', () => {
       sourceType: 'sale_document',
       sourceId: invoiceId,
     });
-    expect(result).toEqual({ id: 'doc-1', cached: true });
+    expect(result).toEqual(sampleGeneratedDocumentResponse());
   });
 
   test('uploadTemporaryPreview stores under sales/{saleId}/previews/', async () => {
@@ -116,11 +131,7 @@ describe('InvoiceArtifactService', () => {
     });
 
     await service.deleteTemporaryArtifacts(businessId, accountId, 'asset-1');
-    expect(deleteAsset).toHaveBeenCalledWith(
-      businessId,
-      accountId,
-      'asset-1',
-    );
+    expect(deleteAsset).toHaveBeenCalledWith(businessId, accountId, 'asset-1');
   });
 
   test('generateShareMetadata builds website URL', () => {

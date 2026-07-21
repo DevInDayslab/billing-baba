@@ -22,9 +22,7 @@ function formatZodError(error: ZodError): Record<string, string[]> {
 }
 
 function toBrandingAssetResponse(
-  asset: Awaited<
-    ReturnType<BusinessBrandingService['completeBrandingUpload']>
-  >,
+  asset: Awaited<ReturnType<BusinessBrandingService['completeBrandingUpload']>>,
 ) {
   return {
     media_asset_id: asset.media_asset_id,

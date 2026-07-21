@@ -22,66 +22,68 @@ export type ImagePolicy = {
   preserveTransparency?: boolean;
 };
 
-export const IMAGE_POLICIES: Record<Exclude<ImagePolicyKey, 'SKIP'>, ImagePolicy> =
-  {
-    ITEM_IMAGE: {
-      key: 'ITEM_IMAGE',
-      optimize: true,
-      keepOriginal: false,
-      generateVariants: true,
-      maxEdge: 1600,
-      resize: true,
-    },
-    RACK_PHOTO: {
-      key: 'RACK_PHOTO',
-      optimize: true,
-      keepOriginal: false,
-      generateVariants: true,
-      maxEdge: 1600,
-      resize: true,
-    },
-    LOGO: {
-      key: 'LOGO',
-      optimize: true,
-      keepOriginal: false,
-      generateVariants: true,
-      maxEdge: 1024,
-      resize: true,
-      preserveTransparency: true,
-    },
-    AVATAR: {
-      key: 'AVATAR',
-      optimize: true,
-      keepOriginal: false,
-      generateVariants: true,
-      maxEdge: 512,
-      resize: true,
-    },
-    ATTACHMENT: {
-      key: 'ATTACHMENT',
-      optimize: true,
-      keepOriginal: false,
-      generateVariants: false,
-      maxEdge: null,
-      resize: false,
-    },
-    PDF: {
-      key: 'PDF',
-      optimize: false,
-      keepOriginal: true,
-      generateVariants: false,
-      maxEdge: null,
-      resize: false,
-    },
-    OCR_SOURCE: {
-      key: 'OCR_SOURCE',
-      optimize: false,
-      keepOriginal: true,
-      generateVariants: false,
-      maxEdge: null,
-      resize: false,
-    },
-  };
+export const IMAGE_POLICIES: Record<
+  Exclude<ImagePolicyKey, 'SKIP'>,
+  ImagePolicy
+> = {
+  ITEM_IMAGE: {
+    key: 'ITEM_IMAGE',
+    optimize: true,
+    keepOriginal: false,
+    generateVariants: true,
+    maxEdge: 1600,
+    resize: true,
+  },
+  RACK_PHOTO: {
+    key: 'RACK_PHOTO',
+    optimize: true,
+    keepOriginal: false,
+    generateVariants: true,
+    maxEdge: 1600,
+    resize: true,
+  },
+  LOGO: {
+    key: 'LOGO',
+    optimize: true,
+    keepOriginal: false,
+    generateVariants: true,
+    maxEdge: 1024,
+    resize: true,
+    preserveTransparency: true,
+  },
+  AVATAR: {
+    key: 'AVATAR',
+    optimize: true,
+    keepOriginal: false,
+    generateVariants: true,
+    maxEdge: 512,
+    resize: true,
+  },
+  ATTACHMENT: {
+    key: 'ATTACHMENT',
+    optimize: true,
+    keepOriginal: false,
+    generateVariants: false,
+    maxEdge: null,
+    resize: false,
+  },
+  PDF: {
+    key: 'PDF',
+    optimize: false,
+    keepOriginal: true,
+    generateVariants: false,
+    maxEdge: null,
+    resize: false,
+  },
+  OCR_SOURCE: {
+    key: 'OCR_SOURCE',
+    optimize: false,
+    keepOriginal: true,
+    generateVariants: false,
+    maxEdge: null,
+    resize: false,
+  },
+};
 
 const ATTACHMENT_PURPOSES: StoragePurpose[] = [
   'sales',
@@ -95,7 +97,7 @@ const ATTACHMENT_PURPOSES: StoragePurpose[] = [
 
 export function resolveImagePolicy(input: ResolvePolicyInput): ImagePolicy {
   if (input.purpose === 'derivatives') {
-    return { key: 'SKIP', ...IMAGE_POLICIES.PDF, optimize: false };
+    return { ...IMAGE_POLICIES.PDF, key: 'SKIP', optimize: false };
   }
 
   if (input.mimeType === 'application/pdf') {
@@ -103,7 +105,7 @@ export function resolveImagePolicy(input: ResolvePolicyInput): ImagePolicy {
   }
 
   if (!isSourceImageMimeType(input.mimeType)) {
-    return { key: 'SKIP', ...IMAGE_POLICIES.PDF, optimize: false };
+    return { ...IMAGE_POLICIES.PDF, key: 'SKIP', optimize: false };
   }
 
   if (input.ownerType === 'avatar' || input.businessId === null) {

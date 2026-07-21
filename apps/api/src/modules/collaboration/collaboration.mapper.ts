@@ -169,7 +169,12 @@ export function invitationToMemberDto(
   const phoneOrEmail = formatPhoneOrEmail(row.phone, row.email);
   const status = invitationStatusToMemberStatus(row.status);
   const isCurrentUser = currentAccount
-    ? contactsMatch(row.phone, row.email, currentAccount.phone, currentAccount.email)
+    ? contactsMatch(
+        row.phone,
+        row.email,
+        currentAccount.phone,
+        currentAccount.email,
+      )
     : false;
 
   return {

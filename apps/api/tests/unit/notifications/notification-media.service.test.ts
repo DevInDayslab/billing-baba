@@ -76,8 +76,7 @@ function createService(overrides: {
     brandingRepository,
     generatedDocuments,
     resolveSourceVersion:
-      overrides.resolveSourceVersion ??
-      (async () => ({ sourceVersion: 3 })),
+      overrides.resolveSourceVersion ?? (async () => ({ sourceVersion: 3 })),
   });
 }
 
@@ -87,7 +86,9 @@ describe('generatedKindForSalesDocumentType', () => {
     expect(generatedKindForSalesDocumentType('delivery_challan')).toBe(
       'delivery_challan_pdf',
     );
-    expect(generatedKindForSalesDocumentType('tax_invoice')).toBe('invoice_pdf');
+    expect(generatedKindForSalesDocumentType('tax_invoice')).toBe(
+      'invoice_pdf',
+    );
     expect(generatedKindForSalesDocumentType('sale_order')).toBeNull();
   });
 });

@@ -377,7 +377,9 @@ export class BusinessRepository {
         upiQrMediaAssetId: businesses.upiQrMediaAssetId,
       })
       .from(businesses)
-      .where(and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)))
+      .where(
+        and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)),
+      )
       .limit(1);
 
     return {
@@ -409,10 +411,15 @@ export class BusinessRepository {
         updatedAt: new Date(),
         syncVersion: sql`${businesses.syncVersion} + 1`,
       })
-      .where(and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)));
+      .where(
+        and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)),
+      );
   }
 
-  async clearBrandingAsset(businessId: string, kind: BrandingKind): Promise<void> {
+  async clearBrandingAsset(
+    businessId: string,
+    kind: BrandingKind,
+  ): Promise<void> {
     await this.db
       .update(businesses)
       .set({
@@ -420,7 +427,9 @@ export class BusinessRepository {
         updatedAt: new Date(),
         syncVersion: sql`${businesses.syncVersion} + 1`,
       })
-      .where(and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)));
+      .where(
+        and(eq(businesses.id, businessId), eq(businesses.isDeleted, false)),
+      );
   }
 
   async createWithBootstrap(
@@ -526,6 +535,7 @@ export class BusinessRepository {
         state_code: business.stateCode,
         address: business.address,
         owner_name: ownerName,
+        logo_url: null,
         is_shared: false,
       };
     });

@@ -204,14 +204,22 @@ async function streamToBuffer(body: unknown): Promise<Buffer> {
   if (body instanceof Uint8Array) {
     return Buffer.from(body);
   }
-  if (typeof body === 'object' && body !== null && Symbol.asyncIterator in body) {
+  if (
+    typeof body === 'object' &&
+    body !== null &&
+    Symbol.asyncIterator in body
+  ) {
     const chunks: Buffer[] = [];
     for await (const chunk of body as AsyncIterable<Uint8Array | string>) {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
     }
     return Buffer.concat(chunks);
   }
-  if (typeof body === 'object' && body !== null && 'transformToByteArray' in body) {
+  if (
+    typeof body === 'object' &&
+    body !== null &&
+    'transformToByteArray' in body
+  ) {
     const bytes = await (
       body as { transformToByteArray: () => Promise<Uint8Array> }
     ).transformToByteArray();

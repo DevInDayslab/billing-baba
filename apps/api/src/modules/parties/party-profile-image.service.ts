@@ -101,8 +101,10 @@ export class PartyProfileImageService {
       );
     }
 
-    const previousAssetId =
-      await this.repository.getProfileMediaAssetId(businessId, partyId);
+    const previousAssetId = await this.repository.getProfileMediaAssetId(
+      businessId,
+      partyId,
+    );
 
     const url = await this.storage.resolveBusinessAssetUrl(
       businessId,

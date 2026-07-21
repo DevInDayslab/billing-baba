@@ -30,12 +30,14 @@ export const GENERATED_DOCUMENT_MIME_TYPES = [
 export type GeneratedDocumentMimeType =
   (typeof GENERATED_DOCUMENT_MIME_TYPES)[number];
 
-export const GENERATED_MIME_EXTENSIONS: Record<GeneratedDocumentMimeType, string> =
-  {
-    'application/pdf': 'pdf',
-    'text/csv': 'csv',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
-  };
+export const GENERATED_MIME_EXTENSIONS: Record<
+  GeneratedDocumentMimeType,
+  string
+> = {
+  'application/pdf': 'pdf',
+  'text/csv': 'csv',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+};
 
 export const MIME_FOR_GENERATED_KIND: Record<
   GeneratedDocumentKind,

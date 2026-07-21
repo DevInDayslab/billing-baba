@@ -4,7 +4,10 @@ import {
   resolveImagePolicy,
   shouldProcessAsset,
 } from '../../../src/modules/media-processing/media-processing.constants';
-import { validateBinarySignature, validateMimeType } from '../../../src/modules/media-processing/pipeline/steps/validate-mime.step';
+import {
+  validateBinarySignature,
+  validateMimeType,
+} from '../../../src/modules/media-processing/pipeline/steps/validate-mime.step';
 import { runImagePipeline } from '../../../src/modules/media-processing/pipeline/image-pipeline';
 import { IMAGE_POLICIES } from '../../../src/modules/media-processing/media-processing.constants';
 import { ImageValidationError } from '../../../src/modules/images/image.errors';
@@ -87,9 +90,9 @@ describe('media-processing pipeline validation', () => {
 
   test('rejects binary signature mismatch', async () => {
     const buffer = Buffer.from('not-an-image');
-    expect(() =>
-      validateBinarySignature(buffer, 'image/jpeg'),
-    ).toThrow(ImageValidationError);
+    expect(() => validateBinarySignature(buffer, 'image/jpeg')).toThrow(
+      ImageValidationError,
+    );
   });
 
   test('attachment policy optimizes without generating extra variants', async () => {

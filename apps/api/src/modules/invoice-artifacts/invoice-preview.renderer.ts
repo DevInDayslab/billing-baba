@@ -64,7 +64,10 @@ export class InvoicePreviewRenderer {
     if (input.logoBuffer && input.logoBuffer.length > 0) {
       try {
         const logoPng = await sharp(input.logoBuffer)
-          .resize(96, 96, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+          .resize(96, 96, {
+            fit: 'contain',
+            background: { r: 255, g: 255, b: 255, alpha: 1 },
+          })
           .png()
           .toBuffer();
         const b64 = logoPng.toString('base64');
@@ -81,7 +84,9 @@ export class InvoicePreviewRenderer {
     );
     let cy = 104;
     if (input.companyAddress) {
-      for (const part of truncate(input.companyAddress.replace(/\n/g, ', '), 80).split(', ').slice(0, 2)) {
+      for (const part of truncate(input.companyAddress.replace(/\n/g, ', '), 80)
+        .split(', ')
+        .slice(0, 2)) {
         companyLines.push(
           `<text x="${companyX}" y="${cy}" font-family="Helvetica, Arial, sans-serif" font-size="16" fill="#475569">${escapeXml(part)}</text>`,
         );
@@ -145,7 +150,11 @@ export class InvoicePreviewRenderer {
         : '';
 
     const totalsY =
-      tableTop + 40 + lines.length * lineRowHeight + (overflow > 0 ? 48 : 24) + 24;
+      tableTop +
+      40 +
+      lines.length * lineRowHeight +
+      (overflow > 0 ? 48 : 24) +
+      24;
 
     const loyaltySvg = input.loyalty
       ? `

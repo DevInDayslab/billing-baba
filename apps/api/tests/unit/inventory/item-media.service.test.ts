@@ -6,9 +6,7 @@ import type { StorageService } from '../../../src/modules/storage/storage.servic
 import type { UploadIntent } from '../../../src/modules/storage/storage.types';
 import type { ItemLocationRepository } from '../../../src/modules/inventory/item-location.repository';
 import type { ItemRepository } from '../../../src/modules/inventory/item.repository';
-import {
-  ItemMediaService,
-} from '../../../src/modules/inventory/item-media.service';
+import { ItemMediaService } from '../../../src/modules/inventory/item-media.service';
 import { MAX_ITEM_GALLERY_IMAGES } from '../../../src/modules/inventory/item-media.constants';
 
 function baseConfig(): AppConfig {

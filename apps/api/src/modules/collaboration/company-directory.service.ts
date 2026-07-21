@@ -99,12 +99,7 @@ export class CompanyDirectoryService {
       }
 
       results.push(
-        toPendingInvitationDto(
-          invitation,
-          owner,
-          expired,
-          owner.logoUrl,
-        ),
+        toPendingInvitationDto(invitation, owner, expired, owner.logoUrl),
       );
     }
 

@@ -14,7 +14,10 @@ export class ConsoleNotificationProvider implements NotificationProvider {
   readonly name = 'console';
 
   constructor(
-    private readonly environment: 'development' | 'production' | 'test' = 'development',
+    private readonly environment:
+      | 'development'
+      | 'production'
+      | 'test' = 'development',
   ) {}
 
   async sendText(params: SendTextParams): Promise<NotificationSendResult> {

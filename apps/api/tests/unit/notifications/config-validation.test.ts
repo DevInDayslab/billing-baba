@@ -10,7 +10,10 @@ const REQUIRED = {
   LOG_LEVEL: 'silent',
 } as const;
 
-function withEnv(overrides: Record<string, string | undefined>, fn: () => void) {
+function withEnv(
+  overrides: Record<string, string | undefined>,
+  fn: () => void,
+) {
   const previous: Record<string, string | undefined> = {};
   for (const key of Object.keys(overrides)) {
     previous[key] = process.env[key];

@@ -69,14 +69,21 @@ function decodeContentBase64(contentBase64: string): Buffer {
     }
     return buffer;
   } catch {
-    throw new AppError('VALIDATION_ERROR', 'Invalid content_base64 payload', 400);
+    throw new AppError(
+      'VALIDATION_ERROR',
+      'Invalid content_base64 payload',
+      400,
+    );
   }
 }
 
 export class GeneratedDocumentService {
   private readonly repository: GeneratedDocumentRepository;
   private readonly storage: StorageService;
-  private readonly membership: Pick<MediaAssetRepository, 'hasBusinessMembership'>;
+  private readonly membership: Pick<
+    MediaAssetRepository,
+    'hasBusinessMembership'
+  >;
   private readonly config: AppConfig;
   private readonly resolveSourceVersionFn: NonNullable<
     GeneratedDocumentServiceDeps['resolveSourceVersion']
@@ -89,10 +96,8 @@ export class GeneratedDocumentService {
   constructor(deps: GeneratedDocumentServiceDeps) {
     const db = requireDb();
     this.config = deps.config;
-    this.repository =
-      deps.repository ?? new GeneratedDocumentRepository(db);
-    this.membership =
-      deps.membership ?? new MediaAssetRepository(db);
+    this.repository = deps.repository ?? new GeneratedDocumentRepository(db);
+    this.membership = deps.membership ?? new MediaAssetRepository(db);
     this.storage =
       deps.storage ??
       new StorageService({
@@ -277,7 +282,11 @@ export class GeneratedDocumentService {
 
     const buffer = decodeContentBase64(input.contentBase64);
     if (buffer.length > GENERATED_DOCUMENT_POLICY.maxBytes) {
-      throw new AppError('VALIDATION_ERROR', 'Generated file is too large', 400);
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'Generated file is too large',
+        400,
+      );
     }
 
     return this.storeBuffer(businessId, accountId, {
@@ -334,7 +343,11 @@ export class GeneratedDocumentService {
     }
 
     if (input.buffer.length > GENERATED_DOCUMENT_POLICY.maxBytes) {
-      throw new AppError('VALIDATION_ERROR', 'Generated file is too large', 400);
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'Generated file is too large',
+        400,
+      );
     }
 
     const usesCanonicalInvoiceKey =
