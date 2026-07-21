@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:billing_baba/core/media/prepare_media_upload_bytes.dart';
+import 'package:billing_baba/core/media/pick_media_image.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
-import 'package:billing_baba/core/storage/media_upload_client.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/business/application/business_profile_controller.dart';
@@ -13,7 +12,6 @@ import 'package:billing_baba/features/business/models/business_profile_model.dar
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/shared/widgets/app_network_image_cache.dart';
 import 'package:billing_baba/shared/widgets/optimistic_media_uploader.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -179,55 +177,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     });
   }
 
-  Future<({Uint8List bytes, String mimeType})?> _pickImageBytes(
-    Set<String> allowedMimes,
-    int maxBytes,
-  ) async {
-    final result = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: _extensionsForMimes(allowedMimes),
-      withData: true,
-    );
-
-    final file = result?.files.single;
-    if (file == null || file.bytes == null) return null;
-
-    final mime = mimeTypeFromFilename(file.name);
-    if (!isAllowedMime(mime, allowedMimes)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unsupported file type: ${file.name}')),
-        );
-      }
-      return null;
-    }
-
-    if (file.bytes!.length > maxBytes) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'File is too large (max ${(maxBytes / (1024 * 1024)).toStringAsFixed(0)} MB)',
-            ),
-          ),
-        );
-      }
-      return null;
-    }
-
-    return (bytes: file.bytes!, mimeType: mime);
-  }
-
-  List<String> _extensionsForMimes(Set<String> mimes) {
-    final extensions = <String>[];
-    if (mimes.contains('image/png')) extensions.add('png');
-    if (mimes.contains('image/jpeg')) {
-      extensions.addAll(['jpg', 'jpeg']);
-    }
-    if (mimes.contains('image/webp')) extensions.add('webp');
-    return extensions;
-  }
-
   Future<void> _uploadBranding({
     required Set<String> allowedMimes,
     required int maxBytes,
@@ -248,26 +197,26 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final repo = _brandingRepository;
     if (repo == null) return;
 
-    final picked = await _pickImageBytes(allowedMimes, maxBytes);
+    final picked = await pickAndPrepareMediaImage(
+      context: context,
+      allowedMimes: allowedMimes,
+      maxBytes: maxBytes,
+    );
     if (picked == null) return;
 
     final generation = nextGeneration();
     final previousUrl = currentUrl();
 
-    // Paint local preview immediately — do not wait for compress/network.
+    // Paint local preview immediately — do not wait for the network.
     setState(() {
-      setOptimisticBytes(picked.bytes);
+      setOptimisticBytes(picked.previewBytes);
       setUploading(true);
     });
 
     try {
-      final prepared = await prepareMediaUploadBytes(
-        bytes: picked.bytes,
-        mimeType: picked.mimeType,
-      );
       if (!mounted || currentGeneration() != generation) return;
 
-      final result = await upload(repo, prepared.bytes, prepared.mimeType);
+      final result = await upload(repo, picked.bytes, picked.mimeType);
       if (!mounted || currentGeneration() != generation) return;
 
       final newUrl = result['url'] as String?;

@@ -92,6 +92,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   bool _isSaving = false;
   String? _rackLocationId;
   String? _rackPhotoUrl;
+  double _initialOpeningQty = 0;
 
   int _tabCountFor(ItemType type) => type == ItemType.product ? 4 : 2;
 
@@ -184,10 +185,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         }
       }
 
+      // Prefer detail opening summary; do not fall back to current quantity —
+      // that value is stock on hand, not opening, and re-saving it fails once
+      // other inventory movements exist.
       final openingQty =
-          double.tryParse(detailDto.openingStock?.totalQuantity ?? '') ??
-          item.quantity ??
-          0;
+          double.tryParse(detailDto.openingStock?.totalQuantity ?? '') ?? 0;
+      _initialOpeningQty = openingQty;
       if (openingQty > 0) {
         notifier.updateOpeningQty(openingQty);
         _openingQtyController.text = openingQty.toString();
@@ -342,7 +345,11 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       if (editItem != null) {
         savedItem = await ref
             .read(inventoryItemsProvider.notifier)
-            .updateItemFromForm(editItem.id, form);
+            .updateItemFromForm(
+              editItem.id,
+              form,
+              initialOpeningQty: _initialOpeningQty,
+            );
         ref
             .read(localItemTierPricesProvider.notifier)
             .setTierPrices(editItem.id, form.tierPriceMap);
@@ -363,6 +370,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       if (saveAndNew) {
         notifier.reset(itemType: form.itemType);
         _clearControllers();
+        _initialOpeningQty = 0;
         _tabController.index = 0;
         return;
       }

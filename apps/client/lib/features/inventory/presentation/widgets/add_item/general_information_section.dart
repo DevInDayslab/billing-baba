@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/item_image_gallery_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_category_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/item_image_gallery_section.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
@@ -81,7 +81,7 @@ class GeneralInformationSection extends StatelessWidget {
                 child: TextField(
                   controller: itemNameController,
                   style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(
+                  decoration: buildFormControlDecoration(
                     hint: _isProduct ? 'Enter item name' : 'Enter service name',
                     hasError: itemNameError,
                   ),
@@ -96,7 +96,7 @@ class GeneralInformationSection extends StatelessWidget {
                 child: TextField(
                   controller: hsnController,
                   style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(
+                  decoration: buildFormControlDecoration(
                     hint: taxCodeHint,
                     suffixIcon: IconButton(
                       onPressed: () {},
@@ -123,7 +123,7 @@ class GeneralInformationSection extends StatelessWidget {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(
+                  decoration: buildFormControlDecoration(
                     hint: codeLabel,
                     suffix: TextButton(
                       onPressed: onAssignCode,
@@ -216,7 +216,7 @@ class GeneralInformationSection extends StatelessWidget {
                 child: TextField(
                   controller: descriptionController,
                   style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(hint: 'Description'),
+                  decoration: buildFormControlDecoration(hint: 'Description'),
                   onChanged: onDescriptionChanged,
                 ),
               ),
@@ -224,29 +224,30 @@ class GeneralInformationSection extends StatelessWidget {
             FormGridCell(
               span: 3,
               child: AppFormField(
-                label: ' ',
+                label: _isProduct ? 'Item Images' : 'Service Images',
+                fixedHeight: false,
                 child: itemId == null
-                    ? Text(
-                        _isProduct
-                            ? 'Save item to add images'
-                            : 'Save service to add images',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary.withValues(alpha: 0.9),
+                    ? Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          _isProduct
+                              ? 'Save item to add images'
+                              : 'Save service to add images',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.9,
+                            ),
+                          ),
                         ),
                       )
-                    : const SizedBox.shrink(),
+                    : ItemImageGallerySection(
+                        itemId: itemId!,
+                      ),
               ),
             ),
           ],
         ),
-        if (itemId != null) ...[
-          const SizedBox(height: FormSpacing.section),
-          ItemImageGallerySection(
-            itemId: itemId!,
-            label: _isProduct ? 'Item Images' : 'Service Images',
-          ),
-        ],
       ],
     );
   }

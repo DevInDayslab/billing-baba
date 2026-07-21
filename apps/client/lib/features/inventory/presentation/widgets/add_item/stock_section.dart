@@ -61,7 +61,7 @@ class StockSection extends StatelessWidget {
             child: TextField(
               controller: openingQtyController,
               style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(hint: 'Opening Stock'),
+              decoration: buildFormControlDecoration(hint: 'Opening Stock'),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -77,7 +77,7 @@ class StockSection extends StatelessWidget {
             child: TextField(
               controller: openingPriceController,
               style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(hint: 'At Price'),
+              decoration: buildFormControlDecoration(hint: 'At Price'),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -122,7 +122,7 @@ class StockSection extends StatelessWidget {
             child: TextField(
               controller: minStockController,
               style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(hint: 'Minimum Stock'),
+              decoration: buildFormControlDecoration(hint: 'Minimum Stock'),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -138,7 +138,7 @@ class StockSection extends StatelessWidget {
             child: TextField(
               controller: locationController,
               style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(hint: 'Ex: Rack A-12'),
+              decoration: buildFormControlDecoration(hint: 'Ex: Rack A-12'),
               onChanged: onLocationChanged,
             ),
           ),

@@ -263,12 +263,18 @@ class InventoryItems extends _$InventoryItems {
 
   Future<InventoryItem?> updateItemFromForm(
     String itemId,
-    AddItemFormState form,
-  ) async {
+    AddItemFormState form, {
+    double? initialOpeningQty,
+  }) async {
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       final units = await ref.read(inventoryUnitsProvider.future);
-      final item = await service.updateItemFromForm(itemId, form, units);
+      final item = await service.updateItemFromForm(
+        itemId,
+        form,
+        units,
+        initialOpeningQty: initialOpeningQty,
+      );
       final current = state.value ?? [];
       state = AsyncData([
         for (final existing in current)

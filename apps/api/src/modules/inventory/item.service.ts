@@ -449,18 +449,6 @@ export class ItemService extends InventoryServiceBase {
       return;
     }
 
-    const hasOtherMovements = await this.repository.hasNonOpeningMovements(
-      businessId,
-      itemId,
-    );
-    if (hasOtherMovements) {
-      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
-        opening_quantity: [
-          'Opening stock cannot be changed after other inventory transactions exist. Use Adjust Stock instead.',
-        ],
-      });
-    }
-
     let openingGodownId = input.openingGodownId;
     if (openingGodownId) {
       await this.assertGodownValid(businessId, openingGodownId);
@@ -474,8 +462,21 @@ export class ItemService extends InventoryServiceBase {
       itemId,
     );
     const delta = openingQty - currentStock;
+    // Re-saving the same stock total (common on item edit) is a no-op.
     if (delta === 0) {
       return;
+    }
+
+    const hasOtherMovements = await this.repository.hasNonOpeningMovements(
+      businessId,
+      itemId,
+    );
+    if (hasOtherMovements) {
+      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        opening_quantity: [
+          'Opening stock cannot be changed after other inventory transactions exist. Use Adjust Stock instead.',
+        ],
+      });
     }
 
     const itemRow = await this.repository.findRowById(businessId, itemId);

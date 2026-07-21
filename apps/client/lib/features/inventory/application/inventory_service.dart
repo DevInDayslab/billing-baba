@@ -791,8 +791,9 @@ class InventoryService {
   Future<InventoryItem> updateItemFromForm(
     String itemId,
     AddItemFormState form,
-    List<InventoryUnit> units,
-  ) async {
+    List<InventoryUnit> units, {
+    double? initialOpeningQty,
+  }) async {
     final baseUnit =
         _resolveUnit(form.baseUnitId, units) ??
         (form.itemType == ItemType.service
@@ -808,6 +809,7 @@ class InventoryService {
       baseUnitShortName: baseUnit.shortName,
       openingGodownId: form.godownId ?? defaultGodown?.id,
       godownIdForLocation: form.godownId ?? defaultGodown?.id,
+      initialOpeningQty: initialOpeningQty,
     );
 
     try {

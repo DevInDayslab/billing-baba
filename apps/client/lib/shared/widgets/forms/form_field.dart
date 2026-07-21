@@ -33,7 +33,14 @@ class AppFormField extends StatelessWidget {
           SizedBox(
             height: FormSpacing.inputHeight,
             width: double.infinity,
-            child: child,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                height: FormSpacing.inputHeight,
+                width: double.infinity,
+                child: child,
+              ),
+            ),
           )
         else
           child,
