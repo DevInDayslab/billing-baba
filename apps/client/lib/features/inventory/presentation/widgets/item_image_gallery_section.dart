@@ -3,11 +3,13 @@ import 'dart:typed_data';
 
 import 'package:billing_baba/core/media/image_display_context.dart';
 import 'package:billing_baba/core/media/pick_media_image.dart';
+import 'package:billing_baba/core/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/item_image_preview_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/pending_item_image.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:billing_baba/shared/widgets/app_network_image_cache.dart';
@@ -22,11 +24,13 @@ class ItemImageGallerySection extends ConsumerStatefulWidget {
   const ItemImageGallerySection({
     required this.itemId,
     this.label = '',
+    this.seedPrimaryImageUrl,
     super.key,
   });
 
   final String itemId;
   final String label;
+  final String? seedPrimaryImageUrl;
 
   @override
   ConsumerState<ItemImageGallerySection> createState() =>
@@ -37,16 +41,54 @@ class _ItemImageGallerySectionState
     extends ConsumerState<ItemImageGallerySection> {
   final List<PendingItemImage> _pending = [];
   var _uploadGeneration = 0;
+  var _seedApplied = false;
 
-  /// Optimistic primary override until provider refreshes.
-  String? _optimisticPrimaryId;
+  ItemImages get _imagesNotifier =>
+      ref.read(itemImagesProvider(widget.itemId).notifier);
 
-  void _invalidateCaches() {
-    ref.invalidate(itemImagesProvider(widget.itemId));
-    ref.invalidate(productDetailProvider(widget.itemId));
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _applySeedIfNeeded());
   }
 
-  /// Returns true when an image was uploaded successfully.
+  @override
+  void didUpdateWidget(covariant ItemImageGallerySection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.seedPrimaryImageUrl != widget.seedPrimaryImageUrl ||
+        oldWidget.itemId != widget.itemId) {
+      _seedApplied = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _applySeedIfNeeded());
+    }
+  }
+
+  void _applySeedIfNeeded() {
+    if (_seedApplied) return;
+    final seedUrl = widget.seedPrimaryImageUrl?.trim();
+    if (seedUrl == null || seedUrl.isEmpty) return;
+
+    _seedApplied = true;
+    _imagesNotifier.seed([
+      seedItemImageFromUrl(widget.itemId, seedUrl),
+    ]);
+    unawaited(_prefetchImageUrl(seedUrl));
+  }
+
+  Future<void> _prefetchImageUrl(String url) async {
+    try {
+      final cache = await ref.read(itemImageCacheProvider.future);
+      cache.prefetch(url);
+    } on Object {
+      // Best-effort thumbnail warm-up.
+    }
+  }
+
+  void _syncPrimaryImageToInventoryList({String? primaryImageUrl}) {
+    ref
+        .read(inventoryItemsProvider.notifier)
+        .patchItemPrimaryImageUrl(widget.itemId, primaryImageUrl);
+  }
+
   Future<bool> _upload({
     String? replacesImageId,
     bool isPrimary = false,
@@ -62,32 +104,62 @@ class _ItemImageGallerySectionState
       return false;
     }
 
-    // Shared Business Profile pick + prepare pipeline.
-    final picked = await pickAndPrepareMediaImage(context: context);
+    final picked = await pickMediaImageBytes(context: context);
     if (picked == null) return false;
 
     final generation = ++_uploadGeneration;
     final localId = 'local-$generation';
+    final shouldBePrimary = isPrimary || remote.isEmpty;
     final pending = PendingItemImage(
       localId: localId,
-      bytes: picked.previewBytes,
+      bytes: picked.bytes,
       replacesImageId: replacesImageId,
-      isPrimary: isPrimary || remote.isEmpty,
+      isPrimary: shouldBePrimary,
     );
 
-    // Instant local preview — upload continues in the background.
+    // Instant local preview — prepare + upload continue in the background.
     setState(() {
       _pending.removeWhere((p) => p.replacesImageId == replacesImageId);
       _pending.add(pending);
     });
 
+    unawaited(
+      _completeUpload(
+        localId: localId,
+        generation: generation,
+        pickedBytes: picked.bytes,
+        pickedMime: picked.mimeType,
+        replacesImageId: replacesImageId,
+        isPrimary: shouldBePrimary,
+        remote: remote,
+      ),
+    );
+    return true;
+  }
+
+  Future<void> _completeUpload({
+    required String localId,
+    required int generation,
+    required Uint8List pickedBytes,
+    required String pickedMime,
+    required bool isPrimary,
+    required List<ItemImageModel> remote,
+    String? replacesImageId,
+  }) async {
     try {
+      final prepared = await prepareMediaUploadBytes(
+        bytes: pickedBytes,
+        mimeType: pickedMime,
+      );
+
+      if (!mounted || generation != _uploadGeneration) return;
+
       final service = await ref.read(inventoryServiceProvider.future);
       final uploaded = await service.uploadItemImage(
         widget.itemId,
-        bytes: picked.bytes,
-        mimeType: picked.mimeType,
-        isPrimary: pending.isPrimary,
+        bytes: prepared.bytes,
+        mimeType: prepared.mimeType,
+        isPrimary: isPrimary,
         replacesImageId: replacesImageId,
       );
 
@@ -99,24 +171,29 @@ class _ItemImageGallerySectionState
         unawaited(evictAppNetworkImage(oldUrl));
       }
 
-      if (!mounted) return true;
+      if (!mounted || generation != _uploadGeneration) return;
+
+      _imagesNotifier.upsert(uploaded);
       setState(() {
         _pending.removeWhere((p) => p.localId == localId);
-        if (uploaded.isPrimary) {
-          _optimisticPrimaryId = uploaded.id;
-        }
       });
-      _invalidateCaches();
-      return true;
+
+      if (uploaded.isPrimary) {
+        _syncPrimaryImageToInventoryList(
+          primaryImageUrl: uploaded.urlForGrid(),
+        );
+      }
+
+      unawaited(_prefetchImageUrl(uploaded.urlForGrid()));
+      unawaited(_imagesNotifier.refreshInBackground());
     } on Exception catch (error) {
-      if (!mounted) return false;
+      if (!mounted || generation != _uploadGeneration) return;
       setState(() {
         _pending.removeWhere((p) => p.localId == localId);
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Upload failed: $error')),
       );
-      return false;
     }
   }
 
@@ -141,16 +218,27 @@ class _ItemImageGallerySectionState
     );
     if (confirmed != true) return false;
 
+    final previous = ref.read(itemImagesProvider(widget.itemId)).value ?? [];
+    _imagesNotifier.removeLocal(image.id);
+
+    final remaining = previous
+        .where((candidate) => candidate.id != image.id)
+        .toList();
+    final nextPrimary =
+        remaining.where((candidate) => candidate.isPrimary).firstOrNull ??
+        remaining.firstOrNull;
+    _syncPrimaryImageToInventoryList(
+      primaryImageUrl: nextPrimary?.urlForGrid(),
+    );
+
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.deleteItemImage(widget.itemId, image.id);
       unawaited(evictAppNetworkImage(image.urlForGrid()));
-      if (_optimisticPrimaryId == image.id) {
-        _optimisticPrimaryId = null;
-      }
-      _invalidateCaches();
+      unawaited(_imagesNotifier.refreshInBackground());
       return true;
     } on Exception catch (error) {
+      _imagesNotifier.applyOptimistic(previous);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Delete failed: $error')),
@@ -161,34 +249,24 @@ class _ItemImageGallerySectionState
   }
 
   Future<void> _setPrimary(ItemImageModel image) async {
-    if (image.isPrimary && _optimisticPrimaryId == null) return;
-    if (_optimisticPrimaryId == image.id) return;
+    if (image.isPrimary) return;
 
-    final previous = _optimisticPrimaryId;
-    setState(() => _optimisticPrimaryId = image.id);
+    final previous = ref.read(itemImagesProvider(widget.itemId)).value ?? [];
+    _imagesNotifier.setPrimaryLocal(image.id);
+    _syncPrimaryImageToInventoryList(primaryImageUrl: image.urlForGrid());
 
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.setPrimaryItemImage(widget.itemId, image.id);
-      _invalidateCaches();
+      unawaited(_imagesNotifier.refreshInBackground());
     } on Exception catch (error) {
+      _imagesNotifier.applyOptimistic(previous);
       if (!mounted) return;
-      setState(() => _optimisticPrimaryId = previous);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not set primary: $error')),
       );
       rethrow;
     }
-  }
-
-  List<ItemImageModel> _sortedRemote(List<ItemImageModel> images) {
-    final sorted = List<ItemImageModel>.from(images)
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    final primaryId = _optimisticPrimaryId;
-    if (primaryId == null) return sorted;
-    return sorted
-        .map((img) => img.copyWith(isPrimary: img.id == primaryId))
-        .toList();
   }
 
   Future<void> _openPreview(
@@ -208,91 +286,102 @@ class _ItemImageGallerySectionState
   @override
   Widget build(BuildContext context) {
     final imagesAsync = ref.watch(itemImagesProvider(widget.itemId));
+    final images = imagesAsync.value ?? const <ItemImageModel>[];
+    final remote = List<ItemImageModel>.from(images)
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-    return imagesAsync.when(
-      loading: () => const SizedBox(
-        height: _thumbSize,
-        child: Align(
+    final replacingIds = _pending
+        .map((p) => p.replacesImageId)
+        .whereType<String>()
+        .toSet();
+    final visibleRemote = remote
+        .where((img) => !replacingIds.contains(img.id))
+        .toList();
+    final hasAny = visibleRemote.isNotEmpty || _pending.isNotEmpty;
+
+    if (!hasAny) {
+      if (imagesAsync.isLoading) {
+        return Align(
           alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
+          child: TextButton.icon(
+            onPressed: null,
+            icon: const Icon(LucideIcons.imagePlus, size: 16),
+            label: Text(
+              widget.label.trim().isEmpty
+                  ? 'Add Item Image'
+                  : 'Add ${widget.label.replaceAll('Images', 'Image')}',
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary.withValues(alpha: 0.55),
+              padding: EdgeInsets.zero,
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        );
+      }
+
+      if (imagesAsync.hasError) {
+        return Text(
+          'Could not load images: ${imagesAsync.error}',
+          style: const TextStyle(color: AppColors.error, fontSize: 12),
+        );
+      }
+
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          onPressed: () => _upload(isPrimary: true),
+          icon: const Icon(LucideIcons.imagePlus, size: 16),
+          label: Text(
+            widget.label.trim().isEmpty
+                ? 'Add Item Image'
+                : 'Add ${widget.label.replaceAll('Images', 'Image')}',
+          ),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
-      ),
-      error: (error, _) => Text(
-        'Could not load images: $error',
-        style: const TextStyle(color: AppColors.error, fontSize: 12),
-      ),
-      data: (images) {
-        final remote = _sortedRemote(images);
-        final replacingIds = _pending
-            .map((p) => p.replacesImageId)
-            .whereType<String>()
-            .toSet();
-        final visibleRemote = remote
-            .where((img) => !replacingIds.contains(img.id))
-            .toList();
-        final hasAny = visibleRemote.isNotEmpty || _pending.isNotEmpty;
+      );
+    }
 
-        if (!hasAny) {
-          return Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton.icon(
-              onPressed: () => _upload(isPrimary: true),
-              icon: const Icon(LucideIcons.imagePlus, size: 16),
-              label: Text(
-                widget.label.trim().isEmpty
-                    ? 'Add Item Image'
-                    : 'Add ${widget.label.replaceAll('Images', 'Image')}',
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                padding: EdgeInsets.zero,
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.label.trim().isNotEmpty) ...[
+          Text(
+            widget.label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
             ),
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            if (widget.label.trim().isNotEmpty) ...[
-              Text(
-                widget.label,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+            for (var i = 0; i < visibleRemote.length; i++)
+              _RemoteThumb(
+                image: visibleRemote[i],
+                onTap: () => _openPreview(visibleRemote, i),
               ),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                for (var i = 0; i < visibleRemote.length; i++)
-                  _RemoteThumb(
-                    image: visibleRemote[i],
-                    onTap: () => _openPreview(visibleRemote, i),
-                  ),
-                for (final pending in _pending)
-                  _PendingThumb(
-                    bytes: pending.bytes,
-                    isPrimary: pending.isPrimary,
-                  ),
-                if (remote.length + _pending.length < _maxGalleryImages)
-                  _AddChip(onTap: _upload),
-              ],
-            ),
+            for (final pending in _pending)
+              _PendingThumb(
+                bytes: pending.bytes,
+                isPrimary: pending.isPrimary,
+              ),
+            if (remote.length + _pending.length < _maxGalleryImages)
+              _AddChip(onTap: _upload),
           ],
-        );
-      },
+        ),
+      ],
     );
   }
 }
@@ -333,13 +422,7 @@ class _RemoteThumb extends StatelessWidget {
                   memCacheWidth: (_thumbSize * 2).round(),
                   placeholder: ColoredBox(
                     color: Colors.grey.shade100,
-                    child: const Center(
-                      child: SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
+                    child: const SizedBox.shrink(),
                   ),
                   errorWidget: ColoredBox(
                     color: Colors.grey.shade100,
@@ -407,25 +490,6 @@ class _PendingThumb extends StatelessWidget {
             filterQuality: FilterQuality.low,
             cacheWidth: (_thumbSize * MediaQuery.devicePixelRatioOf(context))
                 .round(),
-          ),
-          Positioned(
-            right: 4,
-            bottom: 4,
-            child: Material(
-              color: Colors.black.withValues(alpha: 0.55),
-              shape: const CircleBorder(),
-              child: const Padding(
-                padding: EdgeInsets.all(4),
-                child: SizedBox(
-                  width: 10,
-                  height: 10,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.5,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
           ),
           if (isPrimary)
             Positioned(

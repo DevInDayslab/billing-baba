@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/application/inventory_item_list_merge.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_category_dialog.dart';
@@ -29,8 +30,9 @@ class GeneralInformationSection extends StatelessWidget {
     required this.categories,
     required this.onCategorySelected,
     required this.unitLabel,
-    required this.onSelectUnit,
+    required     this.onSelectUnit,
     this.itemId,
+    this.seedPrimaryImageUrl,
     super.key,
   });
 
@@ -52,6 +54,7 @@ class GeneralInformationSection extends StatelessWidget {
   final String unitLabel;
   final VoidCallback onSelectUnit;
   final String? itemId;
+  final String? seedPrimaryImageUrl;
 
   bool get _isProduct => itemType == ItemType.product;
 
@@ -226,13 +229,15 @@ class GeneralInformationSection extends StatelessWidget {
               child: AppFormField(
                 label: _isProduct ? 'Item Images' : 'Service Images',
                 fixedHeight: false,
-                child: itemId == null
+                child: itemId == null || !isServerBackedInventoryItemId(itemId!)
                     ? Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          _isProduct
-                              ? 'Save item to add images'
-                              : 'Save service to add images',
+                          itemId == null
+                              ? (_isProduct
+                                    ? 'Save item to add images'
+                                    : 'Save service to add images')
+                              : 'Images available after item is synced to the server',
                           style: TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary.withValues(
@@ -243,6 +248,7 @@ class GeneralInformationSection extends StatelessWidget {
                       )
                     : ItemImageGallerySection(
                         itemId: itemId!,
+                        seedPrimaryImageUrl: seedPrimaryImageUrl,
                       ),
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
+import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_search_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
@@ -43,6 +44,19 @@ String? resolvePosItemImageUrl(InventoryItem item) {
   final primary = item.primaryImageUrl?.trim();
   if (primary != null && primary.isNotEmpty) return primary;
   return null;
+}
+
+/// Picks the display image from a gallery list (primary, else first by sort order).
+({String url, String? mediaAssetId})? resolvePosImageFromGallery(
+  List<ItemImageModel> images,
+) {
+  if (images.isEmpty) return null;
+  final primary = images.where((image) => image.isPrimary).firstOrNull;
+  final image =
+      primary ?? images.sorted((a, b) => a.sortOrder.compareTo(b.sortOrder)).first;
+  final url = image.urlForGrid().trim();
+  if (url.isEmpty) return null;
+  return (url: url, mediaAssetId: image.mediaAssetId);
 }
 
 /// Builds POS catalog from the shared inventory list (products only).

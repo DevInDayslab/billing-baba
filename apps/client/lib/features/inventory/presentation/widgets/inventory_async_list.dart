@@ -11,6 +11,7 @@ class InventoryAsyncList<T> extends StatelessWidget {
     required this.items,
     required this.onRefresh,
     required this.itemBuilder,
+    this.showCachedWhileLoading = false,
     this.emptyMessage = 'No items found',
     this.loadingMessage = 'Loading...',
     super.key,
@@ -19,30 +20,39 @@ class InventoryAsyncList<T> extends StatelessWidget {
   final AsyncValue<List<T>> asyncValue;
   final List<T> items;
   final Future<void> Function() onRefresh;
-  final Widget Function(BuildContext context, T item) itemBuilder;
+  final Widget Function(BuildContext context, T item, int index) itemBuilder;
   final String emptyMessage;
   final String loadingMessage;
+  final bool showCachedWhileLoading;
 
   @override
   Widget build(BuildContext context) {
     return asyncValue.when(
-      loading: () => RefreshIndicator(
-        onRefresh: onRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: 120,
-              child: Center(
-                child: Text(
-                  loadingMessage,
-                  style: InventoryStyles.emptyStateStyle,
+      loading: () {
+        if (showCachedWhileLoading && items.isNotEmpty) {
+          return RefreshIndicator(
+            onRefresh: onRefresh,
+            child: _buildList(),
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: onRefresh,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              SizedBox(
+                height: 120,
+                child: Center(
+                  child: Text(
+                    loadingMessage,
+                    style: InventoryStyles.emptyStateStyle,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
       error: (error, _) {
         final message = InventoryErrorMapper.messageFor(error);
         if (items.isNotEmpty) {
@@ -86,7 +96,8 @@ class InventoryAsyncList<T> extends StatelessWidget {
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: items.length,
-      itemBuilder: (context, index) => itemBuilder(context, items[index]),
+      itemBuilder: (context, index) =>
+          itemBuilder(context, items[index], index),
     );
   }
 }

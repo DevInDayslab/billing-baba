@@ -67,10 +67,7 @@ class InventoryItemListTable<T> extends StatelessWidget {
             items: items,
             onRefresh: onRefresh,
             emptyMessage: emptyMessage,
-            itemBuilder: (context, item) {
-              final index = items.indexOf(item);
-              return itemBuilder(context, item, index);
-            },
+            itemBuilder: itemBuilder,
           ),
         ),
       ],

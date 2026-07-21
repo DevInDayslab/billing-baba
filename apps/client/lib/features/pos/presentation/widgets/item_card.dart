@@ -1,9 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_category_style.dart';
+import 'package:billing_baba/features/pos/presentation/widgets/pos_item_thumbnail.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_styles.dart';
 import 'package:billing_baba/features/pos/providers/pos_cart_provider.dart';
-import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -19,13 +19,15 @@ class ItemCard extends ConsumerWidget {
 
   final PosItem item;
 
+  /// Image area height — dominates the card so product photos read clearly.
+  static const imageHeight = 118.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isOutOfStock = item.isOutOfStock;
     final stockColor = isOutOfStock
         ? posNegativeColor
         : (item.stock <= 5 ? posNegativeColor : posPositiveColor);
-    final styleKey = item.categoryStyleKey;
 
     return Material(
       color: AppColors.surface,
@@ -45,52 +47,30 @@ class ItemCard extends ConsumerWidget {
             decoration: BoxDecoration(
               borderRadius: AppRadius.mdBorder,
               border: Border.all(
-                color: isOutOfStock ? posNegativeColor.withValues(alpha: 0.4) : posCardBorder,
+                color: isOutOfStock
+                    ? posNegativeColor.withValues(alpha: 0.4)
+                    : posCardBorder,
               ),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
+                SizedBox(
+                  height: imageHeight,
                   child: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      Container(
-                        width: double.infinity,
+                      DecoratedBox(
                         decoration: BoxDecoration(
-                          color: PosCategoryStyle.backgroundColor(styleKey),
+                          color: PosCategoryStyle.backgroundColor(
+                            item.categoryStyleKey,
+                          ),
                           borderRadius: AppRadius.smBorder,
                         ),
-                        child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: AppRadius.smBorder,
-                                child: AppNetworkImage(
-                                  imageUrl: item.imageUrl!,
-                                  width: double.infinity,
-                                  placeholder: Center(
-                                    child: Icon(
-                                      PosCategoryStyle.icon(styleKey),
-                                      size: 36,
-                                      color: AppColors.textSecondary
-                                          .withValues(alpha: 0.7),
-                                    ),
-                                  ),
-                                  errorWidget: Center(
-                                    child: Icon(
-                                      PosCategoryStyle.icon(styleKey),
-                                      size: 36,
-                                      color: AppColors.textSecondary
-                                          .withValues(alpha: 0.7),
-                                    ),
-                                  ),
-                                ),
-                              )
-                            : Center(
-                                child: Icon(
-                                  PosCategoryStyle.icon(styleKey),
-                                  size: 36,
-                                  color: AppColors.textSecondary.withValues(alpha: 0.7),
-                                ),
-                              ),
+                        child: ClipRRect(
+                          borderRadius: AppRadius.smBorder,
+                          child: PosItemThumbnail(item: item),
+                        ),
                       ),
                       if (isOutOfStock)
                         Positioned(

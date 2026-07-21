@@ -90,10 +90,26 @@ export class ItemService extends InventoryServiceBase {
       stockTrackedIds,
     );
 
+    const listData = result.rows.map((row) =>
+      enrichItemListRecord(row, physicalByItem, reservedByItem),
+    );
+
+    const data = this.media
+      ? await Promise.all(
+          listData.map(async (item) => ({
+            ...item,
+            primary_image_url: await this.media!.resolvePrimaryImageUrl(
+              businessId,
+              accountId,
+              item.id,
+              item.primary_image_url,
+            ),
+          })),
+        )
+      : listData;
+
     return {
-      data: result.rows.map((row) =>
-        enrichItemListRecord(row, physicalByItem, reservedByItem),
-      ),
+      data,
       meta: {
         page: query.page,
         limit: query.limit,

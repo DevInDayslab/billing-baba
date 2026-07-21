@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_detail_panel.dart';
@@ -10,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Shared Products/Services workspace: hover preview, selection, split layout.
+/// Shared Products/Services workspace: list selection + split layout.
 class InventoryItemWorkspace extends ConsumerStatefulWidget {
   const InventoryItemWorkspace({
     required this.items,
@@ -71,17 +69,12 @@ class InventoryItemWorkspace extends ConsumerStatefulWidget {
 
 class _InventoryItemWorkspaceState
     extends ConsumerState<InventoryItemWorkspace> {
-  static const _hoverPreviewDelay = Duration(milliseconds: 120);
-
   final FocusNode _listFocusNode = FocusNode();
   int _focusedIndex = 0;
   int _searchResetToken = 0;
-  String? _previewId;
-  Timer? _hoverTimer;
 
   @override
   void dispose() {
-    _hoverTimer?.cancel();
     _listFocusNode.dispose();
     super.dispose();
   }
@@ -104,20 +97,6 @@ class _InventoryItemWorkspaceState
     });
   }
 
-  void _schedulePreview(String id) {
-    _hoverTimer?.cancel();
-    _hoverTimer = Timer(_hoverPreviewDelay, () {
-      if (!mounted || _previewId == id) return;
-      setState(() => _previewId = id);
-    });
-  }
-
-  void _setPreviewImmediate(String id) {
-    _hoverTimer?.cancel();
-    if (_previewId == id) return;
-    setState(() => _previewId = id);
-  }
-
   void _moveFocus(int delta) {
     final items = widget.items;
     if (items.isEmpty) return;
@@ -125,7 +104,6 @@ class _InventoryItemWorkspaceState
       _focusedIndex = (_focusedIndex + delta).clamp(0, items.length - 1);
     });
     final item = items[_focusedIndex];
-    _setPreviewImmediate(item.id);
     widget.onSelectedIdChanged(item.id);
   }
 
@@ -142,7 +120,6 @@ class _InventoryItemWorkspaceState
     if (previous != id) {
       widget.onSelectionChangedSideEffects(previous ?? '', id);
     }
-    _setPreviewImmediate(id);
     widget.onSelectedIdChanged(id);
   }
 
@@ -150,7 +127,6 @@ class _InventoryItemWorkspaceState
   Widget build(BuildContext context) {
     final items = widget.items;
     final selectedId = widget.selectedId;
-    final detailId = _previewId ?? selectedId;
 
     if (selectedId != null && items.isNotEmpty) {
       final selectedIndex = items.indexWhere((item) => item.id == selectedId);
@@ -161,9 +137,9 @@ class _InventoryItemWorkspaceState
       }
     }
 
-    final detailItem = detailId == null
+    final detailItem = selectedId == null
         ? null
-        : items.where((item) => item.id == detailId).firstOrNull;
+        : items.where((item) => item.id == selectedId).firstOrNull;
 
     return InventorySplitLayout(
       listPanel: Focus(
@@ -207,16 +183,15 @@ class _InventoryItemWorkspaceState
           onArrowUp: () => _moveFocus(-1),
           onEnter: _selectFocused,
           onRefresh: widget.onRefresh,
-          onItemHover: _schedulePreview,
           onItemSelected: _selectItem,
           onAddPressed: widget.onAddPressed,
           onMenuSelected: widget.onMenuSelected,
         ),
       ),
-      detailPanel: detailId == null || detailItem == null
+      detailPanel: selectedId == null || detailItem == null
           ? InventoryDetailPlaceholder(message: widget.placeholderMessage)
           : InventoryItemDetailPanel(
-              itemId: detailId,
+              itemId: selectedId,
               fallbackItem: detailItem,
               mode: widget.detailMode,
             ),

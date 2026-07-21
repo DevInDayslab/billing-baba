@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_highlighted_text.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_hover_tooltip.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_row_menu.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:flutter/material.dart';
@@ -15,9 +17,9 @@ class InventoryItemListTile extends StatefulWidget {
     required this.isSelected,
     required this.isFocused,
     required this.searchQuery,
-    required this.onHover,
     required this.onTap,
     required this.onMenuSelected,
+    this.item,
     this.trailingColor,
     this.leadingIcon = Icons.inventory_2_outlined,
     super.key,
@@ -29,9 +31,9 @@ class InventoryItemListTile extends StatefulWidget {
   final bool isSelected;
   final bool isFocused;
   final String searchQuery;
-  final VoidCallback onHover;
   final VoidCallback onTap;
   final ValueChanged<String> onMenuSelected;
+  final InventoryItem? item;
   final IconData leadingIcon;
 
   @override
@@ -67,13 +69,16 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
     Colors.transparent,
   );
 
+  Widget _buildHoverZone({required Widget child}) {
+    final item = widget.item;
+    if (item == null) return child;
+    return InventoryItemRowPreviewTooltip(item: item, child: child);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) {
-        setState(() => _isHovered = true);
-        widget.onHover();
-      },
+      onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() {
         _isHovered = false;
         _isPressed = false;
@@ -99,21 +104,29 @@ class _InventoryItemListTileState extends State<InventoryItemListTile> {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Row(
                 children: [
-                  Icon(
-                    widget.leadingIcon,
-                    size: 16,
-                    color: Colors.grey.shade500,
-                  ),
-                  const SizedBox(width: 8),
                   Expanded(
                     flex: 3,
-                    child: InventoryHighlightedText(
-                      text: widget.title,
-                      query: widget.searchQuery,
-                      style: InventoryStyles.listCellStyle.copyWith(
-                        fontWeight: widget.isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w500,
+                    child: _buildHoverZone(
+                      child: Row(
+                        children: [
+                          Icon(
+                            widget.leadingIcon,
+                            size: 16,
+                            color: Colors.grey.shade500,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: InventoryHighlightedText(
+                              text: widget.title,
+                              query: widget.searchQuery,
+                              style: InventoryStyles.listCellStyle.copyWith(
+                                fontWeight: widget.isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

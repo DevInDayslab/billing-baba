@@ -128,6 +128,14 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   }
 
   Future<void> _hydrateEditItem(InventoryItem item) async {
+    // Warm gallery + list primary URL before the section mounts.
+    unawaited(ref.read(itemImagesProvider(item.id).future));
+    if (item.primaryImageUrl?.trim().isNotEmpty ?? false) {
+      ref.read(itemImagesProvider(item.id).notifier).seed([
+        seedItemImageFromUrl(item.id, item.primaryImageUrl!),
+      ]);
+    }
+
     final notifier = ref.read(addItemFormProvider.notifier);
     notifier.setInitialType(item.type);
     notifier.updateItemName(item.name);
@@ -574,6 +582,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             unitLabel: _displayUnitLabel(),
             onSelectUnit: _openUnitPicker,
             itemId: widget.editItem?.id,
+            seedPrimaryImageUrl: widget.editItem?.primaryImageUrl,
           ),
           const SizedBox(height: FormSpacing.section),
           _buildTabBar(form),

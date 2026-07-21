@@ -23,7 +23,7 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
   int _visibleCount = 9;
 
   static const double _gridSpacing = AppSpacing.sm;
-  static const _cardHeight = 180.0;
+  static const _cardHeight = 228.0;
 
   @override
   void dispose() {
@@ -37,8 +37,8 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
   }
 
   double _maxCrossAxisExtent(double panelWidth) {
-    if (panelWidth >= 560) return 168;
-    if (panelWidth >= 380) return 155;
+    if (panelWidth >= 560) return 178;
+    if (panelWidth >= 380) return 165;
     return panelWidth - _gridSpacing;
   }
 

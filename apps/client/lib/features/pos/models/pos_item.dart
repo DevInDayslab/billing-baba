@@ -10,6 +10,7 @@ class PosItem {
     this.mrp,
     this.unit = 'pcs',
     this.imageUrl,
+    this.imageMediaAssetId,
     this.hsnCode,
   });
 
@@ -23,6 +24,7 @@ class PosItem {
   final int stock;
   final String unit;
   final String? imageUrl;
+  final String? imageMediaAssetId;
   final String? hsnCode;
 
   bool get isOutOfStock => stock <= 0;

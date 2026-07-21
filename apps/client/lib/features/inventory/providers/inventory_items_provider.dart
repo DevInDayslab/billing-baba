@@ -340,4 +340,20 @@ class InventoryItems extends _$InventoryItems {
       context: (partyId: null, itemIds: [itemId]),
     );
   }
+
+  /// Keeps list/POS catalog in sync after gallery uploads without a full refetch.
+  void patchItemPrimaryImageUrl(String itemId, String? primaryImageUrl) {
+    final current = state.value;
+    if (current == null) return;
+
+    state = AsyncData([
+      for (final item in current)
+        if (item.id == itemId)
+          item.copyWith(
+            primaryImageUrl: primaryImageUrl ?? '',
+          )
+        else
+          item,
+    ]);
+  }
 }

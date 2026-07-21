@@ -36,7 +36,6 @@ class InventoryLeftPanel extends ConsumerWidget {
     required this.onArrowUp,
     required this.onEnter,
     required this.onRefresh,
-    required this.onItemHover,
     required this.onItemSelected,
     required this.onAddPressed,
     required this.onMenuSelected,
@@ -65,7 +64,6 @@ class InventoryLeftPanel extends ConsumerWidget {
   final VoidCallback onArrowUp;
   final VoidCallback onEnter;
   final Future<void> Function() onRefresh;
-  final ValueChanged<String> onItemHover;
   final ValueChanged<String> onItemSelected;
   final VoidCallback onAddPressed;
   final void Function(String value, InventoryItem item) onMenuSelected;
@@ -138,11 +136,13 @@ class InventoryLeftPanel extends ConsumerWidget {
           child: InventoryAsyncList<InventoryItem>(
             asyncValue: itemsAsync,
             items: items,
+            showCachedWhileLoading: true,
             onRefresh: onRefresh,
             emptyMessage: emptyMessage,
-            itemBuilder: (context, item) {
-              final index = items.indexOf(item);
+            itemBuilder: (context, item, index) {
               return InventoryItemListTile(
+                key: ValueKey(item.id),
+                item: item,
                 title: item.name,
                 trailingValue: trailingValueBuilder(item),
                 trailingColor: trailingColorBuilder(item),
@@ -150,7 +150,6 @@ class InventoryLeftPanel extends ConsumerWidget {
                 isFocused: index == focusedIndex,
                 searchQuery: searchQuery,
                 leadingIcon: leadingIcon,
-                onHover: () => onItemHover(item.id),
                 onTap: () => onItemSelected(item.id),
                 onMenuSelected: (value) => onMenuSelected(value, item),
               );
