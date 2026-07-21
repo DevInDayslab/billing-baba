@@ -59,6 +59,8 @@ export class CollaborationRepository {
         companyName: businesses.name,
         ownerName: users.name,
         ownerPhone: accounts.phone,
+        logoUrl: businesses.logoUrl,
+        logoMediaAssetId: businesses.logoMediaAssetId,
       })
       .from(businesses)
       .innerJoin(users, eq(users.businessId, businesses.id))
@@ -80,6 +82,8 @@ export class CollaborationRepository {
       companyName: row.companyName,
       ownerName: row.ownerName,
       ownerPhone: row.ownerPhone,
+      logoUrl: row.logoUrl,
+      logoMediaAssetId: row.logoMediaAssetId,
     };
   }
 
@@ -605,7 +609,10 @@ export class CollaborationRepository {
       .update(companyMembers)
       .set({ role, updatedAt: now })
       .where(
-        and(eq(companyMembers.id, memberId), eq(companyMembers.status, 'active')),
+        and(
+          eq(companyMembers.id, memberId),
+          eq(companyMembers.status, 'active'),
+        ),
       )
       .returning();
 

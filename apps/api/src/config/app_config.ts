@@ -79,6 +79,47 @@ const envSchema = z.object({
     if (value === '' || value === undefined) return 24;
     return Number(value);
   }, z.number().int().positive().default(24)),
+  S3_ENDPOINT: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  S3_BUCKET: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  S3_REGION: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  S3_ACCESS_KEY_ID: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
+  S3_SECRET_ACCESS_KEY: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
+  S3_FORCE_PATH_STYLE: z.preprocess((value) => {
+    if (value === '' || value === undefined) return true;
+    if (typeof value === 'string') {
+      return value.toLowerCase() === 'true';
+    }
+    return Boolean(value);
+  }, z.boolean().default(true)),
+  S3_SSL: z.preprocess((value) => {
+    if (value === '' || value === undefined) return true;
+    if (typeof value === 'string') {
+      return value.toLowerCase() === 'true';
+    }
+    return Boolean(value);
+  }, z.boolean().default(true)),
+  S3_PUBLIC_BASE_URL: z.preprocess(
+    emptyToUndefined,
+    z.string().url('S3_PUBLIC_BASE_URL must be a valid URL').optional(),
+  ),
+  STORAGE_MAX_FILE_BYTES: z.preprocess((value) => {
+    if (value === '' || value === undefined) return 10_485_760;
+    return Number(value);
+  }, z.number().int().positive().default(10_485_760)),
+  STORAGE_UPLOAD_URL_TTL_SECONDS: z.preprocess((value) => {
+    if (value === '' || value === undefined) return 900;
+    return Number(value);
+  }, z.number().int().positive().default(900)),
+  STORAGE_DOWNLOAD_URL_TTL_SECONDS: z.preprocess((value) => {
+    if (value === '' || value === undefined) return 3600;
+    return Number(value);
+  }, z.number().int().positive().default(3600)),
 });
 
 export type AppConfig = {
@@ -104,6 +145,19 @@ export type AppConfig = {
   twilioContentSidPaymentReminder?: string;
   invoiceShareExpiryDays: number;
   notificationIdempotencyTtlHours: number;
+  /** True when all required S3 credentials are present. */
+  storageConfigured: boolean;
+  s3Endpoint?: string;
+  s3Bucket?: string;
+  s3Region: string;
+  s3AccessKeyId?: string;
+  s3SecretAccessKey?: string;
+  s3ForcePathStyle: boolean;
+  s3Ssl: boolean;
+  s3PublicBaseUrl?: string;
+  storageMaxFileBytes: number;
+  storageUploadUrlTtlSeconds: number;
+  storageDownloadUrlTtlSeconds: number;
 };
 
 function assertTwilioConfig(env: z.infer<typeof envSchema>): void {
@@ -125,6 +179,40 @@ function assertTwilioConfig(env: z.infer<typeof envSchema>): void {
   }
 }
 
+/**
+ * All-or-nothing S3 credentials: if any required field is set, all must be set.
+ * Empty set means storage is disabled (endpoints return 503).
+ */
+export function assertStorageConfig(env: z.infer<typeof envSchema>): boolean {
+  const required = {
+    S3_ENDPOINT: env.S3_ENDPOINT,
+    S3_BUCKET: env.S3_BUCKET,
+    S3_ACCESS_KEY_ID: env.S3_ACCESS_KEY_ID,
+    S3_SECRET_ACCESS_KEY: env.S3_SECRET_ACCESS_KEY,
+  } as const;
+
+  const present = Object.entries(required).filter(([, value]) =>
+    Boolean(value),
+  );
+  if (present.length === 0) {
+    return false;
+  }
+
+  const missing = Object.entries(required)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Partial S3 configuration is invalid. Missing: ${missing.join(', ')}. ` +
+        'Set all of S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, ' +
+        'or leave all empty to disable object storage.',
+    );
+  }
+
+  return true;
+}
+
 export function loadAppConfig(): AppConfig {
   const result = envSchema.safeParse(process.env);
 
@@ -138,6 +226,7 @@ export function loadAppConfig(): AppConfig {
 
   const env = result.data;
   assertTwilioConfig(env);
+  const storageConfigured = assertStorageConfig(env);
 
   return {
     appName: env.APP_NAME,
@@ -165,5 +254,17 @@ export function loadAppConfig(): AppConfig {
     twilioContentSidPaymentReminder: env.TWILIO_CONTENT_SID_PAYMENT_REMINDER,
     invoiceShareExpiryDays: env.INVOICE_SHARE_EXPIRY_DAYS,
     notificationIdempotencyTtlHours: env.NOTIFICATION_IDEMPOTENCY_TTL_HOURS,
+    storageConfigured,
+    s3Endpoint: env.S3_ENDPOINT,
+    s3Bucket: env.S3_BUCKET,
+    s3Region: env.S3_REGION ?? 'auto',
+    s3AccessKeyId: env.S3_ACCESS_KEY_ID,
+    s3SecretAccessKey: env.S3_SECRET_ACCESS_KEY,
+    s3ForcePathStyle: env.S3_FORCE_PATH_STYLE,
+    s3Ssl: env.S3_SSL,
+    s3PublicBaseUrl: env.S3_PUBLIC_BASE_URL,
+    storageMaxFileBytes: env.STORAGE_MAX_FILE_BYTES,
+    storageUploadUrlTtlSeconds: env.STORAGE_UPLOAD_URL_TTL_SECONDS,
+    storageDownloadUrlTtlSeconds: env.STORAGE_DOWNLOAD_URL_TTL_SECONDS,
   };
 }

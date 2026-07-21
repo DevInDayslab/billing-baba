@@ -107,6 +107,62 @@ describe('NotificationService idempotency', () => {
     expect(insertSuccess).toHaveBeenCalledTimes(1);
   });
 
+  test('sendSaleInvoice uses sendMedia when mediaUrl is provided', async () => {
+    const sendText = mock(
+      async (_params: SendTextParams): Promise<NotificationSendResult> => ({
+        success: true,
+        providerMessageId: 'SM_TEXT',
+      }),
+    );
+    const sendMedia = mock(
+      async (): Promise<NotificationSendResult> => ({
+        success: true,
+        providerMessageId: 'SM_MEDIA',
+      }),
+    );
+    const provider: NotificationProvider = {
+      name: 'mock',
+      sendText,
+      sendMedia,
+    };
+    const insertSuccess = mock(async () => ({
+      inserted: true as const,
+      row: { status: 'success', providerMessageId: 'SM_MEDIA' },
+    }));
+    const sendLog = {
+      findRecentSuccess: mock(async () => null),
+      insertSuccess,
+      findByKey: mock(async () => null),
+    } as unknown as NotificationSendLogRepository;
+
+    const service = new NotificationService(
+      provider,
+      {
+        invitationExpiryDays: 7,
+        notificationIdempotencyTtlHours: 24,
+        environment: 'test',
+      },
+      sendLog,
+    );
+
+    const result = await service.sendSaleInvoice(
+      { phone: '+918920108002' },
+      {
+        customerName: 'Ravi',
+        invoiceNumber: 'INV-1',
+        amount: 50,
+        invoiceUrl: 'https://billingbaba.com/invoice/x',
+        mediaUrl: 'https://cdn.example.com/invoice.pdf',
+      },
+      { idempotencyKey: 'invoice:media' },
+    );
+
+    expect(result.success).toBe(true);
+    expect(sendMedia).toHaveBeenCalledTimes(1);
+    expect(sendText).toHaveBeenCalledTimes(0);
+    expect(insertSuccess).toHaveBeenCalledTimes(1);
+  });
+
   test('rejects invalid phone without calling provider', async () => {
     const sendText = mock(
       async (_params: SendTextParams): Promise<NotificationSendResult> => ({

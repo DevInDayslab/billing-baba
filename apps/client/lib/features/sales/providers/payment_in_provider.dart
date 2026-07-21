@@ -1,9 +1,14 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
+import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
@@ -493,6 +498,8 @@ class PaymentInFormState {
     this.discount = 0,
     this.description = '',
     this.showDescriptionField = false,
+    this.attachedImages = const [],
+    this.attachedDocuments = const [],
     this.showValidationErrors = false,
     this.saveError,
     this.isSaving = false,
@@ -509,6 +516,8 @@ class PaymentInFormState {
   final double discount;
   final String description;
   final bool showDescriptionField;
+  final List<SaleFormAttachment> attachedImages;
+  final List<SaleFormAttachment> attachedDocuments;
   final bool showValidationErrors;
   final String? saveError;
   final bool isSaving;
@@ -522,8 +531,20 @@ class PaymentInFormState {
       partyId!.isNotEmpty &&
       receivedAmount > 0;
 
+  bool get partyHasError => transactionPartyHasError(
+    showValidationErrors: showValidationErrors,
+    partyId: partyId,
+    partyName: party,
+  );
+
+  bool get amountHasError => transactionAmountHasError(
+    showValidationErrors: showValidationErrors,
+    amount: receivedAmount,
+  );
+
   PaymentInFormState copyWith({
     String? partyId,
+    bool clearPartyId = false,
     String? party,
     String? paymentType,
     String? receiptNo,
@@ -534,13 +555,15 @@ class PaymentInFormState {
     double? discount,
     String? description,
     bool? showDescriptionField,
+    List<SaleFormAttachment>? attachedImages,
+    List<SaleFormAttachment>? attachedDocuments,
     bool? showValidationErrors,
     String? saveError,
     bool clearSaveError = false,
     bool? isSaving,
   }) {
     return PaymentInFormState(
-      partyId: partyId ?? this.partyId,
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
       party: party ?? this.party,
       paymentType: paymentType ?? this.paymentType,
       receiptNo: receiptNo ?? this.receiptNo,
@@ -551,6 +574,8 @@ class PaymentInFormState {
       discount: discount ?? this.discount,
       description: description ?? this.description,
       showDescriptionField: showDescriptionField ?? this.showDescriptionField,
+      attachedImages: attachedImages ?? this.attachedImages,
+      attachedDocuments: attachedDocuments ?? this.attachedDocuments,
       showValidationErrors: showValidationErrors ?? this.showValidationErrors,
       saveError: clearSaveError ? null : (saveError ?? this.saveError),
       isSaving: isSaving ?? this.isSaving,
@@ -580,22 +605,58 @@ class PaymentInForm extends _$PaymentInForm {
     state = _initialPaymentInFormState();
   }
 
-  Future<void> updateParty(String name, {String? partyId}) async {
+  Future<void> loadPaymentAttachmentsForEdit(String paymentId) async {
+    if (state.attachedImages.isNotEmpty ||
+        state.attachedDocuments.isNotEmpty) {
+      return;
+    }
+
+    final attachments = await loadTransactionAttachments(
+      ref,
+      entityType: DocumentAttachmentEntityType.paymentIn.apiValue,
+      entityId: paymentId,
+    );
     state = state.copyWith(
-      party: name,
+      attachedImages: attachments.images,
+      attachedDocuments: attachments.documents,
+    );
+  }
+
+  Future<void> updateParty(String name, {String? partyId}) async {
+    final change = unlinkedPartyNameChange(
+      newName: name,
+      previousName: state.party,
+      currentPartyId: state.partyId,
+    );
+    final clearLink = partyId == null && change.clearPartyId;
+    state = state.copyWith(
+      party: change.partyName,
       partyId: partyId,
+      clearPartyId: clearLink,
       clearSaveError: true,
+      balanceDue: clearLink ? 0 : state.balanceDue,
     );
 
-    if (partyId != null && partyId.isNotEmpty) {
+    final linkedId = state.partyId;
+    if (linkedId != null && linkedId.isNotEmpty) {
       try {
         final service = await ref.read(salesServiceProvider.future);
-        final balanceDue = await service.fetchPartyBalanceDue(partyId);
+        final balanceDue = await service.fetchPartyBalanceDue(linkedId);
         state = state.copyWith(balanceDue: balanceDue);
       } catch (_) {
         // Balance lookup is best-effort for the dialog.
       }
     }
+  }
+
+  String? _validationError() {
+    return buildTransactionValidationError(
+      hasValidLineItems: true,
+      hasValidParty: state.partyId != null && state.partyId!.isNotEmpty,
+      hasValidAmount: state.receivedAmount > 0,
+      requireParty: true,
+      requireAmount: true,
+    );
   }
 
   void updatePaymentType(String value) {
@@ -630,6 +691,49 @@ class PaymentInForm extends _$PaymentInForm {
     state = state.copyWith(showDescriptionField: !state.showDescriptionField);
   }
 
+  void addImage(SaleFormAttachment attachment) {
+    state = state.copyWith(
+      attachedImages: [...state.attachedImages, attachment],
+    );
+  }
+
+  void removeImage(String id) {
+    state = state.copyWith(
+      attachedImages: state.attachedImages.where((item) => item.id != id).toList(),
+    );
+  }
+
+  void updateImage(String id, String name) {
+    state = state.copyWith(
+      attachedImages: [
+        for (final image in state.attachedImages)
+          if (image.id == id) image.copyWith(name: name) else image,
+      ],
+    );
+  }
+
+  void addDocument(SaleFormAttachment attachment) {
+    state = state.copyWith(
+      attachedDocuments: [...state.attachedDocuments, attachment],
+    );
+  }
+
+  void removeDocument(String id) {
+    state = state.copyWith(
+      attachedDocuments:
+          state.attachedDocuments.where((item) => item.id != id).toList(),
+    );
+  }
+
+  void updateDocument(String id, String name) {
+    state = state.copyWith(
+      attachedDocuments: [
+        for (final document in state.attachedDocuments)
+          if (document.id == id) document.copyWith(name: name) else document,
+      ],
+    );
+  }
+
   PaymentInModel? buildPaymentModel() {
     if (!state.isValid) {
       state = state.copyWith(showValidationErrors: true);
@@ -662,9 +766,13 @@ class PaymentInForm extends _$PaymentInForm {
   }
 
   Future<({String? error, String? paymentId})> savePayment() async {
+    if (state.isSaving) {
+      return (error: null, paymentId: null);
+    }
+
     final payment = buildPaymentModel();
     if (payment == null) {
-      return (error: 'Please fill required fields', paymentId: null);
+      return (error: _validationError(), paymentId: null);
     }
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
@@ -715,6 +823,19 @@ class PaymentInForm extends _$PaymentInForm {
         );
       }
       final paymentId = created.id;
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.paymentIn.apiValue,
+        entityId: paymentId,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
+      if (synced != null) {
+        state = state.copyWith(
+          attachedImages: synced.images,
+          attachedDocuments: synced.documents,
+        );
+      }
       reset();
       // Fire-and-forget WhatsApp notify when local settings allow.
       // ignore: unawaited_futures

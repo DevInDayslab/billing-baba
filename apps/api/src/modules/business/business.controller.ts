@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
+import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
 import { sendData } from '../../shared/http/response';
 import {
@@ -18,7 +19,9 @@ function formatZodError(error: ZodError): Record<string, string[]> {
   return errors;
 }
 
-export function createBusinessController() {
+export function createBusinessController(config: AppConfig) {
+  const service = new BusinessService(config);
+
   return {
     list: async (
       request: FastifyRequest,
@@ -29,7 +32,7 @@ export function createBusinessController() {
         throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
       }
 
-      const service = new BusinessService();
+      const service = new BusinessService(config);
       const data = await service.listBusinesses(accountId);
       return sendData(reply, data);
     },
@@ -46,7 +49,7 @@ export function createBusinessController() {
         }
 
         const body = createBusinessBodySchema.parse(request.body);
-        const service = new BusinessService();
+        const service = new BusinessService(config);
         const data = await service.createBusiness(accountId, phone, body);
         return sendData(reply, data, 201);
       } catch (error) {
@@ -72,7 +75,6 @@ export function createBusinessController() {
         throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
       }
 
-      const service = new BusinessService();
       const data = await service.getProfile(businessId, accountId);
       return sendData(reply, data);
     },
@@ -89,7 +91,6 @@ export function createBusinessController() {
         }
 
         const body = updateBusinessProfileBodySchema.parse(request.body);
-        const service = new BusinessService();
         const data = await service.updateProfile(businessId, accountId, body);
         return sendData(reply, data);
       } catch (error) {
@@ -115,7 +116,7 @@ export function createBusinessController() {
       }
 
       const businessId = (request.params as { id: string }).id;
-      const service = new BusinessService();
+      const service = new BusinessService(config);
       await service.deleteBusiness(businessId, accountId);
       return reply.status(204).send();
     },

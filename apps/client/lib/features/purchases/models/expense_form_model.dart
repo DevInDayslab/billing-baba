@@ -196,6 +196,7 @@ class AddExpenseFormState {
     bool? isSaving,
     String? saveError,
     bool clearSaveError = false,
+    bool clearPartyId = false,
   }) {
     return AddExpenseFormState(
       expenseId: expenseId ?? this.expenseId,
@@ -203,7 +204,7 @@ class AddExpenseFormState {
       category: category ?? this.category,
       categoryId: categoryId ?? this.categoryId,
       party: party ?? this.party,
-      partyId: partyId ?? this.partyId,
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
       expenseNumber: expenseNumber ?? this.expenseNumber,
       expenseDate: expenseDate ?? this.expenseDate,
       dueDate: dueDate ?? this.dueDate,

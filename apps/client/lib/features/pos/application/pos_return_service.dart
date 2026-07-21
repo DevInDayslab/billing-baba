@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/pos/models/pos_sale_line_item.dart';
@@ -19,8 +20,31 @@ Future<PosReturnService> posReturnService(Ref ref) async {
   return PosReturnService(remote: SalesRemoteDataSource(api.dio));
 }
 
+@riverpod
+Future<PosSale> processPosReturn(
+  Ref ref, {
+  required PosSale originalSale,
+  required List<ReturnItem> returnItems,
+  required PaymentMode refundMode,
+}) async {
+  final service = await ref.read(posReturnServiceProvider.future);
+  final returnSale = await service.processReturn(
+    originalSale: originalSale,
+    returnItems: returnItems,
+    refundMode: refundMode,
+  );
+  await refreshAfterSaleReturn(
+    ref,
+    context: (
+      partyId: originalSale.partyId,
+      itemIds: returnItems.map((item) => item.itemId),
+    ),
+  );
+  return returnSale;
+}
+
 class PosReturnService {
-  PosReturnService({required SalesRemoteDataSource remote}) : _remote = remote;
+  PosReturnService({required this._remote});
 
   final SalesRemoteDataSource _remote;
 

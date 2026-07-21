@@ -1,7 +1,11 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/database/app_database_provider.dart';
+import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/pos/application/pos_catalog.dart';
 import 'package:billing_baba/features/pos/data/pos_local_data_source.dart';
 import 'package:billing_baba/features/pos/models/cart_item.dart';
 import 'package:billing_baba/features/pos/models/held_bill.dart';
@@ -11,6 +15,7 @@ import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:billing_baba/features/pos/providers/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/providers/pos_repository_provider.dart';
+import 'package:collection/collection.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pos_cart_provider.g.dart';
@@ -36,6 +41,30 @@ class PosCart extends _$PosCart {
 
   String? get _businessId => ref.read(currentBusinessProvider)?.id;
 
+  PosItem? _livePosItem(PosItem item) {
+    final inventoryItems = ref.read(inventoryItemsProvider).value;
+    if (inventoryItems == null) return item;
+    final categories = ref.read(inventoryCategoriesProvider).value ?? const [];
+    return findLivePosItem(
+          itemId: item.id,
+          inventoryItems: inventoryItems,
+          categoryNamesById: categoryNamesById(categories),
+        ) ??
+        item;
+  }
+
+  int _cartQuantityFor(String itemId) {
+    return state.items
+        .where((cartItem) => cartItem.item.id == itemId)
+        .fold<int>(0, (sum, cartItem) => sum + cartItem.quantity);
+  }
+
+  bool _canAddQuantity(PosItem item, int additionalQty) {
+    final live = _livePosItem(item);
+    if (live == null || live.stock <= 0) return false;
+    return _cartQuantityFor(item.id) + additionalQty <= live.stock;
+  }
+
   Future<void> _loadHeldBills() async {
     final businessId = _businessId;
     if (businessId == null || businessId.isEmpty) {
@@ -47,10 +76,14 @@ class PosCart extends _$PosCart {
   }
 
   void addItem(PosItem item) {
-    final index = state.items.indexWhere((c) => c.item.id == item.id);
+    if (!_canAddQuantity(item, 1)) return;
+
+    final live = _livePosItem(item) ?? item;
+    final index = state.items.indexWhere((c) => c.item.id == live.id);
     if (index >= 0) {
       final updated = List<CartItem>.from(state.items);
       updated[index] = updated[index].copyWith(
+        item: live,
         quantity: updated[index].quantity + 1,
       );
       state = state.copyWith(items: updated);
@@ -58,7 +91,7 @@ class PosCart extends _$PosCart {
       state = state.copyWith(
         items: [
           ...state.items,
-          CartItem(item: item, quantity: 1),
+          CartItem(item: live, quantity: 1),
         ],
       );
     }
@@ -77,9 +110,23 @@ class PosCart extends _$PosCart {
       removeItem(itemId);
       return;
     }
+
+    final cartItem = state.items.where((c) => c.item.id == itemId).firstOrNull;
+    var nextQty = qty;
+    if (cartItem != null &&
+        !_canAddQuantity(cartItem.item, nextQty - cartItem.quantity)) {
+      final live = _livePosItem(cartItem.item);
+      nextQty = live?.stock ?? cartItem.item.stock;
+      if (nextQty <= 0) {
+        removeItem(itemId);
+        return;
+      }
+    }
+
     final updated = state.items.map((c) {
       if (c.item.id == itemId) {
-        return c.copyWith(quantity: qty);
+        final live = _livePosItem(c.item) ?? c.item;
+        return c.copyWith(item: live, quantity: nextQty);
       }
       return c;
     }).toList();
@@ -225,11 +272,19 @@ class PosCart extends _$PosCart {
 
     final repository = await ref.read(posRepositoryProvider.future);
     try {
+      final itemIds = state.items.map((cartItem) => cartItem.item.id).toList();
       final sale = await repository.submitSale(
         cart: state,
         businessId: businessId,
       );
       clearCart();
+      await refreshAfterSaleMutation(
+        ref,
+        context: (
+          partyId: sale.partyId,
+          itemIds: itemIds,
+        ),
+      );
       return sale;
     } on PosRepositoryException {
       rethrow;

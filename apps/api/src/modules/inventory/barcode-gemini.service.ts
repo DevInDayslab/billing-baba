@@ -3,9 +3,7 @@ import {
   logGeminiApiError,
   logGeminiRequestStart,
 } from '../../shared/gemini/gemini-client';
-import {
-  isEligibleForExternalLookup,
-} from './barcode-confidence';
+import { isEligibleForExternalLookup } from './barcode-confidence';
 
 const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
 const GEMINI_REQUEST_TIMEOUT_MS = 30_000;

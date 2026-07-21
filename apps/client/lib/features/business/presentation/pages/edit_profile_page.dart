@@ -1,9 +1,18 @@
+import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:billing_baba/core/media/pick_media_image.dart';
+import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/business/application/business_profile_controller.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/data/business_branding_repository.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
+import 'package:billing_baba/shared/image/image_service.dart';
+import 'package:billing_baba/shared/image/image_urls.dart';
+import 'package:billing_baba/shared/widgets/optimistic_media_uploader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +26,15 @@ class EditProfilePage extends ConsumerStatefulWidget {
 
 class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   static const _saveButtonColor = Color(0xFFD32F2F);
+  static const _compactBreakpoint = 860.0;
+  static const _logoSize = 120.0;
+  static const _signatureWidth = 220.0;
+  static const _signatureHeight = 96.0;
+  static const double _mediaColumnWidth = _signatureWidth + 8;
+  static const _mediaToFormGap = 40.0;
+
+  static const _pngOnly = {'image/png'};
+  static const _logoMimes = {'image/png', 'image/jpeg', 'image/webp'};
 
   static const _businessTypes = [
     'Retail',
@@ -66,12 +84,25 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
   final _pincodeController = TextEditingController();
+  final _upiIdController = TextEditingController();
 
   String? _businessType;
   String? _businessCategory;
   String? _state;
   String? _profileSeed;
   String? _hydratedProfileId;
+
+  String? _logoUrl;
+  String? _signatureUrl;
+  Uint8List? _logoOptimisticBytes;
+  Uint8List? _signatureOptimisticBytes;
+
+  bool _uploadingLogo = false;
+  bool _uploadingSignature = false;
+  var _logoUploadGeneration = 0;
+  var _signatureUploadGeneration = 0;
+
+  BusinessBrandingRepository? _brandingRepository;
 
   @override
   void initState() {
@@ -82,7 +113,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       if (profile != null && mounted) {
         setState(() => _hydrateFromProfile(profile));
       }
+      _initRepository();
     });
+  }
+
+  Future<void> _initRepository() async {
+    final api = await ref.read(apiClientProvider.future);
+    if (!mounted) return;
+    setState(() => _brandingRepository = BusinessBrandingRepository(api.dio));
   }
 
   @override
@@ -93,11 +131,15 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _emailController.dispose();
     _addressController.dispose();
     _pincodeController.dispose();
+    _upiIdController.dispose();
     super.dispose();
   }
 
-  void _hydrateFromProfile(BusinessProfileModel profile) {
-    if (_hydratedProfileId == profile.id) return;
+  void _hydrateFromProfile(
+    BusinessProfileModel profile, {
+    bool force = false,
+  }) {
+    if (!force && _hydratedProfileId == profile.id) return;
 
     _businessNameController.text = profile.name;
     _phoneController.text =
@@ -107,11 +149,233 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _addressController.text = profile.address ?? '';
     _pincodeController.text =
         Validators.normalizePincode(profile.pincode) ?? '';
+    _upiIdController.text = profile.upiId ?? '';
     _businessType = profile.businessType;
     _businessCategory = profile.businessCategory;
     _state = profile.state;
     _profileSeed = profile.id;
     _hydratedProfileId = profile.id;
+    _logoUrl = profile.logoUrl;
+    _signatureUrl = profile.signatureUrl;
+    _logoOptimisticBytes = null;
+    _signatureOptimisticBytes = null;
+  }
+
+  Future<void> _refreshProfile({bool syncFormFields = false}) async {
+    final service = await ref.read(businessServiceProvider.future);
+    final profile = await service.fetchBusinessProfile(forceRefresh: true);
+    ref.read(businessProfileProvider.notifier).replaceWith(profile);
+    if (!mounted) return;
+
+    setState(() {
+      _logoUrl = profile.logoUrl;
+      _signatureUrl = profile.signatureUrl;
+      _profileSeed = profile.id;
+      // Keep optimistic local previews until the user picks a new image.
+      if (syncFormFields || _hydratedProfileId != profile.id) {
+        _hydrateFromProfile(profile, force: true);
+      }
+    });
+  }
+
+  Future<void> _uploadBranding({
+    required Set<String> allowedMimes,
+    required int maxBytes,
+    required Future<Map<String, dynamic>> Function(
+      BusinessBrandingRepository repo,
+      Uint8List bytes,
+      String mimeType,
+    )
+    upload,
+    required void Function(bool value) setUploading,
+    required void Function(String? url) setUrl,
+    required void Function(Uint8List? bytes) setOptimisticBytes,
+    required String? Function() currentUrl,
+    required int Function() nextGeneration,
+    required int Function() currentGeneration,
+    required void Function(String? url) patchProfileMedia,
+  }) async {
+    final repo = _brandingRepository;
+    if (repo == null) return;
+
+    final picked = await pickAndPrepareMediaImage(
+      context: context,
+      allowedMimes: allowedMimes,
+      maxBytes: maxBytes,
+    );
+    if (picked == null) return;
+
+    final generation = nextGeneration();
+    final previousUrl = currentUrl();
+
+    // Paint local preview immediately — do not wait for the network.
+    setState(() {
+      setOptimisticBytes(picked.previewBytes);
+      setUploading(true);
+    });
+
+    try {
+      if (!mounted || currentGeneration() != generation) return;
+
+      final result = await upload(repo, picked.bytes, picked.mimeType);
+      if (!mounted || currentGeneration() != generation) return;
+
+      final newUrl = result['url'] as String?;
+      setState(() {
+        setUrl(newUrl);
+        setUploading(false);
+      });
+      patchProfileMedia(newUrl);
+      unawaited(
+        ref.read(imageServiceProvider).replaceImage(
+              oldUrl: previousUrl,
+              newUrl: newUrl,
+              oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+              newCacheKey: buildImageCacheKey(fallbackUrl: newUrl),
+            ),
+      );
+    } on Exception catch (e) {
+      if (!mounted || currentGeneration() != generation) return;
+      setState(() {
+        setOptimisticBytes(null);
+        setUrl(previousUrl);
+        setUploading(false);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload failed: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteBranding({
+    required Future<void> Function(BusinessBrandingRepository repo) delete,
+    required void Function(bool value) setUploading,
+    required void Function(String? url) setUrl,
+    required void Function(Uint8List? bytes) setOptimisticBytes,
+    required String? Function() currentUrl,
+    required int Function() nextGeneration,
+    required int Function() currentGeneration,
+    required void Function() patchProfileMediaCleared,
+    required void Function(String? url) patchProfileMedia,
+  }) async {
+    final repo = _brandingRepository;
+    if (repo == null) return;
+
+    final generation = nextGeneration();
+    final previousUrl = currentUrl();
+
+    setState(() {
+      setOptimisticBytes(null);
+      setUrl(null);
+      setUploading(true);
+    });
+    patchProfileMediaCleared();
+
+    try {
+      await delete(repo);
+      if (!mounted || currentGeneration() != generation) return;
+      setState(() => setUploading(false));
+      unawaited(
+        ref.read(imageServiceProvider).invalidateImage(
+              url: previousUrl,
+              cacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+            ),
+      );
+    } on Exception catch (e) {
+      if (!mounted || currentGeneration() != generation) return;
+      setState(() {
+        setUrl(previousUrl);
+        setUploading(false);
+      });
+      patchProfileMedia(previousUrl);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Delete failed: $e')),
+      );
+    }
+  }
+
+  void _patchLogoOnProfile(String? url) {
+    final current = ref.read(businessProfileProvider).asData?.value;
+    if (current == null) return;
+    ref
+        .read(businessProfileProvider.notifier)
+        .replaceWith(
+          url == null
+              ? current.copyWith(clearLogoUrl: true)
+              : current.copyWith(logoUrl: url),
+        );
+  }
+
+  void _patchSignatureOnProfile(String? url) {
+    final current = ref.read(businessProfileProvider).asData?.value;
+    if (current == null) return;
+    ref
+        .read(businessProfileProvider.notifier)
+        .replaceWith(
+          url == null
+              ? current.copyWith(clearSignatureUrl: true)
+              : current.copyWith(signatureUrl: url),
+        );
+  }
+
+  Future<void> _uploadLogo() {
+    return _uploadBranding(
+      allowedMimes: _logoMimes,
+      maxBytes: 2 * 1024 * 1024,
+      upload: (repo, bytes, mime) =>
+          repo.uploadLogo(bytes: bytes, mimeType: mime),
+      setUploading: (v) => _uploadingLogo = v,
+      setUrl: (url) => _logoUrl = url,
+      setOptimisticBytes: (bytes) => _logoOptimisticBytes = bytes,
+      currentUrl: () => _logoUrl,
+      nextGeneration: () => ++_logoUploadGeneration,
+      currentGeneration: () => _logoUploadGeneration,
+      patchProfileMedia: _patchLogoOnProfile,
+    );
+  }
+
+  Future<void> _deleteLogo() {
+    return _deleteBranding(
+      delete: (repo) => repo.deleteLogo(),
+      setUploading: (v) => _uploadingLogo = v,
+      setUrl: (url) => _logoUrl = url,
+      setOptimisticBytes: (bytes) => _logoOptimisticBytes = bytes,
+      currentUrl: () => _logoUrl,
+      nextGeneration: () => ++_logoUploadGeneration,
+      currentGeneration: () => _logoUploadGeneration,
+      patchProfileMediaCleared: () => _patchLogoOnProfile(null),
+      patchProfileMedia: _patchLogoOnProfile,
+    );
+  }
+
+  Future<void> _uploadSignature() {
+    return _uploadBranding(
+      allowedMimes: _pngOnly,
+      maxBytes: 1024 * 1024,
+      upload: (repo, bytes, mime) =>
+          repo.uploadSignature(bytes: bytes, mimeType: mime),
+      setUploading: (v) => _uploadingSignature = v,
+      setUrl: (url) => _signatureUrl = url,
+      setOptimisticBytes: (bytes) => _signatureOptimisticBytes = bytes,
+      currentUrl: () => _signatureUrl,
+      nextGeneration: () => ++_signatureUploadGeneration,
+      currentGeneration: () => _signatureUploadGeneration,
+      patchProfileMedia: _patchSignatureOnProfile,
+    );
+  }
+
+  Future<void> _deleteSignature() {
+    return _deleteBranding(
+      delete: (repo) => repo.deleteSignature(),
+      setUploading: (v) => _uploadingSignature = v,
+      setUrl: (url) => _signatureUrl = url,
+      setOptimisticBytes: (bytes) => _signatureOptimisticBytes = bytes,
+      currentUrl: () => _signatureUrl,
+      nextGeneration: () => ++_signatureUploadGeneration,
+      currentGeneration: () => _signatureUploadGeneration,
+      patchProfileMediaCleared: () => _patchSignatureOnProfile(null),
+      patchProfileMedia: _patchSignatureOnProfile,
+    );
   }
 
   List<String> _dropdownOptions(List<String> options, String? selected) {
@@ -134,6 +398,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       businessCategory: _businessCategory,
       state: _state,
       pincode: Validators.normalizePincode(_pincodeController.text),
+      upiId: _upiIdController.text,
     );
 
     final updated = await ref
@@ -144,6 +409,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
     if (updated != null) {
       _syncDropdownsFromProfile(updated);
+      await _refreshProfile();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Business profile saved successfully')),
       );
@@ -169,11 +436,133 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       _businessCategory = profile.businessCategory;
       _state = profile.state;
       _profileSeed = profile.id;
+      _logoUrl = profile.logoUrl;
+      _signatureUrl = profile.signatureUrl;
       _phoneController.text =
           Validators.normalizeIndianPhone(profile.phone) ?? '';
       _pincodeController.text =
           Validators.normalizePincode(profile.pincode) ?? '';
     });
+  }
+
+  Widget _buildBusinessDetailsColumn(EditBusinessProfileFormState formState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(title: 'Business Details'),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Business Name',
+          required: true,
+          errorText: formState.errorFor('name'),
+          child: _OutlinedField(
+            controller: _businessNameController,
+            hintText: 'Business Name',
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Phone Number',
+          errorText: formState.errorFor('phone'),
+          child: _OutlinedField(
+            controller: _phoneController,
+            hintText: 'Phone Number',
+            keyboardType: TextInputType.phone,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'GSTIN',
+          errorText: formState.errorFor('gstin'),
+          child: _OutlinedField(
+            controller: _gstinController,
+            hintText: 'GSTIN',
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Email ID',
+          errorText: formState.errorFor('email'),
+          child: _OutlinedField(
+            controller: _emailController,
+            hintText: 'Email ID',
+            keyboardType: TextInputType.emailAddress,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Business Address',
+          errorText: formState.errorFor('address'),
+          child: _OutlinedField(
+            controller: _addressController,
+            hintText: 'Business Address',
+            minLines: 4,
+            maxLines: 4,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMoreDetailsColumn(EditBusinessProfileFormState formState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(title: 'More Details'),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Business Type',
+          errorText: formState.errorFor('business_type'),
+          child: _OutlinedDropdown<String>(
+            value: _businessType,
+            hintText: 'Business Type',
+            items: _dropdownOptions(_businessTypes, _businessType),
+            onChanged: (value) => setState(() => _businessType = value),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Business Category',
+          errorText: formState.errorFor('business_category'),
+          child: _OutlinedDropdown<String>(
+            value: _businessCategory,
+            hintText: 'Business Category',
+            items: _dropdownOptions(_businessCategories, _businessCategory),
+            onChanged: (value) => setState(() => _businessCategory = value),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'State',
+          errorText: formState.errorFor('state'),
+          child: _OutlinedDropdown<String>(
+            value: _state,
+            hintText: 'State',
+            items: _dropdownOptions(_indianStates, _state),
+            onChanged: (value) => setState(() => _state = value),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Pincode',
+          errorText: formState.errorFor('pincode'),
+          child: _OutlinedField(
+            controller: _pincodeController,
+            hintText: 'Pincode',
+            keyboardType: TextInputType.number,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'UPI ID',
+          errorText: formState.errorFor('upi_id'),
+          child: _OutlinedField(
+            controller: _upiIdController,
+            hintText: 'merchant@upi',
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -244,148 +633,86 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _LogoPlaceholder(
-                            name: displayName,
-                            logoUrl: profile.logoUrl,
-                            seed: _profileSeed ?? profile.id,
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: Column(
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final stacked =
+                              constraints.maxWidth < _compactBreakpoint;
+                          final mediaColumn = Column(
+                            children: [
+                              OptimisticMediaUploader(
+                                label: 'Logo',
+                                imageUrl: _logoUrl,
+                                optimisticBytes: _logoOptimisticBytes,
+                                isUploading: _uploadingLogo,
+                                replaceLabel: 'Replace Business Logo',
+                                removeLabel: 'Remove Business Logo',
+                                placeholder: BusinessAvatar(
+                                  name: displayName,
+                                  seed: _profileSeed ?? profile.id,
+                                  diameter: _logoSize,
+                                ),
+                                onReplace: _uploadLogo,
+                                onRemove:
+                                    (_logoUrl != null &&
+                                            _logoUrl!.trim().isNotEmpty) ||
+                                        _logoOptimisticBytes != null
+                                    ? _deleteLogo
+                                    : null,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              OptimisticMediaUploader(
+                                label: 'Signature',
+                                width: _signatureWidth,
+                                height: _signatureHeight,
+                                imageUrl: _signatureUrl,
+                                optimisticBytes: _signatureOptimisticBytes,
+                                isUploading: _uploadingSignature,
+                                shape: OptimisticMediaShape.roundedRect,
+                                replaceLabel: 'Replace Signature',
+                                removeLabel: 'Remove Signature',
+                                emptyLabel: 'Sign',
+                                onReplace: _uploadSignature,
+                                onRemove:
+                                    (_signatureUrl != null &&
+                                            _signatureUrl!.trim().isNotEmpty) ||
+                                        _signatureOptimisticBytes != null
+                                    ? _deleteSignature
+                                    : null,
+                              ),
+                            ],
+                          );
+                          final details = _buildBusinessDetailsColumn(
+                            formState,
+                          );
+                          final more = _buildMoreDetailsColumn(formState);
+
+                          if (stacked) {
+                            return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const _SectionHeader(title: 'Business Details'),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Business Name',
-                                  required: true,
-                                  errorText: formState.errorFor('name'),
-                                  child: _OutlinedField(
-                                    controller: _businessNameController,
-                                    hintText: 'Business Name',
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Phone Number',
-                                  errorText: formState.errorFor('phone'),
-                                  child: _OutlinedField(
-                                    controller: _phoneController,
-                                    hintText: 'Phone Number',
-                                    keyboardType: TextInputType.phone,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'GSTIN',
-                                  errorText: formState.errorFor('gstin'),
-                                  child: _OutlinedField(
-                                    controller: _gstinController,
-                                    hintText: 'GSTIN',
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Email ID',
-                                  errorText: formState.errorFor('email'),
-                                  child: _OutlinedField(
-                                    controller: _emailController,
-                                    hintText: 'Email ID',
-                                    keyboardType: TextInputType.emailAddress,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Business Address',
-                                  errorText: formState.errorFor('address'),
-                                  child: _OutlinedField(
-                                    controller: _addressController,
-                                    hintText: 'Business Address',
-                                    minLines: 4,
-                                    maxLines: 4,
-                                  ),
-                                ),
+                                Center(child: mediaColumn),
+                                const SizedBox(height: AppSpacing.lg),
+                                details,
+                                const SizedBox(height: AppSpacing.lg),
+                                more,
                               ],
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const _SectionHeader(title: 'More Details'),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Business Type',
-                                  errorText: formState.errorFor(
-                                    'business_type',
-                                  ),
-                                  child: _OutlinedDropdown<String>(
-                                    value: _businessType,
-                                    hintText: 'Business Type',
-                                    items: _dropdownOptions(
-                                      _businessTypes,
-                                      _businessType,
-                                    ),
-                                    onChanged: (value) =>
-                                        setState(() => _businessType = value),
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Business Category',
-                                  errorText: formState.errorFor(
-                                    'business_category',
-                                  ),
-                                  child: _OutlinedDropdown<String>(
-                                    value: _businessCategory,
-                                    hintText: 'Business Category',
-                                    items: _dropdownOptions(
-                                      _businessCategories,
-                                      _businessCategory,
-                                    ),
-                                    onChanged: (value) => setState(
-                                      () => _businessCategory = value,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'State',
-                                  errorText: formState.errorFor('state'),
-                                  child: _OutlinedDropdown<String>(
-                                    value: _state,
-                                    hintText: 'State',
-                                    items: _dropdownOptions(
-                                      _indianStates,
-                                      _state,
-                                    ),
-                                    onChanged: (value) =>
-                                        setState(() => _state = value),
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Pincode',
-                                  errorText: formState.errorFor('pincode'),
-                                  child: _OutlinedField(
-                                    controller: _pincodeController,
-                                    hintText: 'Pincode',
-                                    keyboardType: TextInputType.number,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                const _LabeledField(
-                                  label: 'Add Signature',
-                                  child: _SignatureUploadBox(),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                            );
+                          }
+
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: _mediaColumnWidth,
+                                child: mediaColumn,
+                              ),
+                              const SizedBox(width: _mediaToFormGap),
+                              Expanded(child: details),
+                              const SizedBox(width: AppSpacing.lg),
+                              Expanded(child: more),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       const Divider(color: Color(0xFFE0E0E0)),
@@ -634,185 +961,5 @@ class _OutlinedDropdown<T> extends StatelessWidget {
           .toList(),
       onChanged: onChanged,
     );
-  }
-}
-
-class _LogoPlaceholder extends StatelessWidget {
-  const _LogoPlaceholder({
-    required this.name,
-    required this.logoUrl,
-    required this.seed,
-  });
-
-  final String name;
-  final String? logoUrl;
-  final String seed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        CustomPaint(
-          painter: _DashedBorderPainter(
-            shape: _DashedBorderShape.circle,
-            color: const Color(0xFFBDBDBD),
-          ),
-          child: SizedBox(
-            width: 100,
-            height: 100,
-            child: Center(
-              child: logoUrl == null
-                  ? BusinessAvatar(
-                      name: name,
-                      seed: seed,
-                      diameter: 96,
-                    )
-                  : const Text(
-                      'Add Logo',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        const Text(
-          'Logo upload coming soon',
-          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-        ),
-      ],
-    );
-  }
-}
-
-class _SignatureUploadBox extends StatelessWidget {
-  const _SignatureUploadBox();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _DashedBorderPainter(
-        shape: _DashedBorderShape.rectangle,
-        color: const Color(0xFFBDBDBD),
-        borderRadius: AppRadius.sm,
-      ),
-      child: const SizedBox(
-        width: double.infinity,
-        height: 80,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.upload, color: AppColors.textSecondary, size: 24),
-            SizedBox(height: AppSpacing.xs),
-            Text(
-              'Coming Soon',
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-enum _DashedBorderShape { circle, rectangle }
-
-class _DashedBorderPainter extends CustomPainter {
-  _DashedBorderPainter({
-    required this.shape,
-    required this.color,
-    this.borderRadius = 0,
-  });
-
-  final _DashedBorderShape shape;
-  final Color color;
-  final double borderRadius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    const dashWidth = 6.0;
-    const dashSpace = 4.0;
-
-    if (shape == _DashedBorderShape.circle) {
-      _drawDashedCircle(canvas, size, paint, dashWidth, dashSpace);
-    } else {
-      _drawDashedRect(canvas, size, paint, dashWidth, dashSpace);
-    }
-  }
-
-  void _drawDashedCircle(
-    Canvas canvas,
-    Size size,
-    Paint paint,
-    double dashWidth,
-    double dashSpace,
-  ) {
-    final radius = size.shortestSide / 2 - paint.strokeWidth;
-    final center = Offset(size.width / 2, size.height / 2);
-    final circumference = 2 * 3.141592653589793 * radius;
-    final dashCount = (circumference / (dashWidth + dashSpace)).floor();
-
-    for (var i = 0; i < dashCount; i++) {
-      final startAngle = (i * (dashWidth + dashSpace)) / radius;
-      final sweepAngle = dashWidth / radius;
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        sweepAngle,
-        false,
-        paint,
-      );
-    }
-  }
-
-  void _drawDashedRect(
-    Canvas canvas,
-    Size size,
-    Paint paint,
-    double dashWidth,
-    double dashSpace,
-  ) {
-    final rect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        paint.strokeWidth / 2,
-        paint.strokeWidth / 2,
-        size.width - paint.strokeWidth,
-        size.height - paint.strokeWidth,
-      ),
-      Radius.circular(borderRadius),
-    );
-
-    final path = Path()..addRRect(rect);
-    final metrics = path.computeMetrics();
-
-    for (final metric in metrics) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final next = distance + dashWidth;
-        canvas.drawPath(
-          metric.extractPath(distance, next.clamp(0, metric.length)),
-          paint,
-        );
-        distance = next + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
-    return oldDelegate.shape != shape ||
-        oldDelegate.color != color ||
-        oldDelegate.borderRadius != borderRadius;
   }
 }

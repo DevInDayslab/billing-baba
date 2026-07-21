@@ -8,6 +8,7 @@ import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_actions.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_profile_image_editor.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/parties/providers/party_groups_provider.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
@@ -146,6 +147,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   bool _additionalField1Enabled = false;
   bool _additionalField2Enabled = false;
 
+  final _profileImageEditorKey = GlobalKey<PartyProfileImageEditorState>();
+  String? _profileImageUrl;
+  String? _profileMediaAssetId;
+
   String _gstType = 'Unregistered/Consumer';
   String _state = _defaultState;
   String _billingDetailState = _defaultState;
@@ -266,6 +271,10 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         : 'Unregistered/Consumer';
     _state = party.state.isNotEmpty ? party.state : _resolvedBusinessState();
     _partyGroup = party.partyGroup;
+    if (duplicateNameSuffix == null) {
+      _profileImageUrl = party.profileImageUrl;
+      _profileMediaAssetId = party.profileMediaAssetId;
+    }
 
     final resolvedState = party.state.isNotEmpty
         ? party.state
@@ -619,11 +628,39 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     setState(() => _isSaving = true);
 
     try {
-      await ref.read(partyListProvider.notifier).updateParty(
+      // Finish any in-flight photo upload before PATCHing / closing the dialog.
+      // Otherwise Update overwrites list/detail with a party that still has no
+      // profile image, and a disposed editor never patches the final URL.
+      final editor = _profileImageEditorKey.currentState;
+      if (editor != null) {
+        await editor.waitForIdle();
+        _profileImageUrl = editor.imageUrl ?? _profileImageUrl;
+        _profileMediaAssetId = editor.mediaAssetId ?? _profileMediaAssetId;
+      }
+
+      final updated = await ref
+          .read(partyListProvider.notifier)
+          .updateParty(
             party.id,
             result,
             isActive: party.isActive,
           );
+
+      // If Update raced ahead of bind on the server, keep the uploaded image.
+      final imageUrl = _profileImageUrl ?? updated.profileImageUrl;
+      final mediaId = _profileMediaAssetId ?? updated.profileMediaAssetId;
+      if (imageUrl != updated.profileImageUrl ||
+          mediaId != updated.profileMediaAssetId) {
+        ref
+            .read(partyListProvider.notifier)
+            .patchProfileImage(
+              party.id,
+              profileImageUrl: imageUrl,
+              profileMediaAssetId: mediaId,
+              clear: imageUrl == null && mediaId == null,
+            );
+      }
+
       if (!mounted) return;
 
       _showSaveFeedback(
@@ -673,11 +710,35 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     setState(() => _isSaving = true);
 
     try {
-      await ref.read(partyListProvider.notifier).createParty(
+      final created = await ref
+          .read(partyListProvider.notifier)
+          .createParty(
             result,
             selectCreated: selectCreated,
           );
       if (!mounted) return;
+
+      final editor = _profileImageEditorKey.currentState;
+      if (editor != null && editor.hasPendingUpload) {
+        try {
+          await editor.flushPendingUpload(created.id);
+          ref
+              .read(partyListProvider.notifier)
+              .patchProfileImage(
+                created.id,
+                profileImageUrl: _profileImageUrl,
+                profileMediaAssetId: _profileMediaAssetId,
+              );
+        } on Object {
+          if (mounted) {
+            _showSaveFeedback(
+              message:
+                  'Party saved, but profile photo upload failed. You can retry from Edit.',
+              isError: true,
+            );
+          }
+        }
+      }
 
       _showSaveFeedback(
         message: 'Party "${result.partyName}" saved successfully',
@@ -772,6 +833,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       _savedShippingState = defaultState;
       _savedShippingCountry = 'India';
       _partyNameError = false;
+      _profileImageUrl = null;
+      _profileMediaAssetId = null;
       _phoneError = null;
       _emailError = null;
       _gstinError = null;
@@ -878,11 +941,15 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               ),
             ),
             IconButton(
-              onPressed: _isSaving ? null : () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Party settings coming soon')),
-                );
-              },
+              onPressed: _isSaving
+                  ? null
+                  : () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Party settings coming soon'),
+                        ),
+                      );
+                    },
               icon: const Icon(Icons.settings_outlined, size: 20),
               color: AppColors.textSecondary,
               tooltip: 'Settings',
@@ -972,9 +1039,41 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       ),
     ];
 
+    final seed =
+        widget.partyToEdit?.id ??
+        widget.duplicateFrom?.id ??
+        _partyNameController.text.trim();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: PartyProfileImageEditor(
+            key: _profileImageEditorKey,
+            partyId: widget.partyToEdit?.id,
+            partyName: _partyNameController.text,
+            seed: seed.isEmpty ? 'party' : seed,
+            initialImageUrl: _profileImageUrl,
+            initialMediaAssetId: _profileMediaAssetId,
+            onChanged: ({required imageUrl, required mediaAssetId}) {
+              _profileImageUrl = imageUrl;
+              _profileMediaAssetId = mediaAssetId;
+              final partyId = widget.partyToEdit?.id;
+              if (partyId != null) {
+                ref
+                    .read(partyListProvider.notifier)
+                    .patchProfileImage(
+                      partyId,
+                      profileImageUrl: imageUrl,
+                      profileMediaAssetId: mediaAssetId,
+                      clear: imageUrl == null && mediaAssetId == null,
+                    );
+              }
+            },
+          ),
+        ),
+        const SizedBox(height: FormSpacing.section),
         FormGrid(
           rowGap: FormSpacing.section,
           cells: [
@@ -1068,15 +1167,14 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           maxLength: maxLength,
-          buildCounter:
-              maxLength == null
-                  ? null
-                  : (
-                    context, {
-                    required currentLength,
-                    required isFocused,
-                    maxLength,
-                  }) => null,
+          buildCounter: maxLength == null
+              ? null
+              : (
+                  context, {
+                  required currentLength,
+                  required isFocused,
+                  maxLength,
+                }) => null,
           decoration: buildSaleFieldDecoration(
             hint: hint,
             hasError: hasError,

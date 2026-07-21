@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/providers/add_purchase_order_form_provider.dart';
@@ -83,25 +85,21 @@ class AddPurchaseOrderFooter extends ConsumerWidget {
                 onTap: notifier.addPaymentType,
               ),
               const SizedBox(height: 12),
-              SaleFormAttachmentsSection(
+              transactionAttachmentsSection(
+                context: context,
+                ref: ref,
+                entityType: DocumentAttachmentEntityType.purchaseOrder.apiValue,
+                entityId: form.documentId,
                 description: form.description,
                 images: form.attachedImages,
                 documents: form.attachedDocuments,
                 onDescriptionChanged: notifier.updateDescription,
-                onAddImage: () => _promptAddImage(
-                  context,
-                  notifier,
-                  form.attachedImages.length,
-                ),
-                onRemoveImage: notifier.removeImage,
-                onUpdateImage: notifier.updateImage,
-                onAddDocument: () => _promptAddDocument(
-                  context,
-                  notifier,
-                  form.attachedDocuments.length,
-                ),
-                onRemoveDocument: notifier.removeDocument,
-                onUpdateDocument: notifier.updateDocument,
+                addImage: notifier.addImage,
+                addDocument: notifier.addDocument,
+                removeImage: notifier.removeImage,
+                removeDocument: notifier.removeDocument,
+                updateImage: notifier.updateImage,
+                updateDocument: notifier.updateDocument,
               ),
             ],
           ),

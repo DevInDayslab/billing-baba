@@ -179,6 +179,24 @@ export class NotificationService {
     options: NotifyOptions,
   ): Promise<NotificationSendResult> {
     const content = buildPaymentReceivedNotification(input);
+    const mediaUrl = input.mediaUrl?.trim();
+
+    if (mediaUrl && this.provider.sendMedia) {
+      return this.safeSendMedia({
+        to: recipient.phone,
+        body: content.body,
+        mediaUrl,
+        notificationType: content.type,
+        idempotencyKey: options.idempotencyKey,
+        companyId: options.companyId,
+        metadata: {
+          notificationType: content.type,
+          companyName: input.companyName,
+          hasMedia: true,
+        },
+      });
+    }
+
     return this.safeSend({
       to: recipient.phone,
       body: content.body,
@@ -198,6 +216,24 @@ export class NotificationService {
     options: NotifyOptions,
   ): Promise<NotificationSendResult> {
     const content = buildSaleInvoiceNotification(input);
+    const mediaUrl = input.mediaUrl?.trim();
+
+    if (mediaUrl && this.provider.sendMedia) {
+      return this.safeSendMedia({
+        to: recipient.phone,
+        body: content.body,
+        mediaUrl,
+        notificationType: content.type,
+        idempotencyKey: options.idempotencyKey,
+        companyId: options.companyId,
+        metadata: {
+          notificationType: content.type,
+          companyName: input.companyName ?? null,
+          hasMedia: true,
+        },
+      });
+    }
+
     return this.safeSend({
       to: recipient.phone,
       body: content.body,
@@ -391,6 +427,125 @@ export class NotificationService {
       });
       // Do not leak raw exception text to callers
       void message;
+      return {
+        success: false,
+        error: {
+          code: 'PROVIDER_ERROR',
+          message: toSafeNotificationErrorMessage('PROVIDER_ERROR'),
+          retryable: false,
+        },
+      };
+    }
+  }
+
+  private async safeSendMedia(params: {
+    to: string;
+    body: string;
+    mediaUrl: string;
+    notificationType: string;
+    idempotencyKey: string;
+    companyId?: string | null;
+    metadata: Record<string, unknown>;
+  }): Promise<NotificationSendResult> {
+    if (!this.provider.sendMedia) {
+      return this.safeSend({
+        to: params.to,
+        body: params.body,
+        notificationType: params.notificationType,
+        idempotencyKey: params.idempotencyKey,
+        companyId: params.companyId,
+        metadata: params.metadata,
+      });
+    }
+
+    const started = Date.now();
+    const phoneResult = normalizeIndianMobile(params.to);
+    if (!phoneResult.ok) {
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_NUMBER',
+          message: toSafeNotificationErrorMessage('INVALID_NUMBER'),
+          retryable: false,
+        },
+      };
+    }
+
+    const e164 = phoneResult.e164;
+    const masked = maskPhoneE164(e164);
+
+    try {
+      if (this.sendLog) {
+        const since = new Date();
+        since.setHours(
+          since.getHours() - this.config.notificationIdempotencyTtlHours,
+        );
+        const prior = await this.sendLog.findRecentSuccess(
+          params.idempotencyKey,
+          since,
+          this.provider.name,
+        );
+        if (prior) {
+          return {
+            success: true,
+            providerMessageId: prior.providerMessageId ?? undefined,
+            deduped: true,
+          };
+        }
+      }
+
+      const result = await this.provider.sendMedia({
+        to: e164,
+        body: params.body,
+        mediaUrl: params.mediaUrl,
+        metadata: params.metadata,
+      });
+
+      if (result.success && this.sendLog) {
+        try {
+          await this.sendLog.insertSuccess({
+            idempotencyKey: params.idempotencyKey,
+            notificationType: params.notificationType,
+            provider: this.provider.name,
+            recipientMasked: masked,
+            companyId: params.companyId,
+            status: 'success',
+            providerMessageId: result.providerMessageId ?? null,
+          });
+        } catch {
+          // best-effort
+        }
+      }
+
+      logNotificationAttempt({
+        notification_type: params.notificationType,
+        provider: this.provider.name,
+        recipient: masked,
+        company_id: params.companyId ?? null,
+        idempotency_key: params.idempotencyKey,
+        status: result.success ? 'success' : 'failure',
+        provider_message_id: result.providerMessageId ?? null,
+        duration_ms: Date.now() - started,
+        error: result.error?.code ?? null,
+        timestamp: new Date().toISOString(),
+      });
+
+      return result.success
+        ? result
+        : {
+            success: false,
+            error: result.error
+              ? {
+                  ...result.error,
+                  message: toSafeNotificationErrorMessage(result.error.code),
+                }
+              : {
+                  code: 'PROVIDER_ERROR',
+                  message: toSafeNotificationErrorMessage('PROVIDER_ERROR'),
+                  retryable: false,
+                },
+          };
+    } catch {
       return {
         success: false,
         error: {

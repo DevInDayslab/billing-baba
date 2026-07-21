@@ -11,9 +11,9 @@ export function MainLayout({
   maxWidthClassName = 'max-w-lg',
 }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-12 print:bg-white print:px-0 print:py-0">
       <div className={`mx-auto w-full ${maxWidthClassName}`}>
-        <header className="mb-8 text-center">
+        <header className="mb-8 text-center print-hide print:hidden">
           <p className="text-sm font-semibold uppercase tracking-widest text-slate-500">
             Billing Baba
           </p>

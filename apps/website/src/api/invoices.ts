@@ -15,6 +15,12 @@ export type PublicInvoiceLine = {
   line_total: string;
 };
 
+export type PublicInvoiceLoyalty = {
+  earned_points: string;
+  redeemed_points: string;
+  points_available: string | null;
+};
+
 export type PublicInvoice = {
   token: string;
   invoice: {
@@ -31,6 +37,7 @@ export type PublicInvoice = {
     paid_amount: string;
     due_amount: string;
     payment_status: 'unpaid' | 'partial' | 'paid';
+    loyalty: PublicInvoiceLoyalty | null;
   };
   company: {
     name: string;
@@ -39,6 +46,8 @@ export type PublicInvoice = {
     phone: string | null;
     email: string | null;
     state_code: string;
+    logo_url: string | null;
+    upi_id: string | null;
   };
   customer: {
     name: string;
@@ -48,8 +57,36 @@ export type PublicInvoice = {
     state_code: string | null;
   } | null;
   lines: PublicInvoiceLine[];
+  payment: {
+    upi_id: string | null;
+    due_amount: string;
+    scan_to_pay_enabled: boolean;
+  };
+  share: {
+    url: string;
+    token: string;
+    expires_at: string | null;
+  };
   share_url: string;
   expires_at: string | null;
+  /** Canonical download endpoint: GET returns signed URL for stored invoice.pdf. */
+  pdf_download_path: string | null;
+};
+
+export type PublicInvoicePdfDownload = {
+  download_url: string;
+  file_name: string;
+  expires_at: string | null;
+  cached: boolean;
+};
+
+export type PaymentQrPayload = {
+  qr_data_url: string;
+  amount: string;
+  merchant: string;
+  upi_id: string;
+  invoice_number: string;
+  upi_payload: string;
 };
 
 export function usePublicInvoice(token: string | undefined) {
@@ -61,5 +98,19 @@ export function usePublicInvoice(token: string | undefined) {
         basePath: '/public/invoices',
       }),
     retry: false,
+  });
+}
+
+export async function fetchPaymentQr(token: string): Promise<PaymentQrPayload> {
+  return apiFetch<PaymentQrPayload>(`/${token}/payment-qr?format=json`, {
+    basePath: '/public/invoices',
+  });
+}
+
+export async function fetchInvoicePdfDownload(
+  token: string,
+): Promise<PublicInvoicePdfDownload> {
+  return apiFetch<PublicInvoicePdfDownload>(`/${token}/download`, {
+    basePath: '/public/invoices',
   });
 }

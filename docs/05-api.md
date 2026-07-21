@@ -436,6 +436,24 @@ flowchart TB
 
 ---
 
+## Storage APIs
+
+**Module:** `storage` · **Docs:** [04-backend/storage.md](04-backend/storage.md) · [ADR-023](09-decisions.md#adr-023-provider-agnostic-object-storage)
+
+Generic object-storage foundation. Clients upload bytes **directly** to Railway via presigned PUT. Business-module bindings (logo, items, parties, …) come in later phases.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/storage/uploads` | Create upload intent (presigned PUT URL) |
+| POST | `/storage/uploads/complete` | Verify object via HEAD; mark asset ready |
+| GET | `/storage/files/{id}` | Media asset metadata |
+| GET | `/storage/files/{id}/url` | Signed or public download URL |
+| DELETE | `/storage/files/{id}` | Soft-delete asset + delete object |
+
+**Auth:** Bearer + business selected. Returns `503 STORAGE_NOT_CONFIGURED` when S3 env is empty.
+
+---
+
 ## Party APIs
 
 **Module:** `parties` · **Domain:** CRM

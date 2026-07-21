@@ -32,6 +32,7 @@ class _QuickCreateMenuButtonState extends ConsumerState<QuickCreateMenuButton> {
   final _layerLink = LayerLink();
   final GlobalKey<State<StatefulWidget>> _triggerKey = GlobalKey();
   OverlayEntry? _overlayEntry;
+  QuickCreateMenuController? _menuController;
   var _isOpen = false;
   var _focusedIndex = 0;
 
@@ -43,15 +44,14 @@ class _QuickCreateMenuButtonState extends ConsumerState<QuickCreateMenuButton> {
 
   @override
   void dispose() {
-    ref.read(quickCreateMenuProvider).unregister();
+    _menuController?.unregister();
     _removeOverlay();
     super.dispose();
   }
 
   void _registerController() {
-    ref
-        .read(quickCreateMenuProvider)
-        .register(
+    _menuController = ref.read(quickCreateMenuProvider);
+    _menuController!.register(
           toggle: _toggleMenu,
           close: _closeMenu,
           isOpen: () => _isOpen,

@@ -33,8 +33,10 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-018: OTP Authentication and Accounts Identity](#adr-018-otp-authentication-and-accounts-identity)
 - [ADR-019: Sale Order Document Type](#adr-019-sale-order-document-type)
 - [ADR-020: Job Work Out Domain](#adr-020-job-work-out-domain)
-- [ADR-021: Sales Document Attachments Deferred](#adr-021-sales-document-attachments-deferred)
+- [ADR-021: Sales Document Attachments](#adr-021-sales-document-attachments)
 - [ADR-022: Provider-Agnostic Outbound Notifications](#adr-022-provider-agnostic-outbound-notifications)
+- [ADR-023: Provider-Agnostic Object Storage](#adr-023-provider-agnostic-object-storage)
+- [ADR-024: Invoice Artifact System](#adr-024-invoice-artifact-system)
 
 ---
 
@@ -62,8 +64,10 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 | ADR-018 | OTP Authentication and Accounts Identity | July 2026 | Accepted |
 | ADR-019 | Sale Order Document Type | July 2026 | Accepted |
 | ADR-020 | Job Work Out Domain | July 2026 | Accepted |
-| ADR-021 | Sales Document Attachments Deferred | July 2026 | Accepted |
+| ADR-021 | Sales Document Attachments | July 2026 | Superseded |
 | ADR-022 | Provider-Agnostic Outbound Notifications | July 2026 | Accepted |
+| ADR-023 | Provider-Agnostic Object Storage | July 2026 | Accepted |
+| ADR-024 | Invoice Artifact System | July 2026 | Accepted |
 
 ---
 
@@ -968,41 +972,32 @@ Introduce a separate domain with tables `job_work_orders`, `job_work_raw_materia
 
 ---
 
-## ADR-021: Sales Document Attachments Deferred
+## ADR-021: Sales Document Attachments
 
 | Field | Value |
 |-------|-------|
 | **Date** | July 2026 |
-| **Status** | Accepted |
+| **Status** | Superseded |
 | **Author** | Technical Lead |
+| **Superseded by** | Polymorphic `document_attachments` + Phase 6 storage integration |
 
 ### Context
 
-Flutter sales forms include `SaleFormAttachment` for images and documents. CRM has `party_attachments` but no sales-document attachment table exists.
+Flutter sales forms include `SaleFormAttachment` for images and documents. CRM has `party_attachments` but no sales-document attachment table existed when ADR-021 was accepted.
 
-### Decision
+### Original decision (deferred)
 
-Defer sales document attachment persistence to post-MVP. Phase 1 sales backend will not include attachment upload endpoints. UI attachments remain client-only until blob storage strategy and table design are finalized.
+Defer sales document attachment persistence to post-MVP until blob storage strategy and table design were finalized.
 
-### Consequences
+### Superseded decision (Phase 6)
 
-**Positive:**
+- Polymorphic `document_attachments` table binds `media_assets` to transactions via `entity_type` + `entity_id`.
+- Supported entities: sale, purchase, estimate, sale_order, purchase_order, delivery_challan, payment_in, payment_out, expense, job_work.
+- `DocumentAttachmentService` uses **StorageService only** (presigned intent → PUT → complete).
+- API: `GET/POST /document-attachments`, `GET /document-attachments/:id/url`, `PATCH/DELETE /document-attachments/:id`.
+- Flutter forms use file picker, preview/download, and offline metadata store for pending uploads.
 
-- Unblocks sales document CRUD and finalize without storage infrastructure
-- Avoids premature schema tied to unknown file size/CDN strategy
-
-**Negative:**
-
-- Attachments lost on refresh until implemented
-
-### Alternatives Considered
-
-| Alternative | Rejected because |
-|-------------|------------------|
-| Reuse `party_attachments` | Wrong entity scope; attachments belong to documents |
-| JSON array of URLs on `sales_documents` | No metadata, poor sync conflict handling |
-
-**References:** [ADR-014](#adr-014-unified-sales-documents)
+**References:** [04-backend/storage.md](04-backend/storage.md) · [ADR-023](#adr-023-provider-agnostic-object-storage) · [ADR-014](#adr-014-unified-sales-documents)
 
 ---
 
@@ -1025,7 +1020,7 @@ Collaboration invitations and future customer messaging (payment reminders, invo
 - Select provider via `NOTIFICATION_PROVIDER=console|twilio`.
 - Keep user-visible copy in shared templates under `src/notifications/`.
 - Public invoice sharing uses cryptographically random `invoice_share_tokens` and website route `/invoice/:token`.
-- Phase 1 sends text-only WhatsApp; media/PDF deferred.
+- WhatsApp invoice notify calls `InvoiceArtifactService` to ensure the PDF and attach a **temporary preview PNG** (not the PDF). See [ADR-024](#adr-024-invoice-artifact-system).
 
 ### Consequences
 
@@ -1044,6 +1039,115 @@ Collaboration invitations and future customer messaging (payment reminders, invo
 |-------------|------------------|
 | Call Twilio SDK from InvitationService | Vendor lock-in; crashes business flows on API errors |
 | Meta Cloud API only | Extra app review; Twilio already provisioned |
+
+---
+
+## ADR-023: Provider-Agnostic Object Storage
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+### Context
+
+Billing Baba needs logos, item images, party documents, expense receipts, and (later) WhatsApp/PDF media. Hardcoding the AWS SDK in business modules would couple domain logic to Railway S3 and block future R2/MinIO/GCS swaps. Proxying file bytes through Fastify would waste bandwidth and memory.
+
+### Decision
+
+- Introduce `StorageProvider` (presigned upload/download, head, delete, copy, move, exists) with `RailwayS3Provider` as the first implementation.
+- Business modules call `StorageService` only — never import `@aws-sdk/*`.
+- Clients upload **directly** to Railway via presigned PUT; the API only creates intents and verifies via HEAD on complete.
+- Registry table `media_assets` stores metadata (`storage_key`, purpose, visibility, MIME, size, etag, owner, status). Soft delete.
+- Generic HTTP surface: `/storage/uploads`, `/storage/uploads/complete`, `/storage/files/:id`, `/storage/files/:id/url`, `DELETE /storage/files/:id`.
+- Domain uploads (logo, items, parties, …) bind in later phases — not in the foundation PR.
+
+### Consequences
+
+**Positive:**
+
+- One upload pipeline for every future module
+- Provider can be swapped without touching sales/inventory/parties
+- API never proxies large binaries
+
+**Negative:**
+
+- Clients must support two-step upload (intent → PUT → complete)
+- Incomplete S3 env fails startup (all-or-nothing); empty env disables storage with 503
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Multipart upload through Fastify | Memory pressure; duplicates Railway bandwidth |
+| Store blobs in PostgreSQL/SQLite | Poor fit for large binaries; sync cost |
+| Per-module S3 helpers | Duplicates policy and path rules |
+
+**References:** [04-backend/storage.md](04-backend/storage.md) · [ADR-022](#adr-022-provider-agnostic-outbound-notifications)
+
+---
+
+## ADR-024: Invoice Artifact System
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+### Context
+
+Invoice sharing needs a Vyapar-like experience: WhatsApp preview image, public webpage, PDF download, and Scan-to-Pay UPI QR. Duplicating PDF/image/QR logic across notify, share, and website paths would drift from a single source of truth.
+
+### Decision
+
+- Introduce **`InvoiceArtifactService`** as the facade for PDF ensure, temporary preview PNG, share metadata, and payment QR orchestration.
+- The **PDF remains the only permanent document** (cached via `GeneratedDocumentService`).
+- Preview PNGs are generated on demand (SVG → sharp), uploaded temporarily, sent via Twilio `sendMedia`, then deleted (plus `*/previews/*` 24h lifecycle).
+- **`PaymentQrService`** builds `upi://pay` payloads from current `businesses.upi_id` and invoice due amount — never stored.
+- Public HTML is not stored; `apps/website` renders `/invoice/:token` from JSON.
+- Share tokens support expiry, revocation, and regeneration (one active token per invoice).
+
+```mermaid
+flowchart TD
+  Invoice[SalesDocument] --> GDS[GeneratedDocumentService]
+  GDS --> IAS[InvoiceArtifactService]
+  IAS --> PDF[Cached invoice.pdf]
+  IAS --> Preview[Preview PNG temp]
+  IAS --> Meta[Share metadata]
+  IAS --> PQS[PaymentQrService]
+  PQS --> QR[Dynamic UPI QR]
+  Preview --> Storage[StorageService]
+  Storage --> Twilio[Twilio sendMedia]
+  Meta --> Website[apps/website]
+  PDF --> Website
+  QR --> Website
+```
+
+### Consequences
+
+**Positive:**
+
+- Business modules never generate invoice images/QR directly
+- WhatsApp gets a compact preview; customers open the full invoice for PDF/pay
+- Public page stays light and token-gated
+
+**Negative:**
+
+- Preview rendering adds CPU cost on notify (target under 500ms)
+- Companies must set text `upi_id` for Scan to Pay (separate from uploaded UPI QR image)
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Attach PDF on WhatsApp | Poor mobile preview; not Vyapar-like |
+| Screenshot PDF for preview | Fragile, slow, layout-dependent |
+| Store HTML/QR permanently | Unnecessary; stale risk; storage cost |
+| Server-rendered public HTML | Website SPA already owns public UX |
+
+**References:** [generated-documents.md](04-backend/generated-documents.md) · [notifications.md](04-backend/notifications.md) · [public-invoices.md](04-backend/public-invoices.md) · [storage.md](04-backend/storage.md)
 
 ---
 
@@ -1178,6 +1282,44 @@ The party details page showed only `ledger_entries`-backed rows (invoices, bills
 |-------------|------------------|
 | Post all documents to `ledger_entries` on create | Pollutes accounting; estimates/orders are not ledger events |
 | Client-side merge of module list APIs | N+1 fetches, inconsistent sort, duplicate cache logic |
+
+---
+
+### ADR-2026-03-20: Media processing staging and variant model
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-03-20 |
+| **Status** | Accepted |
+| **Author** | Engineering |
+
+#### Context
+
+Phase 9 required production-grade image optimization without exposing raw uploads permanently. The initial `ImageService` implementation kept originals and used four derivative sizes under a separate `derivatives/` path.
+
+#### Decision
+
+- Introduce **`MediaProcessingService`** with policy-driven **`ImagePipeline`** (sharp).
+- Image uploads land on **staging keys**; after successful processing, the **canonical source is replaced** with the optimized original and staging is deleted.
+- Variants reduced to **`thumbnail` (256px), `medium` (800px), `original` (policy max)**.
+- Processed keys use UUID naming: `{assetId}-{thumb|medium|original}.webp` under the purpose directory.
+- Processing hooks live in **`StorageService.completeUpload`** — business modules stay unaware.
+- `media_assets` extended with processing metadata (`processing_status`, `staging_storage_key`, compression fields).
+
+#### Consequences
+
+- Smaller storage footprint and faster client loads (especially POS/list views).
+- Failed processing does not fail uploads; staging remains until retry.
+- Breaking change: `media_image_variant` enum drops `small` / `large` (pre-release data only).
+- PDFs and document-like assets skip processing via policy.
+
+#### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Keep raw originals forever | Conflicts with storage cost and privacy (EXIF) goals |
+| Domain modules call `ImageService` directly | Duplicated scheduling, easy to miss upload paths |
+| Four variant sizes (150–1280) | Spec targets three tiers; extra sizes add cost with diminishing returns |
 
 ---
 

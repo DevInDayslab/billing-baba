@@ -181,7 +181,7 @@ class _UnitsListPanel extends StatelessWidget {
             items: units,
             onRefresh: onRefresh,
             emptyMessage: 'No units found',
-            itemBuilder: (context, unit) {
+            itemBuilder: (context, unit, index) {
               final isSelected = unit.id == selectedId;
               return Material(
                 color: isSelected

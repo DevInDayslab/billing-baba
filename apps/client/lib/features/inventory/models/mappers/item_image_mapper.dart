@@ -7,8 +7,23 @@ abstract final class ItemImageMapper {
     return ItemImageModel(
       id: dto.id,
       imageUrl: dto.imageUrl,
+      thumbnailUrl: dto.thumbnailUrl,
+      mediumUrl: dto.mediumUrl,
+      mediaAssetId: dto.mediaAssetId,
       sortOrder: dto.sortOrder,
       isPrimary: dto.isPrimary,
+    );
+  }
+
+  static ItemImageModel fromUploadResult(Map<String, dynamic> result) {
+    return ItemImageModel(
+      id: result['id'] as String,
+      imageUrl: result['image_url'] as String,
+      thumbnailUrl: result['thumbnail_url'] as String?,
+      mediumUrl: result['medium_url'] as String?,
+      mediaAssetId: result['media_asset_id'] as String?,
+      sortOrder: (result['sort_order'] as num?)?.toInt() ?? 0,
+      isPrimary: result['is_primary'] as bool? ?? false,
     );
   }
 }

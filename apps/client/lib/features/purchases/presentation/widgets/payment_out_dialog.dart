@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
@@ -7,7 +10,9 @@ import 'package:billing_baba/features/purchases/presentation/utils/transaction_f
 import 'package:billing_baba/features/purchases/presentation/widgets/shared/transaction_form_busy_overlay.dart';
 import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
+import 'package:billing_baba/core/attachments/document_attachment_providers.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/sale_form_attachments_section.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_time_dropdown.dart';
@@ -216,10 +221,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                             children: [
                               _FloatingLabelField(
                                 label: 'Party *',
-                                hasError:
-                                    form.showValidationErrors &&
-                                    (form.partyId == null ||
-                                        form.partyId!.isEmpty),
+                                hasError: form.partyHasError,
                                 child: BillingNamePartySearchField(
                                   value: form.party,
                                   emptyPlaceholder: 'Select Party',
@@ -229,11 +231,8 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                         name,
                                         partyId: partyId,
                                       ),
-                                  hasError:
-                                      form.showValidationErrors &&
-                                      (form.partyId == null ||
-                                          form.partyId!.isEmpty),
-                                  errorMessage: 'Please select a party',
+                                  hasError: form.partyHasError,
+                                  errorMessage: kPartyValidationMessage,
                                 ),
                               ),
                               if (form.partyId != null &&
@@ -315,12 +314,111 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                 ),
                               ],
                               const SizedBox(height: AppSpacing.sm),
-                              IconButton(
-                                onPressed: () {},
-                                icon: const Icon(Icons.camera_alt_outlined),
-                                color: AppColors.textSecondary,
-                                tooltip: 'Attach image',
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () => transactionAddImage(
+                                        context: context,
+                                        ref: ref,
+                                        entityType: DocumentAttachmentEntityType
+                                            .paymentOut.apiValue,
+                                        entityId: _savedPaymentId,
+                                        onAdded: notifier.addImage,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.camera_alt_outlined,
+                                        size: 16,
+                                      ),
+                                      label: const Text('ADD IMAGE'),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: AppColors.primary,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        side: const BorderSide(
+                                          color: _cardBorder,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () => transactionAddDocument(
+                                        context: context,
+                                        ref: ref,
+                                        entityType: DocumentAttachmentEntityType
+                                            .paymentOut.apiValue,
+                                        entityId: _savedPaymentId,
+                                        onAdded: notifier.addDocument,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.attach_file_outlined,
+                                        size: 16,
+                                      ),
+                                      label: const Text('ADD DOCUMENT'),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: AppColors.primary,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        side: const BorderSide(
+                                          color: _cardBorder,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
+                              if (form.attachedImages.isNotEmpty ||
+                                  form.attachedDocuments.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                if (form.attachedImages.isNotEmpty)
+                                  SaleFormAttachmentChipList(
+                                    attachments: form.attachedImages,
+                                    attachmentService: ref
+                                        .watch(documentAttachmentServiceProvider)
+                                        .value,
+                                    onRemove: (id) => transactionRemoveAttachment(
+                                      ref: ref,
+                                      attachments: form.attachedImages,
+                                      id: id,
+                                      onRemoved: notifier.removeImage,
+                                    ),
+                                    onRename: (id, name) =>
+                                        transactionRenameAttachment(
+                                      ref: ref,
+                                      attachments: form.attachedImages,
+                                      id: id,
+                                      name: name,
+                                      onRenamed: notifier.updateImage,
+                                    ),
+                                  ),
+                                if (form.attachedDocuments.isNotEmpty)
+                                  SaleFormAttachmentChipList(
+                                    attachments: form.attachedDocuments,
+                                    attachmentService: ref
+                                        .watch(documentAttachmentServiceProvider)
+                                        .value,
+                                    onRemove: (id) => transactionRemoveAttachment(
+                                      ref: ref,
+                                      attachments: form.attachedDocuments,
+                                      id: id,
+                                      onRemoved: notifier.removeDocument,
+                                    ),
+                                    onRename: (id, name) =>
+                                        transactionRenameAttachment(
+                                      ref: ref,
+                                      attachments: form.attachedDocuments,
+                                      id: id,
+                                      name: name,
+                                      onRenamed: notifier.updateDocument,
+                                    ),
+                                  ),
+                              ],
                             ],
                           ),
                         ),

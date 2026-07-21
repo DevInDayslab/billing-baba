@@ -337,6 +337,7 @@ class BusinessService {
       email: dto.email,
       address: dto.address,
       role: dto.role,
+      logoUrl: dto.logoUrl,
     );
   }
 
@@ -351,6 +352,7 @@ class BusinessService {
     'address': dto.address,
     'owner_name': dto.ownerName,
     'is_shared': dto.isShared,
+    'logo_url': dto.logoUrl,
   };
 
   Future<void> deleteBusiness(String businessId) async {
@@ -519,7 +521,10 @@ class BusinessList extends _$BusinessList {
       businesses
           .map(
             (business) => business.id == profile.id
-                ? business.copyWith(name: profile.name)
+                ? business.copyWith(
+                    name: profile.name,
+                    logoUrl: profile.logoUrl,
+                  )
                 : business,
           )
           .toList(),
@@ -629,6 +634,7 @@ SidebarBusiness sidebarBusiness(Ref ref) {
       id: profile.id,
       name: profile.name,
       seed: profile.id,
+      logoUrl: profile.logoUrl,
     );
   }
 
@@ -643,9 +649,11 @@ class SidebarBusiness {
     required this.name,
     required this.seed,
     this.id,
+    this.logoUrl,
   });
 
   final String? id;
   final String name;
   final String seed;
+  final String? logoUrl;
 }

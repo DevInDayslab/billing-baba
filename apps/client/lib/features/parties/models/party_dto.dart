@@ -19,6 +19,8 @@ class PartyDto {
     this.state,
     this.areaId,
     this.notes,
+    this.profileImageUrl,
+    this.profileMediaAssetId,
   });
   factory PartyDto.fromJson(Map<String, dynamic> json) {
     final pricingTier =
@@ -42,6 +44,8 @@ class PartyDto {
       balance: json['balance']?.toString() ?? '0',
       isActive: json['is_active'] as bool? ?? true,
       notes: json['notes'] as String?,
+      profileImageUrl: json['profile_image_url'] as String?,
+      profileMediaAssetId: json['profile_media_asset_id'] as String?,
       createdAt: json['created_at'] as String? ?? '',
       updatedAt: json['updated_at'] as String? ?? '',
     );
@@ -63,6 +67,8 @@ class PartyDto {
   final String balance;
   final bool isActive;
   final String? notes;
+  final String? profileImageUrl;
+  final String? profileMediaAssetId;
   final String createdAt;
   final String updatedAt;
 
@@ -83,6 +89,8 @@ class PartyDto {
     'balance': balance,
     'is_active': isActive,
     'notes': notes,
+    'profile_image_url': profileImageUrl,
+    'profile_media_asset_id': profileMediaAssetId,
     'created_at': createdAt,
     'updated_at': updatedAt,
   };

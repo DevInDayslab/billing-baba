@@ -2,12 +2,11 @@
 # Produces an unsigned Windows Release zip — no signing, notarization, or publishing.
 #
 # Triggers:
-#   - Manual run (workflow_dispatch)
+#   - Manual run (workflow_dispatch) — builds the branch you select in the UI
 #   - Push to the `demo` branch
 #
-# Configuration is injected at build time via a generated `.env` asset and
-# `--dart-define` (see AppConfig.apiBaseUrl). Values are hardcoded here
-# intentionally for internal demo builds — not stored in GitHub Secrets.
+# Demo config uses repository variables and secrets (see flutter-ci.yml).
+# Written via setup-flutter-env.sh to avoid PowerShell UTF-8 BOM issues with dotenv.
 
 name: Build Demo
 
@@ -17,7 +16,6 @@ on:
     branches:
       - demo
 
-# Always build from the `demo` branch so manual runs and CI use the same source.
 env:
   FLUTTER_WORKING_DIRECTORY: apps/client
 
@@ -25,29 +23,33 @@ jobs:
   build-windows:
     name: Windows Release
     runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      API_BASE_URL: ${{ vars.API_BASE_URL }}
 
     defaults:
       run:
         working-directory: ${{ env.FLUTTER_WORKING_DIRECTORY }}
 
     steps:
-      - name: Checkout demo branch
-        uses: actions/checkout@v4
-        with:
-          ref: demo
+      # Checkout the commit that triggered this run (push ref or dispatch branch).
+      # Do not hardcode `ref: demo` — that branch may not exist on the remote.
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      # Demo/production config — bundled as a Flutter asset and read by flutter_dotenv.
-      - name: Inject demo environment configuration
-        shell: pwsh
-        run: |
-          @(
-            'APP_ENV=production',
-            'DEBUG=false',
-            'ENABLE_DEV_LOGIN=false',
-            'API_BASE_URL=https://billing-baba-production-6b5e.up.railway.app',
-            'MSG91_WIDGET_ID=366468674b74383638333530',
-            'MSG91_WIDGET_AUTH_TOKEN=506896TywM6h0I69d61233P1'
-          ) | Set-Content -Path .env -Encoding utf8
+      - name: Generate Flutter .env
+        working-directory: .
+        env:
+          FLUTTER_ENV_DIR: apps/client
+          APP_ENV: ${{ vars.APP_ENV }}
+          DEBUG: ${{ vars.DEBUG }}
+          ENABLE_DEV_LOGIN: ${{ vars.ENABLE_DEV_LOGIN }}
+          DEV_OTP: ${{ vars.DEV_OTP }}
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          WEBSITE_URL: https://billingbaba.com
+          MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
+          MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
+        run: bash .github/scripts/setup-flutter-env.sh
 
       - name: Set up Flutter (stable, with SDK + pub cache)
         uses: subosito/flutter-action@v2
@@ -66,7 +68,8 @@ jobs:
       - name: Build Windows release
         run: >
           flutter build windows --release
-          --dart-define=API_BASE_URL=https://billing-baba-production-6b5e.up.railway.app
+          --dart-define=API_BASE_URL=$env:API_BASE_URL
+          --dart-define=WEBSITE_URL=https://billingbaba.com
 
       - name: Verify build output and package artifact
         shell: pwsh

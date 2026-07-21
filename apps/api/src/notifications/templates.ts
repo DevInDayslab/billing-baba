@@ -38,7 +38,7 @@ Your invoice #{{invoice_number}} has been generated.
 Amount:
 ₹{{amount}}
 
-View Invoice:
+Open Full Invoice:
 
 {{invoice_url}}
 

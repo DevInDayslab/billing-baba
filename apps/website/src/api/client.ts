@@ -4,6 +4,15 @@ const API_ORIGIN = (
 
 const API_V1_BASE = `${API_ORIGIN}/api/v1`;
 
+export function getApiOrigin(): string {
+  return API_ORIGIN;
+}
+
+export function getApiV1Url(path: string): string {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return `${API_V1_BASE}${normalized}`;
+}
+
 export type ApiError = {
   code: string;
   message: string;

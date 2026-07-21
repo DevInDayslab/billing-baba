@@ -30,6 +30,7 @@ class CompanyListEntry {
     this.phone,
     this.email,
     this.address,
+    this.logoUrl,
   });
 
   final String id;
@@ -50,6 +51,7 @@ class CompanyListEntry {
   final String? phone;
   final String? email;
   final String? address;
+  final String? logoUrl;
 
   bool get isOwner => relationship.isOwner;
 
@@ -78,6 +80,7 @@ class CompanyListEntry {
     String? phone,
     String? email,
     String? address,
+    String? logoUrl,
   }) {
     return CompanyListEntry(
       id: id ?? this.id,
@@ -98,6 +101,7 @@ class CompanyListEntry {
       phone: phone ?? this.phone,
       email: email ?? this.email,
       address: address ?? this.address,
+      logoUrl: logoUrl ?? this.logoUrl,
     );
   }
 
@@ -118,6 +122,7 @@ class CompanyListEntry {
       phone: model.phone,
       email: model.email,
       address: model.address,
+      logoUrl: model.logoUrl,
     );
   }
 }

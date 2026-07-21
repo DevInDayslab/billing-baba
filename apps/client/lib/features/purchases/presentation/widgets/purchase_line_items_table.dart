@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/providers/add_purchase_form_provider.dart';
@@ -68,7 +69,7 @@ class PurchaseLineItemsTable extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.fromLTRB(12, 4, 12, 0),
                     child: Text(
-                      'Add at least one item with name and quantity',
+                      kLineItemsValidationMessage,
                       style: TextStyle(
                         fontSize: 11,
                         color: saleFieldErrorColor,
@@ -486,8 +487,9 @@ class _LineItemRow extends ConsumerWidget {
             ),
           ),
           _CompactNumberField(
-            initialValue: item.qty == 0 ? '' : item.qty.toString(),
+            initialValue: formatLineItemQty(item.qty),
             hintText: '0',
+            integerOnly: true,
             onChanged: (value) => notifier.updateLineItem(
               index,
               item.copyWith(qty: double.tryParse(value) ?? 0),
@@ -669,11 +671,13 @@ class _CompactNumberField extends StatefulWidget {
     required this.initialValue,
     required this.onChanged,
     this.hintText,
+    this.integerOnly = false,
   });
 
   final String initialValue;
   final ValueChanged<String> onChanged;
   final String? hintText;
+  final bool integerOnly;
 
   @override
   State<_CompactNumberField> createState() => _CompactNumberFieldState();
@@ -712,10 +716,14 @@ class _CompactNumberFieldState extends State<_CompactNumberField> {
         hint: widget.hintText,
         compact: true,
       ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-      ],
+      keyboardType: widget.integerOnly
+          ? TextInputType.number
+          : const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: widget.integerOnly
+          ? [FilteringTextInputFormatter.digitsOnly]
+          : [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+            ],
       onChanged: widget.onChanged,
     );
   }

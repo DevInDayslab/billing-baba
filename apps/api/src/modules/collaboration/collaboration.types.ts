@@ -38,13 +38,7 @@ export type CompanyMemberDto = {
   id: string;
   full_name: string;
   phone_or_email: string;
-  status:
-    | 'pending'
-    | 'joined'
-    | 'left'
-    | 'rejected'
-    | 'expired'
-    | 'cancelled';
+  status: 'pending' | 'joined' | 'left' | 'rejected' | 'expired' | 'cancelled';
   role: CollaborationRole;
   is_owner: boolean;
   is_current_user: boolean;
@@ -83,6 +77,7 @@ export type SharedCompanyDto = {
   name: string;
   owner_name: string;
   owner_phone: string;
+  logo_url: string | null;
   relationship: CompanyRelationship;
   role: CollaborationRole;
   sync_status: 'on' | 'off';
@@ -94,6 +89,7 @@ export type PendingInvitationDto = {
   name: string;
   owner_name: string;
   owner_phone: string;
+  logo_url: string | null;
   relationship: 'pending_invite' | 'expired_invite';
   role: CollaborationRole;
   invitation_id: string;
@@ -145,4 +141,6 @@ export type BusinessOwnerInfo = {
   companyName: string;
   ownerName: string;
   ownerPhone: string;
+  logoUrl: string | null;
+  logoMediaAssetId: string | null;
 };

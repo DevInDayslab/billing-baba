@@ -1,14 +1,15 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/application/inventory_item_list_merge.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_category_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/item_image_gallery_section.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Basic details block — shared Product / Service grid (Vyapar-aligned).
 class GeneralInformationSection extends StatelessWidget {
@@ -29,7 +30,9 @@ class GeneralInformationSection extends StatelessWidget {
     required this.categories,
     required this.onCategorySelected,
     required this.unitLabel,
-    required this.onSelectUnit,
+    required     this.onSelectUnit,
+    this.itemId,
+    this.seedPrimaryImageUrl,
     super.key,
   });
 
@@ -50,6 +53,8 @@ class GeneralInformationSection extends StatelessWidget {
   final ValueChanged<String?> onCategorySelected;
   final String unitLabel;
   final VoidCallback onSelectUnit;
+  final String? itemId;
+  final String? seedPrimaryImageUrl;
 
   bool get _isProduct => itemType == ItemType.product;
 
@@ -79,7 +84,7 @@ class GeneralInformationSection extends StatelessWidget {
                 child: TextField(
                   controller: itemNameController,
                   style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(
+                  decoration: buildFormControlDecoration(
                     hint: _isProduct ? 'Enter item name' : 'Enter service name',
                     hasError: itemNameError,
                   ),
@@ -94,7 +99,7 @@ class GeneralInformationSection extends StatelessWidget {
                 child: TextField(
                   controller: hsnController,
                   style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(
+                  decoration: buildFormControlDecoration(
                     hint: taxCodeHint,
                     suffixIcon: IconButton(
                       onPressed: () {},
@@ -121,7 +126,7 @@ class GeneralInformationSection extends StatelessWidget {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(
+                  decoration: buildFormControlDecoration(
                     hint: codeLabel,
                     suffix: TextButton(
                       onPressed: onAssignCode,
@@ -214,7 +219,7 @@ class GeneralInformationSection extends StatelessWidget {
                 child: TextField(
                   controller: descriptionController,
                   style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(hint: 'Description'),
+                  decoration: buildFormControlDecoration(hint: 'Description'),
                   onChanged: onDescriptionChanged,
                 ),
               ),
@@ -222,33 +227,29 @@ class GeneralInformationSection extends StatelessWidget {
             FormGridCell(
               span: 3,
               child: AppFormField(
-                label: ' ',
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Image upload coming soon'),
+                label: _isProduct ? 'Item Images' : 'Service Images',
+                fixedHeight: false,
+                child: itemId == null || !isServerBackedInventoryItemId(itemId!)
+                    ? Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          itemId == null
+                              ? (_isProduct
+                                    ? 'Save item to add images'
+                                    : 'Save service to add images')
+                              : 'Images available after item is synced to the server',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary.withValues(
+                              alpha: 0.9,
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                    icon: const Icon(LucideIcons.camera, size: 16),
-                    label: Text(
-                      _isProduct ? 'Add Item Image' : 'Add Service Image',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                      )
+                    : ItemImageGallerySection(
+                        itemId: itemId!,
+                        seedPrimaryImageUrl: seedPrimaryImageUrl,
                       ),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                ),
               ),
             ),
           ],

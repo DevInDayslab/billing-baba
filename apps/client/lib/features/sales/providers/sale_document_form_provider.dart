@@ -1,3 +1,7 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
@@ -75,10 +79,18 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
       final service = await ref.read(salesServiceProvider.future);
       final loaded = await service.loadSaleDocumentForm(documentId);
       final items = await _resolveItemNames(loaded.items);
+      final attachments = await loadTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.estimate.apiValue,
+        entityId: documentId,
+      );
       state = loaded.copyWith(
         items: items,
+        attachedImages: attachments.images,
+        attachedDocuments: attachments.documents,
         isLoading: false,
         isFormOpen: true,
+        showValidationErrors: kResetValidationOnLoad,
       );
     } catch (error) {
       state = state.copyWith(
@@ -160,7 +172,16 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
   }
 
   void updateParty(String value) {
-    state = state.copyWith(party: value, clearSaveError: true);
+    final change = unlinkedPartyNameChange(
+      newName: value,
+      previousName: state.party,
+      currentPartyId: state.partyId,
+    );
+    state = state.copyWith(
+      party: change.partyName,
+      clearPartyId: change.clearPartyId,
+      clearSaveError: true,
+    );
   }
 
   void updatePartyWithId({required String partyId, required String partyName}) {
@@ -319,6 +340,14 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
     state = state.copyWith(items: items);
   }
 
+  String? _validationError() {
+    return buildTransactionValidationError(
+      hasValidLineItems: state.hasValidLineItems,
+      hasValidParty: state.partyId != null && state.partyId!.isNotEmpty,
+      requireParty: true,
+    );
+  }
+
   bool validate() {
     final isValid = state.isValid;
     if (!isValid) {
@@ -354,7 +383,8 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
   }
 
   Future<String?> saveDraft() async {
-    if (!validate()) return 'Please fill required fields';
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
@@ -363,8 +393,17 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
         _draftInput(),
         itemNameToId: _itemNameToId(),
       );
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.estimate.apiValue,
+        entityId: document.id,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
       state = state.copyWith(
         documentId: document.id,
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
         isSaving: false,
       );
       ref.invalidate(salesDocumentsListProvider(_listScopeFor(documentType)));
@@ -378,23 +417,41 @@ class SaleDocumentFormNotifier extends _$SaleDocumentFormNotifier {
   }
 
   Future<String?> save({bool finalize = false}) async {
-    if (!validate()) return 'Please fill required fields';
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
       final service = await ref.read(salesServiceProvider.future);
+      late final String savedDocumentId;
       if (finalize) {
-        await service.finalizeDocumentDraft(
+        final document = await service.finalizeDocumentDraft(
           _draftInput(),
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
         );
+        savedDocumentId = document.id;
       } else {
-        await service.saveDocumentDraft(
+        final document = await service.saveDocumentDraft(
           _draftInput(),
           itemNameToId: _itemNameToId(),
         );
+        savedDocumentId = document.id;
       }
+
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.estimate.apiValue,
+        entityId: savedDocumentId,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
+      state = state.copyWith(
+        documentId: savedDocumentId,
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
+      );
+
       ref.invalidate(salesDocumentsListProvider(_listScopeFor(documentType)));
       _invalidateDocumentLists(ref, documentType);
       if (finalize) {

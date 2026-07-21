@@ -267,6 +267,7 @@ async function updateBusinessProfile(
     business_type: 'Retail',
     business_category: 'General Store',
     pincode: '411004',
+    upi_id: undefined,
   });
 
   await db

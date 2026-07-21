@@ -1,10 +1,10 @@
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/generated_documents/providers/generated_document_providers.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/parties/data/party_repository.dart';
 import 'package:billing_baba/features/print/application/print_data_service.dart';
-import 'package:billing_baba/features/print/application/print_image_cache.dart';
 import 'package:billing_baba/features/print/application/print_output_service.dart';
 import 'package:billing_baba/features/print/application/print_service.dart';
 import 'package:billing_baba/features/print/data/print_remote_data_source.dart';
@@ -27,6 +27,7 @@ import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_remote_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_repository.dart';
 import 'package:billing_baba/features/settings/providers/print_settings_provider.dart';
+import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'print_providers.g.dart';
@@ -40,27 +41,11 @@ Future<PrintRepository> printRepository(Ref ref) async {
 }
 
 @Riverpod(keepAlive: true)
-Future<PrintImageCache> printImageCache(Ref ref) async {
-  final api = await ref.watch(apiClientProvider.future);
-  return PrintImageCache(api.dio);
-}
-
-@Riverpod(keepAlive: true)
-TemplateRegistry templateRegistry(Ref ref) {
-  return TemplateRegistry();
-}
-
-@Riverpod(keepAlive: true)
-PrintOutputService printOutputService(Ref ref) {
-  return PrintOutputService();
-}
-
-@Riverpod(keepAlive: true)
 Future<PrintDataService> printDataService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
   final businessService = await ref.watch(businessServiceProvider.future);
   final printRepository = await ref.watch(printRepositoryProvider.future);
-  final imageCache = await ref.watch(printImageCacheProvider.future);
+  final imageService = ref.watch(imageServiceProvider);
 
   return PrintDataService(
     salesRepository: SalesRepository(
@@ -89,8 +74,18 @@ Future<PrintDataService> printDataService(Ref ref) async {
     jobWorkRepository: JobWorkRepository(
       remote: JobWorkRemoteDataSource(api.dio),
     ),
-    imageCache: imageCache,
+    imageService: imageService,
   );
+}
+
+@Riverpod(keepAlive: true)
+TemplateRegistry templateRegistry(Ref ref) {
+  return TemplateRegistry();
+}
+
+@Riverpod(keepAlive: true)
+PrintOutputService printOutputService(Ref ref) {
+  return PrintOutputService();
 }
 
 @Riverpod(keepAlive: true)
@@ -98,11 +93,14 @@ Future<PrintService> printService(Ref ref) async {
   final dataService = await ref.watch(printDataServiceProvider.future);
   final printSettingsRepository =
       await ref.watch(printSettingsRepositoryProvider.future);
+  final generatedDocumentService =
+      await ref.watch(generatedDocumentServiceProvider.future);
   return PrintService(
     dataService: dataService,
     outputService: ref.watch(printOutputServiceProvider),
     templateRegistry: ref.watch(templateRegistryProvider),
     printSettingsRepository: printSettingsRepository,
+    generatedDocumentService: generatedDocumentService,
   );
 }
 

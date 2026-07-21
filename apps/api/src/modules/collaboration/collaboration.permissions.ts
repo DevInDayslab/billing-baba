@@ -36,12 +36,12 @@ export function assertCollaborationAction(
   }
 
   if (collaboratorRole == null) {
-    throw new AppError('FORBIDDEN', 'You do not have access to this company', 403);
+    throw new AppError(
+      'FORBIDDEN',
+      'You do not have access to this company',
+      403,
+    );
   }
 
-  throw new AppError(
-    'FORBIDDEN',
-    'Your role does not allow this action',
-    403,
-  );
+  throw new AppError('FORBIDDEN', 'Your role does not allow this action', 403);
 }

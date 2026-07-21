@@ -7,9 +7,11 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_l
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_table_row.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
+import 'package:billing_baba/features/parties/application/party_list_image_warmup.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_avatar.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/shared/widgets/table_filters/column_filter_trigger.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
@@ -221,8 +223,12 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
                   emptyMessage: isFiltered
                       ? 'No parties found'
                       : 'No parties yet. Add your first party.',
-                  itemBuilder: (context, party) {
-                    final index = parties.indexOf(party);
+                  itemBuilder: (context, party, index) {
+                    if (index == 0) {
+                      ref
+                          .read(partyListImageWarmupProvider)
+                          .warmParties(parties);
+                    }
                     return _PartyListTile(
                       party: party,
                       index: index,
@@ -294,12 +300,16 @@ class _PartyListTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         child: Row(
           children: [
-            Icon(
-              Icons.person_outline,
-              size: 16,
-              color: party.isActive
-                  ? Colors.grey.shade500
-                  : Colors.grey.shade400,
+            PartyAvatar(
+              key: ValueKey(
+                'party-avatar-${party.id}-${party.profileMediaAssetId ?? party.profileImageUrl ?? 'none'}',
+              ),
+              name: party.name,
+              seed: party.id,
+              partyId: party.id,
+              diameter: 28,
+              profileImageUrl: party.profileImageUrl,
+              profileMediaAssetId: party.profileMediaAssetId,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -311,8 +321,9 @@ class _PartyListTile extends StatelessWidget {
                       text: party.name,
                       query: searchQuery,
                       style: InventoryStyles.listCellStyle.copyWith(
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                         color: party.isActive
                             ? AppColors.textPrimary
                             : AppColors.textSecondary,

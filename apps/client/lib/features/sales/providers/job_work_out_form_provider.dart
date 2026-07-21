@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/job_work_service.dart';
@@ -57,7 +59,15 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
         orderId,
         _itemIdToName(),
       );
-      state = loaded;
+      final attachments = await loadTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.jobWork.apiValue,
+        entityId: orderId,
+      );
+      state = loaded.copyWith(
+        attachedImages: attachments.images,
+        attachedDocuments: attachments.documents,
+      );
     } catch (error) {
       state = state.copyWith(saveError: SalesErrorMapper.messageFor(error));
     }
@@ -245,7 +255,17 @@ class JobWorkOutFormNotifier extends _$JobWorkOutFormNotifier {
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
       final service = await ref.read(jobWorkServiceProvider.future);
-      await service.saveOrder(state, itemNameToId: _itemNameToId());
+      final savedOrderId = await service.saveOrder(
+        state,
+        itemNameToId: _itemNameToId(),
+      );
+      await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.jobWork.apiValue,
+        entityId: savedOrderId,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
       ref.invalidate(jobWorkOrdersListProvider);
       refreshAfterJobWorkMutation(
         ref,

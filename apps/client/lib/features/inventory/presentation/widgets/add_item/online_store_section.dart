@@ -44,7 +44,7 @@ class OnlineStoreSection extends StatelessWidget {
             child: TextField(
               controller: priceController,
               style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(hint: priceLabel),
+              decoration: buildFormControlDecoration(hint: priceLabel),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -62,7 +62,7 @@ class OnlineStoreSection extends StatelessWidget {
             child: TextField(
               controller: descriptionController,
               style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(
+              decoration: buildFormControlDecoration(
                 hint: 'Description shown on online store',
               ),
               onChanged: onDescriptionChanged,

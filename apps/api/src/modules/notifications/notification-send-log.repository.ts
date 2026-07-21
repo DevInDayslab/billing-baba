@@ -38,9 +38,7 @@ export class NotificationSendLogRepository {
           eq(notificationSendLog.idempotencyKey, idempotencyKey),
           eq(notificationSendLog.status, 'success'),
           gt(notificationSendLog.createdAt, since),
-          ...(provider
-            ? [eq(notificationSendLog.provider, provider)]
-            : []),
+          ...(provider ? [eq(notificationSendLog.provider, provider)] : []),
         ),
       )
       .orderBy(desc(notificationSendLog.createdAt))

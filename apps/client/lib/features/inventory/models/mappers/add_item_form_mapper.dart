@@ -60,6 +60,7 @@ abstract final class AddItemFormMapper {
     required String baseUnitShortName,
     String? openingGodownId,
     String? godownIdForLocation,
+    double? initialOpeningQty,
   }) {
     final godownId = form.godownId ?? openingGodownId;
     final locationGodownId = form.godownId ?? godownIdForLocation;
@@ -73,8 +74,14 @@ abstract final class AddItemFormMapper {
       );
     }
 
-    final hasOpeningStock =
-        form.itemType == ItemType.product && form.openingQty > 0;
+    // Only send opening stock when the user actually changed it. Re-sending the
+    // hydrated value fails once sales/purchases exist (API blocks opening edits).
+    final baseline = initialOpeningQty ?? 0;
+    final openingChanged = (form.openingQty - baseline).abs() > 0.0001;
+    final includeOpeningStock =
+        form.itemType == ItemType.product &&
+        form.openingQty > 0 &&
+        openingChanged;
 
     return UpdateItemRequest(
       name: form.itemName.trim(),
@@ -97,10 +104,10 @@ abstract final class AddItemFormMapper {
           ? null
           : form.primaryImageUrl.trim(),
       openingQuantity:
-          hasOpeningStock ? _formatMoney(form.openingQty) : null,
+          includeOpeningStock ? _formatMoney(form.openingQty) : null,
       openingCostPerUnit:
-          hasOpeningStock ? _formatMoney(form.atPrice) : null,
-      openingGodownId: hasOpeningStock ? godownId : null,
+          includeOpeningStock ? _formatMoney(form.atPrice) : null,
+      openingGodownId: includeOpeningStock ? godownId : null,
       location: location,
     );
   }

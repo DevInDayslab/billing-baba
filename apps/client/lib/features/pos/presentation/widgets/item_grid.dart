@@ -1,9 +1,12 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/item_card.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_styles.dart';
 import 'package:billing_baba/features/pos/providers/pos_items_provider.dart';
+import 'package:billing_baba/shared/image/app_image_prefetcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,19 +20,12 @@ class ItemGrid extends ConsumerStatefulWidget {
 class _ItemGridState extends ConsumerState<ItemGrid> {
   final _localSearchDebouncer = Debouncer();
   String _debouncedLocalQuery = '';
-  String _selectedCategory = 'All';
+  String? _selectedCategoryId;
+  bool _inStockOnly = false;
   int _visibleCount = 9;
 
-  static const _categories = [
-    'All',
-    'Grocery',
-    'Dairy',
-    'Bakery',
-    'Snacks',
-  ];
-
   static const double _gridSpacing = AppSpacing.sm;
-  static const _cardHeight = 180.0;
+  static const _cardHeight = 228.0;
 
   @override
   void dispose() {
@@ -37,9 +33,12 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
     super.dispose();
   }
 
-  List<PosItem> _filterByCategory(List<PosItem> items) {
-    if (_selectedCategory == 'All') return items;
-    return items.where((item) => item.category == _selectedCategory).toList();
+  void _prefetchPosImages(List<PosItem> filtered, int visibleCount) {
+    ref.read(appImagePrefetcherProvider).prefetchItemsAhead(
+          items: filtered,
+          lastVisibleIndex: visibleCount - 1,
+          urlExtractor: (item) => item.imageUrl,
+        );
   }
 
   String get _effectiveQuery {
@@ -48,14 +47,16 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
   }
 
   double _maxCrossAxisExtent(double panelWidth) {
-    if (panelWidth >= 560) return 168;
-    if (panelWidth >= 380) return 155;
+    if (panelWidth >= 560) return 178;
+    if (panelWidth >= 380) return 165;
     return panelWidth - _gridSpacing;
   }
 
   @override
   Widget build(BuildContext context) {
-    final itemsAsync = ref.watch(posItemSearchProvider(_effectiveQuery));
+    final inventoryAsync = ref.watch(inventoryItemsProvider);
+    final categoriesAsync = ref.watch(inventoryCategoriesProvider);
+    final categoryOptions = ref.watch(posCategoriesProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -77,7 +78,7 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
                   color: AppColors.textPrimary,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Search items...',
+                  hintText: 'Search by name, barcode, or SKU...',
                   hintStyle: TextStyle(
                     color: Colors.grey.shade500,
                     fontSize: 13,
@@ -111,22 +112,31 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
             ),
             const SizedBox(width: AppSpacing.sm),
             Material(
-              color: AppColors.background,
+              color: _inStockOnly ? AppColors.primary : AppColors.background,
               borderRadius: AppRadius.mdBorder,
               child: InkWell(
-                onTap: () {},
+                onTap: () => setState(() {
+                  _inStockOnly = !_inStockOnly;
+                  _visibleCount = 9;
+                }),
                 borderRadius: AppRadius.mdBorder,
                 child: Container(
-                  width: 40,
                   height: 40,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
                     borderRadius: AppRadius.mdBorder,
-                    border: Border.all(color: posCardBorder),
+                    border: Border.all(
+                      color: _inStockOnly ? AppColors.primary : posCardBorder,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.tune,
-                    size: 18,
-                    color: AppColors.textSecondary,
+                  alignment: Alignment.center,
+                  child: Text(
+                    'In Stock',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _inStockOnly ? Colors.white : AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ),
@@ -136,27 +146,41 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
         const SizedBox(height: AppSpacing.sm),
         SizedBox(
           height: 36,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _categories.length,
-            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
-            itemBuilder: (context, index) {
-              final category = _categories[index];
-              final selected = _selectedCategory == category;
-              return _CategoryChip(
-                label: category,
-                selected: selected,
-                onTap: () => setState(() {
-                  _selectedCategory = category;
-                  _visibleCount = 9;
-                }),
-              );
-            },
+          child: categoriesAsync.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
+            data: (_) => ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: categoryOptions.length + 1,
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return _CategoryChip(
+                    label: 'All',
+                    selected: _selectedCategoryId == null,
+                    onTap: () => setState(() {
+                      _selectedCategoryId = null;
+                      _visibleCount = 9;
+                    }),
+                  );
+                }
+
+                final category = categoryOptions[index - 1];
+                return _CategoryChip(
+                  label: category.name,
+                  selected: _selectedCategoryId == category.id,
+                  onTap: () => setState(() {
+                    _selectedCategoryId = category.id;
+                    _visibleCount = 9;
+                  }),
+                );
+              },
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Expanded(
-          child: itemsAsync.when(
+          child: inventoryAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => Center(
               child: Text(
@@ -165,10 +189,21 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
                 textAlign: TextAlign.center,
               ),
             ),
-            data: (items) {
-              final filtered = _filterByCategory(items);
+            data: (_) {
+              final filtered = ref.watch(
+                posFilteredCatalogProvider(
+                  searchQuery: _effectiveQuery,
+                  categoryId: _selectedCategoryId,
+                  inStockOnly: _inStockOnly,
+                ),
+              );
               final visibleItems = filtered.take(_visibleCount).toList();
               final hasMore = filtered.length > _visibleCount;
+
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                _prefetchPosImages(filtered, visibleItems.length);
+              });
 
               if (filtered.isEmpty) {
                 return const Center(
@@ -186,15 +221,14 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         return GridView.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithMaxCrossAxisExtent(
-                                maxCrossAxisExtent: _maxCrossAxisExtent(
-                                  constraints.maxWidth,
-                                ),
-                                mainAxisExtent: _cardHeight,
-                                mainAxisSpacing: _gridSpacing,
-                                crossAxisSpacing: _gridSpacing,
-                              ),
+                          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: _maxCrossAxisExtent(
+                              constraints.maxWidth,
+                            ),
+                            mainAxisExtent: _cardHeight,
+                            mainAxisSpacing: _gridSpacing,
+                            crossAxisSpacing: _gridSpacing,
+                          ),
                           itemCount: visibleItems.length,
                           itemBuilder: (context, index) =>
                               ItemCard(item: visibleItems[index]),

@@ -567,6 +567,7 @@ class BackendCollaborationRepository implements CollaborationRepository {
       memberId: json['member_id'] as String?,
       syncStatus: _syncStatusFromApi(json['sync_status'] as String?),
       source: CompanyListSource.collaborationApi,
+      logoUrl: json['logo_url'] as String?,
     );
   }
 
@@ -585,6 +586,7 @@ class BackendCollaborationRepository implements CollaborationRepository {
       ),
       syncStatus: _syncStatusFromApi(json['sync_status'] as String?),
       source: CompanyListSource.collaborationApi,
+      logoUrl: json['logo_url'] as String?,
     );
   }
 

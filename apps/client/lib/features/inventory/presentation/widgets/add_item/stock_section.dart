@@ -1,10 +1,9 @@
-import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/rack_photo_uploader.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Stock tab — Vyapar-aligned flat grid (Opening Stock through Rack Image).
 class StockSection extends StatelessWidget {
@@ -20,6 +19,9 @@ class StockSection extends StatelessWidget {
     required this.onLocationChanged,
     required this.onAsOfDateSelected,
     required this.asOfDatePickerKey,
+    this.rackLocationId,
+    this.rackPhotoUrl,
+    this.onRackPhotoChanged,
     this.decimalInputFormatter,
     super.key,
   });
@@ -35,6 +37,9 @@ class StockSection extends StatelessWidget {
   final ValueChanged<String> onLocationChanged;
   final ValueChanged<DateTime> onAsOfDateSelected;
   final GlobalKey<SaleSingleDatePickerAnchorState> asOfDatePickerKey;
+  final String? rackLocationId;
+  final String? rackPhotoUrl;
+  final ValueChanged<String?>? onRackPhotoChanged;
   final TextInputFormatter? decimalInputFormatter;
 
   static final _defaultDecimalFormatter = FilteringTextInputFormatter.allow(
@@ -56,7 +61,7 @@ class StockSection extends StatelessWidget {
             child: TextField(
               controller: openingQtyController,
               style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(hint: 'Opening Stock'),
+              decoration: buildFormControlDecoration(hint: 'Opening Stock'),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -72,7 +77,7 @@ class StockSection extends StatelessWidget {
             child: TextField(
               controller: openingPriceController,
               style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(hint: 'At Price'),
+              decoration: buildFormControlDecoration(hint: 'At Price'),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -117,7 +122,7 @@ class StockSection extends StatelessWidget {
             child: TextField(
               controller: minStockController,
               style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(hint: 'Minimum Stock'),
+              decoration: buildFormControlDecoration(hint: 'Minimum Stock'),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -133,41 +138,17 @@ class StockSection extends StatelessWidget {
             child: TextField(
               controller: locationController,
               style: saleFieldTextStyle,
-              decoration: buildSaleFieldDecoration(hint: 'Ex: Rack A-12'),
+              decoration: buildFormControlDecoration(hint: 'Ex: Rack A-12'),
               onChanged: onLocationChanged,
             ),
           ),
         ),
         FormGridCell(
-          span: 4,
-          child: AppFormField(
-            label: ' ',
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Rack image upload coming soon'),
-                    ),
-                  );
-                },
-                icon: const Icon(LucideIcons.camera, size: 16),
-                label: const Text(
-                  'Add Rack Image',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-            ),
+          span: 12,
+          child: RackPhotoUploader(
+            locationId: rackLocationId,
+            photoUrl: rackPhotoUrl,
+            onPhotoChanged: onRackPhotoChanged,
           ),
         ),
       ],

@@ -1,3 +1,7 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
@@ -87,6 +91,12 @@ class DebitNoteForm extends _$DebitNoteForm {
         return saleLine;
       }).toList();
 
+      final attachments = await loadTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.purchase.apiValue,
+        entityId: documentId,
+      );
+
       state = DebitNoteFormState(
         documentId: loaded.documentId,
         partyId: loaded.partyId,
@@ -98,6 +108,10 @@ class DebitNoteForm extends _$DebitNoteForm {
         items: items.isEmpty
             ? [SaleLineItem.empty(id: _nextDebitNoteLineItemId())]
             : items,
+        attachedImages: attachments.images,
+        attachedDocuments: attachments.documents,
+        isLoading: false,
+        showValidationErrors: kResetValidationOnLoad,
       );
     } catch (error) {
       state = state.copyWith(
@@ -117,9 +131,15 @@ class DebitNoteForm extends _$DebitNoteForm {
   }
 
   void updateParty(String value, {String? partyId}) {
+    final change = unlinkedPartyNameChange(
+      newName: value,
+      previousName: state.party,
+      currentPartyId: state.partyId,
+    );
     state = state.copyWith(
-      party: value,
-      partyId: partyId ?? state.partyId,
+      party: change.partyName,
+      partyId: partyId,
+      clearPartyId: partyId == null && change.clearPartyId,
       isDirty: true,
     );
   }
@@ -284,6 +304,14 @@ class DebitNoteForm extends _$DebitNoteForm {
     );
   }
 
+  String? _validationError({bool finalize = false}) {
+    return buildTransactionValidationError(
+      hasValidLineItems: state.hasValidLineItems,
+      hasValidParty: state.partyId != null && state.partyId!.isNotEmpty,
+      requireParty: finalize,
+    );
+  }
+
   bool validate({bool finalize = false}) {
     final hasParty = state.partyId != null && state.partyId!.isNotEmpty;
     final isValid = state.hasValidLineItems && (!finalize || hasParty);
@@ -294,11 +322,9 @@ class DebitNoteForm extends _$DebitNoteForm {
   }
 
   Future<String?> saveDebitNote({bool finalize = true}) async {
+    if (state.isSaving) return null;
     if (!validate(finalize: finalize)) {
-      if (state.partyId == null || state.partyId!.isEmpty) {
-        return 'Please select a party';
-      }
-      return 'Add at least one item with name and quantity';
+      return _validationError(finalize: finalize);
     }
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
@@ -316,18 +342,34 @@ class DebitNoteForm extends _$DebitNoteForm {
         items: _toPurchaseLines(state.items),
       );
 
+      late final String savedDocumentId;
       if (finalize) {
-        await service.finalizeDocumentDraft(
+        final document = await service.finalizeDocumentDraft(
           input,
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
         );
+        savedDocumentId = document.id;
       } else {
-        await service.saveDocumentDraft(
+        final document = await service.saveDocumentDraft(
           input,
           itemNameToId: _itemNameToId(),
         );
+        savedDocumentId = document.id;
       }
+
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.purchase.apiValue,
+        entityId: savedDocumentId,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
+      );
+      state = state.copyWith(
+        documentId: savedDocumentId,
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
+      );
 
       ref.invalidate(purchaseReturnsProvider);
       await refreshAfterPurchaseReturn(

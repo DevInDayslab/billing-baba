@@ -39,6 +39,8 @@ class PartyModel {
     this.additionalField1 = '',
     this.additionalField2 = '',
     this.defaultPriceTier = PriceTier.retail,
+    this.profileImageUrl,
+    this.profileMediaAssetId,
     this.createdAt,
     this.updatedAt,
   });
@@ -85,6 +87,8 @@ class PartyModel {
       defaultPriceTier: extension.defaultPriceTier.isNotEmpty
           ? PriceTier.normalizeTierKey(extension.defaultPriceTier)
           : PriceTier.normalizeTierKey(dto.pricingTier),
+      profileImageUrl: dto.profileImageUrl,
+      profileMediaAssetId: dto.profileMediaAssetId,
       createdAt: DateTime.tryParse(dto.createdAt),
       updatedAt: DateTime.tryParse(dto.updatedAt),
     );
@@ -112,6 +116,8 @@ class PartyModel {
       creditLimit: json['credit_limit']?.toString() ?? '',
       state: json['state'] as String? ?? '',
       hasCustomCreditLimit: (json['credit_limit']?.toString() ?? '0') != '0',
+      profileImageUrl: json['profile_image_url'] as String?,
+      profileMediaAssetId: json['profile_media_asset_id'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'] as String)
           : null,
@@ -196,6 +202,8 @@ class PartyModel {
   final String additionalField1;
   final String additionalField2;
   final String defaultPriceTier;
+  final String? profileImageUrl;
+  final String? profileMediaAssetId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -279,8 +287,11 @@ class PartyModel {
     String? additionalField1,
     String? additionalField2,
     String? defaultPriceTier,
+    String? profileImageUrl,
+    String? profileMediaAssetId,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool clearProfileImage = false,
   }) {
     return PartyModel(
       id: id ?? this.id,
@@ -317,6 +328,12 @@ class PartyModel {
       additionalField1: additionalField1 ?? this.additionalField1,
       additionalField2: additionalField2 ?? this.additionalField2,
       defaultPriceTier: defaultPriceTier ?? this.defaultPriceTier,
+      profileImageUrl: clearProfileImage
+          ? null
+          : (profileImageUrl ?? this.profileImageUrl),
+      profileMediaAssetId: clearProfileImage
+          ? null
+          : (profileMediaAssetId ?? this.profileMediaAssetId),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

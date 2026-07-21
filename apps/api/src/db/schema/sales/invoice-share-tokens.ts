@@ -20,6 +20,7 @@ export const invoiceShareTokens = pgTable(
       .notNull()
       .references(() => businesses.id),
     expiresAt: timestamptz('expires_at'),
+    revokedAt: timestamptz('revoked_at'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     createdBy: uuid('created_by').references(() => accounts.id),
   },

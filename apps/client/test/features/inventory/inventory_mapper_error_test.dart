@@ -59,7 +59,7 @@ void main() {
       expect(tiers.first.pricingTier, 'tier_2');
     });
 
-    test('maps opening stock on update', () {
+    test('maps opening stock on update when quantity changed', () {
       const form = AddItemFormState(
         itemName: 'Hairpin',
         openingQty: 11,
@@ -72,11 +72,33 @@ void main() {
         baseUnitShortName: 'PCS',
         openingGodownId: 'fallback-godown',
         godownIdForLocation: 'fallback-godown',
+        initialOpeningQty: 5,
       );
 
       expect(request.openingQuantity, '11');
       expect(request.openingCostPerUnit, '100');
       expect(request.openingGodownId, 'godown-1');
+    });
+
+    test('omits opening stock on update when quantity unchanged', () {
+      const form = AddItemFormState(
+        itemName: 'Hairpin',
+        openingQty: 11,
+        atPrice: 100,
+        godownId: 'godown-1',
+      );
+
+      final request = AddItemFormMapper.toUpdateRequest(
+        form,
+        baseUnitShortName: 'PCS',
+        openingGodownId: 'fallback-godown',
+        godownIdForLocation: 'fallback-godown',
+        initialOpeningQty: 11,
+      );
+
+      expect(request.openingQuantity, isNull);
+      expect(request.openingCostPerUnit, isNull);
+      expect(request.openingGodownId, isNull);
     });
   });
 

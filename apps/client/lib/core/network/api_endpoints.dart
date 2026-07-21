@@ -4,11 +4,18 @@ abstract final class ApiEndpoints {
   static const businesses = '/api/v1/businesses';
   static String business(String id) => '$businesses/$id';
   static const businessProfile = '/api/v1/business/profile';
+  static const businessLogo = '/api/v1/business/logo';
+  static const businessSignature = '/api/v1/business/signature';
+  static const businessStamp = '/api/v1/business/stamp';
+  static const businessUpiQr = '/api/v1/business/upi-qr';
+  static const authAvatar = '/api/v1/auth/me/avatar';
   static const parties = '/api/v1/parties';
   static String party(String id) => '/api/v1/parties/$id';
   static String partyDeleteStatus(String id) => '/api/v1/parties/$id/delete-status';
   static String partyLedger(String id) => '/api/v1/parties/$id/ledger';
   static String partyLoyalty(String id) => '/api/v1/parties/$id/loyalty';
+  static String partyProfileImage(String id) =>
+      '/api/v1/parties/$id/profile-image';
   static String partyLoyaltyTransactions(String id) =>
       '/api/v1/parties/$id/loyalty/transactions';
   static const settings = '/api/v1/settings';
@@ -49,6 +56,24 @@ abstract final class ApiEndpoints {
       '${inventoryItem(itemId)}/images';
   static String inventoryItemImage(String itemId, String imageId) =>
       '${inventoryItemImages(itemId)}/$imageId';
+  static String inventoryItemImagesReorder(String itemId) =>
+      '${inventoryItemImages(itemId)}/reorder';
+  static String inventoryItemLocationPhoto(String locationId) =>
+      '${inventoryItemLocation(locationId)}/photo';
+
+  static const documentAttachments = '/api/v1/document-attachments';
+  static String documentAttachmentsFor(String entityType, String entityId) =>
+      '$documentAttachments?entity_type=$entityType&entity_id=$entityId';
+  static String documentAttachment(String id) => '$documentAttachments/$id';
+  static String documentAttachmentDownloadUrl(String id) =>
+      '$documentAttachments/$id/url';
+
+  static const storageImages = '/api/v1/storage/images';
+  static String storageImageVariants(String sourceAssetId) =>
+      '$storageImages/$sourceAssetId/variants';
+  static String storageImageVariantUrl(String sourceAssetId, String variant) =>
+      '$storageImages/$sourceAssetId/variants/$variant/url';
+
   static String inventoryItemTierPrices(String itemId) =>
       '${inventoryItem(itemId)}/tier-prices';
   static String inventoryItemTierPrice(String itemId, String tier) =>
@@ -199,6 +224,13 @@ abstract final class ApiEndpoints {
   static const reportsLoanStatement = '$reports/loan-statement';
   static const reportsTrialBalance = '$reports/trial-balance';
   static const reportsBalanceSheet = '$reports/balance-sheet';
+
+  static const generatedDocuments = '/api/v1/generated-documents';
+  static const generatedDocumentsLookup = '$generatedDocuments/lookup';
+  static const generatedDocumentsEnsure = '$generatedDocuments/ensure';
+  static String generatedDocumentUrl(String id) => '$generatedDocuments/$id/url';
+  static String generatedDocumentRegenerate(String id) =>
+      '$generatedDocuments/$id/regenerate';
 
   static const collaboration = '/api/v1/collaboration';
   static const collaborationInvitations = '$collaboration/invitations';

@@ -1,4 +1,5 @@
 import { getDb } from '../../db/client';
+import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
 import type { PricingTier } from '../../shared/pricing/pricing-tier';
 import { InventoryServiceBase } from './inventory.base-service';
@@ -13,6 +14,7 @@ import {
   recordMovementAndUpdateStock,
 } from './inventory-stock.service';
 import { ItemRepository } from './item.repository';
+import { ItemMediaService } from './item-media.service';
 import type {
   CreateItemBody,
   CreateItemImageBody,
@@ -33,8 +35,9 @@ import type {
 export class ItemService extends InventoryServiceBase {
   private readonly repository: ItemRepository;
   private readonly db: NonNullable<ReturnType<typeof getDb>>;
+  private readonly media?: ItemMediaService;
 
-  constructor() {
+  constructor(config?: AppConfig) {
     super();
     const db = getDb();
     if (!db) {
@@ -46,6 +49,12 @@ export class ItemService extends InventoryServiceBase {
     }
     this.db = db;
     this.repository = new ItemRepository(db);
+    if (config) {
+      this.media = new ItemMediaService({
+        config,
+        itemRepository: this.repository,
+      });
+    }
   }
 
   async listItems(
@@ -81,10 +90,26 @@ export class ItemService extends InventoryServiceBase {
       stockTrackedIds,
     );
 
+    const listData = result.rows.map((row) =>
+      enrichItemListRecord(row, physicalByItem, reservedByItem),
+    );
+
+    const data = this.media
+      ? await Promise.all(
+          listData.map(async (item) => ({
+            ...item,
+            primary_image_url: await this.media!.resolvePrimaryImageUrl(
+              businessId,
+              accountId,
+              item.id,
+              item.primary_image_url,
+            ),
+          })),
+        )
+      : listData;
+
     return {
-      data: result.rows.map((row) =>
-        enrichItemListRecord(row, physicalByItem, reservedByItem),
-      ),
+      data,
       meta: {
         page: query.page,
         limit: query.limit,
@@ -106,7 +131,7 @@ export class ItemService extends InventoryServiceBase {
     }
 
     if (!item.has_stock_tracking) {
-      return item;
+      return this.enrichItemMedia(businessId, accountId, item);
     }
 
     const { physicalByItem, reservedByItem } = await loadStockSummariesForItems(
@@ -115,7 +140,11 @@ export class ItemService extends InventoryServiceBase {
       [itemId],
     );
 
-    return enrichItemDetailRecord(item, physicalByItem, reservedByItem);
+    return this.enrichItemMedia(
+      businessId,
+      accountId,
+      enrichItemDetailRecord(item, physicalByItem, reservedByItem),
+    );
   }
 
   async createItem(
@@ -436,18 +465,6 @@ export class ItemService extends InventoryServiceBase {
       return;
     }
 
-    const hasOtherMovements = await this.repository.hasNonOpeningMovements(
-      businessId,
-      itemId,
-    );
-    if (hasOtherMovements) {
-      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
-        opening_quantity: [
-          'Opening stock cannot be changed after other inventory transactions exist. Use Adjust Stock instead.',
-        ],
-      });
-    }
-
     let openingGodownId = input.openingGodownId;
     if (openingGodownId) {
       await this.assertGodownValid(businessId, openingGodownId);
@@ -461,8 +478,21 @@ export class ItemService extends InventoryServiceBase {
       itemId,
     );
     const delta = openingQty - currentStock;
+    // Re-saving the same stock total (common on item edit) is a no-op.
     if (delta === 0) {
       return;
+    }
+
+    const hasOtherMovements = await this.repository.hasNonOpeningMovements(
+      businessId,
+      itemId,
+    );
+    if (hasOtherMovements) {
+      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        opening_quantity: [
+          'Opening stock cannot be changed after other inventory transactions exist. Use Adjust Stock instead.',
+        ],
+      });
     }
 
     const itemRow = await this.repository.findRowById(businessId, itemId);
@@ -574,28 +604,6 @@ export class ItemService extends InventoryServiceBase {
     return updated;
   }
 
-  async deleteItemImage(
-    businessId: string,
-    accountId: string,
-    userId: string | undefined,
-    itemId: string,
-    imageId: string,
-  ): Promise<void> {
-    await this.assertBusinessAccess(businessId, accountId);
-    await this.assertItemExists(businessId, itemId);
-
-    const deleted = await this.repository.softDeleteImage(
-      businessId,
-      itemId,
-      imageId,
-      userId ?? null,
-    );
-
-    if (!deleted) {
-      throw new AppError('NOT_FOUND', 'Item image not found', 404);
-    }
-  }
-
   async getItemTierPrices(
     businessId: string,
     accountId: string,
@@ -703,6 +711,30 @@ export class ItemService extends InventoryServiceBase {
     }
 
     return result;
+  }
+
+  private async enrichItemMedia(
+    businessId: string,
+    accountId: string,
+    item: ItemDetailRecord,
+  ): Promise<ItemDetailRecord> {
+    if (!this.media) return item;
+
+    const [images, primaryUrl] = await Promise.all([
+      this.media.enrichItemImages(businessId, accountId, item.images),
+      this.media.resolvePrimaryImageUrl(
+        businessId,
+        accountId,
+        item.id,
+        item.primary_image_url,
+      ),
+    ]);
+
+    return {
+      ...item,
+      images,
+      primary_image_url: primaryUrl,
+    };
   }
 
   private async assertItemExists(

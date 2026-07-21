@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/utils/output_error_mapper.dart';
+import 'package:billing_baba/features/generated_documents/application/generated_document_service.dart';
+import 'package:billing_baba/features/generated_documents/providers/generated_document_providers.dart';
 import 'package:billing_baba/features/print/application/print_service.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/providers/print_providers.dart';
@@ -87,6 +89,35 @@ abstract final class DocumentPrintActions {
     );
   }
 
+  /// Downloads the server-cached PDF (refreshing if needed) and saves locally.
+  static Future<void> downloadFromCloud(
+    BuildContext context,
+    WidgetRef ref,
+    PrintRequest request, {
+    required String filename,
+  }) {
+    return _runCloud(
+      context,
+      ref,
+      (generatedDocumentService, printService) async {
+        final bytes = await generatedDocumentService.downloadForPrintRequest(
+          request,
+        );
+        final path = await printService.saveBytes(
+          bytes,
+          filename: '$filename.pdf',
+        );
+        if (!context.mounted) return;
+        final message = path != null
+            ? 'PDF saved to $path'
+            : 'PDF ready to share';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      },
+    );
+  }
+
   static Future<void> _run(
     BuildContext context,
     WidgetRef ref,
@@ -112,6 +143,43 @@ abstract final class DocumentPrintActions {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error.message)),
       );
+    } on Object catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(OutputErrorMapper.printMessage(error))),
+      );
+    } finally {
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
+  }
+
+  static Future<void> _runCloud(
+    BuildContext context,
+    WidgetRef ref,
+    Future<void> Function(
+      GeneratedDocumentService generatedDocumentService,
+      PrintService printService,
+    ) action,
+  ) async {
+    if (!context.mounted) return;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const PopScope(
+        canPop: false,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+    );
+
+    try {
+      final generatedDocumentService =
+          await ref.read(generatedDocumentServiceProvider.future);
+      final printService = await ref.read(printServiceProvider.future);
+      if (!context.mounted) return;
+      await action(generatedDocumentService, printService);
     } on Object catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

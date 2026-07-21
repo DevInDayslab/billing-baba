@@ -179,19 +179,22 @@ class JobWorkService {
     );
   }
 
-  Future<void> saveOrder(
+  Future<String> saveOrder(
     JobWorkOutFormState form, {
     required Map<String, String> itemNameToId,
   }) async {
     try {
       if (form.orderId == null) {
-        await _repository.createOrder(_createRequest(form, itemNameToId));
-      } else {
-        await _repository.updateOrder(
-          form.orderId!,
-          _updateRequest(form, itemNameToId),
+        final created = await _repository.createOrder(
+          _createRequest(form, itemNameToId),
         );
+        return created.id;
       }
+      await _repository.updateOrder(
+        form.orderId!,
+        _updateRequest(form, itemNameToId),
+      );
+      return form.orderId!;
     } on DioException catch (error) {
       final validation = ApiErrorParser.parseValidation(error);
       if (validation != null) {

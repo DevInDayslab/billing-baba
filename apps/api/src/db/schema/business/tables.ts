@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { syncedBusinessColumns, tenantRootColumns } from '../columns';
 import { valuationMethodEnum } from '../enums';
 
@@ -21,6 +21,12 @@ export const businesses = pgTable(
     language: text('language').notNull().default('en'),
     logoUrl: text('logo_url'),
     signatureUrl: text('signature_url'),
+    logoMediaAssetId: uuid('logo_media_asset_id'),
+    signatureMediaAssetId: uuid('signature_media_asset_id'),
+    stampMediaAssetId: uuid('stamp_media_asset_id'),
+    upiQrMediaAssetId: uuid('upi_qr_media_asset_id'),
+    /** UPI VPA for dynamic Scan-to-Pay (e.g. merchant@upi) */
+    upiId: text('upi_id'),
     valuationMethod: valuationMethodEnum('valuation_method')
       .notNull()
       .default('average'),

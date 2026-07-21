@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/providers/add_purchase_order_form_provider.dart';
@@ -74,7 +75,7 @@ class PurchaseOrderLineItemsTable extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.fromLTRB(12, 4, 12, 0),
                     child: Text(
-                      'Add at least one item with name and quantity',
+                      kLineItemsValidationMessage,
                       style: TextStyle(
                         fontSize: 11,
                         color: saleFieldErrorColor,

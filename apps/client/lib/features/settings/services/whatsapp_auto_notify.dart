@@ -1,3 +1,6 @@
+import 'package:billing_baba/features/generated_documents/providers/generated_document_providers.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/providers/print_providers.dart';
 import 'package:billing_baba/features/settings/data/notifications_remote_data_source.dart';
 import 'package:billing_baba/features/settings/models/transaction_message_settings.dart';
 import 'package:billing_baba/features/settings/providers/notifications_remote_provider.dart';
@@ -25,11 +28,34 @@ abstract final class WhatsAppAutoNotify {
   static Future<NotificationsRemoteDataSource> _remote(Ref ref) =>
       ref.read(notificationsRemoteProvider.future);
 
-  /// After sale invoice finalize — if auto-send Sale is on.
+  /// Uploads the in-app print layout so storage is not the server MVP PDF.
+  static Future<void> ensureSaleInvoicePdfCached(
+    Ref ref, {
+    required String documentId,
+  }) async {
+    try {
+      final printService = await ref.read(printServiceProvider.future);
+      final generatedDocuments =
+          await ref.read(generatedDocumentServiceProvider.future);
+      final request = PrintRequest.saleInvoice(documentId);
+      final bytes = await printService.generatePdf(request);
+      await generatedDocuments.cacheForPrintRequest(
+        request,
+        bytes,
+        fileName: 'invoice.pdf',
+      );
+    } on Object catch (e, st) {
+      debugPrint('Sale invoice PDF cache failed: $e\n$st');
+    }
+  }
+
+  /// After sale invoice finalize — cache professional PDF, then optional WA.
   static Future<void> afterSaleFinalize(
     Ref ref, {
     required String documentId,
   }) async {
+    await ensureSaleInvoicePdfCached(ref, documentId: documentId);
+
     try {
       final settings = await _settingsIfAllowed(ref);
       if (settings == null) return;

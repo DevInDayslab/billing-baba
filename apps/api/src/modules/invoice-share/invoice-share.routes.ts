@@ -26,6 +26,8 @@ export function createPublicInvoiceRoutes(
 
   return async (app) => {
     app.get('/:token', controller.getPublicByToken);
+    app.get('/:token/payment-qr', controller.getPaymentQr);
+    app.get('/:token/download', controller.downloadPublicPdf);
   };
 }
 
@@ -38,6 +40,12 @@ export function createSalesInvoiceShareRoutes(
 
   return async (app) => {
     app.post('/:id/share', { preHandler }, controller.createShareLink);
+    app.post('/:id/share/revoke', { preHandler }, controller.revokeShareLink);
+    app.post(
+      '/:id/share/regenerate',
+      { preHandler },
+      controller.regenerateShareLink,
+    );
     app.post('/:id/notify', { preHandler }, controller.notifySaleInvoice);
   };
 }

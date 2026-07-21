@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_item_filter_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
@@ -8,7 +9,6 @@ import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
 import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
 import 'package:billing_baba/features/inventory/models/inventory_transaction_filters.dart';
-import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/models/item_location_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/price_history_model.dart';
@@ -24,6 +24,8 @@ import 'package:billing_baba/features/inventory/providers/inventory_units_provid
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+export 'item_images_provider.dart';
 
 final productsProvider = Provider<List<InventoryItem>>((ref) {
   final query = ref.watch(productSearchQueryProvider);
@@ -487,15 +489,7 @@ final itemTierPricesProvider =
       return service.fetchItemTierPrices(itemId);
     });
 
-// Provider.family's family type is not publicly exported by Riverpod.
-// ignore: specify_nonobvious_property_types
-final itemImagesProvider = FutureProvider.family<List<ItemImageModel>, String>((
-  ref,
-  itemId,
-) async {
-  final service = await ref.watch(inventoryServiceProvider.future);
-  return service.fetchItemImages(itemId);
-});
+// Item gallery: see [itemImagesProvider] in item_images_provider.dart.
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types

@@ -82,10 +82,11 @@ export class CompanyMemberService {
       );
     }
 
-    const invitation = await this.repository.findLatestInvitationByPlaceholderMemberId(
-      businessId,
-      memberId,
-    );
+    const invitation =
+      await this.repository.findLatestInvitationByPlaceholderMemberId(
+        businessId,
+        memberId,
+      );
     if (!invitation) {
       throw new AppError('MEMBER_NOT_FOUND', 'Company member not found', 404);
     }
@@ -107,11 +108,12 @@ export class CompanyMemberService {
     }
 
     if (invitation.status === 'accepted' || invitation.status === 'left') {
-      const activeMember = await this.repository.findActiveCompanyMemberByContact(
-        businessId,
-        invitation.phone,
-        invitation.email,
-      );
+      const activeMember =
+        await this.repository.findActiveCompanyMemberByContact(
+          businessId,
+          invitation.phone,
+          invitation.email,
+        );
       if (!activeMember) {
         throw new AppError('MEMBER_NOT_FOUND', 'Company member not found', 404);
       }
@@ -161,10 +163,11 @@ export class CompanyMemberService {
       );
     }
 
-    const invitation = await this.repository.findLatestInvitationByPlaceholderMemberId(
-      businessId,
-      memberId,
-    );
+    const invitation =
+      await this.repository.findLatestInvitationByPlaceholderMemberId(
+        businessId,
+        memberId,
+      );
     if (!invitation) {
       throw new AppError('MEMBER_NOT_FOUND', 'Company member not found', 404);
     }
@@ -185,11 +188,12 @@ export class CompanyMemberService {
     }
 
     if (invitation.status === 'accepted') {
-      const activeMember = await this.repository.findActiveCompanyMemberByContact(
-        businessId,
-        invitation.phone,
-        invitation.email,
-      );
+      const activeMember =
+        await this.repository.findActiveCompanyMemberByContact(
+          businessId,
+          invitation.phone,
+          invitation.email,
+        );
       if (!activeMember) {
         throw new AppError('MEMBER_NOT_FOUND', 'Company member not found', 404);
       }

@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
+import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/pos/providers/pos_sales_list_provider.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
@@ -243,15 +244,12 @@ class _ThermalPreview extends StatelessWidget {
         children: [
           if (settings.printCompanyLogo)
             Center(
-              child: CircleAvatar(
-                radius: 14,
-                backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-                child: Text(
-                  data.businessName.isNotEmpty
-                      ? data.businessName[0].toUpperCase()
-                      : 'B',
-                  style: _style(emphasized: true),
-                ),
+              child: BusinessAvatar(
+                name: data.businessName,
+                seed: data.businessName,
+                diameter: 28,
+                fontSize: 14,
+                logoUrl: data.logoUrl,
               ),
             ),
           if (settings.printCompanyName) ...[
@@ -356,7 +354,6 @@ class _ThermalPreview extends StatelessWidget {
     );
 
     return FittedBox(
-      fit: BoxFit.contain,
       child: content,
     );
   }
@@ -557,7 +554,6 @@ class _RegularPreview extends StatelessWidget {
     );
 
     return FittedBox(
-      fit: BoxFit.contain,
       child: SizedBox(
         width: isLandscape ? 360 : 260,
         child: page,
@@ -641,13 +637,13 @@ class _RegularItemsTable extends StatelessWidget {
       ),
       columnWidths: const {
         0: FlexColumnWidth(3),
-        1: FlexColumnWidth(1),
-        2: FlexColumnWidth(1),
-        3: FlexColumnWidth(1),
+        1: FlexColumnWidth(),
+        2: FlexColumnWidth(),
+        3: FlexColumnWidth(),
       },
       children: [
         TableRow(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.background,
           ),
           children: [

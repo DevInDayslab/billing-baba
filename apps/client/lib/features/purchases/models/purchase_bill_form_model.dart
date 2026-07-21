@@ -194,10 +194,11 @@ class AddPurchaseFormState {
     bool? isSaving,
     String? saveError,
     bool clearSaveError = false,
+    bool clearPartyId = false,
   }) {
     return AddPurchaseFormState(
       documentId: documentId ?? this.documentId,
-      partyId: partyId ?? this.partyId,
+      partyId: clearPartyId ? null : (partyId ?? this.partyId),
       godownId: godownId ?? this.godownId,
       party: party ?? this.party,
       billingName: billingName ?? this.billingName,

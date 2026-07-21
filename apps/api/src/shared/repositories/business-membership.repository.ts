@@ -24,4 +24,20 @@ export class BusinessMembershipRepository {
 
     return Boolean(membership);
   }
+
+  async findAnyAccountId(businessId: string): Promise<string | null> {
+    const [membership] = await this.db
+      .select({ accountId: users.accountId })
+      .from(users)
+      .where(
+        and(
+          eq(users.businessId, businessId),
+          eq(users.isActive, true),
+          eq(users.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return membership?.accountId ?? null;
+  }
 }

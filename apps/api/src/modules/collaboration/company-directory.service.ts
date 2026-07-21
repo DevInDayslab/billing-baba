@@ -1,5 +1,7 @@
+import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { BusinessBrandingService } from '../business/business-branding.service';
 import {
   toPendingInvitationDto,
   toSharedCompanyDto,
@@ -13,8 +15,9 @@ import { isExpired } from './collaboration.utils';
 
 export class CompanyDirectoryService {
   private readonly repository: CollaborationRepository;
+  private readonly branding: BusinessBrandingService | null;
 
-  constructor() {
+  constructor(config?: AppConfig) {
     const db = getDb();
     if (!db) {
       throw new AppError(
@@ -24,6 +27,7 @@ export class CompanyDirectoryService {
       );
     }
     this.repository = new CollaborationRepository(db);
+    this.branding = config ? new BusinessBrandingService({ config }) : null;
   }
 
   async listSharedCompanies(accountId: string): Promise<SharedCompanyDto[]> {
@@ -37,7 +41,18 @@ export class CompanyDirectoryService {
       );
       if (!owner) continue;
 
-      results.push(toSharedCompanyDto(owner, membership.role, membership.id));
+      const logoUrl = this.branding
+        ? await this.branding.resolveLogoUrl(
+            owner.companyId,
+            accountId,
+            owner.logoUrl,
+            owner.logoMediaAssetId,
+          )
+        : owner.logoUrl;
+
+      results.push(
+        toSharedCompanyDto(owner, membership.role, membership.id, logoUrl),
+      );
     }
 
     return results;
@@ -83,7 +98,9 @@ export class CompanyDirectoryService {
         continue;
       }
 
-      results.push(toPendingInvitationDto(invitation, owner, expired));
+      results.push(
+        toPendingInvitationDto(invitation, owner, expired, owner.logoUrl),
+      );
     }
 
     return results;

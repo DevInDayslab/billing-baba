@@ -52,6 +52,23 @@ void main() {
     });
   });
 
+  group('isServerBackedInventoryItemId', () {
+    test('accepts UUID server ids', () {
+      expect(
+        isServerBackedInventoryItemId('b234a35a-f0b1-4fcc-915b-dbf2c46328fa'),
+        isTrue,
+      );
+    });
+
+    test('rejects seed catalog and pending local ids', () {
+      expect(isServerBackedInventoryItemId('item-dai-001'), isFalse);
+      expect(
+        isServerBackedInventoryItemId('item-local-abc-123'),
+        isFalse,
+      );
+    });
+  });
+
   group('inventoryItemsReconcile', () {
     test('matches pending local item to server item by name and type', () {
       final local = _item(id: 'item-local-1', name: 'Widget');

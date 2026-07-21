@@ -1,3 +1,7 @@
+import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
@@ -53,6 +57,11 @@ class CreditNoteForm extends _$CreditNoteForm {
       final service = await ref.read(salesServiceProvider.future);
       final loaded = await service.loadSaleDocumentForm(documentId);
       final items = await _resolveItemNames(loaded.items);
+      final attachments = await loadTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.sale.apiValue,
+        entityId: documentId,
+      );
       state = CreditNoteFormState(
         documentId: loaded.documentId,
         partyId: loaded.partyId,
@@ -62,6 +71,9 @@ class CreditNoteForm extends _$CreditNoteForm {
         stateOfSupply: loaded.stateOfSupply,
         items: items,
         description: loaded.description,
+        attachedImages: attachments.images,
+        attachedDocuments: attachments.documents,
+        showValidationErrors: kResetValidationOnLoad,
       );
     } catch (error) {
       state = state.copyWith(saveError: SalesErrorMapper.messageFor(error));
@@ -88,6 +100,7 @@ class CreditNoteForm extends _$CreditNoteForm {
         items: items,
         description: loaded.description,
         isDirty: true,
+        showValidationErrors: kResetValidationOnLoad,
       );
     } catch (error) {
       state = state.copyWith(saveError: SalesErrorMapper.messageFor(error));
@@ -107,7 +120,17 @@ class CreditNoteForm extends _$CreditNoteForm {
   }
 
   void updateParty(String value) {
-    state = state.copyWith(party: value, isDirty: true, clearSaveError: true);
+    final change = unlinkedPartyNameChange(
+      newName: value,
+      previousName: state.party,
+      currentPartyId: state.partyId,
+    );
+    state = state.copyWith(
+      party: change.partyName,
+      clearPartyId: change.clearPartyId,
+      isDirty: true,
+      clearSaveError: true,
+    );
   }
 
   void updatePartyWithId({required String partyId, required String partyName}) {
@@ -309,6 +332,14 @@ class CreditNoteForm extends _$CreditNoteForm {
     state = state.copyWith(items: items, isDirty: true);
   }
 
+  String? _validationError() {
+    return buildTransactionValidationError(
+      hasValidLineItems: state.hasValidLineItems,
+      hasValidParty: state.partyId != null && state.partyId!.isNotEmpty,
+      requireParty: true,
+    );
+  }
+
   bool validate() {
     final isValid = state.isValid;
     if (!isValid) {
@@ -330,7 +361,8 @@ class CreditNoteForm extends _$CreditNoteForm {
   );
 
   Future<String?> save() async {
-    if (!validate()) return 'Please fill required fields';
+    if (state.isSaving) return null;
+    if (!validate()) return _validationError();
 
     state = state.copyWith(isSaving: true, clearSaveError: true);
     try {
@@ -339,6 +371,13 @@ class CreditNoteForm extends _$CreditNoteForm {
         _draftInput(),
         itemNameToId: _itemNameToId(),
         godownId: state.godownId,
+      );
+      final synced = await syncTransactionAttachments(
+        ref,
+        entityType: DocumentAttachmentEntityType.sale.apiValue,
+        entityId: document.id,
+        images: state.attachedImages,
+        documents: state.attachedDocuments,
       );
       ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
       await refreshAfterSaleReturn(
@@ -353,6 +392,8 @@ class CreditNoteForm extends _$CreditNoteForm {
       );
       state = state.copyWith(
         documentId: document.id,
+        attachedImages: synced?.images ?? state.attachedImages,
+        attachedDocuments: synced?.documents ?? state.attachedDocuments,
         isSaving: false,
         isDirty: false,
       );

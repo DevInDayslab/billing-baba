@@ -3,7 +3,7 @@ type LoadingStateProps = {
 };
 
 export function LoadingState({
-  message = 'Loading invitation…',
+  message = 'Loading...',
 }: LoadingStateProps) {
   return (
     <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 text-slate-600">

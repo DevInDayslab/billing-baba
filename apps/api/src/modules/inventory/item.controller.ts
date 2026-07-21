@@ -1,11 +1,18 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ZodError } from 'zod';
+import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
 import { sendData, sendPaginated } from '../../shared/http/response';
 import {
   formatZodError,
   requireAuthContext,
 } from './inventory.controller-helpers';
+import { ItemMediaService } from './item-media.service';
+import {
+  itemImageUploadBodySchema,
+  reorderItemImagesBodySchema,
+} from './item-media.schema';
+import { toUploadIntentResponse } from '../storage/storage.mapper';
 import {
   createItemBodySchema,
   createItemImageBodySchema,
@@ -21,7 +28,9 @@ import {
 import { ItemService } from './item.service';
 import type { PaginatedItemsResponse } from './item.types';
 
-export function createItemController() {
+export function createItemController(config: AppConfig) {
+  const mediaService = new ItemMediaService({ config });
+
   return {
     list: async (
       request: FastifyRequest,
@@ -30,7 +39,7 @@ export function createItemController() {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const query = listItemsQuerySchema.parse(request.query);
-        const service = new ItemService();
+        const service = new ItemService(config);
         const result = await service.listItems(businessId, accountId, query);
         return sendPaginated(reply, result.data, result.meta);
       } catch (error) {
@@ -50,7 +59,7 @@ export function createItemController() {
       try {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const body = createItemBodySchema.parse(request.body);
-        const service = new ItemService();
+        const service = new ItemService(config);
         const data = await service.createItem(
           businessId,
           accountId,
@@ -75,7 +84,7 @@ export function createItemController() {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const { id } = itemIdParamSchema.parse(request.params);
-        const service = new ItemService();
+        const service = new ItemService(config);
         const data = await service.getItem(businessId, accountId, id);
         return sendData(reply, data);
       } catch (error) {
@@ -96,7 +105,7 @@ export function createItemController() {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id } = itemIdParamSchema.parse(request.params);
         const body = updateItemBodySchema.parse(request.body);
-        const service = new ItemService();
+        const service = new ItemService(config);
         const data = await service.updateItem(
           businessId,
           accountId,
@@ -122,7 +131,7 @@ export function createItemController() {
       try {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id } = itemIdParamSchema.parse(request.params);
-        const service = new ItemService();
+        const service = new ItemService(config);
         await service.deleteItem(businessId, accountId, userId, id);
         return reply.status(204).send();
       } catch (error) {
@@ -142,9 +151,14 @@ export function createItemController() {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const { id } = itemIdParamSchema.parse(request.params);
-        const service = new ItemService();
-        const data = await service.listItemImages(businessId, accountId, id);
-        return sendData(reply, data);
+        const service = new ItemService(config);
+        const images = await service.listItemImages(businessId, accountId, id);
+        const enriched = await mediaService.enrichItemImages(
+          businessId,
+          accountId,
+          images,
+        );
+        return sendData(reply, enriched);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(
@@ -162,14 +176,47 @@ export function createItemController() {
       try {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id } = itemIdParamSchema.parse(request.params);
-        const body = createItemImageBodySchema.parse(request.body);
-        const service = new ItemService();
+        const body = itemImageUploadBodySchema.parse(request.body);
+
+        if ('mime_type' in body) {
+          const intent = await mediaService.createItemImageUploadIntent(
+            businessId,
+            accountId,
+            id,
+            body.mime_type,
+            body.file_size,
+            body.checksum,
+          );
+          return sendData(reply, toUploadIntentResponse(intent), 201);
+        }
+
+        if ('intent_id' in body) {
+          const data = await mediaService.completeItemImageUpload(
+            businessId,
+            accountId,
+            userId,
+            id,
+            body.intent_id,
+            {
+              isPrimary: body.is_primary,
+              sortOrder: body.sort_order,
+              replacesImageId: body.replaces_image_id,
+            },
+          );
+          return sendData(reply, data);
+        }
+
+        const service = new ItemService(config);
         const data = await service.addItemImage(
           businessId,
           accountId,
           userId,
           id,
-          body,
+          {
+            image_url: body.image_url,
+            sort_order: body.sort_order,
+            is_primary: body.is_primary,
+          },
         );
         return sendData(reply, data, 201);
       } catch (error) {
@@ -189,7 +236,7 @@ export function createItemController() {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const { id } = itemIdParamSchema.parse(request.params);
-        const service = new ItemService();
+        const service = new ItemService(config);
         const data = await service.getItemTierPrices(businessId, accountId, id);
         return sendData(reply, data);
       } catch (error) {
@@ -210,7 +257,7 @@ export function createItemController() {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id } = itemIdParamSchema.parse(request.params);
         const body = putItemTierPricesBodySchema.parse(request.body);
-        const service = new ItemService();
+        const service = new ItemService(config);
         const data = await service.putItemTierPrices(
           businessId,
           accountId,
@@ -237,7 +284,7 @@ export function createItemController() {
         const { accountId, businessId } = requireAuthContext(request);
         const { id } = itemIdParamSchema.parse(request.params);
         const query = listItemPriceHistoryQuerySchema.parse(request.query);
-        const service = new ItemService();
+        const service = new ItemService(config);
         const result = await service.listItemPriceHistory(
           businessId,
           accountId,
@@ -263,7 +310,19 @@ export function createItemController() {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id, imageId } = itemImageParamSchema.parse(request.params);
         const body = updateItemImageBodySchema.parse(request.body);
-        const service = new ItemService();
+
+        if (body.is_primary === true && Object.keys(body).length === 1) {
+          const data = await mediaService.setPrimaryItemImage(
+            businessId,
+            accountId,
+            userId,
+            id,
+            imageId,
+          );
+          return sendData(reply, data);
+        }
+
+        const service = new ItemService(config);
         const data = await service.updateItemImage(
           businessId,
           accountId,
@@ -286,12 +345,41 @@ export function createItemController() {
       }
     },
 
+    reorderImages: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { accountId, businessId } = requireAuthContext(request);
+        const { id } = itemIdParamSchema.parse(request.params);
+        const body = reorderItemImagesBodySchema.parse(request.body);
+        const images = await mediaService.reorderItemImages(
+          businessId,
+          accountId,
+          id,
+          body.image_ids,
+        );
+        const enriched = await mediaService.enrichItemImages(
+          businessId,
+          accountId,
+          images,
+        );
+        return sendData(reply, enriched);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid request body',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
     deleteImage: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id, imageId } = itemImageParamSchema.parse(request.params);
-        const service = new ItemService();
-        await service.deleteItemImage(
+        await mediaService.deleteItemImageMedia(
           businessId,
           accountId,
           userId,
@@ -316,7 +404,7 @@ export function createItemController() {
       try {
         const { accountId, businessId, userId } = requireAuthContext(request);
         const { id, tier } = itemTierParamSchema.parse(request.params);
-        const service = new ItemService();
+        const service = new ItemService(config);
         await service.deleteItemTierPrice(
           businessId,
           accountId,

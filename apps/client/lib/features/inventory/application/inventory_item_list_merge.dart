@@ -2,6 +2,15 @@ import 'package:billing_baba/features/inventory/models/item_model.dart';
 
 bool isPendingLocalInventoryItemId(String id) => id.startsWith('item-local-');
 
+final _inventoryItemUuidPattern = RegExp(
+  r'^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+  caseSensitive: false,
+);
+
+/// True when [id] refers to a persisted server item (not offline/local/seed).
+bool isServerBackedInventoryItemId(String id) =>
+    !isPendingLocalInventoryItemId(id) && _inventoryItemUuidPattern.hasMatch(id);
+
 String _normalizedItemName(String name) => name.trim().toLowerCase();
 
 /// Returns true when [local] is a pending offline item representing [server].

@@ -1,4 +1,5 @@
 import 'package:billing_baba/features/business/utils/business_avatar_color.dart';
+import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class BusinessAvatar extends StatelessWidget {
@@ -7,6 +8,7 @@ class BusinessAvatar extends StatelessWidget {
     required this.seed,
     this.diameter = 36,
     this.fontSize,
+    this.logoUrl,
     super.key,
   });
 
@@ -14,6 +16,7 @@ class BusinessAvatar extends StatelessWidget {
   final String seed;
   final double diameter;
   final double? fontSize;
+  final String? logoUrl;
 
   String get _initial {
     final trimmed = name.trim();
@@ -21,8 +24,7 @@ class BusinessAvatar extends StatelessWidget {
     return trimmed[0].toUpperCase();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _initialsAvatar() {
     final radius = diameter / 2;
     final textSize = fontSize ?? (diameter >= 80 ? 40 : radius * 0.78);
 
@@ -35,6 +37,28 @@ class BusinessAvatar extends StatelessWidget {
           color: Colors.white,
           fontSize: textSize,
           fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final url = logoUrl?.trim();
+    if (url == null || url.isEmpty) {
+      return _initialsAvatar();
+    }
+
+    return ClipOval(
+      child: SizedBox(
+        width: diameter,
+        height: diameter,
+        child: AppNetworkImage(
+          imageUrl: url,
+          width: diameter,
+          height: diameter,
+          placeholder: _initialsAvatar(),
+          errorWidget: _initialsAvatar(),
         ),
       ),
     );

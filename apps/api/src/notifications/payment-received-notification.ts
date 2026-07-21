@@ -10,6 +10,7 @@ export type PaymentReceivedNotificationInput = {
   companyName: string;
   amount: string | number;
   paymentId?: string | null;
+  mediaUrl?: string | null;
 };
 
 /**

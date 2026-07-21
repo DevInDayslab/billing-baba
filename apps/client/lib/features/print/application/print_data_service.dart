@@ -3,7 +3,6 @@ import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
 import 'package:billing_baba/features/parties/data/party_repository.dart';
 import 'package:billing_baba/features/print/application/print_exception.dart';
-import 'package:billing_baba/features/print/application/print_image_cache.dart';
 import 'package:billing_baba/features/print/data/print_repository.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/models/printable_allocation.dart';
@@ -26,6 +25,7 @@ import 'package:billing_baba/features/sales/data/sales_repository.dart';
 import 'package:billing_baba/features/sales/models/dto/job_work_order_dto.dart';
 import 'package:billing_baba/features/sales/models/dto/sales_document_dto.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/shared/image/image_service.dart';
 
 class PrintDataService {
   PrintDataService({
@@ -39,7 +39,7 @@ class PrintDataService {
     required this._purchaseFaRepository,
     required this._saleFaRepository,
     required this._jobWorkRepository,
-    required this._imageCache,
+    required this._imageService,
   });
 
   final SalesRepository _salesRepository;
@@ -52,7 +52,7 @@ class PrintDataService {
   final PurchaseFaRepository _purchaseFaRepository;
   final SaleFaRepository _saleFaRepository;
   final JobWorkRepository _jobWorkRepository;
-  final PrintImageCache _imageCache;
+  final ImageService _imageService;
   final Map<String, ItemDetailDto> _itemCache = {};
 
   Future<PrintableDocument> load(PrintRequest request) {
@@ -93,7 +93,11 @@ class PrintDataService {
 
     final partyFuture = _loadParty(document.partyId);
     final linesFuture = _enrichSalesLines(document.lines);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
 
     late final PrintableParty? party;
     late final List<PrintableLineItem> lines;
@@ -136,7 +140,11 @@ class PrintDataService {
 
     final partyFuture = _loadParty(document.partyId);
     final linesFuture = _enrichPurchaseLines(document.lines);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
 
     late final PrintableParty? party;
     late final List<PrintableLineItem> lines;
@@ -183,7 +191,11 @@ class PrintDataService {
     final company = PrintableCompany(profile: profile);
 
     final partyFuture = _loadParty(payment.partyId);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
     final allocationsFuture = _enrichAllocations(payment.allocations);
 
     late final PrintableParty? party;
@@ -230,7 +242,11 @@ class PrintDataService {
     final company = PrintableCompany(profile: profile);
 
     final partyFuture = _loadParty(expense.partyId);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
 
     late final PrintableParty? party;
     late final PrintableAssets assets;
@@ -276,7 +292,11 @@ class PrintDataService {
     final company = PrintableCompany(profile: profile);
 
     final partyFuture = _loadParty(batch.partyId);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
 
     late final PrintableParty? party;
     late final PrintableAssets assets;
@@ -319,7 +339,11 @@ class PrintDataService {
     final company = PrintableCompany(profile: profile);
 
     final partyFuture = _loadParty(batch.partyId);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
 
     late final PrintableParty? party;
     late final PrintableAssets assets;
@@ -362,7 +386,11 @@ class PrintDataService {
     final company = PrintableCompany(profile: profile);
 
     final partyFuture = _loadParty(order.partyId);
-    final assetsFuture = _loadAssets(profile.logoUrl, profile.signatureUrl);
+    final assetsFuture = _loadAssets(
+      profile.logoUrl,
+      profile.signatureUrl,
+      profile.stampUrl,
+    );
     final materialNamesFuture = _loadJobWorkMaterialNames(order.rawMaterials);
 
     late final PrintableParty? party;
@@ -465,14 +493,17 @@ class PrintDataService {
   Future<PrintableAssets> _loadAssets(
     String? logoUrl,
     String? signatureUrl,
+    String? stampUrl,
   ) async {
     final results = await Future.wait([
-      _imageCache.getBytes(logoUrl),
-      _imageCache.getBytes(signatureUrl),
+      _imageService.getBytes(logoUrl),
+      _imageService.getBytes(signatureUrl),
+      _imageService.getBytes(stampUrl),
     ]);
     return PrintableAssets(
       logoBytes: results[0],
       signatureBytes: results[1],
+      stampBytes: results[2],
     );
   }
 

@@ -103,5 +103,6 @@ abstract final class AppRoutes {
   static const settingsBackup = '/settings/backup';
   static const plansPricing = '/plans-pricing';
   static const editProfile = '/edit-profile';
+  static const userProfile = '/my-profile';
   static const accessDenied = '/access-denied';
 }

@@ -3,6 +3,7 @@ import 'package:billing_baba/features/parties/application/party_error_mapper.dar
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_avatar.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
@@ -109,7 +110,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     ].join(' ').toLowerCase();
 
     // Every query word must be found somewhere in the combined text
-    return queryWords.every((word) => searchableText.contains(word));
+    return queryWords.every(searchableText.contains);
   }
 
   Future<void> _openAddPartyDialog() async {
@@ -118,13 +119,27 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     if (!mounted || result == null) return;
 
     ref.invalidate(partyPickerListProvider);
+    ref.invalidate(partiesListProvider);
 
     if (!mounted) return;
     widget.onSelected(result.partyName);
-    final parties = ref.read(partiesListProvider);
-    final match = parties
+
+    var match = ref
+        .read(partiesListProvider)
         .where((party) => party.name == result.partyName)
         .firstOrNull;
+
+    if (match == null) {
+      try {
+        final pickerParties = await ref.read(partyPickerListProvider.future);
+        match = pickerParties
+            .where((party) => party.name == result.partyName)
+            .firstOrNull;
+      } on Object {
+        // Picker refresh is best-effort after create.
+      }
+    }
+
     if (match != null) {
       widget.onPartySelected?.call(match);
       widget.onPartySelectedWithId?.call(match.id, match.name);
@@ -206,6 +221,14 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
 
                   return ListTile(
                     dense: true,
+                    leading: PartyAvatar(
+                      name: party.name,
+                      seed: party.id,
+                      partyId: party.id,
+                      diameter: 32,
+                      profileImageUrl: party.profileImageUrl,
+                      profileMediaAssetId: party.profileMediaAssetId,
+                    ),
                     title: Text(party.name),
                     subtitle: subtitle.isEmpty ? null : Text(subtitle),
                     onTap: () => _selectParty(party),
@@ -230,7 +253,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
   Widget build(BuildContext context) {
     // OverlayEntry does not rebuild when async providers resolve; refresh it
     // manually so the loading spinner is replaced with party results.
-    ref.listen(partyPickerListProvider, (_, __) {
+    ref.listen(partyPickerListProvider, (_, _) {
       _overlayEntry?.markNeedsBuild();
     });
 

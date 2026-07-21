@@ -101,7 +101,7 @@ class PricingSection extends StatelessWidget {
       child: TextField(
         controller: controller,
         style: saleFieldTextStyle,
-        decoration: buildSaleFieldDecoration(hint: hint ?? label),
+        decoration: buildFormControlDecoration(hint: hint ?? label),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         inputFormatters: _formatters,
         onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
@@ -196,7 +196,7 @@ class PricingSection extends StatelessWidget {
                 child: TextField(
                   controller: minWholesaleQtyController,
                   style: saleFieldTextStyle,
-                  decoration: buildSaleFieldDecoration(hint: _qtyHint),
+                  decoration: buildFormControlDecoration(hint: _qtyHint),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),

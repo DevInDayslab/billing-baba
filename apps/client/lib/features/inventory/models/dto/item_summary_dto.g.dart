@@ -54,6 +54,9 @@ _ItemImageDto _$ItemImageDtoFromJson(Map<String, dynamic> json) =>
       isPrimary: json['is_primary'] as bool,
       createdAt: json['created_at'] as String,
       updatedAt: json['updated_at'] as String,
+      thumbnailUrl: json['thumbnail_url'] as String?,
+      mediumUrl: json['medium_url'] as String?,
+      mediaAssetId: json['media_asset_id'] as String?,
     );
 
 Map<String, dynamic> _$ItemImageDtoToJson(_ItemImageDto instance) =>
@@ -64,6 +67,9 @@ Map<String, dynamic> _$ItemImageDtoToJson(_ItemImageDto instance) =>
       'is_primary': instance.isPrimary,
       'created_at': instance.createdAt,
       'updated_at': instance.updatedAt,
+      'thumbnail_url': instance.thumbnailUrl,
+      'medium_url': instance.mediumUrl,
+      'media_asset_id': instance.mediaAssetId,
     };
 
 _ItemLocationSummaryDto _$ItemLocationSummaryDtoFromJson(

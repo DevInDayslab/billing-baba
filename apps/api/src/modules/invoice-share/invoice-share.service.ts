@@ -3,12 +3,18 @@ import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
 import { normalizeIndianMobile } from '../../shared/utils/phone-number';
 import { OutstandingRepository } from '../accounting/outstanding.repository';
+import { InvoiceArtifactService } from '../invoice-artifacts/invoice-artifact.service';
 import type { NotificationService } from '../notifications/notification.service';
+import { NotificationMediaService } from '../notifications/notification-media.service';
 import { getSharedNotificationService } from '../notifications/notification-service.factory';
+import { GeneratedDocumentService } from '../generated-documents/generated-document.service';
+import { generatedKindForSalesDocumentType } from '../notifications/notification-media.service';
+import { MediaAssetRepository } from '../storage/storage.repository';
 import { InvoiceShareRepository } from './invoice-share.repository';
 import type {
   InvoiceShareLinkDto,
   NotifyDispatchDto,
+  PaymentQrJsonDto,
   PublicInvoiceDto,
 } from './invoice-share.types';
 import {
@@ -34,13 +40,28 @@ function requireValidPhone(raw: string | null | undefined): string {
   return result.e164;
 }
 
+export type InvoiceShareServiceDeps = {
+  config: AppConfig;
+  repository?: InvoiceShareRepository;
+  notificationService?: NotificationService;
+  mediaService?: NotificationMediaService;
+  generatedDocuments?: GeneratedDocumentService;
+  artifacts?: InvoiceArtifactService;
+};
+
 export class InvoiceShareService {
   private readonly repository: InvoiceShareRepository;
   private readonly outstandingRepository: OutstandingRepository;
   private readonly notificationService: NotificationService;
+  private readonly mediaService: NotificationMediaService;
+  private readonly generatedDocuments: GeneratedDocumentService;
+  private readonly artifacts: InvoiceArtifactService;
   private readonly config: AppConfig;
 
-  constructor(config: AppConfig, notificationService?: NotificationService) {
+  constructor(
+    config: AppConfig,
+    deps: Omit<InvoiceShareServiceDeps, 'config'> = {},
+  ) {
     const db = getDb();
     if (!db) {
       throw new AppError(
@@ -49,11 +70,31 @@ export class InvoiceShareService {
         503,
       );
     }
-    this.repository = new InvoiceShareRepository(db);
+    this.repository = deps.repository ?? new InvoiceShareRepository(db);
     this.outstandingRepository = new OutstandingRepository(db);
     this.notificationService =
-      notificationService ?? getSharedNotificationService(config);
+      deps.notificationService ?? getSharedNotificationService(config);
+    this.mediaService =
+      deps.mediaService ?? new NotificationMediaService({ config });
+    this.generatedDocuments =
+      deps.generatedDocuments ?? new GeneratedDocumentService({ config });
+    this.artifacts =
+      deps.artifacts ??
+      new InvoiceArtifactService({
+        config,
+        generatedDocuments: this.generatedDocuments,
+        mediaService: this.mediaService,
+        repository: this.repository,
+      });
     this.config = config;
+  }
+
+  /** @deprecated Use constructor(config, deps) */
+  static create(
+    config: AppConfig,
+    notificationService?: NotificationService,
+  ): InvoiceShareService {
+    return new InvoiceShareService(config, { notificationService });
   }
 
   async ensureShareLink(
@@ -118,12 +159,92 @@ export class InvoiceShareService {
     };
   }
 
-  async getPublicInvoice(token: string): Promise<PublicInvoiceDto> {
-    const share = await this.repository.findTokenByValue(token);
-    if (!share) {
-      throw new AppError('INVOICE_NOT_FOUND', 'Invoice not found', 404);
+  async revokeShareLink(
+    businessId: string,
+    invoiceId: string,
+  ): Promise<{ revoked: boolean }> {
+    const document = await this.repository.findSalesDocument(
+      businessId,
+      invoiceId,
+    );
+    if (!document) {
+      throw new AppError('NOT_FOUND', 'Invoice not found', 404);
     }
 
+    const existing = await this.repository.findActiveTokenForInvoice(
+      invoiceId,
+      businessId,
+    );
+    if (!existing) {
+      return { revoked: false };
+    }
+
+    await this.repository.revokeToken(existing.id);
+    return { revoked: true };
+  }
+
+  async regenerateShareLink(
+    businessId: string,
+    invoiceId: string,
+    accountId: string,
+  ): Promise<InvoiceShareLinkDto> {
+    const document = await this.repository.findSalesDocument(
+      businessId,
+      invoiceId,
+    );
+    if (!document) {
+      throw new AppError('NOT_FOUND', 'Invoice not found', 404);
+    }
+
+    if (document.status === 'draft' || document.status === 'cancelled') {
+      throw new AppError(
+        'INVOICE_NOT_SHAREABLE',
+        'Only finalized invoices can be shared',
+        409,
+      );
+    }
+
+    await this.repository.revokeActiveTokensForInvoice(invoiceId, businessId);
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + this.config.invoiceShareExpiryDays);
+
+    const token = generateInvoiceShareToken();
+    const created = await this.repository.createToken({
+      token,
+      invoiceId,
+      businessId,
+      expiresAt,
+      createdBy: accountId,
+    });
+
+    if (!created) {
+      throw new AppError(
+        'INVOICE_SHARE_FAILED',
+        'Could not create invoice share token',
+        500,
+      );
+    }
+
+    return {
+      token: created.token,
+      invoice_id: created.invoiceId,
+      share_url: buildInvoiceShareUrl(this.config.websiteUrl, created.token),
+      expires_at: created.expiresAt?.toISOString() ?? null,
+    };
+  }
+
+  private assertShareTokenActive(share: {
+    expiresAt: Date | null;
+    revokedAt: Date | null;
+  }): void {
+    if (share.revokedAt) {
+      throw new AppError(
+        'INVOICE_SHARE_REVOKED',
+        'This invoice link has been revoked',
+        410,
+      );
+    }
     if (share.expiresAt && share.expiresAt.getTime() < Date.now()) {
       throw new AppError(
         'INVOICE_SHARE_EXPIRED',
@@ -131,6 +252,15 @@ export class InvoiceShareService {
         410,
       );
     }
+  }
+
+  async getPublicInvoice(token: string): Promise<PublicInvoiceDto> {
+    const share = await this.repository.findTokenByValue(token);
+    if (!share) {
+      throw new AppError('INVOICE_NOT_FOUND', 'Invoice not found', 404);
+    }
+
+    this.assertShareTokenActive(share);
 
     const document = await this.repository.findSalesDocument(
       share.businessId,
@@ -153,15 +283,31 @@ export class InvoiceShareService {
       ? await this.repository.findParty(share.businessId, document.partyId)
       : null;
 
-    const [lines, paidAmount] = await Promise.all([
+    const [lines, paidAmount, loyalty] = await Promise.all([
       this.repository.listLinesWithItems(share.businessId, share.invoiceId),
       this.repository.getPaidAmount(share.businessId, share.invoiceId),
+      this.repository.getLoyaltyForSale(
+        share.businessId,
+        share.invoiceId,
+        document.partyId,
+      ),
     ]);
 
+    const balance = dueAmount(document.totalAmount, paidAmount);
     const paymentStatus = paymentStatusFromAmounts(
       document.totalAmount,
       paidAmount,
     );
+    const scanToPayEnabled =
+      Boolean(company.upiId?.trim()) && Number.parseFloat(balance) > 0;
+
+    const logoUrl = await this.mediaService.resolveBrandingLogoUrl(
+      share.businessId,
+    );
+
+    const shareUrl = buildInvoiceShareUrl(this.config.websiteUrl, share.token);
+    const expiresAt = share.expiresAt?.toISOString() ?? null;
+    const pdfDownloadPath = `${this.config.apiPrefix}/public/invoices/${share.token}/download`;
 
     return {
       token: share.token,
@@ -177,8 +323,9 @@ export class InvoiceShareService {
         tax_amount: document.taxAmount,
         total_amount: document.totalAmount,
         paid_amount: paidAmount,
-        due_amount: dueAmount(document.totalAmount, paidAmount),
+        due_amount: balance,
         payment_status: paymentStatus,
+        loyalty,
       },
       company: {
         name: company.name,
@@ -187,6 +334,8 @@ export class InvoiceShareService {
         phone: company.phone,
         email: company.email,
         state_code: company.stateCode,
+        logo_url: logoUrl,
+        upi_id: company.upiId ?? null,
       },
       customer: party
         ? {
@@ -210,9 +359,112 @@ export class InvoiceShareService {
         igst_amount: line.igstAmount,
         line_total: line.lineTotal,
       })),
-      share_url: buildInvoiceShareUrl(this.config.websiteUrl, share.token),
-      expires_at: share.expiresAt?.toISOString() ?? null,
+      payment: {
+        upi_id: company.upiId ?? null,
+        due_amount: balance,
+        scan_to_pay_enabled: scanToPayEnabled,
+      },
+      share: {
+        url: shareUrl,
+        token: share.token,
+        expires_at: expiresAt,
+      },
+      share_url: shareUrl,
+      expires_at: expiresAt,
+      pdf_download_path: pdfDownloadPath,
     };
+  }
+
+  async getPaymentQr(
+    token: string,
+  ): Promise<{ png: Buffer; json: PaymentQrJsonDto }> {
+    const share = await this.repository.findTokenByValue(token);
+    if (!share) {
+      throw new AppError('INVOICE_NOT_FOUND', 'Invoice not found', 404);
+    }
+    this.assertShareTokenActive(share);
+
+    const qr = await this.artifacts.generatePaymentQr(
+      share.businessId,
+      share.invoiceId,
+    );
+    if (!qr) {
+      throw new AppError(
+        'PAYMENT_QR_UNAVAILABLE',
+        'Scan to Pay is not available for this invoice',
+        404,
+      );
+    }
+
+    return {
+      png: qr.buffer,
+      json: {
+        qr_data_url: qr.dataUrl,
+        amount: qr.amount,
+        merchant: qr.merchant,
+        upi_id: qr.upiId,
+        invoice_number: qr.invoiceNumber,
+        upi_payload: qr.upiPayload,
+      },
+    };
+  }
+
+  /**
+   * Canonical Download PDF for the public invoice page.
+   * Returns a signed storage URL — never regenerates when invoice.pdf already exists.
+   */
+  async getPublicInvoiceDownload(token: string): Promise<{
+    download_url: string;
+    file_name: string;
+    expires_at: string | null;
+    cached: boolean;
+  }> {
+    const share = await this.repository.findTokenByValue(token);
+    if (!share) {
+      throw new AppError('INVOICE_NOT_FOUND', 'Invoice not found', 404);
+    }
+    this.assertShareTokenActive(share);
+
+    const document = await this.repository.findSalesDocument(
+      share.businessId,
+      share.invoiceId,
+    );
+    if (!document) {
+      throw new AppError('INVOICE_NOT_FOUND', 'Invoice not found', 404);
+    }
+    if (document.status === 'draft' || document.status === 'cancelled') {
+      throw new AppError('INVOICE_NOT_FOUND', 'Invoice not found', 404);
+    }
+
+    let actorId = share.createdBy;
+    if (!actorId) {
+      const db = getDb();
+      if (!db) {
+        throw new AppError(
+          'DATABASE_NOT_CONFIGURED',
+          'Database is not configured',
+          503,
+        );
+      }
+      actorId = await new MediaAssetRepository(db).findAnyAccountId(
+        share.businessId,
+      );
+    }
+
+    if (!actorId) {
+      throw new AppError(
+        'PDF_GENERATION_FAILED',
+        'No business member available to prepare the invoice PDF',
+        503,
+      );
+    }
+
+    return this.artifacts.resolveCanonicalPdfDownload(
+      share.businessId,
+      actorId,
+      share.invoiceId,
+      document.documentType,
+    );
   }
 
   async notifySaleInvoice(
@@ -245,6 +497,88 @@ export class InvoiceShareService {
       document.documentNumber ??
       `${document.documentSeries}-${document.id.slice(0, 8)}`;
 
+    const kind = generatedKindForSalesDocumentType(document.documentType);
+    if (!kind) {
+      return {
+        notified: false,
+        share_url: link.share_url,
+        token: link.token,
+        error: {
+          code: 'PDF_GENERATION_UNSUPPORTED',
+          message: 'This document type cannot be sent with an invoice preview',
+        },
+      };
+    }
+
+    try {
+      await this.artifacts.ensurePdf(
+        businessId,
+        accountId,
+        invoiceId,
+        document.documentType,
+      );
+    } catch (error) {
+      const message =
+        error instanceof AppError
+          ? error.message
+          : 'Failed to generate invoice PDF';
+      return {
+        notified: false,
+        share_url: link.share_url,
+        token: link.token,
+        error: {
+          code: 'PDF_GENERATION_FAILED',
+          message,
+        },
+      };
+    }
+
+    let previewUpload: {
+      mediaAssetId: string;
+      downloadUrl: string;
+    } | null = null;
+
+    try {
+      const previewBuffer = await this.artifacts.generatePreview(
+        businessId,
+        accountId,
+        invoiceId,
+      );
+      previewUpload = await this.artifacts.uploadTemporaryPreview(
+        businessId,
+        accountId,
+        invoiceId,
+        previewBuffer,
+      );
+    } catch (error) {
+      const message =
+        error instanceof AppError
+          ? error.message
+          : 'Failed to generate invoice preview image';
+      return {
+        notified: false,
+        share_url: link.share_url,
+        token: link.token,
+        error: {
+          code: 'PREVIEW_GENERATION_FAILED',
+          message,
+        },
+      };
+    }
+
+    if (!previewUpload?.downloadUrl) {
+      return {
+        notified: false,
+        share_url: link.share_url,
+        token: link.token,
+        error: {
+          code: 'PREVIEW_GENERATION_FAILED',
+          message:
+            'Invoice preview could not be prepared for WhatsApp delivery',
+        },
+      };
+    }
+
     const result = await this.notificationService.sendSaleInvoice(
       { phone },
       {
@@ -254,6 +588,7 @@ export class InvoiceShareService {
         invoiceUrl: link.share_url,
         companyName: company.name,
         invoiceId: document.id,
+        mediaUrl: previewUpload.downloadUrl,
       },
       {
         idempotencyKey: `invoice:${invoiceId}`,
@@ -261,11 +596,20 @@ export class InvoiceShareService {
       },
     );
 
+    if (result.success) {
+      await this.artifacts.deleteTemporaryArtifacts(
+        businessId,
+        accountId,
+        previewUpload.mediaAssetId,
+      );
+    }
+
     return {
       notified: result.success,
       deduped: result.deduped === true,
       share_url: link.share_url,
       token: link.token,
+      media_attached: Boolean(previewUpload.downloadUrl && result.success),
       error: result.error
         ? { code: result.error.code, message: result.error.message }
         : undefined,

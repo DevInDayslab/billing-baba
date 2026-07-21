@@ -30,6 +30,7 @@ export class AuthRepository {
         name: accounts.name,
         email: accounts.email,
         avatarUrl: accounts.avatarUrl,
+        avatarMediaAssetId: accounts.avatarMediaAssetId,
         timezone: accounts.timezone,
         language: accounts.language,
         createdAt: accounts.createdAt,
@@ -52,6 +53,7 @@ export class AuthRepository {
         name: accounts.name,
         email: accounts.email,
         avatarUrl: accounts.avatarUrl,
+        avatarMediaAssetId: accounts.avatarMediaAssetId,
         timezone: accounts.timezone,
         language: accounts.language,
         createdAt: accounts.createdAt,
@@ -79,6 +81,7 @@ export class AuthRepository {
         name: accounts.name,
         email: accounts.email,
         avatarUrl: accounts.avatarUrl,
+        avatarMediaAssetId: accounts.avatarMediaAssetId,
         timezone: accounts.timezone,
         language: accounts.language,
         createdAt: accounts.createdAt,
@@ -257,6 +260,7 @@ export class AuthRepository {
         name: accounts.name,
         email: accounts.email,
         avatarUrl: accounts.avatarUrl,
+        avatarMediaAssetId: accounts.avatarMediaAssetId,
         timezone: accounts.timezone,
         language: accounts.language,
         createdAt: accounts.createdAt,
@@ -295,6 +299,7 @@ export class AuthRepository {
         name: accounts.name,
         email: accounts.email,
         avatarUrl: accounts.avatarUrl,
+        avatarMediaAssetId: accounts.avatarMediaAssetId,
         timezone: accounts.timezone,
         language: accounts.language,
         createdAt: accounts.createdAt,
@@ -349,5 +354,41 @@ export class AuthRepository {
       .update(refreshTokens)
       .set({ revokedAt: new Date() })
       .where(eq(refreshTokens.id, id));
+  }
+
+  async getAvatarMediaAssetId(accountId: string): Promise<string | null> {
+    const [row] = await this.db
+      .select({ avatarMediaAssetId: accounts.avatarMediaAssetId })
+      .from(accounts)
+      .where(eq(accounts.id, accountId))
+      .limit(1);
+
+    return row?.avatarMediaAssetId ?? null;
+  }
+
+  async bindAvatarAsset(
+    accountId: string,
+    assetId: string,
+    url: string,
+  ): Promise<void> {
+    await this.db
+      .update(accounts)
+      .set({
+        avatarMediaAssetId: assetId,
+        avatarUrl: url,
+        updatedAt: new Date(),
+      })
+      .where(eq(accounts.id, accountId));
+  }
+
+  async clearAvatarAsset(accountId: string): Promise<void> {
+    await this.db
+      .update(accounts)
+      .set({
+        avatarMediaAssetId: null,
+        avatarUrl: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(accounts.id, accountId));
   }
 }

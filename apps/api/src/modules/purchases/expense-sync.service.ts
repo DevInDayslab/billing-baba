@@ -7,11 +7,17 @@ import {
   SYSTEM_EXPENSE_CATEGORIES,
   SYSTEM_EXPENSE_CATEGORY_NAMES,
 } from './expense-category.constants';
-import { postExpenseLedgerEntry, reverseExpenseLedgerEntry } from './expense-ledger.service';
+import {
+  postExpenseLedgerEntry,
+  reverseExpenseLedgerEntry,
+} from './expense-ledger.service';
 import { ExpenseRepository } from './expense.repository';
 import type { ExpenseRecord } from './expense.types';
 
-type DbExecutor = Pick<Database, 'insert' | 'select' | 'update' | 'transaction'>;
+type DbExecutor = Pick<
+  Database,
+  'insert' | 'select' | 'update' | 'transaction'
+>;
 
 export async function ensureSystemExpenseCategories(
   db: DbExecutor,
@@ -250,11 +256,7 @@ async function removeLinkedExpense(
   if (!existing) return;
 
   await reverseExpenseLedgerEntry(db, params.businessId, existing);
-  await repo.softDelete(
-    params.businessId,
-    existing.id,
-    params.userId ?? null,
-  );
+  await repo.softDelete(params.businessId, existing.id, params.userId ?? null);
 }
 
 export async function deleteLinkedExpense(

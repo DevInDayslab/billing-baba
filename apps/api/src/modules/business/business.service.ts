@@ -1,5 +1,7 @@
+import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { BusinessBrandingService } from './business-branding.service';
 import { BusinessRepository } from './business.repository';
 import type {
   CreateBusinessBody,
@@ -13,8 +15,9 @@ import type {
 
 export class BusinessService {
   private readonly repository: BusinessRepository;
+  private readonly branding: BusinessBrandingService | null;
 
-  constructor() {
+  constructor(config?: AppConfig) {
     const db = getDb();
     if (!db) {
       throw new AppError(
@@ -24,10 +27,15 @@ export class BusinessService {
       );
     }
     this.repository = new BusinessRepository(db);
+    this.branding = config ? new BusinessBrandingService({ config }) : null;
   }
 
   async listBusinesses(accountId: string): Promise<BusinessListItem[]> {
-    return this.repository.listByAccountId(accountId);
+    const items = await this.repository.listByAccountId(accountId);
+    if (!this.branding) {
+      return items.map(({ logoMediaAssetId: _ignored, ...item }) => item);
+    }
+    return this.branding.enrichListItemsWithBrandingUrls(accountId, items);
   }
 
   async createBusiness(
@@ -56,7 +64,14 @@ export class BusinessService {
         404,
       );
     }
-    return profile;
+    if (!this.branding) {
+      return profile;
+    }
+    return this.branding.enrichProfileWithBrandingUrls(
+      businessId,
+      accountId,
+      profile,
+    );
   }
 
   async updateProfile(
@@ -77,7 +92,14 @@ export class BusinessService {
           404,
         );
       }
-      return profile;
+      if (!this.branding) {
+        return profile;
+      }
+      return this.branding.enrichProfileWithBrandingUrls(
+        businessId,
+        accountId,
+        profile,
+      );
     } catch (error) {
       if (error instanceof Error && error.message === 'GSTIN_ALREADY_EXISTS') {
         throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {

@@ -7,6 +7,7 @@ class NotifyDispatchResult {
     this.deduped = false,
     this.shareUrl,
     this.token,
+    this.mediaAttached = false,
     this.errorCode,
     this.errorMessage,
   });
@@ -18,6 +19,7 @@ class NotifyDispatchResult {
       deduped: json['deduped'] as bool? ?? false,
       shareUrl: json['share_url'] as String?,
       token: json['token'] as String?,
+      mediaAttached: json['media_attached'] as bool? ?? false,
       errorCode: error?['code'] as String?,
       errorMessage: error?['message'] as String?,
     );
@@ -27,6 +29,7 @@ class NotifyDispatchResult {
   final bool deduped;
   final String? shareUrl;
   final String? token;
+  final bool mediaAttached;
   final String? errorCode;
   final String? errorMessage;
 }

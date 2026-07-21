@@ -2,91 +2,174 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
+import 'package:billing_baba/shared/image/app_image_prefetcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class InventoryAsyncList<T> extends StatelessWidget {
+class InventoryAsyncList<T> extends ConsumerStatefulWidget {
   const InventoryAsyncList({
     required this.asyncValue,
     required this.items,
     required this.onRefresh,
     required this.itemBuilder,
+    this.showCachedWhileLoading = false,
     this.emptyMessage = 'No items found',
     this.loadingMessage = 'Loading...',
+    this.imageUrlExtractor,
+    this.onPrefetchItems,
+    this.prefetchLookahead = 30,
+    this.estimatedItemExtent = 56,
     super.key,
   });
 
   final AsyncValue<List<T>> asyncValue;
   final List<T> items;
   final Future<void> Function() onRefresh;
-  final Widget Function(BuildContext context, T item) itemBuilder;
+  final Widget Function(BuildContext context, T item, int index) itemBuilder;
   final String emptyMessage;
   final String loadingMessage;
+  final bool showCachedWhileLoading;
+  final String? Function(T item)? imageUrlExtractor;
+  final void Function(List<T> items)? onPrefetchItems;
+  final int prefetchLookahead;
+  final double estimatedItemExtent;
+
+  @override
+  ConsumerState<InventoryAsyncList<T>> createState() =>
+      _InventoryAsyncListState<T>();
+}
+
+class _InventoryAsyncListState<T> extends ConsumerState<InventoryAsyncList<T>> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_prefetchAhead);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _prefetchAhead());
+  }
+
+  @override
+  void didUpdateWidget(covariant InventoryAsyncList<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.items != widget.items) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _prefetchAhead());
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_prefetchAhead)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _prefetchAhead() {
+    if (widget.items.isEmpty) return;
+
+    final firstVisible = AppImagePrefetcher.estimateFirstVisibleIndex(
+      _scrollController,
+      itemExtent: widget.estimatedItemExtent,
+    );
+    final lastVisible = AppImagePrefetcher.estimateLastVisibleIndex(
+      _scrollController,
+      itemExtent: widget.estimatedItemExtent,
+    ).clamp(0, widget.items.length - 1);
+
+    final extractor = widget.imageUrlExtractor;
+    if (extractor != null) {
+      ref.read(appImagePrefetcherProvider).prefetchItemsWindow(
+            items: widget.items,
+            firstVisibleIndex: firstVisible,
+            lastVisibleIndex: lastVisible,
+            urlExtractor: extractor,
+            lookahead: widget.prefetchLookahead,
+          );
+    }
+
+    widget.onPrefetchItems?.call(
+      widget.items.sublist(
+        firstVisible.clamp(0, widget.items.length - 1),
+        (lastVisible + widget.prefetchLookahead + 1).clamp(0, widget.items.length),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return asyncValue.when(
-      loading: () => RefreshIndicator(
-        onRefresh: onRefresh,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: 120,
-              child: Center(
-                child: Text(
-                  loadingMessage,
-                  style: InventoryStyles.emptyStateStyle,
+    return widget.asyncValue.when(
+      loading: () {
+        if (widget.showCachedWhileLoading && widget.items.isNotEmpty) {
+          return RefreshIndicator(
+            onRefresh: widget.onRefresh,
+            child: _buildList(),
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: widget.onRefresh,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              SizedBox(
+                height: 120,
+                child: Center(
+                  child: Text(
+                    widget.loadingMessage,
+                    style: InventoryStyles.emptyStateStyle,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
       error: (error, _) {
         final message = InventoryErrorMapper.messageFor(error);
-        if (items.isNotEmpty) {
+        if (widget.items.isNotEmpty) {
           return Column(
             children: [
-              _InventoryErrorBanner(message: message, onRetry: onRefresh),
+              _InventoryErrorBanner(message: message, onRetry: widget.onRefresh),
               Expanded(child: _buildList()),
             ],
           );
         }
         return RefreshIndicator(
-          onRefresh: onRefresh,
+          onRefresh: widget.onRefresh,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             children: [
-              _InventoryErrorBody(message: message, onRetry: onRefresh),
+              _InventoryErrorBody(message: message, onRetry: widget.onRefresh),
             ],
           ),
         );
       },
       data: (_) => RefreshIndicator(
-        onRefresh: onRefresh,
+        onRefresh: widget.onRefresh,
         child: _buildList(),
       ),
     );
   }
 
   Widget _buildList() {
-    if (items.isEmpty) {
+    if (widget.items.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(
             height: 120,
-            child: InventoryListEmptyState(message: emptyMessage),
+            child: InventoryListEmptyState(message: widget.emptyMessage),
           ),
         ],
       );
     }
 
     return ListView.builder(
+      controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: items.length,
-      itemBuilder: (context, index) => itemBuilder(context, items[index]),
+      itemCount: widget.items.length,
+      itemBuilder: (context, index) =>
+          widget.itemBuilder(context, widget.items[index], index),
     );
   }
 }

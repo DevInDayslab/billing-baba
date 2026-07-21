@@ -4,13 +4,21 @@ import { toSafeNotificationErrorMessage } from '../../../src/modules/notificatio
 
 describe('mapTwilioError', () => {
   test('maps authentication failures', () => {
-    const error = mapTwilioError({ status: 401, code: 20003, message: 'Authenticate' });
+    const error = mapTwilioError({
+      status: 401,
+      code: 20003,
+      message: 'Authenticate',
+    });
     expect(error.code).toBe('AUTHENTICATION');
     expect(error.retryable).toBe(false);
   });
 
   test('maps rate limits', () => {
-    const error = mapTwilioError({ status: 429, code: 20429, message: 'Too many requests' });
+    const error = mapTwilioError({
+      status: 429,
+      code: 20429,
+      message: 'Too many requests',
+    });
     expect(error.code).toBe('RATE_LIMITED');
     expect(error.retryable).toBe(true);
   });
@@ -19,7 +27,8 @@ describe('mapTwilioError', () => {
     const error = mapTwilioError({
       status: 400,
       code: 63016,
-      message: 'Failed to send freeform message because you are outside the allowed window',
+      message:
+        'Failed to send freeform message because you are outside the allowed window',
     });
     expect(error.code).toBe('SESSION_WINDOW');
     expect(error.retryable).toBe(false);
@@ -45,7 +54,10 @@ describe('mapTwilioError', () => {
   });
 
   test('maps 5xx as retryable provider error', () => {
-    const error = mapTwilioError({ status: 503, message: 'Service Unavailable' });
+    const error = mapTwilioError({
+      status: 503,
+      message: 'Service Unavailable',
+    });
     expect(error.code).toBe('PROVIDER_ERROR');
     expect(error.retryable).toBe(true);
   });
@@ -53,7 +65,11 @@ describe('mapTwilioError', () => {
 
 describe('toSafeNotificationErrorMessage', () => {
   test('never echoes raw provider text', () => {
-    expect(toSafeNotificationErrorMessage('INVALID_NUMBER')).not.toContain('Twilio');
-    expect(toSafeNotificationErrorMessage('AUTHENTICATION')).toContain('authentication');
+    expect(toSafeNotificationErrorMessage('INVALID_NUMBER')).not.toContain(
+      'Twilio',
+    );
+    expect(toSafeNotificationErrorMessage('AUTHENTICATION')).toContain(
+      'authentication',
+    );
   });
 });

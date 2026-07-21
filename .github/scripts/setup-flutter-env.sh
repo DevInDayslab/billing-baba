@@ -7,6 +7,9 @@ set -euo pipefail
 TARGET_DIR="${FLUTTER_ENV_DIR:-apps/client}"
 ENV_FILE="${TARGET_DIR}/.env"
 
+# Optional — AppConfig defaults to https://billingbaba.com when unset.
+WEBSITE_URL="${WEBSITE_URL:-https://billingbaba.com}"
+
 require_env() {
   local name="$1"
   if [[ -z "${!name:-}" ]]; then
@@ -31,8 +34,10 @@ DEBUG=${DEBUG}
 ENABLE_DEV_LOGIN=${ENABLE_DEV_LOGIN}
 DEV_OTP=${DEV_OTP}
 API_BASE_URL=${API_BASE_URL}
+WEBSITE_URL=${WEBSITE_URL}
 MSG91_WIDGET_ID=${MSG91_WIDGET_ID}
 MSG91_WIDGET_AUTH_TOKEN=${MSG91_WIDGET_AUTH_TOKEN}
+USE_FAKE_COLLABORATION=false
 EOF
 
 require_key() {
@@ -47,6 +52,7 @@ require_key DEBUG
 require_key ENABLE_DEV_LOGIN
 require_key DEV_OTP
 require_key API_BASE_URL
+require_key WEBSITE_URL
 require_key MSG91_WIDGET_ID
 require_key MSG91_WIDGET_AUTH_TOKEN
 

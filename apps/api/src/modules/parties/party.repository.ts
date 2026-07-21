@@ -37,8 +37,31 @@ type PartyRow = {
   openingBalance: string;
   isActive: boolean;
   notes: string | null;
+  profileImageUrl: string | null;
+  profileMediaAssetId: string | null;
   createdAt: Date;
   updatedAt: Date;
+};
+
+const partySelectColumns = {
+  id: parties.id,
+  name: parties.name,
+  mobile: parties.mobile,
+  email: parties.email,
+  partyType: parties.partyType,
+  partyCategory: parties.partyCategory,
+  pricingTier: parties.pricingTier,
+  gstin: parties.gstin,
+  stateCode: parties.stateCode,
+  areaId: parties.areaId,
+  creditLimit: parties.creditLimit,
+  openingBalance: parties.openingBalance,
+  isActive: parties.isActive,
+  notes: parties.notes,
+  profileImageUrl: parties.profileImageUrl,
+  profileMediaAssetId: parties.profileMediaAssetId,
+  createdAt: parties.createdAt,
+  updatedAt: parties.updatedAt,
 };
 
 export class PartyRepository {
@@ -167,24 +190,7 @@ export class PartyRepository {
     const offset = (params.page - 1) * params.limit;
 
     const rows = await this.db
-      .select({
-        id: parties.id,
-        name: parties.name,
-        mobile: parties.mobile,
-        email: parties.email,
-        partyType: parties.partyType,
-        partyCategory: parties.partyCategory,
-        pricingTier: parties.pricingTier,
-        gstin: parties.gstin,
-        stateCode: parties.stateCode,
-        areaId: parties.areaId,
-        creditLimit: parties.creditLimit,
-        openingBalance: parties.openingBalance,
-        isActive: parties.isActive,
-        notes: parties.notes,
-        createdAt: parties.createdAt,
-        updatedAt: parties.updatedAt,
-      })
+      .select(partySelectColumns)
       .from(parties)
       .where(whereClause)
       .orderBy(orderBy)
@@ -204,24 +210,7 @@ export class PartyRepository {
     partyId: string,
   ): Promise<PartyRecord | null> {
     const [row] = await this.db
-      .select({
-        id: parties.id,
-        name: parties.name,
-        mobile: parties.mobile,
-        email: parties.email,
-        partyType: parties.partyType,
-        partyCategory: parties.partyCategory,
-        pricingTier: parties.pricingTier,
-        gstin: parties.gstin,
-        stateCode: parties.stateCode,
-        areaId: parties.areaId,
-        creditLimit: parties.creditLimit,
-        openingBalance: parties.openingBalance,
-        isActive: parties.isActive,
-        notes: parties.notes,
-        createdAt: parties.createdAt,
-        updatedAt: parties.updatedAt,
-      })
+      .select(partySelectColumns)
       .from(parties)
       .where(
         and(
@@ -263,24 +252,7 @@ export class PartyRepository {
         createdBy: values.createdBy ?? null,
         updatedBy: values.updatedBy ?? null,
       })
-      .returning({
-        id: parties.id,
-        name: parties.name,
-        mobile: parties.mobile,
-        email: parties.email,
-        partyType: parties.partyType,
-        partyCategory: parties.partyCategory,
-        pricingTier: parties.pricingTier,
-        gstin: parties.gstin,
-        stateCode: parties.stateCode,
-        areaId: parties.areaId,
-        creditLimit: parties.creditLimit,
-        openingBalance: parties.openingBalance,
-        isActive: parties.isActive,
-        notes: parties.notes,
-        createdAt: parties.createdAt,
-        updatedAt: parties.updatedAt,
-      });
+      .returning(partySelectColumns);
 
     if (!row) {
       throw new Error('Failed to create party');
@@ -335,24 +307,7 @@ export class PartyRepository {
           eq(parties.isDeleted, false),
         ),
       )
-      .returning({
-        id: parties.id,
-        name: parties.name,
-        mobile: parties.mobile,
-        email: parties.email,
-        partyType: parties.partyType,
-        partyCategory: parties.partyCategory,
-        pricingTier: parties.pricingTier,
-        gstin: parties.gstin,
-        stateCode: parties.stateCode,
-        areaId: parties.areaId,
-        creditLimit: parties.creditLimit,
-        openingBalance: parties.openingBalance,
-        isActive: parties.isActive,
-        notes: parties.notes,
-        createdAt: parties.createdAt,
-        updatedAt: parties.updatedAt,
-      });
+      .returning(partySelectColumns);
 
     if (!row) return null;
 
@@ -453,6 +408,66 @@ export class PartyRepository {
     return new Map(balances.map((row) => [row.party_id, row.balance]));
   }
 
+  async getProfileMediaAssetId(
+    businessId: string,
+    partyId: string,
+  ): Promise<string | null> {
+    const [row] = await this.db
+      .select({ profileMediaAssetId: parties.profileMediaAssetId })
+      .from(parties)
+      .where(
+        and(
+          eq(parties.id, partyId),
+          eq(parties.businessId, businessId),
+          eq(parties.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return row?.profileMediaAssetId ?? null;
+  }
+
+  async bindProfileImage(
+    businessId: string,
+    partyId: string,
+    assetId: string,
+    url: string,
+  ): Promise<void> {
+    await this.db
+      .update(parties)
+      .set({
+        profileMediaAssetId: assetId,
+        profileImageUrl: url,
+        updatedAt: new Date(),
+        syncVersion: sql`${parties.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(parties.id, partyId),
+          eq(parties.businessId, businessId),
+          eq(parties.isDeleted, false),
+        ),
+      );
+  }
+
+  async clearProfileImage(businessId: string, partyId: string): Promise<void> {
+    await this.db
+      .update(parties)
+      .set({
+        profileMediaAssetId: null,
+        profileImageUrl: null,
+        updatedAt: new Date(),
+        syncVersion: sql`${parties.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(parties.id, partyId),
+          eq(parties.businessId, businessId),
+          eq(parties.isDeleted, false),
+        ),
+      );
+  }
+
   private toRecord(row: PartyRow, balance?: string): PartyRecord {
     const openingBalance = row.openingBalance ?? '0';
     const ledgerBalance = balance ?? openingBalance;
@@ -475,6 +490,8 @@ export class PartyRepository {
       balance: ledgerBalance,
       is_active: row.isActive,
       notes: row.notes,
+      profile_image_url: row.profileImageUrl,
+      profile_media_asset_id: row.profileMediaAssetId,
       created_at: row.createdAt.toISOString(),
       updated_at: row.updatedAt.toISOString(),
     };
