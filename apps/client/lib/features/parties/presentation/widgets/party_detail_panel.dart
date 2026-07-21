@@ -53,8 +53,7 @@ class PartyDetailPanel extends ConsumerWidget {
             ?.value
             .where((item) => item.id == party.id)
             .firstOrNull;
-        final imageUrl =
-            listParty?.profileImageUrl ?? party.profileImageUrl;
+        final imageUrl = listParty?.profileImageUrl ?? party.profileImageUrl;
         final mediaId =
             listParty?.profileMediaAssetId ?? party.profileMediaAssetId;
         final displayParty = party.copyWith(
@@ -281,8 +280,12 @@ class _PartyDetailHeader extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.xs),
               ],
               PartyAvatar(
+                key: ValueKey(
+                  'party-detail-avatar-${party.id}-${party.profileMediaAssetId ?? party.profileImageUrl ?? 'none'}',
+                ),
                 name: party.name,
                 seed: party.id,
+                partyId: party.id,
                 diameter: 56,
                 displayContext: ImageDisplayContext.detail,
                 profileImageUrl: party.profileImageUrl,

@@ -296,6 +296,7 @@ class _CustomerSearchResults extends StatelessWidget {
                 leading: PartyAvatar(
                   name: customer.name,
                   seed: customer.id,
+                  partyId: customer.id,
                   diameter: 32,
                   profileImageUrl: customer.profileImageUrl,
                   profileMediaAssetId: customer.profileMediaAssetId,

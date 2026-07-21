@@ -455,9 +455,12 @@ class PartyService {
     // Backend does single-substring ILIKE, so "distributor b" won't match
     // "Britannia Distributor". We fetch results for each word separately,
     // then intersect by id so only parties matching ALL words are returned.
-    final words = searchQuery?.trim().split(RegExp(r'\s+'))
-          .where((w) => w.isNotEmpty)
-          .toList() ??
+    final words =
+        searchQuery
+            ?.trim()
+            .split(RegExp(r'\s+'))
+            .where((w) => w.isNotEmpty)
+            .toList() ??
         [];
 
     // Single word or empty — use existing single-fetch logic
@@ -558,8 +561,7 @@ class PartyService {
         PartyListFilter.active => party.isActive,
         PartyListFilter.inactive => !party.isActive,
       };
-    }).toList()
-      ..sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
+    }).toList()..sort((a, b) => b.balance.abs().compareTo(a.balance.abs()));
     return filtered;
   }
 
@@ -825,11 +827,39 @@ class PartyList extends _$PartyList {
   }) async {
     final service = await ref.read(partyServiceProvider.future);
     try {
-      final updated = await service.updateParty(
+      final existing =
+          state.asData?.value
+              .where((party) => party.id == partyId)
+              .firstOrNull ??
+          ref.read(partyDetailProvider(partyId)).asData?.value;
+
+      var updated = await service.updateParty(
         partyId,
         result,
         isActive: isActive,
       );
+
+      // Preserve a just-uploaded profile image if the PATCH response raced
+      // ahead of the media bind and came back without it.
+      final keepImage = existing?.profileImageUrl;
+      final keepMediaId = existing?.profileMediaAssetId;
+      if ((updated.profileImageUrl == null ||
+              updated.profileImageUrl!.trim().isEmpty) &&
+          keepImage != null &&
+          keepImage.trim().isNotEmpty) {
+        updated = updated.copyWith(
+          profileImageUrl: keepImage,
+          profileMediaAssetId: keepMediaId,
+        );
+        unawaited(
+          service.persistPartyProfileImage(
+            partyId,
+            profileImageUrl: keepImage,
+            profileMediaAssetId: keepMediaId,
+          ),
+        );
+      }
+
       _upsertInState(updated);
       ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
       refreshAfterPartyMutation(ref, refreshList: false);
@@ -925,7 +955,8 @@ class PartyList extends _$PartyList {
     bool clear = false,
   }) {
     final current = state.asData?.value;
-    final existing = current?.where((p) => p.id == partyId).firstOrNull ??
+    final existing =
+        current?.where((p) => p.id == partyId).firstOrNull ??
         ref.read(partyDetailProvider(partyId)).asData?.value;
     if (existing == null) return;
 
@@ -937,7 +968,9 @@ class PartyList extends _$PartyList {
     _upsertInState(updated);
     ref.read(partyDetailProvider(partyId).notifier).setParty(updated);
     unawaited(
-      ref.read(partyServiceProvider.future).then(
+      ref
+          .read(partyServiceProvider.future)
+          .then(
             (service) => service.persistPartyProfileImage(
               partyId,
               profileImageUrl: updated.profileImageUrl,

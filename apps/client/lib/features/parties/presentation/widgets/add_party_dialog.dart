@@ -628,11 +628,39 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     setState(() => _isSaving = true);
 
     try {
-      await ref.read(partyListProvider.notifier).updateParty(
+      // Finish any in-flight photo upload before PATCHing / closing the dialog.
+      // Otherwise Update overwrites list/detail with a party that still has no
+      // profile image, and a disposed editor never patches the final URL.
+      final editor = _profileImageEditorKey.currentState;
+      if (editor != null) {
+        await editor.waitForIdle();
+        _profileImageUrl = editor.imageUrl ?? _profileImageUrl;
+        _profileMediaAssetId = editor.mediaAssetId ?? _profileMediaAssetId;
+      }
+
+      final updated = await ref
+          .read(partyListProvider.notifier)
+          .updateParty(
             party.id,
             result,
             isActive: party.isActive,
           );
+
+      // If Update raced ahead of bind on the server, keep the uploaded image.
+      final imageUrl = _profileImageUrl ?? updated.profileImageUrl;
+      final mediaId = _profileMediaAssetId ?? updated.profileMediaAssetId;
+      if (imageUrl != updated.profileImageUrl ||
+          mediaId != updated.profileMediaAssetId) {
+        ref
+            .read(partyListProvider.notifier)
+            .patchProfileImage(
+              party.id,
+              profileImageUrl: imageUrl,
+              profileMediaAssetId: mediaId,
+              clear: imageUrl == null && mediaId == null,
+            );
+      }
+
       if (!mounted) return;
 
       _showSaveFeedback(
@@ -682,7 +710,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     setState(() => _isSaving = true);
 
     try {
-      final created = await ref.read(partyListProvider.notifier).createParty(
+      final created = await ref
+          .read(partyListProvider.notifier)
+          .createParty(
             result,
             selectCreated: selectCreated,
           );
@@ -692,7 +722,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       if (editor != null && editor.hasPendingUpload) {
         try {
           await editor.flushPendingUpload(created.id);
-          ref.read(partyListProvider.notifier).patchProfileImage(
+          ref
+              .read(partyListProvider.notifier)
+              .patchProfileImage(
                 created.id,
                 profileImageUrl: _profileImageUrl,
                 profileMediaAssetId: _profileMediaAssetId,
@@ -909,11 +941,15 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               ),
             ),
             IconButton(
-              onPressed: _isSaving ? null : () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Party settings coming soon')),
-                );
-              },
+              onPressed: _isSaving
+                  ? null
+                  : () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Party settings coming soon'),
+                        ),
+                      );
+                    },
               icon: const Icon(Icons.settings_outlined, size: 20),
               color: AppColors.textSecondary,
               tooltip: 'Settings',
@@ -1003,7 +1039,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       ),
     ];
 
-    final seed = widget.partyToEdit?.id ??
+    final seed =
+        widget.partyToEdit?.id ??
         widget.duplicateFrom?.id ??
         _partyNameController.text.trim();
 
@@ -1024,7 +1061,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               _profileMediaAssetId = mediaAssetId;
               final partyId = widget.partyToEdit?.id;
               if (partyId != null) {
-                ref.read(partyListProvider.notifier).patchProfileImage(
+                ref
+                    .read(partyListProvider.notifier)
+                    .patchProfileImage(
                       partyId,
                       profileImageUrl: imageUrl,
                       profileMediaAssetId: mediaAssetId,
@@ -1128,15 +1167,14 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           maxLength: maxLength,
-          buildCounter:
-              maxLength == null
-                  ? null
-                  : (
-                    context, {
-                    required currentLength,
-                    required isFocused,
-                    maxLength,
-                  }) => null,
+          buildCounter: maxLength == null
+              ? null
+              : (
+                  context, {
+                  required currentLength,
+                  required isFocused,
+                  maxLength,
+                }) => null,
           decoration: buildSaleFieldDecoration(
             hint: hint,
             hasError: hasError,

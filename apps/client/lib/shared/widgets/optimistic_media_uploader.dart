@@ -159,11 +159,17 @@ class OptimisticMediaUploader extends StatelessWidget {
   }) {
     // Prefer local bytes so the preview never flashes back to a network load.
     if (_hasOptimistic) {
-      return Image.memory(
-        optimisticBytes!,
-        fit: fit,
-        gaplessPlayback: true,
-        cacheWidth: cacheWidth,
+      return SizedBox(
+        width: _w,
+        height: _h,
+        child: Image.memory(
+          optimisticBytes!,
+          width: _w,
+          height: _h,
+          fit: fit,
+          gaplessPlayback: true,
+          cacheWidth: cacheWidth,
+        ),
       );
     }
 

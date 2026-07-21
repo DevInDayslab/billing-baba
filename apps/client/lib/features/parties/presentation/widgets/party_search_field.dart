@@ -110,7 +110,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     ].join(' ').toLowerCase();
 
     // Every query word must be found somewhere in the combined text
-    return queryWords.every((word) => searchableText.contains(word));
+    return queryWords.every(searchableText.contains);
   }
 
   Future<void> _openAddPartyDialog() async {
@@ -124,7 +124,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     if (!mounted) return;
     widget.onSelected(result.partyName);
 
-    PartyModel? match = ref
+    var match = ref
         .read(partiesListProvider)
         .where((party) => party.name == result.partyName)
         .firstOrNull;
@@ -224,6 +224,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
                     leading: PartyAvatar(
                       name: party.name,
                       seed: party.id,
+                      partyId: party.id,
                       diameter: 32,
                       profileImageUrl: party.profileImageUrl,
                       profileMediaAssetId: party.profileMediaAssetId,
@@ -252,7 +253,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
   Widget build(BuildContext context) {
     // OverlayEntry does not rebuild when async providers resolve; refresh it
     // manually so the loading spinner is replaced with party results.
-    ref.listen(partyPickerListProvider, (_, __) {
+    ref.listen(partyPickerListProvider, (_, _) {
       _overlayEntry?.markNeedsBuild();
     });
 

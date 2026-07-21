@@ -3,18 +3,22 @@ import 'dart:typed_data';
 
 import 'package:billing_baba/core/media/pick_media_image.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/data/party_profile_image_repository.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_avatar.dart';
+import 'package:billing_baba/features/parties/providers/party_optimistic_profile_images_provider.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
 import 'package:billing_baba/shared/widgets/optimistic_media_uploader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Business-logo-style profile image editor for parties.
+/// Party profile photo editor — same optimistic flow as Business Logo.
 ///
-/// When [partyId] is null (create flow), the pick is kept locally until
-/// [PartyProfileImageEditorState.flushPendingUpload] runs after create.
+/// 1. Paint local preview immediately
+/// 2. Upload in the background
+/// 3. Keep local bytes (no flicker to network)
+/// 4. On failure, restore previous image + snackbar
 class PartyProfileImageEditor extends ConsumerStatefulWidget {
   const PartyProfileImageEditor({
     required this.partyName,
@@ -34,12 +38,10 @@ class PartyProfileImageEditor extends ConsumerStatefulWidget {
   final String? initialMediaAssetId;
   final double size;
 
-  /// Called after a successful upload/delete (or local clear while creating).
   final void Function({
     required String? imageUrl,
     required String? mediaAssetId,
-  })?
-  onChanged;
+  })? onChanged;
 
   @override
   ConsumerState<PartyProfileImageEditor> createState() =>
@@ -56,9 +58,22 @@ class PartyProfileImageEditorState
   String? _pendingMimeType;
   bool _uploading = false;
   var _uploadGeneration = 0;
+  Completer<void>? _inFlight;
 
   bool get hasPendingUpload =>
       _pendingUploadBytes != null && _pendingUploadBytes!.isNotEmpty;
+
+  bool get isBusy => _uploading || (_inFlight?.isCompleted == false);
+
+  String? get imageUrl => _imageUrl;
+  String? get mediaAssetId => _mediaAssetId;
+
+  Future<void> waitForIdle() async {
+    final inFlight = _inFlight;
+    if (inFlight != null && !inFlight.isCompleted) {
+      await inFlight.future;
+    }
+  }
 
   @override
   void initState() {
@@ -71,12 +86,12 @@ class PartyProfileImageEditorState
   @override
   void didUpdateWidget(covariant PartyProfileImageEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialImageUrl != widget.initialImageUrl &&
-        _optimisticBytes == null) {
+    // Match business profile: never clobber an active local preview.
+    if (_uploading || _optimisticBytes != null) return;
+    if (oldWidget.initialImageUrl != widget.initialImageUrl) {
       _imageUrl = widget.initialImageUrl;
     }
-    if (oldWidget.initialMediaAssetId != widget.initialMediaAssetId &&
-        _optimisticBytes == null) {
+    if (oldWidget.initialMediaAssetId != widget.initialMediaAssetId) {
       _mediaAssetId = widget.initialMediaAssetId;
     }
   }
@@ -94,64 +109,163 @@ class PartyProfileImageEditorState
     );
   }
 
+  void _setSharedOptimistic(String? partyId, Uint8List? bytes) {
+    if (partyId == null || partyId.isEmpty) return;
+    final notifier = ref.read(partyOptimisticProfileImagesProvider.notifier);
+    if (bytes == null || bytes.isEmpty) {
+      notifier.clear(partyId);
+    } else {
+      notifier.setBytes(partyId, bytes);
+    }
+  }
+
+  void _patchProviders({
+    required String partyId,
+    required String? imageUrl,
+    required String? mediaAssetId,
+    bool clear = false,
+  }) {
+    try {
+      ref.read(partyListProvider.notifier).patchProfileImage(
+            partyId,
+            profileImageUrl: imageUrl,
+            profileMediaAssetId: mediaAssetId,
+            clear: clear,
+          );
+    } on Object {
+      // Scope may already be gone after dialog dismiss.
+    }
+  }
+
+  Completer<void> _beginInFlight() {
+    final previous = _inFlight;
+    if (previous != null && !previous.isCompleted) {
+      previous.complete();
+    }
+    final completer = Completer<void>();
+    _inFlight = completer;
+    return completer;
+  }
+
+  void _endInFlight(Completer<void> completer) {
+    if (!completer.isCompleted) completer.complete();
+    if (identical(_inFlight, completer)) _inFlight = null;
+  }
+
   Future<void> flushPendingUpload(String partyId) async {
     final bytes = _pendingUploadBytes;
     final mime = _pendingMimeType;
     if (bytes == null || mime == null) return;
+
+    // Promote create-flow preview into the shared optimistic map for the new id.
+    if (_optimisticBytes != null) {
+      _setSharedOptimistic(partyId, _optimisticBytes);
+    }
+
     await _performUpload(partyId: partyId, bytes: bytes, mimeType: mime);
-    if (!mounted) return;
-    setState(() {
-      _pendingUploadBytes = null;
-      _pendingMimeType = null;
-    });
+    _pendingUploadBytes = null;
+    _pendingMimeType = null;
+    if (mounted) setState(() {});
   }
 
   Future<void> _onReplace() async {
+    final repoReady = _repository != null || widget.partyId == null;
+    if (!repoReady) {
+      await _initRepository();
+    }
+
     final picked = await pickAndPrepareMediaImage(context: context);
     if (picked == null || !mounted) return;
 
     final generation = ++_uploadGeneration;
     final previousUrl = _imageUrl;
     final previousMediaId = _mediaAssetId;
+    final partyId = widget.partyId;
+    final completer = _beginInFlight();
 
+    // Paint local preview immediately — same as Business Logo.
     setState(() {
       _optimisticBytes = picked.previewBytes;
       _uploading = true;
     });
+    _setSharedOptimistic(partyId, picked.previewBytes);
 
-    final partyId = widget.partyId;
     if (partyId == null || partyId.isEmpty) {
-      // Create flow — keep bytes until the party exists.
       setState(() {
         _pendingUploadBytes = picked.bytes;
         _pendingMimeType = picked.mimeType;
         _uploading = false;
-        _imageUrl = null;
-        _mediaAssetId = null;
       });
-      _notifyChanged();
+      _endInFlight(completer);
       return;
     }
 
     try {
-      await _performUpload(
+      if (_repository == null) {
+        final api = await ref.read(apiClientProvider.future);
+        _repository = PartyProfileImageRepository(api.dio);
+      }
+      if (!mounted || _uploadGeneration != generation) return;
+
+      final upload = await _repository!.uploadProfileImage(
         partyId: partyId,
         bytes: picked.bytes,
         mimeType: picked.mimeType,
-        generation: generation,
+      );
+      if (_uploadGeneration != generation) return;
+
+      final newUrl = upload['url'] as String?;
+      final newMediaId = upload['media_asset_id'] as String?;
+
+      // Keep optimistic bytes (business logo pattern) — no network flicker.
+      _imageUrl = newUrl;
+      _mediaAssetId = newMediaId;
+      _uploading = false;
+      _notifyChanged();
+      _patchProviders(
+        partyId: partyId,
+        imageUrl: newUrl,
+        mediaAssetId: newMediaId,
+      );
+      if (mounted) setState(() {});
+
+      unawaited(
+        ref.read(imageServiceProvider).replaceImage(
+              oldUrl: previousUrl,
+              newUrl: newUrl,
+              oldCacheKey: buildImageCacheKey(
+                mediaAssetId: previousMediaId,
+                fallbackUrl: previousUrl,
+              ),
+              newCacheKey: buildImageCacheKey(
+                mediaAssetId: newMediaId,
+                fallbackUrl: newUrl,
+              ),
+              mediaAssetId: previousMediaId,
+            ),
       );
     } on Exception catch (e) {
-      if (!mounted || _uploadGeneration != generation) return;
-      setState(() {
-        _optimisticBytes = null;
-        _imageUrl = previousUrl;
-        _mediaAssetId = previousMediaId;
-        _uploading = false;
-      });
+      if (_uploadGeneration != generation) return;
+      _optimisticBytes = null;
+      _imageUrl = previousUrl;
+      _mediaAssetId = previousMediaId;
+      _uploading = false;
+      _setSharedOptimistic(partyId, null);
       _notifyChanged();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Upload failed: $e')),
+      _patchProviders(
+        partyId: partyId,
+        imageUrl: previousUrl,
+        mediaAssetId: previousMediaId,
+        clear: previousUrl == null && previousMediaId == null,
       );
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e')),
+        );
+      }
+    } finally {
+      _endInFlight(completer);
     }
   }
 
@@ -159,48 +273,39 @@ class PartyProfileImageEditorState
     required String partyId,
     required Uint8List bytes,
     required String mimeType,
-    int? generation,
   }) async {
-    final repo = _repository;
-    if (repo == null) {
+    if (_repository == null) {
       final api = await ref.read(apiClientProvider.future);
       _repository = PartyProfileImageRepository(api.dio);
     }
-    final uploadRepo = _repository!;
-    final gen = generation ?? ++_uploadGeneration;
     final previousUrl = _imageUrl;
     final previousMediaId = _mediaAssetId;
+    final generation = ++_uploadGeneration;
 
-    setState(() => _uploading = true);
+    if (mounted) setState(() => _uploading = true);
 
-    final upload = await uploadRepo.uploadProfileImage(
+    final upload = await _repository!.uploadProfileImage(
       partyId: partyId,
       bytes: bytes,
       mimeType: mimeType,
     );
-    if (!mounted || _uploadGeneration != gen) return;
+    if (_uploadGeneration != generation) return;
 
     final newUrl = upload['url'] as String?;
     final newMediaId = upload['media_asset_id'] as String?;
-
-    setState(() {
-      _imageUrl = newUrl;
-      _mediaAssetId = newMediaId;
-      // Keep local preview until the next frame so AppNetworkImage can mount
-      // with the signed URL without flashing the initials placeholder.
-      _uploading = false;
-    });
+    _imageUrl = newUrl;
+    _mediaAssetId = newMediaId;
+    _uploading = false;
     _notifyChanged();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _uploadGeneration != gen) return;
-      setState(() => _optimisticBytes = null);
-    });
+    _patchProviders(
+      partyId: partyId,
+      imageUrl: newUrl,
+      mediaAssetId: newMediaId,
+    );
+    if (mounted) setState(() {});
 
     unawaited(
-      ref
-          .read(imageServiceProvider)
-          .replaceImage(
+      ref.read(imageServiceProvider).replaceImage(
             oldUrl: previousUrl,
             newUrl: newUrl,
             oldCacheKey: buildImageCacheKey(
@@ -220,6 +325,8 @@ class PartyProfileImageEditorState
     final generation = ++_uploadGeneration;
     final previousUrl = _imageUrl;
     final previousMediaId = _mediaAssetId;
+    final partyId = widget.partyId;
+    final completer = _beginInFlight();
 
     setState(() {
       _optimisticBytes = null;
@@ -229,33 +336,34 @@ class PartyProfileImageEditorState
       _mediaAssetId = null;
       _uploading = true;
     });
+    _setSharedOptimistic(partyId, null);
     _notifyChanged();
-
-    final partyId = widget.partyId;
-    if (partyId == null || partyId.isEmpty) {
-      setState(() => _uploading = false);
-      return;
+    if (partyId != null && partyId.isNotEmpty) {
+      _patchProviders(
+        partyId: partyId,
+        imageUrl: null,
+        mediaAssetId: null,
+        clear: true,
+      );
     }
 
-    final repo = _repository;
-    if (repo == null) {
-      setState(() {
-        _imageUrl = previousUrl;
-        _mediaAssetId = previousMediaId;
-        _uploading = false;
-      });
-      _notifyChanged();
+    if (partyId == null || partyId.isEmpty) {
+      if (mounted) setState(() => _uploading = false);
+      _endInFlight(completer);
       return;
     }
 
     try {
-      await repo.deleteProfileImage(partyId);
-      if (!mounted || _uploadGeneration != generation) return;
-      setState(() => _uploading = false);
+      if (_repository == null) {
+        final api = await ref.read(apiClientProvider.future);
+        _repository = PartyProfileImageRepository(api.dio);
+      }
+      await _repository!.deleteProfileImage(partyId);
+      if (_uploadGeneration != generation) return;
+      _uploading = false;
+      if (mounted) setState(() {});
       unawaited(
-        ref
-            .read(imageServiceProvider)
-            .invalidateImage(
+        ref.read(imageServiceProvider).invalidateImage(
               url: previousUrl,
               cacheKey: buildImageCacheKey(
                 mediaAssetId: previousMediaId,
@@ -265,16 +373,25 @@ class PartyProfileImageEditorState
             ),
       );
     } on Exception catch (e) {
-      if (!mounted || _uploadGeneration != generation) return;
-      setState(() {
-        _imageUrl = previousUrl;
-        _mediaAssetId = previousMediaId;
-        _uploading = false;
-      });
+      if (_uploadGeneration != generation) return;
+      _imageUrl = previousUrl;
+      _mediaAssetId = previousMediaId;
+      _uploading = false;
       _notifyChanged();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Remove failed: $e')),
+      _patchProviders(
+        partyId: partyId,
+        imageUrl: previousUrl,
+        mediaAssetId: previousMediaId,
+        clear: previousUrl == null && previousMediaId == null,
       );
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Remove failed: $e')),
+        );
+      }
+    } finally {
+      _endInFlight(completer);
     }
   }
 
@@ -297,10 +414,10 @@ class PartyProfileImageEditorState
         name: displayName,
         seed: widget.seed,
         diameter: widget.size,
+        partyId: widget.partyId,
       ),
       onReplace: _onReplace,
-      onRemove:
-          (_imageUrl != null && _imageUrl!.trim().isNotEmpty) ||
+      onRemove: (_imageUrl != null && _imageUrl!.trim().isNotEmpty) ||
               (_optimisticBytes != null && _optimisticBytes!.isNotEmpty)
           ? _onRemove
           : null,

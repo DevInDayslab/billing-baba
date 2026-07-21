@@ -9,9 +9,9 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_s
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/parties/application/party_list_image_warmup.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
-import 'package:billing_baba/features/parties/presentation/widgets/party_avatar.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_avatar.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/shared/widgets/table_filters/column_filter_trigger.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
@@ -301,8 +301,12 @@ class _PartyListTile extends StatelessWidget {
         child: Row(
           children: [
             PartyAvatar(
+              key: ValueKey(
+                'party-avatar-${party.id}-${party.profileMediaAssetId ?? party.profileImageUrl ?? 'none'}',
+              ),
               name: party.name,
               seed: party.id,
+              partyId: party.id,
               diameter: 28,
               profileImageUrl: party.profileImageUrl,
               profileMediaAssetId: party.profileMediaAssetId,

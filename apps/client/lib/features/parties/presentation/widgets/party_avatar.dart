@@ -1,10 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:billing_baba/core/media/image_display_context.dart';
 import 'package:billing_baba/features/business/utils/business_avatar_color.dart';
+import 'package:billing_baba/features/parties/providers/party_optimistic_profile_images_provider.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Circular party avatar with initials fallback and optional profile image.
-class PartyAvatar extends StatelessWidget {
+class PartyAvatar extends ConsumerWidget {
   const PartyAvatar({
     required this.name,
     required this.seed,
@@ -12,8 +16,10 @@ class PartyAvatar extends StatelessWidget {
     this.fontSize,
     this.profileImageUrl,
     this.profileMediaAssetId,
+    this.optimisticBytes,
     this.displayContext = ImageDisplayContext.list,
     this.onTap,
+    this.partyId,
     super.key,
   });
 
@@ -23,8 +29,15 @@ class PartyAvatar extends StatelessWidget {
   final double? fontSize;
   final String? profileImageUrl;
   final String? profileMediaAssetId;
+
+  /// Explicit local preview bytes (e.g. dialog). When null, [partyId] may still
+  /// resolve bytes from [partyOptimisticProfileImagesProvider].
+  final Uint8List? optimisticBytes;
   final ImageDisplayContext displayContext;
   final VoidCallback? onTap;
+
+  /// When set, watches shared optimistic bytes so list/detail update instantly.
+  final String? partyId;
 
   String get _initial {
     final trimmed = name.trim();
@@ -50,8 +63,42 @@ class PartyAvatar extends StatelessWidget {
     );
   }
 
+  Widget _memoryAvatar(Uint8List bytes) {
+    return ClipOval(
+      child: SizedBox(
+        width: diameter,
+        height: diameter,
+        child: Image.memory(
+          bytes,
+          width: diameter,
+          height: diameter,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+        ),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sharedOptimistic = partyId == null
+        ? null
+        : ref.watch(
+            partyOptimisticProfileImagesProvider.select(
+              (map) => map[partyId!],
+            ),
+          );
+    final localBytes = optimisticBytes ?? sharedOptimistic;
+    if (localBytes != null && localBytes.isNotEmpty) {
+      final child = _memoryAvatar(localBytes);
+      if (onTap == null) return child;
+      return GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: child,
+      );
+    }
+
     final url = profileImageUrl?.trim();
     final mediaId = profileMediaAssetId?.trim();
     final hasUrl = url != null && url.isNotEmpty;
@@ -70,8 +117,6 @@ class PartyAvatar extends StatelessWidget {
             displayContext: displayContext,
             width: diameter,
             height: diameter,
-            // Avatars are always in-viewport when built; visibility detectors
-            // race with dialog/detail dispose and leave initials stuck.
             loadWhenVisible: false,
             placeholder: _initialsAvatar(),
             errorWidget: _initialsAvatar(),
