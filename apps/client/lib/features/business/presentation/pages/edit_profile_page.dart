@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:billing_baba/core/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/storage/media_upload_client.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
@@ -8,8 +10,9 @@ import 'package:billing_baba/features/business/application/business_profile_cont
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/data/business_branding_repository.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
-import 'package:billing_baba/features/business/presentation/widgets/branding_image_uploader.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
+import 'package:billing_baba/shared/widgets/app_network_image_cache.dart';
+import 'package:billing_baba/shared/widgets/optimistic_media_uploader.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,6 +27,12 @@ class EditProfilePage extends ConsumerStatefulWidget {
 
 class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   static const _saveButtonColor = Color(0xFFD32F2F);
+  static const _compactBreakpoint = 860.0;
+  static const _logoSize = 120.0;
+  static const _signatureWidth = 220.0;
+  static const _signatureHeight = 96.0;
+  static const double _mediaColumnWidth = _signatureWidth + 8;
+  static const _mediaToFormGap = 40.0;
 
   static const _pngOnly = {'image/png'};
   static const _logoMimes = {'image/png', 'image/jpeg', 'image/webp'};
@@ -86,13 +95,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   String? _logoUrl;
   String? _signatureUrl;
-  String? _stampUrl;
-  String? _upiQrUrl;
+  Uint8List? _logoOptimisticBytes;
+  Uint8List? _signatureOptimisticBytes;
 
   bool _uploadingLogo = false;
   bool _uploadingSignature = false;
-  bool _uploadingStamp = false;
-  bool _uploadingUpiQr = false;
+  var _logoUploadGeneration = 0;
+  var _signatureUploadGeneration = 0;
 
   BusinessBrandingRepository? _brandingRepository;
 
@@ -127,8 +136,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     super.dispose();
   }
 
-  void _hydrateFromProfile(BusinessProfileModel profile) {
-    if (_hydratedProfileId == profile.id) return;
+  void _hydrateFromProfile(
+    BusinessProfileModel profile, {
+    bool force = false,
+  }) {
+    if (!force && _hydratedProfileId == profile.id) return;
 
     _businessNameController.text = profile.name;
     _phoneController.text =
@@ -146,17 +158,25 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _hydratedProfileId = profile.id;
     _logoUrl = profile.logoUrl;
     _signatureUrl = profile.signatureUrl;
-    _stampUrl = profile.stampUrl;
-    _upiQrUrl = profile.upiQrUrl;
+    _logoOptimisticBytes = null;
+    _signatureOptimisticBytes = null;
   }
 
-  Future<void> _refreshProfile() async {
+  Future<void> _refreshProfile({bool syncFormFields = false}) async {
     final service = await ref.read(businessServiceProvider.future);
     final profile = await service.fetchBusinessProfile(forceRefresh: true);
     ref.read(businessProfileProvider.notifier).replaceWith(profile);
-    if (mounted) {
-      setState(() => _hydrateFromProfile(profile));
-    }
+    if (!mounted) return;
+
+    setState(() {
+      _logoUrl = profile.logoUrl;
+      _signatureUrl = profile.signatureUrl;
+      _profileSeed = profile.id;
+      // Keep optimistic local previews until the user picks a new image.
+      if (syncFormFields || _hydratedProfileId != profile.id) {
+        _hydrateFromProfile(profile, force: true);
+      }
+    });
   }
 
   Future<({Uint8List bytes, String mimeType})?> _pickImageBytes(
@@ -219,6 +239,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     upload,
     required void Function(bool value) setUploading,
     required void Function(String? url) setUrl,
+    required void Function(Uint8List? bytes) setOptimisticBytes,
+    required String? Function() currentUrl,
+    required int Function() nextGeneration,
+    required int Function() currentGeneration,
+    required void Function(String? url) patchProfileMedia,
   }) async {
     final repo = _brandingRepository;
     if (repo == null) return;
@@ -226,27 +251,42 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final picked = await _pickImageBytes(allowedMimes, maxBytes);
     if (picked == null) return;
 
-    setUploading(true);
-    setState(() {});
+    final generation = nextGeneration();
+    final previousUrl = currentUrl();
+
+    // Paint local preview immediately — do not wait for compress/network.
+    setState(() {
+      setOptimisticBytes(picked.bytes);
+      setUploading(true);
+    });
 
     try {
-      final result = await upload(repo, picked.bytes, picked.mimeType);
-      setUrl(result['url'] as String?);
-      await _refreshProfile();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image uploaded successfully')),
-        );
-      }
+      final prepared = await prepareMediaUploadBytes(
+        bytes: picked.bytes,
+        mimeType: picked.mimeType,
+      );
+      if (!mounted || currentGeneration() != generation) return;
+
+      final result = await upload(repo, prepared.bytes, prepared.mimeType);
+      if (!mounted || currentGeneration() != generation) return;
+
+      final newUrl = result['url'] as String?;
+      setState(() {
+        setUrl(newUrl);
+        setUploading(false);
+      });
+      patchProfileMedia(newUrl);
+      unawaited(evictAppNetworkImage(previousUrl));
     } on Exception catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e')),
-        );
-      }
-    } finally {
-      setUploading(false);
-      if (mounted) setState(() {});
+      if (!mounted || currentGeneration() != generation) return;
+      setState(() {
+        setOptimisticBytes(null);
+        setUrl(previousUrl);
+        setUploading(false);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload failed: $e')),
+      );
     }
   }
 
@@ -254,32 +294,126 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     required Future<void> Function(BusinessBrandingRepository repo) delete,
     required void Function(bool value) setUploading,
     required void Function(String? url) setUrl,
+    required void Function(Uint8List? bytes) setOptimisticBytes,
+    required String? Function() currentUrl,
+    required int Function() nextGeneration,
+    required int Function() currentGeneration,
+    required void Function() patchProfileMediaCleared,
+    required void Function(String? url) patchProfileMedia,
   }) async {
     final repo = _brandingRepository;
     if (repo == null) return;
 
-    setUploading(true);
-    setState(() {});
+    final generation = nextGeneration();
+    final previousUrl = currentUrl();
+
+    setState(() {
+      setOptimisticBytes(null);
+      setUrl(null);
+      setUploading(true);
+    });
+    patchProfileMediaCleared();
 
     try {
       await delete(repo);
-      setUrl(null);
-      await _refreshProfile();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image removed')),
-        );
-      }
+      if (!mounted || currentGeneration() != generation) return;
+      setState(() => setUploading(false));
+      unawaited(evictAppNetworkImage(previousUrl));
     } on Exception catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Delete failed: $e')),
-        );
-      }
-    } finally {
-      setUploading(false);
-      if (mounted) setState(() {});
+      if (!mounted || currentGeneration() != generation) return;
+      setState(() {
+        setUrl(previousUrl);
+        setUploading(false);
+      });
+      patchProfileMedia(previousUrl);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Delete failed: $e')),
+      );
     }
+  }
+
+  void _patchLogoOnProfile(String? url) {
+    final current = ref.read(businessProfileProvider).asData?.value;
+    if (current == null) return;
+    ref
+        .read(businessProfileProvider.notifier)
+        .replaceWith(
+          url == null
+              ? current.copyWith(clearLogoUrl: true)
+              : current.copyWith(logoUrl: url),
+        );
+  }
+
+  void _patchSignatureOnProfile(String? url) {
+    final current = ref.read(businessProfileProvider).asData?.value;
+    if (current == null) return;
+    ref
+        .read(businessProfileProvider.notifier)
+        .replaceWith(
+          url == null
+              ? current.copyWith(clearSignatureUrl: true)
+              : current.copyWith(signatureUrl: url),
+        );
+  }
+
+  Future<void> _uploadLogo() {
+    return _uploadBranding(
+      allowedMimes: _logoMimes,
+      maxBytes: 2 * 1024 * 1024,
+      upload: (repo, bytes, mime) =>
+          repo.uploadLogo(bytes: bytes, mimeType: mime),
+      setUploading: (v) => _uploadingLogo = v,
+      setUrl: (url) => _logoUrl = url,
+      setOptimisticBytes: (bytes) => _logoOptimisticBytes = bytes,
+      currentUrl: () => _logoUrl,
+      nextGeneration: () => ++_logoUploadGeneration,
+      currentGeneration: () => _logoUploadGeneration,
+      patchProfileMedia: _patchLogoOnProfile,
+    );
+  }
+
+  Future<void> _deleteLogo() {
+    return _deleteBranding(
+      delete: (repo) => repo.deleteLogo(),
+      setUploading: (v) => _uploadingLogo = v,
+      setUrl: (url) => _logoUrl = url,
+      setOptimisticBytes: (bytes) => _logoOptimisticBytes = bytes,
+      currentUrl: () => _logoUrl,
+      nextGeneration: () => ++_logoUploadGeneration,
+      currentGeneration: () => _logoUploadGeneration,
+      patchProfileMediaCleared: () => _patchLogoOnProfile(null),
+      patchProfileMedia: _patchLogoOnProfile,
+    );
+  }
+
+  Future<void> _uploadSignature() {
+    return _uploadBranding(
+      allowedMimes: _pngOnly,
+      maxBytes: 1024 * 1024,
+      upload: (repo, bytes, mime) =>
+          repo.uploadSignature(bytes: bytes, mimeType: mime),
+      setUploading: (v) => _uploadingSignature = v,
+      setUrl: (url) => _signatureUrl = url,
+      setOptimisticBytes: (bytes) => _signatureOptimisticBytes = bytes,
+      currentUrl: () => _signatureUrl,
+      nextGeneration: () => ++_signatureUploadGeneration,
+      currentGeneration: () => _signatureUploadGeneration,
+      patchProfileMedia: _patchSignatureOnProfile,
+    );
+  }
+
+  Future<void> _deleteSignature() {
+    return _deleteBranding(
+      delete: (repo) => repo.deleteSignature(),
+      setUploading: (v) => _uploadingSignature = v,
+      setUrl: (url) => _signatureUrl = url,
+      setOptimisticBytes: (bytes) => _signatureOptimisticBytes = bytes,
+      currentUrl: () => _signatureUrl,
+      nextGeneration: () => ++_signatureUploadGeneration,
+      currentGeneration: () => _signatureUploadGeneration,
+      patchProfileMediaCleared: () => _patchSignatureOnProfile(null),
+      patchProfileMedia: _patchSignatureOnProfile,
+    );
   }
 
   List<String> _dropdownOptions(List<String> options, String? selected) {
@@ -313,6 +447,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
     if (updated != null) {
       _syncDropdownsFromProfile(updated);
+      await _refreshProfile();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Business profile saved successfully')),
       );
@@ -340,13 +476,131 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       _profileSeed = profile.id;
       _logoUrl = profile.logoUrl;
       _signatureUrl = profile.signatureUrl;
-      _stampUrl = profile.stampUrl;
-      _upiQrUrl = profile.upiQrUrl;
       _phoneController.text =
           Validators.normalizeIndianPhone(profile.phone) ?? '';
       _pincodeController.text =
           Validators.normalizePincode(profile.pincode) ?? '';
     });
+  }
+
+  Widget _buildBusinessDetailsColumn(EditBusinessProfileFormState formState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(title: 'Business Details'),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Business Name',
+          required: true,
+          errorText: formState.errorFor('name'),
+          child: _OutlinedField(
+            controller: _businessNameController,
+            hintText: 'Business Name',
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Phone Number',
+          errorText: formState.errorFor('phone'),
+          child: _OutlinedField(
+            controller: _phoneController,
+            hintText: 'Phone Number',
+            keyboardType: TextInputType.phone,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'GSTIN',
+          errorText: formState.errorFor('gstin'),
+          child: _OutlinedField(
+            controller: _gstinController,
+            hintText: 'GSTIN',
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Email ID',
+          errorText: formState.errorFor('email'),
+          child: _OutlinedField(
+            controller: _emailController,
+            hintText: 'Email ID',
+            keyboardType: TextInputType.emailAddress,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Business Address',
+          errorText: formState.errorFor('address'),
+          child: _OutlinedField(
+            controller: _addressController,
+            hintText: 'Business Address',
+            minLines: 4,
+            maxLines: 4,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMoreDetailsColumn(EditBusinessProfileFormState formState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(title: 'More Details'),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Business Type',
+          errorText: formState.errorFor('business_type'),
+          child: _OutlinedDropdown<String>(
+            value: _businessType,
+            hintText: 'Business Type',
+            items: _dropdownOptions(_businessTypes, _businessType),
+            onChanged: (value) => setState(() => _businessType = value),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Business Category',
+          errorText: formState.errorFor('business_category'),
+          child: _OutlinedDropdown<String>(
+            value: _businessCategory,
+            hintText: 'Business Category',
+            items: _dropdownOptions(_businessCategories, _businessCategory),
+            onChanged: (value) => setState(() => _businessCategory = value),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'State',
+          errorText: formState.errorFor('state'),
+          child: _OutlinedDropdown<String>(
+            value: _state,
+            hintText: 'State',
+            items: _dropdownOptions(_indianStates, _state),
+            onChanged: (value) => setState(() => _state = value),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'Pincode',
+          errorText: formState.errorFor('pincode'),
+          child: _OutlinedField(
+            controller: _pincodeController,
+            hintText: 'Pincode',
+            keyboardType: TextInputType.number,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _LabeledField(
+          label: 'UPI ID',
+          errorText: formState.errorFor('upi_id'),
+          child: _OutlinedField(
+            controller: _upiIdController,
+            hintText: 'merchant@upi',
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -417,255 +671,86 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 120,
-                            child: BrandingImageUploader(
-                              label: 'Logo',
-                              imageUrl: _logoUrl,
-                              isUploading: _uploadingLogo,
-                              shape: BrandingImageShape.circle,
-                              width: 100,
-                              placeholder: BusinessAvatar(
-                                name: displayName,
-                                seed: _profileSeed ?? profile.id,
-                                diameter: 96,
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final stacked =
+                              constraints.maxWidth < _compactBreakpoint;
+                          final mediaColumn = Column(
+                            children: [
+                              OptimisticMediaUploader(
+                                label: 'Logo',
+                                imageUrl: _logoUrl,
+                                optimisticBytes: _logoOptimisticBytes,
+                                isUploading: _uploadingLogo,
+                                replaceLabel: 'Replace Business Logo',
+                                removeLabel: 'Remove Business Logo',
+                                placeholder: BusinessAvatar(
+                                  name: displayName,
+                                  seed: _profileSeed ?? profile.id,
+                                  diameter: _logoSize,
+                                ),
+                                onReplace: _uploadLogo,
+                                onRemove:
+                                    (_logoUrl != null &&
+                                            _logoUrl!.trim().isNotEmpty) ||
+                                        _logoOptimisticBytes != null
+                                    ? _deleteLogo
+                                    : null,
                               ),
-                              onUpload: () => _uploadBranding(
-                                allowedMimes: _logoMimes,
-                                maxBytes: 2 * 1024 * 1024,
-                                upload: (repo, bytes, mime) =>
-                                    repo.uploadLogo(bytes: bytes, mimeType: mime),
-                                setUploading: (v) => _uploadingLogo = v,
-                                setUrl: (url) => _logoUrl = url,
+                              const SizedBox(height: AppSpacing.md),
+                              OptimisticMediaUploader(
+                                label: 'Signature',
+                                width: _signatureWidth,
+                                height: _signatureHeight,
+                                imageUrl: _signatureUrl,
+                                optimisticBytes: _signatureOptimisticBytes,
+                                isUploading: _uploadingSignature,
+                                shape: OptimisticMediaShape.roundedRect,
+                                replaceLabel: 'Replace Signature',
+                                removeLabel: 'Remove Signature',
+                                emptyLabel: 'Sign',
+                                onReplace: _uploadSignature,
+                                onRemove:
+                                    (_signatureUrl != null &&
+                                            _signatureUrl!.trim().isNotEmpty) ||
+                                        _signatureOptimisticBytes != null
+                                    ? _deleteSignature
+                                    : null,
                               ),
-                              onDelete: () => _deleteBranding(
-                                delete: (repo) => repo.deleteLogo(),
-                                setUploading: (v) => _uploadingLogo = v,
-                                setUrl: (url) => _logoUrl = url,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: Column(
+                            ],
+                          );
+                          final details = _buildBusinessDetailsColumn(
+                            formState,
+                          );
+                          final more = _buildMoreDetailsColumn(formState);
+
+                          if (stacked) {
+                            return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const _SectionHeader(title: 'Business Details'),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Business Name',
-                                  required: true,
-                                  errorText: formState.errorFor('name'),
-                                  child: _OutlinedField(
-                                    controller: _businessNameController,
-                                    hintText: 'Business Name',
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Phone Number',
-                                  errorText: formState.errorFor('phone'),
-                                  child: _OutlinedField(
-                                    controller: _phoneController,
-                                    hintText: 'Phone Number',
-                                    keyboardType: TextInputType.phone,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'GSTIN',
-                                  errorText: formState.errorFor('gstin'),
-                                  child: _OutlinedField(
-                                    controller: _gstinController,
-                                    hintText: 'GSTIN',
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Email ID',
-                                  errorText: formState.errorFor('email'),
-                                  child: _OutlinedField(
-                                    controller: _emailController,
-                                    hintText: 'Email ID',
-                                    keyboardType: TextInputType.emailAddress,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Business Address',
-                                  errorText: formState.errorFor('address'),
-                                  child: _OutlinedField(
-                                    controller: _addressController,
-                                    hintText: 'Business Address',
-                                    minLines: 4,
-                                    maxLines: 4,
-                                  ),
-                                ),
+                                Center(child: mediaColumn),
+                                const SizedBox(height: AppSpacing.lg),
+                                details,
+                                const SizedBox(height: AppSpacing.lg),
+                                more,
                               ],
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const _SectionHeader(title: 'More Details'),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Business Type',
-                                  errorText: formState.errorFor(
-                                    'business_type',
-                                  ),
-                                  child: _OutlinedDropdown<String>(
-                                    value: _businessType,
-                                    hintText: 'Business Type',
-                                    items: _dropdownOptions(
-                                      _businessTypes,
-                                      _businessType,
-                                    ),
-                                    onChanged: (value) =>
-                                        setState(() => _businessType = value),
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Business Category',
-                                  errorText: formState.errorFor(
-                                    'business_category',
-                                  ),
-                                  child: _OutlinedDropdown<String>(
-                                    value: _businessCategory,
-                                    hintText: 'Business Category',
-                                    items: _dropdownOptions(
-                                      _businessCategories,
-                                      _businessCategory,
-                                    ),
-                                    onChanged: (value) => setState(
-                                      () => _businessCategory = value,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'State',
-                                  errorText: formState.errorFor('state'),
-                                  child: _OutlinedDropdown<String>(
-                                    value: _state,
-                                    hintText: 'State',
-                                    items: _dropdownOptions(
-                                      _indianStates,
-                                      _state,
-                                    ),
-                                    onChanged: (value) =>
-                                        setState(() => _state = value),
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LabeledField(
-                                  label: 'Pincode',
-                                  errorText: formState.errorFor('pincode'),
-                                  child: _OutlinedField(
-                                    controller: _pincodeController,
-                                    hintText: 'Pincode',
-                                    keyboardType: TextInputType.number,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      const _SectionHeader(title: 'Branding'),
-                      const SizedBox(height: AppSpacing.md),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: BrandingImageUploader(
-                              label: 'Signature',
-                              imageUrl: _signatureUrl,
-                              isUploading: _uploadingSignature,
-                              height: 80,
-                              onUpload: () => _uploadBranding(
-                                allowedMimes: _pngOnly,
-                                maxBytes: 1024 * 1024,
-                                upload: (repo, bytes, mime) => repo.uploadSignature(
-                                  bytes: bytes,
-                                  mimeType: mime,
-                                ),
-                                setUploading: (v) => _uploadingSignature = v,
-                                setUrl: (url) => _signatureUrl = url,
+                            );
+                          }
+
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: _mediaColumnWidth,
+                                child: mediaColumn,
                               ),
-                              onDelete: () => _deleteBranding(
-                                delete: (repo) => repo.deleteSignature(),
-                                setUploading: (v) => _uploadingSignature = v,
-                                setUrl: (url) => _signatureUrl = url,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: BrandingImageUploader(
-                              label: 'Stamp',
-                              imageUrl: _stampUrl,
-                              isUploading: _uploadingStamp,
-                              height: 80,
-                              onUpload: () => _uploadBranding(
-                                allowedMimes: _pngOnly,
-                                maxBytes: 1024 * 1024,
-                                upload: (repo, bytes, mime) => repo.uploadStamp(
-                                  bytes: bytes,
-                                  mimeType: mime,
-                                ),
-                                setUploading: (v) => _uploadingStamp = v,
-                                setUrl: (url) => _stampUrl = url,
-                              ),
-                              onDelete: () => _deleteBranding(
-                                delete: (repo) => repo.deleteStamp(),
-                                setUploading: (v) => _uploadingStamp = v,
-                                setUrl: (url) => _stampUrl = url,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: BrandingImageUploader(
-                              label: 'UPI QR',
-                              imageUrl: _upiQrUrl,
-                              isUploading: _uploadingUpiQr,
-                              height: 120,
-                              onUpload: () => _uploadBranding(
-                                allowedMimes: _pngOnly,
-                                maxBytes: 1024 * 1024,
-                                upload: (repo, bytes, mime) => repo.uploadUpiQr(
-                                  bytes: bytes,
-                                  mimeType: mime,
-                                ),
-                                setUploading: (v) => _uploadingUpiQr = v,
-                                setUrl: (url) => _upiQrUrl = url,
-                              ),
-                              onDelete: () => _deleteBranding(
-                                delete: (repo) => repo.deleteUpiQr(),
-                                setUploading: (v) => _uploadingUpiQr = v,
-                                setUrl: (url) => _upiQrUrl = url,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _upiIdController,
-                        decoration: InputDecoration(
-                          labelText: 'UPI ID',
-                          hintText: 'merchant@upi',
-                          errorText: formState.errorFor('upi_id'),
-                          border: const OutlineInputBorder(),
-                        ),
+                              const SizedBox(width: _mediaToFormGap),
+                              Expanded(child: details),
+                              const SizedBox(width: AppSpacing.lg),
+                              Expanded(child: more),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       const Divider(color: Color(0xFFE0E0E0)),

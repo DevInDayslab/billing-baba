@@ -94,6 +94,54 @@ class BusinessProfileModel {
     'upi_qr_url': upiQrUrl,
     'upi_id': upiId,
   };
+
+  BusinessProfileModel copyWith({
+    String? id,
+    String? name,
+    String? ownerName,
+    String? phone,
+    String? email,
+    String? gstin,
+    String? businessType,
+    String? businessCategory,
+    String? state,
+    String? pincode,
+    String? currency,
+    String? address,
+    String? timezone,
+    String? language,
+    String? logoUrl,
+    String? signatureUrl,
+    String? stampUrl,
+    String? upiQrUrl,
+    String? upiId,
+    bool clearLogoUrl = false,
+    bool clearSignatureUrl = false,
+  }) {
+    return BusinessProfileModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      ownerName: ownerName ?? this.ownerName,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      gstin: gstin ?? this.gstin,
+      businessType: businessType ?? this.businessType,
+      businessCategory: businessCategory ?? this.businessCategory,
+      state: state ?? this.state,
+      pincode: pincode ?? this.pincode,
+      currency: currency ?? this.currency,
+      address: address ?? this.address,
+      timezone: timezone ?? this.timezone,
+      language: language ?? this.language,
+      logoUrl: clearLogoUrl ? null : (logoUrl ?? this.logoUrl),
+      signatureUrl: clearSignatureUrl
+          ? null
+          : (signatureUrl ?? this.signatureUrl),
+      stampUrl: stampUrl ?? this.stampUrl,
+      upiQrUrl: upiQrUrl ?? this.upiQrUrl,
+      upiId: upiId ?? this.upiId,
+    );
+  }
 }
 
 class UpdateBusinessProfileRequest {

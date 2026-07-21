@@ -629,6 +629,7 @@ SidebarBusiness sidebarBusiness(Ref ref) {
       id: profile.id,
       name: profile.name,
       seed: profile.id,
+      logoUrl: profile.logoUrl,
     );
   }
 
@@ -643,9 +644,11 @@ class SidebarBusiness {
     required this.name,
     required this.seed,
     this.id,
+    this.logoUrl,
   });
 
   final String? id;
   final String name;
   final String seed;
+  final String? logoUrl;
 }

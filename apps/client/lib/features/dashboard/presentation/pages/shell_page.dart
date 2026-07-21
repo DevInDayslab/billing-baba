@@ -288,7 +288,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
 
     final subItems = item.subItems
         .where(
-          (sub) => NavigationPermissionRegistry.isVisible(sub.route, permissions),
+          (sub) =>
+              NavigationPermissionRegistry.isVisible(sub.route, permissions),
         )
         .toList();
     if (subItems.isEmpty) return null;
@@ -767,6 +768,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       collapsed: collapsed,
       companyName: sidebarBusiness.name,
       avatarSeed: sidebarBusiness.seed,
+      logoUrl: sidebarBusiness.logoUrl,
       onExpand: _expandSidebarIfCollapsed,
       onEditProfile: () => _navigateTo(AppRoutes.editProfile),
       onSwitchCompany: () async {
@@ -1046,11 +1048,13 @@ class _SidebarProfileFooter extends StatefulWidget {
     required this.onEditProfile,
     required this.onSwitchCompany,
     required this.onLogout,
+    this.logoUrl,
   });
 
   final bool collapsed;
   final String companyName;
   final String avatarSeed;
+  final String? logoUrl;
   final VoidCallback onExpand;
   final VoidCallback onEditProfile;
   final VoidCallback onSwitchCompany;
@@ -1151,6 +1155,7 @@ class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
                     child: BusinessAvatar(
                       name: widget.companyName,
                       seed: widget.avatarSeed,
+                      logoUrl: widget.logoUrl,
                       diameter: 32,
                     ),
                   )
@@ -1159,6 +1164,7 @@ class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
                       BusinessAvatar(
                         name: widget.companyName,
                         seed: widget.avatarSeed,
+                        logoUrl: widget.logoUrl,
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(

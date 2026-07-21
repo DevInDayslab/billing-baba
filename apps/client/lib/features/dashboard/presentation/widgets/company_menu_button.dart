@@ -53,7 +53,7 @@ class _CompanyMenuButtonState extends ConsumerState<CompanyMenuButton> {
             targetAnchor: Alignment.bottomRight,
             followerAnchor: Alignment.topRight,
             offset: const Offset(0, AppSpacing.xs),
-            child:             CompanyProfileMenuCard(
+            child: CompanyProfileMenuCard(
               companyName: business.name,
               onEditProfile: () {
                 _removeMenu();
@@ -122,6 +122,7 @@ class _CompanyMenuButtonState extends ConsumerState<CompanyMenuButton> {
                 BusinessAvatar(
                   name: business.name,
                   seed: business.seed,
+                  logoUrl: business.logoUrl,
                   diameter: 28,
                 ),
                 const SizedBox(width: AppSpacing.sm),

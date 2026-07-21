@@ -1,10 +1,15 @@
+import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:billing_baba/core/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/storage/media_upload_client.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/data/business_branding_repository.dart';
-import 'package:billing_baba/features/business/presentation/widgets/branding_image_uploader.dart';
+import 'package:billing_baba/shared/widgets/app_network_image_cache.dart';
+import 'package:billing_baba/shared/widgets/optimistic_media_uploader.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,12 +24,15 @@ class UserProfilePage extends ConsumerStatefulWidget {
 
 class _UserProfilePageState extends ConsumerState<UserProfilePage> {
   static const _avatarMimes = {'image/png', 'image/jpeg', 'image/webp'};
+  static const _avatarSize = 140.0;
 
   AccountAvatarRepository? _avatarRepository;
   String? _avatarUrl;
+  Uint8List? _optimisticBytes;
   String _displayName = 'User';
   String _phone = '';
   bool _uploading = false;
+  var _uploadGeneration = 0;
 
   @override
   void initState() {
@@ -105,28 +113,43 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
       return;
     }
 
-    setState(() => _uploading = true);
+    final generation = ++_uploadGeneration;
+    final previousUrl = _avatarUrl;
+    final bytes = file.bytes!;
+
+    setState(() {
+      _optimisticBytes = bytes;
+      _uploading = true;
+    });
 
     try {
-      final upload = await repo.uploadAvatar(
-        bytes: file.bytes!,
+      final prepared = await prepareMediaUploadBytes(
+        bytes: bytes,
         mimeType: mime,
       );
-      setState(() => _avatarUrl = upload['url'] as String?);
-      await _refreshMe();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Avatar updated')),
-        );
-      }
+      if (!mounted || _uploadGeneration != generation) return;
+
+      final upload = await repo.uploadAvatar(
+        bytes: prepared.bytes,
+        mimeType: prepared.mimeType,
+      );
+      if (!mounted || _uploadGeneration != generation) return;
+      setState(() {
+        _avatarUrl = upload['url'] as String?;
+        _uploading = false;
+      });
+      unawaited(evictAppNetworkImage(previousUrl));
+      unawaited(_refreshMe());
     } on Exception catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _uploading = false);
+      if (!mounted || _uploadGeneration != generation) return;
+      setState(() {
+        _optimisticBytes = null;
+        _avatarUrl = previousUrl;
+        _uploading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload failed: $e')),
+      );
     }
   }
 
@@ -134,25 +157,30 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
     final repo = _avatarRepository;
     if (repo == null) return;
 
-    setState(() => _uploading = true);
+    final generation = ++_uploadGeneration;
+    final previousUrl = _avatarUrl;
+    setState(() {
+      _optimisticBytes = null;
+      _avatarUrl = null;
+      _uploading = true;
+    });
 
     try {
       await repo.deleteAvatar();
-      setState(() => _avatarUrl = null);
-      await _refreshMe();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Avatar removed')),
-        );
-      }
+      if (!mounted || _uploadGeneration != generation) return;
+      setState(() => _uploading = false);
+      // Keep UI snappy — sync cache/profile off the critical path.
+      unawaited(evictAppNetworkImage(previousUrl));
+      unawaited(_refreshMe());
     } on Exception catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Delete failed: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _uploading = false);
+      if (!mounted || _uploadGeneration != generation) return;
+      setState(() {
+        _avatarUrl = previousUrl;
+        _uploading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Delete failed: $e')),
+      );
     }
   }
 
@@ -208,18 +236,22 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Center(
-                    child: SizedBox(
-                      width: 160,
-                      child: BrandingImageUploader(
-                        label: 'Avatar',
-                        imageUrl: _avatarUrl,
-                        isUploading: _uploading,
-                        shape: BrandingImageShape.circle,
-                        width: 140,
-                        height: 140,
-                        onUpload: _uploadAvatar,
-                        onDelete: _avatarUrl == null ? null : _deleteAvatar,
-                      ),
+                    child: OptimisticMediaUploader(
+                      label: 'Avatar',
+                      size: _avatarSize,
+                      imageUrl: _avatarUrl,
+                      optimisticBytes: _optimisticBytes,
+                      isUploading: _uploading,
+                      replaceLabel: 'Replace Avatar',
+                      removeLabel: 'Remove Avatar',
+                      emptyLabel: 'Photo',
+                      onReplace: _uploadAvatar,
+                      onRemove:
+                          (_avatarUrl != null &&
+                                  _avatarUrl!.trim().isNotEmpty) ||
+                              _optimisticBytes != null
+                          ? _deleteAvatar
+                          : null,
                     ),
                   ),
                 ],
