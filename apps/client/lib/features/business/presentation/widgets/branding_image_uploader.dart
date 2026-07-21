@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/shared/image/app_image_placeholder.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -68,8 +69,12 @@ class BrandingImageUploader extends StatelessWidget {
                       width: width ?? double.infinity,
                       height: height,
                       fit: BoxFit.contain,
-                      placeholder: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                      placeholder: AppImagePlaceholder(
+                        width: width,
+                        height: height,
+                        borderRadius: shape == BrandingImageShape.circle
+                            ? BorderRadius.circular(height / 2)
+                            : AppRadius.smBorder,
                       ),
                       errorWidget: placeholder ??
                           const Icon(

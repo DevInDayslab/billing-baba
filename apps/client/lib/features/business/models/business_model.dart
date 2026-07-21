@@ -17,6 +17,7 @@ class BusinessModel {
     this.email,
     this.address,
     this.role,
+    this.logoUrl,
   });
 
   final String id;
@@ -31,6 +32,7 @@ class BusinessModel {
   final String? email;
   final String? address;
   final String? role;
+  final String? logoUrl;
 
   bool get isOwner => role == 'owner';
 
@@ -47,6 +49,7 @@ class BusinessModel {
     String? email,
     String? address,
     String? role,
+    String? logoUrl,
   }) {
     return BusinessModel(
       id: id ?? this.id,
@@ -61,6 +64,7 @@ class BusinessModel {
       email: email ?? this.email,
       address: address ?? this.address,
       role: role ?? this.role,
+      logoUrl: logoUrl ?? this.logoUrl,
     );
   }
 }

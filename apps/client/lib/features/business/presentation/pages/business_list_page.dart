@@ -18,6 +18,7 @@ import 'package:billing_baba/features/collaboration/domain/models/company_list_e
 import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/company_directory_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/company_session_service_provider.dart';
+import 'package:billing_baba/shared/image/app_image_prefetcher.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -614,6 +615,10 @@ class _SharedCompaniesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _prefetchBusinessLogos(ref, entries);
+    });
+
     if (entries.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -670,6 +675,10 @@ class _MyCompaniesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _prefetchBusinessLogos(ref, entries);
+    });
+
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
@@ -702,6 +711,18 @@ class _MyCompaniesTab extends ConsumerWidget {
       ],
     );
   }
+}
+
+void _prefetchBusinessLogos(WidgetRef ref, List<CompanyListEntry> entries) {
+  if (entries.isEmpty) return;
+
+  ref.read(appImagePrefetcherProvider).prefetchItemsWindow(
+        items: entries,
+        firstVisibleIndex: 0,
+        lastVisibleIndex: entries.length > 15 ? 14 : entries.length - 1,
+        urlExtractor: (entry) => entry.logoUrl,
+        lookahead: 20,
+      );
 }
 
 class _CreateBusinessCard extends StatefulWidget {

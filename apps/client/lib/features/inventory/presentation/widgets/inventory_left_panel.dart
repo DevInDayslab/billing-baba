@@ -2,6 +2,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
+import 'package:billing_baba/features/inventory/application/inventory_list_image_warmup.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_async_list.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_item_list_tile.dart';
@@ -137,8 +138,15 @@ class InventoryLeftPanel extends ConsumerWidget {
             asyncValue: itemsAsync,
             items: items,
             showCachedWhileLoading: true,
+            estimatedItemExtent: inventoryItemListRowHeight,
             onRefresh: onRefresh,
             emptyMessage: emptyMessage,
+            imageUrlExtractor: (item) => item.primaryImageUrl,
+            onPrefetchItems: (window) {
+              final warmup = ref.read(inventoryListImageWarmupProvider);
+              warmup.warmItems(window);
+              warmup.warmItems(items.take(50));
+            },
             itemBuilder: (context, item, index) {
               return InventoryItemListTile(
                 key: ValueKey(item.id),

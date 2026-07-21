@@ -83,6 +83,7 @@ export type SharedCompanyDto = {
   name: string;
   owner_name: string;
   owner_phone: string;
+  logo_url: string | null;
   relationship: CompanyRelationship;
   role: CollaborationRole;
   sync_status: 'on' | 'off';
@@ -94,6 +95,7 @@ export type PendingInvitationDto = {
   name: string;
   owner_name: string;
   owner_phone: string;
+  logo_url: string | null;
   relationship: 'pending_invite' | 'expired_invite';
   role: CollaborationRole;
   invitation_id: string;
@@ -145,4 +147,6 @@ export type BusinessOwnerInfo = {
   companyName: string;
   ownerName: string;
   ownerPhone: string;
+  logoUrl: string | null;
+  logoMediaAssetId: string | null;
 };

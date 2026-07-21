@@ -3,7 +3,6 @@ import 'package:billing_baba/features/inventory/application/inventory_item_filte
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/application/inventory_transaction_table_service.dart';
-import 'package:billing_baba/features/inventory/application/item_image_cache.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/category_item_sort.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
@@ -472,11 +471,6 @@ final productDetailProvider = FutureProvider.family<InventoryItem, String>((
 ) async {
   final service = await ref.watch(inventoryServiceProvider.future);
   return service.getItem(itemId);
-});
-
-final itemImageCacheProvider = FutureProvider<ItemImageCache>((ref) async {
-  final api = await ref.watch(apiClientProvider.future);
-  return ItemImageCache(api.dio);
 });
 
 // Provider.family's family type is not publicly exported by Riverpod.

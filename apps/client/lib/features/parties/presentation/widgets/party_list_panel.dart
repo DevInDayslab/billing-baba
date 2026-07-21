@@ -221,8 +221,7 @@ class _PartyListPanelState extends ConsumerState<PartyListPanel> {
                   emptyMessage: isFiltered
                       ? 'No parties found'
                       : 'No parties yet. Add your first party.',
-                  itemBuilder: (context, party) {
-                    final index = parties.indexOf(party);
+                  itemBuilder: (context, party, index) {
                     return _PartyListTile(
                       party: party,
                       index: index,

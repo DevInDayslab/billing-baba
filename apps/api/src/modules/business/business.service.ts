@@ -31,7 +31,11 @@ export class BusinessService {
   }
 
   async listBusinesses(accountId: string): Promise<BusinessListItem[]> {
-    return this.repository.listByAccountId(accountId);
+    const items = await this.repository.listByAccountId(accountId);
+    if (!this.branding) {
+      return items.map(({ logoMediaAssetId: _ignored, ...item }) => item);
+    }
+    return this.branding.enrichListItemsWithBrandingUrls(accountId, items);
   }
 
   async createBusiness(

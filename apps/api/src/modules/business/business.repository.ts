@@ -19,6 +19,10 @@ import type {
   BusinessListItem,
   BusinessProfile,
 } from './business.types';
+
+export type BusinessListItemRow = BusinessListItem & {
+  logoMediaAssetId: string | null;
+};
 import {
   currentFiscalYearLabel,
   resolveStateCode,
@@ -28,7 +32,7 @@ import {
 export class BusinessRepository {
   constructor(private readonly db: Database) {}
 
-  async listByAccountId(accountId: string): Promise<BusinessListItem[]> {
+  async listByAccountId(accountId: string): Promise<BusinessListItemRow[]> {
     const rows = await this.db
       .select({
         id: businesses.id,
@@ -39,6 +43,8 @@ export class BusinessRepository {
         email: businesses.email,
         stateCode: businesses.stateCode,
         address: businesses.address,
+        logoUrl: businesses.logoUrl,
+        logoMediaAssetId: businesses.logoMediaAssetId,
       })
       .from(users)
       .innerJoin(businesses, eq(users.businessId, businesses.id))
@@ -66,6 +72,8 @@ export class BusinessRepository {
       address: row.address,
       owner_name: ownerNames.get(row.id) ?? null,
       is_shared: row.role !== 'owner',
+      logo_url: row.logoUrl,
+      logoMediaAssetId: row.logoMediaAssetId,
     }));
   }
 

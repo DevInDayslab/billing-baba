@@ -48,44 +48,44 @@ final class PrintRepositoryProvider
 
 String _$printRepositoryHash() => r'31e1c555de09e7a3f7105176aa5737ebb9a76159';
 
-@ProviderFor(printImageCache)
-final printImageCacheProvider = PrintImageCacheProvider._();
+@ProviderFor(printDataService)
+final printDataServiceProvider = PrintDataServiceProvider._();
 
-final class PrintImageCacheProvider
+final class PrintDataServiceProvider
     extends
         $FunctionalProvider<
-          AsyncValue<PrintImageCache>,
-          PrintImageCache,
-          FutureOr<PrintImageCache>
+          AsyncValue<PrintDataService>,
+          PrintDataService,
+          FutureOr<PrintDataService>
         >
-    with $FutureModifier<PrintImageCache>, $FutureProvider<PrintImageCache> {
-  PrintImageCacheProvider._()
+    with $FutureModifier<PrintDataService>, $FutureProvider<PrintDataService> {
+  PrintDataServiceProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'printImageCacheProvider',
+        name: r'printDataServiceProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$printImageCacheHash();
+  String debugGetCreateSourceHash() => _$printDataServiceHash();
 
   @$internal
   @override
-  $FutureProviderElement<PrintImageCache> $createElement(
+  $FutureProviderElement<PrintDataService> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<PrintImageCache> create(Ref ref) {
-    return printImageCache(ref);
+  FutureOr<PrintDataService> create(Ref ref) {
+    return printDataService(ref);
   }
 }
 
-String _$printImageCacheHash() => r'e0376849c34e6fbe8958cae2c731dcc07acf147a';
+String _$printDataServiceHash() => r'80af26773aee377474ae88bb6c59b7c3a85912b2';
 
 @ProviderFor(templateRegistry)
 final templateRegistryProvider = TemplateRegistryProvider._();
@@ -180,45 +180,6 @@ final class PrintOutputServiceProvider
 
 String _$printOutputServiceHash() =>
     r'a4d57de6f7a810dc01c00ec48fee14df6b8c8d77';
-
-@ProviderFor(printDataService)
-final printDataServiceProvider = PrintDataServiceProvider._();
-
-final class PrintDataServiceProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<PrintDataService>,
-          PrintDataService,
-          FutureOr<PrintDataService>
-        >
-    with $FutureModifier<PrintDataService>, $FutureProvider<PrintDataService> {
-  PrintDataServiceProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'printDataServiceProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$printDataServiceHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<PrintDataService> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<PrintDataService> create(Ref ref) {
-    return printDataService(ref);
-  }
-}
-
-String _$printDataServiceHash() => r'3417c474398bd91227bfc8f24cef176b4fb752ef';
 
 @ProviderFor(printService)
 final printServiceProvider = PrintServiceProvider._();

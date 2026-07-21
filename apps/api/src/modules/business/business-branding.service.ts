@@ -13,7 +13,11 @@ import {
   type BrandingKind,
 } from './business-branding.constants';
 import { BusinessRepository } from './business.repository';
-import type { BusinessProfile } from './business.types';
+import type { BusinessListItem, BusinessProfile } from './business.types';
+
+export type BusinessListItemRow = BusinessListItem & {
+  logoMediaAssetId: string | null;
+};
 
 export type BrandingAssetResponse = {
   media_asset_id: string;
@@ -163,6 +167,42 @@ export class BusinessBrandingService {
         throw error;
       }
     }
+  }
+
+  async resolveLogoUrl(
+    businessId: string,
+    accountId: string,
+    fallbackLogoUrl: string | null,
+    logoMediaAssetId: string | null,
+  ): Promise<string | null> {
+    if (!logoMediaAssetId) return fallbackLogoUrl;
+    try {
+      return await this.storage.resolveBusinessAssetUrl(
+        businessId,
+        accountId,
+        logoMediaAssetId,
+      );
+    } catch {
+      return fallbackLogoUrl;
+    }
+  }
+
+  async enrichListItemsWithBrandingUrls(
+    accountId: string,
+    items: BusinessListItemRow[],
+  ): Promise<BusinessListItem[]> {
+    return Promise.all(
+      items.map(async (item) => {
+        const { logoMediaAssetId, ...rest } = item;
+        const logoUrl = await this.resolveLogoUrl(
+          item.id,
+          accountId,
+          item.logo_url,
+          logoMediaAssetId,
+        );
+        return { ...rest, logo_url: logoUrl };
+      }),
+    );
   }
 
   async enrichProfileWithBrandingUrls(

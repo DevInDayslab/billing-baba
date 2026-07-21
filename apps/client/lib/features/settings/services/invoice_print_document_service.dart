@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/print/models/printable_document.dart';
-import 'package:billing_baba/features/print/presentation/providers/print_providers.dart';
+import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
 import 'package:billing_baba/features/settings/presentation/widgets/invoice_preview_widget.dart';
 import 'package:billing_baba/features/settings/services/invoice_pdf_builder.dart';
@@ -117,8 +117,8 @@ abstract final class InvoicePrintDocumentService {
     if (!settings.printCompanyLogo || logoUrl == null) return null;
 
     try {
-      final cache = await ref.read(printImageCacheProvider.future);
-      return cache.getBytes(logoUrl);
+      final imageService = ref.read(imageServiceProvider);
+      return imageService.getBytes(logoUrl);
     } on Object {
       return null;
     }

@@ -20,7 +20,6 @@ final collaborationScopeProvider = Provider<void>((ref) {
   ref.listen(companySessionProvider, (previous, next) {
     if (previous?.companyId == next?.companyId) return;
     ref.read(syncShareRefreshProvider.notifier).refresh(
-          manual: false,
           trigger: SyncShareRefreshTrigger.companyChange,
         );
   });
@@ -101,10 +100,11 @@ void _seedOwnerSession(Ref ref) {
         phone: profile.phone,
         email: profile.email,
         address: profile.address,
+        logoUrl: profile.logoUrl,
       ),
       userId: user.id,
       userName: user.name ?? 'User',
-      userPhone: user.phone ?? '',
+      userPhone: user.phone,
     ),
   );
 }

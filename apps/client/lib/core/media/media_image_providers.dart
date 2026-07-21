@@ -25,3 +25,18 @@ final FutureProviderFamily<String, MediaVariantRequest> mediaVariantUrlProvider 
     return url;
   },
 );
+
+/// Drops cached signed URLs so the next read fetches a fresh variant URL.
+void invalidateMediaVariantUrls(ProviderContainer container, String mediaAssetId) {
+  final assetId = mediaAssetId.trim();
+  if (assetId.isEmpty) return;
+
+  for (final variant in ImageVariant.values) {
+    container.invalidate(
+      mediaVariantUrlProvider((
+        sourceMediaAssetId: assetId,
+        variant: variant,
+      )),
+    );
+  }
+}

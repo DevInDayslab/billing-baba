@@ -10,9 +10,10 @@ import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/item_image_preview_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/pending_item_image.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
+import 'package:billing_baba/features/inventory/providers/item_images_provider.dart';
+import 'package:billing_baba/shared/image/image_service.dart';
+import 'package:billing_baba/shared/image/image_urls.dart';
 import 'package:billing_baba/shared/widgets/app_network_image.dart';
-import 'package:billing_baba/shared/widgets/app_network_image_cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -74,10 +75,17 @@ class _ItemImageGallerySectionState
     unawaited(_prefetchImageUrl(seedUrl));
   }
 
+  Future<void> _invalidateGalleryImage(ItemImageModel image) async {
+    await ref.read(imageServiceProvider).invalidateImage(
+          url: image.urlForGrid(),
+          mediaAssetId: image.mediaAssetId,
+          extraUrls: galleryImageUrls(image),
+        );
+  }
+
   Future<void> _prefetchImageUrl(String url) async {
     try {
-      final cache = await ref.read(itemImageCacheProvider.future);
-      cache.prefetch(url);
+      ref.read(imageServiceProvider).prefetchUrl(url);
     } on Object {
       // Best-effort thumbnail warm-up.
     }
@@ -164,11 +172,12 @@ class _ItemImageGallerySectionState
       );
 
       if (replacesImageId != null) {
-        final oldUrl = remote
+        final oldImage = remote
             .where((img) => img.id == replacesImageId)
-            .map((img) => img.urlForGrid())
             .firstOrNull;
-        unawaited(evictAppNetworkImage(oldUrl));
+        if (oldImage != null) {
+          unawaited(_invalidateGalleryImage(oldImage));
+        }
       }
 
       if (!mounted || generation != _uploadGeneration) return;
@@ -234,7 +243,7 @@ class _ItemImageGallerySectionState
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.deleteItemImage(widget.itemId, image.id);
-      unawaited(evictAppNetworkImage(image.urlForGrid()));
+      unawaited(_invalidateGalleryImage(image));
       unawaited(_imagesNotifier.refreshInBackground());
       return true;
     } on Exception catch (error) {
@@ -285,6 +294,16 @@ class _ItemImageGallerySectionState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(itemImagesProvider(widget.itemId), (previous, next) {
+      final images = next.value;
+      if (images == null || images.isEmpty) return;
+      final urls = [
+        for (final image in images)
+          ?gridImageUrl(image),
+      ];
+      ref.read(imageServiceProvider).prefetchUrls(urls, limit: urls.length);
+    });
+
     final imagesAsync = ref.watch(itemImagesProvider(widget.itemId));
     final images = imagesAsync.value ?? const <ItemImageModel>[];
     final remote = List<ItemImageModel>.from(images)

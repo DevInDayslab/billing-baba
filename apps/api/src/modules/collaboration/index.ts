@@ -14,7 +14,7 @@ export function createCollaborationModule(
     await app.register(createCompanyMemberRoutes(), {
       prefix: '/company-members',
     });
-    await app.register(createCompanyDirectoryRoutes(), {
+    await app.register(createCompanyDirectoryRoutes(config), {
       prefix: '/companies',
     });
   };

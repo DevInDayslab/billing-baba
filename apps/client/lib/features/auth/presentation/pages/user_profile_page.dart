@@ -8,7 +8,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/data/business_branding_repository.dart';
-import 'package:billing_baba/shared/widgets/app_network_image_cache.dart';
+import 'package:billing_baba/shared/image/image_service.dart';
+import 'package:billing_baba/shared/image/image_urls.dart';
 import 'package:billing_baba/shared/widgets/optimistic_media_uploader.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -138,7 +139,16 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
         _avatarUrl = upload['url'] as String?;
         _uploading = false;
       });
-      unawaited(evictAppNetworkImage(previousUrl));
+      unawaited(
+        ref.read(imageServiceProvider).replaceImage(
+              oldUrl: previousUrl,
+              newUrl: upload['url'] as String?,
+              oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+              newCacheKey: buildImageCacheKey(
+                fallbackUrl: upload['url'] as String?,
+              ),
+            ),
+      );
       unawaited(_refreshMe());
     } on Exception catch (e) {
       if (!mounted || _uploadGeneration != generation) return;
@@ -170,7 +180,12 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
       if (!mounted || _uploadGeneration != generation) return;
       setState(() => _uploading = false);
       // Keep UI snappy — sync cache/profile off the critical path.
-      unawaited(evictAppNetworkImage(previousUrl));
+      unawaited(
+        ref.read(imageServiceProvider).invalidateImage(
+              url: previousUrl,
+              cacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+            ),
+      );
       unawaited(_refreshMe());
     } on Exception catch (e) {
       if (!mounted || _uploadGeneration != generation) return;

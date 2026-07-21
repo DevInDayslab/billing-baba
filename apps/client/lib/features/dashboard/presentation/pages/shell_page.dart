@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
@@ -78,6 +81,12 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _registerSearchDialog();
       _ensureShellShortcutFocus();
+      final businessId = ref.read(sidebarBusinessProvider).id;
+      if (businessId!.isNotEmpty) {
+        unawaited(
+          ref.read(imageStartupWarmupProvider).run(businessId: businessId),
+        );
+      }
     });
   }
 

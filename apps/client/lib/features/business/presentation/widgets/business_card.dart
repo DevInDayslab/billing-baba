@@ -77,6 +77,7 @@ class _BusinessCardState extends State<BusinessCard> {
               name: entry.name,
               seed: entry.id,
               diameter: 44,
+              logoUrl: entry.logoUrl,
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(

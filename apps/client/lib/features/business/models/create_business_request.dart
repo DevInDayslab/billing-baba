@@ -47,6 +47,7 @@ class BusinessDetailDto {
     this.address,
     this.ownerName,
     this.isShared = false,
+    this.logoUrl,
   });
 
   factory BusinessDetailDto.fromJson(Map<String, dynamic> json) {
@@ -61,6 +62,7 @@ class BusinessDetailDto {
       address: json['address'] as String?,
       ownerName: json['owner_name'] as String?,
       isShared: json['is_shared'] as bool? ?? false,
+      logoUrl: json['logo_url'] as String?,
     );
   }
 
@@ -74,4 +76,5 @@ class BusinessDetailDto {
   final String? address;
   final String? ownerName;
   final bool isShared;
+  final String? logoUrl;
 }

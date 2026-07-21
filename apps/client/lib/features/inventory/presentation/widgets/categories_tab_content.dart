@@ -188,7 +188,7 @@ class _CategoriesListPanel extends StatelessWidget {
             items: categories,
             onRefresh: onRefresh,
             emptyMessage: 'No categories found',
-            itemBuilder: (context, category) {
+            itemBuilder: (context, category, index) {
               final isSelected = category.id == selectedId;
               return Material(
                 color: isSelected

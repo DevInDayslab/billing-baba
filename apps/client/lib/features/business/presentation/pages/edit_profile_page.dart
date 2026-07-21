@@ -10,7 +10,8 @@ import 'package:billing_baba/features/business/application/business_service.dart
 import 'package:billing_baba/features/business/data/business_branding_repository.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
-import 'package:billing_baba/shared/widgets/app_network_image_cache.dart';
+import 'package:billing_baba/shared/image/image_service.dart';
+import 'package:billing_baba/shared/image/image_urls.dart';
 import 'package:billing_baba/shared/widgets/optimistic_media_uploader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -225,7 +226,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         setUploading(false);
       });
       patchProfileMedia(newUrl);
-      unawaited(evictAppNetworkImage(previousUrl));
+      unawaited(
+        ref.read(imageServiceProvider).replaceImage(
+              oldUrl: previousUrl,
+              newUrl: newUrl,
+              oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+              newCacheKey: buildImageCacheKey(fallbackUrl: newUrl),
+            ),
+      );
     } on Exception catch (e) {
       if (!mounted || currentGeneration() != generation) return;
       setState(() {
@@ -267,7 +275,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       await delete(repo);
       if (!mounted || currentGeneration() != generation) return;
       setState(() => setUploading(false));
-      unawaited(evictAppNetworkImage(previousUrl));
+      unawaited(
+        ref.read(imageServiceProvider).invalidateImage(
+              url: previousUrl,
+              cacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+            ),
+      );
     } on Exception catch (e) {
       if (!mounted || currentGeneration() != generation) return;
       setState(() {

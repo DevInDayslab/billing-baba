@@ -37,10 +37,11 @@ final companySessionBootstrapProvider = Provider<void>((ref) {
           phone: profile.phone,
           email: profile.email,
           address: profile.address,
+          logoUrl: profile.logoUrl,
         ),
         userId: user.id,
         userName: user.name ?? 'User',
-        userPhone: user.phone ?? '',
+        userPhone: user.phone,
       ),
     );
   }

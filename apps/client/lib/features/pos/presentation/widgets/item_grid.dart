@@ -2,9 +2,11 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/item_card.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_styles.dart';
 import 'package:billing_baba/features/pos/providers/pos_items_provider.dart';
+import 'package:billing_baba/shared/image/app_image_prefetcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,6 +31,14 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
   void dispose() {
     _localSearchDebouncer.dispose();
     super.dispose();
+  }
+
+  void _prefetchPosImages(List<PosItem> filtered, int visibleCount) {
+    ref.read(appImagePrefetcherProvider).prefetchItemsAhead(
+          items: filtered,
+          lastVisibleIndex: visibleCount - 1,
+          urlExtractor: (item) => item.imageUrl,
+        );
   }
 
   String get _effectiveQuery {
@@ -189,6 +199,11 @@ class _ItemGridState extends ConsumerState<ItemGrid> {
               );
               final visibleItems = filtered.take(_visibleCount).toList();
               final hasMore = filtered.length > _visibleCount;
+
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                _prefetchPosImages(filtered, visibleItems.length);
+              });
 
               if (filtered.isEmpty) {
                 return const Center(

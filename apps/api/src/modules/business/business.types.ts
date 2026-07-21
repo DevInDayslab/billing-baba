@@ -9,6 +9,7 @@ export type BusinessListItem = {
   address: string | null;
   owner_name: string | null;
   is_shared: boolean;
+  logo_url: string | null;
 };
 
 export type BusinessDetail = BusinessListItem;

@@ -337,6 +337,7 @@ class BusinessService {
       email: dto.email,
       address: dto.address,
       role: dto.role,
+      logoUrl: dto.logoUrl,
     );
   }
 
@@ -351,6 +352,7 @@ class BusinessService {
     'address': dto.address,
     'owner_name': dto.ownerName,
     'is_shared': dto.isShared,
+    'logo_url': dto.logoUrl,
   };
 
   Future<void> deleteBusiness(String businessId) async {
@@ -519,7 +521,10 @@ class BusinessList extends _$BusinessList {
       businesses
           .map(
             (business) => business.id == profile.id
-                ? business.copyWith(name: profile.name)
+                ? business.copyWith(
+                    name: profile.name,
+                    logoUrl: profile.logoUrl,
+                  )
                 : business,
           )
           .toList(),

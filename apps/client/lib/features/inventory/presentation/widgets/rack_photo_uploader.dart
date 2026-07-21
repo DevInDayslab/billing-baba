@@ -1,15 +1,18 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:billing_baba/core/storage/media_upload_client.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/presentation/widgets/branding_image_uploader.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
+import 'package:billing_baba/shared/image/image_service.dart';
+import 'package:billing_baba/shared/image/image_urls.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _rackPhotoAllowedMimes = {'image/png', 'image/jpeg', 'image/webp'};
-const _rackPhotoMaxBytes = 2 * 1024 * 1024;
+const int _rackPhotoMaxBytes = 2 * 1024 * 1024;
 
 class RackPhotoUploader extends ConsumerStatefulWidget {
   const RackPhotoUploader({
@@ -92,6 +95,7 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
     if (picked == null) return;
 
     setState(() => _isUploading = true);
+    final previousUrl = _photoUrl;
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       final url = await service.uploadRackPhoto(
@@ -101,6 +105,14 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
       );
       setState(() => _photoUrl = url);
       widget.onPhotoChanged?.call(url);
+      unawaited(
+        ref.read(imageServiceProvider).replaceImage(
+              oldUrl: previousUrl,
+              newUrl: url,
+              oldCacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+              newCacheKey: buildImageCacheKey(fallbackUrl: url),
+            ),
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Rack photo uploaded successfully')),
@@ -122,11 +134,18 @@ class _RackPhotoUploaderState extends ConsumerState<RackPhotoUploader> {
     if (locationId == null) return;
 
     setState(() => _isUploading = true);
+    final previousUrl = _photoUrl;
     try {
       final service = await ref.read(inventoryServiceProvider.future);
       await service.deleteRackPhoto(locationId);
       setState(() => _photoUrl = null);
       widget.onPhotoChanged?.call(null);
+      unawaited(
+        ref.read(imageServiceProvider).invalidateImage(
+              url: previousUrl,
+              cacheKey: buildImageCacheKey(fallbackUrl: previousUrl),
+            ),
+      );
     } on Exception catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

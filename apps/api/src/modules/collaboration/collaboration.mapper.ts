@@ -58,6 +58,7 @@ export function toSharedCompanyDto(
   company: BusinessOwnerInfo,
   role: SharedCompanyDto['role'],
   memberId: string,
+  logoUrl: string | null = company.logoUrl,
 ): SharedCompanyDto {
   return {
     id: company.companyId,
@@ -65,6 +66,7 @@ export function toSharedCompanyDto(
     name: company.companyName,
     owner_name: company.ownerName,
     owner_phone: company.ownerPhone,
+    logo_url: logoUrl,
     relationship: relationshipFromRole(role),
     role,
     sync_status: 'on',
@@ -75,6 +77,7 @@ export function toPendingInvitationDto(
   row: InvitationRow,
   owner: BusinessOwnerInfo,
   expired: boolean,
+  logoUrl: string | null = owner.logoUrl,
 ): PendingInvitationDto {
   return {
     id: row.id,
@@ -82,6 +85,7 @@ export function toPendingInvitationDto(
     name: owner.companyName,
     owner_name: owner.ownerName,
     owner_phone: owner.ownerPhone,
+    logo_url: logoUrl,
     relationship: expired ? 'expired_invite' : 'pending_invite',
     role: row.role,
     invitation_id: row.id,
