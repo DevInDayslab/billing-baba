@@ -9,6 +9,7 @@ import 'package:billing_baba/features/inventory/models/add_item_form_model.dart'
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/add_item/alternatives_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item/general_information_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item/manufacturing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item/online_store_section.dart';
@@ -91,7 +92,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final _primaryImageUrlController = TextEditingController();
   bool _isSaving = false;
 
-  int _tabCountFor(ItemType type) => type == ItemType.product ? 4 : 2;
+  int _tabCountFor(ItemType type) => type == ItemType.product ? 5 : 2;
 
   @override
   void initState() {
@@ -647,7 +648,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       0 => _buildPricingTab(form, notifier, isService: false),
       1 => _buildStockTab(form, notifier),
       2 => _buildOnlineStoreTab(form, notifier),
-      _ => _buildManufacturingTab(form, notifier),
+      3 => _buildManufacturingTab(form, notifier),
+      _ => _buildAlternativesTab(),
     };
   }
 
@@ -746,9 +748,15 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
+  Widget _buildAlternativesTab() {
+    return AlternativesSection(
+      itemId: widget.editItem?.id,
+    );
+  }
+
   Widget _buildTabBar(AddItemFormState form) {
     final tabs = form.itemType == ItemType.product
-        ? const ['Pricing', 'Stock', 'Online Store', 'Manufacturing']
+        ? const ['Pricing', 'Stock', 'Online Store', 'Manufacturing', 'Alternatives']
         : const ['Pricing', 'Online Store'];
 
     return TabBar(

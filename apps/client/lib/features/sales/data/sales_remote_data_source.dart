@@ -197,6 +197,26 @@ class SalesRemoteDataSource {
     );
   }
 
+  Future<SalesDocumentDto> cloneWithAlternatives(
+    String id,
+    List<ItemReplacement> replacements,
+  ) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      ApiEndpoints.salesDocumentCloneWithAlternatives(id),
+      data: {
+        'replacements': replacements
+            .map((r) => {
+                  'original_item_id': r.originalItemId,
+                  'replacement_item_id': r.replacementItemId,
+                })
+            .toList(),
+      },
+    );
+    return SalesDocumentDto.fromJson(
+      (response.data?['data'] as Map<String, dynamic>?) ?? {},
+    );
+  }
+
   Future<PaginatedPosSessionsDto> listPosSessions({
     int page = 1,
     int limit = 20,

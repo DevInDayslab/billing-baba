@@ -81,4 +81,9 @@ class SalesRepository {
     String id,
     ConvertSalesDocumentRequest request,
   ) => _remote.convertDocument(id, request);
+
+  Future<SalesDocumentDto> cloneWithAlternatives(
+    String id,
+    List<ItemReplacement> replacements,
+  ) => _remote.cloneWithAlternatives(id, replacements);
 }

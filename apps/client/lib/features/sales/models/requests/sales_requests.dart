@@ -304,3 +304,13 @@ class UpdatePaymentRequest {
     if (referenceNumber != null) 'reference_number': referenceNumber,
   };
 }
+
+class ItemReplacement {
+  const ItemReplacement({
+    required this.originalItemId,
+    required this.replacementItemId,
+  });
+
+  final String originalItemId;
+  final String replacementItemId;
+}

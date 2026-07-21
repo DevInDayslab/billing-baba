@@ -1,10 +1,12 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { authenticate } from '../../middleware/auth.middleware';
 import { requireBusiness } from '../../middleware/require-business.middleware';
+import { createItemAlternativesController } from './item-alternatives.controller';
 import { createItemController } from './item.controller';
 
 export const createItemRoutes = (): FastifyPluginAsync => {
   const controller = createItemController();
+  const alternativesController = createItemAlternativesController();
 
   return async (app) => {
     const preHandler = [authenticate, requireBusiness];
@@ -24,6 +26,24 @@ export const createItemRoutes = (): FastifyPluginAsync => {
       controller.deleteTierPrice,
     );
     app.get('/:id/price-history', { preHandler }, controller.getPriceHistory);
+
+    app.get('/:id/alternatives', { preHandler }, alternativesController.list);
+    app.post('/:id/alternatives', { preHandler }, alternativesController.add);
+    app.delete(
+      '/:id/alternatives/:alternativeItemId',
+      { preHandler },
+      alternativesController.remove,
+    );
+    app.patch(
+      '/:id/alternatives/reorder',
+      { preHandler },
+      alternativesController.reorder,
+    );
+    app.get(
+      '/:id/alternatives/recommendations',
+      { preHandler },
+      alternativesController.recommendations,
+    );
 
     app.get('/:id', { preHandler }, controller.getById);
     app.patch('/:id', { preHandler }, controller.update);

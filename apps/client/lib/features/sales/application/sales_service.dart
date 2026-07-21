@@ -59,6 +59,8 @@ class SalesService {
   final SalesRepository _repository;
   final PartyService _partyService;
 
+  SalesRepository get repository => _repository;
+
   Future<Map<String, String>> _partyNameMap() async {
     final parties = await _partyService.fetchParties();
     return {for (final party in parties) party.id: party.name};

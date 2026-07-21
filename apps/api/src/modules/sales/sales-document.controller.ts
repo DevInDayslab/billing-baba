@@ -9,6 +9,7 @@ import {
 } from '../inventory/inventory.controller-helpers';
 import {
   brandSwapBodySchema,
+  cloneWithAlternativesBodySchema,
   convertSalesDocumentBodySchema,
   createPosSessionBodySchema,
   createSalesDocumentBodySchema,
@@ -250,6 +251,35 @@ export function createSalesDocumentController() {
           body,
         );
         return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid request body',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    cloneWithAlternatives: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ) => {
+      try {
+        const { accountId, businessId, userId } = requireAuthContext(request);
+        const { id } = salesDocumentIdParamSchema.parse(request.params);
+        const body = cloneWithAlternativesBodySchema.parse(request.body);
+        const data = await service.cloneWithAlternatives(
+          businessId,
+          accountId,
+          userId,
+          id,
+          body,
+        );
+        return sendData(reply, data, 201);
       } catch (error) {
         if (error instanceof ZodError) {
           throw new AppError(

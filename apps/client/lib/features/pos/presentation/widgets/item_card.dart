@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/out_of_stock_dialog.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_category_style.dart';
 import 'package:billing_baba/features/pos/presentation/widgets/pos_styles.dart';
@@ -18,6 +19,35 @@ class ItemCard extends ConsumerWidget {
 
   final PosItem item;
 
+  void _handleItemTap(BuildContext context, WidgetRef ref) {
+    if (item.stock == 0) {
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => OutOfStockDialog(
+          itemId: item.id,
+          itemName: item.name,
+          onSelectAlternative: (alternativeItem) {
+            final alternativePosItem = PosItem(
+              id: alternativeItem.id,
+              name: alternativeItem.name,
+              sku: alternativeItem.barcode ?? '',
+              category: alternativeItem.categoryName ?? item.category,
+              price: alternativeItem.salePrice,
+              stock: alternativeItem.stockQuantity.toInt(),
+              unit: item.unit,
+            );
+            ref.read(posCartProvider.notifier).addItem(alternativePosItem);
+          },
+          onContinueAnyway: () {
+            ref.read(posCartProvider.notifier).addItem(item);
+          },
+        ),
+      );
+    } else {
+      ref.read(posCartProvider.notifier).addItem(item);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stockColor = item.stock <= 5 ? posNegativeColor : posPositiveColor;
@@ -26,7 +56,7 @@ class ItemCard extends ConsumerWidget {
       color: AppColors.surface,
       borderRadius: AppRadius.mdBorder,
       child: InkWell(
-        onTap: () => ref.read(posCartProvider.notifier).addItem(item),
+        onTap: () => _handleItemTap(context, ref),
         borderRadius: AppRadius.mdBorder,
         hoverColor: posSelectedBackground.withValues(alpha: 0.5),
         child: Container(
