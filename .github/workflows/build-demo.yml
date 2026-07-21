@@ -2,7 +2,7 @@
 # Produces an unsigned Windows Release zip — no signing, notarization, or publishing.
 #
 # Triggers:
-#   - Manual run (workflow_dispatch)
+#   - Manual run (workflow_dispatch) — builds the branch you select in the UI
 #   - Push to the `demo` branch
 #
 # Demo config is fully hardcoded below (production API + website + MSG91).
@@ -16,7 +16,6 @@ on:
     branches:
       - demo
 
-# Always build from the `demo` branch so manual runs and CI use the same source.
 env:
   FLUTTER_WORKING_DIRECTORY: apps/client
 
@@ -31,10 +30,10 @@ jobs:
         working-directory: ${{ env.FLUTTER_WORKING_DIRECTORY }}
 
     steps:
-      - name: Checkout demo branch
-        uses: actions/checkout@v4
-        with:
-          ref: demo
+      # Checkout the commit that triggered this run (push ref or dispatch branch).
+      # Do not hardcode `ref: demo` — that branch may not exist on the remote.
+      - name: Checkout
+        uses: actions/checkout@v5
 
       - name: Generate Flutter .env
         working-directory: .
