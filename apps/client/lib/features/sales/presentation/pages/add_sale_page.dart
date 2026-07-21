@@ -5,6 +5,11 @@ import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/close_form_dialog.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
+import 'package:billing_baba/features/hidden_ledger/models/short_payment_handling.dart';
+import 'package:billing_baba/features/hidden_ledger/presentation/widgets/hidden_ledger_recovery_dialog.dart';
+import 'package:billing_baba/features/hidden_ledger/presentation/widgets/hidden_ledger_summary_tile.dart';
+import 'package:billing_baba/features/hidden_ledger/presentation/widgets/short_payment_handling_dialog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
@@ -659,6 +664,14 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
     final notifier = ref.read(
       addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
     );
+    final canViewHiddenLedger =
+        ref.watch(permissionServiceProvider).canViewHiddenLedger;
+    final partyId = form.partyId;
+    final showHiddenLedgerBanner =
+        canViewHiddenLedger && partyId != null && partyId.isNotEmpty;
+    final hiddenLedgerBanner = showHiddenLedgerBanner
+        ? HiddenLedgerSummaryTile(partyId: partyId)
+        : null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -746,6 +759,10 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               billingNameField,
+              if (hiddenLedgerBanner != null) ...[
+                const SizedBox(height: _sectionGap),
+                hiddenLedgerBanner,
+              ],
               const SizedBox(height: _sectionGap),
               phoneField,
               const SizedBox(height: _sectionGap),
@@ -769,6 +786,10 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                 Expanded(child: phoneField),
               ],
             ),
+            if (hiddenLedgerBanner != null) ...[
+              const SizedBox(height: _sectionGap),
+              hiddenLedgerBanner,
+            ],
             const SizedBox(height: _sectionGap),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -787,7 +808,7 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
   }
 }
 
-class _BottomActionBar extends ConsumerWidget {
+class _BottomActionBar extends ConsumerStatefulWidget {
   const _BottomActionBar({
     required this.sessionKey,
     required this.onSaved,
@@ -799,12 +820,30 @@ class _BottomActionBar extends ConsumerWidget {
   final bool isEditing;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final form = ref.watch(addSaleFormProvider(sessionKey: sessionKey));
+  ConsumerState<_BottomActionBar> createState() => _BottomActionBarState();
+}
+
+class _BottomActionBarState extends ConsumerState<_BottomActionBar> {
+  /// Synchronous guard — blocks duplicate taps before async dialogs / isSaving.
+  bool _submitInFlight = false;
+
+  Future<void> _runExclusive(Future<void> Function() action) async {
+    if (_submitInFlight) return;
+    _submitInFlight = true;
+    try {
+      await action();
+    } finally {
+      _submitInFlight = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final form = ref.watch(addSaleFormProvider(sessionKey: widget.sessionKey));
     final notifier = ref.read(
-      addSaleFormProvider(sessionKey: sessionKey).notifier,
+      addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
     );
-    final isSaving = form.isSaving;
+    final isBusy = _submitInFlight || form.isSaving;
     final isCash = form.saleType == SaleType.cash;
 
     return Padding(
@@ -817,9 +856,9 @@ class _BottomActionBar extends ConsumerWidget {
           final isNarrow = constraints.maxWidth < _narrowBreakpoint;
           final printButton = !isCash
               ? OutlinedButton.icon(
-                  onPressed: isSaving
+                  onPressed: isBusy
                       ? null
-                      : () => _handlePrintPreview(context, ref),
+                      : () => _handlePrintPreview(context),
                   icon: const Icon(Icons.print_outlined, size: 16),
                   label: const Text(
                     'Print / Preview',
@@ -835,14 +874,14 @@ class _BottomActionBar extends ConsumerWidget {
                 )
               : null;
           final shareButton = ShareMenuButton(
-            onChannelSelected: isSaving
+            onChannelSelected: isBusy
                 ? null
-                : (_) => _handleSaveAndShare(context, ref),
+                : (_) => _runExclusive(() => _handleSaveAndShare(context)),
           );
           final saveButton = FilledButton(
-            onPressed: isSaving
+            onPressed: isBusy
                 ? null
-                : () => _handleSave(context, ref, notifier),
+                : () => _runExclusive(() => _handleSave(context, notifier)),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -851,7 +890,7 @@ class _BottomActionBar extends ConsumerWidget {
                 vertical: 8,
               ),
             ),
-            child: isSaving
+            child: isBusy
                 ? const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -917,8 +956,8 @@ class _BottomActionBar extends ConsumerWidget {
     return id == null ? 'invoice' : SaleInvoicePrintActions.filenameFor(id);
   }
 
-  Future<void> _handlePrintPreview(BuildContext context, WidgetRef ref) async {
-    final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
+  Future<void> _handlePrintPreview(BuildContext context) async {
+    final form = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey));
     final docId = _documentIdForForm(form);
     if (docId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -934,14 +973,77 @@ class _BottomActionBar extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleSaveAndShare(BuildContext context, WidgetRef ref) async {
-    final notifier = ref.read(
-      addSaleFormProvider(sessionKey: sessionKey).notifier,
-    );
-    final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
-    if (form.isSaving) return;
+  Future<({String? shortPaymentHandling, double? shortfallAmount})>
+  _resolveShortPaymentHandling(BuildContext context) async {
+    final form = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey));
+    if (!form.hasShortPayment) {
+      return (shortPaymentHandling: null, shortfallAmount: null);
+    }
 
-    final result = await notifier.saveInvoice();
+    final paidAmount = form.displayReceivedAmount;
+    final allowHiddenLedger =
+        ref.read(permissionServiceProvider).canViewHiddenLedger;
+
+    final handling = await showShortPaymentHandlingDialog(
+      context,
+      paidAmount: paidAmount,
+      targetAmount: form.invoiceTotal,
+      allowHiddenLedger: allowHiddenLedger,
+    );
+    if (handling == null) {
+      return (shortPaymentHandling: null, shortfallAmount: null);
+    }
+
+    final shortfall = (form.invoiceTotal - paidAmount)
+        .clamp(0, double.infinity)
+        .toDouble();
+    return (
+      shortPaymentHandling: handling.apiValue,
+      shortfallAmount: handling == ShortPaymentHandling.hiddenLedger
+          ? shortfall
+          : null,
+    );
+  }
+
+  Future<double?> _resolveHiddenLedgerRecovery(BuildContext context) async {
+    if (!ref.read(permissionServiceProvider).canViewHiddenLedger) return 0;
+
+    final form = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey));
+    if (!form.hasRecoverableMarkup) return 0;
+
+    final result = await showHiddenLedgerRecoveryDialog(
+      context,
+      hiddenBalance: form.hiddenLedgerBalance,
+      markupAmount: form.markupAmount,
+    );
+    if (result == null) return null;
+    if (result.choice == HiddenLedgerRecoveryChoice.ignore) return 0;
+    return result.amount;
+  }
+
+  Future<void> _handleSaveAndShare(BuildContext context) async {
+    final notifier = ref.read(
+      addSaleFormProvider(sessionKey: widget.sessionKey).notifier,
+    );
+
+    final shortPayment = await _resolveShortPaymentHandling(context);
+    if (!context.mounted) return;
+    final latestForm = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey));
+    if (latestForm.hasShortPayment && shortPayment.shortPaymentHandling == null) {
+      return;
+    }
+
+    final recoveryAmount = await _resolveHiddenLedgerRecovery(context);
+    if (!context.mounted) return;
+    if (latestForm.hasRecoverableMarkup && recoveryAmount == null) {
+      return;
+    }
+
+    final result = await notifier.saveInvoice(
+      shortPaymentHandling: shortPayment.shortPaymentHandling,
+      shortfallAmount: shortPayment.shortfallAmount,
+      hiddenLedgerRecoveryAmount: recoveryAmount ?? 0,
+    );
     if (!context.mounted) return;
     if (!result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -951,15 +1053,15 @@ class _BottomActionBar extends ConsumerWidget {
     }
     await _showSaveSuccessDialog(
       context,
-      isEditing: isEditing,
+      isEditing: widget.isEditing,
       earnedLoyaltyPoints: result.earnedLoyaltyPoints,
       pointsAvailable: result.pointsAvailable,
     );
     if (!context.mounted) return;
-    final saved = ref.read(addSaleFormProvider(sessionKey: sessionKey));
+    final saved = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey));
     final docId = saved.documentId;
     if (docId == null) {
-      onSaved();
+      widget.onSaved();
       return;
     }
     await SaleInvoicePrintActions.share(
@@ -968,18 +1070,31 @@ class _BottomActionBar extends ConsumerWidget {
       docId,
       filename: _filename(saved),
     );
-    if (context.mounted) onSaved();
+    if (context.mounted) widget.onSaved();
   }
 
   Future<void> _handleSave(
     BuildContext context,
-    WidgetRef ref,
     AddSaleForm notifier,
   ) async {
-    final form = ref.read(addSaleFormProvider(sessionKey: sessionKey));
-    if (form.isSaving) return;
+    final shortPayment = await _resolveShortPaymentHandling(context);
+    if (!context.mounted) return;
+    final latestForm = ref.read(addSaleFormProvider(sessionKey: widget.sessionKey));
+    if (latestForm.hasShortPayment && shortPayment.shortPaymentHandling == null) {
+      return;
+    }
 
-    final result = await notifier.saveInvoice();
+    final recoveryAmount = await _resolveHiddenLedgerRecovery(context);
+    if (!context.mounted) return;
+    if (latestForm.hasRecoverableMarkup && recoveryAmount == null) {
+      return;
+    }
+
+    final result = await notifier.saveInvoice(
+      shortPaymentHandling: shortPayment.shortPaymentHandling,
+      shortfallAmount: shortPayment.shortfallAmount,
+      hiddenLedgerRecoveryAmount: recoveryAmount ?? 0,
+    );
     if (!context.mounted) return;
 
     if (!result.isSuccess) {
@@ -991,12 +1106,12 @@ class _BottomActionBar extends ConsumerWidget {
 
     await _showSaveSuccessDialog(
       context,
-      isEditing: isEditing,
+      isEditing: widget.isEditing,
       earnedLoyaltyPoints: result.earnedLoyaltyPoints,
       pointsAvailable: result.pointsAvailable,
     );
     if (!context.mounted) return;
-    onSaved();
+    widget.onSaved();
   }
 
   Future<void> _showSaveSuccessDialog(

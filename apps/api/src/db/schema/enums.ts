@@ -107,6 +107,12 @@ export const shortPaymentHandlingEnum = pgEnum('short_payment_handling', [
   'unrecovered',
 ]);
 
+export const hiddenLedgerEntryStatusEnum = pgEnum('hidden_ledger_entry_status', [
+  'pending',
+  'partial',
+  'recovered',
+]);
+
 export const inventoryMovementTypeEnum = pgEnum('inventory_movement_type', [
   'opening',
   'purchase',

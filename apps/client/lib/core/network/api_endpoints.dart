@@ -110,6 +110,14 @@ abstract final class ApiEndpoints {
   static String paymentAllocation(String id, String allocationId) =>
       '${paymentAllocations(id)}/$allocationId';
 
+  static const hiddenLedger = '/api/v1/hidden-ledger';
+  static const hiddenLedgerEntries = '$hiddenLedger/entries';
+  static String hiddenLedgerEntry(String id) => '$hiddenLedgerEntries/$id';
+  static String hiddenLedgerPartySummary(String partyId) =>
+      '$hiddenLedger/parties/$partyId/summary';
+  static String hiddenLedgerRecoverFromSale(String partyId) =>
+      '$hiddenLedger/parties/$partyId/recover-from-sale';
+
   static const purchases = '/api/v1/purchases';
   static const purchaseParseDocument = '$purchases/parse-document';
   static const purchaseDocuments = '$purchases/purchase-documents';

@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
+import 'package:billing_baba/features/hidden_ledger/models/short_payment_handling.dart';
+import 'package:billing_baba/features/hidden_ledger/presentation/widgets/short_payment_handling_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
@@ -82,12 +84,42 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
     super.dispose();
   }
 
+  Future<ShortPaymentHandling?> _resolveShortPaymentHandling() async {
+    final notifier = ref.read(paymentInFormProvider.notifier);
+    await notifier.refreshBalanceDue();
+    if (!mounted) return null;
+
+    final form = ref.read(paymentInFormProvider);
+    if (!form.hasShortPayment) return ShortPaymentHandling.officialDue;
+
+    return showShortPaymentHandlingDialog(
+      context,
+      paidAmount: form.receivedAmount + form.discount,
+      targetAmount: form.balanceDue,
+    );
+  }
+
   Future<void> _handleSave({bool previewAfterSave = false}) async {
     final notifier = ref.read(paymentInFormProvider.notifier);
     final payment = notifier.buildPaymentModel();
     if (payment == null) return;
 
-    final result = await notifier.savePayment();
+    final form = ref.read(paymentInFormProvider);
+    final handling = await _resolveShortPaymentHandling();
+    if (!mounted || handling == null) return;
+
+    final shortfall = form.hasShortPayment
+        ? (form.balanceDue - form.receivedAmount - form.discount)
+            .clamp(0, double.infinity)
+            .toDouble()
+        : 0.0;
+
+    final result = await notifier.savePayment(
+      shortPaymentHandling: handling.apiValue,
+      shortfallAmount: handling == ShortPaymentHandling.hiddenLedger
+          ? shortfall
+          : null,
+    );
     if (!mounted) return;
 
     if (result.error != null) {
@@ -130,7 +162,20 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
         VoucherPrintActions.showSaveBeforePrinting(context);
         return;
       }
-      final result = await notifier.savePayment();
+      final form = ref.read(paymentInFormProvider);
+      final handling = await _resolveShortPaymentHandling();
+      if (!mounted || handling == null) return;
+      final shortfall = form.hasShortPayment
+          ? (form.balanceDue - form.receivedAmount - form.discount)
+              .clamp(0, double.infinity)
+              .toDouble()
+          : 0.0;
+      final result = await notifier.savePayment(
+        shortPaymentHandling: handling.apiValue,
+        shortfallAmount: handling == ShortPaymentHandling.hiddenLedger
+            ? shortfall
+            : null,
+      );
       if (!mounted) return;
       if (result.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -198,6 +243,13 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                               value: form.party,
                               emptyPlaceholder: 'Select Party',
                               onSelected: notifier.updateParty,
+                              onPartySelected: (party) => notifier.updateParty(
+                                party.name,
+                                partyId: party.id,
+                                balanceDue: party.hasReceivable
+                                    ? party.balance
+                                    : 0,
+                              ),
                               onPartySelectedWithId: (partyId, name) =>
                                   notifier.updateParty(name, partyId: partyId),
                               hasError:
@@ -322,6 +374,14 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                             ),
                           ),
                           const SizedBox(height: _sectionGap * 2),
+                          if (form.partyId != null && form.balanceDue > 0)
+                            _AmountRow(
+                              label: 'Balance Due',
+                              value: _amountFormat.format(form.balanceDue),
+                              valueColor: AppColors.textSecondary,
+                            ),
+                          if (form.partyId != null && form.balanceDue > 0)
+                            const SizedBox(height: AppSpacing.sm),
                           _AmountRow(
                             label: 'Received',
                             child: SizedBox(

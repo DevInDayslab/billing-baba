@@ -2,6 +2,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
+import 'package:billing_baba/features/hidden_ledger/presentation/widgets/hidden_ledger_history_section.dart';
+import 'package:billing_baba/features/hidden_ledger/presentation/widgets/hidden_ledger_summary_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_header.dart';
 import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
 import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
@@ -80,6 +82,8 @@ class _PartyDetailContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ledgerAsync = ref.watch(partyTimelineProvider(party.id));
     final businessName = ref.watch(sidebarBusinessProvider).name;
+    final canViewHiddenLedger =
+        ref.watch(permissionServiceProvider).canViewHiddenLedger;
     final transactionsAsync = ledgerAsync.whenData(
       (ledger) => ledger.transactions,
     );
@@ -98,6 +102,17 @@ class _PartyDetailContent extends ConsumerWidget {
           businessName: businessName,
           onBack: onBack,
         ),
+        if (canViewHiddenLedger)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              0,
+            ),
+            child: HiddenLedgerSummaryTile(partyId: party.id),
+          ),
+        if (canViewHiddenLedger) HiddenLedgerHistorySection(partyId: party.id),
         const Divider(height: 1, thickness: 1),
         Expanded(
           child: ledgerAsync.when(

@@ -1,6 +1,11 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import {
+  applyHiddenLedgerVisibility,
+  applyHiddenLedgerVisibilityList,
+} from '../../shared/hidden-ledger/party-hidden-ledger';
 import { resolvePartyPricingTier } from '../../shared/pricing/pricing-tier';
+import type { UserRole } from '../auth/auth.types';
 import { PartyRepository } from './party.repository';
 import type {
   CreatePartyBody,
@@ -40,6 +45,7 @@ export class PartyService {
     businessId: string,
     accountId: string,
     query: ListPartiesQuery,
+    role?: UserRole,
   ): Promise<{
     data: PartyRecord[];
     meta: { page: number; limit: number; total: number };
@@ -58,7 +64,7 @@ export class PartyService {
     });
 
     return {
-      data: result.rows,
+      data: applyHiddenLedgerVisibilityList(result.rows, role),
       meta: {
         page: query.page,
         limit: query.limit,
@@ -71,6 +77,7 @@ export class PartyService {
     businessId: string,
     accountId: string,
     partyId: string,
+    role?: UserRole,
   ): Promise<PartyRecord> {
     await this.assertBusinessAccess(businessId, accountId);
 
@@ -79,7 +86,7 @@ export class PartyService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    return party;
+    return applyHiddenLedgerVisibility(party, role);
   }
 
   async createParty(
@@ -87,6 +94,7 @@ export class PartyService {
     accountId: string,
     userId: string | undefined,
     input: CreatePartyBody,
+    role?: UserRole,
   ): Promise<PartyRecord> {
     await this.assertBusinessAccess(businessId, accountId);
 
@@ -112,7 +120,7 @@ export class PartyService {
       await this.assertGstinAvailable(businessId, gstin);
     }
 
-    return this.repository.create({
+    const created = await this.repository.create({
       businessId,
       name: input.name.trim(),
       mobile,
@@ -130,6 +138,8 @@ export class PartyService {
       createdBy: userId ?? null,
       updatedBy: userId ?? null,
     });
+
+    return applyHiddenLedgerVisibility(created, role);
   }
 
   async updateParty(
@@ -138,6 +148,7 @@ export class PartyService {
     userId: string | undefined,
     partyId: string,
     input: UpdatePartyBody,
+    role?: UserRole,
   ): Promise<PartyRecord> {
     await this.assertBusinessAccess(businessId, accountId);
 
@@ -213,7 +224,7 @@ export class PartyService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    return updated;
+    return applyHiddenLedgerVisibility(updated, role);
   }
 
   async getPartyDeleteStatus(

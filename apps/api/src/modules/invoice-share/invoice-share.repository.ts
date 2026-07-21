@@ -110,7 +110,6 @@ export class InvoiceShareRepository {
         email: parties.email,
         gstin: parties.gstin,
         stateCode: parties.stateCode,
-        unrecoveredAmount: parties.unrecoveredAmount,
       })
       .from(parties)
       .where(

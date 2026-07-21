@@ -1,7 +1,9 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
 import 'package:billing_baba/features/parties/models/party_sub_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 const _menuHoverColor = Color(0xFFF5F5F5);
@@ -9,7 +11,7 @@ const _itemVerticalPadding = 12.0;
 const _iconSize = 18.0;
 
 /// Dropdown menu for switching between Parties and Groups views.
-class PartyPageSwitcherMenu extends StatelessWidget {
+class PartyPageSwitcherMenu extends ConsumerWidget {
   const PartyPageSwitcherMenu({
     required this.currentRoute,
     required this.child,
@@ -20,7 +22,16 @@ class PartyPageSwitcherMenu extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final canViewHiddenLedger =
+        ref.watch(permissionServiceProvider).canViewHiddenLedger;
+    final items = PartySubRoutes.items
+        .where(
+          (item) =>
+              item.route != AppRoutes.partyHiddenLedger || canViewHiddenLedger,
+        )
+        .toList();
+
     return MenuAnchor(
       alignmentOffset: const Offset(0, 4),
       style: MenuStyle(
@@ -35,13 +46,15 @@ class PartyPageSwitcherMenu extends StatelessWidget {
         minimumSize: const WidgetStatePropertyAll(Size(200, 0)),
       ),
       menuChildren: [
-        for (final item in PartySubRoutes.items)
+        for (final item in items)
           _PartyPageSwitcherMenuItem(
             label: item.label,
             isSelected: item.route == currentRoute,
-            icon: item.route == AppRoutes.partyDetails
-                ? Icons.format_list_bulleted
-                : Icons.groups_outlined,
+            icon: switch (item.route) {
+              AppRoutes.partyDetails => Icons.format_list_bulleted,
+              AppRoutes.partyHiddenLedger => Icons.visibility_off_outlined,
+              _ => Icons.groups_outlined,
+            },
             onSelected: () {
               if (item.route != currentRoute) {
                 context.go(item.route);

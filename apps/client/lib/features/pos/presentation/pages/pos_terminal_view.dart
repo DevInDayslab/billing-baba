@@ -126,6 +126,8 @@ class _PosTerminalViewState extends ConsumerState<PosTerminalView> {
     final totalPaid = cart.payments.fold(0.0, (sum, p) => sum + p.amount);
     final totalPayable = cart.totalPayable;
     if (cart.payments.isNotEmpty && totalPaid < totalPayable) {
+      // TODO(product): Support short POS payments with the same Official Due vs
+      // Hidden Ledger prompt used in Payment-In and credit sale finalize flows.
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Payment amount is less than total'),

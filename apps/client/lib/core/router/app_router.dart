@@ -21,6 +21,7 @@ import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.da
 import 'package:billing_baba/features/developer/models/developer_sub_route.dart';
 import 'package:billing_baba/features/developer/presentation/pages/developer_components_page.dart';
 import 'package:billing_baba/features/developer/presentation/pages/table_filters_playground_page.dart';
+import 'package:billing_baba/features/hidden_ledger/presentation/pages/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/pages/items_page.dart';
 import 'package:billing_baba/features/inventory/presentation/screens/add_items_barcode_screen.dart';
 import 'package:billing_baba/features/parties/presentation/pages/party_details_page.dart';
@@ -151,6 +152,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.partyGroups,
             builder: (context, state) => const PartyGroupsPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.partyHiddenLedger,
+            builder: (context, state) => const HiddenLedgerListPage(),
           ),
           GoRoute(
             path: AppRoutes.crm,

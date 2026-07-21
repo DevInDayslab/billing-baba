@@ -13,6 +13,7 @@ class PartyModel {
     required this.phone,
     this.partyType = 'customer',
     this.balance = 0,
+    this.unrecoveredAmount = 0,
     this.openingBalance = 0,
     this.isActive = true,
     this.gstin = '',
@@ -57,6 +58,7 @@ class PartyModel {
       phone: _formatPhone(dto.mobile),
       partyType: dto.partyType,
       balance: balance,
+      unrecoveredAmount: dto.unrecoveredAmount,
       openingBalance: openingBalance,
       isActive: dto.isActive,
       gstin: dto.gstin ?? '',
@@ -170,6 +172,7 @@ class PartyModel {
 
   /// Positive = amount to receive. Negative = amount to pay.
   final double balance;
+  final double unrecoveredAmount;
   final double openingBalance;
   final bool isActive;
   final String gstin;
@@ -253,6 +256,7 @@ class PartyModel {
     String? phone,
     String? partyType,
     double? balance,
+    double? unrecoveredAmount,
     double? openingBalance,
     bool? isActive,
     String? gstin,
@@ -288,6 +292,7 @@ class PartyModel {
       phone: phone ?? this.phone,
       partyType: partyType ?? this.partyType,
       balance: balance ?? this.balance,
+      unrecoveredAmount: unrecoveredAmount ?? this.unrecoveredAmount,
       openingBalance: openingBalance ?? this.openingBalance,
       isActive: isActive ?? this.isActive,
       gstin: gstin ?? this.gstin,

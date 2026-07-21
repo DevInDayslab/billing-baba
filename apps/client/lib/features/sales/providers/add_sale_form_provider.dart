@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
+import 'package:billing_baba/features/hidden_ledger/application/hidden_ledger_service.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
 import 'package:billing_baba/features/loyalty/loyalty_points_calculator.dart';
@@ -68,6 +70,7 @@ class AddSaleForm extends _$AddSaleForm {
       state = _withResolvedPartyTier(
         loaded.copyWith(items: items, isLoading: false),
       );
+      _scheduleHiddenLedgerBalanceRefresh();
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
@@ -100,6 +103,7 @@ class AddSaleForm extends _$AddSaleForm {
           showValidationErrors: false,
         ),
       );
+      _scheduleHiddenLedgerBalanceRefresh();
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
@@ -150,6 +154,7 @@ class AddSaleForm extends _$AddSaleForm {
           showValidationErrors: false,
         ),
       );
+      _scheduleHiddenLedgerBalanceRefresh();
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
@@ -405,9 +410,12 @@ class AddSaleForm extends _$AddSaleForm {
     );
     unawaited(_repriceLineItemsForPartyTierAsync());
     unawaited(_refreshLoyaltyAvailable(partyId));
+    unawaited(_refreshHiddenLedgerBalance(partyId));
   }
 
   void applyPartyDetails(PartyModel party) {
+    final canViewHiddenLedger =
+        ref.read(permissionServiceProvider).canViewHiddenLedger;
     final loyaltyAvailable = LoyaltyRules.isEligibleParty(party)
         ? _cachedLoyaltyAvailable(party.id)
         : 0.0;
@@ -437,11 +445,38 @@ class AddSaleForm extends _$AddSaleForm {
       loyaltyPointsAvailable: loyaltyAvailable,
       loyaltyPointsUsed: 0,
       loyaltyPointsEnabled: false,
+      hiddenLedgerBalance:
+          canViewHiddenLedger ? party.unrecoveredAmount : 0,
+      clearHiddenLedgerBalance: !canViewHiddenLedger,
       isDirty: true,
       clearSaveError: true,
     );
     unawaited(_repriceLineItemsForPartyTierAsync());
     unawaited(_refreshLoyaltyAvailable(party.id, party: party));
+    unawaited(_refreshHiddenLedgerBalance(party.id));
+  }
+
+  void _scheduleHiddenLedgerBalanceRefresh() {
+    final partyId = state.partyId;
+    if (partyId == null || partyId.isEmpty) return;
+    unawaited(_refreshHiddenLedgerBalance(partyId));
+  }
+
+  Future<void> _refreshHiddenLedgerBalance(String partyId) async {
+    if (!ref.read(permissionServiceProvider).canViewHiddenLedger) {
+      state = state.copyWith(clearHiddenLedgerBalance: true);
+      return;
+    }
+
+    try {
+      final service = await ref.read(hiddenLedgerServiceProvider.future);
+      final summary = await service.getPartySummary(partyId);
+      if (!ref.mounted) return;
+      state = state.copyWith(hiddenLedgerBalance: summary.hiddenLedgerBalance);
+    } catch (_) {
+      if (!ref.mounted) return;
+      state = state.copyWith(clearHiddenLedgerBalance: true);
+    }
   }
 
   Future<void> _repriceLineItemsForPartyTierAsync() async {
@@ -499,6 +534,7 @@ class AddSaleForm extends _$AddSaleForm {
       loyaltyPointsUsed: 0,
       loyaltyPointsEnabled: false,
       isDirty: true,
+      clearHiddenLedgerBalance: true,
     );
     unawaited(_repriceLineItemsForPartyTierAsync());
   }
@@ -822,7 +858,12 @@ class AddSaleForm extends _$AddSaleForm {
     );
   }
 
-  Future<AddSaleSaveResult> saveInvoice({bool finalize = true}) async {
+  Future<AddSaleSaveResult> saveInvoice({
+    bool finalize = true,
+    String? shortPaymentHandling,
+    double? shortfallAmount,
+    double hiddenLedgerRecoveryAmount = 0,
+  }) async {
     if (state.isSaving) return const AddSaleSaveResult();
 
     if (!validate(finalize: finalize)) {
@@ -855,7 +896,22 @@ class AddSaleForm extends _$AddSaleForm {
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
           loyaltyPointsRedeemed: loyaltyPointsUsed,
+          shortPaymentHandling: shortPaymentHandling,
+          shortfallAmount: shortfallAmount,
         );
+
+        if (partyId != null &&
+            partyId.isNotEmpty &&
+            hiddenLedgerRecoveryAmount > 0) {
+          final hiddenLedgerService =
+              await ref.read(hiddenLedgerServiceProvider.future);
+          await hiddenLedgerService.recoverFromSale(
+            partyId: partyId,
+            saleId: result.document.id,
+            amount: hiddenLedgerRecoveryAmount,
+          );
+          ref.invalidate(partyHiddenLedgerSummaryProvider(partyId));
+        }
 
         final loyalty = _resolveSaleLoyalty(
           party: party,

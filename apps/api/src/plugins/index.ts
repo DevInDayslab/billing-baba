@@ -16,7 +16,7 @@ export async function registerPlugins(
   await registerMultipartPlugin(app);
   await registerCorsPlugin(app, config);
   await registerJwtPlugin(app, config);
-  await registerRateLimitPlugin(app);
+  await registerRateLimitPlugin(app, config);
   await registerSwaggerPlugin(app, config);
   await registerSwaggerUiPlugin(app);
 }

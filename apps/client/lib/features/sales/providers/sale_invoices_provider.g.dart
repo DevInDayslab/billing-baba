@@ -259,7 +259,7 @@ final class SaleInvoiceSearchQueryProvider
 }
 
 String _$saleInvoiceSearchQueryHash() =>
-    r'ca4ff02a32054f65615a16379a22a50515d59618';
+    r'8240ebe2f5bca6daaa7e0d740e4bd506a98dade4';
 
 abstract class _$SaleInvoiceSearchQuery extends $Notifier<String> {
   String build();
@@ -356,7 +356,7 @@ final class SaleInvoicesProvider
   SaleInvoices create() => SaleInvoices();
 }
 
-String _$saleInvoicesHash() => r'485f51293bfe7a8608f78aa23a96dbca7e199dad';
+String _$saleInvoicesHash() => r'95d319dd4e01e7e948505693a793a24dc0008e07';
 
 abstract class _$SaleInvoices extends $AsyncNotifier<PaginatedSaleInvoices> {
   FutureOr<PaginatedSaleInvoices> build();
@@ -481,7 +481,7 @@ final class FilteredSaleInvoicesProvider
 }
 
 String _$filteredSaleInvoicesHash() =>
-    r'935ef7c82a3b5f25235d51165113eba50f3e7f1a';
+    r'27579b63ce67c96ac1fd21c7040f9c27c07665fd';
 
 @ProviderFor(paginatedSaleInvoices)
 final paginatedSaleInvoicesProvider = PaginatedSaleInvoicesProvider._();

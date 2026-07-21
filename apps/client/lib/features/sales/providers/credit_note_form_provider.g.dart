@@ -58,7 +58,7 @@ final class CreditNoteFormProvider
   }
 }
 
-String _$creditNoteFormHash() => r'5dc5af7b916111af20f2a7f5fba4b9cd6b0b1db9';
+String _$creditNoteFormHash() => r'd59eef1d7c2f9e18e56eb2dd0d935aa7dcc0fcce';
 
 final class CreditNoteFormFamily extends $Family
     with
@@ -164,7 +164,7 @@ final class CreditNoteTotalTaxProvider
 }
 
 String _$creditNoteTotalTaxHash() =>
-    r'b5229e102862bb17ff9ea522575070dfee35fa45';
+    r'82d0141817982bb0e41c44481d4d3f1d031da509';
 
 final class CreditNoteTotalTaxFamily extends $Family
     with $FunctionalFamilyOverride<double, String> {
