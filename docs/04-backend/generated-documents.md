@@ -12,10 +12,13 @@ Related: [storage.md](./storage.md) · [notifications.md](./notifications.md) ·
 |--------|----------|
 | `lookup` | Return cached metadata when `source_version` matches |
 | `ensure` | Return cache, store client `content_base64`, or generate server-side PDF |
+| `resolveOrCreateSalePdfDownload` | Public download pipeline: signed URL for existing object, else professional generate + store |
 | `getSignedDownloadUrl` | Fresh signed URL for authenticated clients |
 | `getPublicFileRedirectUrl` | 302 target for public download token |
 
-Business modules call **`InvoiceArtifactService.ensurePdf()`**, which delegates here. Do not generate invoice PDFs inside route handlers.
+Business modules call **`InvoiceArtifactService.ensurePdf()`** / **`resolveCanonicalPdfDownload()`**, which delegates here. Do not generate invoice PDFs inside route handlers.
+
+Sale documents use **`InvoiceDocumentPdfRenderer`**: Chromium prints the canonical public-invoice HTML (same card layout as the website InvoiceView), with Inter + Noto Sans embedded so ₹ renders correctly. Payment receipts still use a simple pdfkit layout.
 
 ## Cache key
 
@@ -44,4 +47,6 @@ Never expose raw S3 keys to clients.
 
 ## Server PDF quality
 
-Server generation (`GeneratedDocumentPdfGenerator`) is an MVP pdfkit layout used when the client has not uploaded bytes. Flutter print templates remain the pixel-parity source for client-uploaded PDFs.
+Server generation for sale invoices uses Chromium to print the **canonical public invoice HTML** (`InvoiceDocumentPdfRenderer`) — the same visual template as the website invoice page (card, table, badge, QR, footer). Noto Sans is embedded so ₹ renders correctly.
+
+Tiny legacy pdfkit text invoices (&lt; ~12KB) are auto-replaced on the next public download. Flutter client uploads remain valid when they are full professional PDFs.

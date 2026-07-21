@@ -11,6 +11,7 @@ import {
   GeneratedDocumentService,
 } from '../generated-documents/generated-document.service';
 import { generatedKindForSalesDocumentType } from '../notifications/notification-media.service';
+import { MediaAssetRepository } from '../storage/storage.repository';
 import { InvoiceShareRepository } from './invoice-share.repository';
 import type {
   InvoiceShareLinkDto,
@@ -302,30 +303,13 @@ export class InvoiceShareService {
     const scanToPayEnabled =
       Boolean(company.upiId?.trim()) && Number.parseFloat(balance) > 0;
 
-    if (share.createdBy) {
-      try {
-        await this.artifacts.ensurePdf(
-          share.businessId,
-          share.createdBy,
-          share.invoiceId,
-          document.documentType,
-        );
-      } catch {
-        // Public page still renders when PDF generation fails.
-      }
-    }
-
-    const [logoUrl, pdfDownloadPath] = await Promise.all([
-      this.mediaService.resolveBrandingLogoUrl(share.businessId),
-      this.artifacts.resolvePdfDownloadPath(
-        share.businessId,
-        share.invoiceId,
-        document.documentType,
-      ),
-    ]);
+    const logoUrl = await this.mediaService.resolveBrandingLogoUrl(
+      share.businessId,
+    );
 
     const shareUrl = buildInvoiceShareUrl(this.config.websiteUrl, share.token);
     const expiresAt = share.expiresAt?.toISOString() ?? null;
+    const pdfDownloadPath = `${this.config.apiPrefix}/public/invoices/${share.token}/download`;
 
     return {
       token: share.token,
@@ -425,6 +409,64 @@ export class InvoiceShareService {
         upi_payload: qr.upiPayload,
       },
     };
+  }
+
+  /**
+   * Canonical Download PDF for the public invoice page.
+   * Returns a signed storage URL — never regenerates when invoice.pdf already exists.
+   */
+  async getPublicInvoiceDownload(token: string): Promise<{
+    download_url: string;
+    file_name: string;
+    expires_at: string | null;
+    cached: boolean;
+  }> {
+    const share = await this.repository.findTokenByValue(token);
+    if (!share) {
+      throw new AppError('INVOICE_NOT_FOUND', 'Invoice not found', 404);
+    }
+    this.assertShareTokenActive(share);
+
+    const document = await this.repository.findSalesDocument(
+      share.businessId,
+      share.invoiceId,
+    );
+    if (!document) {
+      throw new AppError('INVOICE_NOT_FOUND', 'Invoice not found', 404);
+    }
+    if (document.status === 'draft' || document.status === 'cancelled') {
+      throw new AppError('INVOICE_NOT_FOUND', 'Invoice not found', 404);
+    }
+
+    let actorId = share.createdBy;
+    if (!actorId) {
+      const db = getDb();
+      if (!db) {
+        throw new AppError(
+          'DATABASE_NOT_CONFIGURED',
+          'Database is not configured',
+          503,
+        );
+      }
+      actorId = await new MediaAssetRepository(db).findAnyAccountId(
+        share.businessId,
+      );
+    }
+
+    if (!actorId) {
+      throw new AppError(
+        'PDF_GENERATION_FAILED',
+        'No business member available to prepare the invoice PDF',
+        503,
+      );
+    }
+
+    return this.artifacts.resolveCanonicalPdfDownload(
+      share.businessId,
+      actorId,
+      share.invoiceId,
+      document.documentType,
+    );
   }
 
   async notifySaleInvoice(

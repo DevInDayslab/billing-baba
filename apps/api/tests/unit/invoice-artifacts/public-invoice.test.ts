@@ -85,9 +85,12 @@ describe('Public invoice + payment QR', () => {
         resolveBrandingLogoUrl: async () => null,
       } as never,
       artifacts: {
-        ensurePdf: async () => ({ cached: true }),
-        resolvePdfDownloadPath: async () =>
-          '/api/v1/public/generated-documents/pdf-token/file',
+        resolveCanonicalPdfDownload: async () => ({
+          download_url: 'https://signed.example/invoice.pdf',
+          file_name: 'invoice.pdf',
+          expires_at: null,
+          cached: true,
+        }),
       } as unknown as InvoiceArtifactService,
     });
 
@@ -96,8 +99,57 @@ describe('Public invoice + payment QR', () => {
     expect(data.payment.scan_to_pay_enabled).toBe(true);
     expect(data.payment.upi_id).toBe('shop@upi');
     expect(data.share.url).toContain('/invoice/public-token');
-    expect(data.pdf_download_path).toContain('generated-documents');
+    expect(data.pdf_download_path).toBe(
+      '/api/v1/public/invoices/public-token/download',
+    );
     expect(data.invoice.loyalty).toBeNull();
+  });
+
+  test('getPublicInvoiceDownload returns signed URL without regenerating when cached', async () => {
+    let resolveCalls = 0;
+    const service = new InvoiceShareService(baseConfig(), {
+      repository: {
+        findTokenByValue: async () => ({
+          token: 'public-token',
+          invoiceId,
+          businessId,
+          expiresAt: new Date('2027-01-01'),
+          revokedAt: null,
+          createdBy: accountId,
+        }),
+        findSalesDocument: async () => ({
+          id: invoiceId,
+          businessId,
+          partyId: null,
+          documentType: 'tax_invoice',
+          documentNumber: 'INV-9',
+          documentSeries: 'INV',
+          documentDate: new Date('2026-07-20'),
+          status: 'finalized',
+          notes: null,
+          subtotal: '100.0000',
+          discountTotal: '0.0000',
+          taxAmount: '0.0000',
+          totalAmount: '100.0000',
+        }),
+      } as never,
+      artifacts: {
+        resolveCanonicalPdfDownload: async () => {
+          resolveCalls += 1;
+          return {
+            download_url: 'https://signed.example/generated/invoice.pdf',
+            file_name: 'invoice-INV-9.pdf',
+            expires_at: '2026-07-21T13:00:00.000Z',
+            cached: true,
+          };
+        },
+      } as unknown as InvoiceArtifactService,
+    });
+
+    const data = await service.getPublicInvoiceDownload('public-token');
+    expect(resolveCalls).toBe(1);
+    expect(data.cached).toBe(true);
+    expect(data.download_url).toContain('invoice.pdf');
   });
 
   test('getPaymentQr returns 404 when QR unavailable', async () => {

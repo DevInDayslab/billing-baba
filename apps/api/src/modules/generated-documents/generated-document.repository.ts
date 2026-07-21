@@ -22,6 +22,7 @@ function mapRow(row: typeof generatedDocuments.$inferSelect): GeneratedDocumentR
     generatedAt: row.generatedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    createdBy: row.createdBy ?? null,
   };
 }
 

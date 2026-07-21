@@ -99,7 +99,12 @@ export class GeneratedDocumentService {
         config: deps.config,
       });
     this.pdfGenerator =
-      deps.pdfGenerator ?? new GeneratedDocumentPdfGenerator({ db });
+      deps.pdfGenerator ??
+      new GeneratedDocumentPdfGenerator({
+        db,
+        config: deps.config,
+        storage: this.storage,
+      });
     this.resolveSourceVersionFn =
       deps.resolveSourceVersion ??
       (async (businessId, sourceType, sourceId) => {
@@ -332,7 +337,13 @@ export class GeneratedDocumentService {
       throw new AppError('VALIDATION_ERROR', 'Generated file is too large', 400);
     }
 
-    if (existing?.mediaAssetId) {
+    const usesCanonicalInvoiceKey =
+      input.documentKind === 'invoice_pdf' &&
+      input.sourceType === 'sale_document';
+
+    // Canonical invoice.pdf is overwritten in place. Soft-deleting first leaves
+    // the storage_key unique constraint occupied and breaks public downloads.
+    if (existing?.mediaAssetId && !usesCanonicalInvoiceKey) {
       try {
         await this.storage.deleteAsset(
           businessId,
@@ -358,8 +369,7 @@ export class GeneratedDocumentService {
           input.mimeType as keyof typeof GENERATED_MIME_EXTENSIONS
         ],
       policy: GENERATED_DOCUMENT_POLICY,
-      ...(input.documentKind === 'invoice_pdf' &&
-      input.sourceType === 'sale_document'
+      ...(usesCanonicalInvoiceKey
         ? {
             storageKeyOverride: [
               this.config.environment,
@@ -459,6 +469,9 @@ export class GeneratedDocumentService {
       );
     }
 
+    // Do not regenerate with the server MVP pdfkit template here — that would
+    // replace the Flutter print-layout PDF with the plain text invoice.
+    // Missing objects must be re-uploaded from the app (Preview/Print).
     const download = await this.storage.getBusinessAssetDownloadUrl(
       row.businessId,
       row.mediaAssetId,
@@ -477,6 +490,84 @@ export class GeneratedDocumentService {
   async getPublicFileRedirectUrl(token: string): Promise<string> {
     const doc = await this.getPublicDocument(token);
     return doc.download_url;
+  }
+
+  /**
+   * Canonical public/sale PDF pipeline:
+   * 1) If generated_documents points at an existing storage object → signed URL
+   *    (except tiny legacy pdfkit text invoices, which are regenerated)
+   * 2) Else generate the public-invoice HTML PDF, store as …/generated/invoice.pdf
+   * Never streams ephemeral PDFs.
+   */
+  async resolveOrCreateSalePdfDownload(
+    businessId: string,
+    accountId: string,
+    invoiceId: string,
+    documentKind: GeneratedDocumentKind,
+  ): Promise<{
+    download_url: string;
+    file_name: string;
+    expires_at: string | null;
+    cached: boolean;
+  }> {
+    const existing = await this.repository.findBySource(
+      businessId,
+      documentKind,
+      'sale_document',
+      invoiceId,
+    );
+
+    if (existing?.mediaAssetId) {
+      try {
+        const download = await this.storage.getBusinessAssetDownloadUrl(
+          businessId,
+          existing.mediaAssetId,
+        );
+
+        // Legacy Helvetica/pdfkit invoices are typically a few KB and lack ₹.
+        // Chromium HTML invoices are much larger — keep those cached.
+        const legacyTextInvoice =
+          download.contentLength != null &&
+          download.contentLength > 0 &&
+          download.contentLength < 12_000;
+
+        if (!legacyTextInvoice) {
+          return {
+            download_url: download.url,
+            file_name: existing.fileName,
+            expires_at: download.expiresAt,
+            cached: true,
+          };
+        }
+      } catch (error) {
+        if (!(error instanceof StorageNotFoundError)) {
+          throw error;
+        }
+        // Object missing — fall through and regenerate.
+      }
+    }
+
+    const ensured = await this.ensure(businessId, accountId, {
+      documentKind,
+      sourceType: 'sale_document',
+      sourceId: invoiceId,
+      forceRegenerate: true,
+    });
+
+    if (!ensured.download_url) {
+      throw new AppError(
+        'PDF_GENERATION_FAILED',
+        'Invoice PDF could not be prepared for download',
+        500,
+      );
+    }
+
+    return {
+      download_url: ensured.download_url,
+      file_name: ensured.file_name,
+      expires_at: null,
+      cached: false,
+    };
   }
 
   private async enrichRow(

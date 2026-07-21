@@ -69,7 +69,15 @@ export type PublicInvoice = {
   };
   share_url: string;
   expires_at: string | null;
+  /** Canonical download endpoint: GET returns signed URL for stored invoice.pdf. */
   pdf_download_path: string | null;
+};
+
+export type PublicInvoicePdfDownload = {
+  download_url: string;
+  file_name: string;
+  expires_at: string | null;
+  cached: boolean;
 };
 
 export type PaymentQrPayload = {
@@ -95,6 +103,14 @@ export function usePublicInvoice(token: string | undefined) {
 
 export async function fetchPaymentQr(token: string): Promise<PaymentQrPayload> {
   return apiFetch<PaymentQrPayload>(`/${token}/payment-qr?format=json`, {
+    basePath: '/public/invoices',
+  });
+}
+
+export async function fetchInvoicePdfDownload(
+  token: string,
+): Promise<PublicInvoicePdfDownload> {
+  return apiFetch<PublicInvoicePdfDownload>(`/${token}/download`, {
     basePath: '/public/invoices',
   });
 }

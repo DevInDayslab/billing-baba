@@ -87,6 +87,24 @@ export function createInvoiceShareController(config: AppConfig) {
       }
     },
 
+    downloadPublicPdf: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { token } = invoiceShareTokenParamSchema.parse(request.params);
+        const data = await service.getPublicInvoiceDownload(token);
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid invoice token',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
     createShareLink: async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         const { accountId, businessId } = requireAuthContext(request);

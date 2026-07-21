@@ -1,10 +1,23 @@
 import PDFDocument from 'pdfkit';
+import type { AppConfig } from '../../config/app_config';
 import type { Database } from '../../db/client';
-import { businesses, parties, payments, salesDocuments } from '../../db/schema';
+import { businesses, parties, payments } from '../../db/schema';
 import { and, eq } from 'drizzle-orm';
 import { AppError } from '../../shared/errors/app-error';
+import {
+  InvoiceDocumentPdfRenderer,
+  type InvoiceDocumentModel,
+} from '../invoice-artifacts/invoice-document.pdf-renderer';
+import { PaymentQrService } from '../invoice-artifacts/payment-qr.service';
 import { InvoiceShareRepository } from '../invoice-share/invoice-share.repository';
+import {
+  dueAmount,
+  formatDisplayDate,
+  paymentStatusFromAmounts,
+} from '../invoice-share/invoice-share.utils';
 import { generatedKindForSalesDocumentType } from '../notifications/notification-media.service';
+import { MediaAssetRepository } from '../storage/storage.repository';
+import { StorageService } from '../storage/storage.service';
 import type {
   GeneratedDocumentKind,
   GeneratedDocumentSourceType,
@@ -12,21 +25,13 @@ import type {
 
 export type GeneratedDocumentPdfGeneratorDeps = {
   db: Database;
+  config?: AppConfig;
   invoiceShareRepository?: InvoiceShareRepository;
+  storage?: StorageService;
+  mediaAssets?: MediaAssetRepository;
+  paymentQr?: PaymentQrService;
+  invoiceDocumentRenderer?: InvoiceDocumentPdfRenderer;
 };
-
-function documentTitleForKind(kind: GeneratedDocumentKind): string {
-  switch (kind) {
-    case 'estimate_pdf':
-      return 'Estimate';
-    case 'delivery_challan_pdf':
-      return 'Delivery Challan';
-    case 'receipt_pdf':
-      return 'Payment Receipt';
-    default:
-      return 'Tax Invoice';
-  }
-}
 
 function defaultFileName(
   kind: GeneratedDocumentKind,
@@ -36,7 +41,8 @@ function defaultFileName(
   return `${kind.replace('_pdf', '')}-${safe || 'document'}.pdf`;
 }
 
-async function renderPdf(
+/** Plain layout for payment receipts only. Sale invoices use InvoiceDocumentPdfRenderer. */
+async function renderSimplePdf(
   title: string,
   sections: Array<{ heading?: string; lines: string[] }>,
 ): Promise<Buffer> {
@@ -69,11 +75,22 @@ async function renderPdf(
 export class GeneratedDocumentPdfGenerator {
   private readonly db: Database;
   private readonly invoiceShare: InvoiceShareRepository;
+  private readonly storage: StorageService | null;
+  private readonly mediaAssets: MediaAssetRepository;
+  private readonly paymentQr: PaymentQrService;
+  private readonly invoiceDocumentRenderer: InvoiceDocumentPdfRenderer;
 
   constructor(deps: GeneratedDocumentPdfGeneratorDeps) {
     this.db = deps.db;
     this.invoiceShare =
       deps.invoiceShareRepository ?? new InvoiceShareRepository(deps.db);
+    this.mediaAssets = deps.mediaAssets ?? new MediaAssetRepository(deps.db);
+    this.storage =
+      deps.storage ??
+      (deps.config ? new StorageService({ config: deps.config }) : null);
+    this.paymentQr = deps.paymentQr ?? new PaymentQrService();
+    this.invoiceDocumentRenderer =
+      deps.invoiceDocumentRenderer ?? new InvoiceDocumentPdfRenderer();
   }
 
   resolveKindForSalesDocument(documentType: string): GeneratedDocumentKind | null {
@@ -151,74 +168,122 @@ export class GeneratedDocumentPdfGenerator {
       ? await this.invoiceShare.findParty(businessId, document.partyId)
       : null;
 
-    const [lines, paidAmount] = await Promise.all([
+    const [lines, paidAmount, loyalty] = await Promise.all([
       this.invoiceShare.listLinesWithItems(businessId, invoiceId),
       this.invoiceShare.getPaidAmount(businessId, invoiceId),
+      this.invoiceShare.getLoyaltyForSale(
+        businessId,
+        invoiceId,
+        document.partyId,
+      ),
     ]);
 
     const docNumber =
       document.documentNumber ??
       `${document.documentSeries}-${document.id.slice(0, 8)}`;
-    const title = documentTitleForKind(documentKind);
-
-    const lineRows = lines.map(
-      (line) =>
-        `${line.itemName} | ${line.quantity} ${line.unit} x ${line.unitPrice} = ${line.lineTotal}`,
+    const balance = dueAmount(document.totalAmount, paidAmount);
+    const paymentStatus = paymentStatusFromAmounts(
+      document.totalAmount,
+      paidAmount,
     );
 
-    const buffer = await renderPdf(title, [
-      {
-        heading: company.name,
-        lines: [
-          company.address ?? '',
-          company.gstin ? `GSTIN: ${company.gstin}` : '',
-          company.phone ? `Phone: ${company.phone}` : '',
-        ].filter(Boolean),
-      },
-      {
-        heading: 'Document',
-        lines: [
-          `Number: ${docNumber}`,
-          `Date: ${document.documentDate.toISOString().slice(0, 10)}`,
-          `Status: ${document.status}`,
-        ],
-      },
-      party
+    const logoSrc = await this.loadLogoDataUrl(
+      businessId,
+      company.logoMediaAssetId,
+    );
+
+    let qrDataUrl: string | null = null;
+    let qrAmount: string | null = null;
+    let qrUpiId: string | null = null;
+    let qrMerchant: string | null = null;
+    if (company.upiId?.trim() && Number.parseFloat(balance) > 0) {
+      const qr = await this.paymentQr.generate({
+        upiId: company.upiId,
+        companyName: company.name,
+        dueAmount: balance,
+        invoiceNumber: docNumber,
+      });
+      if (qr) {
+        qrDataUrl = qr.dataUrl;
+        qrAmount = qr.amount;
+        qrUpiId = qr.upiId;
+        qrMerchant = qr.merchant;
+      }
+    }
+
+    const model: InvoiceDocumentModel = {
+      companyName: company.name,
+      companyAddress: company.address,
+      companyPhone: company.phone,
+      companyEmail: company.email ?? null,
+      companyGstin: company.gstin,
+      logoSrc,
+      invoiceNumber: docNumber,
+      invoiceDate: formatDisplayDate(document.documentDate),
+      paymentStatus,
+      customerName: party?.name ?? null,
+      customerPhone: party?.mobile ?? null,
+      customerEmail: party?.email ?? null,
+      customerGstin: party?.gstin ?? null,
+      lines: lines.map((line) => {
+        const tax =
+          Number.parseFloat(line.cgstAmount) +
+          Number.parseFloat(line.sgstAmount) +
+          Number.parseFloat(line.igstAmount);
+        return {
+          itemName: line.itemName,
+          quantity: line.quantity,
+          unit: line.unit,
+          unitPrice: line.unitPrice,
+          lineTotal: line.lineTotal,
+          taxAmount: String(tax),
+          discountAmount: line.discountAmount,
+        };
+      }),
+      subtotal: document.subtotal,
+      discountTotal: document.discountTotal,
+      taxAmount: document.taxAmount,
+      totalAmount: document.totalAmount,
+      paidAmount,
+      dueAmount: balance,
+      notes: document.notes,
+      loyalty: loyalty
         ? {
-            heading: 'Customer',
-            lines: [
-              party.name,
-              party.mobile ?? '',
-              party.gstin ? `GSTIN: ${party.gstin}` : '',
-            ].filter(Boolean),
+            earnedPoints: loyalty.earned_points,
+            redeemedPoints: loyalty.redeemed_points,
           }
-        : {
-            heading: 'Customer',
-            lines: ['Walk-in customer'],
-          },
-      {
-        heading: 'Line items',
-        lines: lineRows.length > 0 ? lineRows : ['No line items'],
-      },
-      {
-        heading: 'Totals',
-        lines: [
-          `Subtotal: ${document.subtotal}`,
-          `Discount: ${document.discountTotal}`,
-          `Tax: ${document.taxAmount}`,
-          `Total: ${document.totalAmount}`,
-          `Paid: ${paidAmount}`,
-        ],
-      },
-      document.notes
-        ? { heading: 'Notes', lines: [document.notes] }
-        : { lines: [] },
-    ]);
+        : null,
+      qrDataUrl,
+      qrAmount,
+      qrUpiId,
+      qrMerchant,
+    };
+
+    const buffer = await this.invoiceDocumentRenderer.render(model);
 
     return {
       buffer,
       fileName: defaultFileName(documentKind, docNumber),
     };
+  }
+
+  private async loadLogoDataUrl(
+    businessId: string,
+    logoMediaAssetId: string | null,
+  ): Promise<string | null> {
+    if (!this.storage || !logoMediaAssetId) return null;
+    try {
+      const asset = await this.mediaAssets.findById(
+        businessId,
+        logoMediaAssetId,
+      );
+      if (!asset?.storageKey || asset.status !== 'ready') return null;
+      const buffer = await this.storage.getObjectBufferByKey(asset.storageKey);
+      const mime = asset.mimeType || 'image/png';
+      return `data:${mime};base64,${buffer.toString('base64')}`;
+    } catch {
+      return null;
+    }
   }
 
   private async generateReceiptPdf(
@@ -273,7 +338,7 @@ export class GeneratedDocumentPdfGenerator {
       )
       .limit(1);
 
-    const buffer = await renderPdf('Payment Receipt', [
+    const buffer = await renderSimplePdf('Payment Receipt', [
       {
         heading: company.name,
         lines: [company.address ?? '', company.phone ?? ''].filter(Boolean),

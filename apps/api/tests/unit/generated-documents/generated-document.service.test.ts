@@ -131,11 +131,13 @@ const sampleRow = (
   generatedAt: new Date('2026-01-01T00:00:00.000Z'),
   createdAt: new Date('2026-01-01T00:00:00.000Z'),
   updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  createdBy: accountId,
   ...overrides,
 });
 
 const membership = {
   hasBusinessMembership: async () => true,
+  findAnyAccountId: async () => accountId,
 };
 
 const resolveSourceVersion = async () => ({ sourceVersion: 2 });
@@ -326,5 +328,107 @@ describe('GeneratedDocumentService', () => {
     expect(uploaded).toBe(true);
     expect(result.cached).toBe(false);
     expect(result.download_url).toBe('https://signed.example/generated.pdf');
+  });
+
+  test('resolveOrCreateSalePdfDownload returns existing signed URL without regenerate', async () => {
+    let generateCalls = 0;
+    const repository = {
+      findBySource: async () => sampleRow(),
+      upsert: async () => sampleRow(),
+      findById: async () => sampleRow(),
+      findByPublicToken: async () => null,
+      softDelete: async () => true,
+      getMediaAssetId: async () => '55555555-5555-5555-5555-555555555555',
+    } as unknown as GeneratedDocumentRepository;
+
+    const service = new GeneratedDocumentService({
+      config: baseConfig(),
+      repository,
+      storage: {
+        getBusinessAssetDownloadUrl: async () => ({
+          url: 'https://signed.example/existing-invoice.pdf',
+          expiresAt: '2026-07-21T13:00:00.000Z',
+          visibility: 'private' as const,
+          contentLength: 45_000,
+        }),
+        storeFromBuffer: async () => {
+          throw new Error('should not upload');
+        },
+      } as unknown as StorageService,
+      membership,
+      resolveSourceVersion,
+      assertKindMatchesSource: noopKindAssert,
+      pdfGenerator: {
+        generate: async () => {
+          generateCalls += 1;
+          return { buffer: Buffer.from('%PDF'), fileName: 'x.pdf' };
+        },
+      } as never,
+    });
+
+    const result = await service.resolveOrCreateSalePdfDownload(
+      businessId,
+      accountId,
+      sourceId,
+      'invoice_pdf',
+    );
+
+    expect(generateCalls).toBe(0);
+    expect(result.cached).toBe(true);
+    expect(result.download_url).toBe(
+      'https://signed.example/existing-invoice.pdf',
+    );
+  });
+
+  test('resolveOrCreateSalePdfDownload generates when storage object missing', async () => {
+    const { StorageNotFoundError } = await import(
+      '../../../src/modules/storage/storage.errors'
+    );
+    let uploaded = false;
+    const repository = {
+      findBySource: async () => sampleRow(),
+      upsert: async () => sampleRow({ sourceVersion: 2 }),
+      findById: async () => sampleRow({ sourceVersion: 2 }),
+      findByPublicToken: async () => null,
+      softDelete: async () => true,
+      getMediaAssetId: async () => '55555555-5555-5555-5555-555555555555',
+    } as unknown as GeneratedDocumentRepository;
+
+    const service = new GeneratedDocumentService({
+      config: baseConfig(),
+      repository,
+      storage: {
+        getBusinessAssetDownloadUrl: async () => {
+          throw new StorageNotFoundError('Storage object missing');
+        },
+        storeFromBuffer: async () => {
+          uploaded = true;
+          return { id: '66666666-6666-6666-6666-666666666666' };
+        },
+        deleteAsset: async () => undefined,
+        resolveBusinessAssetUrl: async () =>
+          'https://signed.example/regenerated.pdf',
+      } as unknown as StorageService,
+      membership,
+      resolveSourceVersion,
+      assertKindMatchesSource: noopKindAssert,
+      pdfGenerator: {
+        generate: async () => ({
+          buffer: Buffer.from('%PDF-1.4 professional'),
+          fileName: 'invoice-INV.pdf',
+        }),
+      } as never,
+    });
+
+    const result = await service.resolveOrCreateSalePdfDownload(
+      businessId,
+      accountId,
+      sourceId,
+      'invoice_pdf',
+    );
+
+    expect(uploaded).toBe(true);
+    expect(result.cached).toBe(false);
+    expect(result.download_url).toBe('https://signed.example/regenerated.pdf');
   });
 });

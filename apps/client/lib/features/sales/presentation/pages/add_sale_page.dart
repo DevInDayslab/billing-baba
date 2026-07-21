@@ -30,7 +30,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 const _cardBorder = Color(0xFFE0E0E0);
 const _sectionGap = 16.0;
 const _addressFieldLines = 3;
-const _compactBreakpoint = 900.0;
+const _compactBreakpoint = 1280.0;
 const _narrowBreakpoint = 720.0;
 
 class AddSalePage extends ConsumerStatefulWidget {
@@ -360,6 +360,8 @@ class _PageHeaderState extends ConsumerState<_PageHeader> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Title + sale-type toggle + invoice fields need ~1200px in a single Row.
+        // Prefer stacked header whenever the row would overflow.
         final isCompact = constraints.maxWidth < _compactBreakpoint;
         final headerFields = widget.readOnly
             ? const <Widget>[]
@@ -369,30 +371,35 @@ class _PageHeaderState extends ConsumerState<_PageHeader> {
                 isAutoNumber: isAutoNumber,
               );
 
-        if (isCompact) {
+        final titleRow = Row(
+          children: [
+            Flexible(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            if (!widget.readOnly)
+              _SaleTypeToggle(
+                saleType: form.saleType,
+                onChanged: notifier.toggleSaleType,
+              ),
+            const Spacer(),
+            closeButton,
+          ],
+        );
+
+        if (isCompact || headerFields.isNotEmpty) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  if (!widget.readOnly)
-                    _SaleTypeToggle(
-                      saleType: form.saleType,
-                      onChanged: notifier.toggleSaleType,
-                    ),
-                  const Spacer(),
-                  closeButton,
-                ],
-              ),
+              titleRow,
               if (headerFields.isNotEmpty) ...[
                 const SizedBox(height: _sectionGap),
                 Wrap(
@@ -406,30 +413,7 @@ class _PageHeaderState extends ConsumerState<_PageHeader> {
           );
         }
 
-        return Row(
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            if (!widget.readOnly)
-              _SaleTypeToggle(
-                saleType: form.saleType,
-                onChanged: notifier.toggleSaleType,
-              ),
-            const Spacer(),
-            for (var i = 0; i < headerFields.length; i++) ...[
-              if (i > 0) const SizedBox(width: _sectionGap),
-              headerFields[i],
-            ],
-            closeButton,
-          ],
-        );
+        return titleRow;
       },
     );
   }
@@ -896,7 +880,7 @@ class _BottomActionBar extends ConsumerWidget {
 
           return Row(
             children: [
-              if (printButton != null) printButton,
+              ?printButton,
               const Spacer(),
               shareButton,
               const SizedBox(width: AppSpacing.sm),

@@ -1,8 +1,10 @@
 @import 'tailwindcss';
 
 :root {
+  /* Noto Sans supplies ₹ (U+20B9); Inter does not include the rupee glyph. */
   font-family:
     Inter,
+    'Noto Sans',
     system-ui,
     -apple-system,
     sans-serif;
@@ -13,4 +15,73 @@
 body {
   margin: 0;
   min-height: 100vh;
+}
+
+/* Shown only when printing or exporting the invoice to PDF */
+.invoice-print-only {
+  display: none;
+}
+
+.is-pdf-export .invoice-print-only,
+.is-pdf-export .invoice-pdf-only {
+  display: block;
+}
+
+.is-pdf-export .invoice-screen-only {
+  display: none !important;
+}
+
+.is-pdf-export {
+  overflow: visible !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-hide,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .invoice-print-only {
+    display: block !important;
+  }
+
+  .invoice-sheet {
+    overflow: visible !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  /* Prefer keeping blocks together; long tables may still span pages */
+  .invoice-sheet header,
+  .invoice-sheet section,
+  .invoice-sheet tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .invoice-sheet thead {
+    display: table-header-group;
+  }
+
+  .invoice-sheet img {
+    max-width: 100% !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }

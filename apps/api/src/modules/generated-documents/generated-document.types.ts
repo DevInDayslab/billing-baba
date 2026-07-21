@@ -17,6 +17,7 @@ export type GeneratedDocumentRecord = {
   generatedAt: Date;
   createdAt: Date;
   updatedAt: Date;
+  createdBy: string | null;
 };
 
 export type GeneratedDocumentResponse = {

@@ -232,6 +232,13 @@
       "when": 1785800000000,
       "tag": "0032_invoice_share_revoked",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1785900000000,
+      "tag": "0033_parties_unrecovered_amount",
+      "breakpoints": true
     }
   ]
 }

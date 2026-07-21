@@ -90,6 +90,10 @@ export class MediaAssetRepository {
     return this.membership.hasBusinessMembership(businessId, accountId);
   }
 
+  async findAnyAccountId(businessId: string): Promise<string | null> {
+    return this.membership.findAnyAccountId(businessId);
+  }
+
   async insert(values: InsertMediaAssetValues): Promise<MediaAssetRow> {
     const [row] = await this.db
       .insert(mediaAssets)
@@ -133,6 +137,78 @@ export class MediaAssetRepository {
         ),
       )
       .limit(1);
+
+    return row ?? null;
+  }
+
+  /** Includes soft-deleted rows (public PDF repair / canonical overwrite). */
+  async findByIdIncludingDeleted(
+    businessId: string,
+    id: string,
+  ): Promise<MediaAssetRow | null> {
+    const [row] = await this.db
+      .select(selectColumns)
+      .from(mediaAssets)
+      .where(
+        and(eq(mediaAssets.id, id), eq(mediaAssets.businessId, businessId)),
+      )
+      .limit(1);
+
+    return row ?? null;
+  }
+
+  /** Includes soft-deleted rows — used to overwrite canonical storage keys. */
+  async findByStorageKey(storageKey: string): Promise<MediaAssetRow | null> {
+    const [row] = await this.db
+      .select(selectColumns)
+      .from(mediaAssets)
+      .where(eq(mediaAssets.storageKey, storageKey))
+      .limit(1);
+
+    return row ?? null;
+  }
+
+  /**
+   * Revive a soft-deleted row (or refresh an active one) after overwriting
+   * the object at a canonical storage key.
+   */
+  async reviveAndMarkReady(
+    id: string,
+    values: {
+      businessId: string;
+      purpose: string;
+      visibility: string;
+      mimeType: string;
+      fileSize: number;
+      etag: string | null;
+      ownerType: string | null;
+      ownerId: string | null;
+      uploadedBy: string | null;
+      processingStatus?: ProcessingStatus;
+    },
+  ): Promise<MediaAssetRow | null> {
+    const now = new Date();
+    const [row] = await this.db
+      .update(mediaAssets)
+      .set({
+        businessId: values.businessId,
+        purpose: values.purpose,
+        visibility: values.visibility,
+        mimeType: values.mimeType,
+        fileSize: values.fileSize,
+        originalSize: values.fileSize,
+        etag: values.etag,
+        ownerType: values.ownerType,
+        ownerId: values.ownerId,
+        uploadedBy: values.uploadedBy,
+        status: 'ready',
+        processingStatus: values.processingStatus ?? 'skipped',
+        isDeleted: false,
+        deletedAt: null,
+        updatedAt: now,
+      })
+      .where(eq(mediaAssets.id, id))
+      .returning(selectColumns);
 
     return row ?? null;
   }

@@ -31,6 +31,7 @@ Table: `invoice_share_tokens`
 |--------|------|----------|
 | GET | `/api/v1/public/invoices/:token` | Invoice JSON (company, customer, lines, payment, PDF path) |
 | GET | `/api/v1/public/invoices/:token/payment-qr` | PNG QR (or `?format=json`) |
+| GET | `/api/v1/public/invoices/:token/download` | Canonical PDF: signed URL for stored `generated/invoice.pdf` (generates professional PDF once if missing) |
 
 Expired or revoked tokens → **410**. Unknown → **404**. No authentication.
 
@@ -41,12 +42,26 @@ Expired or revoked tokens → **410**. Unknown → **404**. No authentication.
 Features:
 
 - Responsive invoice view (light theme)
-- Download PDF (canonical generated document)
+- Download PDF via `GET /public/invoices/:token/download` (signed URL to canonical Railway object — never regenerates a legacy template when `invoice.pdf` already exists)
 - Print
 - Share (`navigator.share` / clipboard)
 - Scan to Pay modal (dynamic UPI QR from current balance + `businesses.upi_id`)
 
 HTML is **not** stored — the SPA fetches JSON on each visit.
+
+## Download PDF pipeline
+
+```
+Download button
+  → GET /api/v1/public/invoices/:token/download
+  → Lookup generated_documents for sale invoice.pdf
+  → If object exists in Railway → return signed URL immediately
+  → Else generate public-invoice HTML PDF via Chromium (same layout as the website page),
+     store as …/sales/{id}/generated/invoice.pdf, upsert generated_documents,
+     return signed URL
+```
+
+Tiny legacy pdfkit text invoices are replaced automatically on the next download. Noto Sans is embedded so ₹ renders correctly.
 
 ## Scan to Pay
 

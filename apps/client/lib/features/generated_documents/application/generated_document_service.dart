@@ -34,8 +34,30 @@ class GeneratedDocumentService {
         sourceId: sourceId,
         bytes: clientBytes,
         fileName: fileName,
-        forceRegenerate: clientBytes == null,
+        // Professional Flutter PDFs must replace any server MVP fallback.
+        forceRegenerate: clientBytes != null,
       );
+
+  /// Uploads the Flutter-rendered PDF so cloud/storage matches in-app print.
+  Future<GeneratedDocumentDto?> cacheForPrintRequest(
+    PrintRequest request,
+    Uint8List bytes, {
+    String? fileName,
+  }) async {
+    final query = generatedDocumentQueryForPrintRequest(request);
+    if (query == null) return null;
+
+    final kindFileName =
+        fileName ?? '${query.documentKind.replaceAll('_pdf', '')}.pdf';
+
+    return refresh(
+      documentKind: query.documentKind,
+      sourceType: query.sourceType,
+      sourceId: query.sourceId,
+      clientBytes: bytes,
+      fileName: kindFileName,
+    );
+  }
 
   Future<Uint8List> download({
     required String documentKind,

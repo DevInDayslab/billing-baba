@@ -42,6 +42,8 @@ export type DownloadResult = {
   url: string;
   expiresAt: string | null;
   visibility: StorageVisibility;
+  /** Object size from storage HEAD / media_assets, when known. */
+  contentLength?: number | null;
 };
 
 export type CreateUploadIntentInput = {

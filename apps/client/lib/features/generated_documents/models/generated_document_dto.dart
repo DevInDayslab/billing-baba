@@ -24,9 +24,14 @@ class GeneratedDocumentDto {
       cached: json['cached'] as bool? ?? false,
       downloadUrl: json['download_url'] as String?,
       publicUrl: json['public_url'] as String?,
-      sourceVersion: json['source_version'] as String?,
+      sourceVersion: _stringOrNull(json['source_version']),
       generatedAt: json['generated_at'] as String?,
     );
+  }
+
+  static String? _stringOrNull(Object? value) {
+    if (value == null) return null;
+    return value.toString();
   }
 
   final String id;

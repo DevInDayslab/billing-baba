@@ -67,6 +67,7 @@ export type PublicInvoiceDto = {
   /** @deprecated Prefer share.url — kept for website backward compatibility */
   share_url: string;
   expires_at: string | null;
+  /** Public path to the cached Flutter print-layout PDF when available. */
   pdf_download_path: string | null;
 };
 

@@ -4,6 +4,9 @@ export type InvoicePreviewLine = {
   unit: string;
   unitPrice: string;
   lineTotal: string;
+  /** Sum of CGST+SGST+IGST for the line, when available. */
+  taxAmount?: string;
+  discountAmount?: string;
 };
 
 export type InvoicePreviewLoyalty = {

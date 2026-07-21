@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/generated_documents/providers/generated_document_providers.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/parties/data/party_repository.dart';
@@ -92,11 +93,14 @@ Future<PrintService> printService(Ref ref) async {
   final dataService = await ref.watch(printDataServiceProvider.future);
   final printSettingsRepository =
       await ref.watch(printSettingsRepositoryProvider.future);
+  final generatedDocumentService =
+      await ref.watch(generatedDocumentServiceProvider.future);
   return PrintService(
     dataService: dataService,
     outputService: ref.watch(printOutputServiceProvider),
     templateRegistry: ref.watch(templateRegistryProvider),
     printSettingsRepository: printSettingsRepository,
+    generatedDocumentService: generatedDocumentService,
   );
 }
 

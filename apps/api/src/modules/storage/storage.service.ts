@@ -376,6 +376,9 @@ export class StorageService {
   /**
    * Signed download URL without membership check — only for token-gated public flows
    * where the caller has already validated access.
+   *
+   * Soft-deleted metadata is revived only when the object still exists in storage.
+   * Never returns a signed URL for a missing key (avoids S3 NoSuchKey after redirect).
    */
   async getBusinessAssetDownloadUrl(
     businessId: string,
@@ -383,8 +386,46 @@ export class StorageService {
   ): Promise<DownloadResult> {
     const provider = this.requireProvider();
 
-    const row = await this.repository.findById(businessId, assetId);
-    if (!row || row.status !== 'ready') {
+    let row =
+      (await this.repository.findById(businessId, assetId)) ??
+      (await this.repository.findByIdIncludingDeleted(businessId, assetId));
+
+    if (!row) {
+      throw new StorageNotFoundError();
+    }
+
+    if (row.isDeleted) {
+      const byKey = await this.repository.findByStorageKey(row.storageKey);
+      if (byKey && !byKey.isDeleted && byKey.status === 'ready') {
+        row = byKey;
+      }
+    }
+
+    const head = await provider.head(row.storageKey);
+    if (!head.exists) {
+      throw new StorageNotFoundError('Storage object missing');
+    }
+
+    if (row.isDeleted) {
+      const revived = await this.repository.reviveAndMarkReady(row.id, {
+        businessId,
+        purpose: row.purpose,
+        visibility: row.visibility,
+        mimeType: row.mimeType,
+        fileSize: head.contentLength ?? row.fileSize,
+        etag: head.etag ?? row.etag,
+        ownerType: row.ownerType,
+        ownerId: row.ownerId,
+        uploadedBy: row.uploadedBy,
+        processingStatus: 'skipped',
+      });
+      if (!revived) {
+        throw new StorageNotFoundError();
+      }
+      row = revived;
+    }
+
+    if (row.status !== 'ready') {
       throw new StorageNotFoundError();
     }
 
@@ -393,6 +434,7 @@ export class StorageService {
         url: this.buildPublicUrl(row.storageKey),
         expiresAt: null,
         visibility: 'public',
+        contentLength: head.contentLength ?? row.fileSize,
       };
     }
 
@@ -405,6 +447,7 @@ export class StorageService {
       url: download.url,
       expiresAt: download.expiresAt.toISOString(),
       visibility: row.visibility as StorageAsset['visibility'],
+      contentLength: head.contentLength ?? row.fileSize,
     };
   }
 
@@ -785,6 +828,8 @@ export class StorageService {
   /**
    * Server-side upload for generated exports (PDF, CSV, Excel).
    * Inserts a ready media_assets row after PUT to object storage.
+   * When `storageKeyOverride` is set, overwrites any existing row at that key
+   * (including soft-deleted) so canonical paths like invoice.pdf can regenerate.
    */
   async storeFromBuffer(
     businessId: string,
@@ -810,20 +855,62 @@ export class StorageService {
     );
 
     const provider = this.requireProvider();
-    const assetId = randomUUID();
     const storageKey =
       input.storageKeyOverride ??
       buildStoragePath({
         environment: this.config.environment,
         businessId,
         purpose: input.purpose,
-        assetId,
+        assetId: randomUUID(),
         mimeType: input.mimeType,
         ownerType: input.ownerType,
         ownerId: input.ownerId,
         extension: input.extension,
       });
 
+    const put = await provider.putObject({
+      key: storageKey,
+      body: input.buffer,
+      mimeType: input.mimeType,
+    });
+
+    if (input.storageKeyOverride) {
+      const existing = await this.repository.findByStorageKey(storageKey);
+      if (existing) {
+        const revived = await this.repository.reviveAndMarkReady(existing.id, {
+          businessId,
+          purpose: input.purpose,
+          visibility: input.visibility,
+          mimeType: input.mimeType,
+          fileSize: put.contentLength,
+          etag: put.etag ?? null,
+          ownerType: input.ownerType ?? null,
+          ownerId: input.ownerId ?? null,
+          uploadedBy: accountId,
+          processingStatus: 'skipped',
+        });
+        if (!revived) {
+          throw new StorageNotFoundError('Failed to update stored object');
+        }
+
+        this.log.info(
+          {
+            event: 'storage.store_from_buffer_overwrite',
+            businessId,
+            assetId: revived.id,
+            purpose: input.purpose,
+            mimeType: input.mimeType,
+            fileSize: put.contentLength,
+            storageKey,
+          },
+          'Storage object overwritten from buffer',
+        );
+
+        return toStorageAsset(revived);
+      }
+    }
+
+    const assetId = randomUUID();
     await this.repository.insert({
       id: assetId,
       businessId,
@@ -839,12 +926,6 @@ export class StorageService {
       status: 'pending',
       uploadedBy: accountId,
       processingStatus: 'skipped',
-    });
-
-    const put = await provider.putObject({
-      key: storageKey,
-      body: input.buffer,
-      mimeType: input.mimeType,
     });
 
     const ready = await this.repository.markReady(businessId, assetId, {

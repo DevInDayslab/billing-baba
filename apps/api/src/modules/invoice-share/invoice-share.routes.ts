@@ -27,6 +27,7 @@ export function createPublicInvoiceRoutes(
   return async (app) => {
     app.get('/:token', controller.getPublicByToken);
     app.get('/:token/payment-qr', controller.getPaymentQr);
+    app.get('/:token/download', controller.downloadPublicPdf);
   };
 }
 

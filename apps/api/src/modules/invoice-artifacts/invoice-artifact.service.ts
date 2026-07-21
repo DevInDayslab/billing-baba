@@ -97,6 +97,38 @@ export class InvoiceArtifactService {
     });
   }
 
+  /**
+   * Public Download PDF: reuse stored canonical invoice.pdf when present,
+   * otherwise generate the professional PDF once and store it.
+   */
+  async resolveCanonicalPdfDownload(
+    businessId: string,
+    accountId: string,
+    invoiceId: string,
+    documentType: string,
+  ): Promise<{
+    download_url: string;
+    file_name: string;
+    expires_at: string | null;
+    cached: boolean;
+  }> {
+    const kind = generatedKindForSalesDocumentType(documentType);
+    if (!kind) {
+      throw new AppError(
+        'PDF_GENERATION_UNSUPPORTED',
+        'This document type cannot generate a PDF',
+        400,
+      );
+    }
+
+    return this.generatedDocuments.resolveOrCreateSalePdfDownload(
+      businessId,
+      accountId,
+      invoiceId,
+      kind,
+    );
+  }
+
   async resolvePdfDownloadPath(
     businessId: string,
     invoiceId: string,

@@ -178,6 +178,12 @@ class FakeRepository {
     return row;
   }
 
+  async findByIdIncludingDeleted(businessId: string, id: string) {
+    const row = this.rows.get(id);
+    if (!row || row.businessId !== businessId) return null;
+    return row;
+  }
+
   async markReady(
     businessId: string,
     id: string,
@@ -204,6 +210,50 @@ class FakeRepository {
       ...row,
       isDeleted: true,
       deletedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.rows.set(id, updated);
+    return updated;
+  }
+
+  async findByStorageKey(storageKey: string) {
+    for (const row of this.rows.values()) {
+      if (row.storageKey === storageKey) return row;
+    }
+    return null;
+  }
+
+  async reviveAndMarkReady(
+    id: string,
+    values: {
+      businessId: string;
+      purpose: string;
+      visibility: string;
+      mimeType: string;
+      fileSize: number;
+      etag: string | null;
+      ownerType: string | null;
+      ownerId: string | null;
+      uploadedBy: string | null;
+      processingStatus?: string;
+    },
+  ) {
+    const row = this.rows.get(id);
+    if (!row) return null;
+    const updated: MediaAssetRow = {
+      ...row,
+      businessId: values.businessId,
+      purpose: values.purpose,
+      visibility: values.visibility,
+      mimeType: values.mimeType,
+      fileSize: values.fileSize,
+      etag: values.etag,
+      ownerType: values.ownerType,
+      ownerId: values.ownerId,
+      uploadedBy: values.uploadedBy,
+      status: 'ready',
+      isDeleted: false,
+      deletedAt: null,
       updatedAt: new Date(),
     };
     this.rows.set(id, updated);
@@ -462,5 +512,99 @@ describe('StorageService upload lifecycle', () => {
     expect(next.intentId).not.toBe(intent.intentId);
     expect(next.mimeType).toBe('image/webp');
     expect(provider.deleted).toContain(intent.storageKey);
+  });
+
+  test('storeFromBuffer overwrites soft-deleted canonical storage key', async () => {
+    const repo = new FakeRepository();
+    const provider = new FakeProvider();
+    const service = createService(repo, provider);
+    const key =
+      'test/businesses/biz/sales/sale-1/generated/invoice.pdf';
+
+    const first = await service.storeFromBuffer('biz', 'acct', {
+      purpose: 'sales',
+      visibility: 'private',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4 first'),
+      ownerType: 'generated_invoice_pdf',
+      ownerId: 'sale-1',
+      storageKeyOverride: key,
+    });
+
+    await service.deleteAsset('biz', 'acct', first.id);
+
+    const second = await service.storeFromBuffer('biz', 'acct', {
+      purpose: 'sales',
+      visibility: 'private',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4 professional'),
+      ownerType: 'generated_invoice_pdf',
+      ownerId: 'sale-1',
+      storageKeyOverride: key,
+    });
+
+    expect(second.id).toBe(first.id);
+    expect(second.status).toBe('ready');
+    expect(provider.objects.get(key)?.body?.toString()).toContain(
+      'professional',
+    );
+    const download = await service.getDownloadUrl('biz', 'acct', second.id);
+    expect(download.url).toContain('download/');
+  });
+
+  test('getBusinessAssetDownloadUrl revives soft-deleted public PDF asset', async () => {
+    const repo = new FakeRepository();
+    const provider = new FakeProvider();
+    const service = createService(repo, provider);
+    const key =
+      'test/businesses/biz/sales/sale-2/generated/invoice.pdf';
+
+    const asset = await service.storeFromBuffer('biz', 'acct', {
+      purpose: 'sales',
+      visibility: 'private',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4 keep'),
+      storageKeyOverride: key,
+    });
+
+    // Soft-delete metadata only; keep object (failed regenerate tombstone).
+    const row = repo.rows.get(asset.id)!;
+    repo.rows.set(asset.id, {
+      ...row,
+      isDeleted: true,
+      deletedAt: new Date(),
+    });
+    provider.objects.set(key, {
+      contentType: 'application/pdf',
+      contentLength: 12,
+      etag: 'e',
+      body: Buffer.from('%PDF-1.4 keep'),
+    });
+
+    const download = await service.getBusinessAssetDownloadUrl('biz', asset.id);
+    expect(download.url).toContain('download/');
+    expect(repo.rows.get(asset.id)?.isDeleted).toBe(false);
+  });
+
+  test('getBusinessAssetDownloadUrl fails when soft-deleted and object missing', async () => {
+    const repo = new FakeRepository();
+    const provider = new FakeProvider();
+    const service = createService(repo, provider);
+    const key =
+      'test/businesses/biz/sales/sale-3/generated/invoice.pdf';
+
+    const asset = await service.storeFromBuffer('biz', 'acct', {
+      purpose: 'sales',
+      visibility: 'private',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4 gone'),
+      storageKeyOverride: key,
+    });
+
+    await service.deleteAsset('biz', 'acct', asset.id);
+
+    await expect(
+      service.getBusinessAssetDownloadUrl('biz', asset.id),
+    ).rejects.toBeInstanceOf(StorageNotFoundError);
   });
 });
