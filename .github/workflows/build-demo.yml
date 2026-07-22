@@ -1,17 +1,17 @@
 # Windows desktop release pipeline for Billing Baba.
 #
-# Produces:
-#   - BillingBabaSetup-v<version>.exe  (Inno Setup installer with VC++ runtime)
-#   - BillingBaba-Windows-v<version>.zip
-#   - SHA256SUMS.txt
+# Outputs (all under dist/):
+#   BillingBabaSetup-v<version>.exe  — Inno Setup installer with VC++ runtime
+#   BillingBaba-Windows-v<version>.zip — portable Release folder
+#   SHA256SUMS.txt                     — checksums for the above
 #
 # Triggers:
-#   - Push to `demo` branch → prerelease "Demo Build" on GitHub Releases
-#   - Push of version tag `v*` → GitHub Release with auto-generated notes
-#   - Manual workflow_dispatch
+#   Branch push (demo, develop)  → build + GitHub Artifacts
+#   Tag push v*                  → build + GitHub Release + GitHub Artifacts
+#   workflow_dispatch            → build + GitHub Artifacts (Release only when run on a v* tag)
 #
-# Demo config uses repository variables and secrets (see flutter-ci.yml).
-# Written via setup-flutter-env.sh to avoid PowerShell UTF-8 BOM issues with dotenv.
+# Re-pushing the same tag updates the existing release; assets with matching names are
+# replaced (softprops/action-gh-release overwrite_files, default true).
 #
 # Future placeholders (not implemented):
 #   - Windows Authenticode signing (SignTool / certificate)
@@ -34,6 +34,7 @@ permissions:
 
 env:
   FLUTTER_WORKING_DIRECTORY: apps/client
+  DIST_DIR: dist
   VC_REDIST_URL: https://aka.ms/vs/17/release/vc_redist.x64.exe
   VC_REDIST_CACHE_KEY: vc-redist-x64-v17
 
@@ -50,10 +51,8 @@ jobs:
         working-directory: ${{ env.FLUTTER_WORKING_DIRECTORY }}
 
     steps:
-      # ── Checkout & environment ──────────────────────────────────────────────
+      # ── Checkout & version ──────────────────────────────────────────────────────
 
-      # Checkout the commit that triggered this run (push ref or dispatch branch).
-      # Do not hardcode `ref: demo` — that branch may not exist on the remote.
       - name: Checkout
         uses: actions/checkout@v5
 
@@ -70,40 +69,12 @@ jobs:
           Write-Host "Application version: $version"
           "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
-      - name: Determine release metadata
-        id: release
+      - name: Prepare dist output directory
         shell: pwsh
+        working-directory: .
         run: |
-          $ref = "${{ github.ref }}"
-          $version = "${{ steps.version.outputs.version }}"
-
-          $isTagRelease = $ref -match '^refs/tags/v'
-          $isDemoBranch = $ref -eq 'refs/heads/demo'
-          $publishRelease = $isTagRelease -or $isDemoBranch
-
-          if ($isTagRelease) {
-            $tag = $ref.Replace('refs/tags/', '')
-            $releaseName = "Billing Baba $version"
-            $prerelease = 'false'
-          } elseif ($isDemoBranch) {
-            $tag = 'demo-build'
-            $releaseName = 'Demo Build'
-            $prerelease = 'true'
-          } else {
-            $tag = ''
-            $releaseName = ''
-            $prerelease = 'false'
-          }
-
-          "publish_release=$($publishRelease.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "is_tag_release=$($isTagRelease.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "release_tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "release_name=$releaseName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-          "prerelease=$prerelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-
-          Write-Host "Publish release: $publishRelease"
-          Write-Host "Release tag: $tag"
-          Write-Host "Release name: $releaseName"
+          New-Item -ItemType Directory -Force -Path "${{ env.DIST_DIR }}" | Out-Null
+          Write-Host "Output directory: $(Resolve-Path '${{ env.DIST_DIR }}')"
 
       - name: Generate Flutter .env
         working-directory: .
@@ -150,8 +121,6 @@ jobs:
           $releaseDir = Join-Path $PWD "build/windows/x64/runner/Release"
           $exePath = Join-Path $releaseDir "billing_baba.exe"
 
-          Write-Host "Build output directory: $releaseDir"
-
           if (-not (Test-Path $exePath)) {
             Write-Error "Build output missing: expected executable at '$exePath'"
             exit 1
@@ -176,18 +145,15 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path installer/deps | Out-Null
           Invoke-WebRequest -Uri "${{ env.VC_REDIST_URL }}" -OutFile installer/deps/vc_redist.x64.exe
-          Write-Host "Downloaded VC++ Redistributable to installer/deps/vc_redist.x64.exe"
 
       - name: Verify VC++ Redistributable
         shell: pwsh
         working-directory: .
         run: |
-          $vcRedist = "installer/deps/vc_redist.x64.exe"
-          if (-not (Test-Path $vcRedist)) {
-            Write-Error "VC++ Redistributable missing at '$vcRedist'"
+          if (-not (Test-Path installer/deps/vc_redist.x64.exe)) {
+            Write-Error "VC++ Redistributable missing at installer/deps/vc_redist.x64.exe"
             exit 1
           }
-          Write-Host "Verified VC++ Redistributable: $vcRedist"
 
       # ── Inno Setup installer ──────────────────────────────────────────────────
 
@@ -200,10 +166,8 @@ jobs:
             Write-Error "Inno Setup compiler not found at '$iscc'"
             exit 1
           }
-          Write-Host "Inno Setup installed: $iscc"
 
       - name: Compile Inno Setup installer
-        id: installer
         shell: pwsh
         working-directory: .
         env:
@@ -211,49 +175,46 @@ jobs:
         run: |
           $version = $env:APP_VERSION
           $releaseDir = "${{ steps.build_output.outputs.release_dir }}"
-          $outputDir = Join-Path $PWD "dist"
-          $vcRedist = Join-Path $PWD "installer/deps/vc_redist.x64.exe"
-          $setupIcon = Join-Path $PWD "apps/client/windows/runner/resources/app_icon.ico"
-          $issFile = Join-Path $PWD "installer/BillingBaba.iss"
+          $distDir = Join-Path $PWD "${{ env.DIST_DIR }}"
+          $setupExe = Join-Path $distDir "BillingBabaSetup-v$version.exe"
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-
-          New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
 
           & $iscc `
             "/DAppVersion=$version" `
             "/DReleaseDir=$releaseDir" `
-            "/DOutputDir=$outputDir" `
-            "/DVCRedistPath=$vcRedist" `
-            "/DSetupIcon=$setupIcon" `
-            $issFile
+            "/DOutputDir=$distDir" `
+            "/DVCRedistPath=$(Join-Path $PWD 'installer/deps/vc_redist.x64.exe')" `
+            "/DSetupIcon=$(Join-Path $PWD 'apps/client/windows/runner/resources/app_icon.ico')" `
+            "$(Join-Path $PWD 'installer/BillingBaba.iss')"
 
-          $setupExe = Join-Path $outputDir "BillingBabaSetup-v$version.exe"
           if (-not (Test-Path $setupExe)) {
             Write-Error "Installer output missing: expected '$setupExe'"
             exit 1
           }
 
           Write-Host "Created installer: $setupExe"
-          "setup_exe=$setupExe" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       # ── Portable ZIP package ──────────────────────────────────────────────────
 
       - name: Package portable Windows ZIP
-        id: zip
         shell: pwsh
+        working-directory: .
         env:
           APP_VERSION: ${{ steps.version.outputs.version }}
         run: |
           $version = $env:APP_VERSION
-          $releaseDir = "build/windows/x64/runner/Release"
-          $zipName = "BillingBaba-Windows-v$version.zip"
-          $zipPath = Join-Path $PWD $zipName
+          $releaseDir = Join-Path $PWD "apps/client/build/windows/x64/runner/Release"
+          $zipPath = Join-Path $PWD "${{ env.DIST_DIR }}/BillingBaba-Windows-v$version.zip"
 
-          if (Test-Path $zipPath) {
-            Remove-Item $zipPath -Force
+          if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+
+          # Archive only Release contents (exe, DLLs, data/) — no repo path prefixes.
+          Push-Location $releaseDir
+          try {
+            Compress-Archive -Path * -DestinationPath $zipPath -Force
+          } finally {
+            Pop-Location
           }
-
-          Compress-Archive -Path "$releaseDir/*" -DestinationPath $zipPath -Force
 
           if (-not (Test-Path $zipPath)) {
             Write-Error "ZIP output missing: expected '$zipPath'"
@@ -261,35 +222,32 @@ jobs:
           }
 
           Write-Host "Created portable ZIP: $zipPath"
-          "zip_path=$zipPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       # ── SHA256 checksums ──────────────────────────────────────────────────────
 
       - name: Generate SHA256 checksums
-        id: checksums
         shell: pwsh
         working-directory: .
         env:
           APP_VERSION: ${{ steps.version.outputs.version }}
         run: |
           $version = $env:APP_VERSION
-          $setupExe = "dist/BillingBabaSetup-v$version.exe"
-          $zipFile = "apps/client/BillingBaba-Windows-v$version.zip"
-          $checksumFile = "dist/SHA256SUMS.txt"
+          $distDir = "${{ env.DIST_DIR }}"
+          $setupName = "BillingBabaSetup-v$version.exe"
+          $zipName = "BillingBaba-Windows-v$version.zip"
+          $setupExe = Join-Path $distDir $setupName
+          $zipFile = Join-Path $distDir $zipName
+          $checksumFile = Join-Path $distDir "SHA256SUMS.txt"
 
-          if (-not (Test-Path $setupExe)) {
-            Write-Error "Installer missing for checksum: '$setupExe'"
-            exit 1
-          }
-          if (-not (Test-Path $zipFile)) {
-            Write-Error "ZIP missing for checksum: '$zipFile'"
-            exit 1
+          foreach ($file in @($setupExe, $zipFile)) {
+            if (-not (Test-Path $file)) {
+              Write-Error "Missing file for checksum: '$file'"
+              exit 1
+            }
           }
 
           $setupHash = (Get-FileHash -Path $setupExe -Algorithm SHA256).Hash.ToLower()
           $zipHash = (Get-FileHash -Path $zipFile -Algorithm SHA256).Hash.ToLower()
-          $setupName = Split-Path $setupExe -Leaf
-          $zipName = Split-Path $zipFile -Leaf
 
           @(
             "$setupHash  $setupName"
@@ -299,37 +257,17 @@ jobs:
           Write-Host "Generated checksums:"
           Get-Content $checksumFile | ForEach-Object { Write-Host $_ }
 
-          "checksum_file=$checksumFile" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+      # ── GitHub Release (tag v* only) ──────────────────────────────────────────
 
-      # ── GitHub Release ────────────────────────────────────────────────────────
-
-      - name: Publish versioned GitHub Release
-        if: steps.release.outputs.is_tag_release == 'true'
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.release.outputs.release_tag }}
-          name: ${{ steps.release.outputs.release_name }}
+          tag_name: ${{ github.ref_name }}
+          name: Billing Baba v${{ steps.version.outputs.version }}
           generate_release_notes: true
-          files: |
-            dist/BillingBabaSetup-v${{ steps.version.outputs.version }}.exe
-            apps/client/BillingBaba-Windows-v${{ steps.version.outputs.version }}.zip
-            dist/SHA256SUMS.txt
-
-      - name: Publish demo GitHub Release
-        if: steps.release.outputs.publish_release == 'true' && steps.release.outputs.is_tag_release != 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.release.outputs.release_tag }}
-          name: ${{ steps.release.outputs.release_name }}
-          prerelease: true
-          body: |
-            Demo build from commit ${{ github.sha }} on branch `demo`.
-
-            Download **BillingBabaSetup-v${{ steps.version.outputs.version }}.exe** for installation.
-          files: |
-            dist/BillingBabaSetup-v${{ steps.version.outputs.version }}.exe
-            apps/client/BillingBaba-Windows-v${{ steps.version.outputs.version }}.zip
-            dist/SHA256SUMS.txt
+          overwrite_files: true
+          files: ${{ env.DIST_DIR }}/*
 
       # ── GitHub Artifacts ──────────────────────────────────────────────────────
 
@@ -337,8 +275,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: BillingBaba-Windows-v${{ steps.version.outputs.version }}
-          path: |
-            dist/BillingBabaSetup-v${{ steps.version.outputs.version }}.exe
-            apps/client/BillingBaba-Windows-v${{ steps.version.outputs.version }}.zip
-            dist/SHA256SUMS.txt
+          path: ${{ env.DIST_DIR }}/
           retention-days: 30
