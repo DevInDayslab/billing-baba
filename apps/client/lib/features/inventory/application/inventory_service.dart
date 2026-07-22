@@ -755,6 +755,14 @@ class InventoryService {
     }
   }
 
+  Future<Map<String, List<String>>> fetchAlternativesIndex() async {
+    try {
+      return await _repository.getAlternativesIndex();
+    } on DioException catch (error) {
+      InventoryErrorMapper.mapAndThrow(error);
+    }
+  }
+
   Future<InventoryItem> createItemFromForm(
     AddItemFormState form,
     List<InventoryUnit> units,

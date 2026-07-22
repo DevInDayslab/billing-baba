@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/media/image_display_context.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
@@ -218,8 +219,18 @@ class _PartyDetailHeader extends ConsumerWidget {
     final leftLines = [
       _MetaLine(
         label: 'Phone Number',
-        value: PartyModel.displayOrDash(party.phone),
+        value: PartyModel.displayPhones(party),
       ),
+      if (party.legalName.trim().isNotEmpty)
+        _MetaLine(
+          label: 'Legal Name',
+          value: PartyModel.displayOrDash(party.legalName),
+        ),
+      if (party.alias.trim().isNotEmpty)
+        _MetaLine(
+          label: 'Alias',
+          value: PartyModel.displayOrDash(party.alias),
+        ),
       _MetaLine(
         label: 'Email',
         value: PartyModel.displayOrDash(party.email),
@@ -236,6 +247,16 @@ class _PartyDetailHeader extends ConsumerWidget {
 
     final rightLines = [
       _MetaLine(label: 'Party Type', value: party.partyTypeLabel),
+      if (party.partyGroup.trim().isNotEmpty)
+        _MetaLine(
+          label: 'Party Group',
+          value: PartyModel.displayOrDash(party.partyGroup),
+        ),
+      if (party.areaCode.trim().isNotEmpty)
+        _MetaLine(
+          label: 'Area Code',
+          value: PartyModel.displayOrDash(party.areaCode),
+        ),
       _MetaLine(
         label: 'Business Name',
         value: PartyModel.displayOrDash(businessName),
@@ -292,18 +313,23 @@ class _PartyDetailHeader extends ConsumerWidget {
                 profileMediaAssetId: party.profileMediaAssetId,
                 onTap: () {
                   final url = party.profileImageUrl?.trim();
-                  if (url == null || url.isEmpty) return;
-                  showPartyProfileImagePreviewDialog(
-                    context: context,
-                    imageUrl: url,
-                    mediaAssetId: party.profileMediaAssetId,
-                    onReplace: canEditParty
-                        ? () => PartyActions.edit(context, ref, party)
-                        : null,
-                    onRemove: canEditParty
-                        ? () => PartyActions.edit(context, ref, party)
-                        : null,
-                  );
+                  if (url != null && url.isNotEmpty) {
+                    showPartyProfileImagePreviewDialog(
+                      context: context,
+                      imageUrl: url,
+                      mediaAssetId: party.profileMediaAssetId,
+                      onReplace: canEditParty
+                          ? () => PartyActions.edit(context, ref, party)
+                          : null,
+                      onRemove: canEditParty
+                          ? () => PartyActions.edit(context, ref, party)
+                          : null,
+                    );
+                    return;
+                  }
+                  if (canEditParty) {
+                    PartyActions.edit(context, ref, party);
+                  }
                 },
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -317,8 +343,9 @@ class _PartyDetailHeader extends ConsumerWidget {
                           child: Row(
                             children: [
                               Flexible(
-                                child: Text(
+                                child: AppTruncatedText(
                                   party.name,
+                                  maxLength: _partyHeaderNameMaxLength,
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
@@ -326,9 +353,15 @@ class _PartyDetailHeader extends ConsumerWidget {
                                         ? AppColors.textPrimary
                                         : AppColors.textSecondary,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
+                              if (canEditParty)
+                                _PartyHeaderActionIcon(
+                                  icon: Icons.edit_outlined,
+                                  tooltip: 'Edit party',
+                                  onPressed: () =>
+                                      PartyActions.edit(context, ref, party),
+                                ),
                               if (!party.isActive) ...[
                                 const SizedBox(width: AppSpacing.sm),
                                 Container(
@@ -348,14 +381,6 @@ class _PartyDetailHeader extends ConsumerWidget {
                                       color: Colors.grey.shade600,
                                     ),
                                   ),
-                                ),
-                              ],
-                              if (canEditParty) ...[
-                                _PartyHeaderActionIcon(
-                                  icon: Icons.edit_outlined,
-                                  tooltip: 'Edit party',
-                                  onPressed: () =>
-                                      PartyActions.edit(context, ref, party),
                                 ),
                               ],
                             ],
@@ -506,6 +531,8 @@ class _MetaLine {
   final String label;
   final String value;
 }
+
+const _partyHeaderNameMaxLength = 20;
 
 class _PartyHeaderActionIcon extends StatelessWidget {
   const _PartyHeaderActionIcon({

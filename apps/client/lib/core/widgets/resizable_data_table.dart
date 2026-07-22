@@ -203,39 +203,7 @@ class _ResizableDataTableState extends State<ResizableDataTable> {
 
         final table = SizedBox(
           width: childWidth,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildHeaderRow(displayWidths),
-                  if (widget.rows.isNotEmpty)
-                    ...widget.rows.map(
-                      (row) => _buildDataRow(row, displayWidths),
-                    ),
-                ],
-              ),
-              if (_activeResizeColumnIndex != null)
-                Positioned(
-                  left:
-                      _columnOffset(
-                        _activeResizeColumnIndex!,
-                        displayWidths,
-                      ) +
-                      displayWidths[_activeResizeColumnIndex!],
-                  top: 0,
-                  bottom: 0,
-                  child: IgnorePointer(
-                    child: Container(
-                      width: 2,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-            ],
-          ),
+          child: _buildTableBody(displayWidths, constraints),
         );
 
         if (!needsHorizontalScroll) {
@@ -255,6 +223,71 @@ class _ResizableDataTableState extends State<ResizableDataTable> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTableBody(
+    List<double> displayWidths,
+    BoxConstraints constraints,
+  ) {
+    final dataRows = [
+      for (final row in widget.rows) _buildDataRow(row, displayWidths),
+    ];
+    final resizeOverlay = _activeResizeColumnIndex == null
+        ? null
+        : Positioned(
+            left:
+                _columnOffset(_activeResizeColumnIndex!, displayWidths) +
+                displayWidths[_activeResizeColumnIndex!],
+            top: 0,
+            bottom: 0,
+            child: IgnorePointer(
+              child: Container(
+                width: 2,
+                color: AppColors.primary,
+              ),
+            ),
+          );
+
+    final canPinHeader =
+        constraints.maxHeight.isFinite &&
+        widget.rows.isNotEmpty &&
+        constraints.maxHeight > _headerHeight;
+    final bodyMaxHeight = canPinHeader
+        ? constraints.maxHeight - _headerHeight
+        : null;
+
+    final rowsColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: dataRows,
+    );
+
+    final body = bodyMaxHeight == null
+        ? rowsColumn
+        : SizedBox(
+            height: bodyMaxHeight,
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                child: rowsColumn,
+              ),
+            ),
+          );
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeaderRow(displayWidths),
+            if (widget.rows.isNotEmpty) body,
+          ],
+        ),
+        if (resizeOverlay != null) resizeOverlay,
+      ],
     );
   }
 

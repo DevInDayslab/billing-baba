@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import type { StorageProvider } from '../../providers/storage';
-import { createStorageProvider } from '../../providers/storage';
+import { resolveStorageProvider } from '../../providers/storage';
 import { AppError } from '../../shared/errors/app-error';
 import { buildStagingStoragePath } from '../media-processing/image/image-path.builder';
 import { shouldProcessAsset } from '../media-processing/media-processing.constants';
@@ -79,10 +79,8 @@ export class StorageService {
 
     if (deps.provider) {
       this.provider = deps.provider;
-    } else if (deps.config.storageConfigured) {
-      this.provider = createStorageProvider(deps.config);
     } else {
-      this.provider = null;
+      this.provider = resolveStorageProvider(deps.config);
     }
   }
 

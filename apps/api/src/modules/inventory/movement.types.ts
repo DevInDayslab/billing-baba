@@ -22,6 +22,8 @@ export type MovementRecord = {
   reference_number: string | null;
   party_name: string | null;
   created_by: string | null;
+  created_by_name: string | null;
+  notes: string | null;
   created_at: string;
 };
 
@@ -57,6 +59,8 @@ export type MovementRow = {
   referenceNumber: string | null;
   partyName: string | null;
   createdBy: string | null;
+  createdByName: string | null;
+  notes: string | null;
   createdAt: Date;
 };
 
@@ -69,4 +73,5 @@ export type CreateMovementInput = {
   referenceId?: string | null;
   referenceType?: string | null;
   createdBy?: string | null;
+  notes?: string | null;
 };

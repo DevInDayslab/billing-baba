@@ -1,6 +1,7 @@
 import {
   boolean,
   integer,
+  jsonb,
   pgTable,
   text,
   uniqueIndex,
@@ -36,6 +37,8 @@ export const businessSettings = pgTable('business_settings', {
   creditLimitAction: creditLimitActionEnum('credit_limit_action')
     .notNull()
     .default('warn'),
+  pricingTierLabels: jsonb('pricing_tier_labels').$type<Record<string, string>>(),
+  defaultInvoiceTaxRate: money('default_invoice_tax_rate'),
 });
 
 export const taxRates = pgTable('tax_rates', {

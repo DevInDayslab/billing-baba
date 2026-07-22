@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   integer,
+  jsonb,
   pgTable,
   text,
   uniqueIndex,
@@ -84,6 +85,9 @@ export const items = pgTable(
     ...syncedBusinessColumns,
     businessId: businessId(),
     name: text('name').notNull(),
+    shortName: text('short_name'),
+    alias: text('alias'),
+    searchKeywords: text('search_keywords'),
     description: text('description'),
     itemType: itemTypeEnum('item_type').notNull().default('product'),
     hasStockTracking: boolean('has_stock_tracking').notNull().default(true),
@@ -98,12 +102,33 @@ export const items = pgTable(
     salePrice: money('sale_price').notNull().default('0'),
     purchasePrice: money('purchase_price').notNull().default('0'),
     reorderLevel: money('reorder_level'),
+    defaultTaxRate: money('default_tax_rate'),
     primaryImageUrl: text('primary_image_url'),
   },
   (table) => [
     uniqueIndex('uq_items_business_barcode_active')
       .on(table.businessId, table.barcode)
       .where(sql`${table.isDeleted} = false AND ${table.barcode} IS NOT NULL`),
+  ],
+);
+
+export const itemAlternatives = pgTable(
+  'item_alternatives',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => items.id),
+    alternativeItemId: uuid('alternative_item_id')
+      .notNull()
+      .references(() => items.id),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex('uq_item_alternatives_pair_active')
+      .on(table.businessId, table.itemId, table.alternativeItemId)
+      .where(sql`${table.isDeleted} = false`),
   ],
 );
 
@@ -235,6 +260,7 @@ export const inventoryMovements = pgTable('inventory_movements', {
   unit: text('unit'),
   referenceId: uuid('reference_id'),
   referenceType: text('reference_type'),
+  notes: text('notes'),
   createdAt: timestamptz('created_at').notNull().defaultNow(),
   createdBy: uuid('created_by').references(() => users.id),
 });

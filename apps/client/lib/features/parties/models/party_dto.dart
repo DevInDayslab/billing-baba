@@ -11,9 +11,14 @@ class PartyDto {
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
+    this.legalName,
+    this.alias,
     this.mobile,
+    this.additionalPhones = const [],
     this.email,
     this.partyCategory,
+    this.partyGroup,
+    this.areaCode,
     this.gstin,
     this.stateCode,
     this.state,
@@ -27,13 +32,21 @@ class PartyDto {
         json['default_price_tier'] as String? ??
         json['pricing_tier'] as String? ??
         'tier_1';
+    final additionalPhonesRaw = json['additional_phones'];
     return PartyDto(
       id: json['id'] as String,
       name: json['name'] as String,
+      legalName: json['legal_name'] as String?,
+      alias: json['alias'] as String?,
       mobile: json['mobile'] as String?,
+      additionalPhones: additionalPhonesRaw is List
+          ? additionalPhonesRaw.map((phone) => phone.toString()).toList()
+          : const [],
       email: json['email'] as String?,
       partyType: json['party_type'] as String? ?? 'customer',
       partyCategory: json['party_category'] as String?,
+      partyGroup: json['party_group'] as String?,
+      areaCode: json['area_code'] as String?,
       pricingTier: pricingTier,
       gstin: json['gstin'] as String?,
       stateCode: json['state_code'] as String?,
@@ -53,10 +66,15 @@ class PartyDto {
 
   final String id;
   final String name;
+  final String? legalName;
+  final String? alias;
   final String? mobile;
+  final List<String> additionalPhones;
   final String? email;
   final String partyType;
   final String? partyCategory;
+  final String? partyGroup;
+  final String? areaCode;
   final String pricingTier;
   final String? gstin;
   final String? stateCode;
@@ -75,10 +93,15 @@ class PartyDto {
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
+    'legal_name': legalName,
+    'alias': alias,
     'mobile': mobile,
+    'additional_phones': additionalPhones,
     'email': email,
     'party_type': partyType,
     'party_category': partyCategory,
+    'party_group': partyGroup,
+    'area_code': areaCode,
     'pricing_tier': pricingTier,
     'gstin': gstin,
     'state_code': stateCode,

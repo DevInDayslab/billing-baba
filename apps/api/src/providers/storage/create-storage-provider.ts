@@ -1,7 +1,24 @@
 import type { AppConfig } from '../../config/app_config';
 import { AppError } from '../../shared/errors/app-error';
+import { createLocalFilesystemProvider } from './local-filesystem-provider';
 import { RailwayS3Provider } from './railway-s3-provider';
 import type { StorageProvider } from './storage-provider';
+
+/**
+ * Resolves the active storage provider.
+ * Uses S3 when configured; falls back to local filesystem in development.
+ */
+export function resolveStorageProvider(
+  config: AppConfig,
+): StorageProvider | null {
+  if (config.storageConfigured) {
+    return createStorageProvider(config);
+  }
+  if (config.environment === 'development') {
+    return createLocalFilesystemProvider(config);
+  }
+  return null;
+}
 
 /**
  * Selects the object storage provider from configuration.

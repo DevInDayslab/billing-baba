@@ -14,6 +14,7 @@ import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/providers/invoice_tax_fallback_provider.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -59,6 +60,7 @@ List<PurchaseLineItem> _toPurchaseLines(List<SaleLineItem> items) {
 class DebitNoteForm extends _$DebitNoteForm {
   @override
   DebitNoteFormState build({String? debitNoteId}) {
+    ref.watch(invoiceFallbackTaxPercentProvider);
     if (debitNoteId != null) {
       Future.microtask(() => _loadDocument(debitNoteId));
     }
@@ -231,18 +233,21 @@ class DebitNoteForm extends _$DebitNoteForm {
 
   void updateLineItem(int index, SaleLineItem item) {
     if (index < 0 || index >= state.items.length) return;
+    final previous = state.items[index];
     final items = [...state.items];
     items[index] = item;
     state = state.copyWith(items: items, isDirty: true);
+    rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  void selectCatalogItem(int index, SaleItemOption catalogItem) {
+  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
-    final applied = applyCatalogItemToLine(
+    final applied = (await applyCatalogItemWithInvoiceTaxFallback(
+      ref,
       line,
       catalogItem,
-    ).copyWith(mrp: catalogItem.salePrice);
+    )).copyWith(mrp: catalogItem.salePrice);
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
       targetIndex: index,

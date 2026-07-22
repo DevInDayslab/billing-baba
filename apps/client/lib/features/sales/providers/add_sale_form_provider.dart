@@ -22,9 +22,10 @@ import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/providers/invoice_tax_fallback_provider.dart';
 import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
-import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
+import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/features/settings/services/whatsapp_auto_notify.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -55,6 +56,7 @@ AddSaleFormState _defaultFormState({String? documentId}) {
 class AddSaleForm extends _$AddSaleForm {
   @override
   AddSaleFormState build({String sessionKey = 'default'}) {
+    ref.watch(invoiceFallbackTaxPercentProvider);
     return _defaultFormState();
   }
 
@@ -476,8 +478,9 @@ class AddSaleForm extends _$AddSaleForm {
     _repriceLineItemsForPartyTier();
   }
 
-  void _repriceLineItemsForPartyTier() {
+  Future<void> _repriceLineItemsForPartyTier() async {
     final partyTier = state.partyPriceTier;
+    final fallback = await readInvoiceFallbackTaxPercent(ref);
     final localStore = ref.read(localItemTierPricesProvider);
     final apiStore = ref.read(itemApiTierPricesProvider);
     final inventory = ref.read(inventoryItemsProvider).value ?? [];
@@ -502,6 +505,7 @@ class AddSaleForm extends _$AddSaleForm {
         catalogItem,
         partyPriceTier: partyTier,
         resetQtyWhenEmpty: false,
+        fallbackTaxPercent: fallback,
       );
     }).toList();
 
@@ -630,6 +634,7 @@ class AddSaleForm extends _$AddSaleForm {
 
   void updateLineItem(int index, SaleLineItem item) {
     if (index < 0 || index >= state.items.length) return;
+    final previous = state.items[index];
     final items = [...state.items];
     items[index] = item;
     final clearBillTax =
@@ -640,16 +645,18 @@ class AddSaleForm extends _$AddSaleForm {
       isDirty: true,
       clearSaveError: true,
     );
+    rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  void selectCatalogItem(int index, SaleItemOption catalogItem) {
+  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
-    final applied = applyCatalogItemToLine(
+    final applied = (await applyCatalogItemWithInvoiceTaxFallback(
+      ref,
       line,
       catalogItem,
       partyPriceTier: state.partyPriceTier,
-    ).copyWith(mrp: catalogItem.salePrice);
+    )).copyWith(mrp: catalogItem.salePrice);
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
       targetIndex: index,

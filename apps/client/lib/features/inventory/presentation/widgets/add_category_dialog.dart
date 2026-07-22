@@ -4,22 +4,18 @@ import 'package:billing_baba/features/inventory/presentation/widgets/inventory_s
 import 'package:billing_baba/features/inventory/providers/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-const _dialogMaxWidth = 400.0;
 
 Future<void> showAddCategoryDialog(
   BuildContext context, {
   InventoryCategory? editCategory,
 }) {
-  return showDialog<void>(
+  return showFormDialog<void>(
     context: context,
-    builder: (context) => Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: AddCategoryDialog(editCategory: editCategory),
-    ),
+    size: FormDialogSize.compact,
+    child: AddCategoryDialog(editCategory: editCategory),
   );
 }
 
@@ -89,13 +85,11 @@ class _AddCategoryDialogState extends ConsumerState<AddCategoryDialog> {
   Widget build(BuildContext context) {
     final hasError = _errorMessage != null;
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: _dialogMaxWidth),
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: AppRadius.lgBorder,
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
+    return Material(
+      color: AppColors.surface,
+      borderRadius: AppRadius.lgBorder,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -190,7 +184,6 @@ class _AddCategoryDialogState extends ConsumerState<AddCategoryDialog> {
             ],
           ),
         ),
-      ),
     );
   }
 }

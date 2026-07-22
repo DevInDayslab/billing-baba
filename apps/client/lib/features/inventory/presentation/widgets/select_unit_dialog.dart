@@ -5,11 +5,10 @@ import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_unit_dialog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-const _dialogMaxWidth = 480.0;
 
 class UnitSelection {
   const UnitSelection({this.baseUnitId, this.secondaryUnitId});
@@ -23,15 +22,12 @@ Future<UnitSelection?> showSelectUnitDialog(
   String? initialBaseUnitId,
   String? initialSecondaryUnitId,
 }) {
-  return showDialog<UnitSelection>(
+  return showFormDialog<UnitSelection>(
     context: context,
-    builder: (context) => Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: SelectUnitDialog(
-        initialBaseUnitId: initialBaseUnitId,
-        initialSecondaryUnitId: initialSecondaryUnitId,
-      ),
+    size: FormDialogSize.medium,
+    child: SelectUnitDialog(
+      initialBaseUnitId: initialBaseUnitId,
+      initialSecondaryUnitId: initialSecondaryUnitId,
     ),
   );
 }
@@ -86,13 +82,11 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
     final units = ref.watch(unitsProvider);
     final hasUnits = units.isNotEmpty;
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: _dialogMaxWidth),
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: AppRadius.lgBorder,
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
+    return Material(
+      color: AppColors.surface,
+      borderRadius: AppRadius.lgBorder,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -215,7 +209,6 @@ class _SelectUnitDialogState extends ConsumerState<SelectUnitDialog> {
             ],
           ),
         ),
-      ),
     );
   }
 

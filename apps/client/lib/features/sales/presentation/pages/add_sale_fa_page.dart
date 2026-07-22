@@ -335,6 +335,7 @@ class _FormFields extends ConsumerWidget {
             label: 'Customer *',
             child: BillingNamePartySearchField(
               value: form.party,
+              selectedPartyId: form.partyId,
               hasError: form.partyHasError,
               errorMessage: 'Customer is required',
               onSelected: notifier.updateParty,

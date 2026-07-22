@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_table_row.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
@@ -228,9 +229,8 @@ class _PartyInGroupTile extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(
+              child: AppEllipsisText(
                 party.name,
-                overflow: TextOverflow.ellipsis,
                 style: InventoryStyles.listCellStyle.copyWith(
                   fontWeight: FontWeight.w500,
                   color: party.isActive
@@ -241,10 +241,9 @@ class _PartyInGroupTile extends StatelessWidget {
             ),
             SizedBox(
               width: 88,
-              child: Text(
+              child: AppEllipsisText(
                 amountText,
                 textAlign: TextAlign.right,
-                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,

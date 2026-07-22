@@ -26,6 +26,37 @@ const optionalMobile = z
   .optional()
   .transform((value) => (value === '' ? undefined : value));
 
+const requiredMobile = z
+  .string()
+  .trim()
+  .min(1, 'Mobile number is required')
+  .transform((value) => value.replace(/\D/g, '').slice(-10))
+  .refine((value) => value.length === 10, {
+    message: 'Phone must be exactly 10 digits',
+  });
+
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .transform((value) => (value === '' ? undefined : value));
+
+const additionalPhonesField = z
+  .array(
+    z
+      .string()
+      .trim()
+      .min(1)
+      .transform((value) => value.replace(/\D/g, '').slice(-10))
+      .refine((value) => value.length === 10, {
+        message: 'Each phone must be exactly 10 digits',
+      }),
+  )
+  .optional()
+  .default([]);
+
 const optionalGstin = z
   .string()
   .trim()
@@ -86,11 +117,16 @@ export type ListPartiesQuery = z.infer<typeof listPartiesQuerySchema>;
 
 export const createPartyBodySchema = z.object({
   name: z.string().trim().min(1, 'Party name is required').max(200),
-  mobile: optionalMobile,
+  legal_name: optionalText(200),
+  alias: optionalText(200),
+  mobile: requiredMobile,
+  additional_phones: additionalPhonesField,
   email: optionalEmail,
   gstin: optionalGstin,
   party_type: z.enum(partyTypeValues).default('customer'),
   party_category: z.enum(partyCategoryValues).optional(),
+  party_group: optionalText(100),
+  area_code: optionalText(50),
   pricing_tier: pricingTierInput.optional(),
   default_price_tier: pricingTierInput.optional(),
   state_code: z
@@ -121,6 +157,9 @@ export const createPartyBodySchema = z.object({
 export type CreatePartyBody = z.infer<typeof createPartyBodySchema>;
 
 export const updatePartyBodySchema = createPartyBodySchema
+  .extend({
+    mobile: optionalMobile,
+  })
   .partial()
   .refine((body) => Object.keys(body).length > 0, {
     message: 'At least one field is required',

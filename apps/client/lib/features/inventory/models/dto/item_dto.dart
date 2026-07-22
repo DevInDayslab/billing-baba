@@ -17,6 +17,13 @@ abstract class ItemListDto with _$ItemListDto {
     @JsonKey(name: 'purchase_price') required String purchasePrice,
     @JsonKey(name: 'created_at') required String createdAt,
     @JsonKey(name: 'updated_at') required String updatedAt,
+    @JsonKey(name: 'short_name') String? shortName,
+    String? alias,
+    @JsonKey(name: 'search_keywords') @Default([]) List<String> searchKeywords,
+    @JsonKey(name: 'default_tax_rate') String? defaultTaxRate,
+    @JsonKey(name: 'alternative_item_ids')
+    @Default([])
+    List<String> alternativeItemIds,
     String? description,
     @JsonKey(name: 'category_id') String? categoryId,
     CategorySummaryDto? category,
@@ -50,6 +57,13 @@ abstract class ItemDetailDto with _$ItemDetailDto {
     @JsonKey(name: 'purchase_price') required String purchasePrice,
     @JsonKey(name: 'created_at') required String createdAt,
     @JsonKey(name: 'updated_at') required String updatedAt,
+    @JsonKey(name: 'short_name') String? shortName,
+    String? alias,
+    @JsonKey(name: 'search_keywords') @Default([]) List<String> searchKeywords,
+    @JsonKey(name: 'default_tax_rate') String? defaultTaxRate,
+    @JsonKey(name: 'alternative_item_ids')
+    @Default([])
+    List<String> alternativeItemIds,
     String? description,
     @JsonKey(name: 'category_id') String? categoryId,
     CategorySummaryDto? category,

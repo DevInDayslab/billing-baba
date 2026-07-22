@@ -2,6 +2,7 @@ import 'package:billing_baba/features/inventory/application/inventory_stock_calc
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/adjust_stock_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_detail_header.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/inventory_stock_history_table.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_transactions_table.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
@@ -36,6 +37,9 @@ class InventoryItemDetailPanel extends ConsumerWidget {
     final stockSummary = mode == InventoryDetailHeaderMode.product
         ? ref.watch(productStockSummaryProvider(itemId))
         : null;
+    final latestStockUpdate = mode == InventoryDetailHeaderMode.product
+        ? ref.watch(latestStockUpdateProvider(itemId))
+        : null;
     final contextData = ref.watch(productDetailContextProvider(itemId));
     final unitLabel = displayItem.baseUnitShortName ?? 'pcs';
 
@@ -48,6 +52,7 @@ class InventoryItemDetailPanel extends ConsumerWidget {
           mode: mode,
           stockMetrics: stockMetrics,
           stockSummary: stockSummary,
+          latestStockUpdate: latestStockUpdate,
           categoryName: contextData.categoryName,
           actionLabel: mode == InventoryDetailHeaderMode.product
               ? 'Adjust Stock'
@@ -58,10 +63,15 @@ class InventoryItemDetailPanel extends ConsumerWidget {
         ),
         const Divider(height: 1, thickness: 1),
         Expanded(
-          child: InventoryTransactionsTable(
-            itemId: itemId,
-            unitLabel: unitLabel,
-          ),
+          child: mode == InventoryDetailHeaderMode.product
+              ? InventoryStockHistoryTable(
+                  itemId: itemId,
+                  unitLabel: unitLabel,
+                )
+              : InventoryTransactionsTable(
+                  itemId: itemId,
+                  unitLabel: unitLabel,
+                ),
         ),
       ],
     );

@@ -20,5 +20,15 @@ export const createBusinessProfileRoutes = (
       { preHandler: [authenticate, requireBusiness] },
       controller.updateProfile,
     );
+    app.get(
+      '/commerce-settings',
+      { preHandler: [authenticate, requireBusiness] },
+      controller.getCommerceSettings,
+    );
+    app.patch(
+      '/commerce-settings',
+      { preHandler: [authenticate, requireBusiness] },
+      controller.updateCommerceSettings,
+    );
   };
 };

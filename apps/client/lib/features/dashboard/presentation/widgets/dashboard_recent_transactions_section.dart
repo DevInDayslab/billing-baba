@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/presentation/utils/dashboard_transaction_navigation.dart';
@@ -170,7 +171,7 @@ class _TransactionRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    AppEllipsisText(
                       tx.partyName.isEmpty
                           ? dashboardTransactionTypeLabel(tx.type)
                           : tx.partyName,
@@ -179,17 +180,13 @@ class _TransactionRow extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Text(
+                    AppEllipsisText(
                       _detailLine,
                       style: DashboardTypography.metadata.copyWith(
                         fontSize: AppTypography.subtitleSize,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(

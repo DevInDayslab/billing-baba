@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/sales/models/sale_line_item_columns.dart';
 import 'package:flutter/material.dart';
 
@@ -439,7 +440,7 @@ class SaleLineItemGridCell extends StatelessWidget {
           padding: padding,
           child: Align(
             alignment: alignment,
-            child: child,
+            child: wrapEllipsisTooltipChild(child),
           ),
         ),
       ),

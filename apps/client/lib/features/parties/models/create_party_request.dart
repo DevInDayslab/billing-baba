@@ -1,11 +1,16 @@
 class CreatePartyRequest {
   const CreatePartyRequest({
     required this.name,
-    this.mobile,
+    required this.mobile,
+    this.legalName,
+    this.alias,
+    this.additionalPhones = const [],
     this.email,
     this.gstin,
     this.partyType = 'customer',
     this.partyCategory,
+    this.partyGroup,
+    this.areaCode,
     this.pricingTier = 'tier_1',
     this.state,
     this.stateCode,
@@ -18,11 +23,16 @@ class CreatePartyRequest {
   });
 
   final String name;
-  final String? mobile;
+  final String mobile;
+  final String? legalName;
+  final String? alias;
+  final List<String> additionalPhones;
   final String? email;
   final String? gstin;
   final String partyType;
   final String? partyCategory;
+  final String? partyGroup;
+  final String? areaCode;
   final String pricingTier;
   final String? state;
   final String? stateCode;
@@ -35,11 +45,17 @@ class CreatePartyRequest {
 
   Map<String, dynamic> toJson() => {
     'name': name,
-    if (mobile != null && mobile!.isNotEmpty) 'mobile': mobile,
+    'mobile': mobile,
+    if (legalName != null && legalName!.isNotEmpty) 'legal_name': legalName,
+    if (alias != null && alias!.isNotEmpty) 'alias': alias,
+    if (additionalPhones.isNotEmpty) 'additional_phones': additionalPhones,
     if (email != null && email!.isNotEmpty) 'email': email,
     if (gstin != null && gstin!.isNotEmpty) 'gstin': gstin,
     'party_type': partyType,
     if (partyCategory != null) 'party_category': partyCategory,
+    if (partyGroup != null && partyGroup!.isNotEmpty)
+      'party_group': partyGroup,
+    if (areaCode != null && areaCode!.isNotEmpty) 'area_code': areaCode,
     'pricing_tier': pricingTier,
     if (state != null && state!.isNotEmpty) 'state': state,
     if (stateCode != null && stateCode!.isNotEmpty) 'state_code': stateCode,
@@ -58,10 +74,15 @@ class UpdatePartyRequest {
   const UpdatePartyRequest({
     this.name,
     this.mobile,
+    this.legalName,
+    this.alias,
+    this.additionalPhones,
     this.email,
     this.gstin,
     this.partyType,
     this.partyCategory,
+    this.partyGroup,
+    this.areaCode,
     this.pricingTier,
     this.state,
     this.stateCode,
@@ -75,10 +96,15 @@ class UpdatePartyRequest {
 
   final String? name;
   final String? mobile;
+  final String? legalName;
+  final String? alias;
+  final List<String>? additionalPhones;
   final String? email;
   final String? gstin;
   final String? partyType;
   final String? partyCategory;
+  final String? partyGroup;
+  final String? areaCode;
   final String? pricingTier;
   final String? state;
   final String? stateCode;
@@ -93,10 +119,17 @@ class UpdatePartyRequest {
     final json = <String, dynamic>{};
     if (name != null) json['name'] = name;
     if (mobile != null) json['mobile'] = mobile;
+    if (legalName != null) json['legal_name'] = legalName;
+    if (alias != null) json['alias'] = alias;
+    if (additionalPhones != null) {
+      json['additional_phones'] = additionalPhones;
+    }
     if (email != null) json['email'] = email;
     if (gstin != null) json['gstin'] = gstin;
     if (partyType != null) json['party_type'] = partyType;
     if (partyCategory != null) json['party_category'] = partyCategory;
+    if (partyGroup != null) json['party_group'] = partyGroup;
+    if (areaCode != null) json['area_code'] = areaCode;
     if (pricingTier != null) json['pricing_tier'] = pricingTier;
     if (state != null) json['state'] = state;
     if (stateCode != null) json['state_code'] = stateCode;

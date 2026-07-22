@@ -108,6 +108,8 @@ class SaleItemOption {
     this.sku,
     this.barcode,
     this.tierPrices = const {},
+    this.defaultTaxPercent = 0,
+    this.isAlternativeSuggestion = false,
   });
 
   final String id;
@@ -122,6 +124,8 @@ class SaleItemOption {
   final String? sku;
   final String? barcode;
   final Map<String, double> tierPrices;
+  final double defaultTaxPercent;
+  final bool isAlternativeSuggestion;
 
   bool matchesSearchQuery(String query) {
     return InventorySearchEngine.matchesFields(

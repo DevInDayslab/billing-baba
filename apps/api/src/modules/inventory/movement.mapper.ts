@@ -16,6 +16,8 @@ export function toMovementRecord(row: MovementRow): MovementRecord {
     reference_number: row.referenceNumber,
     party_name: row.partyName,
     created_by: row.createdBy,
+    created_by_name: row.createdByName,
+    notes: row.notes,
     created_at: row.createdAt.toISOString(),
   };
 }

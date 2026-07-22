@@ -37,8 +37,10 @@ abstract final class FormSpacing {
 
   static const double cardRadius = AppRadius.md;
 
-  static const double dialogWidth = 1000;
-  static const double dialogMaxWidth = 1040;
+  static const double dialogWidth = 1120;
+  static const double dialogMaxWidth = 1160;
+  static const double dialogCompactMaxWidth = 560;
+  static const double dialogMediumMaxWidth = 720;
   static const double dialogMaxHeightFactor = 0.9;
 
   /// Stack grid cells below this width.

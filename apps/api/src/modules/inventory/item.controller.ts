@@ -21,6 +21,7 @@ import {
   itemTierParamSchema,
   listItemPriceHistoryQuerySchema,
   listItemsQuerySchema,
+  putItemAlternativesBodySchema,
   putItemTierPricesBodySchema,
   updateItemBodySchema,
   updateItemImageBodySchema,
@@ -418,6 +419,67 @@ export function createItemController(config: AppConfig) {
           throw new AppError(
             'VALIDATION_ERROR',
             'Invalid tier parameter',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    getAlternativesIndex: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ) => {
+      const { accountId, businessId } = requireAuthContext(request);
+      const service = new ItemService(config);
+      const data = await service.getAlternativesIndex(businessId, accountId);
+      return sendData(reply, data);
+    },
+
+    listAlternatives: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { accountId, businessId } = requireAuthContext(request);
+        const { id } = itemIdParamSchema.parse(request.params);
+        const service = new ItemService(config);
+        const data = await service.listItemAlternatives(
+          businessId,
+          accountId,
+          id,
+        );
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid item ID',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    putAlternatives: async (request: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const { accountId, businessId, userId } = requireAuthContext(request);
+        const { id } = itemIdParamSchema.parse(request.params);
+        const body = putItemAlternativesBodySchema.parse(request.body);
+        const service = new ItemService(config);
+        const data = await service.putItemAlternatives(
+          businessId,
+          accountId,
+          userId,
+          id,
+          body.alternative_item_ids,
+        );
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid request body',
             400,
             formatZodError(error),
           );

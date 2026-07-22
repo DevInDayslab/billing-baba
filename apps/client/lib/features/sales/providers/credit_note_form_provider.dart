@@ -13,6 +13,7 @@ import 'package:billing_baba/features/sales/models/sales_document_draft_input.da
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
+import 'package:billing_baba/features/sales/providers/invoice_tax_fallback_provider.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:flutter/material.dart';
@@ -40,8 +41,10 @@ CreditNoteFormState _initialCreditNoteFormState() {
 @riverpod
 class CreditNoteForm extends _$CreditNoteForm {
   @override
-  CreditNoteFormState build({String sessionKey = 'default'}) =>
-      _initialCreditNoteFormState();
+  CreditNoteFormState build({String sessionKey = 'default'}) {
+    ref.watch(invoiceFallbackTaxPercentProvider);
+    return _initialCreditNoteFormState();
+  }
 
   Map<String, String> _itemNameToId() {
     final items = ref.read(inventoryItemsProvider).value ?? [];
@@ -294,6 +297,7 @@ class CreditNoteForm extends _$CreditNoteForm {
 
   void updateLineItem(int index, SaleLineItem item) {
     if (index < 0 || index >= state.items.length) return;
+    final previous = state.items[index];
     final items = [...state.items];
     items[index] = item;
     final clearBillTax =
@@ -304,15 +308,17 @@ class CreditNoteForm extends _$CreditNoteForm {
       isDirty: true,
       clearSaveError: true,
     );
+    rememberInvoiceLineTaxIfChanged(ref, previous, item);
   }
 
-  void selectCatalogItem(int index, SaleItemOption catalogItem) {
+  Future<void> selectCatalogItem(int index, SaleItemOption catalogItem) async {
     if (index < 0 || index >= state.items.length) return;
     final line = state.items[index];
-    final applied = applyCatalogItemToLine(
+    final applied = (await applyCatalogItemWithInvoiceTaxFallback(
+      ref,
       line,
       catalogItem,
-    ).copyWith(mrp: catalogItem.salePrice);
+    )).copyWith(mrp: catalogItem.salePrice);
     final items = selectCatalogItemOnSaleLines(
       items: state.items,
       targetIndex: index,

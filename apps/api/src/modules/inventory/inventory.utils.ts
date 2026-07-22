@@ -1,5 +1,15 @@
 /** Shared inventory module utilities. */
 
+export function parseSearchKeywords(
+  raw: string | null | undefined,
+): string[] {
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
+
 export function normalizeMoney(value: string | number | undefined): string {
   if (value === undefined || value === '') {
     return '0';

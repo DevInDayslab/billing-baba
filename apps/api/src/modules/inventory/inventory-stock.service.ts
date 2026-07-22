@@ -33,6 +33,7 @@ export type RecordMovementParams = {
   referenceType?: string | null;
   createdBy?: string | null;
   occurredAt?: Date | null;
+  notes?: string | null;
 };
 
 export type GodownRow = {
@@ -135,6 +136,7 @@ export async function recordMovementAndUpdateStock(
       unit: params.unit ?? null,
       referenceId: params.referenceId ?? null,
       referenceType: params.referenceType ?? null,
+      notes: params.notes ?? null,
       createdBy: params.createdBy ?? null,
       createdAt: params.occurredAt ?? new Date(),
     })

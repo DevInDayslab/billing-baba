@@ -43,6 +43,7 @@ class _ItemImageGallerySectionState
   final List<PendingItemImage> _pending = [];
   var _uploadGeneration = 0;
   var _seedApplied = false;
+  final Set<String> _prefetchedImageIds = {};
 
   ItemImages get _imagesNotifier =>
       ref.read(itemImagesProvider(widget.itemId).notifier);
@@ -83,9 +84,48 @@ class _ItemImageGallerySectionState
         );
   }
 
+  Future<void> _prefetchGalleryImage(ItemImageModel image) async {
+    try {
+      final imageService = ref.read(imageServiceProvider);
+      final thumbUrl = normalizeImageUrl(image.urlForGrid());
+      final detailUrl = normalizeImageUrl(image.urlForDetail());
+      final mediaAssetId = image.mediaAssetId?.trim();
+
+      if (mediaAssetId != null && mediaAssetId.isNotEmpty) {
+        await imageService.prefetchResolved(
+          sourceMediaAssetId: mediaAssetId,
+          context: ImageDisplayContext.galleryThumb,
+          fallbackUrl: thumbUrl,
+        );
+        if (detailUrl != null) {
+          await imageService.prefetchResolved(
+            sourceMediaAssetId: mediaAssetId,
+            context: ImageDisplayContext.detail,
+            fallbackUrl: detailUrl,
+          );
+        }
+        return;
+      }
+
+      if (thumbUrl != null) {
+        await imageService.prefetchUrl(
+          thumbUrl,
+          cacheKey: buildImageCacheKey(fallbackUrl: thumbUrl),
+        );
+      }
+    } on Object {
+      // Best-effort thumbnail warm-up.
+    }
+  }
+
   Future<void> _prefetchImageUrl(String url) async {
     try {
-      ref.read(imageServiceProvider).prefetchUrl(url);
+      final normalized = normalizeImageUrl(url);
+      if (normalized == null) return;
+      await ref.read(imageServiceProvider).prefetchUrl(
+            normalized,
+            cacheKey: buildImageCacheKey(fallbackUrl: normalized),
+          );
     } on Object {
       // Best-effort thumbnail warm-up.
     }
@@ -193,7 +233,7 @@ class _ItemImageGallerySectionState
         );
       }
 
-      unawaited(_prefetchImageUrl(uploaded.urlForGrid()));
+      unawaited(_prefetchGalleryImage(uploaded));
       unawaited(_imagesNotifier.refreshInBackground());
     } on Exception catch (error) {
       if (!mounted || generation != _uploadGeneration) return;
@@ -297,11 +337,11 @@ class _ItemImageGallerySectionState
     ref.listen(itemImagesProvider(widget.itemId), (previous, next) {
       final images = next.value;
       if (images == null || images.isEmpty) return;
-      final urls = [
-        for (final image in images)
-          ?gridImageUrl(image),
-      ];
-      ref.read(imageServiceProvider).prefetchUrls(urls, limit: urls.length);
+      for (final image in images) {
+        if (_prefetchedImageIds.contains(image.id)) continue;
+        _prefetchedImageIds.add(image.id);
+        unawaited(_prefetchGalleryImage(image));
+      }
     });
 
     final imagesAsync = ref.watch(itemImagesProvider(widget.itemId));

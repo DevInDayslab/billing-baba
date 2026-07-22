@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/providers/commerce_settings_provider.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/crm/presentation/providers/contacts_provider.dart';
 import 'package:billing_baba/features/crm/presentation/providers/deals_provider.dart';
@@ -50,6 +51,7 @@ void invalidateAllBusinessScopedProviders(
     ..invalidate(businessProfileProvider)
     ..invalidate(currentBusinessProvider)
     ..invalidate(sidebarBusinessProvider)
+    ..invalidate(commerceSettingsProvider)
     ..invalidate(partyListProvider)
     ..invalidate(partyServiceProvider)
     ..invalidate(partyGroupsProvider)

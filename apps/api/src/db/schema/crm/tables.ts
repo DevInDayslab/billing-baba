@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   date,
+  integer,
   pgTable,
   text,
   uniqueIndex,
@@ -38,8 +39,12 @@ export const parties = pgTable(
     ...syncedBusinessColumns,
     businessId: businessId(),
     name: text('name').notNull(),
+    legalName: text('legal_name'),
+    alias: text('alias'),
     mobile: text('mobile'),
     email: text('email'),
+    partyGroup: text('party_group'),
+    areaCode: text('area_code'),
     partyType: partyTypeEnum('party_type').notNull().default('customer'),
     partyCategory: partyCategoryEnum('party_category'),
     pricingTier: pricingTierEnum('pricing_tier').notNull().default('tier_1'),
@@ -61,6 +66,25 @@ export const parties = pgTable(
       .where(sql`${table.isDeleted} = false AND ${table.mobile} IS NOT NULL`),
     sql`CHECK (${table.creditLimit} >= 0)`,
     sql`CHECK (${table.unrecoveredAmount} >= 0)`,
+  ],
+);
+
+export const partyPhones = pgTable(
+  'party_phones',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    partyId: uuid('party_id')
+      .notNull()
+      .references(() => parties.id),
+    mobile: text('mobile').notNull(),
+    label: text('label'),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex('uq_party_phones_business_mobile_active')
+      .on(table.businessId, table.mobile)
+      .where(sql`${table.isDeleted} = false`),
   ],
 );
 

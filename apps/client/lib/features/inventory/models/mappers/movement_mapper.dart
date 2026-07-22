@@ -39,6 +39,8 @@ abstract final class MovementMapper {
       status: 'Completed',
       isInbound: isInbound,
       godownName: dto.godownName,
+      createdByName: dto.createdByName?.trim(),
+      notes: dto.notes?.trim(),
     );
   }
 

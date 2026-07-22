@@ -11,6 +11,9 @@ class PartyModel {
     required this.id,
     required this.name,
     required this.phone,
+    this.legalName = '',
+    this.alias = '',
+    this.additionalPhones = const [],
     this.partyType = 'customer',
     this.balance = 0,
     this.openingBalance = 0,
@@ -23,6 +26,7 @@ class PartyModel {
     this.billingAddress = '',
     this.shippingAddress = '',
     this.partyGroup = '',
+    this.areaCode = '',
     this.addressLine = '',
     this.city = '',
     this.pincode = '',
@@ -56,7 +60,13 @@ class PartyModel {
     return PartyModel(
       id: dto.id,
       name: dto.name,
+      legalName: dto.legalName ?? '',
+      alias: dto.alias ?? '',
       phone: _formatPhone(dto.mobile),
+      additionalPhones: dto.additionalPhones
+          .map((phone) => _formatPhone(phone))
+          .where((phone) => phone.isNotEmpty)
+          .toList(),
       partyType: dto.partyType,
       balance: balance,
       openingBalance: openingBalance,
@@ -68,7 +78,8 @@ class PartyModel {
       notes: dto.notes ?? '',
       billingAddress: extension.billingAddress,
       shippingAddress: extension.shippingAddress,
-      partyGroup: extension.partyGroup,
+      partyGroup: _resolvePartyGroup(dto.partyGroup, extension.partyGroup),
+      areaCode: dto.areaCode ?? '',
       addressLine: extension.addressLine,
       city: extension.city,
       pincode: extension.pincode,
@@ -98,8 +109,16 @@ class PartyModel {
     return PartyModel(
       id: json['id'] as String,
       name: json['name'] as String,
+      legalName: json['legal_name'] as String? ?? '',
+      alias: json['alias'] as String? ?? '',
       phone:
           json['phone'] as String? ?? _formatPhone(json['mobile'] as String?),
+      additionalPhones: json['additional_phones'] is List
+          ? (json['additional_phones'] as List)
+                .map((phone) => _formatPhone(phone.toString()))
+                .where((phone) => phone.isNotEmpty)
+                .toList()
+          : const [],
       partyType: json['party_type'] as String? ?? 'customer',
       balance:
           (json['balance'] as num?)?.toDouble() ??
@@ -136,7 +155,14 @@ class PartyModel {
     return PartyModel(
       id: id,
       name: result.partyName.trim(),
+      legalName: result.legalName.trim(),
+      alias: result.alias.trim(),
       phone: result.phone.trim(),
+      additionalPhones: result.additionalPhones
+          .map((phone) => _formatPhone(phone))
+          .where((phone) => phone.isNotEmpty)
+          .toList(),
+      partyType: result.partyType,
       balance: openingBalance,
       openingBalance: openingBalance,
       gstin: result.gstin.trim(),
@@ -146,6 +172,7 @@ class PartyModel {
       billingAddress: result.billingAddress.trim(),
       shippingAddress: result.shippingAddress.trim(),
       partyGroup: result.partyGroup.trim(),
+      areaCode: result.areaCode.trim(),
       addressLine: result.addressLine.trim(),
       city: result.city.trim(),
       pincode: result.pincode.trim(),
@@ -171,7 +198,10 @@ class PartyModel {
 
   final String id;
   final String name;
+  final String legalName;
+  final String alias;
   final String phone;
+  final List<String> additionalPhones;
   final String partyType;
 
   /// Positive = amount to receive. Negative = amount to pay.
@@ -186,6 +216,7 @@ class PartyModel {
   final String billingAddress;
   final String shippingAddress;
   final String partyGroup;
+  final String areaCode;
   final String addressLine;
   final String city;
   final String pincode;
@@ -255,10 +286,22 @@ class PartyModel {
     return DateFormat('dd/MM/yyyy').format(value);
   }
 
+  static String displayPhones(PartyModel party) {
+    final phones = <String>[
+      if (party.phone.trim().isNotEmpty) party.phone,
+      ...party.additionalPhones,
+    ];
+    if (phones.isEmpty) return '—';
+    return phones.join(', ');
+  }
+
   PartyModel copyWith({
     String? id,
     String? name,
+    String? legalName,
+    String? alias,
     String? phone,
+    List<String>? additionalPhones,
     String? partyType,
     double? balance,
     double? openingBalance,
@@ -271,6 +314,7 @@ class PartyModel {
     String? billingAddress,
     String? shippingAddress,
     String? partyGroup,
+    String? areaCode,
     String? addressLine,
     String? city,
     String? pincode,
@@ -296,7 +340,10 @@ class PartyModel {
     return PartyModel(
       id: id ?? this.id,
       name: name ?? this.name,
+      legalName: legalName ?? this.legalName,
+      alias: alias ?? this.alias,
       phone: phone ?? this.phone,
+      additionalPhones: additionalPhones ?? this.additionalPhones,
       partyType: partyType ?? this.partyType,
       balance: balance ?? this.balance,
       openingBalance: openingBalance ?? this.openingBalance,
@@ -309,6 +356,7 @@ class PartyModel {
       billingAddress: billingAddress ?? this.billingAddress,
       shippingAddress: shippingAddress ?? this.shippingAddress,
       partyGroup: partyGroup ?? this.partyGroup,
+      areaCode: areaCode ?? this.areaCode,
       addressLine: addressLine ?? this.addressLine,
       city: city ?? this.city,
       pincode: pincode ?? this.pincode,
@@ -356,24 +404,47 @@ class PartyModel {
     return digits;
   }
 
-  static String? _optionalNormalizedPhone(String phone) {
-    final normalized = normalizePhone(phone);
-    return normalized.isEmpty ? null : normalized;
-  }
-
   static String? _optionalNormalizedGstin(String gstin) {
     final trimmed = gstin.trim();
     if (trimmed.isEmpty) return null;
     return trimmed.toUpperCase();
   }
 
+  static String _resolvePartyGroup(String? apiValue, String localValue) {
+    final api = apiValue?.trim() ?? '';
+    if (api.isNotEmpty) return api;
+    return localValue.trim();
+  }
+
+  static List<String> _normalizeAdditionalPhones(List<String> phones) {
+    final seen = <String>{};
+    final normalized = <String>[];
+    for (final phone in phones) {
+      final digits = normalizePhone(phone);
+      if (digits.length != 10 || seen.contains(digits)) continue;
+      seen.add(digits);
+      normalized.add(digits);
+    }
+    return normalized;
+  }
+
   static CreatePartyRequest createRequestFromResult(AddPartyResult result) {
+    final primaryMobile = normalizePhone(result.phone);
     return CreatePartyRequest(
       name: result.partyName.trim(),
-      mobile: _optionalNormalizedPhone(result.phone),
+      legalName: result.legalName.trim().isEmpty
+          ? null
+          : result.legalName.trim(),
+      alias: result.alias.trim().isEmpty ? null : result.alias.trim(),
+      mobile: primaryMobile,
+      additionalPhones: _normalizeAdditionalPhones(result.additionalPhones),
       email: result.email.trim().isEmpty ? null : result.email.trim(),
       gstin: _optionalNormalizedGstin(result.gstin),
       partyType: result.partyType,
+      partyGroup: result.partyGroup.trim().isEmpty
+          ? null
+          : result.partyGroup.trim(),
+      areaCode: result.areaCode.trim().isEmpty ? null : result.areaCode.trim(),
       state: result.state.trim().isEmpty ? null : result.state.trim(),
       creditLimit: result.hasCustomCreditLimit
           ? Validators.normalizeDecimalString(result.creditLimit)
@@ -389,10 +460,15 @@ class PartyModel {
   }) {
     return UpdatePartyRequest(
       name: result.partyName.trim(),
-      mobile: _optionalNormalizedPhone(result.phone),
+      legalName: result.legalName.trim(),
+      alias: result.alias.trim(),
+      mobile: normalizePhone(result.phone),
+      additionalPhones: _normalizeAdditionalPhones(result.additionalPhones),
       email: result.email.trim().isEmpty ? null : result.email.trim(),
       gstin: _optionalNormalizedGstin(result.gstin),
       partyType: result.partyType,
+      partyGroup: result.partyGroup.trim(),
+      areaCode: result.areaCode.trim(),
       state: result.state.trim().isEmpty ? null : result.state.trim(),
       creditLimit: result.hasCustomCreditLimit
           ? Validators.normalizeDecimalString(result.creditLimit) ?? '0'

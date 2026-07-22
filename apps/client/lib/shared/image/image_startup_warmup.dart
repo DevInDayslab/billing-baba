@@ -49,19 +49,6 @@ class ImageStartupWarmup {
   Future<void> _warmInventoryItems() async {
     try {
       final items = _ref.read(inventoryItemsProvider).value ?? const [];
-      final withImages = items
-          .where((item) => normalizeImageUrl(item.primaryImageUrl) != null)
-          .take(30)
-          .toList();
-
-      final imageService = _ref.read(imageServiceProvider);
-      for (final item in withImages) {
-        await imageService.prefetchUrl(
-          item.primaryImageUrl,
-          cacheKey: buildImageCacheKey(fallbackUrl: item.primaryImageUrl),
-        );
-      }
-
       _ref.read(inventoryListImageWarmupProvider).warmItems(
             items.take(30),
             limit: 30,

@@ -410,6 +410,42 @@ final productStockAfterProvider = Provider.family<Map<String, double>, String>((
   return InventoryStockCalculator.stockAfterByTransactionId(transactions);
 });
 
+class LatestStockUpdate {
+  const LatestStockUpdate({
+    required this.updatedAt,
+    required this.changeDescription,
+    this.updatedByName,
+  });
+
+  final DateTime updatedAt;
+  final String? updatedByName;
+  final String changeDescription;
+}
+
+// Provider.family's family type is not publicly exported by Riverpod.
+// ignore: specify_nonobvious_property_types
+final latestStockUpdateProvider = Provider.family<LatestStockUpdate?, String>((
+  ref,
+  itemId,
+) {
+  final transactions =
+      ref.watch(productTransactionsProvider(itemId)).value ?? [];
+  if (transactions.isEmpty) return null;
+
+  final latest = transactions.first;
+  final prefix = latest.isInbound ? '+' : '-';
+  final unit = latest.unit?.trim();
+  final unitSuffix = unit == null || unit.isEmpty ? '' : ' $unit';
+  final changeDescription =
+      '${latest.typeLabel}: $prefix${formatQuantityValue(latest.quantity)}$unitSuffix';
+
+  return LatestStockUpdate(
+    updatedAt: latest.date,
+    updatedByName: latest.createdByName,
+    changeDescription: changeDescription,
+  );
+});
+
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types
 final productDetailContextProvider =
@@ -454,10 +490,14 @@ final productTransactionsProvider =
           .where(
             (txn) =>
                 query.isEmpty ||
+                txn.typeLabel.toLowerCase().contains(query) ||
                 txn.documentLabel.toLowerCase().contains(query) ||
                 txn.transactionType.toLowerCase().contains(query) ||
                 txn.referenceNo.toLowerCase().contains(query) ||
                 txn.partyName.toLowerCase().contains(query) ||
+                (txn.godownName?.toLowerCase().contains(query) ?? false) ||
+                (txn.createdByName?.toLowerCase().contains(query) ?? false) ||
+                (txn.notes?.toLowerCase().contains(query) ?? false) ||
                 txn.status.toLowerCase().contains(query),
           )
           .toList();

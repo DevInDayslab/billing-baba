@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
 
@@ -118,7 +119,7 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(
+                    child: AppEllipsisText(
                       displayText,
                       style: TextStyle(
                         fontSize: widget.compact ? 12 : 14,
@@ -127,7 +128,6 @@ class SaleGenericSelectDropdownState extends State<SaleGenericSelectDropdown> {
                             ? Colors.grey.shade400
                             : AppColors.textPrimary,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Icon(

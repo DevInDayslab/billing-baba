@@ -3,6 +3,8 @@ import type { PricingTier } from '../../shared/pricing/pricing-tier';
 export type PartyRecord = {
   id: string;
   name: string;
+  legal_name: string | null;
+  alias: string | null;
   mobile: string | null;
   email: string | null;
   party_type: 'customer' | 'supplier' | 'both';
@@ -13,6 +15,8 @@ export type PartyRecord = {
     | 'manufacturer'
     | 'custom'
     | null;
+  party_group: string | null;
+  area_code: string | null;
   pricing_tier: PricingTier;
   default_price_tier: PricingTier;
   gstin: string | null;
@@ -26,6 +30,7 @@ export type PartyRecord = {
   notes: string | null;
   profile_image_url: string | null;
   profile_media_asset_id: string | null;
+  additional_phones: string[];
   created_at: string;
   updated_at: string;
 };
@@ -43,6 +48,8 @@ export type PaginatedPartiesResponse = {
 export type PartyInsertValues = {
   businessId: string;
   name: string;
+  legalName?: string | null;
+  alias?: string | null;
   mobile: string | null;
   email: string | null;
   partyType: 'customer' | 'supplier' | 'both';
@@ -53,6 +60,8 @@ export type PartyInsertValues = {
     | 'manufacturer'
     | 'custom'
     | null;
+  partyGroup?: string | null;
+  areaCode?: string | null;
   pricingTier: PricingTier;
   gstin: string | null;
   stateCode: string | null;

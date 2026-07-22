@@ -246,6 +246,27 @@
       "when": 1786000000000,
       "tag": "0034_party_profile_media",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1786100000000,
+      "tag": "0035_party_enhancements",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1786200000000,
+      "tag": "0036_item_enhancements",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1786300000000,
+      "tag": "0037_stock_movement_notes",
+      "breakpoints": true
     }
   ]
 }

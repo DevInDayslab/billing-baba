@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:billing_baba/features/inventory/application/inventory_list_image_warmup.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item_dialog.dart';
@@ -58,6 +59,11 @@ class ProductsTabContent extends ConsumerWidget {
       onSelectionChangedSideEffects: (previousId, nextId) {
         ref.read(productTransactionFiltersProvider.notifier).reset();
         ref.read(selectedProductTransactionIdProvider.notifier).select(null);
+        final items = ref.read(inventoryItemsProvider).value ?? [];
+        final item = items.where((entry) => entry.id == nextId).firstOrNull;
+        if (item != null) {
+          ref.read(inventoryListImageWarmupProvider).warmItem(item);
+        }
       },
       onRefresh: () => ref
           .read(inventoryItemsProvider.notifier)

@@ -22,6 +22,8 @@ _MovementDto _$MovementDtoFromJson(Map<String, dynamic> json) => _MovementDto(
   referenceNumber: json['reference_number'] as String?,
   partyName: json['party_name'] as String?,
   createdBy: json['created_by'] as String?,
+  createdByName: json['created_by_name'] as String?,
+  notes: json['notes'] as String?,
 );
 
 Map<String, dynamic> _$MovementDtoToJson(_MovementDto instance) =>
@@ -41,4 +43,6 @@ Map<String, dynamic> _$MovementDtoToJson(_MovementDto instance) =>
       'reference_number': instance.referenceNumber,
       'party_name': instance.partyName,
       'created_by': instance.createdBy,
+      'created_by_name': instance.createdByName,
+      'notes': instance.notes,
     };

@@ -1323,6 +1323,58 @@ Phase 9 required production-grade image optimization without exposing raw upload
 
 ---
 
+## ADR-036: Item Management Enhancements
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-22 |
+| **Status** | Accepted |
+
+#### Context
+
+Items needed richer catalog metadata (short names, aliases, keywords), alternative-item suggestions during invoice search, per-business tier pricing labels, and configurable/default GST rates without breaking existing invoices.
+
+#### Decision
+
+- Extend `items` with nullable `short_name`, `alias`, `search_keywords`, `default_tax_rate`.
+- Add `item_alternatives` junction table for directed alternative relationships.
+- Extend `business_settings` with `pricing_tier_labels` (JSON) and `default_invoice_tax_rate`.
+- Expose commerce settings at `GET/PATCH /api/v1/business/commerce-settings` and alternatives index at `GET /api/v1/inventory/items/alternatives-index`.
+- Client search index includes short name, alias, and keywords as alias tokens; invoice lines keep tax on the line (unchanged schema).
+
+#### Consequences
+
+- Existing invoices remain valid; new item fields are optional.
+- Search remains client-side indexed for performance; API list `q` also searches new columns for server-side queries.
+- Recent invoice GST rate is remembered per business in local preferences when no item/default rate applies.
+
+---
+
+## ADR-037: Stock Movement History Notes
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-22 |
+| **Status** | Accepted |
+
+#### Context
+
+Product item details needed an immutable stock update history showing who changed stock, when, and why. Manual adjustments lacked a reason field; movement list responses did not include user display names.
+
+#### Decision
+
+- Add nullable `notes` to `inventory_movements` (append-only ledger; no update/delete endpoints).
+- Enrich movement list/detail responses with `created_by_name` via join to `users`.
+- Accept optional `notes` on `POST /inventory/movements` for adjustments.
+- Client product detail shows a dedicated **Stock History** table (date/time, user, change, balance, godown, reference, notes) and last-update summary in the header.
+
+#### Consequences
+
+- Historical movements without notes or user attribution display em dash; new adjustments can capture reasons.
+- No new item-scoped API route; existing `GET /inventory/movements?item_id=` is reused to avoid duplicate fetches.
+
+---
+
 ## ADR Template
 
 Use for future decisions. Do not remove.

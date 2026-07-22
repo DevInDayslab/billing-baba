@@ -18,7 +18,13 @@ import type {
   BusinessDetail,
   BusinessListItem,
   BusinessProfile,
+  CommerceSettings,
 } from './business.types';
+import {
+  defaultPricingTierLabels,
+  PRICING_TIER_VALUES,
+} from '../../shared/pricing/pricing-tier';
+import type { UpdateCommerceSettingsBody } from './business-commerce-settings.schema';
 
 export type BusinessListItemRow = BusinessListItem & {
   logoMediaAssetId: string | null;
@@ -313,6 +319,104 @@ export class BusinessRepository {
 
       return this.toProfile(updated, owner?.name ?? null);
     });
+  }
+
+  async getCommerceSettings(
+    businessId: string,
+    accountId: string,
+  ): Promise<CommerceSettings | null> {
+    const hasAccess = await this.hasBusinessMembership(businessId, accountId);
+    if (!hasAccess) return null;
+
+    const [row] = await this.db
+      .select({
+        pricingTierLabels: businessSettings.pricingTierLabels,
+        defaultInvoiceTaxRate: businessSettings.defaultInvoiceTaxRate,
+      })
+      .from(businessSettings)
+      .where(eq(businessSettings.businessId, businessId))
+      .limit(1);
+
+    return this.toCommerceSettings(row);
+  }
+
+  async updateCommerceSettings(
+    businessId: string,
+    accountId: string,
+    input: UpdateCommerceSettingsBody,
+  ): Promise<CommerceSettings | null> {
+    const hasAccess = await this.hasBusinessMembership(businessId, accountId);
+    if (!hasAccess) return null;
+
+    const updates: {
+      updatedAt: Date;
+      syncVersion: ReturnType<typeof sql>;
+      pricingTierLabels?: Record<string, string>;
+      defaultInvoiceTaxRate?: string | null;
+    } = {
+      updatedAt: new Date(),
+      syncVersion: sql`${businessSettings.syncVersion} + 1`,
+    };
+
+    if (input.pricing_tier_labels !== undefined) {
+      updates.pricingTierLabels = input.pricing_tier_labels;
+    }
+    if (input.default_invoice_tax_rate !== undefined) {
+      updates.defaultInvoiceTaxRate =
+        input.default_invoice_tax_rate == null
+          ? null
+          : String(input.default_invoice_tax_rate);
+    }
+
+    await this.db
+      .update(businessSettings)
+      .set(updates)
+      .where(eq(businessSettings.businessId, businessId));
+
+    return this.getCommerceSettings(businessId, accountId);
+  }
+
+  private async hasBusinessMembership(
+    businessId: string,
+    accountId: string,
+  ): Promise<boolean> {
+    const [membership] = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .innerJoin(businesses, eq(users.businessId, businesses.id))
+      .where(
+        and(
+          eq(users.businessId, businessId),
+          eq(users.accountId, accountId),
+          eq(users.isActive, true),
+          eq(users.isDeleted, false),
+          eq(businesses.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    return membership != null;
+  }
+
+  private toCommerceSettings(
+    row:
+      | {
+          pricingTierLabels: Record<string, string> | null;
+          defaultInvoiceTaxRate: string | null;
+        }
+      | undefined,
+  ): CommerceSettings {
+    const defaults = defaultPricingTierLabels();
+    const custom = row?.pricingTierLabels ?? {};
+    const pricing_tier_labels: Record<string, string> = {};
+    for (const tier of PRICING_TIER_VALUES) {
+      pricing_tier_labels[tier] = custom[tier]?.trim() || defaults[tier];
+    }
+
+    return {
+      pricing_tier_labels,
+      default_invoice_tax_rate: row?.defaultInvoiceTaxRate ?? null,
+    };
   }
 
   private toProfile(

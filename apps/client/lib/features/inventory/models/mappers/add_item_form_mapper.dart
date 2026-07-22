@@ -3,6 +3,7 @@ import 'package:billing_baba/features/inventory/models/add_item_form_model.dart'
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
 import 'package:billing_baba/features/inventory/models/requests/item_requests.dart';
+import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 
 abstract final class AddItemFormMapper {
@@ -30,6 +31,11 @@ abstract final class AddItemFormMapper {
 
     return CreateItemRequest(
       name: form.itemName.trim(),
+      shortName: form.shortName.trim().isEmpty ? null : form.shortName.trim(),
+      alias: form.alias.trim().isEmpty ? null : form.alias.trim(),
+      searchKeywords: _parseSearchKeywords(form.searchKeywords),
+      defaultTaxRate: ItemTaxRate.toApiValue(form.taxRate),
+      alternativeItemIds: form.alternativeItemIds,
       description: form.description.trim().isEmpty
           ? null
           : form.description.trim(),
@@ -85,6 +91,15 @@ abstract final class AddItemFormMapper {
 
     return UpdateItemRequest(
       name: form.itemName.trim(),
+      shortName: form.shortName.trim(),
+      clearShortName: form.shortName.trim().isEmpty,
+      alias: form.alias.trim(),
+      clearAlias: form.alias.trim().isEmpty,
+      searchKeywords: _parseSearchKeywords(form.searchKeywords),
+      clearSearchKeywords: _parseSearchKeywords(form.searchKeywords)?.isEmpty ?? true,
+      defaultTaxRate: ItemTaxRate.toApiValue(form.taxRate),
+      clearDefaultTaxRate: ItemTaxRate.toApiValue(form.taxRate) == null,
+      alternativeItemIds: form.alternativeItemIds,
       description: form.description.trim(),
       itemType: form.itemType == ItemType.service ? 'service' : 'product',
       hsnCode: form.hsn.trim(),
@@ -149,5 +164,14 @@ abstract final class AddItemFormMapper {
       return value.toStringAsFixed(0);
     }
     return value.toStringAsFixed(2);
+  }
+
+  static List<String>? _parseSearchKeywords(String raw) {
+    final keywords = raw
+        .split(',')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+    return keywords.isEmpty ? null : keywords;
   }
 }

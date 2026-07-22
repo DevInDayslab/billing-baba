@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_primary_button.dart';
@@ -16,6 +17,7 @@ class InventoryDetailHeader extends StatelessWidget {
     required this.mode,
     this.stockMetrics,
     this.stockSummary,
+    this.latestStockUpdate,
     this.categoryName,
     this.actionLabel,
     this.onAction,
@@ -26,6 +28,7 @@ class InventoryDetailHeader extends StatelessWidget {
   final InventoryDetailHeaderMode mode;
   final ItemStockMetrics? stockMetrics;
   final ProductStockSummary? stockSummary;
+  final LatestStockUpdate? latestStockUpdate;
   final String? categoryName;
   final String? actionLabel;
   final VoidCallback? onAction;
@@ -55,14 +58,13 @@ class InventoryDetailHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
+                child: AppEllipsisText(
                   item.name,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               if (actionLabel != null && onAction != null) ...[
@@ -135,7 +137,6 @@ class InventoryDetailHeader extends StatelessWidget {
       ];
     }
 
-    final summary = stockSummary;
     final metrics = stockMetrics ?? InventoryStockCalculator.metricsFromItem(item);
     return [
       _MetaData(
@@ -205,6 +206,24 @@ class InventoryDetailHeader extends StatelessWidget {
             ? formatQuantityValue(metrics.reservedQuantity)
             : inventoryEmDash,
       ),
+      if (latestStockUpdate != null) ...[
+        _MetaData(
+          label: 'Last Stock Update',
+          value: DateFormat('dd MMM yyyy, hh:mm a').format(
+            latestStockUpdate!.updatedAt.toLocal(),
+          ),
+        ),
+        _MetaData(
+          label: 'Updated By',
+          value: (latestStockUpdate!.updatedByName?.trim().isNotEmpty ?? false)
+              ? latestStockUpdate!.updatedByName!
+              : inventoryEmDash,
+        ),
+        _MetaData(
+          label: 'Last Change',
+          value: latestStockUpdate!.changeDescription,
+        ),
+      ],
     ];
   }
 }
@@ -225,27 +244,30 @@ class InventoryDetailMetaLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 3),
-      child: RichText(
-        text: TextSpan(
-          style: const TextStyle(fontSize: 12, height: 1.35),
-          children: [
-            TextSpan(
-              text: '${label.toUpperCase()}: ',
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-                letterSpacing: 0.2,
-              ),
+      child: Row(
+        children: [
+          Text(
+            '${label.toUpperCase()}: ',
+            style: const TextStyle(
+              fontSize: 12,
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+              letterSpacing: 0.2,
             ),
-            TextSpan(
-              text: value,
+          ),
+          Expanded(
+            child: AppEllipsisText(
+              value,
               style: TextStyle(
+                fontSize: 12,
+                height: 1.35,
                 fontWeight: FontWeight.w600,
                 color: valueColor ?? AppColors.textPrimary,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

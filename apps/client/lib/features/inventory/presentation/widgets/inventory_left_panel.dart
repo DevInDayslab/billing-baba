@@ -141,11 +141,8 @@ class InventoryLeftPanel extends ConsumerWidget {
             estimatedItemExtent: inventoryItemListRowHeight,
             onRefresh: onRefresh,
             emptyMessage: emptyMessage,
-            imageUrlExtractor: (item) => item.primaryImageUrl,
             onPrefetchItems: (window) {
-              final warmup = ref.read(inventoryListImageWarmupProvider);
-              warmup.warmItems(window);
-              warmup.warmItems(items.take(50));
+              ref.read(inventoryListImageWarmupProvider).warmItems(window);
             },
             itemBuilder: (context, item, index) {
               return InventoryItemListTile(

@@ -1,4 +1,5 @@
 import { pricingTierLabel } from '../../shared/pricing/pricing-tier';
+import { parseSearchKeywords } from './inventory.utils';
 import type {
   BaseUnitSummary,
   BrandSummary,
@@ -44,10 +45,16 @@ function toBaseUnitSummary(row: ItemRow): BaseUnitSummary {
   };
 }
 
-export function toItemListRecord(row: ItemRow): ItemListRecord {
+export function toItemListRecord(
+  row: ItemRow,
+  alternativeItemIds: string[] = [],
+): ItemListRecord {
   return {
     id: row.id,
     name: row.name,
+    short_name: row.shortName,
+    alias: row.alias,
+    search_keywords: parseSearchKeywords(row.searchKeywords),
     description: row.description,
     item_type: row.itemType,
     has_stock_tracking: row.hasStockTracking,
@@ -64,7 +71,9 @@ export function toItemListRecord(row: ItemRow): ItemListRecord {
     mrp: row.mrp,
     market_price: row.marketPrice,
     reorder_level: row.reorderLevel,
+    default_tax_rate: row.defaultTaxRate,
     primary_image_url: row.primaryImageUrl,
+    alternative_item_ids: alternativeItemIds,
     created_at: row.createdAt.toISOString(),
     updated_at: row.updatedAt.toISOString(),
   };
@@ -130,9 +139,10 @@ export function toItemDetailRecord(
   images: ItemImageRow[],
   locations: ItemLocationRow[],
   openingStock: OpeningStockGodownSummary[],
+  alternativeItemIds: string[] = [],
 ): ItemDetailRecord {
   return {
-    ...toItemListRecord(row),
+    ...toItemListRecord(row, alternativeItemIds),
     tier_prices: tierPrices.map(toItemTierPriceRecord),
     images: images.map(toItemImageRecord),
     locations: locations.map(toItemLocationSummary),

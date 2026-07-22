@@ -42,6 +42,11 @@ abstract final class ItemMapper {
       reorderLevel: _parseMoney(dto.reorderLevel),
       primaryImageUrl: dto.primaryImageUrl,
       isRawMaterial: dto.itemType == 'raw_material',
+      shortName: dto.shortName,
+      alias: dto.alias,
+      searchKeywords: dto.searchKeywords,
+      defaultTaxRate: _parseMoney(dto.defaultTaxRate),
+      alternativeItemIds: dto.alternativeItemIds,
     );
   }
 
@@ -79,6 +84,11 @@ abstract final class ItemMapper {
         quantity: dto.quantity,
         reservedQuantity: dto.reservedQuantity,
         availableForSale: dto.availableForSale,
+        shortName: dto.shortName,
+        alias: dto.alias,
+        searchKeywords: dto.searchKeywords,
+        defaultTaxRate: dto.defaultTaxRate,
+        alternativeItemIds: dto.alternativeItemIds,
       ),
       quantity: quantity ?? _parseMoney(dto.quantity),
       stockValue: stockValue,

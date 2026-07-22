@@ -43,10 +43,6 @@ class _PartyDetailsPageState extends ConsumerState<PartyDetailsPage> {
 
   Future<void> _restorePreferences() async {
     final service = await ref.read(partyServiceProvider.future);
-    final remembered = service.readRememberedSelectedParty();
-    if (remembered != null && mounted) {
-      ref.read(selectedPartyIdProvider.notifier).selected = remembered;
-    }
     final filter = service.readRememberedListFilter();
     if (filter != null && mounted) {
       ref.read(partyListFilterProvider.notifier).filter = filter;
@@ -106,7 +102,8 @@ class _PartyDetailsPageState extends ConsumerState<PartyDetailsPage> {
                       listPanel: const PartyListPanel(),
                       detailPanel: selectedId == null
                           ? const InventoryDetailPlaceholder(
-                              message: 'Select a party to view details',
+                              message: 'Select a party to see details',
+                              icon: Icons.people_outline,
                             )
                           : PartyDetailPanel(partyId: selectedId),
                     );

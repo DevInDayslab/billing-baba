@@ -61,6 +61,9 @@ export type OpeningStockSummary = {
 export type ItemListRecord = {
   id: string;
   name: string;
+  short_name: string | null;
+  alias: string | null;
+  search_keywords: string[];
   description: string | null;
   item_type: ItemType;
   has_stock_tracking: boolean;
@@ -77,7 +80,9 @@ export type ItemListRecord = {
   mrp: string | null;
   market_price: string | null;
   reorder_level: string | null;
+  default_tax_rate: string | null;
   primary_image_url: string | null;
+  alternative_item_ids: string[];
   quantity?: string;
   reserved_quantity?: string;
   available_for_sale?: string;
@@ -101,6 +106,9 @@ export type PaginatedItemsResponse = {
 export type ItemInsertValues = {
   businessId: string;
   name: string;
+  shortName?: string | null;
+  alias?: string | null;
+  searchKeywords?: string | null;
   description?: string | null;
   itemType: ItemType;
   hasStockTracking: boolean;
@@ -114,6 +122,7 @@ export type ItemInsertValues = {
   mrp?: string | null;
   marketPrice?: string | null;
   reorderLevel?: string | null;
+  defaultTaxRate?: string | null;
   primaryImageUrl?: string | null;
   createdBy?: string | null;
   updatedBy?: string | null;
@@ -121,6 +130,9 @@ export type ItemInsertValues = {
 
 export type ItemUpdateValues = {
   name?: string;
+  shortName?: string | null;
+  alias?: string | null;
+  searchKeywords?: string | null;
   description?: string | null;
   itemType?: ItemType;
   hasStockTracking?: boolean;
@@ -134,6 +146,7 @@ export type ItemUpdateValues = {
   mrp?: string | null;
   marketPrice?: string | null;
   reorderLevel?: string | null;
+  defaultTaxRate?: string | null;
   primaryImageUrl?: string | null;
   updatedBy?: string | null;
 };
@@ -155,6 +168,9 @@ export type ListItemsParams = {
 export type ItemRow = {
   id: string;
   name: string;
+  shortName: string | null;
+  alias: string | null;
+  searchKeywords: string | null;
   description: string | null;
   itemType: ItemType;
   hasStockTracking: boolean;
@@ -173,6 +189,7 @@ export type ItemRow = {
   mrp: string | null;
   marketPrice: string | null;
   reorderLevel: string | null;
+  defaultTaxRate: string | null;
   primaryImageUrl: string | null;
   createdAt: Date;
   updatedAt: Date;

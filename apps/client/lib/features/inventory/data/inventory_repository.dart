@@ -105,6 +105,9 @@ class InventoryRepository {
 
   Future<ItemDetailDto> getItem(String id) => _remote.getItem(id);
 
+  Future<Map<String, List<String>>> getAlternativesIndex() =>
+      _remote.getAlternativesIndex();
+
   Future<ItemDetailDto> createItem(CreateItemRequest request) =>
       _remote.createItem(request);
 

@@ -1,14 +1,16 @@
+import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 
-/// Applies catalog item defaults to an invoice line (price, unit, qty).
+/// Applies catalog item defaults to an invoice line (price, unit, qty, tax).
 SaleLineItem applyCatalogItemToLine(
   SaleLineItem line,
   SaleItemOption item, {
   String? partyPriceTier,
   bool resetQtyWhenEmpty = true,
+  double? fallbackTaxPercent,
 }) {
   final qty = resetQtyWhenEmpty && line.qty <= 0 ? 1.0 : line.qty;
   final price = resolveTierPrice(
@@ -16,6 +18,9 @@ SaleLineItem applyCatalogItemToLine(
     tierPrices: item.tierPrices,
     partyTier: partyPriceTier,
   );
+  final taxPercent = item.defaultTaxPercent > 0
+      ? item.defaultTaxPercent
+      : (fallbackTaxPercent ?? line.taxPercent);
   return line.copyWith(
     itemId: item.id,
     itemName: item.name,
@@ -23,6 +28,7 @@ SaleLineItem applyCatalogItemToLine(
     priceManuallyOverridden: false,
     unit: saleItemDefaultUnit(item),
     qty: qty,
+    taxPercent: taxPercent,
   );
 }
 

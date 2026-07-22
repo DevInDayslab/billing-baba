@@ -81,6 +81,9 @@ class AddItemFormState {
   const AddItemFormState({
     this.itemType = ItemType.product,
     this.itemName = '',
+    this.shortName = '',
+    this.alias = '',
+    this.searchKeywords = '',
     this.hsn = '',
     this.itemCode = '',
     this.baseUnitId,
@@ -110,12 +113,16 @@ class AddItemFormState {
     this.rawMaterials = const [],
     this.additionalCosts = const [],
     this.tierPrices = const [],
+    this.alternativeItemIds = const [],
     this.itemNameError = false,
     this.isDirty = false,
   });
 
   final ItemType itemType;
   final String itemName;
+  final String shortName;
+  final String alias;
+  final String searchKeywords;
   final String hsn;
   final String itemCode;
   final String? baseUnitId;
@@ -145,6 +152,7 @@ class AddItemFormState {
   final List<RawMaterialRow> rawMaterials;
   final List<AdditionalCostRow> additionalCosts;
   final List<ItemTierPriceRow> tierPrices;
+  final List<String> alternativeItemIds;
   final bool itemNameError;
   final bool isDirty;
 
@@ -164,6 +172,9 @@ class AddItemFormState {
   AddItemFormState copyWith({
     ItemType? itemType,
     String? itemName,
+    String? shortName,
+    String? alias,
+    String? searchKeywords,
     String? hsn,
     String? itemCode,
     String? baseUnitId,
@@ -198,12 +209,16 @@ class AddItemFormState {
     List<RawMaterialRow>? rawMaterials,
     List<AdditionalCostRow>? additionalCosts,
     List<ItemTierPriceRow>? tierPrices,
+    List<String>? alternativeItemIds,
     bool? itemNameError,
     bool? isDirty,
   }) {
     return AddItemFormState(
       itemType: itemType ?? this.itemType,
       itemName: itemName ?? this.itemName,
+      shortName: shortName ?? this.shortName,
+      alias: alias ?? this.alias,
+      searchKeywords: searchKeywords ?? this.searchKeywords,
       hsn: hsn ?? this.hsn,
       itemCode: itemCode ?? this.itemCode,
       baseUnitId: clearBaseUnit ? null : (baseUnitId ?? this.baseUnitId),
@@ -237,6 +252,7 @@ class AddItemFormState {
       rawMaterials: rawMaterials ?? this.rawMaterials,
       additionalCosts: additionalCosts ?? this.additionalCosts,
       tierPrices: tierPrices ?? this.tierPrices,
+      alternativeItemIds: alternativeItemIds ?? this.alternativeItemIds,
       itemNameError: itemNameError ?? this.itemNameError,
       isDirty: isDirty ?? this.isDirty,
     );
