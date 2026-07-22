@@ -46,6 +46,7 @@ htmlcov/
 *.o
 *.so
 *.dylib
+installer/deps/*.exe
 
 # Secrets — never commit
 *.pem
