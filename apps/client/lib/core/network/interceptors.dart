@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/network/http_logging_interceptor.dart';
 import 'package:dio/dio.dart';
 
 /// Ensures POST/PUT/PATCH requests with JSON content-type always include a body.
@@ -43,10 +45,6 @@ String? _jsonContentType(RequestOptions options) {
 List<Interceptor> buildInterceptors() {
   return [
     buildJsonBodyInterceptor(),
-    InterceptorsWrapper(
-      onRequest: (options, handler) => handler.next(options),
-      onResponse: (response, handler) => handler.next(response),
-      onError: (error, handler) => handler.next(error),
-    ),
+    if (AppConfig.diagnosticsEnabled) HttpLoggingInterceptor(),
   ];
 }

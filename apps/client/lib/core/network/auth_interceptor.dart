@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/network/http_logging_interceptor.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:dio/dio.dart';
 
@@ -49,6 +50,7 @@ class AuthInterceptor extends Interceptor {
       final options = err.requestOptions;
       options.headers['Authorization'] = 'Bearer $newToken';
       options.extra['retried'] = true;
+      HttpLoggingInterceptor.logRetry(options, reason: '401 token refresh');
 
       final dio = Dio(
         BaseOptions(

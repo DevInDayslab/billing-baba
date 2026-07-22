@@ -190,6 +190,10 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       route: AppRoutes.developerComponentsTableFilters,
       label: 'Table Filters',
     ),
+    const _NavSubItem(
+      route: AppRoutes.developerDiagnostics,
+      label: 'Diagnostics',
+    ),
   ];
 
   List<_NavItem> get _allNavItems => [

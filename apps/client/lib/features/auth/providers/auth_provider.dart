@@ -2,6 +2,10 @@ import 'dart:async';
 
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/logging/logging_service.dart';
+import 'package:billing_baba/core/network/network_diagnostics_service.dart';
+import 'package:billing_baba/core/network/network_error_details.dart';
+import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
@@ -43,6 +47,7 @@ class AuthState {
     this.reqId = '',
     this.msg91AccessToken,
     this.error,
+    this.networkError,
     this.session,
     this.resendAvailableAt,
     this.otpSessionVersion = 0,
@@ -55,6 +60,7 @@ class AuthState {
   final String reqId;
   final String? msg91AccessToken;
   final String? error;
+  final NetworkErrorDetails? networkError;
   final AuthSession? session;
   final DateTime? resendAvailableAt;
   final int otpSessionVersion;
@@ -111,11 +117,13 @@ class AuthState {
     String? reqId,
     String? msg91AccessToken,
     String? error,
+    NetworkErrorDetails? networkError,
     AuthSession? session,
     DateTime? resendAvailableAt,
     int? otpSessionVersion,
     bool? backendLoginCompleted,
     bool clearError = false,
+    bool clearNetworkError = false,
     bool clearSession = false,
     bool clearReqId = false,
     bool clearResendTimer = false,
@@ -130,6 +138,8 @@ class AuthState {
           ? null
           : msg91AccessToken ?? this.msg91AccessToken,
       error: clearError ? null : error ?? this.error,
+      networkError:
+          clearNetworkError ? null : networkError ?? this.networkError,
       session: clearSession ? null : session ?? this.session,
       resendAvailableAt: clearResendTimer
           ? null
@@ -299,7 +309,11 @@ class Auth extends _$Auth {
     );
   }
 
-  void _onBackendLoginFailed(int generation, String specificMessage) {
+  void _onBackendLoginFailed(
+    int generation,
+    String specificMessage, {
+    NetworkErrorDetails? networkError,
+  }) {
     if (generation != _verifyGeneration || state.backendLoginCompleted) {
       return;
     }
@@ -307,7 +321,10 @@ class Auth extends _$Auth {
     _backendLoginInFlight = false;
     _setOtpPhase(OtpPhase.backendLoginFailed);
     state = state.copyWith(
-      error: _formatBackendLoginFailureMessage(specificMessage),
+      error: _formatBackendLoginFailureMessage(
+        networkError?.title ?? specificMessage,
+      ),
+      networkError: networkError,
       clearResendTimer: true,
     );
   }
@@ -385,7 +402,11 @@ class Auth extends _$Auth {
       }
       _onBackendLoginFailed(
         generation,
-        '${_backendLoginErrorMessage(e)}${_debugErrorSuffix(e)}',
+        _backendLoginErrorMessage(e),
+        networkError: NetworkExceptionClassifier.classify(
+          e,
+          host: NetworkExceptionClassifier.hostFromApiUrl(),
+        ),
       );
     } on Object catch (e, st) {
       if (generation != _verifyGeneration || state.backendLoginCompleted) {
@@ -397,7 +418,11 @@ class Auth extends _$Auth {
       }
       _onBackendLoginFailed(
         generation,
-        '${_backendLoginErrorMessage(e)}${_debugErrorSuffix(e)}',
+        _backendLoginErrorMessage(e),
+        networkError: NetworkExceptionClassifier.classify(
+          e,
+          host: NetworkExceptionClassifier.hostFromApiUrl(),
+        ),
       );
     } finally {
       if (!state.backendLoginCompleted &&
@@ -454,6 +479,10 @@ class Auth extends _$Auth {
   Future<void> sendOtp(String phone) async {
     if (_sendInFlight || !state.canSendOtp) return;
 
+    final maskedPhone = LoggingService.maskPhone(phone);
+    LoggingService.instance.info(
+      'sendOtp: login button pressed phone=$maskedPhone',
+    );
     AuthDebugLogger.log(
       'sendOtp: login button pressed phone=${AuthDebugLogger.maskPhone(phone)}',
     );
@@ -463,35 +492,107 @@ class Auth extends _$Auth {
     state = state.copyWith(
       phone: phone,
       clearError: true,
+      clearNetworkError: true,
       clearReqId: true,
       clearResendTimer: true,
       backendLoginCompleted: false,
     );
 
+    final stopwatch = Stopwatch()..start();
+
     try {
+      if (AppConfig.diagnosticsEnabled) {
+        final connectivity = NetworkDiagnosticsService();
+        final testResult = await connectivity.runConnectivityTest();
+        LoggingService.instance.info(
+          'Pre-OTP connectivity test: $testResult',
+        );
+        if (!testResult.success) {
+          LoggingService.instance.warn(
+            'Backend unreachable before OTP — MSG91 send will still be attempted',
+          );
+        }
+      }
+
+      LoggingService.instance.info('Sending OTP request...');
       final reqId = await _otp.sendOtp(phone).timeout(_sendTimeout);
-      _onOtpSent(reqId, phone: phone);
-    } on TimeoutException {
-      _setOtpPhase(OtpPhase.idle);
-      _setAuthStatus(AuthStatus.unauthenticated);
-      state = state.copyWith(
-        clearReqId: true,
-        error: "Couldn't send OTP. Please check your connection.",
+      stopwatch.stop();
+      LoggingService.instance.info(
+        'OTP request succeeded duration=${stopwatch.elapsed.inMilliseconds}ms',
       );
-    } on OtpException catch (e) {
-      _setOtpPhase(OtpPhase.idle);
-      _setAuthStatus(AuthStatus.unauthenticated);
-      state = state.copyWith(clearReqId: true, error: e.message);
-    } on Object catch (e) {
-      _setOtpPhase(OtpPhase.idle);
-      _setAuthStatus(AuthStatus.unauthenticated);
-      state = state.copyWith(
-        clearReqId: true,
-        error: _messageFromError(e),
+      _onOtpSent(reqId, phone: phone);
+    } on TimeoutException catch (e, st) {
+      stopwatch.stop();
+      _handleSendOtpFailure(
+        e,
+        st,
+        phone: phone,
+        duration: stopwatch.elapsed,
+      );
+    } on OtpException catch (e, st) {
+      stopwatch.stop();
+      if (e.isNetwork || e.cause != null) {
+        _handleSendOtpFailure(
+          e.cause ?? e,
+          st,
+          phone: phone,
+          duration: stopwatch.elapsed,
+        );
+      } else {
+        _setOtpPhase(OtpPhase.idle);
+        _setAuthStatus(AuthStatus.unauthenticated);
+        state = state.copyWith(clearReqId: true, error: e.message);
+      }
+    } on Object catch (e, st) {
+      stopwatch.stop();
+      _handleSendOtpFailure(
+        e,
+        st,
+        phone: phone,
+        duration: stopwatch.elapsed,
       );
     } finally {
       _sendInFlight = false;
     }
+  }
+
+  void _handleSendOtpFailure(
+    Object error,
+    StackTrace stackTrace, {
+    required String phone,
+    required Duration duration,
+    bool keepOtpSent = false,
+  }) {
+    final details = NetworkExceptionClassifier.classify(
+      error,
+      host: NetworkExceptionClassifier.hostFromApiUrl(),
+      duration: duration,
+    );
+
+    LoggingService.instance.error(
+      'sendOtp failed phone=${LoggingService.maskPhone(phone)} '
+      'duration=${duration.inMilliseconds}ms\n'
+      'Reason: ${details.reason}\n'
+      'Details: ${details.details}',
+      error,
+      stackTrace,
+    );
+
+    if (keepOtpSent) {
+      state = state.copyWith(
+        error: details.title,
+        networkError: details,
+      );
+      return;
+    }
+
+    _setOtpPhase(OtpPhase.idle);
+    _setAuthStatus(AuthStatus.unauthenticated);
+    state = state.copyWith(
+      clearReqId: true,
+      error: details.title,
+      networkError: details,
+    );
   }
 
   Future<void> verifyOtp(String otp) async {
@@ -664,17 +765,38 @@ class Auth extends _$Auth {
       }
 
       _onOtpSent(reqId, phone: phone);
-    } on TimeoutException {
+    } on TimeoutException catch (e, st) {
       _setOtpPhase(OtpPhase.otpSent);
-      state = state.copyWith(
-        error: "Couldn't send OTP. Please check your connection.",
+      _handleSendOtpFailure(
+        e,
+        st,
+        phone: phone,
+        duration: const Duration(seconds: 20),
+        keepOtpSent: true,
       );
-    } on OtpException catch (e) {
+    } on OtpException catch (e, st) {
+      if (e.isNetwork || e.cause != null) {
+        _setOtpPhase(OtpPhase.otpSent);
+        _handleSendOtpFailure(
+          e.cause ?? e,
+          st,
+          phone: phone,
+          duration: Duration.zero,
+          keepOtpSent: true,
+        );
+      } else {
+        _setOtpPhase(OtpPhase.otpSent);
+        state = state.copyWith(error: e.message);
+      }
+    } on Object catch (e, st) {
       _setOtpPhase(OtpPhase.otpSent);
-      state = state.copyWith(error: e.message);
-    } on Object catch (e) {
-      _setOtpPhase(OtpPhase.otpSent);
-      state = state.copyWith(error: _messageFromError(e));
+      _handleSendOtpFailure(
+        e,
+        st,
+        phone: phone,
+        duration: Duration.zero,
+        keepOtpSent: true,
+      );
     } finally {
       _resendInFlight = false;
     }
@@ -846,31 +968,10 @@ class Auth extends _$Auth {
   }
 
   String _backendLoginErrorMessage(Object error) {
-    if (error is DioException) {
-      if (error.type == DioExceptionType.connectionTimeout ||
-          error.type == DioExceptionType.receiveTimeout) {
-        return 'Server is taking too long to respond.';
-      }
-      if (error.type == DioExceptionType.connectionError) {
-        return 'Unable to connect to Billing Baba server.';
-      }
-      final statusCode = error.response?.statusCode;
-      if (statusCode != null && statusCode >= 500) {
-        return 'Billing Baba server encountered an error.';
-      }
-      final data = error.response?.data;
-      if (data is Map<String, dynamic>) {
-        final code = data['code']?.toString();
-        final message = data['message'];
-        if (message is String && message.isNotEmpty) {
-          return _mapApiErrorMessage(code, message);
-        }
-      }
-    }
-    if (error.toString().contains('SocketException')) {
-      return 'Unable to connect to Billing Baba server.';
-    }
-    return 'Something went wrong.';
+    return NetworkExceptionClassifier.classify(
+      error,
+      host: NetworkExceptionClassifier.hostFromApiUrl(),
+    ).reason;
   }
 
   String _messageFromError(Object error) {

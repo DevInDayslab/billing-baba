@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:flutter/foundation.dart';
 
 /// Auth-flow debug logging. Never logs full tokens or secrets.
@@ -7,7 +8,7 @@ abstract final class AuthDebugLogger {
 
   static void log(String message) {
     if (!enabled) return;
-    debugPrint('[AUTH_DEBUG] $message');
+    LoggingService.instance.info('[AUTH_DEBUG] $message');
   }
 
   static void widgetInitialized({

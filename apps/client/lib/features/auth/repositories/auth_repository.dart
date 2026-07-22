@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/network/api_endpoints.dart';
-import 'package:billing_baba/core/network/auth_http_debug_interceptor.dart';
 import 'package:billing_baba/core/network/interceptors.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
@@ -14,7 +14,7 @@ class AuthRepository {
 
   static Dio _createDio() {
     final baseUrl = AppConfig.apiBaseUrl;
-    AuthDebugLogger.log('AuthRepository Dio baseUrl=$baseUrl');
+    LoggingService.instance.info('AuthRepository Dio baseUrl=$baseUrl');
     return Dio(
         BaseOptions(
           baseUrl: baseUrl,
@@ -24,8 +24,7 @@ class AuthRepository {
         ),
       )
       ..interceptors.addAll([
-        if (AppConfig.authDebugLogging) AuthHttpDebugInterceptor(),
-        buildJsonBodyInterceptor(),
+        ...buildInterceptors(),
       ]);
   }
 

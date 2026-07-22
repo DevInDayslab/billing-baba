@@ -1,10 +1,10 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/features/auth/presentation/pages/login_page.dart';
 import 'package:billing_baba/features/auth/presentation/pages/splash_page.dart';
+import 'package:billing_baba/features/auth/presentation/pages/user_profile_page.dart';
 import 'package:billing_baba/features/auth/presentation/pages/verify_otp_page.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/presentation/pages/business_list_page.dart';
-import 'package:billing_baba/features/auth/presentation/pages/user_profile_page.dart';
 import 'package:billing_baba/features/business/presentation/pages/edit_profile_page.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
 import 'package:billing_baba/features/collaboration/guards/access_denied_page.dart';
@@ -21,6 +21,7 @@ import 'package:billing_baba/features/dashboard/presentation/pages/home_page.dar
 import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.dart';
 import 'package:billing_baba/features/developer/models/developer_sub_route.dart';
 import 'package:billing_baba/features/developer/presentation/pages/developer_components_page.dart';
+import 'package:billing_baba/features/developer/presentation/pages/diagnostics_page.dart';
 import 'package:billing_baba/features/developer/presentation/pages/table_filters_playground_page.dart';
 import 'package:billing_baba/features/inventory/presentation/pages/items_page.dart';
 import 'package:billing_baba/features/inventory/presentation/screens/add_items_barcode_screen.dart';
@@ -486,6 +487,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.developerComponentsTableFilters,
             builder: (context, state) => const TableFiltersPlaygroundPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.developerDiagnostics,
+            builder: (context, state) => const DiagnosticsPage(),
           ),
           for (final item in DeveloperSubRoutes.items)
             if (item.route != AppRoutes.developerComponentsTableFilters)

@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/network/network_error_details.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/auth/presentation/widgets/network_error_banner.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -111,6 +113,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               isDevLoginLoading: isDevLoginLoading,
                               canSend: canSend,
                               errorMessage: auth.error,
+                              networkError: auth.networkError,
                               showDevLogin: showDevLogin,
                               onSubmit: _submit,
                               onDevLogin: _devLogin,
@@ -122,6 +125,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               isDevLoginLoading: isDevLoginLoading,
                               canSend: canSend,
                               errorMessage: auth.error,
+                              networkError: auth.networkError,
                               showDevLogin: showDevLogin,
                               onSubmit: _submit,
                               onDevLogin: _devLogin,
@@ -150,6 +154,7 @@ class _DesktopCard extends StatelessWidget {
     required this.canSend,
     required this.onSubmit,
     this.errorMessage,
+    this.networkError,
     this.showDevLogin = false,
     this.onDevLogin,
   });
@@ -160,6 +165,7 @@ class _DesktopCard extends StatelessWidget {
   final bool isDevLoginLoading;
   final bool canSend;
   final String? errorMessage;
+  final NetworkErrorDetails? networkError;
   final bool showDevLogin;
   final VoidCallback onSubmit;
   final VoidCallback? onDevLogin;
@@ -223,6 +229,7 @@ class _DesktopCard extends StatelessWidget {
                   isDevLoginLoading: isDevLoginLoading,
                   canSend: canSend,
                   errorMessage: errorMessage,
+                  networkError: networkError,
                   showDevLogin: showDevLogin,
                   onSubmit: onSubmit,
                   onDevLogin: onDevLogin,
@@ -248,6 +255,7 @@ class _MobileCard extends StatelessWidget {
     required this.canSend,
     required this.onSubmit,
     this.errorMessage,
+    this.networkError,
     this.showDevLogin = false,
     this.onDevLogin,
   });
@@ -258,6 +266,7 @@ class _MobileCard extends StatelessWidget {
   final bool isDevLoginLoading;
   final bool canSend;
   final String? errorMessage;
+  final NetworkErrorDetails? networkError;
   final bool showDevLogin;
   final VoidCallback onSubmit;
   final VoidCallback? onDevLogin;
@@ -284,6 +293,7 @@ class _MobileCard extends StatelessWidget {
         isDevLoginLoading: isDevLoginLoading,
         canSend: canSend,
         errorMessage: errorMessage,
+        networkError: networkError,
         showDevLogin: showDevLogin,
         onSubmit: onSubmit,
         onDevLogin: onDevLogin,
@@ -304,6 +314,7 @@ class _LoginForm extends StatelessWidget {
     required this.canSend,
     required this.onSubmit,
     this.errorMessage,
+    this.networkError,
     this.showDevLogin = false,
     this.onDevLogin,
   });
@@ -314,6 +325,7 @@ class _LoginForm extends StatelessWidget {
   final bool isDevLoginLoading;
   final bool canSend;
   final String? errorMessage;
+  final NetworkErrorDetails? networkError;
   final bool showDevLogin;
   final VoidCallback onSubmit;
   final VoidCallback? onDevLogin;
@@ -437,15 +449,11 @@ class _LoginForm extends StatelessWidget {
             },
           ),
 
-          if (errorMessage != null) ...[
+          if (errorMessage != null || networkError != null) ...[
             const SizedBox(height: AppSpacing.sm),
-            Text(
-              errorMessage!,
-              style: const TextStyle(
-                color: AppColors.error,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
+            NetworkErrorBanner(
+              errorMessage: errorMessage,
+              networkError: networkError,
             ),
           ],
 

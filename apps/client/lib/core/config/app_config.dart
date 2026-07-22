@@ -41,6 +41,27 @@ abstract final class AppConfig {
       dotenv.env['DEBUG']?.toLowerCase() == 'true' ||
       dotenv.env['APP_ENV']?.toLowerCase() == 'development';
 
+  /// Production-grade diagnostics for alpha, demo, and internal builds.
+  static bool get diagnosticsEnabled =>
+      authDebugLogging ||
+      enableDevLogin ||
+      _isDiagnosticsAppEnv;
+
+  static bool get _isDiagnosticsAppEnv {
+    final env = dotenv.env['APP_ENV']?.toLowerCase();
+    return env == 'alpha' || env == 'demo' || env == 'internal';
+  }
+
+  /// Shows detailed network error UI (View Details) in diagnostics builds.
+  static bool get showDiagnosticsDetails => diagnosticsEnabled;
+
+  /// Git commit from `--dart-define=GIT_COMMIT=...` (CI builds).
+  static String get gitCommit {
+    const fromDefine = String.fromEnvironment('GIT_COMMIT');
+    if (fromDefine.isNotEmpty) return fromDefine;
+    return '(unavailable)';
+  }
+
   /// Public website base URL used for collaboration invite links.
   static String get websiteUrl {
     const fromDefine = String.fromEnvironment('WEBSITE_URL');
@@ -59,9 +80,9 @@ abstract final class AppConfig {
   /// Default OTP for local development when MSG91 is not configured.
   static String get devOtp => dotenv.env['DEV_OTP']?.trim() ?? '123456';
 
-  /// Prints resolved config once at startup when debug logging is enabled.
+  /// Prints resolved config once at startup when diagnostics are enabled.
   static void logStartupConfig() {
-    if (!authDebugLogging) return;
+    if (!diagnosticsEnabled) return;
     debugPrint(
       '[CONFIG] API_BASE_URL=$apiBaseUrl (source: $apiBaseUrlSource)',
     );
@@ -70,5 +91,17 @@ abstract final class AppConfig {
     debugPrint('[CONFIG] APP_ENV=${dotenv.env['APP_ENV'] ?? '(unset)'}');
     debugPrint('[CONFIG] DEBUG=${dotenv.env['DEBUG'] ?? '(unset)'}');
     debugPrint('[CONFIG] DEV_OTP=${'*' * devOtp.length}');
+    debugPrint('[CONFIG] GIT_COMMIT=$gitCommit');
+  }
+
+  static List<String> startupConfigLines() {
+    return [
+      'APP_ENV=${dotenv.env['APP_ENV'] ?? '(unset)'}',
+      'DEBUG=${dotenv.env['DEBUG'] ?? '(unset)'}',
+      'ENABLE_DEV_LOGIN=$enableDevLogin',
+      'API_BASE_URL=$apiBaseUrl (source: $apiBaseUrlSource)',
+      'WEBSITE_URL=$websiteUrl',
+      'GIT_COMMIT=$gitCommit',
+    ];
   }
 }

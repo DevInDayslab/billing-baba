@@ -111,6 +111,7 @@ jobs:
           flutter build windows --release
           --dart-define=API_BASE_URL=$env:API_BASE_URL
           --dart-define=WEBSITE_URL=https://billingbaba.com
+          --dart-define=GIT_COMMIT=${{ github.sha }}
 
       # ── Verify build output ───────────────────────────────────────────────────
 

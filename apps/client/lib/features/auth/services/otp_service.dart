@@ -9,12 +9,14 @@ class OtpException implements Exception {
     this.code,
     this.isNetwork = false,
     this.isConsumed = false,
+    this.cause,
   });
 
   final String message;
   final int? code;
   final bool isNetwork;
   final bool isConsumed;
+  final Object? cause;
 
   @override
   String toString() => message;
@@ -225,9 +227,9 @@ class OtpService {
         text.contains('network') ||
         text.contains('timeout') ||
         text.contains('connection')) {
-      return OtpException(fallback, isNetwork: true);
+      return OtpException(fallback, isNetwork: true, cause: error);
     }
-    return OtpException(fallback);
+    return OtpException(fallback, cause: error);
   }
 
   String? _extractAccessToken(Map<String, dynamic> result) {

@@ -1,24 +1,19 @@
-import 'package:flutter/foundation.dart';
+import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/logging/logging_service.dart';
 
-/// Lightweight application logger.
+/// Lightweight application logger — delegates to [LoggingService].
 abstract final class AppLogger {
   static void debug(String message) {
-    if (kDebugMode) {
-      debugPrint('[DEBUG] $message');
+    if (AppConfig.diagnosticsEnabled) {
+      LoggingService.instance.debug(message);
     }
   }
 
   static void info(String message) {
-    if (kDebugMode) {
-      debugPrint('[INFO] $message');
-    }
+    LoggingService.instance.info(message);
   }
 
   static void error(String message, [Object? error, StackTrace? stackTrace]) {
-    if (kDebugMode) {
-      debugPrint('[ERROR] $message');
-      if (error != null) debugPrint('$error');
-      if (stackTrace != null) debugPrint('$stackTrace');
-    }
+    LoggingService.instance.error(message, error, stackTrace);
   }
 }
