@@ -21,6 +21,7 @@ export type ParsedPurchaseDocument = {
   vendor_city: string | null;
   vendor_pincode: string | null;
   vendor_state: string | null;
+  e_way_bill_number: string | null;
   supplier_invoice_number: string | null;
   invoice_number: string | null;
   invoice_date: string | null;

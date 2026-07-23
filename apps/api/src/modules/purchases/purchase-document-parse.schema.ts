@@ -27,6 +27,7 @@ export const parsedPurchaseDocumentSchema = z.object({
   vendor_city: nullableString,
   vendor_pincode: nullableString,
   vendor_state: nullableString,
+  e_way_bill_number: nullableString,
   supplier_invoice_number: nullableString,
   invoice_number: nullableString,
   invoice_date: nullableString,

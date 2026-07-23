@@ -35,6 +35,8 @@ Rules:
 - Include only line items that have a readable item/product name.
 - For Indian GST invoices, vendor_name is the supplier/seller name.
 - vendor_phone, vendor_email, vendor_address, vendor_city, vendor_pincode, and vendor_state are the supplier's contact/address details from the bill header (not the buyer).
+- invoice_number is the supplier invoice / bill number printed on the document.
+- e_way_bill_number is ONLY the E-Way Bill number when the document has a field explicitly labeled E-Way Bill No, E-Way Bill, E-Bill No, or similar. Use null if no such field exists. Do not copy invoice_number or supplier_invoice_number into e_way_bill_number.
 
 JSON schema:
 {
@@ -46,6 +48,7 @@ JSON schema:
   "vendor_city": string | null,
   "vendor_pincode": string | null,
   "vendor_state": string | null,
+  "e_way_bill_number": string | null,
   "supplier_invoice_number": string | null,
   "invoice_number": string | null,
   "invoice_date": string | null,

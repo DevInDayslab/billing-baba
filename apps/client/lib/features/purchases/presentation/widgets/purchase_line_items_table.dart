@@ -55,7 +55,7 @@ class PurchaseLineItemsTable extends ConsumerWidget {
             final tableColumn = Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const _LineItemsHeader(),
+                _LineItemsHeader(billId: billId),
                 const Divider(height: 1, color: _cardBorder),
                 for (var i = 0; i < form.items.length; i++) ...[
                   if (i > 0) const Divider(height: 1, color: _cardBorder),
@@ -189,35 +189,43 @@ class _LineItemsTableRow extends StatelessWidget {
   }
 }
 
-class _LineItemsHeader extends StatelessWidget {
-  const _LineItemsHeader();
+class _LineItemsHeader extends ConsumerWidget {
+  const _LineItemsHeader({this.billId});
+
+  final String? billId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(addPurchaseFormProvider(billId: billId).notifier);
+
     return Container(
       color: _headerBackground,
       height: _rowHeight,
-      child: const _LineItemsTableRow(
+      child: _LineItemsTableRow(
         children: [
-          Text('#', style: _headerStyle),
-          SizedBox.shrink(),
-          Text('ITEM', style: _headerStyle),
-          Text('DESCRIPTION', style: _headerStyle),
-          Text('QTY', style: _headerStyle),
-          Text('UNIT', style: _headerStyle),
-          Text(
+          const Text('#', style: _headerStyle),
+          const SizedBox.shrink(),
+          const Text('ITEM', style: _headerStyle),
+          const Text('DESCRIPTION', style: _headerStyle),
+          const Text('QTY', style: _headerStyle),
+          const Text('UNIT', style: _headerStyle),
+          const Text(
             'PRICE/UNIT',
             style: _headerStyle,
             overflow: TextOverflow.ellipsis,
           ),
-          Text('TAX %', style: _headerStyle, overflow: TextOverflow.ellipsis),
-          Text(
+          _TaxPercentHeaderCell(
+            onSelected: (value) => notifier.applyTaxPercentToAllLines(
+              saleTaxSlabs[value] ?? 0,
+            ),
+          ),
+          const Text(
             'TAX AMT',
             style: _headerStyle,
             textAlign: TextAlign.right,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
+          const Text(
             'AMOUNT',
             style: _headerStyle,
             textAlign: TextAlign.right,
@@ -233,6 +241,29 @@ class _LineItemsHeader extends StatelessWidget {
     fontWeight: FontWeight.w600,
     color: AppColors.textSecondary,
   );
+}
+
+class _TaxPercentHeaderCell extends StatelessWidget {
+  const _TaxPercentHeaderCell({required this.onSelected});
+
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Apply tax rate to all rows',
+      child: SaleGenericSelectDropdown(
+        value: '',
+        options: SaleDropdownOptions.taxSlabs,
+        hintText: 'TAX %',
+        highlight: SaleDropdownHighlight.neutral,
+        compact: true,
+        borderless: true,
+        minMenuWidth: 88,
+        onSelected: onSelected,
+      ),
+    );
+  }
 }
 
 class _TotalsRow extends StatelessWidget {

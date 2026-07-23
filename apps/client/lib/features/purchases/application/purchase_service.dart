@@ -869,7 +869,8 @@ class PurchaseService {
       final line = items[i];
       if (line.qty <= 0 && line.itemName.trim().isEmpty) continue;
 
-      final itemId = line.itemId ?? itemNameToId[line.itemName.trim()];
+      final itemId =
+          line.itemId ?? itemNameToId[line.itemName.trim().toLowerCase()];
       if (itemId == null && line.itemName.trim().isNotEmpty) {
         throw PurchaseException('Item not found: ${line.itemName}');
       }

@@ -195,6 +195,9 @@ class AddPurchaseFormState {
     String? saveError,
     bool clearSaveError = false,
     bool clearPartyId = false,
+    bool clearBillDate = false,
+    bool clearBillTime = false,
+    bool clearDueDate = false,
   }) {
     return AddPurchaseFormState(
       documentId: documentId ?? this.documentId,
@@ -204,10 +207,10 @@ class AddPurchaseFormState {
       billingName: billingName ?? this.billingName,
       eWayBillNo: eWayBillNo ?? this.eWayBillNo,
       billNumber: billNumber ?? this.billNumber,
-      billDate: billDate ?? this.billDate,
-      billTime: billTime ?? this.billTime,
+      billDate: clearBillDate ? null : (billDate ?? this.billDate),
+      billTime: clearBillTime ? null : (billTime ?? this.billTime),
       paymentTerms: paymentTerms ?? this.paymentTerms,
-      dueDate: dueDate ?? this.dueDate,
+      dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
       stateOfSupply: stateOfSupply ?? this.stateOfSupply,
       godown: godown ?? this.godown,
       termsTitle: termsTitle ?? this.termsTitle,

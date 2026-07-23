@@ -50,6 +50,7 @@ class PurchaseDocumentParseDto {
     this.vendorCity,
     this.vendorPincode,
     this.vendorState,
+    this.eWayBillNumber,
     this.supplierInvoiceNumber,
     this.invoiceNumber,
     this.invoiceDate,
@@ -85,6 +86,7 @@ class PurchaseDocumentParseDto {
       vendorCity: _nullableString(json['vendor_city']),
       vendorPincode: _nullableString(json['vendor_pincode']),
       vendorState: _nullableString(json['vendor_state']),
+      eWayBillNumber: _nullableString(json['e_way_bill_number']),
       supplierInvoiceNumber: _nullableString(json['supplier_invoice_number']),
       invoiceNumber: _nullableString(json['invoice_number']),
       invoiceDate: _nullableString(json['invoice_date']),
@@ -111,6 +113,7 @@ class PurchaseDocumentParseDto {
   final String? vendorCity;
   final String? vendorPincode;
   final String? vendorState;
+  final String? eWayBillNumber;
   final String? supplierInvoiceNumber;
   final String? invoiceNumber;
   final String? invoiceDate;

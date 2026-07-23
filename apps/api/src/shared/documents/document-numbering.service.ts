@@ -5,6 +5,10 @@ import { AppError } from '../errors/app-error';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
+export type DocumentNumberAvailabilityCheck = (
+  documentNumber: string,
+) => Promise<boolean>;
+
 export function currentFiscalYear(date = new Date()): string {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
@@ -19,6 +23,10 @@ export async function assignDocumentNumber(
   businessId: string,
   documentSeries: string,
   documentDate: Date,
+  options?: {
+    isAvailable?: DocumentNumberAvailabilityCheck;
+    maxAttempts?: number;
+  },
 ): Promise<string> {
   const fiscalYear = currentFiscalYear(documentDate);
 
@@ -77,12 +85,32 @@ export async function assignDocumentNumber(
 
   const number = sequence.nextNumber;
   const prefix = sequence.prefix ?? '';
-  const documentNumber = `${prefix}${number}`;
+  let candidateNumber = number;
+  let documentNumber = `${prefix}${candidateNumber}`;
+  const isAvailable = options?.isAvailable;
+  const maxAttempts = options?.maxAttempts ?? 100;
+
+  if (isAvailable) {
+    let attempts = 0;
+    while (!(await isAvailable(documentNumber)) && attempts < maxAttempts) {
+      candidateNumber += 1;
+      documentNumber = `${prefix}${candidateNumber}`;
+      attempts += 1;
+    }
+
+    if (!(await isAvailable(documentNumber))) {
+      throw new AppError(
+        'DOCUMENT_NUMBER_EXHAUSTED',
+        `Unable to assign a unique document number for series ${documentSeries}`,
+        409,
+      );
+    }
+  }
 
   const [updated] = await db
     .update(documentNumberSequences)
     .set({
-      nextNumber: number + 1,
+      nextNumber: candidateNumber + 1,
       updatedAt: new Date(),
       syncVersion: sql`${documentNumberSequences.syncVersion} + 1`,
     })

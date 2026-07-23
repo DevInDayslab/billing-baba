@@ -33,6 +33,7 @@ function emptyParsedDocument(): ParsedPurchaseDocument {
     vendor_city: null,
     vendor_pincode: null,
     vendor_state: null,
+    e_way_bill_number: null,
     supplier_invoice_number: null,
     invoice_number: null,
     invoice_date: null,

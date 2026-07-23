@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { ledgerEntries } from '../../db/schema/accounting/tables';
 import { purchaseDocuments } from '../../db/schema/purchases/tables';
@@ -11,6 +11,8 @@ import {
 } from '../inventory/inventory-stock.service';
 import type { PurchaseDocumentRepository } from './purchase-document.repository';
 import type { PurchaseDocumentType } from './purchase-document.types';
+
+type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
 const STOCK_ON_FINALIZE_TYPES: PurchaseDocumentType[] = [
   'purchase_bill',
@@ -33,6 +35,35 @@ function movementTypeForDocument(
     default:
       return null;
   }
+}
+
+async function isPurchaseDocumentNumberAvailable(
+  tx: DbTransaction,
+  params: {
+    businessId: string;
+    documentSeries: string;
+    documentNumber: string;
+    excludeDocumentId?: string;
+  },
+): Promise<boolean> {
+  const filters = [
+    eq(purchaseDocuments.businessId, params.businessId),
+    eq(purchaseDocuments.documentSeries, params.documentSeries),
+    eq(purchaseDocuments.documentNumber, params.documentNumber),
+    eq(purchaseDocuments.isDeleted, false),
+  ];
+
+  if (params.excludeDocumentId) {
+    filters.push(ne(purchaseDocuments.id, params.excludeDocumentId));
+  }
+
+  const [existing] = await tx
+    .select({ id: purchaseDocuments.id })
+    .from(purchaseDocuments)
+    .where(and(...filters))
+    .limit(1);
+
+  return !existing;
 }
 
 export async function finalizePurchaseDocument(
@@ -95,12 +126,33 @@ export async function finalizePurchaseDocument(
   return db.transaction(async (tx) => {
     let documentNumber: string | null = document.documentNumber;
 
+    if (documentNumber) {
+      const available = await isPurchaseDocumentNumberAvailable(tx, {
+        businessId: params.businessId,
+        documentSeries: document.documentSeries,
+        documentNumber,
+        excludeDocumentId: params.documentId,
+      });
+      if (!available) {
+        documentNumber = null;
+      }
+    }
+
     if (!documentNumber) {
       documentNumber = await assignDocumentNumber(
         tx,
         params.businessId,
         document.documentSeries,
         document.documentDate,
+        {
+          isAvailable: (candidate) =>
+            isPurchaseDocumentNumberAvailable(tx, {
+              businessId: params.businessId,
+              documentSeries: document.documentSeries,
+              documentNumber: candidate,
+              excludeDocumentId: params.documentId,
+            }),
+        },
       );
     }
 
