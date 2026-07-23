@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/features/print/presentation/widgets/sale_invoice_print_actions.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
+import 'package:billing_baba/features/sales/presentation/widgets/clone_alternatives_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_cancel_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_invoice_delete_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/shared/sales_action_menu_button.dart';
@@ -9,6 +10,7 @@ import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:billing_baba/features/sales/application/sales_service.dart';
 
 class SaleInvoiceMenuEntry {
   const SaleInvoiceMenuEntry({
@@ -76,6 +78,10 @@ class SaleInvoiceTableActions {
         ),
       const SaleInvoiceMenuEntry(action: 'delete', label: 'Delete'),
       const SaleInvoiceMenuEntry(action: 'duplicate', label: 'Duplicate'),
+      const SaleInvoiceMenuEntry(
+        action: 'clone_with_alternatives',
+        label: 'Clone with Alternatives',
+      ),
       const SaleInvoiceMenuEntry(action: 'open_pdf', label: 'Open PDF'),
       const SaleInvoiceMenuEntry(action: 'preview', label: 'Preview'),
       const SaleInvoiceMenuEntry(action: 'print', label: 'Print'),
@@ -117,6 +123,8 @@ class SaleInvoiceTableActions {
         }
       case 'duplicate':
         await context.push('${AppRoutes.duplicateSale}/${invoice.id}');
+      case 'clone_with_alternatives':
+        await _handleCloneWithAlternatives(context, ref, invoice);
       case 'generate_e_invoice':
       case 'preview_delivery_challan':
       case 'view_history':
@@ -282,5 +290,58 @@ class SaleInvoiceTableActions {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Invoice ${invoice.invoiceNo} deleted')),
     );
+  }
+
+  static Future<void> _handleCloneWithAlternatives(
+    BuildContext context,
+    WidgetRef ref,
+    SaleInvoiceModel invoice,
+  ) async {
+    try {
+      final salesService = await ref.read(salesServiceProvider.future);
+
+      final invoiceDto = await salesService.repository.getDocument(invoice.id);
+      
+      if (invoiceDto.lines.isEmpty) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invoice has no line items')),
+        );
+        return;
+      }
+
+      if (!context.mounted) return;
+
+      final newInvoiceId = await showDialog<String>(
+        context: context,
+        builder: (context) => CloneAlternativesDialog(
+          invoiceId: invoice.id,
+          outOfStockItems: invoiceDto.lines
+              .map(
+                (line) => OutOfStockItem(
+                  itemId: line.itemId,
+                  itemName: '',
+                ),
+              )
+              .toList(),
+          repository: salesService.repository,
+        ),
+      );
+
+      if (newInvoiceId != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invoice cloned successfully'),
+          ),
+        );
+        ref.read(saleInvoicesProvider.notifier).refresh();
+        await context.push('${AppRoutes.editSale}/$newInvoiceId');
+      }
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to clone invoice: $error')),
+      );
+    }
   }
 }

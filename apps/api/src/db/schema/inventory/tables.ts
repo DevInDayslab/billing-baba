@@ -24,6 +24,8 @@ import { users } from '../identity/tables';
 const businessId = () =>
   syncedBusinessColumns.businessId.notNull().references(() => businesses.id);
 
+export { itemAlternatives } from './item-alternatives.table';
+
 export const categories = pgTable('categories', {
   ...syncedBusinessColumns,
   businessId: businessId(),

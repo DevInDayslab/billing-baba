@@ -5,6 +5,7 @@ import { assertValidConversion } from './sales-convert.rules';
 import { SalesDocumentRepository } from './sales-document.repository';
 import type {
   BrandSwapBody,
+  CloneWithAlternativesBody,
   ConvertSalesDocumentBody,
   CreatePosSessionBody,
   CreateSalesDocumentBody,
@@ -605,6 +606,115 @@ export class SalesDocumentService extends SalesServiceBase {
     );
 
     return { swapped_lines: swapped };
+  }
+
+  async cloneWithAlternatives(
+    businessId: string,
+    accountId: string,
+    userId: string | undefined,
+    documentId: string,
+    input: CloneWithAlternativesBody,
+  ): Promise<SalesDocumentRecord> {
+    await this.assertBusinessAccess(businessId, accountId);
+
+    const source = await this.repository.findById(businessId, documentId, true);
+    if (!source) {
+      throw new AppError('NOT_FOUND', 'Sales document not found', 404);
+    }
+
+    if (source.party_id) {
+      await this.assertPartyValid(businessId, source.party_id);
+    }
+
+    const replacementMap = new Map(
+      (input.replacements ?? []).map((r) => [
+        r.original_item_id,
+        r.replacement_item_id,
+      ]),
+    );
+
+    for (const replacementItemId of replacementMap.values()) {
+      await this.assertItemValid(businessId, replacementItemId);
+    }
+
+    const newDocId = await this.db.transaction(async (tx) => {
+      const repo = new SalesDocumentRepository(tx as unknown as typeof this.db);
+
+      const newDoc = await repo.create({
+        businessId,
+        documentType: source.document_type,
+        documentSeries: source.document_series,
+        partyId: source.party_id,
+        isGstFormal: source.is_gst_formal,
+        partyStateCode: source.party_state_code,
+        documentDate: new Date(),
+        convertedFromId: null,
+        notes: source.notes,
+        createdBy: userId ?? null,
+        updatedBy: userId ?? null,
+      });
+
+      const newDocumentRecord: SalesDocumentRecord = {
+        ...newDoc,
+        is_gst_formal: source.is_gst_formal,
+      };
+
+      if (source.lines) {
+        for (const line of source.lines) {
+          const replacementItemId = replacementMap.get(line.item_id);
+          let effectiveItemId = line.item_id;
+          let effectiveUnitPrice = line.unit_price;
+
+          if (replacementItemId) {
+            effectiveItemId = replacementItemId;
+            const replacementItem = await repo.findItem(
+              businessId,
+              replacementItemId,
+            );
+            if (replacementItem?.salePrice) {
+              effectiveUnitPrice = replacementItem.salePrice;
+            }
+          }
+
+          const tax = await this.computeLineTax(
+            businessId,
+            newDocumentRecord,
+            {
+              quantity: line.quantity,
+              unit_price: effectiveUnitPrice,
+              discount_amount: line.discount_amount,
+              tax_rate: line.tax_rate,
+            },
+          );
+
+          await repo.createLine({
+            businessId,
+            salesDocumentId: newDoc.id,
+            itemId: effectiveItemId,
+            quantity: line.quantity,
+            unit: line.unit,
+            unitPrice: effectiveUnitPrice,
+            marketPrice: line.market_price,
+            discountAmount: line.discount_amount,
+            taxType: tax.taxType,
+            taxRate: line.tax_rate,
+            cgstAmount: tax.cgstAmount,
+            sgstAmount: tax.sgstAmount,
+            igstAmount: tax.igstAmount,
+            lineTotal: tax.lineTotal,
+            sortOrder: line.sort_order,
+            createdBy: userId ?? null,
+            updatedBy: userId ?? null,
+          });
+        }
+
+        await this.recalculateDocumentTotals(businessId, newDoc.id, repo);
+      }
+
+      return newDoc.id;
+    });
+
+    return this.getDocument(businessId, accountId, newDocId);
   }
 
   async listPosSessions(

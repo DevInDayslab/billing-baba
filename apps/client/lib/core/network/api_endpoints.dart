@@ -81,6 +81,17 @@ abstract final class ApiEndpoints {
   static String inventoryItemPriceHistory(String itemId) =>
       '${inventoryItem(itemId)}/price-history';
 
+  static String listAlternatives(String itemId) =>
+      '/api/v1/inventory/items/$itemId/alternatives';
+  static String addAlternative(String itemId) =>
+      '/api/v1/inventory/items/$itemId/alternatives';
+  static String removeAlternative(String itemId, String altId) =>
+      '/api/v1/inventory/items/$itemId/alternatives/$altId';
+  static String reorderAlternatives(String itemId) =>
+      '/api/v1/inventory/items/$itemId/alternatives/reorder';
+  static String itemRecommendations(String itemId) =>
+      '/api/v1/inventory/items/$itemId/alternatives/recommendations';
+
   static const inventoryItemLocations = '$inventory/item-locations';
   static String inventoryItemLocation(String id) =>
       '$inventoryItemLocations/$id';
@@ -112,6 +123,8 @@ abstract final class ApiEndpoints {
       '${salesDocument(id)}/convert';
   static String salesDocumentBrandSwap(String id) =>
       '${salesDocument(id)}/brand-swap';
+  static String salesDocumentCloneWithAlternatives(String id) =>
+      '${salesDocument(id)}/clone-with-alternatives';
   static String salesDocumentShare(String id) => '${salesDocument(id)}/share';
   static String salesDocumentNotify(String id) => '${salesDocument(id)}/notify';
 

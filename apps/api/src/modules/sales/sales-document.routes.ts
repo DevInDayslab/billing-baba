@@ -18,6 +18,11 @@ export const createSalesDocumentRoutes = (): FastifyPluginAsync => {
     app.post('/:id/cancel', { preHandler }, controller.cancelDocument);
     app.post('/:id/convert', { preHandler }, controller.convertDocument);
     app.post('/:id/brand-swap', { preHandler }, controller.brandSwap);
+    app.post(
+      '/:id/clone-with-alternatives',
+      { preHandler },
+      controller.cloneWithAlternatives,
+    );
 
     app.get('/:id/lines', { preHandler }, controller.listLines);
     app.post('/:id/lines', { preHandler }, controller.addLine);

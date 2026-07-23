@@ -267,6 +267,13 @@
       "when": 1786300000000,
       "tag": "0037_hidden_ledger_repair",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1786400000000,
+      "tag": "0038_add_item_alternatives",
+      "breakpoints": true
     }
   ]
 }

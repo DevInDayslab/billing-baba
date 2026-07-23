@@ -155,6 +155,22 @@ export const brandSwapBodySchema = z.object({
 
 export type BrandSwapBody = z.infer<typeof brandSwapBodySchema>;
 
+export const cloneWithAlternativesBodySchema = z.object({
+  replacements: z
+    .array(
+      z.object({
+        original_item_id: z.uuid(),
+        replacement_item_id: z.uuid(),
+      }),
+    )
+    .optional()
+    .default([]),
+});
+
+export type CloneWithAlternativesBody = z.infer<
+  typeof cloneWithAlternativesBodySchema
+>;
+
 export const finalizeSalesDocumentBodySchema = z.object({
   godown_id: z.uuid().optional(),
   loyalty_points_redeemed: z

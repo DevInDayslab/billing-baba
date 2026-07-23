@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/out_of_stock_dialog.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
@@ -88,6 +89,7 @@ class _SaleOrderLineItemsTableState
                         notifier.confirmLineItem(i);
                         setState(() => _activeRowIndex = i + 1);
                       },
+                      onItemSelected: (catalogItem) => _handleItemSelected(i, catalogItem),
                     ),
                   _TotalsRow(
                     widths: widths,
@@ -147,6 +149,45 @@ class _SaleOrderLineItemsTableState
       ),
       child: content,
     );
+  }
+
+  Future<void> _handleItemSelected(
+    int index,
+    SaleItemOption catalogItem,
+  ) async {
+    final notifier = ref.read(saleOrderFormProvider(sessionKey: widget.sessionKey).notifier);
+    
+    // Check if item is out of stock
+    if (catalogItem.stock == 0) {
+      if (!mounted) return;
+      
+      await showDialog<void>(
+        context: context,
+        builder: (context) => OutOfStockDialog(
+          itemId: catalogItem.id,
+          itemName: catalogItem.name,
+          onSelectAlternative: (alternative) {
+            notifier.selectCatalogItem(
+              index,
+              SaleItemOption(
+                id: alternative.id,
+                name: alternative.name,
+                salePrice: alternative.salePrice,
+                purchasePrice: 0,
+                mfgCost: 0,
+                stock: alternative.stockQuantity,
+              ),
+            );
+          },
+          onContinueAnyway: () {
+            notifier.selectCatalogItem(index, catalogItem);
+          },
+        ),
+      );
+    } else {
+      // Item has stock, proceed normally
+      notifier.selectCatalogItem(index, catalogItem);
+    }
   }
 }
 
@@ -238,6 +279,7 @@ class _LineItemRow extends ConsumerWidget {
     required this.onConfirm,
     required this.sessionKey,
     required this.widths,
+    required this.onItemSelected,
   });
 
   final int index;
@@ -245,6 +287,7 @@ class _LineItemRow extends ConsumerWidget {
   final bool isActive;
   final VoidCallback onActivate;
   final VoidCallback onConfirm;
+  final void Function(SaleItemOption) onItemSelected;
   final String sessionKey;
   final SaleLineItemColumnWidths widths;
 
@@ -325,8 +368,7 @@ class _LineItemRow extends ConsumerWidget {
                               index,
                               item.copyWith(itemName: value),
                             ),
-                            onItemSelected: (catalogItem) =>
-                                notifier.selectCatalogItem(index, catalogItem),
+                            onItemSelected: onItemSelected,
                           ),
                         ),
                       ),
