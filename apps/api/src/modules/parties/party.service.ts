@@ -131,6 +131,15 @@ export class PartyService {
       await this.assertMobileAvailable(businessId, mobile);
     }
 
+    const additionalPhones = this.normalizeAdditionalPhones(
+      input.additional_phones,
+      mobile,
+    );
+    await this.assertAdditionalPhonesAvailable(
+      businessId,
+      additionalPhones,
+    );
+
     if (gstin) {
       await this.assertGstinAvailable(businessId, gstin);
     }
@@ -138,10 +147,14 @@ export class PartyService {
     const created = await this.repository.create({
       businessId,
       name: input.name.trim(),
+      legalName: input.legal_name?.trim() || null,
+      alias: input.alias?.trim() || null,
       mobile,
       email: input.email?.trim() || null,
       partyType: input.party_type,
       partyCategory: input.party_category ?? null,
+      partyGroup: input.party_group?.trim() || null,
+      areaCode: input.area_code?.trim() || null,
       pricingTier: resolvePartyPricingTier(input) ?? 'tier_1',
       gstin,
       stateCode: resolveStateCode(input.state, input.state_code),
@@ -154,7 +167,21 @@ export class PartyService {
       updatedBy: userId ?? null,
     });
 
-    const enriched = await this.enrich(businessId, accountId, created);
+    if (additionalPhones.length > 0) {
+      await this.repository.replaceAdditionalPhones(
+        businessId,
+        created.id,
+        additionalPhones,
+        userId ?? null,
+      );
+    }
+
+    const refreshed = await this.repository.findById(businessId, created.id);
+    const enriched = await this.enrich(
+      businessId,
+      accountId,
+      refreshed ?? created,
+    );
     return applyHiddenLedgerVisibility(enriched, role);
   }
 
@@ -199,10 +226,33 @@ export class PartyService {
       await this.assertGstinAvailable(businessId, gstin, partyId);
     }
 
+    const resolvedPrimaryMobile = mobile ?? existing.mobile;
+    const additionalPhones =
+      input.additional_phones !== undefined
+        ? this.normalizeAdditionalPhones(
+            input.additional_phones,
+            resolvedPrimaryMobile,
+          )
+        : undefined;
+
+    if (additionalPhones !== undefined) {
+      await this.assertAdditionalPhonesAvailable(
+        businessId,
+        additionalPhones,
+        partyId,
+      );
+    }
+
     const resolvedPricingTier = resolvePartyPricingTier(input);
 
     const updated = await this.repository.update(businessId, partyId, {
       ...(input.name !== undefined ? { name: input.name.trim() } : {}),
+      ...(input.legal_name !== undefined
+        ? { legalName: input.legal_name?.trim() || null }
+        : {}),
+      ...(input.alias !== undefined
+        ? { alias: input.alias?.trim() || null }
+        : {}),
       ...(mobile !== undefined ? { mobile } : {}),
       ...(input.email !== undefined
         ? { email: input.email?.trim() || null }
@@ -212,6 +262,12 @@ export class PartyService {
         : {}),
       ...(input.party_category !== undefined
         ? { partyCategory: input.party_category ?? null }
+        : {}),
+      ...(input.party_group !== undefined
+        ? { partyGroup: input.party_group?.trim() || null }
+        : {}),
+      ...(input.area_code !== undefined
+        ? { areaCode: input.area_code?.trim() || null }
         : {}),
       ...(resolvedPricingTier !== undefined
         ? { pricingTier: resolvedPricingTier }
@@ -240,7 +296,21 @@ export class PartyService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    const enriched = await this.enrich(businessId, accountId, updated);
+    if (additionalPhones !== undefined) {
+      await this.repository.replaceAdditionalPhones(
+        businessId,
+        partyId,
+        additionalPhones,
+        userId ?? null,
+      );
+    }
+
+    const refreshed = await this.repository.findById(businessId, partyId);
+    const enriched = await this.enrich(
+      businessId,
+      accountId,
+      refreshed ?? updated,
+    );
     return applyHiddenLedgerVisibility(enriched, role);
   }
 
@@ -357,6 +427,38 @@ export class PartyService {
       throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
         mobile: ['This mobile number is already registered to another party'],
       });
+    }
+  }
+
+  private normalizeAdditionalPhones(
+    phones: string[] | undefined,
+    primaryMobile: string | null,
+  ): string[] {
+    const seen = new Set<string>();
+    if (primaryMobile) {
+      seen.add(primaryMobile);
+    }
+
+    const normalized: string[] = [];
+    for (const phone of phones ?? []) {
+      const mobile = normalizeMobile(phone);
+      if (!mobile || !validateNormalizedMobile(mobile) || seen.has(mobile)) {
+        continue;
+      }
+      seen.add(mobile);
+      normalized.push(mobile);
+    }
+
+    return normalized;
+  }
+
+  private async assertAdditionalPhonesAvailable(
+    businessId: string,
+    mobiles: string[],
+    excludePartyId?: string,
+  ): Promise<void> {
+    for (const mobile of mobiles) {
+      await this.assertMobileAvailable(businessId, mobile, excludePartyId);
     }
   }
 

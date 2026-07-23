@@ -16,6 +16,19 @@ _ItemListDto _$ItemListDtoFromJson(Map<String, dynamic> json) => _ItemListDto(
   purchasePrice: json['purchase_price'] as String,
   createdAt: json['created_at'] as String,
   updatedAt: json['updated_at'] as String,
+  shortName: json['short_name'] as String?,
+  alias: json['alias'] as String?,
+  searchKeywords:
+      (json['search_keywords'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+  defaultTaxRate: json['default_tax_rate'] as String?,
+  alternativeItemIds:
+      (json['alternative_item_ids'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
   description: json['description'] as String?,
   categoryId: json['category_id'] as String?,
   category: json['category'] == null
@@ -52,6 +65,11 @@ Map<String, dynamic> _$ItemListDtoToJson(_ItemListDto instance) =>
       'purchase_price': instance.purchasePrice,
       'created_at': instance.createdAt,
       'updated_at': instance.updatedAt,
+      'short_name': instance.shortName,
+      'alias': instance.alias,
+      'search_keywords': instance.searchKeywords,
+      'default_tax_rate': instance.defaultTaxRate,
+      'alternative_item_ids': instance.alternativeItemIds,
       'description': instance.description,
       'category_id': instance.categoryId,
       'category': instance.category,
@@ -81,6 +99,19 @@ _ItemDetailDto _$ItemDetailDtoFromJson(
   purchasePrice: json['purchase_price'] as String,
   createdAt: json['created_at'] as String,
   updatedAt: json['updated_at'] as String,
+  shortName: json['short_name'] as String?,
+  alias: json['alias'] as String?,
+  searchKeywords:
+      (json['search_keywords'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+  defaultTaxRate: json['default_tax_rate'] as String?,
+  alternativeItemIds:
+      (json['alternative_item_ids'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
   description: json['description'] as String?,
   categoryId: json['category_id'] as String?,
   category: json['category'] == null
@@ -137,6 +168,11 @@ Map<String, dynamic> _$ItemDetailDtoToJson(_ItemDetailDto instance) =>
       'purchase_price': instance.purchasePrice,
       'created_at': instance.createdAt,
       'updated_at': instance.updatedAt,
+      'short_name': instance.shortName,
+      'alias': instance.alias,
+      'search_keywords': instance.searchKeywords,
+      'default_tax_rate': instance.defaultTaxRate,
+      'alternative_item_ids': instance.alternativeItemIds,
       'description': instance.description,
       'category_id': instance.categoryId,
       'category': instance.category,

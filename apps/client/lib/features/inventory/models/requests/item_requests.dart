@@ -104,6 +104,11 @@ class CreateItemRequest {
     this.barcode,
     this.categoryId,
     this.brandId,
+    this.shortName,
+    this.alias,
+    this.searchKeywords,
+    this.defaultTaxRate,
+    this.alternativeItemIds = const [],
     this.salePrice = '0',
     this.purchasePrice = '0',
     this.mrp,
@@ -125,6 +130,11 @@ class CreateItemRequest {
   final String? barcode;
   final String? categoryId;
   final String? brandId;
+  final String? shortName;
+  final String? alias;
+  final List<String>? searchKeywords;
+  final String? defaultTaxRate;
+  final List<String> alternativeItemIds;
   final String baseUnit;
   final String salePrice;
   final String purchasePrice;
@@ -149,6 +159,12 @@ class CreateItemRequest {
       if (barcode != null && barcode!.isNotEmpty) 'barcode': barcode,
       if (categoryId != null) 'category_id': categoryId,
       if (brandId != null) 'brand_id': brandId,
+      if (shortName != null && shortName!.isNotEmpty) 'short_name': shortName,
+      if (alias != null && alias!.isNotEmpty) 'alias': alias,
+      if (searchKeywords != null && searchKeywords!.isNotEmpty)
+        'search_keywords': searchKeywords,
+      if (defaultTaxRate != null) 'default_tax_rate': defaultTaxRate,
+      'alternative_item_ids': alternativeItemIds,
       'base_unit': baseUnit,
       'sale_price': salePrice,
       'purchase_price': purchasePrice,
@@ -179,6 +195,15 @@ class UpdateItemRequest {
     this.clearCategory = false,
     this.brandId,
     this.clearBrand = false,
+    this.shortName,
+    this.clearShortName = false,
+    this.alias,
+    this.clearAlias = false,
+    this.searchKeywords,
+    this.clearSearchKeywords = false,
+    this.defaultTaxRate,
+    this.clearDefaultTaxRate = false,
+    this.alternativeItemIds,
     this.baseUnit,
     this.salePrice,
     this.purchasePrice,
@@ -202,6 +227,15 @@ class UpdateItemRequest {
   final bool clearCategory;
   final String? brandId;
   final bool clearBrand;
+  final String? shortName;
+  final bool clearShortName;
+  final String? alias;
+  final bool clearAlias;
+  final List<String>? searchKeywords;
+  final bool clearSearchKeywords;
+  final String? defaultTaxRate;
+  final bool clearDefaultTaxRate;
+  final List<String>? alternativeItemIds;
   final String? baseUnit;
   final String? salePrice;
   final String? purchasePrice;
@@ -231,6 +265,29 @@ class UpdateItemRequest {
       json['brand_id'] = null;
     } else if (brandId != null) {
       json['brand_id'] = brandId;
+    }
+    if (clearShortName) {
+      json['short_name'] = null;
+    } else if (shortName != null) {
+      json['short_name'] = shortName;
+    }
+    if (clearAlias) {
+      json['alias'] = null;
+    } else if (alias != null) {
+      json['alias'] = alias;
+    }
+    if (clearSearchKeywords) {
+      json['search_keywords'] = [];
+    } else if (searchKeywords != null) {
+      json['search_keywords'] = searchKeywords;
+    }
+    if (clearDefaultTaxRate) {
+      json['default_tax_rate'] = null;
+    } else if (defaultTaxRate != null) {
+      json['default_tax_rate'] = defaultTaxRate;
+    }
+    if (alternativeItemIds != null) {
+      json['alternative_item_ids'] = alternativeItemIds;
     }
     if (baseUnit != null) json['base_unit'] = baseUnit;
     if (salePrice != null) json['sale_price'] = salePrice;

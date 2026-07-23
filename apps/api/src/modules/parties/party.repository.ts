@@ -1,7 +1,7 @@
-import { and, asc, count, desc, eq, ilike, ne, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, inArray, ne, or, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { payments } from '../../db/schema/accounting/tables';
-import { parties } from '../../db/schema/crm/tables';
+import { parties, partyPhones } from '../../db/schema/crm/tables';
 import { users } from '../../db/schema/identity/tables';
 import { purchaseDocuments } from '../../db/schema/purchases/tables';
 import { salesDocuments } from '../../db/schema/sales/tables';
@@ -19,6 +19,8 @@ import { resolveStateName } from './party.utils';
 type PartyRow = {
   id: string;
   name: string;
+  legalName: string | null;
+  alias: string | null;
   mobile: string | null;
   email: string | null;
   partyType: 'customer' | 'supplier' | 'both';
@@ -29,6 +31,8 @@ type PartyRow = {
     | 'manufacturer'
     | 'custom'
     | null;
+  partyGroup: string | null;
+  areaCode: string | null;
   pricingTier: PricingTier;
   gstin: string | null;
   stateCode: string | null;
@@ -47,10 +51,14 @@ type PartyRow = {
 const partySelectColumns = {
   id: parties.id,
   name: parties.name,
+  legalName: parties.legalName,
+  alias: parties.alias,
   mobile: parties.mobile,
   email: parties.email,
   partyType: parties.partyType,
   partyCategory: parties.partyCategory,
+  partyGroup: parties.partyGroup,
+  areaCode: parties.areaCode,
   pricingTier: parties.pricingTier,
   gstin: parties.gstin,
   stateCode: parties.stateCode,
@@ -98,6 +106,25 @@ export class PartyRepository {
     mobile: string,
     excludePartyId?: string,
   ): Promise<string | null> {
+    const partyConflict = await this.findActivePartyMobileConflict(
+      businessId,
+      mobile,
+      excludePartyId,
+    );
+    if (partyConflict) return partyConflict;
+
+    return this.findActiveAdditionalPhoneConflict(
+      businessId,
+      mobile,
+      excludePartyId,
+    );
+  }
+
+  private async findActivePartyMobileConflict(
+    businessId: string,
+    mobile: string,
+    excludePartyId?: string,
+  ): Promise<string | null> {
     const conditions = [
       eq(parties.businessId, businessId),
       eq(parties.mobile, mobile),
@@ -115,6 +142,30 @@ export class PartyRepository {
       .limit(1);
 
     return row?.id ?? null;
+  }
+
+  private async findActiveAdditionalPhoneConflict(
+    businessId: string,
+    mobile: string,
+    excludePartyId?: string,
+  ): Promise<string | null> {
+    const conditions = [
+      eq(partyPhones.businessId, businessId),
+      eq(partyPhones.mobile, mobile),
+      eq(partyPhones.isDeleted, false),
+    ];
+
+    if (excludePartyId) {
+      conditions.push(ne(partyPhones.partyId, excludePartyId));
+    }
+
+    const [row] = await this.db
+      .select({ partyId: partyPhones.partyId })
+      .from(partyPhones)
+      .where(and(...conditions))
+      .limit(1);
+
+    return row?.partyId ?? null;
   }
 
   async findActiveGstinConflict(
@@ -160,10 +211,24 @@ export class PartyRepository {
 
     if (params.q) {
       const pattern = `%${params.q}%`;
+      const phoneMatches = this.db
+        .select({ partyId: partyPhones.partyId })
+        .from(partyPhones)
+        .where(
+          and(
+            eq(partyPhones.businessId, params.businessId),
+            eq(partyPhones.isDeleted, false),
+            ilike(partyPhones.mobile, pattern),
+          ),
+        );
+
       const searchCondition = or(
         ilike(parties.name, pattern),
+        ilike(parties.legalName, pattern),
+        ilike(parties.alias, pattern),
         ilike(parties.mobile, pattern),
         ilike(parties.gstin, pattern),
+        sql`${parties.id} IN (${phoneMatches})`,
       );
       if (searchCondition) {
         filters.push(searchCondition);
@@ -200,10 +265,17 @@ export class PartyRepository {
       .offset(offset);
 
     const balanceMap = await this.loadBalanceMap(params.businessId);
+    const phonesMap = await this.loadAdditionalPhonesMap(
+      params.businessId,
+      rows.map((row) => row.id),
+    );
 
     return {
       rows: rows.map((row) =>
-        this.toRecord(row, balanceMap.get(row.id), { includeHiddenLedgerBalance: true }),
+        this.toRecord(row, balanceMap.get(row.id), {
+          includeHiddenLedgerBalance: true,
+          additionalPhones: phonesMap.get(row.id),
+        }),
       ),
       total,
     };
@@ -231,8 +303,12 @@ export class PartyRepository {
       businessId,
       partyId,
     );
+    const additionalPhones = await this.listAdditionalPhones(businessId, partyId);
 
-    return this.toRecord(row, balance ?? undefined, { includeHiddenLedgerBalance: true });
+    return this.toRecord(row, balance ?? undefined, {
+      includeHiddenLedgerBalance: true,
+      additionalPhones,
+    });
   }
 
   async create(values: PartyInsertValues): Promise<PartyRecord> {
@@ -241,10 +317,14 @@ export class PartyRepository {
       .values({
         businessId: values.businessId,
         name: values.name,
+        legalName: values.legalName ?? null,
+        alias: values.alias ?? null,
         mobile: values.mobile,
         email: values.email,
         partyType: values.partyType,
         partyCategory: values.partyCategory ?? null,
+        partyGroup: values.partyGroup ?? null,
+        areaCode: values.areaCode ?? null,
         pricingTier: values.pricingTier,
         gstin: values.gstin,
         stateCode: values.stateCode,
@@ -262,7 +342,10 @@ export class PartyRepository {
       throw new Error('Failed to create party');
     }
 
-    return this.toRecord(row, values.openingBalance, { includeHiddenLedgerBalance: true });
+    return this.toRecord(row, values.openingBalance, {
+      includeHiddenLedgerBalance: true,
+      additionalPhones: [],
+    });
   }
 
   async update(
@@ -274,6 +357,10 @@ export class PartyRepository {
       .update(parties)
       .set({
         ...(values.name !== undefined ? { name: values.name } : {}),
+        ...(values.legalName !== undefined
+          ? { legalName: values.legalName }
+          : {}),
+        ...(values.alias !== undefined ? { alias: values.alias } : {}),
         ...(values.mobile !== undefined ? { mobile: values.mobile } : {}),
         ...(values.email !== undefined ? { email: values.email } : {}),
         ...(values.partyType !== undefined
@@ -282,6 +369,10 @@ export class PartyRepository {
         ...(values.partyCategory !== undefined
           ? { partyCategory: values.partyCategory }
           : {}),
+        ...(values.partyGroup !== undefined
+          ? { partyGroup: values.partyGroup }
+          : {}),
+        ...(values.areaCode !== undefined ? { areaCode: values.areaCode } : {}),
         ...(values.pricingTier !== undefined
           ? { pricingTier: values.pricingTier }
           : {}),
@@ -322,8 +413,12 @@ export class PartyRepository {
       businessId,
       partyId,
     );
+    const additionalPhones = await this.listAdditionalPhones(businessId, partyId);
 
-    return this.toRecord(row, balance ?? undefined, { includeHiddenLedgerBalance: true });
+    return this.toRecord(row, balance ?? undefined, {
+      includeHiddenLedgerBalance: true,
+      additionalPhones,
+    });
   }
 
   async softDelete(
@@ -407,6 +502,94 @@ export class PartyRepository {
     };
   }
 
+  async replaceAdditionalPhones(
+    businessId: string,
+    partyId: string,
+    mobiles: string[],
+    updatedBy?: string | null,
+  ): Promise<void> {
+    await this.db
+      .update(partyPhones)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+        updatedBy: updatedBy ?? null,
+        syncVersion: sql`${partyPhones.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(partyPhones.businessId, businessId),
+          eq(partyPhones.partyId, partyId),
+          eq(partyPhones.isDeleted, false),
+        ),
+      );
+
+    if (mobiles.length === 0) return;
+
+    await this.db.insert(partyPhones).values(
+      mobiles.map((mobile, index) => ({
+        businessId,
+        partyId,
+        mobile,
+        sortOrder: index,
+        createdBy: updatedBy ?? null,
+        updatedBy: updatedBy ?? null,
+      })),
+    );
+  }
+
+  private async listAdditionalPhones(
+    businessId: string,
+    partyId: string,
+  ): Promise<string[]> {
+    const rows = await this.db
+      .select({ mobile: partyPhones.mobile })
+      .from(partyPhones)
+      .where(
+        and(
+          eq(partyPhones.businessId, businessId),
+          eq(partyPhones.partyId, partyId),
+          eq(partyPhones.isDeleted, false),
+        ),
+      )
+      .orderBy(asc(partyPhones.sortOrder), asc(partyPhones.createdAt));
+
+    return rows.map((row) => row.mobile);
+  }
+
+  private async loadAdditionalPhonesMap(
+    businessId: string,
+    partyIds: string[],
+  ): Promise<Map<string, string[]>> {
+    const map = new Map<string, string[]>();
+    if (partyIds.length === 0) return map;
+
+    const rows = await this.db
+      .select({
+        partyId: partyPhones.partyId,
+        mobile: partyPhones.mobile,
+        sortOrder: partyPhones.sortOrder,
+      })
+      .from(partyPhones)
+      .where(
+        and(
+          eq(partyPhones.businessId, businessId),
+          inArray(partyPhones.partyId, partyIds),
+          eq(partyPhones.isDeleted, false),
+        ),
+      )
+      .orderBy(asc(partyPhones.sortOrder), asc(partyPhones.createdAt));
+
+    for (const row of rows) {
+      const existing = map.get(row.partyId) ?? [];
+      existing.push(row.mobile);
+      map.set(row.partyId, existing);
+    }
+
+    return map;
+  }
+
   private async loadBalanceMap(
     businessId: string,
   ): Promise<Map<string, string>> {
@@ -479,7 +662,10 @@ export class PartyRepository {
   private toRecord(
     row: PartyRow,
     balance?: string,
-    options?: { includeHiddenLedgerBalance?: boolean },
+    options?: {
+      includeHiddenLedgerBalance?: boolean;
+      additionalPhones?: string[];
+    },
   ): PartyRecord {
     const openingBalance = row.openingBalance ?? '0';
     const ledgerBalance = balance ?? openingBalance;
@@ -487,10 +673,14 @@ export class PartyRepository {
     const record: PartyRecord = {
       id: row.id,
       name: row.name,
+      legal_name: row.legalName,
+      alias: row.alias,
       mobile: row.mobile,
       email: row.email,
       party_type: row.partyType,
       party_category: row.partyCategory,
+      party_group: row.partyGroup,
+      area_code: row.areaCode,
       pricing_tier: row.pricingTier,
       default_price_tier: row.pricingTier,
       gstin: row.gstin,
@@ -504,6 +694,7 @@ export class PartyRepository {
       notes: row.notes,
       profile_image_url: row.profileImageUrl,
       profile_media_asset_id: row.profileMediaAssetId,
+      additional_phones: options?.additionalPhones ?? [],
       created_at: row.createdAt.toISOString(),
       updated_at: row.updatedAt.toISOString(),
     };

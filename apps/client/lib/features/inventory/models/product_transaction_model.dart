@@ -16,6 +16,8 @@ class ProductTransaction {
     this.unit,
     this.isInbound = false,
     this.godownName,
+    this.createdByName,
+    this.notes,
   });
 
   final String id;
@@ -34,6 +36,8 @@ class ProductTransaction {
   final String referenceNo;
   final String movementType;
   final String? godownName;
+  final String? createdByName;
+  final String? notes;
 
   double get signedQuantity => isInbound ? quantity : -quantity;
 

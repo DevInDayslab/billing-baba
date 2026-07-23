@@ -4,6 +4,7 @@ abstract final class ApiEndpoints {
   static const businesses = '/api/v1/businesses';
   static String business(String id) => '$businesses/$id';
   static const businessProfile = '/api/v1/business/profile';
+  static const businessCommerceSettings = '/api/v1/business/commerce-settings';
   static const businessLogo = '/api/v1/business/logo';
   static const businessSignature = '/api/v1/business/signature';
   static const businessStamp = '/api/v1/business/stamp';
@@ -51,6 +52,8 @@ abstract final class ApiEndpoints {
   static String inventoryGodown(String id) => '$inventoryGodowns/$id';
 
   static const inventoryItems = '$inventory/items';
+  static const inventoryItemsAlternativesIndex =
+      '$inventoryItems/alternatives-index';
   static String inventoryItem(String id) => '$inventoryItems/$id';
   static String inventoryItemImages(String itemId) =>
       '${inventoryItem(itemId)}/images';

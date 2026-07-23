@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/models/party_type_filter.dart';
@@ -17,6 +18,7 @@ class PartySearchField extends ConsumerStatefulWidget {
     this.onPartySelected,
     this.onPartySelectedWithId,
     this.onPartyCreated,
+    this.selectedPartyId,
     this.partyTypeFilter = PartyTypeFilter.all,
     this.hasError = false,
     this.emptyPlaceholder = 'Select party',
@@ -29,6 +31,7 @@ class PartySearchField extends ConsumerStatefulWidget {
   final ValueChanged<PartyModel>? onPartySelected;
   final void Function(String partyId, String partyName)? onPartySelectedWithId;
   final ValueChanged<AddPartyResult>? onPartyCreated;
+  final String? selectedPartyId;
   final PartyTypeFilter partyTypeFilter;
   final bool hasError;
   final String emptyPlaceholder;
@@ -42,11 +45,24 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
   String _searchQuery = '';
+  String? _lastSelectedPartyId;
 
   @override
   void dispose() {
     _removeOverlay();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(PartySearchField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedPartyId != null &&
+        widget.selectedPartyId != oldWidget.selectedPartyId) {
+      _lastSelectedPartyId = widget.selectedPartyId;
+    }
+    if (widget.value.isEmpty) {
+      _lastSelectedPartyId = null;
+    }
   }
 
   void closeMenu() => _removeOverlay();
@@ -73,6 +89,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
   }
 
   void _selectParty(PartyModel party) {
+    _lastSelectedPartyId = party.id;
     _removeOverlay();
     widget.onSelected(party.name);
     widget.onPartySelected?.call(party);
@@ -141,6 +158,75 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     }
 
     if (match != null) {
+      _lastSelectedPartyId = match.id;
+      widget.onPartySelected?.call(match);
+      widget.onPartySelectedWithId?.call(match.id, match.name);
+    }
+    widget.onPartyCreated?.call(result);
+  }
+
+  PartyModel? _resolveSelectedParty() {
+    final partyId = widget.selectedPartyId ?? _lastSelectedPartyId;
+    if (partyId != null && partyId.isNotEmpty) {
+      final fromList = ref
+          .read(partiesListProvider)
+          .where((party) => party.id == partyId)
+          .firstOrNull;
+      if (fromList != null) return fromList;
+
+      final fromPicker = ref
+          .read(partyPickerListProvider)
+          .value
+          ?.where((party) => party.id == partyId)
+          .firstOrNull;
+      if (fromPicker != null) return fromPicker;
+    }
+
+    final name = widget.value.trim();
+    if (name.isEmpty) return null;
+
+    return ref
+            .read(partiesListProvider)
+            .where((party) => party.name == name)
+            .firstOrNull ??
+        ref
+            .read(partyPickerListProvider)
+            .value
+            ?.where((party) => party.name == name)
+            .firstOrNull;
+  }
+
+  Future<void> _openEditPartyDialog() async {
+    final party = _resolveSelectedParty();
+    if (party == null) return;
+
+    _removeOverlay();
+    final result = await showEditPartyDialog(context, party: party);
+    if (!mounted || result == null) return;
+
+    ref.invalidate(partyPickerListProvider);
+    ref.invalidate(partiesListProvider);
+
+    widget.onSelected(result.partyName);
+
+    var match = ref
+        .read(partiesListProvider)
+        .where((item) => item.id == party.id)
+        .firstOrNull;
+
+    if (match == null) {
+      try {
+        final pickerParties = await ref.read(partyPickerListProvider.future);
+        match = pickerParties
+            .where((item) => item.id == party.id)
+            .firstOrNull;
+      } on Object {
+        // Picker refresh is best-effort after edit.
+      }
+    }
+
+    if (match != null) {
+      _lastSelectedPartyId = match.id;
       widget.onPartySelected?.call(match);
       widget.onPartySelectedWithId?.call(match.id, match.name);
     }
@@ -229,7 +315,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
                       profileImageUrl: party.profileImageUrl,
                       profileMediaAssetId: party.profileMediaAssetId,
                     ),
-                    title: Text(party.name),
+                    title: AppEllipsisText(party.name),
                     subtitle: subtitle.isEmpty ? null : Text(subtitle),
                     onTap: () => _selectParty(party),
                   );
@@ -260,6 +346,7 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
     final displayValue = widget.value.isEmpty
         ? widget.emptyPlaceholder
         : widget.value;
+    final canEditParty = widget.value.isNotEmpty;
 
     return CompositedTransformTarget(
       link: _layerLink,
@@ -270,18 +357,35 @@ class PartySearchFieldState extends ConsumerState<PartySearchField> {
           decoration:
               buildSaleFieldDecoration(
                 hasError: widget.hasError,
-                suffixIcon: const Icon(Icons.arrow_drop_down),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (canEditParty)
+                      IconButton(
+                        onPressed: _openEditPartyDialog,
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        color: AppColors.textSecondary,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                        tooltip: 'Edit party',
+                      ),
+                    const Icon(Icons.arrow_drop_down),
+                    const SizedBox(width: 4),
+                  ],
+                ),
               ).copyWith(
                 errorText: widget.hasError ? widget.errorMessage : null,
               ),
-          child: Text(
+          child: AppEllipsisText(
             displayValue,
             style: TextStyle(
               color: widget.value.isEmpty
                   ? AppColors.textSecondary
                   : AppColors.textPrimary,
             ),
-            overflow: TextOverflow.ellipsis,
           ),
         ),
       ),

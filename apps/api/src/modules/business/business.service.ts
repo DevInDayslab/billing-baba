@@ -7,10 +7,12 @@ import type {
   CreateBusinessBody,
   UpdateBusinessProfileBody,
 } from './business.schema';
+import type { UpdateCommerceSettingsBody } from './business-commerce-settings.schema';
 import type {
   BusinessDetail,
   BusinessListItem,
   BusinessProfile,
+  CommerceSettings,
 } from './business.types';
 
 export class BusinessService {
@@ -108,6 +110,44 @@ export class BusinessService {
       }
       throw error;
     }
+  }
+
+  async getCommerceSettings(
+    businessId: string,
+    accountId: string,
+  ): Promise<CommerceSettings> {
+    const settings = await this.repository.getCommerceSettings(
+      businessId,
+      accountId,
+    );
+    if (!settings) {
+      throw new AppError(
+        'BUSINESS_NOT_FOUND',
+        'Business not found or you do not have access',
+        404,
+      );
+    }
+    return settings;
+  }
+
+  async updateCommerceSettings(
+    businessId: string,
+    accountId: string,
+    input: UpdateCommerceSettingsBody,
+  ): Promise<CommerceSettings> {
+    const settings = await this.repository.updateCommerceSettings(
+      businessId,
+      accountId,
+      input,
+    );
+    if (!settings) {
+      throw new AppError(
+        'BUSINESS_NOT_FOUND',
+        'Business not found or you do not have access',
+        404,
+      );
+    }
+    return settings;
   }
 
   async deleteBusiness(businessId: string, accountId: string): Promise<void> {

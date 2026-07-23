@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/category_item_sort.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
@@ -279,10 +280,9 @@ class _CategoryDetailPanel extends ConsumerWidget {
                     Row(
                       children: [
                         Flexible(
-                          child: Text(
+                          child: AppEllipsisText(
                             category.name.toUpperCase(),
                             style: InventoryStyles.panelTitleStyle,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),

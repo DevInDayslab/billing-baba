@@ -3,6 +3,7 @@ import 'package:billing_baba/features/purchases/models/expense_model.dart';
 import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -61,14 +62,11 @@ class ExpenseCategoryDropdown extends ConsumerWidget {
 Future<ExpenseCategoryModel?> showAddExpenseCategoryDialog(
   BuildContext context,
 ) {
-  return showDialog<ExpenseCategoryModel>(
+  return showFormDialog<ExpenseCategoryModel>(
     context: context,
+    size: FormDialogSize.compact,
     barrierDismissible: false,
-    builder: (context) => const Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: AddExpenseCategoryDialog(),
-    ),
+    child: const AddExpenseCategoryDialog(),
   );
 }
 
@@ -121,13 +119,11 @@ class _AddExpenseCategoryDialogState
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 420),
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: AppRadius.lgBorder,
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
+    return Material(
+      color: AppColors.surface,
+      borderRadius: AppRadius.lgBorder,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -204,7 +200,6 @@ class _AddExpenseCategoryDialogState
             ],
           ),
         ),
-      ),
     );
   }
 }

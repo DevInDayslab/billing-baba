@@ -1,4 +1,5 @@
 export 'form_control_decoration.dart';
+export 'form_dialog_shell.dart';
 export 'form_field.dart';
 export 'form_field_label.dart';
 export 'form_grid.dart';

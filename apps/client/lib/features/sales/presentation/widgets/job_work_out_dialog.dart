@@ -293,6 +293,7 @@ class _JobWorkOutFormFields extends StatelessWidget {
                 label: 'Party Name',
                 child: BillingNamePartySearchField(
                   value: form.party,
+                  selectedPartyId: form.partyId,
                   hasError: form.partyHasError,
                   errorMessage: 'Party is required',
                   onSelected: notifier.updateParty,

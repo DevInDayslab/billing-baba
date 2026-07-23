@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_empty_state.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_metric_card.dart';
@@ -73,14 +74,12 @@ class DashboardInventorySection extends StatelessWidget {
                                 padding: const EdgeInsets.only(
                                   top: AppSpacing.md,
                                 ),
-                                child: Text(
+                                child: AppEllipsisText(
                                   item.itemName,
                                   style: const TextStyle(
                                     fontSize: 13,
                                     color: AppColors.textPrimary,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               Padding(

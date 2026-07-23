@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
 import 'package:flutter/material.dart';
@@ -26,11 +27,16 @@ class InventoryHighlightedText extends StatelessWidget {
     final baseStyle = style ?? InventoryStyles.listCellStyle;
 
     if (trimmedQuery.isEmpty) {
-      return Text(
-        text,
+      return AppEllipsisTooltip(
+        message: text,
         style: baseStyle,
         maxLines: maxLines,
-        overflow: overflow,
+        child: Text(
+          text,
+          style: baseStyle,
+          maxLines: maxLines,
+          overflow: overflow,
+        ),
       );
     }
 
@@ -40,11 +46,16 @@ class InventoryHighlightedText extends StatelessWidget {
     );
 
     if (ranges.isEmpty) {
-      return Text(
-        text,
+      return AppEllipsisTooltip(
+        message: text,
         style: baseStyle,
         maxLines: maxLines,
-        overflow: overflow,
+        child: Text(
+          text,
+          style: baseStyle,
+          maxLines: maxLines,
+          overflow: overflow,
+        ),
       );
     }
 
@@ -76,10 +87,15 @@ class InventoryHighlightedText extends StatelessWidget {
       spans.add(TextSpan(text: text.substring(cursor), style: baseStyle));
     }
 
-    return Text.rich(
-      TextSpan(children: spans),
+    return AppEllipsisTooltip(
+      message: text,
+      style: baseStyle,
       maxLines: maxLines,
-      overflow: overflow,
+      child: Text.rich(
+        TextSpan(children: spans),
+        maxLines: maxLines,
+        overflow: overflow,
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import { and, asc, count, desc, eq, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { Database } from '../../db/client';
 import { parties } from '../../db/schema/crm/tables';
+import { users } from '../../db/schema/identity/tables';
 import {
   godowns,
   inventoryMovements,
@@ -50,6 +51,8 @@ export class MovementRepository {
         ${purchaseParty.name}
       )`,
       createdBy: inventoryMovements.createdBy,
+      createdByName: users.name,
+      notes: inventoryMovements.notes,
       createdAt: inventoryMovements.createdAt,
     };
   }
@@ -75,7 +78,15 @@ export class MovementRepository {
           eq(inventoryMovements.referenceId, purchaseDocuments.id),
         ),
       )
-      .leftJoin(purchaseParty, eq(purchaseDocuments.partyId, purchaseParty.id));
+      .leftJoin(purchaseParty, eq(purchaseDocuments.partyId, purchaseParty.id))
+      .leftJoin(
+        users,
+        and(
+          eq(inventoryMovements.createdBy, users.id),
+          eq(users.businessId, inventoryMovements.businessId),
+          eq(users.isDeleted, false),
+        ),
+      );
   }
 
   async list(params: ListMovementsParams): Promise<{

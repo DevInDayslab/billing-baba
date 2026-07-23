@@ -47,6 +47,22 @@ class AddItemForm extends Notifier<AddItemFormState> {
     );
   }
 
+  void updateShortName(String value) {
+    state = state.copyWith(shortName: value, isDirty: true);
+  }
+
+  void updateAlias(String value) {
+    state = state.copyWith(alias: value, isDirty: true);
+  }
+
+  void updateSearchKeywords(String value) {
+    state = state.copyWith(searchKeywords: value, isDirty: true);
+  }
+
+  void setAlternativeItemIds(List<String> itemIds) {
+    state = state.copyWith(alternativeItemIds: itemIds, isDirty: true);
+  }
+
   void updateHsn(String value) {
     state = state.copyWith(hsn: value, isDirty: true);
   }

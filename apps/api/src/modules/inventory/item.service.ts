@@ -208,6 +208,9 @@ export class ItemService extends InventoryServiceBase {
       const item = await this.repository.create(tx, {
         businessId,
         name,
+        shortName: input.short_name?.trim() || null,
+        alias: input.alias?.trim() || null,
+        searchKeywords: input.search_keywords ?? null,
         description: input.description ?? null,
         itemType: input.item_type,
         hasStockTracking,
@@ -221,6 +224,7 @@ export class ItemService extends InventoryServiceBase {
         mrp: input.mrp ?? null,
         marketPrice: input.market_price ?? null,
         reorderLevel: input.reorder_level ?? null,
+        defaultTaxRate: input.default_tax_rate ?? null,
         primaryImageUrl: input.primary_image_url ?? null,
         createdBy: userId ?? null,
         updatedBy: userId ?? null,
@@ -285,6 +289,21 @@ export class ItemService extends InventoryServiceBase {
       throw new AppError('NOT_FOUND', 'Item not found', 404);
     }
 
+    if (input.alternative_item_ids.length > 0) {
+      await this.assertAlternativeItemsValid(
+        businessId,
+        itemId,
+        input.alternative_item_ids,
+      );
+      await this.repository.replaceAlternatives(
+        businessId,
+        itemId,
+        input.alternative_item_ids,
+        userId ?? null,
+      );
+      return (await this.repository.findById(businessId, itemId)) ?? created;
+    }
+
     return created;
   }
 
@@ -326,6 +345,15 @@ export class ItemService extends InventoryServiceBase {
 
     const updated = await this.repository.update(businessId, itemId, {
       ...(input.name !== undefined ? { name: input.name.trim() } : {}),
+      ...(input.short_name !== undefined
+        ? { shortName: input.short_name?.trim() || null }
+        : {}),
+      ...(input.alias !== undefined
+        ? { alias: input.alias?.trim() || null }
+        : {}),
+      ...(input.search_keywords !== undefined
+        ? { searchKeywords: input.search_keywords ?? null }
+        : {}),
       ...(input.description !== undefined
         ? { description: input.description }
         : {}),
@@ -352,6 +380,9 @@ export class ItemService extends InventoryServiceBase {
         : {}),
       ...(input.reorder_level !== undefined
         ? { reorderLevel: input.reorder_level }
+        : {}),
+      ...(input.default_tax_rate !== undefined
+        ? { defaultTaxRate: input.default_tax_rate ?? null }
         : {}),
       ...(input.primary_image_url !== undefined
         ? { primaryImageUrl: input.primary_image_url }
@@ -398,6 +429,20 @@ export class ItemService extends InventoryServiceBase {
           openingGodownId: input.opening_godown_id,
           location: input.location,
         },
+      );
+    }
+
+    if (input.alternative_item_ids !== undefined) {
+      await this.assertAlternativeItemsValid(
+        businessId,
+        itemId,
+        input.alternative_item_ids,
+      );
+      await this.repository.replaceAlternatives(
+        businessId,
+        itemId,
+        input.alternative_item_ids,
+        userId ?? null,
       );
     }
 
@@ -812,6 +857,84 @@ export class ItemService extends InventoryServiceBase {
     if (conflictId) {
       throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
         barcode: ['An item with this barcode already exists'],
+      });
+    }
+  }
+
+  async getAlternativesIndex(
+    businessId: string,
+    accountId: string,
+  ): Promise<Record<string, string[]>> {
+    await this.assertBusinessAccess(businessId, accountId);
+    return this.repository.loadAlternativesIndex(businessId);
+  }
+
+  async listItemAlternatives(
+    businessId: string,
+    accountId: string,
+    itemId: string,
+  ): Promise<string[]> {
+    await this.assertBusinessAccess(businessId, accountId);
+    await this.assertItemExists(businessId, itemId);
+    return this.repository.listAlternativeIds(businessId, itemId);
+  }
+
+  async putItemAlternatives(
+    businessId: string,
+    accountId: string,
+    userId: string | undefined,
+    itemId: string,
+    alternativeItemIds: string[],
+  ): Promise<ItemDetailRecord> {
+    await this.assertBusinessAccess(businessId, accountId);
+    await this.assertItemExists(businessId, itemId);
+    await this.assertAlternativeItemsValid(
+      businessId,
+      itemId,
+      alternativeItemIds,
+    );
+    await this.repository.replaceAlternatives(
+      businessId,
+      itemId,
+      alternativeItemIds,
+      userId ?? null,
+    );
+
+    const detail = await this.repository.findById(businessId, itemId);
+    if (!detail) {
+      throw new AppError('NOT_FOUND', 'Item not found', 404);
+    }
+    return detail;
+  }
+
+  private async assertAlternativeItemsValid(
+    businessId: string,
+    itemId: string,
+    alternativeItemIds: string[],
+  ): Promise<void> {
+    const uniqueIds = [...new Set(alternativeItemIds)];
+    if (uniqueIds.length !== alternativeItemIds.length) {
+      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        alternative_item_ids: ['Duplicate alternative items are not allowed'],
+      });
+    }
+
+    if (uniqueIds.includes(itemId)) {
+      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        alternative_item_ids: ['An item cannot be an alternative to itself'],
+      });
+    }
+
+    if (uniqueIds.length === 0) return;
+
+    const existing = await this.repository.findExistingItemIds(
+      businessId,
+      uniqueIds,
+    );
+    const missing = uniqueIds.filter((id) => !existing.has(id));
+    if (missing.length > 0) {
+      throw new AppError('VALIDATION_ERROR', 'Invalid request body', 400, {
+        alternative_item_ids: ['One or more alternative items were not found'],
       });
     }
   }

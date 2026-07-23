@@ -17,6 +17,8 @@ class TierPricingSection extends StatelessWidget {
     required this.onUpdateTierPrice,
     required this.onRemoveTierPrice,
     required this.onAddTierPrice,
+    this.apiTierLabels,
+    this.onCustomizeTierNames,
     this.decimalInputFormatter,
     super.key,
   });
@@ -28,6 +30,8 @@ class TierPricingSection extends StatelessWidget {
   onUpdateTierPrice;
   final ValueChanged<String> onRemoveTierPrice;
   final VoidCallback onAddTierPrice;
+  final Map<String, String>? apiTierLabels;
+  final VoidCallback? onCustomizeTierNames;
   final TextInputFormatter? decimalInputFormatter;
 
   static final _defaultDecimalFormatter = FilteringTextInputFormatter.allow(
@@ -45,9 +49,19 @@ class TierPricingSection extends StatelessWidget {
         .toSet();
     final options = PriceTier.all
         .where((tier) => tier == row.tierKey || !used.contains(tier))
-        .map(PriceTier.labelFor)
+        .map(
+          (tier) => PriceTier.labelFor(tier, apiTierLabels: apiTierLabels),
+        )
         .toList();
     return options;
+  }
+
+  String get _emptyStateMessage {
+    final extraTiers = PriceTier.all
+        .where((tier) => tier != PriceTier.retail)
+        .map((tier) => PriceTier.labelFor(tier, apiTierLabels: apiTierLabels))
+        .join(', ');
+    return 'No tier prices added. Use "+ Add Tier" to set $extraTiers prices.';
   }
 
   @override
@@ -55,15 +69,43 @@ class TierPricingSection extends StatelessWidget {
     final canAddMore = tierPrices.length < PriceTier.all.length;
 
     return FormSection(
-      title: 'Tier Pricing',
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Tier Pricing',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              if (onCustomizeTierNames != null)
+                TextButton(
+                  onPressed: onCustomizeTierNames,
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    'Customize names',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: FormSpacing.row),
           if (tierPrices.isEmpty)
-            const Text(
-              'No tier prices added. Use "+ Add Tier" to set Wholesale, Dealer, or Distributor prices.',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            Text(
+              _emptyStateMessage,
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           if (tierPrices.isNotEmpty)
             Container(
@@ -78,6 +120,7 @@ class TierPricingSection extends StatelessWidget {
                     _TierPricingRow(
                       row: row,
                       tierOptions: _tierOptionsFor(row),
+                      apiTierLabels: apiTierLabels,
                       priceController: priceControllerFor(
                         row.id,
                         row.price == 0 ? '' : row.price.toString(),
@@ -85,7 +128,10 @@ class TierPricingSection extends StatelessWidget {
                       formatters: _formatters,
                       onTierChanged: (label) => onUpdateTierPrice(
                         row.id,
-                        tierKey: PriceTier.keyFromLabel(label),
+                        tierKey: PriceTier.keyFromLabel(
+                          label,
+                          apiTierLabels: apiTierLabels,
+                        ),
                       ),
                       onPriceChanged: (value) => onUpdateTierPrice(
                         row.id,
@@ -155,6 +201,7 @@ class _TierPricingRow extends StatelessWidget {
   const _TierPricingRow({
     required this.row,
     required this.tierOptions,
+    required this.apiTierLabels,
     required this.priceController,
     required this.formatters,
     required this.onTierChanged,
@@ -164,6 +211,7 @@ class _TierPricingRow extends StatelessWidget {
 
   final ItemTierPriceRow row;
   final List<String> tierOptions;
+  final Map<String, String>? apiTierLabels;
   final TextEditingController priceController;
   final List<TextInputFormatter> formatters;
   final ValueChanged<String> onTierChanged;
@@ -182,7 +230,10 @@ class _TierPricingRow extends StatelessWidget {
           Expanded(
             flex: 4,
             child: SaleGenericSelectDropdown(
-              value: PriceTier.labelFor(row.tierKey),
+              value: PriceTier.labelFor(
+                row.tierKey,
+                apiTierLabels: apiTierLabels,
+              ),
               options: tierOptions,
               onSelected: onTierChanged,
             ),

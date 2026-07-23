@@ -246,6 +246,23 @@ class InventoryRemoteDataSource {
     );
   }
 
+  Future<Map<String, List<String>>> getAlternativesIndex() async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      ApiEndpoints.inventoryItemsAlternativesIndex,
+    );
+    final data = response.data?['data'];
+    if (data is! Map<String, dynamic>) return const {};
+
+    final index = <String, List<String>>{};
+    for (final entry in data.entries) {
+      final value = entry.value;
+      if (value is List) {
+        index[entry.key] = value.whereType<String>().toList(growable: false);
+      }
+    }
+    return index;
+  }
+
   Future<ItemDetailDto> createItem(CreateItemRequest request) async {
     return _parseSingle(
       response: await _dio.post<Map<String, dynamic>>(

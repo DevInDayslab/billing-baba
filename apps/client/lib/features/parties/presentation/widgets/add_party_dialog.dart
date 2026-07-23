@@ -4,14 +4,17 @@ import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/core/widgets/text_input_dialog.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
+import 'package:billing_baba/features/business/providers/commerce_settings_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/parties/presentation/widgets/party_additional_phones_field.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/widgets/party_profile_image_editor.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
 import 'package:billing_baba/features/parties/providers/party_groups_provider.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
+import 'package:billing_baba/features/pricing/presentation/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
@@ -23,7 +26,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 export 'package:billing_baba/features/parties/models/add_party_result.dart';
 
-const _dialogMaxWidth = 900.0;
 const _cardBorder = Color(0xFFE0E0E0);
 const _gstLeftColumnWidth = 220.0;
 const _defaultDecimal = '0.00';
@@ -31,12 +33,9 @@ const _defaultState = 'Andhra Pradesh';
 
 /// Shows the Add Party modal from sale forms and party pickers.
 Future<AddPartyResult?> showAddPartyDialog(BuildContext context) {
-  return showDialog<AddPartyResult>(
+  return showFormDialog<AddPartyResult>(
     context: context,
-    builder: (context) => _buildPartyDialogShell(
-      context: context,
-      child: const AddPartyDialog(),
-    ),
+    child: const AddPartyDialog(),
   );
 }
 
@@ -45,12 +44,9 @@ Future<AddPartyResult?> showEditPartyDialog(
   BuildContext context, {
   required PartyModel party,
 }) {
-  return showDialog<AddPartyResult>(
+  return showFormDialog<AddPartyResult>(
     context: context,
-    builder: (context) => _buildPartyDialogShell(
-      context: context,
-      child: AddPartyDialog(partyToEdit: party),
-    ),
+    child: AddPartyDialog(partyToEdit: party),
   );
 }
 
@@ -59,34 +55,9 @@ Future<AddPartyResult?> showDuplicatePartyDialog(
   BuildContext context, {
   required PartyModel party,
 }) {
-  return showDialog<AddPartyResult>(
+  return showFormDialog<AddPartyResult>(
     context: context,
-    builder: (context) => _buildPartyDialogShell(
-      context: context,
-      child: AddPartyDialog(duplicateFrom: party),
-    ),
-  );
-}
-
-Widget _buildPartyDialogShell({
-  required BuildContext context,
-  required Widget child,
-}) {
-  final size = MediaQuery.sizeOf(context);
-
-  return Dialog(
-    backgroundColor: Colors.transparent,
-    insetPadding: EdgeInsets.symmetric(
-      horizontal: size.width < 640 ? AppSpacing.sm : AppSpacing.lg,
-      vertical: AppSpacing.md,
-    ),
-    child: ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: _dialogMaxWidth,
-        maxHeight: size.height * FormSpacing.dialogMaxHeightFactor,
-      ),
-      child: child,
-    ),
+    child: AddPartyDialog(duplicateFrom: party),
   );
 }
 
@@ -123,6 +94,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
   late final TabController _tabController;
   final _partyNameController = TextEditingController();
+  final _legalNameController = TextEditingController();
+  final _aliasController = TextEditingController();
+  final _areaCodeController = TextEditingController();
   final _gstinController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
@@ -139,6 +113,8 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   final _creditLimitController = TextEditingController();
   final _additionalField1Controller = TextEditingController();
   final _additionalField2Controller = TextEditingController();
+  final List<TextEditingController> _additionalPhoneControllers = [];
+  final List<String?> _additionalPhoneErrors = [];
   final _openingBalanceAsOfDatePickerKey =
       GlobalKey<SaleSingleDatePickerAnchorState>();
 
@@ -161,10 +137,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   bool _showShippingAddress = false;
   bool _showDetailedBillingAddress = false;
   bool _showDetailedShippingAddress = false;
-  bool _partyNameError = false;
+  String? _partyNameError;
   String? _phoneError;
   String? _emailError;
   String? _gstinError;
+  String? _partyGroupError;
   String? _openingBalanceError;
   String? _creditLimitError;
   String? _loyaltyBalanceError;
@@ -185,6 +162,11 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   String _savedShippingCountry = 'India';
 
   bool get _isEditMode => widget.partyToEdit != null;
+
+  bool get _requiresGstin =>
+      _gstType == 'Registered Business - Regular' ||
+      _gstType == 'Registered Business - Composition' ||
+      _gstType == 'SEZ';
 
   @override
   void initState() {
@@ -255,6 +237,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _partyNameController.text = duplicateNameSuffix == null
         ? party.name
         : '${party.name}$duplicateNameSuffix';
+    _legalNameController.text = party.legalName;
+    _aliasController.text = party.alias;
+    _areaCodeController.text = party.areaCode;
     _partyType = party.partyType;
     _gstinController.text = party.gstin;
     if (party.phone != '+91 00000 00000') {
@@ -263,6 +248,12 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         _phoneController.text = normalizedPhone;
       }
     }
+    _setAdditionalPhones(
+      party.additionalPhones
+          .map(PartyModel.normalizePhone)
+          .where((phone) => phone.isNotEmpty)
+          .toList(),
+    );
     _emailController.text = party.email;
     _billingAddressController.text = party.billingAddress;
     _shippingAddressController.text = party.shippingAddress;
@@ -333,10 +324,49 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _defaultPriceTier = party.defaultPriceTier;
   }
 
+  void _setAdditionalPhones(List<String> phones) {
+    for (final controller in _additionalPhoneControllers) {
+      controller.dispose();
+    }
+    _additionalPhoneControllers.clear();
+    _additionalPhoneErrors.clear();
+    for (final phone in phones) {
+      _additionalPhoneControllers.add(TextEditingController(text: phone));
+      _additionalPhoneErrors.add(null);
+    }
+  }
+
+  void _addAdditionalPhoneField() {
+    setState(() {
+      _additionalPhoneControllers.add(TextEditingController());
+      _additionalPhoneErrors.add(null);
+    });
+  }
+
+  void _removeAdditionalPhoneField(int index) {
+    setState(() {
+      _additionalPhoneControllers[index].dispose();
+      _additionalPhoneControllers.removeAt(index);
+      if (index < _additionalPhoneErrors.length) {
+        _additionalPhoneErrors.removeAt(index);
+      }
+    });
+  }
+
+  List<String> _collectAdditionalPhones() {
+    return _additionalPhoneControllers
+        .map((controller) => controller.text.trim())
+        .where((phone) => phone.isNotEmpty)
+        .toList();
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
     _partyNameController.dispose();
+    _legalNameController.dispose();
+    _aliasController.dispose();
+    _areaCodeController.dispose();
     _gstinController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
@@ -353,15 +383,21 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _creditLimitController.dispose();
     _additionalField1Controller.dispose();
     _additionalField2Controller.dispose();
+    for (final controller in _additionalPhoneControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   AddPartyResult _buildResult() {
     return AddPartyResult(
       partyName: _partyNameController.text.trim(),
+      legalName: _legalNameController.text.trim(),
+      alias: _aliasController.text.trim(),
       partyType: _partyType,
       gstin: _gstinController.text.trim(),
       phone: _phoneController.text.trim(),
+      additionalPhones: _collectAdditionalPhones(),
       gstType: _gstType,
       state: _state,
       email: _emailController.text.trim(),
@@ -370,6 +406,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
           ? _shippingAddressController.text.trim()
           : '',
       partyGroup: _partyGroup,
+      areaCode: _areaCodeController.text.trim(),
       addressLine: _savedBillingAddressLine,
       city: _savedBillingCity,
       pincode: _savedBillingPincode,
@@ -502,11 +539,26 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     });
   }
 
+  String? _validateGstinField() {
+    final value = _gstinController.text.trim();
+    if (_requiresGstin && value.isEmpty) {
+      return 'GSTIN is required for registered businesses';
+    }
+    return Validators.gstin(value);
+  }
+
   bool _validate() {
-    final nameValid = _partyNameController.text.trim().isNotEmpty;
-    final phoneError = Validators.phone(_phoneController.text);
+    final partyNameError = Validators.required(
+      _partyNameController.text,
+      fieldName: 'Party name',
+    );
+    final phoneError = Validators.requiredPhone(_phoneController.text);
     final emailError = Validators.email(_emailController.text);
-    final gstinError = Validators.gstin(_gstinController.text);
+    final gstinError = _validateGstinField();
+    final partyGroupError = Validators.requiredSelection(
+      _partyGroup,
+      fieldName: 'Party group',
+    );
     final openingBalanceError = Validators.nonNegativeDecimalAmount(
       _openingBalanceController.text,
     );
@@ -519,41 +571,126 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
     final mobileDuplicateError = _checkDuplicateMobile();
     final gstinDuplicateError = _checkDuplicateGstin();
+    final additionalPhoneErrors = _validateAdditionalPhones();
 
     setState(() {
-      _partyNameError = !nameValid;
+      _partyNameError = partyNameError;
       _phoneError = phoneError ?? mobileDuplicateError;
       _emailError = emailError;
       _gstinError = gstinError ?? gstinDuplicateError;
+      _partyGroupError = partyGroupError;
       _openingBalanceError = openingBalanceError;
       _creditLimitError = creditLimitError;
       _loyaltyBalanceError = loyaltyBalanceError;
+      _additionalPhoneErrors
+        ..clear()
+        ..addAll(additionalPhoneErrors);
     });
 
-    return nameValid &&
+    final additionalPhonesValid =
+        additionalPhoneErrors.every((error) => error == null);
+
+    final isValid =
+        partyNameError == null &&
         _phoneError == null &&
+        additionalPhonesValid &&
         _emailError == null &&
         _gstinError == null &&
+        partyGroupError == null &&
         _openingBalanceError == null &&
         _creditLimitError == null &&
         _loyaltyBalanceError == null;
+
+    if (!isValid) {
+      _showValidationFeedback();
+      if (_tabController.index != 0 &&
+          (partyGroupError != null ||
+              _emailError != null ||
+              gstinError != null ||
+              gstinDuplicateError != null)) {
+        _tabController.index = 0;
+      } else if (_tabController.index != 1 &&
+          (_openingBalanceError != null ||
+              _creditLimitError != null ||
+              _loyaltyBalanceError != null)) {
+        _tabController.index = 1;
+      }
+    }
+
+    return isValid;
   }
 
-  String? _checkDuplicateMobile() {
-    final normalized = PartyModel.normalizePhone(_phoneController.text);
+  void _showValidationFeedback() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please fill in all required fields correctly'),
+      ),
+    );
+  }
+
+  List<String?> _validateAdditionalPhones() {
+    final seen = <String>{
+      PartyModel.normalizePhone(_phoneController.text),
+    };
+    final errors = <String?>[];
+
+    for (final controller in _additionalPhoneControllers) {
+      final value = controller.text.trim();
+      if (value.isEmpty) {
+        errors.add('Enter a phone number or remove this field');
+        continue;
+      }
+
+      final formatError = Validators.phone(value);
+      if (formatError != null) {
+        errors.add(formatError);
+        continue;
+      }
+
+      final normalized = PartyModel.normalizePhone(value);
+      if (seen.contains(normalized)) {
+        errors.add('Duplicate phone number');
+        continue;
+      }
+
+      final duplicateError = _checkDuplicatePhoneNumber(normalized);
+      if (duplicateError != null) {
+        errors.add(duplicateError);
+        continue;
+      }
+
+      seen.add(normalized);
+      errors.add(null);
+    }
+
+    return errors;
+  }
+
+  String? _checkDuplicatePhoneNumber(String normalized) {
     if (normalized.isEmpty) return null;
 
     final parties = ref.read(partiesListProvider);
     final currentId = widget.partyToEdit?.id;
     final conflict = parties.any((party) {
       if (party.id == currentId) return false;
-      final partyMobile = PartyModel.normalizePhone(party.phone);
-      return partyMobile.isNotEmpty && partyMobile == normalized;
+      final allPhones = [
+        PartyModel.normalizePhone(party.phone),
+        ...party.additionalPhones.map(PartyModel.normalizePhone),
+      ];
+      return allPhones.any(
+        (phone) => phone.isNotEmpty && phone == normalized,
+      );
     });
 
     return conflict
         ? 'This mobile number is already registered to another party'
         : null;
+  }
+
+  String? _checkDuplicateMobile() {
+    final normalized = PartyModel.normalizePhone(_phoneController.text);
+    return _checkDuplicatePhoneNumber(normalized);
   }
 
   String? _checkDuplicateGstin() {
@@ -582,7 +719,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       _gstinError = exception.fieldErrors['gstin'] ?? _gstinError;
       _emailError = exception.fieldErrors['email'] ?? _emailError;
       if (exception.fieldErrors['name'] != null) {
-        _partyNameError = true;
+        _partyNameError = exception.fieldErrors['name'];
       }
       _openingBalanceError =
           exception.fieldErrors['opening_balance'] ?? _openingBalanceError;
@@ -790,6 +927,9 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
   void _resetFormAfterSave() {
     _partyNameController.clear();
+    _legalNameController.clear();
+    _aliasController.clear();
+    _areaCodeController.clear();
     _gstinController.clear();
     _phoneController.clear();
     _emailController.clear();
@@ -806,6 +946,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     _creditLimitController.clear();
     _additionalField1Controller.clear();
     _additionalField2Controller.clear();
+    _setAdditionalPhones(const []);
     final defaultState = _resolvedBusinessState();
     setState(() {
       _gstType = 'Unregistered/Consumer';
@@ -832,12 +973,13 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
       _savedShippingPincode = '';
       _savedShippingState = defaultState;
       _savedShippingCountry = 'India';
-      _partyNameError = false;
+      _partyNameError = null;
       _profileImageUrl = null;
       _profileMediaAssetId = null;
       _phoneError = null;
       _emailError = null;
       _gstinError = null;
+      _partyGroupError = null;
       _openingBalanceError = null;
       _creditLimitError = null;
       _loyaltyBalanceError = null;
@@ -970,19 +1112,34 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
     final partyNameField = _buildInlineTextField(
       controller: _partyNameController,
       hint: 'Party Name *',
-      hasError: _partyNameError,
-      errorText: 'Party name is required',
+      hasError: _partyNameError != null,
+      errorText: _partyNameError,
       autofocus: !_isEditMode,
       onChanged: (_) {
-        if (_partyNameError) {
-          setState(() => _partyNameError = false);
+        if (_partyNameError != null) {
+          setState(() => _partyNameError = null);
         }
       },
     );
 
+    final legalNameField = _buildInlineTextField(
+      controller: _legalNameController,
+      hint: 'Legal Name',
+    );
+
+    final aliasField = _buildInlineTextField(
+      controller: _aliasController,
+      hint: 'Alias',
+    );
+
+    final areaCodeField = _buildInlineTextField(
+      controller: _areaCodeController,
+      hint: 'Area Code',
+    );
+
     final gstinField = _buildInlineTextField(
       controller: _gstinController,
-      hint: 'GSTIN',
+      hint: _requiresGstin ? 'GSTIN *' : 'GSTIN',
       hasError: _gstinError != null,
       errorText: _gstinError,
       onChanged: (_) {
@@ -998,7 +1155,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
     final phoneField = _buildInlineTextField(
       controller: _phoneController,
-      hint: 'Phone Number',
+      hint: 'Mobile Number *',
       keyboardType: TextInputType.number,
       maxLength: 10,
       inputFormatters: [
@@ -1028,15 +1185,21 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
 
     final rowOneCells = <FormGridCell>[
       FormGridCell(
-        span: _isEditMode ? 4 : 6,
+        span: _isEditMode ? 4 : 4,
         child: partyNameField,
       ),
+      FormGridCell(span: 4, child: legalNameField),
+      FormGridCell(span: 4, child: aliasField),
       if (billingNameField != null)
         FormGridCell(span: 4, child: billingNameField),
       FormGridCell(
-        span: _isEditMode ? 4 : 6,
+        span: 4,
         child: gstinField,
       ),
+      FormGridCell(span: 4, child: phoneField),
+      FormGridCell(span: 4, child: _buildPartyGroupControls()),
+      FormGridCell(span: 4, child: areaCodeField),
+      FormGridCell(span: 4, child: _buildDefaultPriceTierField()),
     ];
 
     final seed =
@@ -1076,13 +1239,51 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
         const SizedBox(height: FormSpacing.section),
         FormGrid(
           rowGap: FormSpacing.section,
-          cells: [
-            ...rowOneCells,
-            FormGridCell(span: 4, child: phoneField),
-            FormGridCell(span: 4, child: _buildPartyGroupControls()),
-            FormGridCell(span: 4, child: _buildDefaultPriceTierField()),
-          ],
+          cells: rowOneCells,
         ),
+        if (_additionalPhoneControllers.isNotEmpty) ...[
+          const SizedBox(height: FormSpacing.section),
+          PartyAdditionalPhonesField(
+            controllers: _additionalPhoneControllers,
+            errors: _additionalPhoneErrors.length ==
+                    _additionalPhoneControllers.length
+                ? _additionalPhoneErrors
+                : List<String?>.filled(
+                    _additionalPhoneControllers.length,
+                    null,
+                  ),
+            onAdd: _addAdditionalPhoneField,
+            onRemove: _removeAdditionalPhoneField,
+            onChanged: (_) => setState(() {}),
+            fieldBuilder:
+                ({
+                  required controller,
+                  required errorText,
+                  required onRemove,
+                  required onChanged,
+                }) => buildAdditionalPhoneInput(
+                  controller: controller,
+                  errorText: errorText,
+                  onRemove: onRemove,
+                  onChanged: onChanged,
+                ),
+          ),
+        ] else ...[
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _addAdditionalPhoneField,
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Add another number'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 4),
         ValueListenableBuilder<TextEditingValue>(
           valueListenable: _partyNameController,
@@ -1103,26 +1304,57 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
   }
 
   Widget _buildDefaultPriceTierField() {
+    final tierLabels = ref.watch(pricingTierLabelsProvider);
     return SaleGenericSelectDropdown(
-      value: PriceTier.labelFor(_defaultPriceTier),
-      options: PriceTier.dropdownOptions,
+      value: PriceTier.labelFor(
+        _defaultPriceTier,
+        apiTierLabels: tierLabels,
+      ),
+      options: PriceTier.dropdownOptionsFor(apiTierLabels: tierLabels),
       hintText: 'Default Price Tier',
+      footerActionLabel: 'Customize tier names',
+      onFooterAction: _showCustomizeTierNamesDialog,
       onSelected: (label) => setState(
-        () => _defaultPriceTier = PriceTier.keyFromLabel(label),
+        () => _defaultPriceTier = PriceTier.keyFromLabel(
+          label,
+          apiTierLabels: tierLabels,
+        ),
       ),
     );
+  }
+
+  Future<void> _showCustomizeTierNamesDialog() async {
+    await showEditPricingTierLabelsDialog(context);
+    if (mounted) setState(() {});
   }
 
   Widget _buildPartyGroupControls() {
     final partyGroups = ref.watch(partyGroupsProvider);
 
-    return SaleGenericSelectDropdown(
-      value: _partyGroup,
-      options: partyGroups,
-      hintText: 'Party Group',
-      footerActionLabel: 'Add new group',
-      onFooterAction: _showAddPartyGroupDialog,
-      onSelected: (value) => setState(() => _partyGroup = value),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SaleGenericSelectDropdown(
+          value: _partyGroup,
+          options: partyGroups,
+          hintText: 'Party Group *',
+          hasError: _partyGroupError != null,
+          footerActionLabel: 'Add new group',
+          onFooterAction: _showAddPartyGroupDialog,
+          onSelected: (value) => setState(() {
+            _partyGroup = value;
+            _partyGroupError = null;
+          }),
+        ),
+        if (_partyGroupError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 2),
+            child: Text(
+              _partyGroupError!,
+              style: const TextStyle(fontSize: 11, color: saleFieldErrorColor),
+            ),
+          ),
+      ],
     );
   }
 
@@ -1273,7 +1505,12 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
               child: SaleGenericSelectDropdown(
                 value: _gstType,
                 options: _gstTypes,
-                onSelected: (value) => setState(() => _gstType = value),
+                onSelected: (value) => setState(() {
+                  _gstType = value;
+                  if (!_requiresGstin && _gstinError != null) {
+                    _gstinError = null;
+                  }
+                }),
               ),
             ),
             const SizedBox(height: FormSpacing.section),

@@ -59,6 +59,12 @@ export const createMovementBodySchema = z
       .trim()
       .optional()
       .transform((value) => (value === '' ? undefined : value)),
+    notes: z
+      .string()
+      .trim()
+      .max(500, 'Notes must be at most 500 characters')
+      .optional()
+      .transform((value) => (value === '' ? undefined : value)),
   })
   .superRefine((body, ctx) => {
     const delta = Number(body.quantity_delta);

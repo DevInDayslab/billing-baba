@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_highlighted_text.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_table_row.dart';
@@ -173,10 +174,9 @@ class _PartyGroupListTile extends StatelessWidget {
             ),
             SizedBox(
               width: _groupListAmountHeaderWidth,
-              child: Text(
+              child: AppEllipsisText(
                 amountText,
                 textAlign: TextAlign.right,
-                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,

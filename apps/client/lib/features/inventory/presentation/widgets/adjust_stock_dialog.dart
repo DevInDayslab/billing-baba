@@ -36,6 +36,7 @@ class AdjustStockDialog extends ConsumerStatefulWidget {
 class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
   final _quantityController = TextEditingController();
   final _costController = TextEditingController();
+  final _notesController = TextEditingController();
   String? _godownId;
   String? _errorMessage;
   bool _isLoading = false;
@@ -44,6 +45,7 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
   void dispose() {
     _quantityController.dispose();
     _costController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -92,6 +94,7 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
           movementType: 'adjustment',
           quantityDelta: _formatDecimal(delta),
           costPerUnit: cost != null ? _formatDecimal(cost) : null,
+          notes: _notesController.text.trim(),
         ),
       );
 
@@ -191,6 +194,17 @@ class _AdjustStockDialogState extends ConsumerState<AdjustStockDialog> {
                 ),
                 decoration: buildSaleFieldDecoration(
                   hint: 'Optional for reductions',
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              const Text('Notes (optional)', style: saleFieldLabelStyle),
+              const SizedBox(height: AppSpacing.sm),
+              TextField(
+                controller: _notesController,
+                maxLength: 500,
+                maxLines: 2,
+                decoration: buildSaleFieldDecoration(
+                  hint: 'Reason for adjustment',
                 ),
               ),
               if (_errorMessage != null) ...[

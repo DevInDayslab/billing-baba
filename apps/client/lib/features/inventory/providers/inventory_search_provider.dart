@@ -23,6 +23,12 @@ final inventorySearchEngineProvider = Provider<InventorySearchEngine>((ref) {
 
   final searchableItems = items.map((item) {
     final unitShortName = item.baseUnitShortName?.toLowerCase();
+    final aliases = <String>[
+      if (item.shortName != null && item.shortName!.trim().isNotEmpty)
+        item.shortName!.trim(),
+      if (item.alias != null && item.alias!.trim().isNotEmpty) item.alias!.trim(),
+      ...item.searchKeywords,
+    ];
     return InventorySearchableFields.fromInventoryItem(
       item,
       categoryName: categoryById[item.categoryId],
@@ -30,6 +36,7 @@ final inventorySearchEngineProvider = Provider<InventorySearchEngine>((ref) {
       unitName: unitShortName == null
           ? item.baseUnitShortName
           : unitByShortName[unitShortName] ?? item.baseUnitShortName,
+      aliases: aliases,
     );
   });
 

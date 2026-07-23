@@ -5,24 +5,20 @@ import 'package:billing_baba/features/inventory/providers/inventory_providers.da
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
+import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-const _dialogMaxWidth = 720.0;
-
 Future<void> showAddConversionDialog(
   BuildContext context, {
   required String initialBaseUnitId,
 }) {
-  return showDialog<void>(
+  return showFormDialog<void>(
     context: context,
-    builder: (context) => Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: AddConversionDialog(initialBaseUnitId: initialBaseUnitId),
-    ),
+    size: FormDialogSize.medium,
+    child: AddConversionDialog(initialBaseUnitId: initialBaseUnitId),
   );
 }
 
@@ -194,13 +190,11 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
     );
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: _dialogMaxWidth),
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: AppRadius.lgBorder,
-        clipBehavior: Clip.antiAlias,
-        child: Column(
+    return Material(
+      color: AppColors.surface,
+      borderRadius: AppRadius.lgBorder,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -364,7 +358,6 @@ class _AddConversionDialogState extends ConsumerState<AddConversionDialog> {
             ),
           ],
         ),
-      ),
     );
   }
 }

@@ -38,3 +38,8 @@ export type BusinessProfile = {
   /** UPI VPA for Scan-to-Pay (e.g. merchant@upi) */
   upi_id: string | null;
 };
+
+export type CommerceSettings = {
+  pricing_tier_labels: Record<string, string>;
+  default_invoice_tax_rate: string | null;
+};

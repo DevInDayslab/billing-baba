@@ -45,6 +45,24 @@ export function pricingTierLabel(tier: PricingTier): PricingTierLabel {
   return TIER_TO_LABEL[tier];
 }
 
+export function resolvePricingTierLabel(
+  tier: PricingTier,
+  customLabels?: Record<string, string> | null,
+): string {
+  const custom = customLabels?.[tier]?.trim();
+  if (custom) return custom;
+  return pricingTierLabel(tier);
+}
+
+export function defaultPricingTierLabels(): Record<PricingTier, string> {
+  return {
+    tier_1: 'Retail',
+    tier_2: 'Wholesale',
+    tier_3: 'Dealer',
+    tier_4: 'Distributor',
+  };
+}
+
 export function normalizePricingTier(
   value: string | undefined,
   fallback: PricingTier = 'tier_1',

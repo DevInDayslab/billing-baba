@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_table_widgets.dart'
     show ReportTableHeaderRow;
 import 'package:billing_baba/features/reports/presentation/widgets/shared/report_theme.dart';
@@ -160,7 +161,7 @@ class ReportAlignedDataRow extends StatelessWidget {
       style: dataStyle,
       overflow: TextOverflow.ellipsis,
       maxLines: 2,
-      child: cell.child,
+      child: wrapEllipsisTooltipChild(cell.child),
     );
 
     final aligned = Align(alignment: cell.alignment, child: content);

@@ -631,10 +631,23 @@ class PartyService {
           final created = await _repository.createParty(
             CreatePartyRequest(
               name: requestJson['name'] as String,
-              mobile: requestJson['mobile'] as String?,
+              mobile:
+                  requestJson['mobile'] as String? ??
+                  PartyModel.normalizePhone(
+                    requestJson['mobile']?.toString() ?? '',
+                  ),
+              legalName: requestJson['legal_name'] as String?,
+              alias: requestJson['alias'] as String?,
+              additionalPhones: requestJson['additional_phones'] is List
+                  ? (requestJson['additional_phones'] as List)
+                        .map((phone) => phone.toString())
+                        .toList()
+                  : const [],
               email: requestJson['email'] as String?,
               gstin: requestJson['gstin'] as String?,
               partyType: requestJson['party_type'] as String? ?? 'customer',
+              partyGroup: requestJson['party_group'] as String?,
+              areaCode: requestJson['area_code'] as String?,
               state: requestJson['state'] as String?,
               creditLimit: requestJson['credit_limit']?.toString(),
               openingBalance: requestJson['opening_balance']?.toString(),

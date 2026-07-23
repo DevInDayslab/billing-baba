@@ -1,4 +1,8 @@
-export { createStorageProvider } from './create-storage-provider';
+export {
+  createStorageProvider,
+  resolveStorageProvider,
+} from './create-storage-provider';
+export { LocalFilesystemProvider } from './local-filesystem-provider';
 export { RailwayS3Provider } from './railway-s3-provider';
 export type {
   CopyObjectParams,

@@ -7,6 +7,7 @@ class CreateMovementRequest {
     this.costPerUnit,
     this.referenceId,
     this.referenceType,
+    this.notes,
   });
 
   final String itemId;
@@ -16,6 +17,7 @@ class CreateMovementRequest {
   final String? costPerUnit;
   final String? referenceId;
   final String? referenceType;
+  final String? notes;
 
   Map<String, dynamic> toJson() => {
     'item_id': itemId,
@@ -25,5 +27,6 @@ class CreateMovementRequest {
     if (costPerUnit != null) 'cost_per_unit': costPerUnit,
     if (referenceId != null) 'reference_id': referenceId,
     if (referenceType != null) 'reference_type': referenceType,
+    if (notes != null && notes!.trim().isNotEmpty) 'notes': notes!.trim(),
   };
 }

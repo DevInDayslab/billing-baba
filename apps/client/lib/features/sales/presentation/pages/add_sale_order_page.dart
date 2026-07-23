@@ -369,6 +369,7 @@ class _FormFields extends ConsumerWidget {
             label: 'Party',
             child: BillingNamePartySearchField(
               value: form.party,
+              selectedPartyId: form.partyId,
               hasError: form.partyHasError,
               emptyPlaceholder: 'Search Party Name',
               errorMessage: 'Party is required',

@@ -210,6 +210,7 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
                   label: 'Search by Name/Phone *',
                   child: BillingNamePartySearchField(
                     value: form.party,
+                    selectedPartyId: form.partyId,
                     partyTypeFilter: PartyTypeFilter.supplier,
                     hasError: form.partyHasError,
                     errorMessage: 'Please select a supplier',

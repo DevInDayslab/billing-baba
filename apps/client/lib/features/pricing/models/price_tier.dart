@@ -16,8 +16,6 @@ abstract final class PriceTier {
     distributor: 'Distributor',
   };
 
-  static String labelFor(String tierKey) => labels[tierKey] ?? labels[retail]!;
-
   static const dropdownOptions = [
     'Retail',
     'Wholesale',
@@ -25,7 +23,39 @@ abstract final class PriceTier {
     'Distributor',
   ];
 
-  static String keyFromLabel(String label) {
+  static String labelFor(
+    String tierKey, {
+    Map<String, String>? apiTierLabels,
+  }) {
+    final apiLabel = _apiLabelForTierKey(tierKey, apiTierLabels);
+    if (apiLabel != null) return apiLabel;
+    return labels[tierKey] ?? labels[retail]!;
+  }
+
+  static String? _apiLabelForTierKey(
+    String tierKey,
+    Map<String, String>? apiTierLabels,
+  ) {
+    if (apiTierLabels == null || apiTierLabels.isEmpty) return null;
+    final apiTier = toApiTier(tierKey);
+    return apiTierLabels[apiTier];
+  }
+
+  static List<String> dropdownOptionsFor({
+    Map<String, String>? apiTierLabels,
+  }) => all.map((tier) => labelFor(tier, apiTierLabels: apiTierLabels)).toList();
+
+  static String keyFromLabel(
+    String label, {
+    Map<String, String>? apiTierLabels,
+  }) {
+    if (apiTierLabels != null) {
+      for (final entry in apiTierLabels.entries) {
+        if (entry.value == label) {
+          return fromApiTier(entry.key);
+        }
+      }
+    }
     for (final entry in labels.entries) {
       if (entry.value == label) return entry.key;
     }

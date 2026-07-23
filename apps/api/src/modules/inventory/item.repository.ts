@@ -5,6 +5,7 @@ import {
   desc,
   eq,
   ilike,
+  inArray,
   ne,
   notInArray,
   or,
@@ -16,6 +17,7 @@ import {
   categories,
   godowns,
   inventoryMovements,
+  itemAlternatives,
   itemImages,
   itemLocations,
   itemPriceHistory,
@@ -61,6 +63,9 @@ export class ItemRepository {
     return {
       id: items.id,
       name: items.name,
+      shortName: items.shortName,
+      alias: items.alias,
+      searchKeywords: items.searchKeywords,
       description: items.description,
       itemType: items.itemType,
       hasStockTracking: items.hasStockTracking,
@@ -79,6 +84,7 @@ export class ItemRepository {
       mrp: items.mrp,
       marketPrice: items.marketPrice,
       reorderLevel: items.reorderLevel,
+      defaultTaxRate: items.defaultTaxRate,
       primaryImageUrl: items.primaryImageUrl,
       createdAt: items.createdAt,
       updatedAt: items.updatedAt,
@@ -113,6 +119,9 @@ export class ItemRepository {
       const pattern = `%${params.q}%`;
       const search = or(
         ilike(items.name, pattern),
+        ilike(items.shortName, pattern),
+        ilike(items.alias, pattern),
+        ilike(items.searchKeywords, pattern),
         ilike(items.barcode, pattern),
         ilike(items.hsnCode, pattern),
       );
@@ -166,8 +175,15 @@ export class ItemRepository {
       .limit(params.limit)
       .offset(offset);
 
+    const alternativesMap = await this.loadAlternativesMap(
+      params.businessId,
+      rows.map((row) => row.id),
+    );
+
     return {
-      rows: rows.map((row) => toItemListRecord(row as ItemRow)),
+      rows: rows.map((row) =>
+        toItemListRecord(row as ItemRow, alternativesMap.get(row.id) ?? []),
+      ),
       total,
     };
   }
@@ -197,11 +213,13 @@ export class ItemRepository {
       return null;
     }
 
-    const [tierPrices, images, locations, openingStock] = await Promise.all([
+    const [tierPrices, images, locations, openingStock, alternativeIds] =
+      await Promise.all([
       this.loadTierPrices(businessId, itemId),
       this.loadImages(businessId, itemId),
       this.loadLocations(businessId, itemId),
       this.loadOpeningStock(businessId, itemId),
+      this.listAlternativeIds(businessId, itemId),
     ]);
 
     return toItemDetailRecord(
@@ -210,6 +228,7 @@ export class ItemRepository {
       images,
       locations,
       openingStock,
+      alternativeIds,
     );
   }
 
@@ -338,6 +357,9 @@ export class ItemRepository {
       .values({
         businessId: values.businessId,
         name: values.name,
+        shortName: values.shortName ?? null,
+        alias: values.alias ?? null,
+        searchKeywords: values.searchKeywords ?? null,
         description: values.description ?? null,
         itemType: values.itemType,
         hasStockTracking: values.hasStockTracking,
@@ -351,6 +373,7 @@ export class ItemRepository {
         mrp: values.mrp ?? null,
         marketPrice: values.marketPrice ?? null,
         reorderLevel: values.reorderLevel ?? null,
+        defaultTaxRate: values.defaultTaxRate ?? null,
         primaryImageUrl: values.primaryImageUrl ?? null,
         createdBy: values.createdBy ?? null,
         updatedBy: values.updatedBy ?? null,
@@ -358,6 +381,9 @@ export class ItemRepository {
       .returning({
         id: items.id,
         name: items.name,
+        shortName: items.shortName,
+        alias: items.alias,
+        searchKeywords: items.searchKeywords,
         description: items.description,
         itemType: items.itemType,
         hasStockTracking: items.hasStockTracking,
@@ -376,6 +402,7 @@ export class ItemRepository {
         mrp: items.mrp,
         marketPrice: items.marketPrice,
         reorderLevel: items.reorderLevel,
+        defaultTaxRate: items.defaultTaxRate,
         primaryImageUrl: items.primaryImageUrl,
         createdAt: items.createdAt,
         updatedAt: items.updatedAt,
@@ -475,6 +502,13 @@ export class ItemRepository {
       .update(items)
       .set({
         ...(values.name !== undefined ? { name: values.name } : {}),
+        ...(values.shortName !== undefined
+          ? { shortName: values.shortName }
+          : {}),
+        ...(values.alias !== undefined ? { alias: values.alias } : {}),
+        ...(values.searchKeywords !== undefined
+          ? { searchKeywords: values.searchKeywords }
+          : {}),
         ...(values.description !== undefined
           ? { description: values.description }
           : {}),
@@ -502,6 +536,9 @@ export class ItemRepository {
         ...(values.reorderLevel !== undefined
           ? { reorderLevel: values.reorderLevel }
           : {}),
+        ...(values.defaultTaxRate !== undefined
+          ? { defaultTaxRate: values.defaultTaxRate }
+          : {}),
         ...(values.primaryImageUrl !== undefined
           ? { primaryImageUrl: values.primaryImageUrl }
           : {}),
@@ -521,6 +558,9 @@ export class ItemRepository {
       .returning({
         id: items.id,
         name: items.name,
+        shortName: items.shortName,
+        alias: items.alias,
+        searchKeywords: items.searchKeywords,
         description: items.description,
         itemType: items.itemType,
         hasStockTracking: items.hasStockTracking,
@@ -539,6 +579,7 @@ export class ItemRepository {
         mrp: items.mrp,
         marketPrice: items.marketPrice,
         reorderLevel: items.reorderLevel,
+        defaultTaxRate: items.defaultTaxRate,
         primaryImageUrl: items.primaryImageUrl,
         createdAt: items.createdAt,
         updatedAt: items.updatedAt,
@@ -1235,6 +1276,142 @@ export class ItemRepository {
       rows: rows.map(toItemPriceHistoryRecord),
       total,
     };
+  }
+
+  async listAlternativeIds(
+    businessId: string,
+    itemId: string,
+  ): Promise<string[]> {
+    const rows = await this.db
+      .select({ alternativeItemId: itemAlternatives.alternativeItemId })
+      .from(itemAlternatives)
+      .where(
+        and(
+          eq(itemAlternatives.businessId, businessId),
+          eq(itemAlternatives.itemId, itemId),
+          eq(itemAlternatives.isDeleted, false),
+        ),
+      )
+      .orderBy(asc(itemAlternatives.sortOrder), asc(itemAlternatives.createdAt));
+
+    return rows.map((row) => row.alternativeItemId);
+  }
+
+  async loadAlternativesMap(
+    businessId: string,
+    itemIds: string[],
+  ): Promise<Map<string, string[]>> {
+    const map = new Map<string, string[]>();
+    if (itemIds.length === 0) return map;
+
+    const rows = await this.db
+      .select({
+        itemId: itemAlternatives.itemId,
+        alternativeItemId: itemAlternatives.alternativeItemId,
+        sortOrder: itemAlternatives.sortOrder,
+      })
+      .from(itemAlternatives)
+      .where(
+        and(
+          eq(itemAlternatives.businessId, businessId),
+          inArray(itemAlternatives.itemId, itemIds),
+          eq(itemAlternatives.isDeleted, false),
+        ),
+      )
+      .orderBy(asc(itemAlternatives.sortOrder), asc(itemAlternatives.createdAt));
+
+    for (const row of rows) {
+      const existing = map.get(row.itemId) ?? [];
+      existing.push(row.alternativeItemId);
+      map.set(row.itemId, existing);
+    }
+
+    return map;
+  }
+
+  async loadAlternativesIndex(
+    businessId: string,
+  ): Promise<Record<string, string[]>> {
+    const rows = await this.db
+      .select({
+        itemId: itemAlternatives.itemId,
+        alternativeItemId: itemAlternatives.alternativeItemId,
+        sortOrder: itemAlternatives.sortOrder,
+      })
+      .from(itemAlternatives)
+      .where(
+        and(
+          eq(itemAlternatives.businessId, businessId),
+          eq(itemAlternatives.isDeleted, false),
+        ),
+      )
+      .orderBy(asc(itemAlternatives.sortOrder), asc(itemAlternatives.createdAt));
+
+    const index: Record<string, string[]> = {};
+    for (const row of rows) {
+      const existing = index[row.itemId] ?? [];
+      existing.push(row.alternativeItemId);
+      index[row.itemId] = existing;
+    }
+
+    return index;
+  }
+
+  async findExistingItemIds(
+    businessId: string,
+    itemIds: string[],
+  ): Promise<Set<string>> {
+    if (itemIds.length === 0) return new Set();
+
+    const rows = await this.db
+      .select({ id: items.id })
+      .from(items)
+      .where(
+        and(
+          eq(items.businessId, businessId),
+          inArray(items.id, itemIds),
+          eq(items.isDeleted, false),
+        ),
+      );
+
+    return new Set(rows.map((row) => row.id));
+  }
+
+  async replaceAlternatives(
+    businessId: string,
+    itemId: string,
+    alternativeItemIds: string[],
+    updatedBy?: string | null,
+  ): Promise<void> {
+    await this.db
+      .update(itemAlternatives)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+        updatedAt: new Date(),
+        updatedBy: updatedBy ?? null,
+        syncVersion: sql`${itemAlternatives.syncVersion} + 1`,
+      })
+      .where(
+        and(
+          eq(itemAlternatives.businessId, businessId),
+          eq(itemAlternatives.itemId, itemId),
+          eq(itemAlternatives.isDeleted, false),
+        ),
+      );
+
+    if (alternativeItemIds.length === 0) return;
+
+    await this.db.insert(itemAlternatives).values(
+      alternativeItemIds.map((alternativeItemId, index) => ({
+        businessId,
+        itemId,
+        alternativeItemId,
+        sortOrder: index,
+        createdBy: updatedBy ?? null,
+        updatedBy: updatedBy ?? null,
+      })),
+    );
   }
 
   runTransaction<T>(callback: (tx: DbTransaction) => Promise<T>): Promise<T> {

@@ -663,6 +663,7 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
         final isNarrow = constraints.maxWidth < _narrowBreakpoint;
         final billingNameField = BillingNamePartySearchField(
           value: form.billingName,
+          selectedPartyId: form.partyId,
           hasError: form.partyHasError,
           errorMessage: kPartyValidationMessage,
           emptyPlaceholder: 'Billing Name (Optional)',

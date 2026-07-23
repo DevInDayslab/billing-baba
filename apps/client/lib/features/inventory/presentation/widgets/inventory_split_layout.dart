@@ -65,9 +65,14 @@ class InventorySplitLayout extends StatelessWidget {
 }
 
 class InventoryDetailPlaceholder extends StatelessWidget {
-  const InventoryDetailPlaceholder({required this.message, super.key});
+  const InventoryDetailPlaceholder({
+    required this.message,
+    this.icon = Icons.inventory_2_outlined,
+    super.key,
+  });
 
   final String message;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +83,7 @@ class InventoryDetailPlaceholder extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.inventory_2_outlined,
+              icon,
               size: 48,
               color: Colors.grey.shade400,
             ),

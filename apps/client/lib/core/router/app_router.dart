@@ -16,6 +16,7 @@ import 'package:billing_baba/features/collaboration/presentation/providers/permi
 import 'package:billing_baba/features/crm/presentation/screens/contacts_screen.dart';
 import 'package:billing_baba/features/crm/presentation/screens/deals_screen.dart';
 import 'package:billing_baba/features/crm/presentation/screens/leads_screen.dart';
+import 'package:billing_baba/features/settings/presentation/screens/taxes_settings_screen.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/coming_soon_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/home_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/pages/shell_page.dart';
@@ -516,7 +517,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.settingsTaxes,
-            builder: (context, state) => const ComingSoonPage(title: 'Taxes'),
+            builder: (context, state) => const TaxesSettingsScreen(),
           ),
           GoRoute(
             path: AppRoutes.settingsInvoiceTemplates,

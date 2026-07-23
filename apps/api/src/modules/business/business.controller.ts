@@ -7,6 +7,7 @@ import {
   createBusinessBodySchema,
   updateBusinessProfileBodySchema,
 } from './business.schema';
+import { updateCommerceSettingsBodySchema } from './business-commerce-settings.schema';
 import { BusinessService } from './business.service';
 
 function formatZodError(error: ZodError): Record<string, string[]> {
@@ -92,6 +93,51 @@ export function createBusinessController(config: AppConfig) {
 
         const body = updateBusinessProfileBodySchema.parse(request.body);
         const data = await service.updateProfile(businessId, accountId, body);
+        return sendData(reply, data);
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Invalid request body',
+            400,
+            formatZodError(error),
+          );
+        }
+        throw error;
+      }
+    },
+
+    getCommerceSettings: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ): Promise<FastifyReply> => {
+      const accountId = request.accountId;
+      const businessId = request.businessId;
+      if (!accountId || !businessId) {
+        throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
+      }
+
+      const data = await service.getCommerceSettings(businessId, accountId);
+      return sendData(reply, data);
+    },
+
+    updateCommerceSettings: async (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ): Promise<FastifyReply> => {
+      try {
+        const accountId = request.accountId;
+        const businessId = request.businessId;
+        if (!accountId || !businessId) {
+          throw new AppError('UNAUTHORIZED', 'Account not found in token', 401);
+        }
+
+        const body = updateCommerceSettingsBodySchema.parse(request.body);
+        const data = await service.updateCommerceSettings(
+          businessId,
+          accountId,
+          body,
+        );
         return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {

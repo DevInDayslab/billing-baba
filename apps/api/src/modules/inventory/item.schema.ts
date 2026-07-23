@@ -30,6 +30,42 @@ const optionalMoneyField = z
       .optional(),
   );
 
+const optionalTaxRate = z
+  .union([z.string(), z.number()])
+  .optional()
+  .transform((value) => {
+    if (value === undefined || value === '') return undefined;
+    return String(value);
+  })
+  .pipe(
+    z.union([
+      z.undefined(),
+      z
+        .string()
+        .regex(
+          /^\d+(\.\d{1,4})?$/,
+          'Tax rate must be a valid decimal percentage',
+        ),
+    ]),
+  );
+
+const searchKeywordsField = z
+  .union([z.string(), z.array(z.string())])
+  .optional()
+  .transform((value) => {
+    if (value === undefined) return undefined;
+    if (Array.isArray(value)) {
+      const keywords = value
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0);
+      return keywords.length > 0 ? keywords.join(', ') : undefined;
+    }
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  });
+
+const alternativeItemIdsField = z.array(z.uuid('Invalid alternative item ID'));
+
 const tierPriceSchema = z.object({
   pricing_tier: z
     .enum(PRICING_TIER_INPUT_VALUES)
@@ -90,6 +126,19 @@ export type ListItemsQuery = z.infer<typeof listItemsQuerySchema>;
 
 export const createItemBodySchema = z.object({
   name: z.string().trim().min(1, 'Item name is required').max(300),
+  short_name: z
+    .string()
+    .trim()
+    .max(100)
+    .optional()
+    .transform((value) => (value === '' ? undefined : value)),
+  alias: z
+    .string()
+    .trim()
+    .max(200)
+    .optional()
+    .transform((value) => (value === '' ? undefined : value)),
+  search_keywords: searchKeywordsField,
   description: z
     .string()
     .trim()
@@ -114,7 +163,9 @@ export const createItemBodySchema = z.object({
   mrp: optionalMoneyField,
   market_price: optionalMoneyField,
   reorder_level: optionalMoneyField,
+  default_tax_rate: optionalTaxRate,
   has_stock_tracking: z.boolean().optional().default(true),
+  alternative_item_ids: alternativeItemIdsField.optional().default([]),
   tier_prices: tierPricesArraySchema.optional().default([]),
   primary_image_url: z
     .string()
@@ -132,6 +183,21 @@ export type CreateItemBody = z.infer<typeof createItemBodySchema>;
 export const updateItemBodySchema = z
   .object({
     name: z.string().trim().min(1, 'Item name is required').max(300).optional(),
+    short_name: z
+      .string()
+      .trim()
+      .max(100)
+      .nullable()
+      .optional()
+      .transform((value) => (value === '' ? null : value)),
+    alias: z
+      .string()
+      .trim()
+      .max(200)
+      .nullable()
+      .optional()
+      .transform((value) => (value === '' ? null : value)),
+    search_keywords: searchKeywordsField.optional(),
     description: z
       .string()
       .trim()
@@ -159,7 +225,9 @@ export const updateItemBodySchema = z
     mrp: optionalMoneyField.nullable(),
     market_price: optionalMoneyField.nullable(),
     reorder_level: optionalMoneyField.nullable(),
+    default_tax_rate: optionalTaxRate.nullable(),
     has_stock_tracking: z.boolean().optional(),
+    alternative_item_ids: alternativeItemIdsField.optional(),
     tier_prices: tierPricesArraySchema.optional(),
     primary_image_url: z
       .string()
@@ -234,3 +302,13 @@ export const listItemPriceHistoryQuerySchema = z.object({
 export type ListItemPriceHistoryQuery = z.infer<
   typeof listItemPriceHistoryQuerySchema
 >;
+
+export const putItemAlternativesBodySchema = z.object({
+  alternative_item_ids: alternativeItemIdsField,
+});
+
+export type PutItemAlternativesBody = z.infer<
+  typeof putItemAlternativesBodySchema
+>;
+
+export const itemAlternativesIndexQuerySchema = z.object({});

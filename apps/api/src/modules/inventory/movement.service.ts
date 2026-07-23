@@ -120,6 +120,7 @@ export class MovementService extends InventoryServiceBase {
         referenceId: input.reference_id ?? null,
         referenceType: input.reference_type ?? null,
         createdBy: userId ?? null,
+        notes: input.notes ?? null,
       });
 
       return result.movementId;

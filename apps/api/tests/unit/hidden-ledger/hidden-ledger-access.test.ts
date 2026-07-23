@@ -6,10 +6,14 @@ import type { PartyRecord } from '../../../src/modules/parties/party.types';
 const sampleParty: PartyRecord = {
   id: 'party-1',
   name: 'Test Party',
+  legal_name: null,
+  alias: null,
   mobile: null,
   email: null,
   party_type: 'customer',
   party_category: null,
+  party_group: null,
+  area_code: null,
   pricing_tier: 'tier_1',
   default_price_tier: 'tier_1',
   gstin: null,
@@ -24,6 +28,7 @@ const sampleParty: PartyRecord = {
   notes: null,
   profile_image_url: null,
   profile_media_asset_id: null,
+  additional_phones: [],
   created_at: '2026-01-01T00:00:00.000Z',
   updated_at: '2026-01-01T00:00:00.000Z',
 };

@@ -6,6 +6,7 @@ import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_search_provider.dart';
+import 'package:billing_baba/features/inventory/providers/item_alternatives_index_provider.dart';
 import 'package:billing_baba/features/pricing/providers/item_api_tier_prices_provider.dart';
 import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
@@ -18,6 +19,7 @@ import 'package:intl/intl.dart';
 SaleItemOption saleItemOptionFromInventory(
   InventoryItem item, {
   Map<String, double> tierPrices = const {},
+  bool isAlternativeSuggestion = false,
 }) {
   return SaleItemOption(
     id: item.id,
@@ -32,6 +34,8 @@ SaleItemOption saleItemOptionFromInventory(
     sku: item.barcode,
     barcode: item.barcode,
     tierPrices: tierPrices,
+    defaultTaxPercent: item.defaultTaxRate ?? 0,
+    isAlternativeSuggestion: isAlternativeSuggestion,
   );
 }
 
@@ -204,10 +208,40 @@ class ItemNameAutocompleteFieldState
           .searchItems(inventory, query: query);
     }
 
-    return [
-      for (final item in rankedItems.take(_maxDropdownItems))
+    final rankedList = rankedItems.take(_maxDropdownItems).toList();
+    final options = [
+      for (final item in rankedList)
         saleItemOptionFromInventory(item),
     ];
+
+    if (query.isEmpty) return options;
+
+    final alternativesIndex =
+        ref.read(itemAlternativesIndexProvider).value ?? const {};
+    final inventoryById = {for (final item in inventory) item.id: item};
+    final existingIds = options.map((option) => option.id).toSet();
+    final alternativeIds = <String>{};
+
+    for (final item in rankedList.take(5)) {
+      final linked = alternativesIndex[item.id] ?? const [];
+      alternativeIds.addAll(linked);
+    }
+
+    for (final alternativeId in alternativeIds) {
+      if (existingIds.contains(alternativeId)) continue;
+      final item = inventoryById[alternativeId];
+      if (item == null) continue;
+      options.add(
+        saleItemOptionFromInventory(
+          item,
+          isAlternativeSuggestion: true,
+        ),
+      );
+      existingIds.add(alternativeId);
+      if (options.length >= _maxDropdownItems) break;
+    }
+
+    return options;
   }
 
   void _removeOverlay() {
@@ -262,24 +296,6 @@ class ItemNameAutocompleteFieldState
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                          InkWell(
-                            onTap: _openAddItemDialog,
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              child: Text(
-                                '+ Add Item',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const Divider(height: 1),
                           const Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: 12,
@@ -394,6 +410,8 @@ class ItemNameAutocompleteFieldState
                                                     salePrice: item.salePrice,
                                                     purchasePrice:
                                                         item.purchasePrice,
+                                                    defaultTaxRate:
+                                                        item.defaultTaxPercent,
                                                   ),
                                                 ),
                                                 tierPrices:
@@ -402,6 +420,8 @@ class ItemNameAutocompleteFieldState
                                                       localStore: localStore,
                                                       itemId: item.id,
                                                     ),
+                                                isAlternativeSuggestion:
+                                                    item.isAlternativeSuggestion,
                                               );
                                           _controller.text = resolved.name;
                                           widget.onChanged(resolved.name);
@@ -424,19 +444,36 @@ class ItemNameAutocompleteFieldState
                                             children: [
                                               Expanded(
                                                 flex: 3,
-                                                child: Text(
-                                                  item.name,
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: isSelected
-                                                        ? FontWeight.w600
-                                                        : FontWeight.normal,
-                                                    color: isSelected
-                                                        ? const Color(
-                                                            0xFFD32F2F,
-                                                          )
-                                                        : AppColors.textPrimary,
-                                                  ),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      item.name,
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight: isSelected
+                                                            ? FontWeight.w600
+                                                            : FontWeight.normal,
+                                                        color: isSelected
+                                                            ? const Color(
+                                                                0xFFD32F2F,
+                                                              )
+                                                            : AppColors
+                                                                .textPrimary,
+                                                      ),
+                                                    ),
+                                                    if (item
+                                                        .isAlternativeSuggestion)
+                                                      const Text(
+                                                        'Alternative',
+                                                        style: TextStyle(
+                                                          fontSize: 10,
+                                                          color: AppColors
+                                                              .textSecondary,
+                                                        ),
+                                                      ),
+                                                  ],
                                                 ),
                                               ),
                                               Expanded(
@@ -487,6 +524,25 @@ class ItemNameAutocompleteFieldState
                                       );
                                     },
                                   ),
+                          ),
+                          const Divider(height: 1),
+                          ListTile(
+                            dense: true,
+                            visualDensity: VisualDensity.compact,
+                            leading: const Icon(
+                              Icons.add,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                            title: const Text(
+                              '+ Add Item',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            onTap: _openAddItemDialog,
                           ),
                         ],
                       ),

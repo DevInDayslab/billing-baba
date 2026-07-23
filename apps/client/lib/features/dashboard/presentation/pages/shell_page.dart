@@ -21,6 +21,7 @@ import 'package:billing_baba/features/dashboard/presentation/widgets/quick_creat
 import 'package:billing_baba/features/dashboard/providers/quick_create_menu_provider.dart';
 import 'package:billing_baba/features/dashboard/providers/shell_sidebar_provider.dart';
 import 'package:billing_baba/features/parties/models/party_sub_route.dart';
+import 'package:billing_baba/features/parties/providers/parties_selection_providers.dart';
 import 'package:billing_baba/features/pos/providers/pos_session_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
@@ -331,6 +332,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       _isCollaborationExpanded = false;
       _isDeveloperExpanded = false;
     });
+    if (route == AppRoutes.partyDetails) {
+      ref.read(selectedPartyIdProvider.notifier).selected = null;
+    }
     context.go(route);
   }
 

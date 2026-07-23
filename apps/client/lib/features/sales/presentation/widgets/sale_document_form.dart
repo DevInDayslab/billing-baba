@@ -689,6 +689,7 @@ class _DocumentFormFieldsState extends ConsumerState<_DocumentFormFields> {
             label: 'Party',
             child: BillingNamePartySearchField(
               value: form.party,
+              selectedPartyId: form.partyId,
               hasError: form.partyHasError,
               emptyPlaceholder: 'Search Party Name',
               errorMessage: 'Party is required',

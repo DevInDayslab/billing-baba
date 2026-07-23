@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 
 const _fieldBorder = Color(0xFFCCCCCC);
@@ -207,7 +208,7 @@ class SaleFormDropdownState extends State<SaleFormDropdown> {
         child: Row(
           children: [
             Expanded(
-              child: Text(
+              child: AppEllipsisText(
                 displayText,
                 style: TextStyle(
                   fontSize: 13,
@@ -215,7 +216,6 @@ class SaleFormDropdownState extends State<SaleFormDropdown> {
                       ? AppColors.textSecondary
                       : AppColors.textPrimary,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
             const Icon(

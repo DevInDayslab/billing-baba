@@ -3,12 +3,15 @@ import 'dart:async';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/features/business/providers/commerce_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
+import 'package:billing_baba/features/inventory/models/brand_model.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
+import 'package:billing_baba/features/inventory/presentation/widgets/add_item/alternative_items_field.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item/alternatives_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item/general_information_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item/manufacturing_section.dart';
@@ -18,10 +21,13 @@ import 'package:billing_baba/features/inventory/presentation/widgets/add_item/st
 import 'package:billing_baba/features/inventory/presentation/widgets/add_item/tier_pricing_section.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/select_unit_dialog.dart';
 import 'package:billing_baba/features/inventory/providers/add_item_form_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_brands_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
+import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
+import 'package:billing_baba/features/pricing/presentation/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/pricing/providers/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_single_date_picker.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
@@ -44,13 +50,9 @@ Future<InventoryItem?> showAddItemDialog(
   ItemType initialType = ItemType.product,
   InventoryItem? editItem,
 }) {
-  return showDialog<InventoryItem>(
+  return showFormDialog<InventoryItem>(
     context: context,
-    builder: (context) => Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: FormSpacing.page),
-      child: AddItemDialog(initialType: initialType, editItem: editItem),
-    ),
+    child: AddItemDialog(initialType: initialType, editItem: editItem),
   );
 }
 
@@ -73,6 +75,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   late TabController _tabController;
   final _asOfDatePickerKey = GlobalKey<SaleSingleDatePickerAnchorState>();
   final _itemNameController = TextEditingController();
+  final _shortNameController = TextEditingController();
+  final _aliasController = TextEditingController();
+  final _searchKeywordsController = TextEditingController();
   final _hsnController = TextEditingController();
   final _itemCodeController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -113,8 +118,23 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             .read(addItemFormProvider.notifier)
             .setInitialType(widget.initialType);
         _ensureDefaultServiceUnit();
+        unawaited(_applyDefaultItemTaxRate());
       }
     });
+  }
+
+  Future<void> _applyDefaultItemTaxRate() async {
+    try {
+      final commerce = await ref.read(commerceSettingsProvider.future);
+      final defaultTax = commerce.defaultInvoiceTaxPercent;
+      if (defaultTax == null || defaultTax <= 0) return;
+      if (!mounted) return;
+      ref
+          .read(addItemFormProvider.notifier)
+          .setTaxRate(ItemTaxRate.labelForPercent(defaultTax));
+    } on Object {
+      // Non-blocking default; user can set GST manually.
+    }
   }
 
   void _ensureDefaultServiceUnit() {
@@ -141,6 +161,20 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     notifier.setInitialType(item.type);
     notifier.updateItemName(item.name);
     _itemNameController.text = item.name;
+
+    if (item.shortName != null) {
+      notifier.updateShortName(item.shortName!);
+      _shortNameController.text = item.shortName!;
+    }
+    if (item.alias != null) {
+      notifier.updateAlias(item.alias!);
+      _aliasController.text = item.alias!;
+    }
+    if (item.searchKeywords.isNotEmpty) {
+      final keywords = item.searchKeywords.join(', ');
+      notifier.updateSearchKeywords(keywords);
+      _searchKeywordsController.text = keywords;
+    }
 
     if (item.hsnCode != null) {
       notifier.updateHsn(item.hsnCode!);
@@ -192,6 +226,27 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           notifier.updateMinStock(reorderLevel);
           _minStockController.text = reorderLevel.toString();
         }
+      }
+
+      if (detailDto.shortName != null && detailDto.shortName!.isNotEmpty) {
+        notifier.updateShortName(detailDto.shortName!);
+        _shortNameController.text = detailDto.shortName!;
+      }
+      if (detailDto.alias != null && detailDto.alias!.isNotEmpty) {
+        notifier.updateAlias(detailDto.alias!);
+        _aliasController.text = detailDto.alias!;
+      }
+      if (detailDto.searchKeywords.isNotEmpty) {
+        final keywords = detailDto.searchKeywords.join(', ');
+        notifier.updateSearchKeywords(keywords);
+        _searchKeywordsController.text = keywords;
+      }
+      final defaultTax = double.tryParse(detailDto.defaultTaxRate ?? '');
+      if (defaultTax != null) {
+        notifier.setTaxRate(ItemTaxRate.labelForPercent(defaultTax));
+      }
+      if (detailDto.alternativeItemIds.isNotEmpty) {
+        notifier.setAlternativeItemIds(detailDto.alternativeItemIds);
       }
 
       // Prefer detail opening summary; do not fall back to current quantity —
@@ -307,6 +362,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       ..removeListener(_onTabChanged)
       ..dispose();
     _itemNameController.dispose();
+    _shortNameController.dispose();
+    _aliasController.dispose();
+    _searchKeywordsController.dispose();
     _hsnController.dispose();
     _itemCodeController.dispose();
     _descriptionController.dispose();
@@ -487,6 +545,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         .where((c) => c.id == form.categoryId)
         .map((c) => c.name)
         .firstOrNull;
+    final brands = ref.watch(inventoryBrandsProvider).value ?? const [];
+    final brandOptions = brands.map((brand) => brand.name).toList();
+    final selectedBrand = brands
+        .where((brand) => brand.id == form.brandId)
+        .map((brand) => brand.name)
+        .firstOrNull;
 
     final media = MediaQuery.sizeOf(context);
     final availableWidth = media.width - 48;
@@ -519,6 +583,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                 categories,
                 categoryOptions,
                 selectedCategory,
+                brands,
+                brandOptions,
+                selectedBrand,
               )
             else
               Flexible(
@@ -529,6 +596,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                     categories,
                     categoryOptions,
                     selectedCategory,
+                    brands,
+                    brandOptions,
+                    selectedBrand,
                   ),
                 ),
               ),
@@ -546,6 +616,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     List<InventoryCategory> categories,
     List<String> categoryOptions,
     String? selectedCategory,
+    List<BrandModel> brands,
+    List<String> brandOptions,
+    String? selectedBrand,
   ) {
     final isService = form.itemType == ItemType.service;
     final bodyPadding = EdgeInsets.fromLTRB(
@@ -564,11 +637,17 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
           GeneralInformationSection(
             itemType: form.itemType,
             itemNameController: _itemNameController,
+            shortNameController: _shortNameController,
+            aliasController: _aliasController,
+            searchKeywordsController: _searchKeywordsController,
             hsnController: _hsnController,
             itemCodeController: _itemCodeController,
             descriptionController: _descriptionController,
             itemNameError: form.itemNameError,
             onItemNameChanged: notifier.updateItemName,
+            onShortNameChanged: notifier.updateShortName,
+            onAliasChanged: notifier.updateAlias,
+            onSearchKeywordsChanged: notifier.updateSearchKeywords,
             onHsnChanged: notifier.updateHsn,
             onItemCodeChanged: notifier.updateItemCode,
             onDescriptionChanged: notifier.updateDescription,
@@ -580,8 +659,17 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
             selectedCategory: selectedCategory,
             categories: categories,
             onCategorySelected: notifier.setCategory,
+            brandOptions: brandOptions,
+            selectedBrand: selectedBrand,
+            brands: brands,
+            onBrandSelected: notifier.setBrand,
             unitLabel: _displayUnitLabel(),
             onSelectUnit: _openUnitPicker,
+            alternativeItemsField: AlternativeItemsField(
+              selectedItemIds: form.alternativeItemIds,
+              excludeItemId: widget.editItem?.id,
+              onChanged: notifier.setAlternativeItemIds,
+            ),
             itemId: widget.editItem?.id,
             seedPrimaryImageUrl: widget.editItem?.primaryImageUrl,
           ),
@@ -722,6 +810,11 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         const SizedBox(height: FormSpacing.section),
         TierPricingSection(
           tierPrices: form.tierPrices,
+          apiTierLabels: ref.watch(pricingTierLabelsProvider),
+          onCustomizeTierNames: () async {
+            await showEditPricingTierLabelsDialog(context);
+            if (mounted) setState(() {});
+          },
           priceControllerFor: _tierPriceController,
           onUpdateTierPrice: notifier.updateTierPriceRow,
           onRemoveTierPrice: (id) {

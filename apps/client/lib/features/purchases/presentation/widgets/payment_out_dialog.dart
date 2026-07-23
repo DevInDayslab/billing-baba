@@ -224,6 +224,7 @@ class _PaymentOutDialogState extends ConsumerState<PaymentOutDialog> {
                                 hasError: form.partyHasError,
                                 child: BillingNamePartySearchField(
                                   value: form.party,
+                                  selectedPartyId: form.partyId,
                                   emptyPlaceholder: 'Select Party',
                                   onSelected: notifier.updateParty,
                                   onPartySelectedWithId: (partyId, name) =>

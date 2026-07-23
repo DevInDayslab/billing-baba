@@ -21,6 +21,11 @@ class InventoryItem {
     this.reorderLevel,
     this.primaryImageUrl,
     this.isRawMaterial = false,
+    this.shortName,
+    this.alias,
+    this.searchKeywords = const [],
+    this.defaultTaxRate,
+    this.alternativeItemIds = const [],
   });
 
   final String id;
@@ -42,6 +47,11 @@ class InventoryItem {
   final double? reorderLevel;
   final String? primaryImageUrl;
   final bool isRawMaterial;
+  final String? shortName;
+  final String? alias;
+  final List<String> searchKeywords;
+  final double? defaultTaxRate;
+  final List<String> alternativeItemIds;
 
   InventoryItem copyWith({
     String? id,
@@ -63,6 +73,11 @@ class InventoryItem {
     double? reorderLevel,
     String? primaryImageUrl,
     bool? isRawMaterial,
+    String? shortName,
+    String? alias,
+    List<String>? searchKeywords,
+    double? defaultTaxRate,
+    List<String>? alternativeItemIds,
   }) {
     return InventoryItem(
       id: id ?? this.id,
@@ -84,6 +99,11 @@ class InventoryItem {
       reorderLevel: reorderLevel ?? this.reorderLevel,
       primaryImageUrl: primaryImageUrl ?? this.primaryImageUrl,
       isRawMaterial: isRawMaterial ?? this.isRawMaterial,
+      shortName: shortName ?? this.shortName,
+      alias: alias ?? this.alias,
+      searchKeywords: searchKeywords ?? this.searchKeywords,
+      defaultTaxRate: defaultTaxRate ?? this.defaultTaxRate,
+      alternativeItemIds: alternativeItemIds ?? this.alternativeItemIds,
     );
   }
 }

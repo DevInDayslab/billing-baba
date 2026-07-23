@@ -244,6 +244,7 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                             hasError: form.partyHasError,
                             child: BillingNamePartySearchField(
                               value: form.party,
+                              selectedPartyId: form.partyId,
                               emptyPlaceholder: 'Select Party',
                               onSelected: notifier.updateParty,
                               onPartySelected: (party) => notifier.updateParty(

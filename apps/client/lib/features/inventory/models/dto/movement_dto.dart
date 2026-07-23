@@ -22,6 +22,8 @@ abstract class MovementDto with _$MovementDto {
     @JsonKey(name: 'reference_number') String? referenceNumber,
     @JsonKey(name: 'party_name') String? partyName,
     @JsonKey(name: 'created_by') String? createdBy,
+    @JsonKey(name: 'created_by_name') String? createdByName,
+    String? notes,
   }) = _MovementDto;
 
   factory MovementDto.fromJson(Map<String, dynamic> json) =>

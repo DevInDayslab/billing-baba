@@ -16,14 +16,23 @@ class InventoryListImageWarmup {
 
   final Ref _ref;
   final Set<String> _galleryWarmInFlight = {};
+  final Set<String> _warmedItemIds = {};
 
   void warmItem(InventoryItem item) {
+    if (_warmedItemIds.contains(item.id)) return;
+    _warmedItemIds.add(item.id);
+
     final primary = normalizeImageUrl(item.primaryImageUrl);
     if (primary != null) {
       _ref.read(itemImagesProvider(item.id).notifier).seed([
         seedItemImageFromUrl(item.id, primary),
       ]);
-      unawaited(_ref.read(imageServiceProvider).prefetchUrl(primary));
+      unawaited(
+        _ref.read(imageServiceProvider).prefetchUrl(
+              primary,
+              cacheKey: buildImageCacheKey(fallbackUrl: primary),
+            ),
+      );
       return;
     }
 
@@ -48,21 +57,39 @@ class InventoryListImageWarmup {
       final image = _resolvePrimaryOrFirst(images);
       if (image == null) return;
 
-      final url = normalizeImageUrl(image.urlForGrid());
-      if (url == null) return;
-
-      final mediaAssetId = image.mediaAssetId?.trim();
-      if (mediaAssetId != null && mediaAssetId.isNotEmpty) {
-        await _ref.read(imageServiceProvider).prefetchResolved(
-              sourceMediaAssetId: mediaAssetId,
-              context: ImageDisplayContext.galleryThumb,
-              fallbackUrl: url,
-            );
-      } else {
-        await _ref.read(imageServiceProvider).prefetchUrl(url);
-      }
+      await _prefetchGalleryImage(image);
     } finally {
       _galleryWarmInFlight.remove(itemId);
+    }
+  }
+
+  Future<void> _prefetchGalleryImage(ItemImageModel image) async {
+    final imageService = _ref.read(imageServiceProvider);
+    final thumbUrl = normalizeImageUrl(image.urlForGrid());
+    final detailUrl = normalizeImageUrl(image.urlForDetail());
+    final mediaAssetId = image.mediaAssetId?.trim();
+
+    if (mediaAssetId != null && mediaAssetId.isNotEmpty) {
+      await imageService.prefetchResolved(
+        sourceMediaAssetId: mediaAssetId,
+        context: ImageDisplayContext.galleryThumb,
+        fallbackUrl: thumbUrl,
+      );
+      if (detailUrl != null) {
+        await imageService.prefetchResolved(
+          sourceMediaAssetId: mediaAssetId,
+          context: ImageDisplayContext.detail,
+          fallbackUrl: detailUrl,
+        );
+      }
+      return;
+    }
+
+    if (thumbUrl != null) {
+      await imageService.prefetchUrl(
+        thumbUrl,
+        cacheKey: buildImageCacheKey(fallbackUrl: thumbUrl),
+      );
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_list_table_row.dart';
 import 'package:billing_baba/features/inventory/presentation/widgets/inventory_styles.dart';
@@ -108,18 +109,16 @@ class ExpenseListPanelRow extends StatelessWidget {
           showColumnSeparators: false,
           trailing: const InventoryListRowMenu(),
           children: [
-            Text(
+            AppEllipsisText(
               primaryText,
-              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textPrimary,
               ),
             ),
-            Text(
+            AppEllipsisText(
               amountText,
               textAlign: TextAlign.right,
-              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textPrimary,

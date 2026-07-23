@@ -174,6 +174,7 @@ class _FormFieldsState extends ConsumerState<_FormFields> {
             label: 'Party *',
             child: BillingNamePartySearchField(
               value: form.party,
+              selectedPartyId: form.partyId,
               hasError: form.partyHasError,
               errorMessage: 'Please select a party',
               onSelected: notifier.updateParty,
