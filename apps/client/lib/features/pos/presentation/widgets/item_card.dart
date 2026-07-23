@@ -35,7 +35,7 @@ class ItemCard extends ConsumerWidget {
               id: alternativeItem.id,
               name: alternativeItem.name,
               sku: alternativeItem.barcode ?? '',
-              category: alternativeItem.categoryName ?? item.category,
+              categoryName: alternativeItem.categoryName ?? item.categoryName,
               price: alternativeItem.salePrice,
               stock: alternativeItem.stockQuantity.toInt(),
               unit: item.unit,
