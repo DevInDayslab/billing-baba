@@ -4,10 +4,13 @@ import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/providers/inventory_units_provider.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/providers/parties_providers.dart';
-import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/purchases/application/purchase_document_item_factory.dart';
 import 'package:billing_baba/features/purchases/application/purchase_document_party_factory.dart';
 import 'package:billing_baba/features/purchases/application/purchase_document_parse_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
@@ -93,7 +96,10 @@ class AddPurchaseForm extends _$AddPurchaseForm {
         itemNameToId: _itemNameToId(),
         nextLineId: _nextPurchaseLineItemId,
       );
-      final items = await _resolveItemNames(mapped.items);
+      final linkedItems = await _ensureInventoryItemsForParsedLines(
+        mapped.items,
+      );
+      final items = await _resolveItemNames(linkedItems);
       state = mapped.copyWith(
         items: items,
         isLoading: false,
@@ -214,7 +220,69 @@ class AddPurchaseForm extends _$AddPurchaseForm {
 
   Map<String, String> _itemNameToId() {
     final items = ref.read(inventoryItemsProvider).value ?? [];
-    return {for (final item in items) item.name.trim(): item.id};
+    return PurchaseDocumentItemFactory.buildNameToIdMap(items);
+  }
+
+  /// Links OCR lines to inventory, creating missing items once per unique name.
+  Future<List<PurchaseLineItem>> _ensureInventoryItemsForParsedLines(
+    List<PurchaseLineItem> items,
+  ) async {
+    if (items.isEmpty) return items;
+
+    final inventory = ref.read(inventoryItemsProvider).value ?? [];
+    final nameToId = PurchaseDocumentItemFactory.buildNameToIdMap(inventory);
+    var lines = PurchaseDocumentItemFactory.assignItemIds(items, nameToId);
+
+    final templates = PurchaseDocumentItemFactory.linesNeedingCreation(
+      lines,
+      nameToId,
+    );
+    if (templates.isEmpty) return lines;
+
+    debugPrint(
+      '[PurchaseParse] creating ${templates.length} inventory item(s) from parsed bill',
+    );
+
+    for (final template in templates) {
+      final key = PurchaseDocumentItemFactory.normalizeName(template.itemName);
+      if (key.isEmpty || nameToId.containsKey(key)) continue;
+
+      final created = await _createInventoryItemFromParsedLine(template);
+      if (created != null) {
+        nameToId[key] = created.id;
+        debugPrint(
+          '[PurchaseParse] inventory item created id=${created.id} name=${created.name}',
+        );
+      }
+    }
+
+    lines = PurchaseDocumentItemFactory.assignItemIds(lines, nameToId);
+    return lines;
+  }
+
+  Future<InventoryItem?> _createInventoryItemFromParsedLine(
+    PurchaseLineItem line,
+  ) async {
+    try {
+      final units = await ref.read(inventoryUnitsProvider.future);
+      final form = PurchaseDocumentItemFactory.toAddItemFormState(
+        line: line,
+        units: units,
+      );
+      if (form == null) {
+        debugPrint(
+          '[PurchaseParse] skipped item create for "${line.itemName}": missing units or name',
+        );
+        return null;
+      }
+
+      return ref.read(inventoryItemsProvider.notifier).addItemFromForm(form);
+    } on Object catch (error, stackTrace) {
+      debugPrint(
+        '[PurchaseParse] inventory item creation failed for "${line.itemName}", continuing form fill: $error\n$stackTrace',
+      );
+      return null;
+    }
   }
 
   void updateParty(String value, {String? partyId}) {
@@ -306,6 +374,19 @@ class AddPurchaseForm extends _$AddPurchaseForm {
     if (index < 0 || index >= state.items.length) return;
     final items = [...state.items];
     items[index] = item;
+    state = state.copyWith(items: items, isDirty: true);
+  }
+
+  void applyTaxPercentToAllLines(double taxPercent) {
+    if (state.items.isEmpty) return;
+
+    final items = [
+      for (final item in state.items)
+        item.copyWith(
+          taxPercent: taxPercent,
+          priceIsTaxInclusive: taxPercent > 0 ? true : item.priceIsTaxInclusive,
+        ),
+    ];
     state = state.copyWith(items: items, isDirty: true);
   }
 

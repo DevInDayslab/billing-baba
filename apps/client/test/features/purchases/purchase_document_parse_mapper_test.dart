@@ -1,9 +1,77 @@
 import 'package:billing_baba/features/purchases/application/purchase_document_parse_mapper.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group('PurchaseDocumentParseMapper header fields', () {
+    test('leaves OCR header fields empty when not detected', () {
+      final base = AddPurchaseFormState(
+        eWayBillNo: 'EWB-OLD',
+        billDate: DateTime(2024, 1, 15),
+        billTime: const TimeOfDay(hour: 10, minute: 30),
+        dueDate: DateTime(2024, 2, 1),
+        stateOfSupply: 'Madhya Pradesh',
+        items: [PurchaseLineItem.empty(id: 'line_1')],
+      );
+
+      final result = PurchaseDocumentParseMapper.apply(
+        base: base,
+        parsed: const PurchaseDocumentParseDto(
+          vendorName: 'Acme Supplies',
+        ),
+        parties: const [],
+        itemNameToId: const {},
+        nextLineId: () => 'line_2',
+      );
+
+      expect(result.eWayBillNo, isEmpty);
+      expect(result.billDate, isNull);
+      expect(result.billTime, isNull);
+      expect(result.dueDate, isNull);
+      expect(result.stateOfSupply, isEmpty);
+      expect(result.party, 'Acme Supplies');
+    });
+
+    test('fills e-way bill only when OCR detects e_way_bill_number', () {
+      final withEWay = PurchaseDocumentParseMapper.apply(
+        base: AddPurchaseFormState(
+          items: [PurchaseLineItem.empty(id: 'line_1')],
+        ),
+        parsed: const PurchaseDocumentParseDto(
+          eWayBillNumber: 'EWB1234567890',
+          invoiceNumber: 'INV-1001',
+          supplierInvoiceNumber: 'INV-1001',
+        ),
+        parties: const [],
+        itemNameToId: const {},
+        nextLineId: () => 'line_2',
+      );
+
+      expect(withEWay.eWayBillNo, 'EWB1234567890');
+      expect(withEWay.billNumber, 'INV-1001');
+    });
+
+    test('leaves e-way bill blank when only invoice number is parsed', () {
+      final result = PurchaseDocumentParseMapper.apply(
+        base: AddPurchaseFormState(
+          items: [PurchaseLineItem.empty(id: 'line_1')],
+        ),
+        parsed: const PurchaseDocumentParseDto(
+          invoiceNumber: 'INV-1001',
+          supplierInvoiceNumber: 'INV-1001',
+        ),
+        parties: const [],
+        itemNameToId: const {},
+        nextLineId: () => 'line_2',
+      );
+
+      expect(result.eWayBillNo, isEmpty);
+      expect(result.billNumber, 'INV-1001');
+    });
+  });
+
   group('PurchaseDocumentParseMapper tax', () {
     test(
       'switches exclusive billed line to With Tax and matches tax amount',

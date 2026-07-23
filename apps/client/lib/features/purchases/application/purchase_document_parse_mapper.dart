@@ -24,7 +24,14 @@ class PurchaseDocumentParseMapper {
     required Map<String, String> itemNameToId,
     required String Function() nextLineId,
   }) {
-    var next = base;
+    // OCR must not leave form defaults when a field was not detected on the bill.
+    var next = base.copyWith(
+      eWayBillNo: '',
+      stateOfSupply: '',
+      clearBillDate: true,
+      clearBillTime: true,
+      clearDueDate: true,
+    );
 
     final partyMatch = resolveParty(parsed, parties);
     if (partyMatch != null) {
@@ -37,8 +44,8 @@ class PurchaseDocumentParseMapper {
       next = next.copyWith(party: parsed.vendorName);
     }
 
-    if (parsed.supplierInvoiceNumber != null) {
-      next = next.copyWith(eWayBillNo: parsed.supplierInvoiceNumber!);
+    if (parsed.eWayBillNumber != null) {
+      next = next.copyWith(eWayBillNo: parsed.eWayBillNumber!);
     }
 
     if (parsed.invoiceNumber != null &&
@@ -145,7 +152,7 @@ class PurchaseDocumentParseMapper {
     if (price == null || price < 0) return null;
 
     String? itemId = line.itemId;
-    itemId ??= itemNameToId[itemName];
+    itemId ??= itemNameToId[itemName.trim().toLowerCase()];
 
     final tax = _resolveWithTaxMapping(line, qty, price);
 
