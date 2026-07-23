@@ -22,6 +22,7 @@ export type PartyRecord = {
   credit_limit: string;
   opening_balance: string;
   balance: string;
+  hidden_ledger_balance?: string;
   is_active: boolean;
   notes: string | null;
   profile_image_url: string | null;
@@ -69,6 +70,7 @@ export type PartyUpdateValues = Partial<
   Omit<PartyInsertValues, 'businessId' | 'createdBy'>
 > & {
   updatedBy?: string | null;
+  hiddenLedgerBalance?: string;
 };
 
 export type ListPartiesParams = {

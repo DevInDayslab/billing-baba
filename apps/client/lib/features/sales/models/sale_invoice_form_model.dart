@@ -29,6 +29,7 @@ class SaleLineItem {
     this.taxPercent = 0,
     this.isConfirmed = false,
     this.priceManuallyOverridden = false,
+    this.catalogUnitPrice = 0,
   });
 
   factory SaleLineItem.empty({required String id}) => SaleLineItem(id: id);
@@ -53,8 +54,20 @@ class SaleLineItem {
   final double taxPercent;
   final bool isConfirmed;
   final bool priceManuallyOverridden;
+  final double catalogUnitPrice;
 
   double get _discountedUnitPrice => pricePerUnit * (1 - discountPercent / 100);
+
+  /// Additional line revenue from a manual price increase above catalog price.
+  double get markupAmount {
+    if (!priceManuallyOverridden || catalogUnitPrice <= 0) return 0;
+    if (pricePerUnit <= catalogUnitPrice) return 0;
+    final baseline = copyWith(
+      pricePerUnit: catalogUnitPrice,
+      priceManuallyOverridden: false,
+    );
+    return (amount - baseline.amount).clamp(0, double.infinity);
+  }
 
   double get lineSubtotal {
     final base = qty * _discountedUnitPrice;
@@ -94,6 +107,7 @@ class SaleLineItem {
     double? taxPercent,
     bool? isConfirmed,
     bool? priceManuallyOverridden,
+    double? catalogUnitPrice,
     bool clearExpDate = false,
     bool clearMfgDate = false,
   }) {
@@ -119,6 +133,7 @@ class SaleLineItem {
       isConfirmed: isConfirmed ?? this.isConfirmed,
       priceManuallyOverridden:
           priceManuallyOverridden ?? this.priceManuallyOverridden,
+      catalogUnitPrice: catalogUnitPrice ?? this.catalogUnitPrice,
     );
   }
 }
@@ -185,6 +200,7 @@ class AddSaleFormState {
     this.attachedSaleOrderIds = const [],
     this.partyPriceTier,
     this.taxOption = 'NONE',
+    this.hiddenLedgerBalance = 0,
   });
 
   final String? documentId;
@@ -230,6 +246,7 @@ class AddSaleFormState {
   final List<String> attachedSaleOrderIds;
   final String? partyPriceTier;
   final String taxOption;
+  final double hiddenLedgerBalance;
 
   String get paymentType => payments.isNotEmpty ? payments.first.type : 'Cash';
 
@@ -284,6 +301,28 @@ class AddSaleFormState {
     }
     final received = receivedEnabled ? receivedAmount : 0;
     return (invoiceTotal - received).clamp(0, double.infinity);
+  }
+
+  bool get hasShortPayment {
+    if (invoiceTotal <= 0) return false;
+    final paid = displayReceivedAmount;
+    if (saleType == SaleType.cash) {
+      return paid > 0 && paid < invoiceTotal;
+    }
+    return receivedEnabled && paid > 0 && paid < invoiceTotal;
+  }
+
+  double get markupAmount =>
+      items.fold<double>(0, (sum, item) => sum + item.markupAmount);
+
+  bool get hasRecoverableMarkup =>
+      hiddenLedgerBalance > 0 && markupAmount > 0;
+
+  double get maxRecoverableAmount {
+    if (!hasRecoverableMarkup) return 0;
+    return hiddenLedgerBalance < markupAmount
+        ? hiddenLedgerBalance
+        : markupAmount;
   }
 
   bool get showLoyaltySection =>
@@ -368,6 +407,8 @@ class AddSaleFormState {
     bool clearPartyPriceTier = false,
     bool clearPartyId = false,
     String? taxOption,
+    double? hiddenLedgerBalance,
+    bool clearHiddenLedgerBalance = false,
   }) {
     return AddSaleFormState(
       documentId: clearDocumentId ? null : (documentId ?? this.documentId),
@@ -418,6 +459,9 @@ class AddSaleFormState {
           ? null
           : (partyPriceTier ?? this.partyPriceTier),
       taxOption: taxOption ?? this.taxOption,
+      hiddenLedgerBalance: clearHiddenLedgerBalance
+          ? 0
+          : (hiddenLedgerBalance ?? this.hiddenLedgerBalance),
     );
   }
 }

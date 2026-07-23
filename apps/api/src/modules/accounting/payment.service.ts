@@ -1,5 +1,6 @@
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import { HiddenLedgerService } from '../hidden-ledger/hidden-ledger.service';
 import { normalizeMoney, parseMoney } from '../inventory/inventory.utils';
 import { EXPENSE_SOURCE_TYPES } from '../purchases/expense-category.constants';
 import {
@@ -103,7 +104,6 @@ export class PaymentService {
     }
 
     const allocations = input.allocations ?? [];
-    const paymentAmount = parseMoney(input.amount);
 
     for (const allocation of allocations) {
       const hasSales = Boolean(allocation.sales_document_id);
@@ -119,6 +119,10 @@ export class PaymentService {
 
     return this.db.transaction(async (tx) => {
       const repo = new PaymentRepository(tx as unknown as typeof this.db);
+      const isHiddenLedgerRoute = input.short_payment_handling === 'unrecovered';
+      const shortfallAmount = isHiddenLedgerRoute
+        ? parseMoney(input.shortfall_amount ?? '0')
+        : 0;
 
       let pendingPaymentTotal = 0;
       for (const allocation of allocations) {
@@ -127,9 +131,23 @@ export class PaymentService {
           businessId,
           { party_id: input.party_id, amount: input.amount },
           allocation,
-          { pendingPaymentTotal },
+          {
+            pendingPaymentTotal,
+            shortPaymentHandling: input.short_payment_handling ?? null,
+            shortfallAmount: input.shortfall_amount ?? null,
+          },
         );
         pendingPaymentTotal += parseMoney(allocation.allocated_amount);
+      }
+
+      if (isHiddenLedgerRoute) {
+        await this.assertHiddenLedgerShortfall(
+          repo,
+          businessId,
+          input,
+          allocations,
+          shortfallAmount,
+        );
       }
 
       const payment = await repo.create({
@@ -181,17 +199,44 @@ export class PaymentService {
         description: `Payment ${input.direction}`,
       });
 
-      if (
-        input.short_payment_handling === 'unrecovered' &&
-        pendingPaymentTotal < paymentAmount
-      ) {
-        const shortfall = paymentAmount - pendingPaymentTotal;
-        const current = parseMoney(party.unrecoveredAmount);
-        await repo.updatePartyUnrecovered(
+      if (isHiddenLedgerRoute && shortfallAmount > 0) {
+        const salesDocumentId = allocations.find(
+          (allocation) => allocation.sales_document_id,
+        )?.sales_document_id;
+
+        if (!salesDocumentId) {
+          throw new AppError(
+            'VALIDATION_ERROR',
+            'Hidden ledger short payments require a sales document allocation',
+            422,
+          );
+        }
+
+        const hiddenLedgerService = new HiddenLedgerService();
+        const entry = await hiddenLedgerService.recordShortPaymentEntry({
           businessId,
-          input.party_id,
-          normalizeMoney(current + shortfall),
-        );
+          partyId: input.party_id,
+          salesDocumentId,
+          shortfallAmount: normalizeMoney(shortfallAmount),
+          userId: userId ?? null,
+          db: tx as unknown as typeof this.db,
+        });
+
+        await repo.createLedgerEntry({
+          businessId,
+          partyId: input.party_id,
+          entryType: 'payment',
+          debit: '0',
+          credit: normalizeMoney(shortfallAmount),
+          balanceAfter: normalizeMoney(shortfallAmount),
+          referenceId: entry.id,
+          referenceType: 'hidden_ledger_entries',
+          entryDate: (input.payment_date ?? new Date().toISOString()).slice(
+            0,
+            10,
+          ),
+          description: 'Hidden ledger shortfall settlement',
+        });
       }
 
       const full = await repo.findById(businessId, payment.id, true);
@@ -357,15 +402,76 @@ export class PaymentService {
     }
   }
 
+  private async assertHiddenLedgerShortfall(
+    repo: PaymentRepository,
+    businessId: string,
+    input: CreatePaymentBody,
+    allocations: CreateAllocationBody[],
+    shortfallAmount: number,
+  ): Promise<void> {
+    const salesAllocation = allocations.find(
+      (allocation) => allocation.sales_document_id,
+    );
+    if (!salesAllocation?.sales_document_id) {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'Hidden ledger short payments require a sales document allocation',
+        422,
+      );
+    }
+
+    const document = await repo.findSalesDocumentForAllocation(
+      businessId,
+      salesAllocation.sales_document_id,
+    );
+    if (!document) {
+      throw new AppError('NOT_FOUND', 'Sales document not found', 404);
+    }
+
+    const alreadyAllocated = await repo.sumAllocatedToSalesDocument(
+      businessId,
+      salesAllocation.sales_document_id,
+    );
+    const documentTotal = parseMoney(document.totalAmount);
+    const paymentAmount = parseMoney(input.amount);
+    const allocatedAmount = parseMoney(salesAllocation.allocated_amount);
+    const expectedShortfall = documentTotal - alreadyAllocated - paymentAmount;
+
+    if (Math.abs(expectedShortfall - shortfallAmount) > 0.0001) {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'shortfall_amount does not match invoice shortfall',
+        422,
+      );
+    }
+
+    if (Math.abs(allocatedAmount - (paymentAmount + shortfallAmount)) > 0.0001) {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'Allocated amount must equal payment amount plus shortfall for hidden ledger routing',
+        422,
+      );
+    }
+  }
+
   private async assertAllocationTarget(
     repo: PaymentRepository,
     businessId: string,
     payment: { party_id: string; amount: string; id?: string },
     allocation: CreateAllocationBody,
-    options?: { pendingPaymentTotal?: number },
+    options?: {
+      pendingPaymentTotal?: number;
+      shortPaymentHandling?: string | null;
+      shortfallAmount?: string | null;
+    },
   ): Promise<void> {
     const allocationAmount = parseMoney(allocation.allocated_amount);
     const paymentAmount = parseMoney(payment.amount);
+    const hiddenShortfall =
+      options?.shortPaymentHandling === 'unrecovered'
+        ? parseMoney(options.shortfallAmount ?? '0')
+        : 0;
+    const maxAllocatable = paymentAmount + hiddenShortfall;
 
     let existingPaymentAllocated = options?.pendingPaymentTotal ?? 0;
     if (payment.id) {
@@ -375,7 +481,7 @@ export class PaymentService {
       );
     }
 
-    if (existingPaymentAllocated + allocationAmount > paymentAmount) {
+    if (existingPaymentAllocated + allocationAmount > maxAllocatable) {
       throw new AppError(
         'VALIDATION_ERROR',
         'Allocated amount exceeds payment amount',

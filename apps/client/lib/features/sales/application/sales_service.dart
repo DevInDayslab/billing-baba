@@ -432,6 +432,8 @@ class SalesService {
     String? godownId,
     bool isGstFormal = true,
     double loyaltyPointsRedeemed = 0,
+    String? shortPaymentHandling,
+    double? shortfallAmount,
   }) async {
     if (partyId == null || partyId.isEmpty) {
       throw const SalesException('Party is required');
@@ -451,13 +453,21 @@ class SalesService {
 
       final payableTotal = form.invoiceTotal;
       final receivedAmount = form.saleType == SaleType.cash
-          ? payableTotal
+          ? form.paymentAmount
           : (form.receivedEnabled ? form.receivedAmount : 0);
 
       if (receivedAmount > 0) {
         final paymentMode = form.saleType == SaleType.cash
             ? SalesPaymentModes.toApi(form.paymentType)
             : SalesPaymentModes.toApi(form.paymentType);
+        final routeToHiddenLedger =
+            shortPaymentHandling == 'unrecovered' &&
+            shortfallAmount != null &&
+            shortfallAmount > 0;
+        final allocationAmount = routeToHiddenLedger
+            ? payableTotal
+            : receivedAmount;
+
         await _repository.createPayment(
           CreatePaymentRequest(
             partyId: partyId,
@@ -471,10 +481,14 @@ class SalesService {
                 time: form.invoiceTime,
               ),
             ),
+            shortPaymentHandling: shortPaymentHandling,
+            shortfallAmount: shortfallAmount != null && shortfallAmount > 0
+                ? shortfallAmount.toStringAsFixed(4)
+                : null,
             allocations: [
               PaymentAllocationRequest(
                 salesDocumentId: finalized.id,
-                allocatedAmount: receivedAmount.toStringAsFixed(4),
+                allocatedAmount: allocationAmount.toStringAsFixed(4),
               ),
             ],
           ),
@@ -599,13 +613,15 @@ class SalesService {
   Future<double> fetchPartyBalanceDue(String partyId) async {
     final page = await fetchInvoicesPage(
       SalesDocumentListQuery(
-        documentType: 'tax_invoice',
         status: 'finalized',
         partyId: partyId,
         limit: 100,
       ),
     );
-    return page.items.fold<double>(0, (sum, invoice) => sum + invoice.balance);
+    return page.items.fold<double>(
+      0,
+      (sum, invoice) => sum + (invoice.balance > 0 ? invoice.balance : 0),
+    );
   }
 
   String? _apiDocumentDate(SalesDocumentDraftInput input) {

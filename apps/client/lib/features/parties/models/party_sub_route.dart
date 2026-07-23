@@ -16,6 +16,7 @@ abstract final class PartySubRoutes {
   static const items = [
     PartySubRoute(route: AppRoutes.partyDetails, label: 'Parties'),
     PartySubRoute(route: AppRoutes.partyGroups, label: 'Groups'),
+    PartySubRoute(route: AppRoutes.partyHiddenLedger, label: 'Hidden Ledger'),
   ];
 
   static String labelForRoute(String route) {

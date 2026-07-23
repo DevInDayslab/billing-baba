@@ -2,6 +2,8 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   date,
+  integer,
+  numeric,
   pgTable,
   text,
   uniqueIndex,
@@ -17,6 +19,7 @@ import {
 import {
   contactActivityTypeEnum,
   dealStageEnum,
+  hiddenLedgerEntryStatusEnum,
   leadActivityTypeEnum,
   leadSourceEnum,
   leadStatusEnum,
@@ -27,6 +30,7 @@ import {
   visitPurposeEnum,
 } from '../enums';
 import { users } from '../identity/tables';
+import { salesDocuments } from '../sales/tables';
 import { areas } from '../settings/tables';
 
 const businessId = () =>
@@ -48,7 +52,12 @@ export const parties = pgTable(
     areaId: uuid('area_id').references(() => areas.id),
     creditLimit: money('credit_limit').notNull().default('0'),
     openingBalance: money('opening_balance').notNull().default('0'),
-    unrecoveredAmount: money('unrecovered_amount').notNull().default('0'),
+    hiddenLedgerBalance: numeric('hidden_ledger_balance', {
+      precision: 12,
+      scale: 2,
+    })
+      .notNull()
+      .default('0'),
     profileImageUrl: text('profile_image_url'),
     profileMediaAssetId: uuid('profile_media_asset_id'),
     connectedSince: date('connected_since'),
@@ -60,7 +69,7 @@ export const parties = pgTable(
       .on(table.businessId, table.mobile)
       .where(sql`${table.isDeleted} = false AND ${table.mobile} IS NOT NULL`),
     sql`CHECK (${table.creditLimit} >= 0)`,
-    sql`CHECK (${table.unrecoveredAmount} >= 0)`,
+    sql`CHECK (${table.hiddenLedgerBalance} >= 0)`,
   ],
 );
 
@@ -224,6 +233,52 @@ export const contacts = pgTable('contacts', {
   title: text('title'),
   description: text('description'),
 });
+
+/** Seller-only shortfall ledger — never exposed on customer-facing documents */
+export const hiddenLedgerEntries = pgTable(
+  'hidden_ledger_entries',
+  {
+    ...syncedBusinessColumns,
+    businessId: businessId(),
+    partyId: uuid('party_id')
+      .notNull()
+      .references(() => parties.id),
+    saleId: uuid('sale_id').references(() => salesDocuments.id),
+    invoiceId: uuid('invoice_id').references(() => salesDocuments.id),
+    amount: money('amount').notNull(),
+    recoveredAmount: money('recovered_amount').notNull().default('0'),
+    remainingAmount: money('remaining_amount').notNull(),
+    status: hiddenLedgerEntryStatusEnum('status').notNull().default('pending'),
+  },
+  (table) => [
+    sql`CHECK (${table.amount} > 0)`,
+    sql`CHECK (${table.recoveredAmount} >= 0)`,
+    sql`CHECK (${table.remainingAmount} >= 0)`,
+    sql`CHECK (${table.recoveredAmount} <= ${table.amount})`,
+  ],
+);
+
+/** Immutable audit trail for hidden ledger recoveries (Phase 2+) */
+export const hiddenLedgerRecoveryRecords = pgTable(
+  'hidden_ledger_recovery_records',
+  {
+    id: uuidPrimaryKey(),
+    businessId: businessId(),
+    ledgerEntryId: uuid('ledger_entry_id')
+      .notNull()
+      .references(() => hiddenLedgerEntries.id),
+    saleId: uuid('sale_id').references(() => salesDocuments.id),
+    recoveredAmount: money('recovered_amount').notNull(),
+    recoveredBy: uuid('recovered_by').references(() => users.id),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    updatedAt: timestamptz('updated_at').notNull().defaultNow(),
+    deletedAt: timestamptz('deleted_at'),
+    isDeleted: boolean('is_deleted').notNull().default(false),
+    syncVersion: integer('sync_version').notNull().default(1),
+    deviceId: uuid('device_id'),
+  },
+  (table) => [sql`CHECK (${table.recoveredAmount} > 0)`],
+);
 
 export const contactActivities = pgTable('contact_activities', {
   ...syncedBusinessColumns,

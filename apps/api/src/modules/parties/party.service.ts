@@ -1,8 +1,13 @@
 import type { AppConfig } from '../../config/app_config';
 import { getDb } from '../../db/client';
 import { AppError } from '../../shared/errors/app-error';
+import {
+  applyHiddenLedgerVisibility,
+  applyHiddenLedgerVisibilityList,
+} from '../../shared/hidden-ledger/party-hidden-ledger';
 import { resolvePartyPricingTier } from '../../shared/pricing/pricing-tier';
 import { PartyProfileImageService } from './party-profile-image.service';
+import type { UserRole } from '../auth/auth.types';
 import { PartyRepository } from './party.repository';
 import type {
   CreatePartyBody,
@@ -46,6 +51,7 @@ export class PartyService {
     businessId: string,
     accountId: string,
     query: ListPartiesQuery,
+    role?: UserRole,
   ): Promise<{
     data: PartyRecord[];
     meta: { page: number; limit: number; total: number };
@@ -63,7 +69,7 @@ export class PartyService {
       order: query.order,
     });
 
-    const data = this.profileImages
+    const enriched = this.profileImages
       ? await this.profileImages.enrichParties(
           businessId,
           accountId,
@@ -72,7 +78,7 @@ export class PartyService {
       : result.rows;
 
     return {
-      data,
+      data: applyHiddenLedgerVisibilityList(enriched, role),
       meta: {
         page: query.page,
         limit: query.limit,
@@ -85,6 +91,7 @@ export class PartyService {
     businessId: string,
     accountId: string,
     partyId: string,
+    role?: UserRole,
   ): Promise<PartyRecord> {
     await this.assertBusinessAccess(businessId, accountId);
 
@@ -93,7 +100,8 @@ export class PartyService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    return this.enrich(businessId, accountId, party);
+    const enriched = await this.enrich(businessId, accountId, party);
+    return applyHiddenLedgerVisibility(enriched, role);
   }
 
   async createParty(
@@ -101,6 +109,7 @@ export class PartyService {
     accountId: string,
     userId: string | undefined,
     input: CreatePartyBody,
+    role?: UserRole,
   ): Promise<PartyRecord> {
     await this.assertBusinessAccess(businessId, accountId);
 
@@ -145,7 +154,8 @@ export class PartyService {
       updatedBy: userId ?? null,
     });
 
-    return this.enrich(businessId, accountId, created);
+    const enriched = await this.enrich(businessId, accountId, created);
+    return applyHiddenLedgerVisibility(enriched, role);
   }
 
   async updateParty(
@@ -154,6 +164,7 @@ export class PartyService {
     userId: string | undefined,
     partyId: string,
     input: UpdatePartyBody,
+    role?: UserRole,
   ): Promise<PartyRecord> {
     await this.assertBusinessAccess(businessId, accountId);
 
@@ -229,7 +240,8 @@ export class PartyService {
       throw new AppError('NOT_FOUND', 'Party not found', 404);
     }
 
-    return this.enrich(businessId, accountId, updated);
+    const enriched = await this.enrich(businessId, accountId, updated);
+    return applyHiddenLedgerVisibility(enriched, role);
   }
 
   async getPartyDeleteStatus(

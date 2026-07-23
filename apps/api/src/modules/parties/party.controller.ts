@@ -57,7 +57,12 @@ export function createPartyController(config: AppConfig) {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const query = listPartiesQuerySchema.parse(request.query);
-        const result = await service.listParties(businessId, accountId, query);
+        const result = await service.listParties(
+          businessId,
+          accountId,
+          query,
+          request.role,
+        );
 
         return sendPaginated(reply, result.data, result.meta);
       } catch (error) {
@@ -82,6 +87,7 @@ export function createPartyController(config: AppConfig) {
           accountId,
           userId,
           body,
+          request.role,
         );
         return sendData(reply, data, 201);
       } catch (error) {
@@ -101,7 +107,12 @@ export function createPartyController(config: AppConfig) {
       try {
         const { accountId, businessId } = requireAuthContext(request);
         const { id } = partyIdParamSchema.parse(request.params);
-        const data = await service.getParty(businessId, accountId, id);
+        const data = await service.getParty(
+          businessId,
+          accountId,
+          id,
+          request.role,
+        );
         return sendData(reply, data);
       } catch (error) {
         if (error instanceof ZodError) {
@@ -176,6 +187,7 @@ export function createPartyController(config: AppConfig) {
           userId,
           id,
           body,
+          request.role,
         );
         return sendData(reply, data);
       } catch (error) {

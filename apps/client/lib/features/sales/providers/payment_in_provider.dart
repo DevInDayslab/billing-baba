@@ -5,6 +5,8 @@ import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/utils/debouncer.dart';
 import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
+import 'package:billing_baba/features/hidden_ledger/application/hidden_ledger_service.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/payment_in_model.dart';
@@ -525,6 +527,9 @@ class PaymentInFormState {
   double get remainingBalance =>
       (balanceDue - receivedAmount - discount).clamp(0, double.infinity);
 
+  bool get hasShortPayment =>
+      receivedAmount + discount < balanceDue && balanceDue > 0;
+
   bool get isValid =>
       party.trim().isNotEmpty &&
       partyId != null &&
@@ -637,15 +642,31 @@ class PaymentInForm extends _$PaymentInForm {
       balanceDue: clearLink ? 0 : state.balanceDue,
     );
 
-    final linkedId = state.partyId;
-    if (linkedId != null && linkedId.isNotEmpty) {
-      try {
-        final service = await ref.read(salesServiceProvider.future);
-        final balanceDue = await service.fetchPartyBalanceDue(linkedId);
-        state = state.copyWith(balanceDue: balanceDue);
-      } catch (_) {
-        // Balance lookup is best-effort for the dialog.
+    if (partyId != null && partyId.isNotEmpty) {
+      await refreshBalanceDue();
+    } else {
+      state = state.copyWith(balanceDue: 0);
+    }
+  }
+
+  /// Loads the party's official receivable balance for short-payment detection.
+  Future<void> refreshBalanceDue() async {
+    final partyId = state.partyId;
+    if (partyId == null || partyId.isEmpty) return;
+
+    try {
+      final partyService = await ref.read(partyServiceProvider.future);
+      final party = await partyService.getParty(partyId);
+      if (party.hasReceivable) {
+        state = state.copyWith(balanceDue: party.balance);
+        return;
       }
+
+      final salesService = await ref.read(salesServiceProvider.future);
+      final invoiceBalance = await salesService.fetchPartyBalanceDue(partyId);
+      state = state.copyWith(balanceDue: invoiceBalance);
+    } catch (_) {
+      // Balance lookup is best-effort for the dialog.
     }
   }
 
@@ -765,7 +786,10 @@ class PaymentInForm extends _$PaymentInForm {
     );
   }
 
-  Future<({String? error, String? paymentId})> savePayment() async {
+  Future<({String? error, String? paymentId})> savePayment({
+    String? shortPaymentHandling,
+    double? shortfallAmount,
+  }) async {
     if (state.isSaving) {
       return (error: null, paymentId: null);
     }
@@ -806,12 +830,20 @@ class PaymentInForm extends _$PaymentInForm {
           balanceAfterPayment: payment.discount > 0
               ? balanceAfterPayment.toStringAsFixed(4)
               : null,
+          shortPaymentHandling: shortPaymentHandling,
+          shortfallAmount: shortfallAmount != null && shortfallAmount > 0
+              ? shortfallAmount.toStringAsFixed(4)
+              : null,
           allocations: allocations,
         ),
       );
 
       ref.invalidate(paymentInRecordsProvider);
       ref.invalidate(saleInvoicesProvider);
+      if (shortPaymentHandling == 'unrecovered' && state.partyId != null) {
+        ref.invalidate(partyHiddenLedgerSummaryProvider(state.partyId!));
+        ref.invalidate(partyHiddenLedgerEntriesProvider(state.partyId!));
+      }
       refreshAfterPaymentIn(
         ref,
         context: (partyId: payment.partyId, itemIds: const []),

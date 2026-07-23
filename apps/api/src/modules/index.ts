@@ -12,6 +12,7 @@ import {
   publicGeneratedDocumentsModule,
 } from './generated-documents';
 import { createHealthModule } from './health';
+import { hiddenLedgerModule } from './hidden-ledger';
 import { inventoryModule } from './inventory';
 import {
   createPartyReminderRoutes,
@@ -51,6 +52,7 @@ export async function registerModules(
       await api.register(createAccountingModule(config), {
         prefix: '/accounting',
       });
+      await api.register(hiddenLedgerModule, { prefix: '/hidden-ledger' });
       await api.register(dashboardModule, { prefix: '/dashboard' });
       await api.register(reportsModule, { prefix: '/reports' });
       await api.register(settingsModule, { prefix: '/settings' });

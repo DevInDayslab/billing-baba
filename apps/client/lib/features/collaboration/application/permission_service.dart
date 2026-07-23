@@ -16,6 +16,10 @@ class PermissionService {
 
   bool get hasFullAccess => _session?.hasFullAccess ?? false;
 
+  /// Owner and secondary admin (manager equivalent) may view hidden ledger data.
+  bool get canViewHiddenLedger =>
+      hasFullAccess || _session?.role == Role.secondaryAdmin;
+
   bool canView(PermissionModule module) =>
       _can(module, PermissionAction.view);
 

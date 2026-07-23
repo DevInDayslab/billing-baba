@@ -126,6 +126,7 @@ class CreatePaymentRequest {
     this.discountAmount,
     this.balanceAfterPayment,
     this.shortPaymentHandling,
+    this.shortfallAmount,
     this.allocations = const [],
     this.source = 'manual',
   });
@@ -140,6 +141,7 @@ class CreatePaymentRequest {
   final String? discountAmount;
   final String? balanceAfterPayment;
   final String? shortPaymentHandling;
+  final String? shortfallAmount;
   final List<PaymentAllocationRequest> allocations;
   final String source;
 
@@ -156,6 +158,7 @@ class CreatePaymentRequest {
     if (balanceAfterPayment != null) 'balance_after_payment': balanceAfterPayment,
     if (shortPaymentHandling != null)
       'short_payment_handling': shortPaymentHandling,
+    if (shortfallAmount != null) 'shortfall_amount': shortfallAmount,
     'source': source,
     'allocations': allocations.map((a) => a.toJson()).toList(),
   };

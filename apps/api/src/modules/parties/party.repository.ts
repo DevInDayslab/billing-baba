@@ -35,6 +35,7 @@ type PartyRow = {
   areaId: string | null;
   creditLimit: string;
   openingBalance: string;
+  hiddenLedgerBalance: string;
   isActive: boolean;
   notes: string | null;
   profileImageUrl: string | null;
@@ -56,6 +57,7 @@ const partySelectColumns = {
   areaId: parties.areaId,
   creditLimit: parties.creditLimit,
   openingBalance: parties.openingBalance,
+  hiddenLedgerBalance: parties.hiddenLedgerBalance,
   isActive: parties.isActive,
   notes: parties.notes,
   profileImageUrl: parties.profileImageUrl,
@@ -200,7 +202,9 @@ export class PartyRepository {
     const balanceMap = await this.loadBalanceMap(params.businessId);
 
     return {
-      rows: rows.map((row) => this.toRecord(row, balanceMap.get(row.id))),
+      rows: rows.map((row) =>
+        this.toRecord(row, balanceMap.get(row.id), { includeHiddenLedgerBalance: true }),
+      ),
       total,
     };
   }
@@ -228,7 +232,7 @@ export class PartyRepository {
       partyId,
     );
 
-    return this.toRecord(row, balance ?? undefined);
+    return this.toRecord(row, balance ?? undefined, { includeHiddenLedgerBalance: true });
   }
 
   async create(values: PartyInsertValues): Promise<PartyRecord> {
@@ -258,7 +262,7 @@ export class PartyRepository {
       throw new Error('Failed to create party');
     }
 
-    return this.toRecord(row, values.openingBalance);
+    return this.toRecord(row, values.openingBalance, { includeHiddenLedgerBalance: true });
   }
 
   async update(
@@ -292,6 +296,9 @@ export class PartyRepository {
         ...(values.openingBalance !== undefined
           ? { openingBalance: values.openingBalance }
           : {}),
+        ...(values.hiddenLedgerBalance !== undefined
+          ? { hiddenLedgerBalance: values.hiddenLedgerBalance }
+          : {}),
         ...(values.notes !== undefined ? { notes: values.notes } : {}),
         ...(values.isActive !== undefined ? { isActive: values.isActive } : {}),
         ...(values.updatedBy !== undefined
@@ -316,7 +323,7 @@ export class PartyRepository {
       partyId,
     );
 
-    return this.toRecord(row, balance ?? undefined);
+    return this.toRecord(row, balance ?? undefined, { includeHiddenLedgerBalance: true });
   }
 
   async softDelete(
@@ -408,6 +415,7 @@ export class PartyRepository {
     return new Map(balances.map((row) => [row.party_id, row.balance]));
   }
 
+
   async getProfileMediaAssetId(
     businessId: string,
     partyId: string,
@@ -468,11 +476,15 @@ export class PartyRepository {
       );
   }
 
-  private toRecord(row: PartyRow, balance?: string): PartyRecord {
+  private toRecord(
+    row: PartyRow,
+    balance?: string,
+    options?: { includeHiddenLedgerBalance?: boolean },
+  ): PartyRecord {
     const openingBalance = row.openingBalance ?? '0';
     const ledgerBalance = balance ?? openingBalance;
 
-    return {
+    const record: PartyRecord = {
       id: row.id,
       name: row.name,
       mobile: row.mobile,
@@ -495,5 +507,11 @@ export class PartyRepository {
       created_at: row.createdAt.toISOString(),
       updated_at: row.updatedAt.toISOString(),
     };
+
+    if (options?.includeHiddenLedgerBalance) {
+      record.hidden_ledger_balance = row.hiddenLedgerBalance;
+    }
+
+    return record;
   }
 }

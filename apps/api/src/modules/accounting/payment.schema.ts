@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { parseMoney } from '../inventory/inventory.utils';
 
 const paymentModeValues = [
   'cash',
@@ -37,23 +38,46 @@ const allocationSchema = z.object({
   allocated_amount: moneyString,
 });
 
-export const createPaymentBodySchema = z.object({
-  party_id: z.uuid(),
-  direction: z.enum(paymentDirectionValues),
-  amount: moneyString,
-  discount_amount: moneyString.optional(),
-  balance_after_payment: moneyString.optional(),
-  payment_mode: z.enum(paymentModeValues),
-  payment_date: z.iso.datetime().optional(),
-  reference_number: z.string().trim().max(100).optional().nullable(),
-  notes: z.string().trim().max(2000).optional().nullable(),
-  short_payment_handling: z.enum(shortPaymentHandlingValues).optional(),
-  allocations: z.array(allocationSchema).optional().default([]),
-  source: z
-    .enum(['manual', 'document_finalize'] as const)
-    .optional()
-    .default('manual'),
-});
+export const createPaymentBodySchema = z
+  .object({
+    party_id: z.uuid(),
+    direction: z.enum(paymentDirectionValues),
+    amount: moneyString,
+    discount_amount: moneyString.optional(),
+    balance_after_payment: moneyString.optional(),
+    payment_mode: z.enum(paymentModeValues),
+    payment_date: z.iso.datetime().optional(),
+    reference_number: z.string().trim().max(100).optional().nullable(),
+    notes: z.string().trim().max(2000).optional().nullable(),
+    short_payment_handling: z.enum(shortPaymentHandlingValues).optional(),
+    shortfall_amount: moneyString.optional(),
+    allocations: z.array(allocationSchema).optional().default([]),
+    source: z
+      .enum(['manual', 'document_finalize'] as const)
+      .optional()
+      .default('manual'),
+  })
+  .superRefine((body, ctx) => {
+    if (body.short_payment_handling === 'unrecovered') {
+      if (!body.shortfall_amount) {
+        ctx.addIssue({
+          code: 'custom',
+          message:
+            'shortfall_amount is required when short_payment_handling is unrecovered',
+          path: ['shortfall_amount'],
+        });
+        return;
+      }
+
+      if (parseMoney(body.shortfall_amount) <= 0) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'shortfall_amount must be greater than zero',
+          path: ['shortfall_amount'],
+        });
+      }
+    }
+  });
 
 export type CreatePaymentBody = z.infer<typeof createPaymentBodySchema>;
 

@@ -425,7 +425,7 @@ export class PaymentRepository {
     const [row] = await this.db
       .select({
         id: parties.id,
-        unrecoveredAmount: parties.unrecoveredAmount,
+        hiddenLedgerBalance: parties.hiddenLedgerBalance,
       })
       .from(parties)
       .where(
@@ -440,7 +440,7 @@ export class PaymentRepository {
     return row ?? null;
   }
 
-  async updatePartyUnrecovered(
+  async updatePartyHiddenLedgerBalance(
     businessId: string,
     partyId: string,
     amount: string,
@@ -448,7 +448,7 @@ export class PaymentRepository {
     await this.db
       .update(parties)
       .set({
-        unrecoveredAmount: amount,
+        hiddenLedgerBalance: amount,
         updatedAt: new Date(),
         syncVersion: sql`${parties.syncVersion} + 1`,
       })

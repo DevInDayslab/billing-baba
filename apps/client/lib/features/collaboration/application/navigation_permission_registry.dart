@@ -12,6 +12,10 @@ abstract final class NavigationPermissionRegistry {
       return true;
     }
 
+    if (route == AppRoutes.partyHiddenLedger) {
+      return service.canViewHiddenLedger;
+    }
+
     if (_isOwnerOnlyRoute(route)) return false;
 
     final module = _moduleForNavRoute(route);

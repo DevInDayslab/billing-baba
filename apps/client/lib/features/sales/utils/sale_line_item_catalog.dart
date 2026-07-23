@@ -20,6 +20,7 @@ SaleLineItem applyCatalogItemToLine(
     itemId: item.id,
     itemName: item.name,
     pricePerUnit: price,
+    catalogUnitPrice: price,
     priceManuallyOverridden: false,
     unit: saleItemDefaultUnit(item),
     qty: qty,

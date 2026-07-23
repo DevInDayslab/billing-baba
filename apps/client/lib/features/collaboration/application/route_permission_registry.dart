@@ -10,6 +10,7 @@ abstract final class RoutePermissionRegistry {
     AppRoutes.parties: PermissionModule.party,
     AppRoutes.partyDetails: PermissionModule.party,
     AppRoutes.partyGroups: PermissionModule.party,
+    AppRoutes.partyHiddenLedger: PermissionModule.party,
     AppRoutes.items: PermissionModule.item,
     AppRoutes.itemsCategories: PermissionModule.item,
     AppRoutes.itemsUnits: PermissionModule.item,
@@ -78,6 +79,10 @@ abstract final class RoutePermissionRegistry {
   static bool canAccessRoute(String location, PermissionService service) {
     if (!service.hasSession) return false;
     if (service.hasFullAccess) return true;
+
+    if (location == AppRoutes.partyHiddenLedger) {
+      return service.canViewHiddenLedger;
+    }
 
     if (location.startsWith(AppRoutes.utilities) ||
         location.startsWith(AppRoutes.developer) ||

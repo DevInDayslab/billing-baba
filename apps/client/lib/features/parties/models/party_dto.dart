@@ -8,6 +8,7 @@ class PartyDto {
     required this.creditLimit,
     required this.openingBalance,
     required this.balance,
+    this.unrecoveredAmount = 0,
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
@@ -42,6 +43,7 @@ class PartyDto {
       creditLimit: json['credit_limit']?.toString() ?? '0',
       openingBalance: json['opening_balance']?.toString() ?? '0',
       balance: json['balance']?.toString() ?? '0',
+      unrecoveredAmount: _readHiddenLedgerBalance(json),
       isActive: json['is_active'] as bool? ?? true,
       notes: json['notes'] as String?,
       profileImageUrl: json['profile_image_url'] as String?,
@@ -65,12 +67,18 @@ class PartyDto {
   final String creditLimit;
   final String openingBalance;
   final String balance;
+  final double unrecoveredAmount;
   final bool isActive;
   final String? notes;
   final String? profileImageUrl;
   final String? profileMediaAssetId;
   final String createdAt;
   final String updatedAt;
+
+  static double _readHiddenLedgerBalance(Map<String, dynamic> json) {
+    final balance = json['hidden_ledger_balance'] ?? json['unrecovered_amount'];
+    return double.tryParse(balance?.toString() ?? '0') ?? 0;
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,
