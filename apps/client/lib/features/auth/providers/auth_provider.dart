@@ -21,6 +21,8 @@ import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:billing_baba/features/auth/utils/auth_flow_logger.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
+import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_session_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -879,22 +881,44 @@ class Auth extends _$Auth {
     final refreshToken = state.session?.refreshToken;
     if (refreshToken == null) return;
 
+    SwitchCompanyDebugLog.action('enterBusinessSelection begin');
+    ref.read(companySessionProvider.notifier).clear();
+    SwitchCompanyDebugLog.action('companySession cleared');
     state = state.copyWith(clearError: true);
     try {
       await _clearActiveBusinessSession();
+      SwitchCompanyDebugLog.invalidate(
+        'active business session + business-scoped providers',
+      );
       final service = await _service();
+      SwitchCompanyDebugLog.api('refreshStoredSession(preserveBusinessScope: false)');
       final session = await service.refreshStoredSession(
         refreshToken: refreshToken,
         preserveBusinessScope: false,
       );
       if (session == null) {
-        _setAuthStatus(AuthStatus.unauthenticated);
-        state = state.copyWith(clearSession: true);
+        AuthFlowLogger.authStatus(AuthStatus.unauthenticated.name);
+        // Single write so auth watchers only rebuild once.
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          clearSession: true,
+        );
+        SwitchCompanyDebugLog.action('session null → unauthenticated (atomic)');
         return;
       }
-      _setAuthStatus(AuthStatus.needsBusinessSelection);
-      state = state.copyWith(session: session);
+      // Single write for status + session. Splitting these caused
+      // collaborationRepository / companyDirectory to rebuild twice and
+      // produced a second loading indicator after Switch Company.
+      AuthFlowLogger.authStatus(AuthStatus.needsBusinessSelection.name);
+      state = state.copyWith(
+        status: AuthStatus.needsBusinessSelection,
+        session: session,
+      );
+      SwitchCompanyDebugLog.action(
+        'auth → needsBusinessSelection + session (atomic)',
+      );
     } on Object catch (e) {
+      SwitchCompanyDebugLog.action('enterBusinessSelection error: $e');
       state = state.copyWith(error: _messageFromError(e));
     }
   }

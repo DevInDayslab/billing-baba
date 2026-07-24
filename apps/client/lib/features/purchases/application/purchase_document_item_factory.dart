@@ -1,7 +1,6 @@
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
-import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 
 /// Builds inventory item payloads from parsed purchase bill lines.
@@ -91,10 +90,24 @@ class PurchaseDocumentItemFactory {
       purchasePriceTaxMode: line.priceIsTaxInclusive
           ? PriceTaxMode.withTax
           : PriceTaxMode.withoutTax,
-      taxRate: ItemTaxRate.labelForPercent(
-        line.taxPercent > 0 ? line.taxPercent : null,
-      ),
+      taxRate: _inventoryTaxRateLabel(line.taxPercent),
     );
+  }
+
+  static String _inventoryTaxRateLabel(double percent) {
+    if (percent <= 0) return 'None';
+
+    const slabs = <double>[5, 12, 18, 28];
+    for (final slab in slabs) {
+      if ((percent - slab).abs() < 0.75) {
+        return 'GST @ ${slab.toInt()}%';
+      }
+    }
+
+    if (percent == percent.roundToDouble()) {
+      return 'GST @ ${percent.toInt()}%';
+    }
+    return 'GST @ $percent%';
   }
 
   static String _unitLabelForLine(String unit) {

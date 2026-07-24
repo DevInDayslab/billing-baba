@@ -26,8 +26,10 @@ class ShellSidebar extends _$ShellSidebar {
 
   Future<void> _loadCollapsedPreference() async {
     final storage = await ref.read(storageServiceProvider.future);
+    if (!ref.mounted) return;
+
     final value = storage.read(StorageKeys.sidebarCollapsed);
-    if (value == 'true') {
+    if (value == 'true' && !state.isCollapsed) {
       state = state.copyWith(isCollapsed: true);
     }
   }
@@ -38,6 +40,7 @@ class ShellSidebar extends _$ShellSidebar {
   }
 
   void setCollapsed(bool collapsed) {
+    if (state.isCollapsed == collapsed) return;
     state = state.copyWith(isCollapsed: collapsed);
     _persistCollapsed(collapsed);
   }
@@ -46,9 +49,15 @@ class ShellSidebar extends _$ShellSidebar {
 
   void expand() => setCollapsed(false);
 
-  void openDrawer() => state = state.copyWith(isDrawerOpen: true);
+  void openDrawer() {
+    if (state.isDrawerOpen) return;
+    state = state.copyWith(isDrawerOpen: true);
+  }
 
-  void closeDrawer() => state = state.copyWith(isDrawerOpen: false);
+  void closeDrawer() {
+    if (!state.isDrawerOpen) return;
+    state = state.copyWith(isDrawerOpen: false);
+  }
 
   /// Dismisses sidebar chrome after the user picks a destination.
   ///
@@ -56,7 +65,7 @@ class ShellSidebar extends _$ShellSidebar {
   /// collapse back to the icon rail.
   void closeOnNavigation({required bool overlayLayout}) {
     if (overlayLayout) {
-      state = state.copyWith(isDrawerOpen: false);
+      closeDrawer();
       return;
     }
     setCollapsed(true);

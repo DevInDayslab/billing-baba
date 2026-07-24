@@ -187,7 +187,7 @@ class _CloneAlternativesDialogState
 
   Widget _buildItemReplacementSection(OutOfStockItem item) {
     final alternativesAsync =
-        ref.watch(itemAlternativesNotifierProvider(item.itemId));
+        ref.watch(itemAlternativesProvider(item.itemId));
     final itemName = _itemNames[item.itemId] ?? item.itemName;
 
     return Card(

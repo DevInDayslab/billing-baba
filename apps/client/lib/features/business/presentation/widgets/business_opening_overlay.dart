@@ -4,16 +4,28 @@ import 'package:flutter/material.dart';
 class BusinessOpeningOverlay extends StatelessWidget {
   const BusinessOpeningOverlay({
     this.message = 'Opening company…',
+    this.subtitle = 'Loading dashboard and company data',
+    this.opaque = false,
+    this.whiteBackground = false,
     super.key,
   });
 
   final String message;
+  final String? subtitle;
+  final bool opaque;
+  final bool whiteBackground;
 
   @override
   Widget build(BuildContext context) {
+    final backdropColor = !opaque
+        ? Colors.black.withValues(alpha: 0.45)
+        : whiteBackground
+        ? AppColors.surface
+        : AppColors.background;
+
     return AbsorbPointer(
       child: ColoredBox(
-        color: Colors.black.withValues(alpha: 0.45),
+        color: backdropColor,
         child: Center(
           child: Material(
             color: AppColors.surface,
@@ -41,14 +53,16 @@ class BusinessOpeningOverlay extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'Loading dashboard and company data',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+                  if (subtitle != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      subtitle!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
+                  ],
                 ],
               ),
             ),

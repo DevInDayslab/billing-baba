@@ -1,7 +1,10 @@
 import 'package:billing_baba/core/providers/data_refresh.dart';
+import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
-import 'package:billing_baba/features/business/providers/commerce_settings_provider.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
+import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_directory_provider.dart';
 import 'package:billing_baba/features/crm/presentation/providers/contacts_provider.dart';
 import 'package:billing_baba/features/crm/presentation/providers/deals_provider.dart';
 import 'package:billing_baba/features/crm/presentation/providers/leads_provider.dart';
@@ -35,6 +38,53 @@ class _BusinessSessionLoading extends Notifier<String?> {
   void start(String businessId) => state = businessId;
 
   void clear() => state = null;
+}
+
+/// True while navigating to the company picker after "Switch Company".
+final businessSelectionTransitionProvider =
+    NotifierProvider<_BusinessSelectionTransition, bool>(
+      _BusinessSelectionTransition.new,
+    );
+
+class _BusinessSelectionTransition extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void start() {
+    SwitchCompanyDebugLog.loading('businessSelectionTransition → true');
+    state = true;
+  }
+
+  void clear() {
+    SwitchCompanyDebugLog.loading('businessSelectionTransition → false');
+    state = false;
+  }
+}
+
+/// Blocking overlay + session reset until the company directory has reloaded.
+///
+/// Owns the transition overlay end-to-end so the Companies page does not clear
+/// it early (which caused a flash + second spinner).
+Future<void> switchToBusinessSelection(
+  WidgetRef ref, {
+  required Future<void> Function() navigateToBusinessList,
+}) async {
+  final container = ref.container;
+  SwitchCompanyDebugLog.action('switchToBusinessSelection begin');
+  container.read(businessSelectionTransitionProvider.notifier).start();
+  try {
+    await container.read(authProvider.notifier).enterBusinessSelection();
+    SwitchCompanyDebugLog.nav('explicit navigateToBusinessList');
+    await navigateToBusinessList();
+    SwitchCompanyDebugLog.loading('await companyDirectoryProvider.future');
+    final entries = await container.read(companyDirectoryProvider.future);
+    SwitchCompanyDebugLog.loading(
+      'companyDirectory ready (${entries.length} entries)',
+    );
+  } finally {
+    container.read(businessSelectionTransitionProvider.notifier).clear();
+    SwitchCompanyDebugLog.action('switchToBusinessSelection end');
+  }
 }
 
 /// Invalidates providers that cache or display business-scoped data.
@@ -92,6 +142,22 @@ void invalidateAllBusinessScopedProviders(
   bumpReportDataEpoch(ref);
 }
 
+/// Seeds sidebar/profile UI immediately from list-card data before API warm-up.
+void seedBusinessProfilePreview(Ref ref, {required CompanyListEntry entry}) {
+  ref.read(businessProfileProvider.notifier).replaceWith(
+    BusinessProfileModel(
+      id: entry.id,
+      name: entry.name,
+      ownerName: entry.ownerName,
+      phone: entry.phone,
+      email: entry.email,
+      gstin: entry.gstin,
+      address: entry.address,
+      logoUrl: entry.logoUrl,
+    ),
+  );
+}
+
 /// Loads core business-scoped data for the dashboard shell after a switch.
 ///
 /// Uses direct service/repository calls and seeds provider state instead of
@@ -106,6 +172,23 @@ Future<void> warmBusinessScopedProviders(
   final service = await ref.read(businessServiceProvider.future);
   _ensureRefMounted(ref, 'warm after service resolve');
 
+  BusinessOpenDebugLog.step('warm', 'parallel fetch (profile, dashboard, tasks)');
+  await Future.wait<void>([
+    _warmBusinessProfile(ref, service, businessId),
+    _warmDashboard(ref),
+    _warmTasks(ref, businessId),
+  ]);
+  _ensureRefMounted(ref, 'warm after parallel fetch');
+
+  ref.read(dashboardWidgetPreferencesProvider);
+  BusinessOpenDebugLog.step('warm', 'complete');
+}
+
+Future<void> _warmBusinessProfile(
+  Ref ref,
+  BusinessService service,
+  String businessId,
+) async {
   BusinessOpenDebugLog.step('warm', 'profile fetch');
   final profile = await service.fetchBusinessProfile(forceRefresh: true);
   _ensureRefMounted(ref, 'warm after profile fetch');
@@ -118,13 +201,16 @@ Future<void> warmBusinessScopedProviders(
   await service.persistSavedProfile(profile);
   ref.read(businessProfileProvider.notifier).replaceWith(profile);
   BusinessOpenDebugLog.step('warm', 'profile ok (${profile.name})');
+}
 
+Future<void> _warmDashboard(Ref ref) async {
   BusinessOpenDebugLog.step('warm', 'dashboard');
   await ref.read(dashboardProvider.notifier).refresh();
   _ensureRefMounted(ref, 'warm after dashboard');
-
   BusinessOpenDebugLog.step('warm', 'dashboard ok');
+}
 
+Future<void> _warmTasks(Ref ref, String businessId) async {
   BusinessOpenDebugLog.step('warm', 'tasks');
   final taskRepo = await ref.read(taskRepositoryProvider.future);
   _ensureRefMounted(ref, 'warm after task repo');
@@ -132,9 +218,6 @@ Future<void> warmBusinessScopedProviders(
   final tasks = await taskRepo.load(businessId);
   ref.read(tasksProvider.notifier).replaceWith(tasks);
   BusinessOpenDebugLog.step('warm', 'tasks ok (${tasks.length})');
-
-  ref.read(dashboardWidgetPreferencesProvider);
-  BusinessOpenDebugLog.step('warm', 'complete');
 }
 
 void _ensureRefMounted(Ref ref, String step) {

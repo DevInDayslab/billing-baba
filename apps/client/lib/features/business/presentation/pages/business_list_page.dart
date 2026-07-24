@@ -8,15 +8,16 @@ import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_card.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_card_menu.dart';
-import 'package:billing_baba/features/business/presentation/widgets/business_opening_overlay.dart';
 import 'package:billing_baba/features/business/presentation/widgets/create_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/widgets/delete_business_dialog.dart';
 import 'package:billing_baba/features/business/presentation/widgets/edit_business_dialog.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
+import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/features/collaboration/application/company_session_service.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/company_directory_provider.dart';
+import 'package:billing_baba/features/collaboration/presentation/providers/company_session_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/company_session_service_provider.dart';
 import 'package:billing_baba/shared/image/app_image_prefetcher.dart';
 import 'package:dio/dio.dart';
@@ -47,11 +48,29 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    final selectMyCompaniesTab = ref.read(businessSelectionTransitionProvider);
+    SwitchCompanyDebugLog.lifecycle(
+      'BusinessListPage',
+      'initState',
+      'transition=$selectMyCompaniesTab',
+    );
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: selectMyCompaniesTab ? 1 : 0,
+    );
+    // Transition overlay is owned by switchToBusinessSelection — do not clear
+    // it here when directory first resolves (that caused a companies flash
+    // before a second directory reload finished).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(ref.read(companySessionServiceProvider.future));
+    });
   }
 
   @override
   void dispose() {
+    SwitchCompanyDebugLog.lifecycle('BusinessListPage', 'dispose');
     _tabController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -157,7 +176,51 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
       case CompanyCardMenuAction.reject:
         await _rejectInvite(entry);
       case CompanyCardMenuAction.open:
-        await _openCompany(context, ref, entry);
+        await _openCompanyEntry(entry);
+    }
+  }
+
+  Future<void> _openCompanyEntry(CompanyListEntry entry) async {
+    final container = ProviderScope.containerOf(context, listen: false);
+    if (container.read(businessSessionLoadingProvider) != null) return;
+
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
+    try {
+      BusinessOpenDebugLog.step('ui', 'calling openCompany');
+      final sessionService = await container.read(
+        companySessionServiceProvider.future,
+      );
+      await sessionService.openCompany(entry);
+      BusinessOpenDebugLog.step('ui', 'openCompany returned — navigating home');
+
+      final auth = container.read(authProvider);
+      final session = container.read(companySessionProvider);
+      if (auth.status != AuthStatus.authenticated || session == null) {
+        throw const BusinessSelectionFailed(
+          'Could not open company. Please try again.',
+        );
+      }
+
+      if (!mounted) return;
+      context.go(AppRoutes.home);
+      BusinessOpenDebugLog.step('ui', 'navigation dispatched');
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        container.invalidate(companyDirectoryProvider);
+      });
+    } on CompanySessionOpenBlocked catch (error) {
+      BusinessOpenDebugLog.step('ui', 'blocked: ${error.message}');
+      messenger?.showSnackBar(SnackBar(content: Text(error.message)));
+    } on BusinessSelectionFailed catch (error) {
+      BusinessOpenDebugLog.step('ui', 'failed: ${error.message}');
+      messenger?.showSnackBar(SnackBar(content: Text(error.message)));
+    } on Object catch (error) {
+      BusinessOpenDebugLog.step('ui', 'failed: $error');
+      final message = error is DioException
+          ? ApiErrorParser.userFacingMessage(error)
+          : 'Could not open company. Please try again.';
+      messenger?.showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -206,14 +269,21 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
     final directoryAsync = ref.watch(companyDirectoryProvider);
     final directoryServiceAsync = ref.watch(companyDirectoryServiceProvider);
     final phoneNumber = ref.watch(loggedInPhoneProvider);
-    final openingBusinessId = ref.watch(businessSessionLoadingProvider);
+
+    SwitchCompanyDebugLog.lifecycle(
+      'BusinessListPage',
+      'build',
+      'directory=${directoryAsync.runtimeType} '
+      'transition=${ref.read(businessSelectionTransitionProvider)}',
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          directoryAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+      body: directoryAsync.when(
+            loading: () => const ColoredBox(
+              color: AppColors.surface,
+              child: Center(child: CircularProgressIndicator()),
+            ),
             error: (error, _) => _ErrorState(
               onRetry: () => ref.invalidate(companyDirectoryProvider),
             ),
@@ -272,11 +342,13 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
                               _SharedCompaniesTab(
                                 entries: sharedCompanies,
                                 onAction: _handleCardAction,
+                                onOpen: _openCompanyEntry,
                               ),
                               _MyCompaniesTab(
                                 entries: myCompanies,
                                 onCreate: _openCreateBusiness,
                                 onAction: _handleCardAction,
+                                onOpen: _openCompanyEntry,
                               ),
                             ],
                           ),
@@ -293,9 +365,6 @@ class _BusinessListPageState extends ConsumerState<BusinessListPage>
               );
             },
           ),
-          if (openingBusinessId != null) const BusinessOpeningOverlay(),
-        ],
-      ),
     );
   }
 }
@@ -608,10 +677,12 @@ class _SharedCompaniesTab extends ConsumerWidget {
   const _SharedCompaniesTab({
     required this.entries,
     required this.onAction,
+    required this.onOpen,
   });
 
   final List<CompanyListEntry> entries;
   final void Function(CompanyListEntry, CompanyCardMenuAction) onAction;
+  final Future<void> Function(CompanyListEntry) onOpen;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -650,7 +721,7 @@ class _SharedCompaniesTab extends ConsumerWidget {
         final isExpired = entry.relationship.isExpired;
         return BusinessCard(
           entry: entry,
-          onOpen: () => _openCompany(context, ref, entry),
+          onOpen: () => onOpen(entry),
           onAccept: isPending && !isExpired
               ? () => onAction(entry, CompanyCardMenuAction.accept)
               : null,
@@ -667,11 +738,13 @@ class _MyCompaniesTab extends ConsumerWidget {
     required this.entries,
     required this.onCreate,
     required this.onAction,
+    required this.onOpen,
   });
 
   final List<CompanyListEntry> entries;
   final VoidCallback onCreate;
   final void Function(CompanyListEntry, CompanyCardMenuAction) onAction;
+  final Future<void> Function(CompanyListEntry) onOpen;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -701,7 +774,7 @@ class _MyCompaniesTab extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: AppSpacing.md),
             child: BusinessCard(
               entry: entry,
-              onOpen: () => _openCompany(context, ref, entry),
+              onOpen: () => onOpen(entry),
               onMenuAction: (action) => onAction(entry, action),
             ),
           ),
@@ -814,52 +887,6 @@ class _CreateBusinessCardState extends State<_CreateBusinessCard> {
         ),
       ),
     );
-  }
-}
-
-Future<void> _openCompany(
-  BuildContext context,
-  WidgetRef ref,
-  CompanyListEntry entry,
-) async {
-  final container = ProviderScope.containerOf(context, listen: false);
-  final loading = container.read(businessSessionLoadingProvider.notifier);
-  loading.start(entry.id);
-
-  try {
-    BusinessOpenDebugLog.step('ui', 'calling openCompany');
-    final sessionService = await container.read(
-      companySessionServiceProvider.future,
-    );
-    await sessionService.openCompany(entry);
-    BusinessOpenDebugLog.step('ui', 'openCompany returned — navigating home');
-    if (!context.mounted) return;
-    context.go(AppRoutes.home);
-    BusinessOpenDebugLog.step('ui', 'navigation dispatched');
-  } on CompanySessionOpenBlocked catch (error) {
-    BusinessOpenDebugLog.step('ui', 'blocked: ${error.message}');
-    if (!context.mounted) return;
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(content: Text(error.message)),
-    );
-  } on BusinessSelectionFailed catch (error) {
-    BusinessOpenDebugLog.step('ui', 'failed: ${error.message}');
-    if (!context.mounted) return;
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(content: Text(error.message)),
-    );
-  } on Object catch (error) {
-    BusinessOpenDebugLog.step('ui', 'failed: $error');
-    if (!context.mounted) return;
-    final message = error is DioException
-        ? ApiErrorParser.userFacingMessage(error)
-        : 'Could not open company. Please try again.';
-    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  } finally {
-    loading.clear();
-    BusinessOpenDebugLog.step('ui', 'loading overlay cleared');
   }
 }
 
