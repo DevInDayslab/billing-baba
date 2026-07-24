@@ -29,8 +29,6 @@ export const createItemRoutes = (config: AppConfig): FastifyPluginAsync => {
       controller.deleteTierPrice,
     );
     app.get('/:id/price-history', { preHandler }, controller.getPriceHistory);
-    app.get('/:id/alternatives', { preHandler }, controller.listAlternatives);
-    app.put('/:id/alternatives', { preHandler }, controller.putAlternatives);
 
     app.get('/:id/alternatives', { preHandler }, alternativesController.list);
     app.post('/:id/alternatives', { preHandler }, alternativesController.add);
