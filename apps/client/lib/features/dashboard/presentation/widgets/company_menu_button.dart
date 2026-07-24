@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
+import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -89,9 +91,15 @@ class _CompanyMenuButtonState extends ConsumerState<CompanyMenuButton> {
   }
 
   Future<void> _switchCompany() async {
-    await ref.read(authProvider.notifier).enterBusinessSelection();
-    if (!mounted) return;
-    context.go(AppRoutes.businessList);
+    SwitchCompanyDebugLog.action('CompanyMenuButton._switchCompany');
+    await switchToBusinessSelection(
+      ref,
+      navigateToBusinessList: () async {
+        if (!mounted) return;
+        SwitchCompanyDebugLog.nav('CompanyMenuButton context.go(businessList)');
+        context.go(AppRoutes.businessList);
+      },
+    );
   }
 
   Future<void> _logout() async {

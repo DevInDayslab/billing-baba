@@ -6,6 +6,7 @@ import 'package:billing_baba/features/auth/presentation/pages/verify_otp_page.da
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/presentation/pages/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/pages/edit_profile_page.dart';
+import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
 import 'package:billing_baba/features/collaboration/guards/access_denied_page.dart';
 import 'package:billing_baba/features/collaboration/guards/permission_guard.dart';
@@ -104,7 +105,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           if (!onOtp) return AppRoutes.verifyOtp;
         case AuthStatus.needsBusinessCreation:
         case AuthStatus.needsBusinessSelection:
-          if (!onBusinessList) return AppRoutes.businessList;
+          if (!onBusinessList) {
+            final hasActiveCompany = ref.read(companySessionProvider) != null;
+            if (!hasActiveCompany) {
+              SwitchCompanyDebugLog.nav(
+                'GoRouter redirect $location → ${AppRoutes.businessList} '
+                '(${auth.status.name})',
+              );
+              return AppRoutes.businessList;
+            }
+          }
         case AuthStatus.authenticated:
           if (onLogin || onOtp) return AppRoutes.home;
           final permission = ref.read(permissionServiceProvider);
@@ -138,7 +148,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       ShellRoute(
-        builder: (context, state, child) => ShellPage(child: child),
+        builder: (context, state, child) => ShellPage(
+          key: const ValueKey('app-shell'),
+          child: child,
+        ),
         routes: [
           GoRoute(
             path: AppRoutes.home,

@@ -7,7 +7,7 @@ import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
-import 'package:billing_baba/features/business/presentation/widgets/business_opening_overlay.dart';
+import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/features/collaboration/application/navigation_permission_registry.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/company_session_bootstrap_provider.dart';
@@ -80,6 +80,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _registerSearchDialog();
       _ensureShellShortcutFocus();
       final businessId = ref.read(sidebarBusinessProvider).id;
@@ -319,11 +320,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
   }
 
   void _navigateTo(String route) {
-    ref
-        .read(shellSidebarProvider.notifier)
-        .closeOnNavigation(
-          overlayLayout: _useOverlaySidebar,
-        );
+    final overlayLayout = _useOverlaySidebar;
+    final sidebarNotifier = ref.read(shellSidebarProvider.notifier);
+
     setState(() {
       _isSaleExpanded = false;
       _isPurchaseExpanded = false;
@@ -336,6 +335,21 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       ref.read(selectedPartyIdProvider.notifier).selected = null;
     }
     context.go(route);
+    _scheduleSidebarCloseAfterNavigation(
+      sidebarNotifier: sidebarNotifier,
+      overlayLayout: overlayLayout,
+    );
+  }
+
+  /// Collapses the drawer/rail after navigation so provider listeners on the
+  /// shell subtree are not notified while the tap handler is still unwinding.
+  void _scheduleSidebarCloseAfterNavigation({
+    required ShellSidebar sidebarNotifier,
+    required bool overlayLayout,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      sidebarNotifier.closeOnNavigation(overlayLayout: overlayLayout);
+    });
   }
 
   void _expandSidebarIfCollapsed() {
@@ -358,126 +372,115 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     }
     ref.watch(companySessionBootstrapProvider);
     final permissions = ref.watch(permissionServiceProvider);
-    final sidebarState = ref.watch(shellSidebarProvider);
-    final isCollapsed = sidebarState.isCollapsed;
-    final isDrawerOpen = sidebarState.isDrawerOpen;
-    final isOpeningBusiness = ref.watch(businessSessionLoadingProvider) != null;
 
-    final shell = LayoutBuilder(
-      builder: (context, constraints) {
-        final useOverlaySidebar = constraints.maxWidth < _overlayBreakpoint;
-        _useOverlaySidebar = useOverlaySidebar;
+    return _ShellSidebarStateScope(
+      builder: (isCollapsed, isDrawerOpen, sidebarNotifier) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final useOverlaySidebar = constraints.maxWidth < _overlayBreakpoint;
+            _useOverlaySidebar = useOverlaySidebar;
 
-        if (_wasOverlaySidebar == true && !useOverlaySidebar && isDrawerOpen) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              ref.read(shellSidebarProvider.notifier).closeDrawer();
+            if (_wasOverlaySidebar == true &&
+                !useOverlaySidebar &&
+                isDrawerOpen) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                sidebarNotifier.closeDrawer();
+              });
             }
-          });
-        }
-        _wasOverlaySidebar = useOverlaySidebar;
+            _wasOverlaySidebar = useOverlaySidebar;
 
-        final showTopBar =
-            currentLocation != AppRoutes.pos ||
-            !ref.watch(posSessionProvider).isTerminalOpen;
-        final mainContent = _ShellShortcutScope(
-          quickCreateEnabled: showTopBar,
-          shortcutFocusNode: _shellShortcutFocusNode,
-          child: ColoredBox(
-            color: AppColors.background,
-            child: Column(
-              children: [
-                if (showTopBar) ...[
-                  const CustomerSupportStrip(),
-                  AppTopBar(showMenuButton: useOverlaySidebar),
-                ],
-                Expanded(child: widget.child),
-              ],
-            ),
-          ),
-        );
+            final showTopBar =
+                currentLocation != AppRoutes.pos ||
+                !ref.watch(posSessionProvider).isTerminalOpen;
+            final mainContent = _ShellShortcutScope(
+              quickCreateEnabled: showTopBar,
+              shortcutFocusNode: _shellShortcutFocusNode,
+              child: ColoredBox(
+                color: AppColors.background,
+                child: Column(
+                  children: [
+                    if (showTopBar) ...[
+                      const CustomerSupportStrip(),
+                      AppTopBar(showMenuButton: useOverlaySidebar),
+                    ],
+                    Expanded(child: widget.child),
+                  ],
+                ),
+              ),
+            );
 
-        if (useOverlaySidebar) {
-          return Scaffold(
-            body: Stack(
-              fit: StackFit.expand,
-              children: [
-                mainContent,
-                Positioned.fill(
-                  child: IgnorePointer(
-                    ignoring: !isDrawerOpen,
+            if (useOverlaySidebar) {
+              return Scaffold(
+                body: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    mainContent,
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        ignoring: !isDrawerOpen,
+                        child: GestureDetector(
+                          onTap: sidebarNotifier.closeDrawer,
+                          child: AnimatedOpacity(
+                            opacity: isDrawerOpen ? 1 : 0,
+                            duration: const Duration(milliseconds: 200),
+                            child: const ColoredBox(color: Color(0x80000000)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      left: isDrawerOpen ? 0 : -_sidebarExpandedWidth,
+                      top: 0,
+                      bottom: 0,
+                      width: _sidebarExpandedWidth,
+                      child: Material(
+                        elevation: isDrawerOpen ? 8 : 0,
+                        color: _sidebarColor,
+                        child: _buildSidebarPanel(
+                          currentLocation: currentLocation,
+                          collapsed: false,
+                          showCloseButton: true,
+                          permissions: permissions,
+                          sidebarNotifier: sidebarNotifier,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return Scaffold(
+              body: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    width: isCollapsed
+                        ? _sidebarCollapsedWidth
+                        : _sidebarExpandedWidth,
+                    color: _sidebarColor,
                     child: GestureDetector(
-                      onTap: () =>
-                          ref.read(shellSidebarProvider.notifier).closeDrawer(),
-                      child: AnimatedOpacity(
-                        opacity: isDrawerOpen ? 1 : 0,
-                        duration: const Duration(milliseconds: 200),
-                        child: const ColoredBox(color: Color(0x80000000)),
+                      onTap: isCollapsed ? sidebarNotifier.expand : null,
+                      behavior: HitTestBehavior.translucent,
+                      child: _buildSidebarPanel(
+                        currentLocation: currentLocation,
+                        collapsed: isCollapsed,
+                        permissions: permissions,
+                        sidebarNotifier: sidebarNotifier,
                       ),
                     ),
                   ),
-                ),
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
-                  left: isDrawerOpen ? 0 : -_sidebarExpandedWidth,
-                  top: 0,
-                  bottom: 0,
-                  width: _sidebarExpandedWidth,
-                  child: Material(
-                    elevation: isDrawerOpen ? 8 : 0,
-                    color: _sidebarColor,
-                    child: _buildSidebarPanel(
-                      currentLocation: currentLocation,
-                      collapsed: false,
-                      showCloseButton: true,
-                      permissions: permissions,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Scaffold(
-          body: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                width: isCollapsed
-                    ? _sidebarCollapsedWidth
-                    : _sidebarExpandedWidth,
-                color: _sidebarColor,
-                child: GestureDetector(
-                  onTap: isCollapsed
-                      ? () => ref.read(shellSidebarProvider.notifier).expand()
-                      : null,
-                  behavior: HitTestBehavior.translucent,
-                  child: _buildSidebarPanel(
-                    currentLocation: currentLocation,
-                    collapsed: isCollapsed,
-                    permissions: permissions,
-                  ),
-                ),
+                  Expanded(child: mainContent),
+                ],
               ),
-              Expanded(child: mainContent),
-            ],
-          ),
+            );
+          },
         );
       },
-    );
-
-    if (!isOpeningBusiness) return shell;
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        shell,
-        const BusinessOpeningOverlay(),
-      ],
     );
   }
 
@@ -485,6 +488,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
     required String currentLocation,
     required bool collapsed,
     required PermissionService permissions,
+    required ShellSidebar sidebarNotifier,
     bool showCloseButton = false,
   }) {
     return LayoutBuilder(
@@ -500,6 +504,7 @@ class _ShellPageState extends ConsumerState<ShellPage> {
             _buildSidebarHeader(
               collapsed: compactLayout,
               showCloseButton: showCloseButton,
+              sidebarNotifier: sidebarNotifier,
             ),
             Expanded(
               child: _buildNavList(
@@ -517,10 +522,9 @@ class _ShellPageState extends ConsumerState<ShellPage> {
 
   Widget _buildSidebarHeader({
     required bool collapsed,
+    required ShellSidebar sidebarNotifier,
     bool showCloseButton = false,
   }) {
-    final sidebarNotifier = ref.read(shellSidebarProvider.notifier);
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.sm,
@@ -789,8 +793,16 @@ class _ShellPageState extends ConsumerState<ShellPage> {
       onExpand: _expandSidebarIfCollapsed,
       onEditProfile: () => _navigateTo(AppRoutes.editProfile),
       onSwitchCompany: () async {
-        await ref.read(authProvider.notifier).enterBusinessSelection();
-        if (mounted) _navigateTo(AppRoutes.businessList);
+        SwitchCompanyDebugLog.action('ShellPage.onSwitchCompany');
+        await switchToBusinessSelection(
+          ref,
+          navigateToBusinessList: () async {
+            if (mounted) {
+              SwitchCompanyDebugLog.nav('ShellPage _navigateTo(businessList)');
+              _navigateTo(AppRoutes.businessList);
+            }
+          },
+        );
       },
       onLogout: () async {
         await ref.read(authProvider.notifier).logout();
@@ -1353,6 +1365,30 @@ class _ProfileMenuItem extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ShellSidebarStateScope extends ConsumerWidget {
+  const _ShellSidebarStateScope({
+    required this.builder,
+  });
+
+  final Widget Function(
+    bool isCollapsed,
+    bool isDrawerOpen,
+    ShellSidebar sidebarNotifier,
+  )
+  builder;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sidebarState = ref.watch(shellSidebarProvider);
+    final sidebarNotifier = ref.read(shellSidebarProvider.notifier);
+    return builder(
+      sidebarState.isCollapsed,
+      sidebarState.isDrawerOpen,
+      sidebarNotifier,
     );
   }
 }

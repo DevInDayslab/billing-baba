@@ -1,6 +1,9 @@
 import 'package:billing_baba/core/config/app_config.dart';
+import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_router.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/business/presentation/widgets/business_opening_overlay.dart';
+import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/shared/image/image_memory_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +33,13 @@ class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
+    final isOpeningCompany = ref.watch(businessSessionLoadingProvider) != null;
+    final isSelectingCompany = ref.watch(businessSelectionTransitionProvider);
+    final isBlocking = isOpeningCompany || isSelectingCompany;
+
+    SwitchCompanyDebugLog.loading(
+      'app overlay opening=$isOpeningCompany selecting=$isSelectingCompany',
+    );
 
     return MaterialApp.router(
       title: AppConfig.appName,
@@ -38,7 +48,27 @@ class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        return AppThemeScope(child: child ?? const SizedBox.shrink());
+        final content = AppThemeScope(child: child ?? const SizedBox.shrink());
+        if (!isBlocking) return content;
+
+        return Stack(
+          children: [
+            // Keep the router mounted for data loading, but hide it visually.
+            Opacity(opacity: 0, child: IgnorePointer(child: content)),
+            Positioned.fill(
+              child: BusinessOpeningOverlay(
+                opaque: true,
+                whiteBackground: true,
+                message: isOpeningCompany
+                    ? 'Opening company…'
+                    : 'Loading companies…',
+                subtitle: isOpeningCompany
+                    ? 'Loading dashboard and company data'
+                    : null,
+              ),
+            ),
+          ],
+        );
       },
     );
   }

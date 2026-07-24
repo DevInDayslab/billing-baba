@@ -22,7 +22,7 @@ class OutOfStockDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final alternativesAsync = ref.watch(itemAlternativesNotifierProvider(itemId));
+    final alternativesAsync = ref.watch(itemAlternativesProvider(itemId));
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

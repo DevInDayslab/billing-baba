@@ -196,7 +196,15 @@ class BusinessService {
     );
 
     if (!forceReselect && jwtBusinessId != null && jwtBusinessId.isNotEmpty) {
-      return;
+      final expectedId = _cache.readLastOpenedBusinessId();
+      if (expectedId == null ||
+          expectedId.isEmpty ||
+          jwtBusinessId == expectedId) {
+        return;
+      }
+      BusinessProfileDebugLog.log(
+        'JWT scoped to $jwtBusinessId but expected $expectedId — re-scoping',
+      );
     }
 
     final businessId = await _resolveBusinessIdForScope();

@@ -250,9 +250,6 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                               onPartySelected: (party) => notifier.updateParty(
                                 party.name,
                                 partyId: party.id,
-                                balanceDue: party.hasReceivable
-                                    ? party.balance
-                                    : 0,
                               ),
                               onPartySelectedWithId: (partyId, name) =>
                                   notifier.updateParty(name, partyId: partyId),

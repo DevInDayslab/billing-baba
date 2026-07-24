@@ -36,7 +36,7 @@ class AlternativesSection extends ConsumerWidget {
       );
     }
 
-    final alternativesAsync = ref.watch(itemAlternativesNotifierProvider(itemId!));
+    final alternativesAsync = ref.watch(itemAlternativesProvider(itemId!));
 
     return alternativesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -53,7 +53,7 @@ class AlternativesSection extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () => ref.invalidate(itemAlternativesNotifierProvider(itemId!)),
+              onPressed: () => ref.invalidate(itemAlternativesProvider(itemId!)),
               child: const Text('Retry'),
             ),
           ],
@@ -267,7 +267,7 @@ class AlternativesSection extends ConsumerWidget {
 
     try {
       await ref
-          .read(itemAlternativesNotifierProvider(itemId!).notifier)
+          .read(itemAlternativesProvider(itemId!).notifier)
           .removeAlternative(alternativeItemId);
     } on InventoryOfflineException {
       if (!context.mounted) return;
@@ -319,7 +319,7 @@ class AlternativesSection extends ConsumerWidget {
       ),
     );
     
-    ref.invalidate(itemAlternativesNotifierProvider(itemId!));
+    ref.invalidate(itemAlternativesProvider(itemId!));
   }
 }
 
@@ -566,7 +566,7 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
   Future<void> _addAlternative(InventoryItem item) async {
     try {
       await ref
-          .read(itemAlternativesNotifierProvider(widget.itemId).notifier)
+          .read(itemAlternativesProvider(widget.itemId).notifier)
           .addAlternative(item.id);
       
       if (!mounted) return;

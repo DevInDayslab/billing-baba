@@ -24,6 +24,7 @@ class SessionCacheCleanup {
     await _storage.write(StorageKeys.cachedBusinessProfile, '');
     await _storage.write(StorageKeys.cachedProfile, '');
     await _storage.write(StorageKeys.lastOpenedBusinessId, '');
+    await _storage.deleteSecure(StorageKeys.selectedBusinessId);
   }
 
   /// Removes persisted data for a single business (delete or purge).
