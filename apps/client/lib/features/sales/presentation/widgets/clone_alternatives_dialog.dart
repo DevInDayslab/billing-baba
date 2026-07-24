@@ -103,7 +103,7 @@ class _CloneAlternativesDialogState
                     ),
                     const SizedBox(height: 16),
                     ...widget.outOfStockItems.map(
-                      (item) => _buildItemReplacementSection(item),
+                      _buildItemReplacementSection,
                     ),
                   ],
                 ),
@@ -163,18 +163,18 @@ class _CloneAlternativesDialogState
         border: Border.all(color: const Color(0xFFFFB74D)),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Icon(
+          Icon(
             LucideIcons.info,
             size: 20,
             color: Color(0xFFF57C00),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           Expanded(
             child: Text(
               'This will create a new draft invoice with out-of-stock items replaced by your selected alternatives.',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 color: Color(0xFFE65100),
               ),
@@ -187,7 +187,7 @@ class _CloneAlternativesDialogState
 
   Widget _buildItemReplacementSection(OutOfStockItem item) {
     final alternativesAsync =
-        ref.watch(itemAlternativesNotifierProvider(item.itemId));
+        ref.watch(itemAlternativesProvider(item.itemId));
     final itemName = _itemNames[item.itemId] ?? item.itemName;
 
     return Card(
@@ -257,8 +257,8 @@ class _CloneAlternativesDialogState
                 padding: EdgeInsets.all(16),
                 child: Center(child: CircularProgressIndicator()),
               ),
-              error: (error, stack) => Padding(
-                padding: const EdgeInsets.all(16),
+              error: (error, stack) => const Padding(
+                padding: EdgeInsets.all(16),
                 child: Text(
                   'Failed to load alternatives',
                   style: TextStyle(color: AppColors.error, fontSize: 13),
@@ -293,7 +293,7 @@ class _CloneAlternativesDialogState
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: _selectedReplacements[item.itemId],
+                      initialValue: _selectedReplacements[item.itemId],
                       decoration: InputDecoration(
                         hintText: 'Keep original (no replacement)',
                         border: OutlineInputBorder(
@@ -306,7 +306,6 @@ class _CloneAlternativesDialogState
                       ),
                       items: [
                         const DropdownMenuItem<String>(
-                          value: null,
                           child: Text('Keep original (no replacement)'),
                         ),
                         ...alternatives.map(

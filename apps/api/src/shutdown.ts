@@ -1,5 +1,6 @@
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import { closeDatabase } from './db';
+import { stopSubscriptionScheduler } from './modules/subscription/subscription.scheduler';
 
 let isShuttingDown = false;
 
@@ -28,6 +29,8 @@ export function setupGracefulShutdown(app: FastifyInstance): void {
 
     try {
       app.log.info(`Received ${signal} — starting graceful shutdown`);
+
+      stopSubscriptionScheduler();
 
       app.log.info('Stopping acceptance of new requests');
       await app.close();

@@ -1,6 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/plans_pricing/models/plan_model.dart';
-import 'package:billing_baba/features/plans_pricing/presentation/widgets/payment_pending_dialog.dart';
+import 'package:billing_baba/features/subscription/application/subscription_purchase.dart';
+import 'package:billing_baba/features/subscription/models/subscription_models.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -10,6 +11,8 @@ Future<void> showUpgradePlanDialog(
   required PlanPlatform platform,
   required PlanDuration duration,
   required double upgradeAmount,
+  required Future<void> Function() onPay,
+  CurrentSubscriptionModel? currentSubscription,
 }) {
   return showDialog<void>(
     context: context,
@@ -21,6 +24,8 @@ Future<void> showUpgradePlanDialog(
         platform: platform,
         duration: duration,
         upgradeAmount: upgradeAmount,
+        onPay: onPay,
+        currentSubscription: currentSubscription,
       ),
     ),
   );
@@ -33,12 +38,16 @@ class UpgradePlanDialog extends StatefulWidget {
     required this.platform,
     required this.duration,
     required this.upgradeAmount,
+    required this.onPay,
+    this.currentSubscription,
     super.key,
   });
 
   final PlanPlatform platform;
   final PlanDuration duration;
   final double upgradeAmount;
+  final Future<void> Function() onPay;
+  final CurrentSubscriptionModel? currentSubscription;
 
   @override
   State<UpgradePlanDialog> createState() => _UpgradePlanDialogState();
@@ -50,6 +59,7 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
   static final _priceFormat = NumberFormat('#,##0.##', 'en_IN');
 
   _UpgradeStep _step = _UpgradeStep.confirm;
+  var _payInProgress = false;
 
   String get _platformDurationLabel =>
       '${widget.platform.label} • ${widget.duration.label}';
@@ -60,17 +70,13 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
     setState(() => _step = _UpgradeStep.reviewCheckout);
   }
 
-  Future<void> _startMockPayment() async {
-    final amount = widget.upgradeAmount;
+  Future<void> _startPayment() async {
+    if (_payInProgress) {
+      return;
+    }
+    setState(() => _payInProgress = true);
     Navigator.of(context).pop();
-
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-
-    await showPaymentPendingDialog(
-      context,
-      amount: amount,
-    );
+    await widget.onPay();
   }
 
   @override
@@ -114,6 +120,7 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
                   children: [
                     _ActivePlanColumn(
                       platformDurationLabel: _platformDurationLabel,
+                      currentSubscription: widget.currentSubscription,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     const Icon(
@@ -135,6 +142,7 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
                   Expanded(
                     child: _ActivePlanColumn(
                       platformDurationLabel: _platformDurationLabel,
+                      currentSubscription: widget.currentSubscription,
                     ),
                   ),
                   const Padding(
@@ -316,7 +324,7 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
               ),
               const SizedBox(width: AppSpacing.sm),
               FilledButton(
-                onPressed: _startMockPayment,
+                onPressed: _payInProgress ? null : _startPayment,
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.error,
                   padding: const EdgeInsets.symmetric(
@@ -409,9 +417,13 @@ class _LabelPill extends StatelessWidget {
 }
 
 class _ActivePlanColumn extends StatelessWidget {
-  const _ActivePlanColumn({required this.platformDurationLabel});
+  const _ActivePlanColumn({
+    required this.platformDurationLabel,
+    this.currentSubscription,
+  });
 
   final String platformDurationLabel;
+  final CurrentSubscriptionModel? currentSubscription;
 
   static const _goldIconBg = Color(0xFFFFF3E0);
   static const _goldIconColor = Color(0xFFE65100);
@@ -449,10 +461,10 @@ class _ActivePlanColumn extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Vyapar Gold',
-                      style: TextStyle(
+                      currentSubscription?.planName ?? 'No Plan',
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -483,17 +495,19 @@ class _ActivePlanColumn extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        const Row(
+        Row(
           children: [
-            Icon(
+            const Icon(
               Icons.schedule,
               size: 16,
               color: AppColors.textSecondary,
             ),
-            SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: AppSpacing.xs),
             Text(
-              'Expiring on 03 December 2026',
-              style: TextStyle(
+              currentSubscription?.expiresAt == null
+                  ? 'Annual plan • 365 days'
+                  : 'Expiring on ${formatSubscriptionExpiry(currentSubscription!.expiresAt)}',
+              style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,
               ),

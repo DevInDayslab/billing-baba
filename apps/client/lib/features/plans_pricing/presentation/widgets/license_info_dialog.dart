@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/plans_pricing/models/plan_model.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/widgets/upgrade_plan_dialog.dart';
+import 'package:billing_baba/features/subscription/application/subscription_purchase.dart';
+import 'package:billing_baba/features/subscription/models/subscription_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,6 +14,8 @@ Future<void> showLicenseInfoDialog(
   required PlanPlatform platform,
   required PlanDuration duration,
   required double upgradeAmount,
+  CurrentSubscriptionModel? currentSubscription,
+  Future<void> Function()? onUpgrade,
 }) {
   return showDialog<void>(
     context: context,
@@ -22,6 +26,8 @@ Future<void> showLicenseInfoDialog(
         platform: platform,
         duration: duration,
         upgradeAmount: upgradeAmount,
+        currentSubscription: currentSubscription,
+        onUpgrade: onUpgrade,
       ),
     ),
   );
@@ -32,12 +38,16 @@ class LicenseInfoDialog extends StatelessWidget {
     required this.platform,
     required this.duration,
     required this.upgradeAmount,
+    this.currentSubscription,
+    this.onUpgrade,
     super.key,
   });
 
   final PlanPlatform platform;
   final PlanDuration duration;
   final double upgradeAmount;
+  final CurrentSubscriptionModel? currentSubscription;
+  final Future<void> Function()? onUpgrade;
 
   static const _syncCompanyId = '7987016325__t_2024_10_05_00_16_26_s5iu.vyp';
   static const _upgradeBannerBg = Color(0xFFE8F1FF);
@@ -63,22 +73,30 @@ class LicenseInfoDialog extends StatelessWidget {
               const SizedBox(height: AppSpacing.sm),
               const _SubheaderRow(syncCompanyId: _syncCompanyId),
               const SizedBox(height: AppSpacing.lg),
-              const _PlanDetailsCard(
+              _PlanDetailsCard(
                 goldIconBg: _goldIconBg,
                 goldIconColor: _goldIconColor,
                 expiryColor: _expiryColor,
+                currentSubscription: currentSubscription,
               ),
               const SizedBox(height: AppSpacing.md),
               _UpgradeBanner(
                 bannerBg: _upgradeBannerBg,
                 onUpgrade: () {
                   final navigator = Navigator.of(context)..pop();
+                  final upgrade = onUpgrade;
+                  if (upgrade != null) {
+                    unawaited(upgrade());
+                    return;
+                  }
                   unawaited(
                     showUpgradePlanDialog(
                       navigator.context,
                       platform: platform,
                       duration: duration,
                       upgradeAmount: upgradeAmount,
+                      onPay: () async {},
+                      currentSubscription: currentSubscription,
                     ),
                   );
                 },
@@ -176,11 +194,26 @@ class _PlanDetailsCard extends StatelessWidget {
     required this.goldIconBg,
     required this.goldIconColor,
     required this.expiryColor,
+    this.currentSubscription,
   });
 
   final Color goldIconBg;
   final Color goldIconColor;
   final Color expiryColor;
+  final CurrentSubscriptionModel? currentSubscription;
+
+  String get _expiryLabel {
+    final subscription = currentSubscription;
+    if (subscription?.expiresAt == null) {
+      return 'No active paid plan';
+    }
+    final formatted = formatSubscriptionExpiry(subscription!.expiresAt);
+    final days = subscription.remainingDays;
+    if (days == null) {
+      return 'Expires on $formatted';
+    }
+    return "Expires on $formatted ; $days days left";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -209,9 +242,9 @@ class _PlanDetailsCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              const Text(
-                'Vyapar Gold',
-                style: TextStyle(
+              Text(
+                currentSubscription?.planName ?? 'No Plan',
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -225,15 +258,16 @@ class _PlanDetailsCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _PlatformExpiryColumn(
-                  platform: 'Desktop  •  3 Years',
-                  expiry: "(Expires on 3 Dec '26 ; 156 days left)",
+                  platform: 'Desktop  •  1 Year',
+                  expiry: '($_expiryLabel)',
                   expiryColor: expiryColor,
                 ),
               ),
               Expanded(
                 child: _PlatformExpiryColumn(
-                  platform: 'Mobile  •  3 Years',
-                  expiry: "(Expires on 18 Nov '26 ; 141 days left)",
+                  platform: 'Status',
+                  expiry:
+                      '(${formatSubscriptionStatus(currentSubscription?.status ?? SubscriptionStatusCode.active)})',
                   expiryColor: expiryColor,
                 ),
               ),

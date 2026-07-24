@@ -30,5 +30,7 @@ export * from './sales/tables';
 export * from './settings/relations';
 export * from './settings/tables';
 export * from './storage/tables';
+export * from './subscription/relations';
+export * from './subscription/tables';
 export * from './sync/relations';
 export * from './sync/tables';

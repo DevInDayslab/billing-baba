@@ -3,16 +3,15 @@ import 'dart:async';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:billing_baba/features/auth/providers/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_avatar.dart';
 import 'package:billing_baba/features/business/presentation/widgets/business_opening_overlay.dart';
 import 'package:billing_baba/features/collaboration/application/navigation_permission_registry.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service.dart';
+import 'package:billing_baba/features/collaboration/models/collaboration_sub_route.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/company_session_bootstrap_provider.dart';
 import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
-import 'package:billing_baba/features/collaboration/models/collaboration_sub_route.dart';
 import 'package:billing_baba/features/dashboard/application/quick_create_executor.dart';
 import 'package:billing_baba/features/dashboard/models/quick_create_action.dart';
 import 'package:billing_baba/features/dashboard/presentation/widgets/app_top_bar.dart';
@@ -29,7 +28,9 @@ import 'package:billing_baba/features/search/application/search_route_observer.d
 import 'package:billing_baba/features/search/application/search_shortcuts_handler.dart';
 import 'package:billing_baba/features/search/presentation/search_dialog.dart';
 import 'package:billing_baba/features/search/providers/search_dialog_provider.dart';
+import 'package:billing_baba/features/subscription/providers/subscription_provider.dart';
 import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
+import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -88,6 +89,8 @@ class _ShellPageState extends ConsumerState<ShellPage> {
           ref.read(imageStartupWarmupProvider).run(businessId: businessId),
         );
       }
+      unawaited(ref.read(subscriptionPlansProvider.future));
+      unawaited(ref.read(currentSubscriptionProvider.future));
     });
   }
 

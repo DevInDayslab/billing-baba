@@ -277,4 +277,12 @@ abstract final class ApiEndpoints {
       '$collaborationInvitations/$token/reject';
   static String collaborationLeaveCompany(String memberId) =>
       '$collaboration/company-members/$memberId/leave';
+
+  static const subscription = '/api/v1/subscription';
+  static const subscriptionPlans = '$subscription/plans';
+  static const subscriptionCurrent = '$subscription/current';
+  static const subscriptionHistory = '$subscription/history';
+  static const subscriptionCreateOrder = '$subscription/create-order';
+  static const subscriptionVerify = '$subscription/verify';
+  static const subscriptionRefresh = '$subscription/refresh';
 }

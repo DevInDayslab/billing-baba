@@ -22,7 +22,7 @@ class OutOfStockDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final alternativesAsync = ref.watch(itemAlternativesNotifierProvider(itemId));
+    final alternativesAsync = ref.watch(itemAlternativesProvider(itemId));
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -51,9 +51,9 @@ class OutOfStockDialog extends ConsumerWidget {
                       ),
                       error: (error, stack) {
                         print('ALTERNATIVES ERROR: $error');
-                        return Center(
+                        return const Center(
                           child: Padding(
-                            padding: const EdgeInsets.all(32),
+                            padding: EdgeInsets.all(32),
                             child: Text(
                               'Failed to load alternatives',
                               style: TextStyle(color: AppColors.error, fontSize: 13),

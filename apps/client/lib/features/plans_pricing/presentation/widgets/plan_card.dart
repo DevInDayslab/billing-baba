@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/plans_pricing/models/plan_model.dart';
+import 'package:billing_baba/features/plans_pricing/presentation/widgets/plan_price_display.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class PlanCard extends StatelessWidget {
   const PlanCard({
@@ -14,6 +14,7 @@ class PlanCard extends StatelessWidget {
     this.featuresExpanded = false,
     this.onToggleFeatures,
     this.onCtaPressed,
+    this.pricesLoading = false,
     super.key,
   });
 
@@ -26,6 +27,7 @@ class PlanCard extends StatelessWidget {
   final bool featuresExpanded;
   final VoidCallback? onToggleFeatures;
   final VoidCallback? onCtaPressed;
+  final bool pricesLoading;
   static const _platinumBg = Color(0xFFF3F0FF);
   static const _goldIconBg = Color(0xFFFFF3E0);
   static const _goldIconColor = Color(0xFFE65100);
@@ -33,10 +35,6 @@ class PlanCard extends StatelessWidget {
   static const _platinumIconColor = Color(0xFF5E35B1);
   static const _checkColor = Color(0xFF2E7D32);
   static const _crossColor = Color(0xFFD32F2F);
-
-  static final _priceFormat = NumberFormat('#,##0.##', 'en_IN');
-
-  String _formatPrice(double price) => '₹${_priceFormat.format(price)}';
 
   List<PlanFeature> _displayFeatures(List<PlanFeature> features) =>
       features.where((f) => !f.isCategoryHeader).toList();
@@ -185,42 +183,10 @@ class PlanCard extends StatelessWidget {
           ],
         ),
         SizedBox(height: compact ? AppSpacing.sm : AppSpacing.md),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                _formatPrice(pricing.originalPrice),
-                style: TextStyle(
-                  fontSize: compact ? 13 : 15,
-                  color: AppColors.textSecondary,
-                  decoration: TextDecoration.lineThrough,
-                  decorationColor: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                _formatPrice(pricing.discountedPrice),
-                style: TextStyle(
-                  fontSize: compact ? 20 : 26,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Only ${_formatPrice(pricing.perMonthPrice)} per month',
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: compact ? 12 : 13,
-            color: AppColors.textSecondary,
-          ),
+        PlanPriceDisplay(
+          pricing: pricing,
+          compact: compact,
+          loading: pricesLoading,
         ),
         SizedBox(height: compact ? AppSpacing.sm : AppSpacing.md),
         SizedBox(

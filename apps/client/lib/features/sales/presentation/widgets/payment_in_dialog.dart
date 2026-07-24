@@ -1,13 +1,13 @@
 import 'package:billing_baba/core/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/core/attachments/document_attachment_providers.dart';
 import 'package:billing_baba/core/attachments/transaction_attachment_actions.dart';
 import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
-import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/hidden_ledger/models/short_payment_handling.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/widgets/short_payment_handling_dialog.dart';
+import 'package:billing_baba/features/print/presentation/widgets/voucher_print_actions.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/billing_name_party_search_field.dart';
-import 'package:billing_baba/core/attachments/document_attachment_providers.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_form_attachments_section.dart';
 import 'package:billing_baba/features/sales/presentation/widgets/sale_generic_select_dropdown.dart';
@@ -250,9 +250,6 @@ class _PaymentInDialogState extends ConsumerState<PaymentInDialog> {
                               onPartySelected: (party) => notifier.updateParty(
                                 party.name,
                                 partyId: party.id,
-                                balanceDue: party.hasReceivable
-                                    ? party.balance
-                                    : 0,
                               ),
                               onPartySelectedWithId: (partyId, name) =>
                                   notifier.updateParty(name, partyId: partyId),

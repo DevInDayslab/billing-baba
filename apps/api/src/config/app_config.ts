@@ -120,6 +120,15 @@ const envSchema = z.object({
     if (value === '' || value === undefined) return 3600;
     return Number(value);
   }, z.number().int().positive().default(3600)),
+  RAZORPAY_KEY_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  RAZORPAY_KEY_SECRET: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
+  RAZORPAY_WEBHOOK_SECRET: z.preprocess(
+    emptyToUndefined,
+    z.string().min(1).optional(),
+  ),
 });
 
 export type AppConfig = {
@@ -158,6 +167,9 @@ export type AppConfig = {
   storageMaxFileBytes: number;
   storageUploadUrlTtlSeconds: number;
   storageDownloadUrlTtlSeconds: number;
+  razorpayKeyId?: string;
+  razorpayKeySecret?: string;
+  razorpayWebhookSecret?: string;
 };
 
 function assertTwilioConfig(env: z.infer<typeof envSchema>): void {
@@ -266,5 +278,8 @@ export function loadAppConfig(): AppConfig {
     storageMaxFileBytes: env.STORAGE_MAX_FILE_BYTES,
     storageUploadUrlTtlSeconds: env.STORAGE_UPLOAD_URL_TTL_SECONDS,
     storageDownloadUrlTtlSeconds: env.STORAGE_DOWNLOAD_URL_TTL_SECONDS,
+    razorpayKeyId: env.RAZORPAY_KEY_ID,
+    razorpayKeySecret: env.RAZORPAY_KEY_SECRET,
+    razorpayWebhookSecret: env.RAZORPAY_WEBHOOK_SECRET,
   };
 }

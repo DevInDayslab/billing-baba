@@ -1375,6 +1375,35 @@ Product item details needed an immutable stock update history showing who change
 
 ---
 
+## ADR-038: Annual Plan Purchase Infrastructure (Phase 1)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-24 |
+| **Status** | Accepted |
+
+#### Context
+
+Billing Baba needs cloud-backed plan purchase and storage for Gold and Platinum annual plans before any licensing or feature gating. This is a one-time annual purchase (365 days), not recurring Razorpay Subscriptions.
+
+#### Decision
+
+- Add normalized tables: `subscription_plans`, `subscriptions`, `subscription_payments`, `subscription_history`.
+- Denormalize current state on `businesses`: `current_plan`, `plan_status`, `plan_expires_at` (default `no_plan` / `active`).
+- Integrate Razorpay **Orders API** only. Primary activation via `POST /subscription/verify` after Razorpay Checkout.js returns payment credentials; Flutter verifies server-side via Dio (never trusts WebView callbacks alone). Webhooks (`payment.captured`, `order.paid`) remain secondary reconciliation for missed or duplicate events.
+- No Billing Baba-hosted checkout page and no external browser. `POST /subscription/create-order` returns `{ paymentUuid, razorpayOrderId, razorpayKey, amount, currency, businessName, businessEmail, businessPhone }`. Flutter opens a full-bleed desktop modal with an embedded WebView loading bundled `assets/checkout/checkout.html` via `loadFlutterAsset` (macOS) or in-memory asset HTML (Windows). Razorpay order data is injected from Flutter with `runJavaScript` after the page loads — no localhost URLs, no server-hosted checkout page. `checkout.html` only fetches Razorpay Checkout.js over HTTPS; all authenticated API calls stay in Flutter (Dio). Payment credentials are passed from the page to Flutter via a JavaScript bridge; Flutter calls `/verify` with `payment_id`, `order_id`, and `signature` and refreshes subscription state automatically.
+- Daily idempotent scheduler expires `ACTIVE` subscriptions past `expires_at` and downgrades business to `no_plan`.
+- Flutter Plans & Pricing UI remains unchanged visually; mock pricing/payment replaced with API data.
+- No feature restrictions, license validation, or API authorization by plan in this phase.
+
+#### Consequences
+
+- Future licensing can read `businesses.current_plan` and subscription history without changing payment flow.
+- Plan prices are seeded in `subscription_plans` and updatable in DB.
+- Addon/seat licensing and auto-renewal remain out of scope.
+
+---
+
 ## ADR Template
 
 Use for future decisions. Do not remove.

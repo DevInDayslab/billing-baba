@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Payment</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      color-scheme: light;
+    }
+
+    /* Embed Razorpay Standard Checkout edge-to-edge inside the WebView. */
+  </style>
+</head>
+<body>
+  <script>
+    var checkoutOpened = false;
+    var styleObserver = null;
+
+    function sendToFlutter(payload) {
+      var message = JSON.stringify(payload);
+      if (typeof PaymentBridge !== 'undefined' && PaymentBridge.postMessage) {
+        PaymentBridge.postMessage(message);
+        return;
+      }
+      if (window.chrome && window.chrome.webview && window.chrome.webview.postMessage) {
+        window.chrome.webview.postMessage(payload);
+        return;
+      }
+      console.error('PaymentBridge unavailable', payload);
+    }
+
+    function applyEmbeddedCheckoutStyles() {
+      var style = document.getElementById('billing-baba-razorpay-embed');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'billing-baba-razorpay-embed';
+        document.head.appendChild(style);
+      }
+
+      style.textContent = [
+        '.razorpay-backdrop {',
+        '  background: transparent !important;',
+        '  opacity: 1 !important;',
+        '}',
+        '.razorpay-container {',
+        '  position: fixed !important;',
+        '  inset: 0 !important;',
+        '  width: 100% !important;',
+        '  height: 100% !important;',
+        '  max-width: none !important;',
+        '  max-height: none !important;',
+        '  display: flex !important;',
+        '  align-items: stretch !important;',
+        '  justify-content: center !important;',
+        '  z-index: 2147483647 !important;',
+        '}',
+        '.razorpay-container > iframe,',
+        '.razorpay-container iframe,',
+        'iframe[src*="razorpay"] {',
+        '  width: 100% !important;',
+        '  height: 100% !important;',
+        '  max-width: none !important;',
+        '  max-height: none !important;',
+        '  border: none !important;',
+        '  color-scheme: light !important;',
+        '}',
+        '.razorpay-container,',
+        '.razorpay-container *,',
+        '[class*="razorpay"] {',
+        '  color-scheme: light !important;',
+        '}'
+      ].join('\n');
+    }
+
+    function watchRazorpayMount() {
+      applyEmbeddedCheckoutStyles();
+      if (styleObserver) {
+        return;
+      }
+      styleObserver = new MutationObserver(applyEmbeddedCheckoutStyles);
+      styleObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
+    var DESKTOP_CHECKOUT_MIN_WIDTH = 1000;
+
+    function logCheckoutViewport() {
+      var viewport = {
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        userAgent: navigator.userAgent
+      };
+      console.log(
+        '[BillingBaba Checkout] viewport:',
+        'innerWidth=' + viewport.innerWidth,
+        'innerHeight=' + viewport.innerHeight,
+        'userAgent=' + viewport.userAgent
+      );
+      sendToFlutter({
+        event: 'checkout_viewport',
+        innerWidth: viewport.innerWidth,
+        innerHeight: viewport.innerHeight,
+        userAgent: viewport.userAgent
+      });
+      return viewport;
+    }
+
+    function ensureDesktopViewport() {
+      var viewport = logCheckoutViewport();
+      if (!viewport.innerWidth || viewport.innerWidth < DESKTOP_CHECKOUT_MIN_WIDTH) {
+        sendToFlutter({
+          event: 'payment_failed',
+          message:
+            'Payment window is too narrow for desktop checkout (' +
+            (viewport.innerWidth || 0) +
+            'px). Widen the app window and try again.'
+        });
+        return false;
+      }
+      return true;
+    }
+
+    function ensureCheckoutProfile(config) {
+      if (!config.prefillName || !config.prefillEmail || !config.prefillContact) {
+        sendToFlutter({
+          event: 'payment_failed',
+          message:
+            'Please complete your business profile before purchasing a subscription.'
+        });
+        return false;
+      }
+      return true;
+    }
+
+    function buildCheckoutOptions(config) {
+      var options = {
+        key: config.razorpayKey,
+        order_id: config.razorpayOrderId,
+        amount: config.amount,
+        currency: config.currency,
+        name: config.businessName || 'Billing Baba',
+        description: config.description || 'Annual plan',
+        prefill: {
+          name: config.prefillName,
+          email: config.prefillEmail,
+          contact: config.prefillContact
+        },
+        readonly: {
+          name: true,
+          email: true,
+          contact: true
+        },
+        theme: {
+          color: config.themeColor || '#D32F2F',
+          backdrop_color: 'transparent'
+        },
+        config: {
+          display: {
+            preferences: {
+              show_default_blocks: true
+            }
+          }
+        },
+        handler: function (response) {
+          sendToFlutter({
+            event: 'payment_success',
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpaySignature: response.razorpay_signature
+          });
+        },
+        modal: {
+          backdropclose: false,
+          escape: true,
+          animation: true,
+          confirm_close: true,
+          ondismiss: function () {
+            checkoutOpened = false;
+            sendToFlutter({ event: 'payment_cancelled' });
+          }
+        }
+      };
+
+      if (config.businessLogo) {
+        options.image = config.businessLogo;
+      }
+
+      return options;
+    }
+
+    function openCheckout() {
+      if (checkoutOpened) {
+        return;
+      }
+
+      var config = window.BillingBabaCheckout && window.BillingBabaCheckout.config;
+      if (!config) {
+        sendToFlutter({ event: 'payment_failed', message: 'Missing payment config' });
+        return;
+      }
+
+      if (typeof Razorpay === 'undefined') {
+        sendToFlutter({
+          event: 'payment_failed',
+          message: 'Razorpay Checkout.js failed to load'
+        });
+        return;
+      }
+
+      // if (!ensureDesktopViewport()) {
+      //   return;
+      // }
+
+      if (!ensureCheckoutProfile(config)) {
+        return;
+      }
+
+      checkoutOpened = true;
+      watchRazorpayMount();
+      sendToFlutter({ event: 'payment_started' });
+
+      try {
+        var rzp = new Razorpay(buildCheckoutOptions(config));
+        rzp.on('payment.failed', function (response) {
+          checkoutOpened = false;
+          sendToFlutter({
+            event: 'payment_failed',
+            message: response.error && response.error.description
+              ? response.error.description
+              : 'Payment failed'
+          });
+        });
+        rzp.open();
+        setTimeout(applyEmbeddedCheckoutStyles, 0);
+        setTimeout(applyEmbeddedCheckoutStyles, 250);
+        setTimeout(applyEmbeddedCheckoutStyles, 750);
+      } catch (error) {
+        checkoutOpened = false;
+        sendToFlutter({
+          event: 'payment_failed',
+          message: error && error.message ? error.message : 'Could not open checkout'
+        });
+      }
+    }
+
+    function loadCheckoutScript() {
+      if (typeof Razorpay !== 'undefined') {
+        openCheckout();
+        return;
+      }
+
+      var script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = openCheckout;
+      script.onerror = function () {
+        sendToFlutter({
+          event: 'payment_failed',
+          message: 'Could not load Razorpay Checkout.js'
+        });
+      };
+      document.head.appendChild(script);
+    }
+
+    window.BillingBabaCheckout = {
+      config: null,
+      start: function (config) {
+        this.config = config;
+        loadCheckoutScript();
+      },
+      reset: function () {
+        checkoutOpened = false;
+        this.config = null;
+        if (styleObserver) {
+          styleObserver.disconnect();
+          styleObserver = null;
+        }
+      }
+    };
+  </script>
+</body>
+</html>

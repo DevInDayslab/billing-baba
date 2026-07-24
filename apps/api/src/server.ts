@@ -10,6 +10,7 @@ import {
   formatGeminiKeyLogLine,
 } from './shared/gemini/gemini-client';
 import { setupGracefulShutdown } from './shutdown';
+import { startSubscriptionScheduler } from './modules/subscription/subscription.scheduler';
 
 loadEnv({ path: path.resolve(__dirname, '../.env'), override: true });
 
@@ -20,6 +21,8 @@ async function startServer(): Promise<void> {
   setupGracefulShutdown(app);
 
   await app.listen({ host: config.host, port: config.port });
+
+  startSubscriptionScheduler(app, config);
 
   app.log.info(
     `${config.appName} v${config.version} listening on http://${config.host}:${config.port}`,

@@ -9,6 +9,11 @@ import 'package:billing_baba/features/plans_pricing/presentation/widgets/plan_ca
 import 'package:billing_baba/features/plans_pricing/presentation/widgets/plan_card_compact.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/widgets/upgrade_plan_dialog.dart';
 import 'package:billing_baba/features/plans_pricing/providers/plans_provider.dart';
+import 'package:billing_baba/features/subscription/application/subscription_pricing_helper.dart';
+import 'package:billing_baba/features/subscription/application/subscription_purchase.dart';
+import 'package:billing_baba/features/subscription/models/subscription_models.dart';
+import 'package:billing_baba/features/subscription/presentation/widgets/subscription_history_dialog.dart';
+import 'package:billing_baba/features/subscription/providers/subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -34,13 +39,35 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
       _selectedPlatform == PlanPlatform.mobile ? 6 : 10;
 
   void _openUpgradeDialog(double upgradeAmount) {
+    final currentSubscription = ref.read(currentSubscriptionProvider).value;
     unawaited(
       showUpgradePlanDialog(
         context,
         platform: _selectedPlatform,
         duration: _selectedDuration,
         upgradeAmount: upgradeAmount,
+        onPay: () => _purchasePlan(SubscriptionPlanCode.platinum),
+        currentSubscription: currentSubscription,
       ),
+    );
+  }
+
+  Future<void> _purchasePlan(SubscriptionPlanCode plan) async {
+    if (ref.read(subscriptionPurchaseInProgressProvider)) {
+      return;
+    }
+    await purchaseSubscriptionPlan(context: context, ref: ref, plan: plan);
+  }
+
+  Future<void> _openHistory() async {
+    final history = ref.read(subscriptionHistoryProvider).value ?? [];
+    if (history.isEmpty) {
+      await ref.read(subscriptionHistoryProvider.future);
+    }
+    if (!mounted) return;
+    await showSubscriptionHistoryDialog(
+      context,
+      history: ref.read(subscriptionHistoryProvider).value ?? [],
     );
   }
 
@@ -48,16 +75,24 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
   Widget build(BuildContext context) {
     final features = ref.watch(planFeaturesProvider);
     final plans = ref.watch(pricingPlansProvider);
+    ref.watch(currentSubscriptionProvider);
+    final subscriptionPlansAsync = ref.watch(subscriptionPlansProvider);
+    final currentSubscription = ref.watch(currentSubscriptionProvider).value;
+    final apiPlans = subscriptionPlansAsync.value ?? [];
+    final pricesLoading = subscriptionPlansAsync.isLoading;
+    final purchaseInProgress = ref.watch(subscriptionPurchaseInProgressProvider);
     final goldPlan = plans.firstWhere((p) => p.isGold);
     final platinumPlan = plans.firstWhere((p) => !p.isGold);
     final cardFeatures = goldPlan.featuresByPlatform[_selectedPlatform]!;
-    final goldPricing = goldPlan.pricingFor(
-      _selectedPlatform,
-      _selectedDuration,
+    final goldPricing = applyApiPricing(
+      fallback: goldPlan.pricingFor(_selectedPlatform, _selectedDuration),
+      apiPlan: findApiPlan(apiPlans, SubscriptionPlanCode.gold),
+      ctaLabel: goldCtaLabel(currentSubscription),
     );
-    final platinumPricing = platinumPlan.pricingFor(
-      _selectedPlatform,
-      _selectedDuration,
+    final platinumPricing = applyApiPricing(
+      fallback: platinumPlan.pricingFor(_selectedPlatform, _selectedDuration),
+      apiPlan: findApiPlan(apiPlans, SubscriptionPlanCode.platinum),
+      ctaLabel: platinumCtaLabel(currentSubscription),
     );
 
     final scrollContent = SingleChildScrollView(
@@ -84,8 +119,12 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
                         platform: _selectedPlatform,
                         duration: _selectedDuration,
                         upgradeAmount: platinumPricing.discountedPrice,
+                        currentSubscription: currentSubscription,
+                        onUpgrade: () => _purchasePlan(SubscriptionPlanCode.platinum),
                       ),
                     );
+                  } else if (value == 'purchase_history') {
+                    unawaited(_openHistory());
                   }
                 },
               ),
@@ -107,6 +146,7 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
                   platinumPlan: platinumPlan,
                   goldPricing: goldPricing,
                   platinumPricing: platinumPricing,
+                  pricesLoading: pricesLoading,
                   features: cardFeatures,
                   overviewFeatureLimit: _overviewFeatureLimit,
                   featuresExpanded: _featuresExpanded,
@@ -119,6 +159,9 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
                       setState(() => _showFullComparison = true),
                   onUpgradePressed: () =>
                       _openUpgradeDialog(platinumPricing.discountedPrice),
+                  onGoldPressed: () => _purchasePlan(SubscriptionPlanCode.gold),
+                  onPlatinumPressed: () =>
+                      _purchasePlan(SubscriptionPlanCode.platinum),
                 ),
                 LayoutBuilder(
                   builder: (context, constraints) {
@@ -153,10 +196,14 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
                   platinumPlan: platinumPlan,
                   goldPricing: goldPricing,
                   platinumPricing: platinumPricing,
+                  pricesLoading: pricesLoading,
                   features: cardFeatures,
                   overviewFeatureLimit: _overviewFeatureLimit,
                   onUpgradePressed: () =>
                       _openUpgradeDialog(platinumPricing.discountedPrice),
+                  onGoldPressed: () => _purchasePlan(SubscriptionPlanCode.gold),
+                  onPlatinumPressed: () =>
+                      _purchasePlan(SubscriptionPlanCode.platinum),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _FeatureComparisonTable(features: features),
@@ -169,7 +216,9 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: LayoutBuilder(
+      body: Stack(
+        children: [
+          LayoutBuilder(
         builder: (context, constraints) {
           final isCompact =
               constraints.maxWidth < _compactBreakpoint && !_showFullComparison;
@@ -203,13 +252,21 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
                   child: SafeArea(
                     top: false,
                     child: FilledButton(
-                      onPressed:
-                          _selectedCompactPlan == PricingPlanType.platinum &&
-                              selectedPricing.ctaLabel == 'Upgrade to Platinum'
-                          ? () => _openUpgradeDialog(
-                              selectedPricing.discountedPrice,
-                            )
-                          : () {},
+                      onPressed: purchaseInProgress
+                          ? null
+                          : () {
+                        if (_selectedCompactPlan == PricingPlanType.platinum) {
+                          if (selectedPricing.ctaLabel == 'Upgrade to Platinum') {
+                            _openUpgradeDialog(selectedPricing.discountedPrice);
+                          } else {
+                            unawaited(
+                              _purchasePlan(SubscriptionPlanCode.platinum),
+                            );
+                          }
+                        } else {
+                          unawaited(_purchasePlan(SubscriptionPlanCode.gold));
+                        }
+                      },
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.error,
                         foregroundColor: Colors.white,
@@ -263,6 +320,13 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
             ),
           );
         },
+      ),
+          if (purchaseInProgress)
+            const ColoredBox(
+              color: Color(0x66FFFFFF),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
@@ -332,6 +396,13 @@ class _PageHeader extends StatelessWidget {
                     value: 'offline_payment',
                     child: Text(
                       'Offline Payment',
+                      style: TextStyle(color: Colors.black87),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'purchase_history',
+                    child: Text(
+                      'Purchase History',
                       style: TextStyle(color: Colors.black87),
                     ),
                   ),
@@ -595,6 +666,9 @@ class _OverviewPlanCards extends StatelessWidget {
     required this.onToggleFeatures,
     required this.onViewAllFeatures,
     required this.onUpgradePressed,
+    required this.onGoldPressed,
+    required this.onPlatinumPressed,
+    this.pricesLoading = false,
   });
 
   final PricingPlan goldPlan;
@@ -609,6 +683,9 @@ class _OverviewPlanCards extends StatelessWidget {
   final VoidCallback onToggleFeatures;
   final VoidCallback onViewAllFeatures;
   final VoidCallback onUpgradePressed;
+  final VoidCallback onGoldPressed;
+  final VoidCallback onPlatinumPressed;
+  final bool pricesLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -620,6 +697,9 @@ class _OverviewPlanCards extends StatelessWidget {
 
         final showUpgradeCta =
             platinumPricing.ctaLabel == 'Upgrade to Platinum';
+        final showGoldCta = goldPricing.ctaLabel.isNotEmpty;
+        final showPlatinumDirectCta =
+            platinumPricing.ctaLabel != 'Upgrade to Platinum';
 
         return IntrinsicHeight(
           child: Row(
@@ -629,11 +709,13 @@ class _OverviewPlanCards extends StatelessWidget {
                 child: PlanCard(
                   plan: goldPlan,
                   pricing: goldPricing,
+                  pricesLoading: pricesLoading,
                   features: features,
                   isGold: true,
                   overviewFeatureLimit: overviewFeatureLimit,
                   featuresExpanded: featuresExpanded,
                   onToggleFeatures: onToggleFeatures,
+                  onCtaPressed: showGoldCta ? onGoldPressed : null,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -641,12 +723,17 @@ class _OverviewPlanCards extends StatelessWidget {
                 child: PlanCard(
                   plan: platinumPlan,
                   pricing: platinumPricing,
+                  pricesLoading: pricesLoading,
                   features: features,
                   isGold: false,
                   overviewFeatureLimit: overviewFeatureLimit,
                   featuresExpanded: featuresExpanded,
                   onToggleFeatures: onToggleFeatures,
-                  onCtaPressed: showUpgradeCta ? onUpgradePressed : null,
+                  onCtaPressed: showUpgradeCta
+                      ? onUpgradePressed
+                      : showPlatinumDirectCta
+                      ? onPlatinumPressed
+                      : null,
                 ),
               ),
             ],
@@ -668,6 +755,7 @@ class _OverviewPlanCards extends StatelessWidget {
         PlanCardCompact(
           plan: selectedPlan,
           pricing: selectedPricing,
+          pricesLoading: pricesLoading,
           features: features,
           isGold: isGoldSelected,
           onViewAllFeatures: onViewAllFeatures,
@@ -694,6 +782,9 @@ class _ComparisonHeader extends StatelessWidget {
     required this.features,
     required this.overviewFeatureLimit,
     required this.onUpgradePressed,
+    required this.onGoldPressed,
+    required this.onPlatinumPressed,
+    this.pricesLoading = false,
   });
 
   final PricingPlan goldPlan;
@@ -703,10 +794,15 @@ class _ComparisonHeader extends StatelessWidget {
   final List<PlanFeature> features;
   final int overviewFeatureLimit;
   final VoidCallback onUpgradePressed;
+  final VoidCallback onGoldPressed;
+  final VoidCallback onPlatinumPressed;
+  final bool pricesLoading;
 
   @override
   Widget build(BuildContext context) {
     final showUpgradeCta = platinumPricing.ctaLabel == 'Upgrade to Platinum';
+    final showPlatinumDirectCta =
+        platinumPricing.ctaLabel != 'Upgrade to Platinum';
 
     return Row(
       children: [
@@ -714,10 +810,12 @@ class _ComparisonHeader extends StatelessWidget {
           child: PlanCard(
             plan: goldPlan,
             pricing: goldPricing,
+            pricesLoading: pricesLoading,
             features: features,
             isGold: true,
             compact: true,
             overviewFeatureLimit: overviewFeatureLimit,
+            onCtaPressed: onGoldPressed,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -725,11 +823,16 @@ class _ComparisonHeader extends StatelessWidget {
           child: PlanCard(
             plan: platinumPlan,
             pricing: platinumPricing,
+            pricesLoading: pricesLoading,
             features: features,
             isGold: false,
             compact: true,
             overviewFeatureLimit: overviewFeatureLimit,
-            onCtaPressed: showUpgradeCta ? onUpgradePressed : null,
+            onCtaPressed: showUpgradeCta
+                ? onUpgradePressed
+                : showPlatinumDirectCta
+                ? onPlatinumPressed
+                : null,
           ),
         ),
       ],

@@ -36,7 +36,7 @@ class AlternativesSection extends ConsumerWidget {
       );
     }
 
-    final alternativesAsync = ref.watch(itemAlternativesNotifierProvider(itemId!));
+    final alternativesAsync = ref.watch(itemAlternativesProvider(itemId!));
 
     return alternativesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -44,7 +44,7 @@ class AlternativesSection extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            const Text(
               'Failed to load alternatives',
               style: TextStyle(
                 fontSize: 13,
@@ -53,7 +53,7 @@ class AlternativesSection extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: () => ref.invalidate(itemAlternativesNotifierProvider(itemId!)),
+              onPressed: () => ref.invalidate(itemAlternativesProvider(itemId!)),
               child: const Text('Retry'),
             ),
           ],
@@ -93,7 +93,7 @@ class AlternativesSection extends ConsumerWidget {
             color: Colors.grey.shade400,
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'No alternatives added',
             style: TextStyle(
               fontSize: 14,
@@ -142,8 +142,8 @@ class AlternativesSection extends ConsumerWidget {
     final alternativeItemId = (alternative as dynamic).alternativeItemId as String;
 
     final subtitle = [
-      if (brandName != null) brandName,
-      if (categoryName != null) categoryName,
+      ?brandName,
+      ?categoryName,
     ].join(' · ');
 
     return Container(
@@ -267,7 +267,7 @@ class AlternativesSection extends ConsumerWidget {
 
     try {
       await ref
-          .read(itemAlternativesNotifierProvider(itemId!).notifier)
+          .read(itemAlternativesProvider(itemId!).notifier)
           .removeAlternative(alternativeItemId);
     } on InventoryOfflineException {
       if (!context.mounted) return;
@@ -301,7 +301,7 @@ class AlternativesSection extends ConsumerWidget {
     );
   }
 
-  void _showAddAlternativeSheet(
+  Future<void> _showAddAlternativeSheet(
     BuildContext context,
     WidgetRef ref,
     List<dynamic> alternatives,
@@ -319,7 +319,7 @@ class AlternativesSection extends ConsumerWidget {
       ),
     );
     
-    ref.invalidate(itemAlternativesNotifierProvider(itemId!));
+    ref.invalidate(itemAlternativesProvider(itemId!));
   }
 }
 
@@ -430,7 +430,7 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
 
     return itemsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
+      error: (error, stack) => const Center(
         child: Text(
           'Failed to load items',
           style: TextStyle(fontSize: 13, color: AppColors.error),
@@ -494,8 +494,8 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
     final categoryName = item.categoryId != null ? categoryById[item.categoryId] : null;
     
     final subtitle = [
-      if (brandName != null) brandName,
-      if (categoryName != null) categoryName,
+      ?brandName,
+      ?categoryName,
     ].join(' · ');
 
     final stockQty = item.quantity ?? 0;
@@ -566,7 +566,7 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
   Future<void> _addAlternative(InventoryItem item) async {
     try {
       await ref
-          .read(itemAlternativesNotifierProvider(widget.itemId).notifier)
+          .read(itemAlternativesProvider(widget.itemId).notifier)
           .addAlternative(item.id);
       
       if (!mounted) return;
