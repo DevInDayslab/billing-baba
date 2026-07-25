@@ -1,0 +1,84 @@
+# Dependencies
+**/node_modules/
+**/vendor/
+**/.venv/
+**/venv/
+**/.pub-cache/
+**/.pub/
+
+# Build / generated output
+**/build/
+**/dist/
+**/out/
+**/target/
+**/.dart_tool/
+**/.next/
+**/.turbo/
+**/.vercel/
+**/coverage/
+**/.nyc_output/
+**/htmlcov/
+
+# Flutter / Dart tooling
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework/
+**/ios/Flutter/Flutter.podspec
+**/macos/Pods/
+**/macos/Flutter/ephemeral/
+**/windows/flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/android/.gradle/
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.*
+
+# Logs & temp
+**/*.log
+**/logs/
+**/tmp/
+**/temp/
+**/*.tmp
+**/*.temp
+
+# OS / IDE
+**/.DS_Store
+**/Thumbs.db
+**/.idea/
+**/.vscode/*
+!**/.vscode/extensions.json
+!**/.vscode/settings.json.example
+**/*.swp
+**/*.swo
+*~
+
+# Secrets & credentials — never index
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.msg91.example
+**/*.pem
+**/*.key
+**/credentials.json
+**/secrets/
+**/.local-storage/
+
+# Binary / media noise
+**/*.exe
+**/*.dll
+**/*.so
+**/*.dylib
+**/*.class
+**/*.o
+**/*.apk
+**/*.aab
+**/*.ipa
+**/*.app
+**/*.symbols
+**/*.map.json
+**/installer/deps/
+
+# Large generated / trace dumps
+**/gemini-trace-evidence.json
+**/tmp-*.json
