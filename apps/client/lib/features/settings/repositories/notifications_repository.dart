@@ -36,14 +36,13 @@ class NotificationsRepository {
     required String partyId,
     String? phone,
     String? dueDate,
-  }) =>
-      _map(
-        () => _remote.sendPartyReminder(
-          partyId: partyId,
-          phone: phone,
-          dueDate: dueDate,
-        ),
-      );
+  }) => _map(
+    () => _remote.sendPartyReminder(
+      partyId: partyId,
+      phone: phone,
+      dueDate: dueDate,
+    ),
+  );
 
   Future<NotifyDispatchResult> shareSalesDocument(String id) =>
       _map(() => _remote.shareSalesDocument(id));
@@ -51,8 +50,7 @@ class NotificationsRepository {
   Future<NotifyDispatchResult> notifySalesDocument(
     String id, {
     String? phone,
-  }) =>
-      _map(() => _remote.notifySalesDocument(id, phone: phone));
+  }) => _map(() => _remote.notifySalesDocument(id, phone: phone));
 
   Future<NotifyDispatchResult> notifyPaymentReceived(String paymentId) =>
       _map(() => _remote.notifyPaymentReceived(paymentId));

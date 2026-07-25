@@ -3,7 +3,7 @@ import 'package:billing_baba/features/purchases/models/dto/purchase_document_par
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 import 'package:flutter/material.dart';
 
 typedef _LineTaxMapping = ({

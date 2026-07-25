@@ -1,7 +1,6 @@
-import 'dart:io' show Platform;
-
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
-import 'package:billing_baba/features/auth/providers/auth_provider.dart';
+import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_service.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
@@ -10,7 +9,7 @@ import 'package:billing_baba/features/collaboration/data/collaboration_api.dart'
 import 'package:billing_baba/features/collaboration/data/collaboration_cache.dart';
 import 'package:billing_baba/features/collaboration/data/collaboration_repository.dart';
 import 'package:billing_baba/features/collaboration/data/fake_collaboration_repository.dart';
-import 'package:billing_baba/features/collaboration/presentation/providers/company_session_provider.dart';
+import 'package:billing_baba/features/collaboration/application/company_session_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -24,10 +23,11 @@ bool get useFakeCollaborationRepository {
 
 String _defaultDeviceName() {
   if (kIsWeb) return 'Web Browser';
-  if (Platform.isMacOS) return 'MacBook Pro';
-  if (Platform.isWindows) return 'Windows Desktop';
-  if (Platform.isAndroid) return 'Android Device';
-  if (Platform.isIOS) return 'iPhone';
+  final platform = AppPlatform.current;
+  if (platform.isMacOS) return 'MacBook Pro';
+  if (platform.isWindows) return 'Windows Desktop';
+  if (platform.isAndroid) return 'Android Device';
+  if (platform.isIOS) return 'iPhone';
   return 'Desktop';
 }
 

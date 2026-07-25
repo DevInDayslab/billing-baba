@@ -1,13 +1,15 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:flutter/foundation.dart';
 
 /// Temporary diagnostics for the Switch Company navigation/loading flow.
 ///
 /// Search console for `[SWITCH_COMPANY]` while reproducing the flicker.
+/// Opt in via `VERBOSE_LOGGING=true` in `.env`.
 abstract final class SwitchCompanyDebugLog {
   static int _seq = 0;
 
   static void log(String message) {
-    if (!kDebugMode) return;
+    if (!AppConfig.consoleVerbose) return;
     _seq += 1;
     debugPrint('[SWITCH_COMPANY #$_seq] $message');
   }

@@ -10,7 +10,7 @@ import 'package:billing_baba/core/services/business_local_data_cleanup.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/core/utils/jwt_utils.dart';
 import 'package:billing_baba/features/auth/models/account_profile.dart';
-import 'package:billing_baba/features/auth/providers/auth_provider.dart';
+import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/data/business_cache.dart';
 import 'package:billing_baba/features/business/data/business_repository.dart';
 import 'package:billing_baba/features/business/models/business_model.dart';
@@ -18,7 +18,7 @@ import 'package:billing_baba/features/business/models/business_profile_model.dar
 import 'package:billing_baba/features/business/models/create_business_request.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/business_profile_debug_log.dart';
-import 'package:billing_baba/features/pos/providers/pos_cart_provider.dart';
+import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

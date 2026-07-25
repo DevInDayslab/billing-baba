@@ -1,7 +1,7 @@
 import 'package:billing_baba/features/export/models/export_column.dart';
 import 'package:billing_baba/features/export/models/export_row.dart';
 import 'package:billing_baba/features/export/models/export_sheet.dart';
-import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
+import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<ExportSheet> buildExpenseExportSheet(WidgetRef ref) async {

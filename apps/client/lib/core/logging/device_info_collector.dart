@@ -1,5 +1,6 @@
 import 'dart:io' show InternetAddress, Platform;
 
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -38,16 +39,18 @@ abstract final class DeviceInfoCollector {
   }
 
   static String _platformName() {
-    if (Platform.isWindows) return 'Windows';
-    if (Platform.isMacOS) return 'macOS';
-    if (Platform.isLinux) return 'Linux';
-    if (Platform.isAndroid) return 'Android';
-    if (Platform.isIOS) return 'iOS';
+    final platform = AppPlatform.current;
+    if (platform.isWindows) return 'Windows';
+    if (platform.isMacOS) return 'macOS';
+    if (platform.isLinux) return 'Linux';
+    if (platform.isAndroid) return 'Android';
+    if (platform.isIOS) return 'iOS';
     return 'Unknown';
   }
 
   static Future<_NativeDetails> _nativeDetails(DeviceInfoPlugin deviceInfo) async {
-    if (Platform.isWindows) {
+    final platform = AppPlatform.current;
+    if (platform.isWindows) {
       final info = await deviceInfo.windowsInfo;
       return _NativeDetails(
         operatingSystem: 'Windows ${info.majorVersion}.${info.minorVersion} '
@@ -56,21 +59,21 @@ abstract final class DeviceInfoCollector {
         cpuArchitecture: '${info.numberOfCores} cores',
       );
     }
-    if (Platform.isMacOS) {
+    if (platform.isMacOS) {
       final info = await deviceInfo.macOsInfo;
       return _NativeDetails(
         operatingSystem: '${info.osRelease} ${info.kernelVersion}',
         cpuArchitecture: info.arch,
       );
     }
-    if (Platform.isLinux) {
+    if (platform.isLinux) {
       final info = await deviceInfo.linuxInfo;
       return _NativeDetails(
         operatingSystem: '${info.prettyName ?? 'Linux'} ${info.version ?? ''}',
         cpuArchitecture: info.machineId ?? '',
       );
     }
-    if (Platform.isAndroid) {
+    if (platform.isAndroid) {
       final info = await deviceInfo.androidInfo;
       return _NativeDetails(
         operatingSystem:
@@ -78,7 +81,7 @@ abstract final class DeviceInfoCollector {
         cpuArchitecture: info.supportedAbis.join(', '),
       );
     }
-    if (Platform.isIOS) {
+    if (platform.isIOS) {
       final info = await deviceInfo.iosInfo;
       return _NativeDetails(
         operatingSystem: '${info.systemName} ${info.systemVersion}',

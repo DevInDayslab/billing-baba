@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -10,7 +9,7 @@ class OpenSearchDialogIntent extends Intent {
 
 /// Builds the single shell-level shortcut for navigation search.
 Map<ShortcutActivator, Intent> buildSearchShortcuts() {
-  final useMeta = Platform.isMacOS;
+  final useMeta = AppPlatform.current.isMacOS;
   return {
     SingleActivator(
       LogicalKeyboardKey.keyF,

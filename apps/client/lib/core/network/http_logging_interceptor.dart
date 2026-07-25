@@ -13,7 +13,7 @@ class HttpLoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     options.extra[_extraStartTime] = DateTime.now().millisecondsSinceEpoch;
-    if (AppConfig.diagnosticsEnabled) {
+    if (AppConfig.consoleVerbose) {
       final headers = LogSanitizer.sanitizeHeaders(options.headers);
       final body = LogSanitizer.sanitizeBody(options.data);
       LoggingService.instance.info(
@@ -38,7 +38,7 @@ class HttpLoggingInterceptor extends Interceptor {
       LogSanitizer.sanitizeBody(response.data),
     );
 
-    if (AppConfig.diagnosticsEnabled) {
+    if (AppConfig.consoleVerbose) {
       LoggingService.instance.info(
         '← ${response.requestOptions.method} ${response.requestOptions.uri}',
       );
@@ -65,7 +65,7 @@ class HttpLoggingInterceptor extends Interceptor {
       LogSanitizer.sanitizeBody(err.response?.data),
     );
 
-    if (AppConfig.diagnosticsEnabled) {
+    if (AppConfig.consoleVerbose) {
       LoggingService.instance.error(
         '✗ ${err.requestOptions.method} ${err.requestOptions.uri}\n'
         '  Type: ${err.type}\n'
@@ -99,14 +99,16 @@ class HttpLoggingInterceptor extends Interceptor {
   Duration _elapsed(RequestOptions options) {
     final start = options.extra[_extraStartTime] as int?;
     if (start == null) return Duration.zero;
-    return Duration(milliseconds: DateTime.now().millisecondsSinceEpoch - start);
+    return Duration(
+      milliseconds: DateTime.now().millisecondsSinceEpoch - start,
+    );
   }
 
   /// Call when retrying a request (e.g. after 401 refresh).
   static void logRetry(RequestOptions options, {required String reason}) {
     final count = (options.extra[_extraRetryCount] as int? ?? 0) + 1;
     options.extra[_extraRetryCount] = count;
-    if (AppConfig.diagnosticsEnabled) {
+    if (AppConfig.consoleVerbose) {
       LoggingService.instance.warn(
         '↻ Retry #$count ${options.method} ${options.uri} ($reason)',
       );

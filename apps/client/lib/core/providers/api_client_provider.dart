@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/network/api_client.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
-import 'package:billing_baba/features/auth/providers/auth_provider.dart';
+import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'api_client_provider.g.dart';

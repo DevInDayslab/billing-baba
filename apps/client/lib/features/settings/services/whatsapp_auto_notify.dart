@@ -1,11 +1,11 @@
-import 'package:billing_baba/features/generated_documents/providers/generated_document_providers.dart';
+import 'package:billing_baba/features/generated_documents/application/generated_document_providers.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
-import 'package:billing_baba/features/print/presentation/providers/print_providers.dart';
+import 'package:billing_baba/features/print/application/print_providers.dart';
 import 'package:billing_baba/features/settings/data/notifications_remote_data_source.dart';
 import 'package:billing_baba/features/settings/models/transaction_message_settings.dart';
-import 'package:billing_baba/features/settings/providers/notifications_remote_provider.dart';
-import 'package:billing_baba/features/settings/providers/transaction_message_settings_provider.dart';
-import 'package:billing_baba/features/settings/providers/whatsapp_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/notifications_remote_provider.dart';
+import 'package:billing_baba/features/settings/application/transaction_message_settings_provider.dart';
+import 'package:billing_baba/features/settings/application/whatsapp_settings_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,8 +35,9 @@ abstract final class WhatsAppAutoNotify {
   }) async {
     try {
       final printService = await ref.read(printServiceProvider.future);
-      final generatedDocuments =
-          await ref.read(generatedDocumentServiceProvider.future);
+      final generatedDocuments = await ref.read(
+        generatedDocumentServiceProvider.future,
+      );
       final request = PrintRequest.saleInvoice(documentId);
       final bytes = await printService.generatePdf(request);
       await generatedDocuments.cacheForPrintRequest(

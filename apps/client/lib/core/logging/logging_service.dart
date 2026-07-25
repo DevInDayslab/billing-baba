@@ -7,6 +7,7 @@ import 'package:billing_baba/core/logging/diagnostics_store.dart';
 import 'package:billing_baba/core/logging/log_level.dart';
 import 'package:billing_baba/core/logging/log_sanitizer.dart';
 import 'package:billing_baba/core/network/network_error_details.dart';
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -43,7 +44,7 @@ class LoggingService {
   }
 
   Future<Directory> _resolveLogDirectory() async {
-    if (!kIsWeb && Platform.isWindows) {
+    if (!kIsWeb && AppPlatform.current.isWindows) {
       final localAppData = Platform.environment['LOCALAPPDATA'];
       if (localAppData != null && localAppData.isNotEmpty) {
         return Directory('$localAppData\\${AppConfig.appName}\\logs');
@@ -55,16 +56,16 @@ class LoggingService {
   }
 
   Future<Directory> _documentsDirectory() async {
-    if (!kIsWeb && Platform.isWindows) {
+    if (!kIsWeb && AppPlatform.current.isWindows) {
       final userProfile = Platform.environment['USERPROFILE'];
       if (userProfile != null && userProfile.isNotEmpty) {
         return Directory('$userProfile\\Documents');
       }
     }
-  if (!kIsWeb && Platform.isMacOS) {
+    if (!kIsWeb && AppPlatform.current.isMacOS) {
       return Directory('${Platform.environment['HOME'] ?? ''}/Documents');
     }
-    if (!kIsWeb && Platform.isLinux) {
+    if (!kIsWeb && AppPlatform.current.isLinux) {
       return Directory('${Platform.environment['HOME'] ?? ''}/Documents');
     }
     // Fallback for mobile — use app documents via path_provider pattern.
@@ -102,7 +103,11 @@ class LoggingService {
     final timestamp = _formatTimestamp(DateTime.now());
     final line = '$timestamp ${level.label} $message';
 
-    if (AppConfig.diagnosticsEnabled || kDebugMode) {
+    final echoToConsole = switch (level) {
+      LogLevel.error || LogLevel.warn => kDebugMode,
+      LogLevel.info || LogLevel.debug => AppConfig.consoleVerbose,
+    };
+    if (echoToConsole) {
       debugPrint(line);
     }
 
@@ -158,12 +163,12 @@ class LoggingService {
   }
 
   String _formatTimestamp(DateTime time) {
-  return '${time.year.toString().padLeft(4, '0')}-'
-      '${time.month.toString().padLeft(2, '0')}-'
-      '${time.day.toString().padLeft(2, '0')} '
-      '${time.hour.toString().padLeft(2, '0')}:'
-      '${time.minute.toString().padLeft(2, '0')}:'
-      '${time.second.toString().padLeft(2, '0')}';
+    return '${time.year.toString().padLeft(4, '0')}-'
+        '${time.month.toString().padLeft(2, '0')}-'
+        '${time.day.toString().padLeft(2, '0')} '
+        '${time.hour.toString().padLeft(2, '0')}:'
+        '${time.minute.toString().padLeft(2, '0')}:'
+        '${time.second.toString().padLeft(2, '0')}';
   }
 
   Future<String> readRecentLogs({int maxLines = 500}) async {
@@ -189,11 +194,12 @@ class LoggingService {
 
     if (kIsWeb) return;
 
-    if (Platform.isWindows) {
+    final platform = AppPlatform.current;
+    if (platform.isWindows) {
       await Process.run('explorer', [dir.path]);
-    } else if (Platform.isMacOS) {
+    } else if (platform.isMacOS) {
       await Process.run('open', [dir.path]);
-    } else if (Platform.isLinux) {
+    } else if (platform.isLinux) {
       await Process.run('xdg-open', [dir.path]);
     }
   }

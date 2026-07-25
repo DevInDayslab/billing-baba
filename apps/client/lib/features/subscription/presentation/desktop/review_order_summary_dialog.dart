@@ -5,7 +5,7 @@ import 'package:billing_baba/features/subscription/application/subscription_chec
 import 'package:billing_baba/features/subscription/application/subscription_error_mapper.dart';
 import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/review_order_summary_input.dart';
-import 'package:billing_baba/features/subscription/presentation/providers/create_order_provider.dart';
+import 'package:billing_baba/features/subscription/application/create_order_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';

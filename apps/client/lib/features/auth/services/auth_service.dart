@@ -2,7 +2,10 @@ import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
+import 'package:billing_baba/features/auth/models/auth_user.dart';
+import 'package:billing_baba/features/auth/models/business_summary.dart';
 import 'package:billing_baba/features/auth/repositories/auth_repository.dart';
+import 'package:billing_baba/features/auth/services/otp_service.dart';
 import 'package:billing_baba/features/auth/utils/auth_debug_logger.dart';
 import 'package:dio/dio.dart';
 
@@ -12,8 +15,37 @@ class AuthService {
     required this._storage,
   });
 
+  /// Local-only developer session — never sent to the API.
+  static const devAccessToken = 'dev-offline-access-token';
+  static const devRefreshToken = 'dev-offline-refresh-token';
+
   final AuthRepository _repository;
   final StorageService _storage;
+
+  static bool isOfflineDevToken(String accessToken) =>
+      accessToken == devAccessToken ||
+      accessToken == OtpService.mockAccessToken;
+
+  static AuthSession offlineDevSession({String phone = '919999999999'}) {
+    return AuthSession(
+      accessToken: devAccessToken,
+      refreshToken: devRefreshToken,
+      expiresIn: 86400,
+      user: AuthUser(
+        id: 'dev-user',
+        phone: phone,
+        name: 'Developer',
+        role: 'owner',
+      ),
+      businesses: const [
+        BusinessSummary(
+          id: 'dev-business',
+          name: 'Dev Business',
+          role: 'owner',
+        ),
+      ],
+    );
+  }
 
   Future<AuthSession?> loadStoredSession() async {
     final accessToken = await _storage.readSecure(StorageKeys.accessToken);
@@ -23,6 +55,15 @@ class AuthService {
         accessToken.isEmpty ||
         refreshToken.isEmpty) {
       return null;
+    }
+
+    // Offline developer / mock sessions — restore locally, never hit the API.
+    if (isOfflineDevToken(accessToken)) {
+      final phone = _storage.read(StorageKeys.accountPhone) ?? '919999999999';
+      return offlineDevSession(phone: phone).copyWith(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      );
     }
 
     try {
@@ -118,12 +159,13 @@ class AuthService {
   }
 
   Future<AuthSession> devLogin() async {
-    AuthDebugLogger.log('AuthService.devLogin entered');
-    final session = await _repository.devLogin();
-    AuthDebugLogger.log('AuthService.devLogin response received');
+    AuthDebugLogger.log(
+      'AuthService.devLogin: offline local session (no API)',
+    );
+    final session = AuthService.offlineDevSession();
+    await persistSession(session);
     AuthDebugLogger.backendLoginSuccess();
     AuthDebugLogger.jwtIssued(session.accessToken);
-    await persistSession(session);
     return session;
   }
 

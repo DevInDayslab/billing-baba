@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_list_image_warmup.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
-import 'package:billing_baba/features/pos/providers/pos_items_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
 import 'package:billing_baba/shared/image/image_debug_log.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';

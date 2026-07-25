@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:flutter/material.dart';
 
 /// Standard label above a form control.

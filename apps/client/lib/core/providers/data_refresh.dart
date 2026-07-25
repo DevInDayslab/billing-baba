@@ -1,23 +1,23 @@
 import 'dart:async';
 
-import 'package:billing_baba/features/dashboard/providers/dashboard_provider.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_items_provider.dart';
+import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
-import 'package:billing_baba/features/purchases/providers/expenses_provider.dart';
-import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
-import 'package:billing_baba/features/purchases/providers/purchase_bills_provider.dart';
-import 'package:billing_baba/features/purchases/providers/purchase_fa_provider.dart';
-import 'package:billing_baba/features/reports/providers/report_refresh_provider.dart';
-import 'package:billing_baba/features/sales/providers/delivery_challan_provider.dart';
-import 'package:billing_baba/features/sales/providers/estimate_quotation_provider.dart';
-import 'package:billing_baba/features/sales/providers/job_work_orders_provider.dart';
-import 'package:billing_baba/features/sales/providers/payment_in_provider.dart';
-import 'package:billing_baba/features/sales/providers/sale_fa_provider.dart';
-import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
-import 'package:billing_baba/features/sales/providers/sale_orders_provider.dart';
-import 'package:billing_baba/features/sales/providers/sale_return_provider.dart';
-import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
+import 'package:billing_baba/features/purchases/application/expenses_provider.dart';
+import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_fa_provider.dart';
+import 'package:billing_baba/features/reports/application/report_refresh_provider.dart';
+import 'package:billing_baba/features/sales/application/delivery_challan_provider.dart';
+import 'package:billing_baba/features/sales/application/estimate_quotation_provider.dart';
+import 'package:billing_baba/features/sales/application/job_work_orders_provider.dart';
+import 'package:billing_baba/features/sales/application/payment_in_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_fa_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_return_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void invalidateDashboard(Ref ref) {

@@ -5,7 +5,7 @@ import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/print/models/printable_document.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
-import 'package:billing_baba/features/settings/presentation/widgets/invoice_preview_widget.dart';
+import 'package:billing_baba/features/settings/presentation/desktop/widgets/invoice_preview_widget.dart';
 import 'package:billing_baba/features/settings/services/invoice_pdf_builder.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -93,7 +93,10 @@ abstract final class InvoicePrintDocumentService {
     required PosSale sale,
     required WidgetRef ref,
   }) async {
-    final preview = InvoicePreviewData.fromSources(profile: business, sale: sale);
+    final preview = InvoicePreviewData.fromSources(
+      profile: business,
+      sale: sale,
+    );
     final logoBytes = await _resolveLogoBytes(
       settings: settings,
       logoUrl: preview.logoUrl,

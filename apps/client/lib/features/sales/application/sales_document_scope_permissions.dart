@@ -1,5 +1,5 @@
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
-import 'package:billing_baba/features/sales/providers/sales_documents_list_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 
 PermissionModule permissionModuleForScope(SalesDocumentListScope scope) {

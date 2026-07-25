@@ -2,14 +2,14 @@ import 'package:billing_baba/core/layout/dashboard_layout.dart' show DashboardLa
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_side_widget.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
-import 'package:billing_baba/features/parties/providers/parties_providers.dart';
-import 'package:billing_baba/features/parties/providers/parties_selection_providers.dart';
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
+import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
 import 'package:billing_baba/features/reports/models/business_status_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/item_stock_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/party_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/reports_nav_intent.dart';
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
-import 'package:billing_baba/features/reports/providers/reports_nav_intent_provider.dart';
+import 'package:billing_baba/features/reports/application/reports_nav_intent_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

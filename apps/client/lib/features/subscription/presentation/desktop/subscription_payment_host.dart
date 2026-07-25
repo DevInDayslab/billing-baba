@@ -1,5 +1,4 @@
-import 'dart:io' show Platform;
-
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/features/subscription/domain/models/create_order_result.dart';
 import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/payment_bridge_result.dart';
@@ -15,7 +14,8 @@ Future<PaymentBridgeResult?> showSubscriptionPaymentHost(
   required CreateOrderResult order,
   required SubscriptionPlanType planType,
 }) async {
-  if (kIsWeb || (!Platform.isMacOS && !Platform.isWindows)) {
+  final platform = AppPlatform.current;
+  if (kIsWeb || (!platform.isMacOS && !platform.isWindows)) {
     return const PaymentBridgeFailed(
       'Payments are only supported on desktop.',
     );

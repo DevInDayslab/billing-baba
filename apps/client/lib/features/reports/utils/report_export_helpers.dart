@@ -1,5 +1,5 @@
-import 'package:billing_baba/features/export/presentation/widgets/export_actions.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_preview_dialog.dart';
+import 'package:billing_baba/features/export/presentation/desktop/widgets/export_actions.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_preview_dialog.dart';
 import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:flutter/material.dart';
 
