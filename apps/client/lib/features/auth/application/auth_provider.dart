@@ -439,13 +439,16 @@ class Auth extends _$Auth {
     _setAuthStatus(AuthStatus.initializing);
     state = state.copyWith(clearError: true);
 
+    // Keep branded splash visible for the full animation on all platforms.
+    final splashWait = Future<void>.delayed(_splashMinDuration);
+
     try {
       final service = await _service().timeout(const Duration(seconds: 8));
       final sessionFuture = service.loadStoredSession().timeout(
         const Duration(seconds: 8),
       );
       final results = await Future.wait<Object?>([
-        Future<void>.delayed(_splashMinDuration),
+        splashWait,
         sessionFuture,
       ]);
       final session = results[1] as AuthSession?;
@@ -464,11 +467,11 @@ class Auth extends _$Auth {
         backendLoginCompleted: true,
       );
     } on TimeoutException {
-      await Future<void>.delayed(_splashMinDuration);
+      await splashWait;
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(clearSession: true, otpPhase: OtpPhase.idle);
     } on Object catch (e) {
-      await Future<void>.delayed(_splashMinDuration);
+      await splashWait;
       _setAuthStatus(AuthStatus.unauthenticated);
       state = state.copyWith(
         clearSession: true,
@@ -709,9 +712,7 @@ class Auth extends _$Auth {
     if (_devLoginInFlight || state.backendLoginCompleted) return;
 
     _devLoginInFlight = true;
-    AuthDebugLogger.log(
-      'devLogin: button pressed apiBaseUrl=${AppConfig.apiBaseUrl}',
-    );
+    AuthDebugLogger.log('devLogin: offline local session (no API)');
     state = state.copyWith(clearError: true);
     _setOtpPhase(OtpPhase.backendLogin);
 
@@ -720,17 +721,6 @@ class Auth extends _$Auth {
       final session = await service.devLogin();
       AuthDebugLogger.log('devLogin: login successful');
       _completeOtpLogin(session);
-    } on DioException catch (e, st) {
-      AuthDebugLogger.log(
-        'devLogin failed: ${e.type} status=${e.response?.statusCode}',
-      );
-      if (AppConfig.authDebugLogging) {
-        debugPrint('[AUTH] devLogin stackTrace:\n$st');
-      }
-      _setOtpPhase(OtpPhase.idle);
-      state = state.copyWith(
-        error: '${_devLoginErrorMessage(e)}${_debugErrorSuffix(e)}',
-      );
     } on Object catch (e, st) {
       AuthDebugLogger.log('devLogin failed: $e');
       if (AppConfig.authDebugLogging) {

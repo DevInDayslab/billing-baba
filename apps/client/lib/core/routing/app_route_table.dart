@@ -78,10 +78,12 @@ typedef AppShellBuilder = Widget Function(
 GoRouter createAppRouter({
   required Ref ref,
   required AppShellBuilder shellBuilder,
+  String initialLocation = AppRoutes.splash,
+  bool showSplash = true,
 }) {
   ref.watch(companySessionBootstrapProvider);
   return GoRouter(
-    initialLocation: AppRoutes.splash,
+    initialLocation: initialLocation,
     refreshListenable: RouterRefreshListenable(ref),
     redirect: (context, state) {
       final auth = ref.read(authProvider);
@@ -93,10 +95,26 @@ GoRouter createAppRouter({
       final onBusinessList = location == AppRoutes.businessList;
 
       if (auth.status == AuthStatus.initializing) {
+        if (!showSplash) {
+          // Mobile: no splash — stay on / go to login while auth boots.
+          return onLogin ? null : AppRoutes.login;
+        }
         return onSplash ? null : AppRoutes.splash;
       }
 
       if (onSplash) {
+        // Mobile never keeps the splash route.
+        if (!showSplash) {
+          return switch (auth.status) {
+            AuthStatus.authenticated => AppRoutes.home,
+            AuthStatus.needsBusinessSelection ||
+            AuthStatus.needsBusinessCreation =>
+              AppRoutes.businessList,
+            AuthStatus.otpSent => AppRoutes.verifyOtp,
+            AuthStatus.unauthenticated || AuthStatus.initializing =>
+              AppRoutes.login,
+          };
+        }
         return switch (auth.status) {
           AuthStatus.authenticated => AppRoutes.home,
           AuthStatus.needsBusinessSelection => AppRoutes.businessList,
@@ -129,7 +147,7 @@ GoRouter createAppRouter({
           final permission = ref.read(permissionServiceProvider);
           return PermissionGuard.redirect(location, permission);
         case AuthStatus.initializing:
-          return AppRoutes.splash;
+          return showSplash ? AppRoutes.splash : AppRoutes.login;
       }
       return null;
     },

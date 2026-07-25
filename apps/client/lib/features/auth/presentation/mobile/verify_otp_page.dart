@@ -1,16 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:billing_baba/features/auth/presentation/desktop/verify_otp_page.dart';
+import 'package:flutter/widgets.dart';
 
+/// Reuses the existing OTP verification UI and auth providers on mobile.
 class MobileVerifyOtpPage extends StatelessWidget {
-  const MobileVerifyOtpPage({
-    super.key,
-  });
+  const MobileVerifyOtpPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Verify Otp — Mobile UI coming soon'),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const DesktopVerifyOtpPage();
 }

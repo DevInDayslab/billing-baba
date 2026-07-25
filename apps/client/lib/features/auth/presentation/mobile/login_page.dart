@@ -1,16 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:billing_baba/features/auth/presentation/desktop/login_page.dart';
+import 'package:flutter/widgets.dart';
 
+/// Reuses the existing login UI and auth providers on mobile.
 class MobileLoginPage extends StatelessWidget {
-  const MobileLoginPage({
-    super.key,
-  });
+  const MobileLoginPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Login — Mobile UI coming soon'),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const DesktopLoginPage();
 }

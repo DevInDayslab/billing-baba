@@ -4,7 +4,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Mobile GoRouter — uses [MobileShell], public Adaptive feature pages only.
+/// Mobile GoRouter.
+///
+/// `/` SplashPage → LoginPage → VerifyOtpPage → (BusinessList when needed)
+/// → [MobileShell].
 final mobileRouterProvider = Provider<GoRouter>((ref) {
   return createAppRouter(
     ref: ref,
