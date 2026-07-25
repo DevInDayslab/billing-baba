@@ -110,7 +110,8 @@ class InvoicePreviewData {
             (item) => InvoicePreviewItem(
               name: item.name,
               qty: item.quantity,
-              rate: item.unitPrice ??
+              rate:
+                  item.unitPrice ??
                   (item.quantity > 0 ? item.lineTotal / item.quantity : 0),
               amount: item.lineTotal,
             ),
@@ -194,10 +195,10 @@ class _ThermalPreview extends StatelessWidget {
   final InvoicePreviewData data;
 
   double get _widthMm => switch (settings.thermalPageSize) {
-        ThermalPageSize.twoInch => 62,
-        ThermalPageSize.threeInch => 80,
-        ThermalPageSize.fourInch => 92,
-      };
+    ThermalPageSize.twoInch => 62,
+    ThermalPageSize.threeInch => 80,
+    ThermalPageSize.fourInch => 92,
+  };
 
   double get _baseFontSize {
     final scale = switch (settings.thermalPageSize) {
@@ -368,16 +369,16 @@ class _RegularPreview extends StatelessWidget {
   static const _sqrt2 = 1.41421356237;
 
   double _invoiceFontSize() => switch (settings.invoiceTextSize) {
-        PrintTextSize.small => 8,
-        PrintTextSize.medium => 10,
-        PrintTextSize.large => 12,
-      };
+    PrintTextSize.small => 8,
+    PrintTextSize.medium => 10,
+    PrintTextSize.large => 12,
+  };
 
   double _companyFontSize() => switch (settings.companyTextSize) {
-        PrintTextSize.small => 8,
-        PrintTextSize.medium => 10,
-        PrintTextSize.large => 12,
-      };
+    PrintTextSize.small => 8,
+    PrintTextSize.medium => 10,
+    PrintTextSize.large => 12,
+  };
 
   TextStyle _body({bool emphasized = false}) {
     return AppTypography.inter(
@@ -434,8 +435,9 @@ class _RegularPreview extends StatelessWidget {
                               if (settings.printCompanyLogo)
                                 CircleAvatar(
                                   radius: 16,
-                                  backgroundColor: AppColors.primary
-                                      .withValues(alpha: 0.12),
+                                  backgroundColor: AppColors.primary.withValues(
+                                    alpha: 0.12,
+                                  ),
                                   child: Text(
                                     data.businessName.isNotEmpty
                                         ? data.businessName[0].toUpperCase()

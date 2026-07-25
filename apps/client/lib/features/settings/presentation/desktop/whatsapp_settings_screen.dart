@@ -46,13 +46,13 @@ class _WhatsAppSettingsScreenState
           final statusLabel = !draft.enabled
               ? 'Disabled'
               : apiConnected
-                  ? 'Connected'
-                  : 'Not connected';
+              ? 'Connected'
+              : 'Not connected';
           final statusColor = !draft.enabled
               ? Colors.grey.shade700
               : apiConnected
-                  ? Colors.green.shade700
-                  : Colors.orange.shade800;
+              ? Colors.green.shade700
+              : Colors.orange.shade800;
           final sender = status?.senderMasked ?? '—';
 
           return ListView(
@@ -86,7 +86,10 @@ class _WhatsAppSettingsScreenState
                         ),
                       ),
                       const Divider(),
-                      const _InfoRow(label: 'Provider', value: 'Twilio WhatsApp'),
+                      const _InfoRow(
+                        label: 'Provider',
+                        value: 'Twilio WhatsApp',
+                      ),
                       const SizedBox(height: AppSpacing.sm),
                       _InfoRow(
                         label: 'Status',
@@ -187,8 +190,8 @@ class _WhatsAppSettingsScreenState
           content: Text(
             result.notified
                 ? (result.deduped
-                    ? 'Test already sent recently (deduped)'
-                    : 'Test message sent')
+                      ? 'Test already sent recently (deduped)'
+                      : 'Test message sent')
                 : (result.errorMessage ?? 'Failed to send test message'),
           ),
         ),
@@ -242,6 +245,6 @@ class _InfoRow extends StatelessWidget {
 
 final FutureProvider<NotificationStatusDto> _notificationStatusProvider =
     FutureProvider.autoDispose((ref) async {
-  final remote = await ref.watch(notificationsRemoteProvider.future);
-  return remote.getStatus();
-});
+      final remote = await ref.watch(notificationsRemoteProvider.future);
+      return remote.getStatus();
+    });

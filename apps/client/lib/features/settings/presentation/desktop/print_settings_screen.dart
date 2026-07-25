@@ -20,7 +20,8 @@ class DesktopPrintSettingsScreen extends ConsumerStatefulWidget {
       _PrintSettingsScreenState();
 }
 
-class _PrintSettingsScreenState extends ConsumerState<DesktopPrintSettingsScreen>
+class _PrintSettingsScreenState
+    extends ConsumerState<DesktopPrintSettingsScreen>
     with SingleTickerProviderStateMixin {
   bool _isApplying = false;
   PrintSettings? _draft;
@@ -114,8 +115,7 @@ class _PrintSettingsScreenState extends ConsumerState<DesktopPrintSettingsScreen
         data: (savedSettings) {
           _draft ??= savedSettings;
 
-          final tabIndex =
-              _draft!.printerType == PrinterType.thermal ? 0 : 1;
+          final tabIndex = _draft!.printerType == PrinterType.thermal ? 0 : 1;
           if (_tabController.index != tabIndex &&
               !_tabController.indexIsChanging) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -319,8 +319,8 @@ class _ErrorState extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: AppSpacing.lg),
             FilledButton(

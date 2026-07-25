@@ -93,7 +93,10 @@ abstract final class InvoicePrintDocumentService {
     required PosSale sale,
     required WidgetRef ref,
   }) async {
-    final preview = InvoicePreviewData.fromSources(profile: business, sale: sale);
+    final preview = InvoicePreviewData.fromSources(
+      profile: business,
+      sale: sale,
+    );
     final logoBytes = await _resolveLogoBytes(
       settings: settings,
       logoUrl: preview.logoUrl,

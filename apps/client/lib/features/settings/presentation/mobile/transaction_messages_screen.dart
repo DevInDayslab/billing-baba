@@ -1,15 +1,18 @@
+import 'package:billing_baba/core/widgets/mobile/mobile_settings_detail_page.dart';
+import 'package:billing_baba/features/settings/presentation/mobile/widgets/mobile_settings_placeholder_body.dart';
 import 'package:flutter/material.dart';
 
 class MobileTransactionMessagesScreen extends StatelessWidget {
-  const MobileTransactionMessagesScreen({
-    super.key,
-  });
+  const MobileTransactionMessagesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Transaction Messages — Mobile UI coming soon'),
+    return const MobileSettingsDetailPage(
+      title: 'Transaction Messages',
+      subtitle: 'Auto-send templates and message content',
+      body: MobileSettingsPlaceholderBody(
+        title: 'Transaction Messages',
+        message: 'Message templates and auto-send rules will be editable here.',
       ),
     );
   }

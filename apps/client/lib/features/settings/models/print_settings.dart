@@ -12,9 +12,9 @@ enum PrintTextSize { small, medium, large }
 
 extension PrinterTypeX on PrinterType {
   String get storageKey => switch (this) {
-        PrinterType.regular => 'regular',
-        PrinterType.thermal => 'thermal',
-      };
+    PrinterType.regular => 'regular',
+    PrinterType.thermal => 'thermal',
+  };
 
   static PrinterType fromStorageKey(String? key) =>
       PrinterType.values.firstWhere(
@@ -25,10 +25,10 @@ extension PrinterTypeX on PrinterType {
 
 extension ThermalPageSizeX on ThermalPageSize {
   String get storageKey => switch (this) {
-        ThermalPageSize.twoInch => 'two_inch',
-        ThermalPageSize.threeInch => 'three_inch',
-        ThermalPageSize.fourInch => 'four_inch',
-      };
+    ThermalPageSize.twoInch => 'two_inch',
+    ThermalPageSize.threeInch => 'three_inch',
+    ThermalPageSize.fourInch => 'four_inch',
+  };
 
   static ThermalPageSize fromStorageKey(String? key) =>
       ThermalPageSize.values.firstWhere(
@@ -39,9 +39,9 @@ extension ThermalPageSizeX on ThermalPageSize {
 
 extension RegularOrientationX on RegularOrientation {
   String get storageKey => switch (this) {
-        RegularOrientation.portrait => 'portrait',
-        RegularOrientation.landscape => 'landscape',
-      };
+    RegularOrientation.portrait => 'portrait',
+    RegularOrientation.landscape => 'landscape',
+  };
 
   static RegularOrientation fromStorageKey(String? key) =>
       RegularOrientation.values.firstWhere(
@@ -52,10 +52,10 @@ extension RegularOrientationX on RegularOrientation {
 
 extension PrintTextSizeX on PrintTextSize {
   String get storageKey => switch (this) {
-        PrintTextSize.small => 'small',
-        PrintTextSize.medium => 'medium',
-        PrintTextSize.large => 'large',
-      };
+    PrintTextSize.small => 'small',
+    PrintTextSize.medium => 'medium',
+    PrintTextSize.large => 'large',
+  };
 
   static PrintTextSize fromStorageKey(String? key) =>
       PrintTextSize.values.firstWhere(
@@ -87,23 +87,23 @@ class PrintSettings {
   });
 
   const PrintSettings.defaults()
-      : printerType = PrinterType.thermal,
-        thermalPageSize = ThermalPageSize.threeInch,
-        useTextStylingBold = true,
-        autoCutPaperAfterPrinting = false,
-        extraLinesAtEnd = 0,
-        numberOfCopies = 1,
-        orientation = RegularOrientation.portrait,
-        invoiceTextSize = PrintTextSize.medium,
-        companyTextSize = PrintTextSize.large,
-        printCompanyName = true,
-        printCompanyLogo = true,
-        printAddress = true,
-        printPhone = true,
-        printGstin = true,
-        printBankDetails = true,
-        printTermsAndConditions = true,
-        termsAndConditions = 'Thanks for doing business with us!';
+    : printerType = PrinterType.thermal,
+      thermalPageSize = ThermalPageSize.threeInch,
+      useTextStylingBold = true,
+      autoCutPaperAfterPrinting = false,
+      extraLinesAtEnd = 0,
+      numberOfCopies = 1,
+      orientation = RegularOrientation.portrait,
+      invoiceTextSize = PrintTextSize.medium,
+      companyTextSize = PrintTextSize.large,
+      printCompanyName = true,
+      printCompanyLogo = true,
+      printAddress = true,
+      printPhone = true,
+      printGstin = true,
+      printBankDetails = true,
+      printTermsAndConditions = true,
+      termsAndConditions = 'Thanks for doing business with us!';
 
   final PrinterType printerType;
   final ThermalPageSize thermalPageSize;

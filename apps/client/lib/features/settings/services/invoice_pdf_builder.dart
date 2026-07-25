@@ -114,137 +114,143 @@ class InvoicePdfBuilder {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.stretch,
             children: [
-          if (settings.printCompanyLogo) ...[
-            if (invoice.logoBytes != null)
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.center,
-                children: [
-                  pw.Image(
-                    pw.MemoryImage(invoice.logoBytes!),
-                    width: 32,
-                    height: 32,
-                    fit: pw.BoxFit.contain,
+              if (settings.printCompanyLogo) ...[
+                if (invoice.logoBytes != null)
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                    children: [
+                      pw.Image(
+                        pw.MemoryImage(invoice.logoBytes!),
+                        width: 32,
+                        height: 32,
+                        fit: pw.BoxFit.contain,
+                      ),
+                    ],
+                  )
+                else
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                    children: [
+                      pw.Container(
+                        width: 32,
+                        height: 32,
+                        decoration: const pw.BoxDecoration(
+                          shape: pw.BoxShape.circle,
+                          color: PdfColor.fromInt(0x1F1565C0),
+                        ),
+                        alignment: pw.Alignment.center,
+                        child: pw.Text(
+                          business.name.isNotEmpty
+                              ? business.name[0].toUpperCase()
+                              : 'B',
+                          style: thermalStyle(emphasized: true),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              )
-            else
+                pw.SizedBox(height: gapSm),
+              ],
+              if (settings.printCompanyName) ...[
+                pw.Text(
+                  business.name,
+                  style: thermalStyle(scale: 1.15, emphasized: true),
+                  textAlign: pw.TextAlign.center,
+                ),
+                pw.SizedBox(height: gapXs),
+              ],
+              if (settings.printAddress &&
+                  business.address != null &&
+                  business.address!.trim().isNotEmpty) ...[
+                pw.Text(
+                  business.address!.trim(),
+                  style: thermalStyle(),
+                  textAlign: pw.TextAlign.center,
+                ),
+                pw.SizedBox(height: gapXs),
+              ],
+              if (settings.printGstin &&
+                  business.gstin != null &&
+                  business.gstin!.trim().isNotEmpty) ...[
+                pw.Text(
+                  'GSTIN: ${business.gstin!.trim()}',
+                  style: thermalStyle(),
+                  textAlign: pw.TextAlign.center,
+                ),
+                pw.SizedBox(height: gapXs),
+              ],
+              if (settings.printPhone &&
+                  business.phone != null &&
+                  business.phone!.trim().isNotEmpty)
+                pw.Text(
+                  'Phone: ${business.phone!.trim()}',
+                  style: thermalStyle(),
+                  textAlign: pw.TextAlign.center,
+                ),
+              _thermalSectionDivider(gapBefore: gapLg, gapAfter: gapMd),
               pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.center,
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const pw.BoxDecoration(
-                      shape: pw.BoxShape.circle,
-                      color: PdfColor.fromInt(0x1F1565C0),
-                    ),
-                    alignment: pw.Alignment.center,
+                  pw.Expanded(
                     child: pw.Text(
-                      business.name.isNotEmpty
-                          ? business.name[0].toUpperCase()
-                          : 'B',
+                      'No: ${invoice.invoiceNo}',
                       style: thermalStyle(emphasized: true),
                     ),
                   ),
+                  pw.Text(
+                    _thermalDateFormat.format(invoice.date),
+                    style: thermalStyle(scale: 0.95),
+                    textAlign: pw.TextAlign.right,
+                  ),
                 ],
               ),
-            pw.SizedBox(height: gapSm),
-          ],
-          if (settings.printCompanyName) ...[
-            pw.Text(
-              business.name,
-              style: thermalStyle(scale: 1.15, emphasized: true),
-              textAlign: pw.TextAlign.center,
-            ),
-            pw.SizedBox(height: gapXs),
-          ],
-          if (settings.printAddress &&
-              business.address != null &&
-              business.address!.trim().isNotEmpty) ...[
-            pw.Text(
-              business.address!.trim(),
-              style: thermalStyle(),
-              textAlign: pw.TextAlign.center,
-            ),
-            pw.SizedBox(height: gapXs),
-          ],
-          if (settings.printGstin &&
-              business.gstin != null &&
-              business.gstin!.trim().isNotEmpty) ...[
-            pw.Text(
-              'GSTIN: ${business.gstin!.trim()}',
-              style: thermalStyle(),
-              textAlign: pw.TextAlign.center,
-            ),
-            pw.SizedBox(height: gapXs),
-          ],
-          if (settings.printPhone &&
-              business.phone != null &&
-              business.phone!.trim().isNotEmpty)
-            pw.Text(
-              'Phone: ${business.phone!.trim()}',
-              style: thermalStyle(),
-              textAlign: pw.TextAlign.center,
-            ),
-          _thermalSectionDivider(gapBefore: gapLg, gapAfter: gapMd),
-          pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Expanded(
-                child: pw.Text(
-                  'No: ${invoice.invoiceNo}',
+              if (invoice.customerName != null &&
+                  invoice.customerName!.trim().isNotEmpty) ...[
+                pw.SizedBox(height: gapMd),
+                pw.Text(
+                  'BILL TO:',
                   style: thermalStyle(emphasized: true),
                 ),
+                pw.SizedBox(height: gapXs),
+                pw.Text(
+                  invoice.customerName!.trim(),
+                  style: thermalStyle(),
+                ),
+              ],
+              _thermalSectionDivider(gapBefore: gapMd, gapAfter: gapMd),
+              _thermalItemsTable(thermalStyle),
+              _thermalSectionDivider(gapBefore: gapMd, gapAfter: gapSm),
+              _thermalTotalRow(
+                'Sub Total',
+                _format(invoice.subtotal),
+                thermalStyle(),
               ),
-              pw.Text(
-                _thermalDateFormat.format(invoice.date),
-                style: thermalStyle(scale: 0.95),
-                textAlign: pw.TextAlign.right,
+              _thermalTotalRow('Tax', _format(invoice.tax), thermalStyle()),
+              _thermalSectionDivider(gapBefore: gapSm, gapAfter: gapSm),
+              _thermalTotalRow(
+                'Total Amount',
+                _format(invoice.total),
+                thermalStyle(emphasized: true),
+                emphasized: true,
               ),
-            ],
-          ),
-          if (invoice.customerName != null &&
-              invoice.customerName!.trim().isNotEmpty) ...[
-            pw.SizedBox(height: gapMd),
-            pw.Text(
-              'BILL TO:',
-              style: thermalStyle(emphasized: true),
-            ),
-            pw.SizedBox(height: gapXs),
-            pw.Text(
-              invoice.customerName!.trim(),
-              style: thermalStyle(),
-            ),
-          ],
-          _thermalSectionDivider(gapBefore: gapMd, gapAfter: gapMd),
-          _thermalItemsTable(thermalStyle),
-          _thermalSectionDivider(gapBefore: gapMd, gapAfter: gapSm),
-          _thermalTotalRow('Sub Total', _format(invoice.subtotal), thermalStyle()),
-          _thermalTotalRow('Tax', _format(invoice.tax), thermalStyle()),
-          _thermalSectionDivider(gapBefore: gapSm, gapAfter: gapSm),
-          _thermalTotalRow(
-            'Total Amount',
-            _format(invoice.total),
-            thermalStyle(emphasized: true),
-            emphasized: true,
-          ),
-          if (settings.printBankDetails) ...[
-            pw.SizedBox(height: gapLg),
-            pw.Text(
-              'Bank: Sample Account\nIFSC: SAMPLE0001',
-              style: thermalStyle(scale: 0.9),
-            ),
-          ],
-          if (settings.printTermsAndConditions &&
-              settings.termsAndConditions.trim().isNotEmpty) ...[
-            pw.SizedBox(height: gapLg),
-            pw.Text(
-              settings.termsAndConditions.trim(),
-              style: thermalStyle(scale: 0.9),
-              textAlign: pw.TextAlign.center,
-            ),
-          ],
-          pw.SizedBox(height: gapLg + settings.extraLinesAtEnd * 4 * PdfPageFormat.mm),
+              if (settings.printBankDetails) ...[
+                pw.SizedBox(height: gapLg),
+                pw.Text(
+                  'Bank: Sample Account\nIFSC: SAMPLE0001',
+                  style: thermalStyle(scale: 0.9),
+                ),
+              ],
+              if (settings.printTermsAndConditions &&
+                  settings.termsAndConditions.trim().isNotEmpty) ...[
+                pw.SizedBox(height: gapLg),
+                pw.Text(
+                  settings.termsAndConditions.trim(),
+                  style: thermalStyle(scale: 0.9),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ],
+              pw.SizedBox(
+                height: gapLg + settings.extraLinesAtEnd * 4 * PdfPageFormat.mm,
+              ),
             ],
           ),
         ],
@@ -260,14 +266,14 @@ class InvoicePdfBuilder {
     final companySize = _companyTextSize();
 
     pw.TextStyle body({bool emphasized = false}) => InvoicePdfFonts.style(
-          fontSize: invoiceSize,
-          fontWeight: emphasized ? pw.FontWeight.bold : pw.FontWeight.normal,
-        );
+      fontSize: invoiceSize,
+      fontWeight: emphasized ? pw.FontWeight.bold : pw.FontWeight.normal,
+    );
 
     pw.TextStyle company({bool emphasized = false}) => InvoicePdfFonts.style(
-          fontSize: companySize,
-          fontWeight: emphasized ? pw.FontWeight.bold : pw.FontWeight.normal,
-        );
+      fontSize: companySize,
+      fontWeight: emphasized ? pw.FontWeight.bold : pw.FontWeight.normal,
+    );
 
     doc.addPage(
       pw.MultiPage(
@@ -489,7 +495,11 @@ class InvoicePdfBuilder {
     bool emphasized = false,
   }) {
     return pw.Padding(
-      padding: pw.EdgeInsets.only(right: 1, top: emphasized ? 4 : 3, bottom: emphasized ? 4 : 3),
+      padding: pw.EdgeInsets.only(
+        right: 1,
+        top: emphasized ? 4 : 3,
+        bottom: emphasized ? 4 : 3,
+      ),
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
@@ -600,13 +610,13 @@ class InvoicePdfBuilder {
   }
 
   PdfPageFormat _thermalPageFormat() => thermalReceiptPdfFormat(
-        size: settings.thermalPageSize,
-        heightMm: estimateThermalReceiptHeightMm(
-          settings: settings,
-          itemCount: invoice.items.length,
-          customerName: invoice.customerName,
-        ),
-      );
+    size: settings.thermalPageSize,
+    heightMm: estimateThermalReceiptHeightMm(
+      settings: settings,
+      itemCount: invoice.items.length,
+      customerName: invoice.customerName,
+    ),
+  );
 
   double _thermalBaseFontSize() {
     final scale = switch (settings.thermalPageSize) {
@@ -618,16 +628,16 @@ class InvoicePdfBuilder {
   }
 
   double _invoiceTextSize() => switch (settings.invoiceTextSize) {
-        PrintTextSize.small => 8,
-        PrintTextSize.medium => 10,
-        PrintTextSize.large => 12,
-      };
+    PrintTextSize.small => 8,
+    PrintTextSize.medium => 10,
+    PrintTextSize.large => 12,
+  };
 
   double _companyTextSize() => switch (settings.companyTextSize) {
-        PrintTextSize.small => 8,
-        PrintTextSize.medium => 10,
-        PrintTextSize.large => 12,
-      };
+    PrintTextSize.small => 8,
+    PrintTextSize.medium => 10,
+    PrintTextSize.large => 12,
+  };
 
   String _format(double value) => _currency.format(value);
 }

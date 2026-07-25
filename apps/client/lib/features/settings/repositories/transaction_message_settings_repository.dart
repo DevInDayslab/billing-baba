@@ -55,9 +55,8 @@ class TransactionMessageSettingsRepository {
 
     final autoSend = <TransactionMessageType, bool>{
       for (final type in TransactionMessageType.values)
-        type: autoSendRaw[type.name] as bool? ??
-            defaults.autoSend[type] ??
-            false,
+        type:
+            autoSendRaw[type.name] as bool? ?? defaults.autoSend[type] ?? false,
     };
 
     final templates = <TransactionMessageType, MessageTemplate>{
@@ -74,11 +73,13 @@ class TransactionMessageSettingsRepository {
 
     return TransactionMessageSettings(
       sendToParty: json['sendToParty'] as bool? ?? defaults.sendToParty,
-      sendTransactionUpdate: json['sendTransactionUpdate'] as bool? ??
+      sendTransactionUpdate:
+          json['sendTransactionUpdate'] as bool? ??
           defaults.sendTransactionUpdate,
       sendCopyToMyself:
           json['sendCopyToMyself'] as bool? ?? defaults.sendCopyToMyself,
-      includeCurrentBalance: json['includeCurrentBalance'] as bool? ??
+      includeCurrentBalance:
+          json['includeCurrentBalance'] as bool? ??
           defaults.includeCurrentBalance,
       includeInvoiceLink:
           json['includeInvoiceLink'] as bool? ?? defaults.includeInvoiceLink,

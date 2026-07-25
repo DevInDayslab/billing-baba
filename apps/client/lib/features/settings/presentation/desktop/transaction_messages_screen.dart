@@ -71,13 +71,18 @@ class _TransactionMessagesScreenState
           return LayoutBuilder(
             builder: (context, constraints) {
               final narrow =
-                  constraints.maxWidth < DesktopTransactionMessagesScreen._narrowBreakpoint;
+                  constraints.maxWidth <
+                  DesktopTransactionMessagesScreen._narrowBreakpoint;
               final left = _buildSettingsPanel(draft);
               final right = _buildEditorPreview(draft);
               if (narrow) {
                 return ListView(
                   padding: const EdgeInsets.all(AppSpacing.md),
-                  children: [left, const SizedBox(height: AppSpacing.lg), right],
+                  children: [
+                    left,
+                    const SizedBox(height: AppSpacing.lg),
+                    right,
+                  ],
                 );
               }
               return Row(
@@ -221,8 +226,7 @@ class _TransactionMessagesScreenState
           controller: _bodyController,
           maxLines: 10,
           onChanged: (body) {
-            final templates =
-                Map<TransactionMessageType, MessageTemplate>.from(
+            final templates = Map<TransactionMessageType, MessageTemplate>.from(
               draft.templates,
             );
             final current = draft.templateFor(_selectedType);
@@ -239,8 +243,7 @@ class _TransactionMessagesScreenState
           controller: _footerController,
           maxLines: 2,
           onChanged: (footer) {
-            final templates =
-                Map<TransactionMessageType, MessageTemplate>.from(
+            final templates = Map<TransactionMessageType, MessageTemplate>.from(
               draft.templates,
             );
             final current = draft.templateFor(_selectedType);
@@ -364,9 +367,9 @@ class _TransactionMessagesScreenState
   }
 
   TextStyle get _sectionTitle => AppTypography.inter(
-        fontSize: AppTypography.titleSmallSize,
-        fontWeight: FontWeight.w600,
-      );
+    fontSize: AppTypography.titleSmallSize,
+    fontWeight: FontWeight.w600,
+  );
 
   Future<void> _save() async {
     final draft = _draft;

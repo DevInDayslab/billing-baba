@@ -18,12 +18,16 @@ class WhatsAppSettingsNotifier extends _$WhatsAppSettingsNotifier {
   @override
   Future<WhatsAppSettings> build() async {
     ref.watch(currentBusinessProvider);
-    final repository = await ref.watch(whatsappSettingsRepositoryProvider.future);
+    final repository = await ref.watch(
+      whatsappSettingsRepositoryProvider.future,
+    );
     return repository.load();
   }
 
   Future<void> save(WhatsAppSettings settings) async {
-    final repository = await ref.read(whatsappSettingsRepositoryProvider.future);
+    final repository = await ref.read(
+      whatsappSettingsRepositoryProvider.future,
+    );
     await repository.save(settings);
     state = AsyncData(settings);
   }

@@ -4,7 +4,7 @@ import 'package:billing_baba/core/logging/logging_service.dart';
 /// Lightweight application logger — delegates to [LoggingService].
 abstract final class AppLogger {
   static void debug(String message) {
-    if (AppConfig.diagnosticsEnabled) {
+    if (AppConfig.consoleVerbose) {
       LoggingService.instance.debug(message);
     }
   }

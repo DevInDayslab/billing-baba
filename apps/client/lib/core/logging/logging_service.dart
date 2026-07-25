@@ -103,7 +103,11 @@ class LoggingService {
     final timestamp = _formatTimestamp(DateTime.now());
     final line = '$timestamp ${level.label} $message';
 
-    if (AppConfig.diagnosticsEnabled || kDebugMode) {
+    final echoToConsole = switch (level) {
+      LogLevel.error || LogLevel.warn => kDebugMode,
+      LogLevel.info || LogLevel.debug => AppConfig.consoleVerbose,
+    };
+    if (echoToConsole) {
       debugPrint(line);
     }
 
@@ -159,12 +163,12 @@ class LoggingService {
   }
 
   String _formatTimestamp(DateTime time) {
-  return '${time.year.toString().padLeft(4, '0')}-'
-      '${time.month.toString().padLeft(2, '0')}-'
-      '${time.day.toString().padLeft(2, '0')} '
-      '${time.hour.toString().padLeft(2, '0')}:'
-      '${time.minute.toString().padLeft(2, '0')}:'
-      '${time.second.toString().padLeft(2, '0')}';
+    return '${time.year.toString().padLeft(4, '0')}-'
+        '${time.month.toString().padLeft(2, '0')}-'
+        '${time.day.toString().padLeft(2, '0')} '
+        '${time.hour.toString().padLeft(2, '0')}:'
+        '${time.minute.toString().padLeft(2, '0')}:'
+        '${time.second.toString().padLeft(2, '0')}';
   }
 
   Future<String> readRecentLogs({int maxLines = 500}) async {

@@ -28,7 +28,9 @@ class PrintSettingsNotifier extends _$PrintSettingsNotifier {
     state = AsyncData(settings);
   }
 
-  Future<void> updateField(PrintSettings Function(PrintSettings) updater) async {
+  Future<void> updateField(
+    PrintSettings Function(PrintSettings) updater,
+  ) async {
     final current = state;
     if (!current.hasValue) return;
     await save(updater(current.requireValue));
