@@ -1,6 +1,6 @@
 import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
-import 'package:billing_baba/features/collaboration/presentation/providers/permission_service_provider.dart';
+import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

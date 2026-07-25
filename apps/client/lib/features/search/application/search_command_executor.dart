@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
-import 'package:billing_baba/features/inventory/presentation/widgets/add_item_dialog.dart';
-import 'package:billing_baba/features/parties/presentation/widgets/add_party_dialog.dart';
-import 'package:billing_baba/features/purchases/presentation/widgets/payment_out_dialog.dart';
-import 'package:billing_baba/features/reports/providers/reports_nav_intent_provider.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/payment_in_dialog.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_party_dialog.dart';
+import 'package:billing_baba/features/purchases/presentation/desktop/widgets/payment_out_dialog.dart';
+import 'package:billing_baba/features/reports/application/reports_nav_intent_provider.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/payment_in_dialog.dart';
 import 'package:billing_baba/features/search/application/recent_search_storage.dart';
 import 'package:billing_baba/features/search/domain/search_category.dart';
 import 'package:billing_baba/features/search/domain/search_item.dart';

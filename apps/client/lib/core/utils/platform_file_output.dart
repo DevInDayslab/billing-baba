@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/features/print/application/print_exception.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -10,10 +11,9 @@ import 'package:share_plus/share_plus.dart';
 
 /// Platform-aware save, share, and open for generated file bytes.
 abstract final class PlatformFileOutput {
-  static bool get isDesktop =>
-      !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
+  static bool get isDesktop => !kIsWeb && AppPlatform.current.isDesktop;
 
-  static bool get isMobile => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+  static bool get isMobile => !kIsWeb && AppPlatform.current.isMobile;
 
   /// Desktop: native save dialog. Returns path or null if cancelled.
   ///

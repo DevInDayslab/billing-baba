@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
-import 'package:billing_baba/core/router/app_router.dart';
+import 'package:billing_baba/core/routing/app_router.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/business/presentation/widgets/business_opening_overlay.dart';
+import 'package:billing_baba/features/business/presentation/desktop/widgets/business_opening_overlay.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/shared/image/image_memory_handler.dart';
 import 'package:flutter/material.dart';

@@ -1,6 +1,6 @@
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/item_name_autocomplete_field.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/item_name_autocomplete_field.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
 
 /// Applies catalog item defaults to a purchase line (price, unit, qty).
 PurchaseLineItem applyCatalogItemToPurchaseLine(

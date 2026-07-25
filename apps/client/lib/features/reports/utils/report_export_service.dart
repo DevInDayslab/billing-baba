@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:billing_baba/features/export/data/csv_exporter.dart';
 import 'package:billing_baba/features/export/models/export_request.dart';
 import 'package:billing_baba/features/export/models/export_sheet.dart';
-import 'package:billing_baba/features/reports/presentation/widgets/shared/report_preview_dialog.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_preview_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

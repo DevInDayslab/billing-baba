@@ -6,7 +6,7 @@ import 'package:billing_baba/core/attachments/attachment_sync_helper.dart';
 import 'package:billing_baba/core/attachments/document_attachment_providers.dart';
 import 'package:billing_baba/core/attachments/document_attachment_service.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
-import 'package:billing_baba/features/sales/presentation/widgets/sale_form_attachments_section.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_form_attachments_section.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';
 import 'package:flutter/material.dart';

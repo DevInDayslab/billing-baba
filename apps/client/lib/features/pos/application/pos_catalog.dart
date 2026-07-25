@@ -3,7 +3,7 @@ import 'package:billing_baba/features/inventory/application/inventory_stock_calc
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
-import 'package:billing_baba/features/inventory/providers/inventory_search_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:collection/collection.dart';
 

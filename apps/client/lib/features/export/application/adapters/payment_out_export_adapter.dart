@@ -6,7 +6,7 @@ import 'package:billing_baba/features/export/utils/paginated_fetch.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/models/requests/purchase_requests.dart';
-import 'package:billing_baba/features/purchases/providers/payment_out_provider.dart';
+import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
 import 'package:billing_baba/features/sales/models/requests/sales_requests.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

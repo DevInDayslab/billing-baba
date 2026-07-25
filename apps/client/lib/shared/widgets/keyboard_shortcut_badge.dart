@@ -1,7 +1,6 @@
-import 'dart:io';
-
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/dashboard/presentation/widgets/dashboard_typography.dart';
+import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -33,7 +32,7 @@ class KeyboardShortcutBadge extends StatelessWidget {
 
   /// Footer shortcut for opening the quick-create menu.
   factory KeyboardShortcutBadge.platformOpenMenu() {
-    if (Platform.isMacOS) {
+    if (AppPlatform.current.isMacOS) {
       return const KeyboardShortcutBadge(keys: ['⌘', 'Enter']);
     }
     return const KeyboardShortcutBadge(keys: ['Ctrl', 'Enter']);
@@ -41,7 +40,7 @@ class KeyboardShortcutBadge extends StatelessWidget {
 
   /// Footer shortcut for opening navigation search.
   factory KeyboardShortcutBadge.platformOpenSearch() {
-    if (Platform.isMacOS) {
+    if (AppPlatform.current.isMacOS) {
       return const KeyboardShortcutBadge(keys: ['⌘', 'F']);
     }
     return const KeyboardShortcutBadge(keys: ['Ctrl', 'F']);
@@ -49,8 +48,8 @@ class KeyboardShortcutBadge extends StatelessWidget {
 
   final List<String> keys;
 
-  static String get _altLabel => Platform.isMacOS ? '⌥' : 'Alt';
-  static String get _ctrlLabel => Platform.isMacOS ? '⌃' : 'Ctrl';
+  static String get _altLabel => AppPlatform.current.isMacOS ? '⌥' : 'Alt';
+  static String get _ctrlLabel => AppPlatform.current.isMacOS ? '⌃' : 'Ctrl';
   static String get _metaLabel => '⌘';
 
   static String _labelForKey(LogicalKeyboardKey key) {

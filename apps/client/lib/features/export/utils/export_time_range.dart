@@ -1,4 +1,4 @@
-import 'package:billing_baba/features/sales/providers/sale_invoices_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:flutter/material.dart';
 
 /// Resolves time range filters for export queries (mirrors list providers).

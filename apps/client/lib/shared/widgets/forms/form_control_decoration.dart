@@ -1,4 +1,4 @@
-import 'package:billing_baba/features/sales/presentation/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
 import 'package:billing_baba/shared/widgets/forms/form_spacing.dart';
 import 'package:flutter/material.dart';
 

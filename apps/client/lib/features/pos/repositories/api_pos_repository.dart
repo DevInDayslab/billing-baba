@@ -1,7 +1,7 @@
 import 'package:billing_baba/features/pos/application/pos_sale_service.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
-import 'package:billing_baba/features/pos/providers/pos_cart_state.dart';
+import 'package:billing_baba/features/pos/application/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/repositories/pos_repository.dart';
 
 class ApiPosRepository implements PosRepository {

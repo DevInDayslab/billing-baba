@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Platform;
 
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/payment_bridge_result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -164,7 +164,7 @@ class _RazorpayDesktopCheckoutDialog extends StatelessWidget {
   final ValueChanged<PaymentBridgeResult> onResult;
 
   String _desktopUserAgent() {
-    if (Platform.isMacOS) {
+    if (AppPlatform.current.isMacOS) {
       return 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
           'AppleWebKit/537.36 (KHTML, like Gecko) '
           'Chrome/120.0.0.0 Safari/537.36';

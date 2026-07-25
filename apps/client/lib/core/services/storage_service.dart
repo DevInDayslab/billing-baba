@@ -1,5 +1,4 @@
-import 'dart:io' show Platform;
-
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,7 +17,8 @@ class StorageService {
   SharedPreferences? preferences;
   final FlutterSecureStorage _secureStorage;
 
-  bool get _usePreferencesForSecureStorage => !kIsWeb && Platform.isMacOS;
+  bool get _usePreferencesForSecureStorage =>
+      !kIsWeb && AppPlatform.current.isMacOS;
 
   Future<void> init() async {
     preferences ??= await SharedPreferences.getInstance();

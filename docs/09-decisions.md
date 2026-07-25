@@ -1430,6 +1430,34 @@ The first client implementation of the checkout WebView (built alongside ADR-038
 
 ---
 
+## ADR-040: Adaptive Presentation Split (Desktop / Mobile)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-25 |
+| **Status** | Accepted |
+
+#### Context
+
+Billing Baba targets Windows, macOS, Linux, Android, and iOS from one Flutter client. Desktop UI is complete; mobile UI will be built separately. Business logic must stay shared while presentation diverges.
+
+#### Decision
+
+- Centralize OS detection in `AppPlatform` (`lib/core/platform/app_platform.dart`). No `Platform.isXXX` checks outside its detector.
+- Use `AdaptivePage` (`lib/core/widgets/adaptive_page.dart`) to select desktop vs mobile widgets from `AppPlatform.family`.
+- Feature presentation layout: `presentation/common/`, `presentation/desktop/`, `presentation/mobile/`, plus a public Adaptive entry page per route (e.g. `ItemsPage`) that GoRouter imports. Router never references `Desktop*` / `Mobile*` pages.
+- Riverpod providers and other UI-independent application code live under `application/` (not `presentation/` or a top-level `providers/` folder).
+- Existing desktop UI was moved under `presentation/desktop/` without intentional visual/behavior changes. Mobile pages start as navigation-preserving placeholders.
+
+#### Consequences
+
+- Mobile UI can be rebuilt feature-by-feature without touching domain/application/data or GoRouter paths.
+- Import paths for former `providers/` modules now use `application/`.
+- App shells live in `core/shell/` (`DesktopShell`, `MobileShell`). Desktop and mobile each have a dedicated GoRouter in `core/routing/` (`desktop_router.dart`, `mobile_router.dart`); `appRouterProvider` selects by `AppPlatform`. Both routers navigate only to public Adaptive feature pages.
+- Public Adaptive entries live directly under `features/<feature>/presentation/` (not nested `pages/` / `screens/` folders).
+
+---
+
 ## ADR Template
 
 Use for future decisions. Do not remove.
