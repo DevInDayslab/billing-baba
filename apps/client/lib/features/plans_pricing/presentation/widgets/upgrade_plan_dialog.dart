@@ -1,7 +1,17 @@
+import 'dart:async';
+
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/plans_pricing/models/plan_model.dart';
-import 'package:billing_baba/features/plans_pricing/presentation/widgets/payment_pending_dialog.dart';
+import 'package:billing_baba/features/subscription/application/subscription_error_mapper.dart';
+import 'package:billing_baba/features/subscription/domain/models/current_subscription.dart';
+import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
+import 'package:billing_baba/features/subscription/domain/subscription_plan_metadata.dart';
+import 'package:billing_baba/features/subscription/presentation/desktop/review_order_summary_dialog.dart';
+import 'package:billing_baba/features/subscription/presentation/desktop/review_order_summary_input.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/current_subscription_provider.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/plans_pricing_view_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 /// Shows the upgrade-plan confirmation flow from Plans & Pricing.
@@ -26,9 +36,7 @@ Future<void> showUpgradePlanDialog(
   );
 }
 
-enum _UpgradeStep { confirm, reviewCheckout }
-
-class UpgradePlanDialog extends StatefulWidget {
+class UpgradePlanDialog extends ConsumerStatefulWidget {
   const UpgradePlanDialog({
     required this.platform,
     required this.duration,
@@ -41,36 +49,38 @@ class UpgradePlanDialog extends StatefulWidget {
   final double upgradeAmount;
 
   @override
-  State<UpgradePlanDialog> createState() => _UpgradePlanDialogState();
+  ConsumerState<UpgradePlanDialog> createState() => _UpgradePlanDialogState();
 }
 
-class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
+class _UpgradePlanDialogState extends ConsumerState<UpgradePlanDialog> {
   static const _dialogMaxWidth = 1100.0;
-
-  static final _priceFormat = NumberFormat('#,##0.##', 'en_IN');
-
-  _UpgradeStep _step = _UpgradeStep.confirm;
 
   String get _platformDurationLabel =>
       '${widget.platform.label} • ${widget.duration.label}';
 
-  String _formatPrice(double price) => '₹${_priceFormat.format(price)}';
-
   void _proceedToCheckout() {
-    setState(() => _step = _UpgradeStep.reviewCheckout);
-  }
+    final viewData = ref.read(plansPricingViewProvider).asData?.value;
+    final platinumPlan = viewData?.plans
+        .where((plan) => !plan.isGold)
+        .firstOrNull;
+    final pricing = platinumPlan?.pricingFor(widget.platform, widget.duration);
+    final metadata = metadataFor(SubscriptionPlanType.platinum);
 
-  Future<void> _startMockPayment() async {
-    final amount = widget.upgradeAmount;
-    Navigator.of(context).pop();
-
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-
-    await showPaymentPendingDialog(
-      context,
-      amount: amount,
+    final input = ReviewOrderSummaryInput(
+      planType: SubscriptionPlanType.platinum,
+      planName: platinumPlan?.name ?? 'Platinum',
+      platform: widget.platform,
+      duration: widget.duration,
+      discountedPrice: widget.upgradeAmount,
+      originalPrice: pricing?.originalPrice ?? widget.upgradeAmount,
+      licenseType: metadata.licenseType,
+      deviceLimit: metadata.deviceLimit,
+      durationLabel: widget.duration.label,
     );
+
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
+    Navigator.of(context).pop();
+    unawaited(showReviewOrderSummaryDialog(rootContext, ref, input: input));
   }
 
   @override
@@ -81,269 +91,115 @@ class _UpgradePlanDialogState extends State<UpgradePlanDialog> {
         color: AppColors.surface,
         borderRadius: AppRadius.lgBorder,
         clipBehavior: Clip.antiAlias,
-        child: switch (_step) {
-          _UpgradeStep.confirm => _buildConfirmStep(),
-          _UpgradeStep.reviewCheckout => _buildReviewCheckoutStep(),
-        },
+        child: _buildConfirmStep(),
       ),
     );
   }
 
   Widget _buildConfirmStep() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _DialogHeader(
-          title: 'Upgrade your Plan',
-          onClose: () => Navigator.of(context).pop(),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            0,
-            AppSpacing.lg,
-            AppSpacing.lg,
-          ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isNarrow = constraints.maxWidth < 640;
+    final currentAsync = ref.watch(currentSubscriptionStateProvider);
 
-              if (isNarrow) {
-                return Column(
+    return currentAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Text(SubscriptionErrorMapper.messageFor(error)),
+      ),
+      data: (current) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _DialogHeader(
+            title: 'Upgrade your Plan',
+            onClose: () => Navigator.of(context).pop(),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.lg,
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 640;
+
+                if (isNarrow) {
+                  return Column(
+                    children: [
+                      _ActivePlanColumn(
+                        current: current,
+                        platformDurationLabel: _platformDurationLabel,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      const Icon(
+                        Icons.arrow_downward,
+                        color: AppColors.textSecondary,
+                        size: 28,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _UpgradePlanColumn(
+                        platformDurationLabel: _platformDurationLabel,
+                        duration: widget.duration,
+                        upgradeAmount: widget.upgradeAmount,
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _ActivePlanColumn(
-                      platformDurationLabel: _platformDurationLabel,
+                    Expanded(
+                      child: _ActivePlanColumn(
+                        current: current,
+                        platformDurationLabel: _platformDurationLabel,
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    const Icon(
-                      Icons.arrow_downward,
-                      color: AppColors.textSecondary,
-                      size: 28,
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward,
+                        color: AppColors.textSecondary,
+                        size: 32,
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    _UpgradePlanColumn(
-                      platformDurationLabel: _platformDurationLabel,
+                    Expanded(
+                      child: _UpgradePlanColumn(
+                        platformDurationLabel: _platformDurationLabel,
+                        duration: widget.duration,
+                        upgradeAmount: widget.upgradeAmount,
+                      ),
                     ),
                   ],
                 );
-              }
-
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _ActivePlanColumn(
-                      platformDurationLabel: _platformDurationLabel,
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                    ),
-                    child: Icon(
-                      Icons.arrow_forward,
-                      color: AppColors.textSecondary,
-                      size: 32,
-                    ),
-                  ),
-                  Expanded(
-                    child: _UpgradePlanColumn(
-                      platformDurationLabel: _platformDurationLabel,
-                    ),
-                  ),
-                ],
-              );
-            },
+              },
+            ),
           ),
-        ),
-        _ConfirmBottomBar(
-          onCancel: () => Navigator.of(context).pop(),
-          onProceed: _proceedToCheckout,
-        ),
-      ],
+          _ConfirmBottomBar(
+            onCancel: () => Navigator.of(context).pop(),
+            onProceed: _proceedToCheckout,
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildReviewCheckoutStep() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _DialogHeader(
-          title: 'Review Order Summary',
-          onClose: () => Navigator.of(context).pop(),
-          leading: IconButton(
-            onPressed: () => setState(() => _step = _UpgradeStep.confirm),
-            icon: const Icon(Icons.arrow_back, color: AppColors.textSecondary),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  borderRadius: AppRadius.mdBorder,
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      'Order Summary',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Vyapar Platinum ($_platformDurationLabel)',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          _formatPrice(widget.upgradeAmount),
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: AppSpacing.lg),
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Total Amount',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          _formatPrice(widget.upgradeAmount),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  borderRadius: AppRadius.mdBorder,
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Payment Method',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    SizedBox(height: AppSpacing.sm),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(
-                        Icons.radio_button_checked,
-                        color: AppColors.primary,
-                      ),
-                      title: Text(
-                        'UPI / Net Banking (Mock)',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                      subtitle: Text(
-                        'Simulated payment — no real charge',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: Colors.grey.shade300)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.textPrimary,
-                  side: BorderSide(color: Colors.grey.shade400),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: AppSpacing.sm + 4,
-                  ),
-                ),
-                child: const Text('Cancel'),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              FilledButton(
-                onPressed: _startMockPayment,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.error,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: AppSpacing.sm + 4,
-                  ),
-                ),
-                child: Text('Pay ${_formatPrice(widget.upgradeAmount)}'),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 class _DialogHeader extends StatelessWidget {
   const _DialogHeader({
     required this.title,
     required this.onClose,
-    this.leading,
   });
 
   final String title;
   final VoidCallback onClose;
-  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
@@ -356,10 +212,6 @@ class _DialogHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (leading != null) ...[
-            leading!,
-            const SizedBox(width: AppSpacing.xs),
-          ],
           Expanded(
             child: Text(
               title,
@@ -409,15 +261,27 @@ class _LabelPill extends StatelessWidget {
 }
 
 class _ActivePlanColumn extends StatelessWidget {
-  const _ActivePlanColumn({required this.platformDurationLabel});
+  const _ActivePlanColumn({
+    required this.current,
+    required this.platformDurationLabel,
+  });
 
+  final CurrentSubscription current;
   final String platformDurationLabel;
 
   static const _goldIconBg = Color(0xFFFFF3E0);
   static const _goldIconColor = Color(0xFFE65100);
+  static final _dateFormat = DateFormat('dd MMMM yyyy');
 
   @override
   Widget build(BuildContext context) {
+    final planName = current.hasActivePlan
+        ? 'Vyapar ${current.planName}'
+        : 'No active plan';
+    final expiryLabel = current.expiresAt != null
+        ? 'Expiring on ${_dateFormat.format(current.expiresAt!)}'
+        : 'No expiry date';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -449,10 +313,10 @@ class _ActivePlanColumn extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Vyapar Gold',
-                      style: TextStyle(
+                      planName,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -483,17 +347,17 @@ class _ActivePlanColumn extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        const Row(
+        Row(
           children: [
-            Icon(
+            const Icon(
               Icons.schedule,
               size: 16,
               color: AppColors.textSecondary,
             ),
-            SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: AppSpacing.xs),
             Text(
-              'Expiring on 03 December 2026',
-              style: TextStyle(
+              expiryLabel,
+              style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,
               ),
@@ -506,9 +370,15 @@ class _ActivePlanColumn extends StatelessWidget {
 }
 
 class _UpgradePlanColumn extends StatelessWidget {
-  const _UpgradePlanColumn({required this.platformDurationLabel});
+  const _UpgradePlanColumn({
+    required this.platformDurationLabel,
+    required this.duration,
+    required this.upgradeAmount,
+  });
 
   final String platformDurationLabel;
+  final PlanDuration duration;
+  final double upgradeAmount;
 
   static const _platinumBg = Color(0xFFF3F0FF);
   static const _platinumIconBg = Color(0xFFEDE7F6);
@@ -516,6 +386,11 @@ class _UpgradePlanColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final durationDays = duration == PlanDuration.threeYears ? 365 * 3 : 365;
+    final projectedExpiry = DateTime.now().add(Duration(days: durationDays));
+    final expiryLabel =
+        'Will expire on ${DateFormat('dd MMMM yyyy').format(projectedExpiry)}';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -568,17 +443,17 @@ class _UpgradePlanColumn extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              const Row(
+              Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.schedule,
                     size: 16,
                     color: AppColors.textSecondary,
                   ),
-                  SizedBox(width: AppSpacing.xs),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
-                    'Will expire on 02 July 2029',
-                    style: TextStyle(
+                    expiryLabel,
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
                     ),

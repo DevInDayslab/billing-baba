@@ -24,9 +24,10 @@ import 'package:billing_baba/features/sales/providers/sale_line_item_column_visi
 import 'package:billing_baba/features/settings/providers/print_settings_provider.dart';
 import 'package:billing_baba/features/settings/providers/transaction_message_settings_provider.dart';
 import 'package:billing_baba/features/settings/providers/whatsapp_settings_provider.dart';
-// import 'package:billing_baba/features/subscription/presentation/providers/current_license_provider.dart';
-// import 'package:billing_baba/features/subscription/presentation/providers/purchase_history_provider.dart';
-// import 'package:billing_baba/features/subscription/presentation/providers/subscription_plans_provider.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/current_subscription_provider.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/plans_pricing_view_provider.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/purchase_history_provider.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/subscription_plans_provider.dart';
 import 'package:billing_baba/features/tasks/providers/tasks_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -129,10 +130,11 @@ void invalidateAllBusinessScopedProviders(
     ..invalidate(posCartProvider)
     ..invalidate(posSalesListProvider)
     ..invalidate(dashboardProvider)
-    ..invalidate(inventoryItemsProvider);
-    // ..invalidate(currentLicenseProvider)
-    // ..invalidate(subscriptionPlansProvider)
-    // ..invalidate(purchaseHistoryProvider);
+    ..invalidate(inventoryItemsProvider)
+    ..invalidate(currentSubscriptionStateProvider)
+    ..invalidate(subscriptionPlansProvider)
+    ..invalidate(purchaseHistoryStateProvider)
+    ..invalidate(plansPricingViewProvider);
 
   if (includeBusinessService) {
     ref.invalidate(businessServiceProvider);
