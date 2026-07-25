@@ -289,3 +289,23 @@ export const invitationStatusEnum = pgEnum('invitation_status', [
   'expired',
   'cancelled',
 ]);
+
+export const subscriptionPlanEnum = pgEnum('subscription_plan', [
+  'no_plan',
+  'gold',
+  'platinum',
+]);
+
+export const subscriptionStatusEnum = pgEnum('subscription_status', [
+  'active',
+  'expired',
+  'pending',
+  'cancelled',
+]);
+
+export const paymentStatusEnum = pgEnum('payment_status', [
+  'created',
+  'paid',
+  'failed',
+  'refunded',
+]);

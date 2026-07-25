@@ -227,7 +227,7 @@ class PlanCard extends StatelessWidget {
           width: double.infinity,
           child: isGold
               ? OutlinedButton(
-                  onPressed: () {},
+                  onPressed: onCtaPressed,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,
                     side: const BorderSide(color: AppColors.error),

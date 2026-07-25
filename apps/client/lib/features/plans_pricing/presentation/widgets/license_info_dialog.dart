@@ -3,8 +3,14 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/plans_pricing/models/plan_model.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/widgets/upgrade_plan_dialog.dart';
+import 'package:billing_baba/features/subscription/domain/models/current_subscription.dart';
+import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
+import 'package:billing_baba/features/subscription/domain/subscription_plan_metadata.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/current_subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 /// Shows the license info modal from Plans & Pricing overflow menu.
 Future<void> showLicenseInfoDialog(
@@ -27,7 +33,7 @@ Future<void> showLicenseInfoDialog(
   );
 }
 
-class LicenseInfoDialog extends StatelessWidget {
+class LicenseInfoDialog extends ConsumerWidget {
   const LicenseInfoDialog({
     required this.platform,
     required this.duration,
@@ -46,7 +52,9 @@ class LicenseInfoDialog extends StatelessWidget {
   static const _expiryColor = Color(0xFFE65100);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentAsync = ref.watch(currentSubscriptionStateProvider);
+
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 650),
       child: Material(
@@ -55,35 +63,53 @@ class LicenseInfoDialog extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _DialogHeader(onClose: () => Navigator.of(context).pop()),
-              const SizedBox(height: AppSpacing.sm),
-              const _SubheaderRow(syncCompanyId: _syncCompanyId),
-              const SizedBox(height: AppSpacing.lg),
-              const _PlanDetailsCard(
-                goldIconBg: _goldIconBg,
-                goldIconColor: _goldIconColor,
-                expiryColor: _expiryColor,
+          child: currentAsync.when(
+            loading: () => const SizedBox(
+              height: 200,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, _) => const SizedBox(
+              height: 200,
+              child: Center(
+                child: Text(
+                  'Unable to load license info.',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
               ),
-              const SizedBox(height: AppSpacing.md),
-              _UpgradeBanner(
-                bannerBg: _upgradeBannerBg,
-                onUpgrade: () {
-                  final navigator = Navigator.of(context)..pop();
-                  unawaited(
-                    showUpgradePlanDialog(
-                      navigator.context,
-                      platform: platform,
-                      duration: duration,
-                      upgradeAmount: upgradeAmount,
-                    ),
-                  );
-                },
-              ),
-            ],
+            ),
+            data: (current) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _DialogHeader(onClose: () => Navigator.of(context).pop()),
+                const SizedBox(height: AppSpacing.sm),
+                const _SubheaderRow(syncCompanyId: _syncCompanyId),
+                const SizedBox(height: AppSpacing.lg),
+                _PlanDetailsCard(
+                  current: current,
+                  platform: platform,
+                  duration: duration,
+                  goldIconBg: _goldIconBg,
+                  goldIconColor: _goldIconColor,
+                  expiryColor: _expiryColor,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _UpgradeBanner(
+                  bannerBg: _upgradeBannerBg,
+                  onUpgrade: () {
+                    final navigator = Navigator.of(context)..pop();
+                    unawaited(
+                      showUpgradePlanDialog(
+                        navigator.context,
+                        platform: platform,
+                        duration: duration,
+                        upgradeAmount: upgradeAmount,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -173,17 +199,35 @@ class _SubheaderRow extends StatelessWidget {
 
 class _PlanDetailsCard extends StatelessWidget {
   const _PlanDetailsCard({
+    required this.current,
+    required this.platform,
+    required this.duration,
     required this.goldIconBg,
     required this.goldIconColor,
     required this.expiryColor,
   });
 
+  final CurrentSubscription current;
+  final PlanPlatform platform;
+  final PlanDuration duration;
   final Color goldIconBg;
   final Color goldIconColor;
   final Color expiryColor;
 
+  static final _dateFormat = DateFormat("d MMM ''yy");
+
   @override
   Widget build(BuildContext context) {
+    final planType = current.hasActivePlan
+        ? current.planType
+        : SubscriptionPlanType.gold;
+    final metadata = metadataFor(planType);
+    final planLabel = current.hasActivePlan
+        ? 'Vyapar ${current.planName}'
+        : 'No active plan';
+    final platformDurationLabel = '${platform.label}  •  ${duration.label}';
+    final expiryText = _expiryLabel(current);
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -209,9 +253,9 @@ class _PlanDetailsCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              const Text(
-                'Vyapar Gold',
-                style: TextStyle(
+              Text(
+                planLabel,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -225,15 +269,15 @@ class _PlanDetailsCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _PlatformExpiryColumn(
-                  platform: 'Desktop  •  3 Years',
-                  expiry: "(Expires on 3 Dec '26 ; 156 days left)",
+                  platform: 'Desktop  •  ${duration.label}',
+                  expiry: expiryText,
                   expiryColor: expiryColor,
                 ),
               ),
               Expanded(
                 child: _PlatformExpiryColumn(
-                  platform: 'Mobile  •  3 Years',
-                  expiry: "(Expires on 18 Nov '26 ; 141 days left)",
+                  platform: platformDurationLabel,
+                  expiry: expiryText,
                   expiryColor: expiryColor,
                 ),
               ),
@@ -243,7 +287,7 @@ class _PlanDetailsCard extends StatelessWidget {
           const _DashedDivider(),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            '•  MANUFACTURING',
+            '•  ${metadata.licenseType.toUpperCase()}',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -254,6 +298,16 @@ class _PlanDetailsCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _expiryLabel(CurrentSubscription subscription) {
+    if (!subscription.hasActivePlan || subscription.expiresAt == null) {
+      return '(No active subscription)';
+    }
+
+    final expires = subscription.expiresAt!;
+    final remaining = subscription.remainingDays ?? 0;
+    return "(Expires on ${_dateFormat.format(expires)} ; $remaining days left)";
   }
 }
 

@@ -72,6 +72,9 @@ dependencies:
   window_manager: ^0.5.2
   open_filex: ^4.7.0
 
+  # Desktop Razorpay checkout (InAppWebView host + netbanking popups).
+  flutter_inappwebview: 6.2.0-beta.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -8,9 +8,17 @@ import 'package:billing_baba/features/plans_pricing/presentation/widgets/license
 import 'package:billing_baba/features/plans_pricing/presentation/widgets/plan_card.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/widgets/plan_card_compact.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/widgets/upgrade_plan_dialog.dart';
-import 'package:billing_baba/features/plans_pricing/providers/plans_provider.dart';
+import 'package:billing_baba/features/subscription/application/subscription_error_mapper.dart';
+import 'package:billing_baba/features/subscription/domain/models/purchase_history.dart';
+import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
+import 'package:billing_baba/features/subscription/domain/subscription_plan_metadata.dart';
+import 'package:billing_baba/features/subscription/presentation/desktop/review_order_summary_dialog.dart';
+import 'package:billing_baba/features/subscription/presentation/desktop/review_order_summary_input.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/plans_pricing_view_provider.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/purchase_history_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 const _compactBreakpoint = 760.0;
 
@@ -33,6 +41,33 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
   int get _overviewFeatureLimit =>
       _selectedPlatform == PlanPlatform.mobile ? 6 : 10;
 
+  Future<void> _openReviewOrder(SubscriptionPlanType planType) async {
+    final viewData = ref.read(plansPricingViewProvider).asData?.value;
+    if (viewData == null || !mounted) return;
+
+    final plan = viewData.plans.firstWhere(
+      (p) => planType == SubscriptionPlanType.gold ? p.isGold : !p.isGold,
+    );
+    final pricing = plan.pricingFor(_selectedPlatform, _selectedDuration);
+    final metadata = metadataFor(planType);
+
+    await showReviewOrderSummaryDialog(
+      context,
+      ref,
+      input: ReviewOrderSummaryInput(
+        planType: planType,
+        planName: plan.name,
+        platform: _selectedPlatform,
+        duration: _selectedDuration,
+        discountedPrice: pricing.discountedPrice,
+        originalPrice: pricing.originalPrice,
+        licenseType: metadata.licenseType,
+        deviceLimit: metadata.deviceLimit,
+        durationLabel: _selectedDuration.label,
+      ),
+    );
+  }
+
   void _openUpgradeDialog(double upgradeAmount) {
     unawaited(
       showUpgradePlanDialog(
@@ -46,223 +81,448 @@ class _PlansPricingPageState extends ConsumerState<PlansPricingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final features = ref.watch(planFeaturesProvider);
-    final plans = ref.watch(pricingPlansProvider);
-    final goldPlan = plans.firstWhere((p) => p.isGold);
-    final platinumPlan = plans.firstWhere((p) => !p.isGold);
-    final cardFeatures = goldPlan.featuresByPlatform[_selectedPlatform]!;
-    final goldPricing = goldPlan.pricingFor(
-      _selectedPlatform,
-      _selectedDuration,
-    );
-    final platinumPricing = platinumPlan.pricingFor(
-      _selectedPlatform,
-      _selectedDuration,
-    );
+    final viewAsync = ref.watch(plansPricingViewProvider);
 
-    final scrollContent = SingleChildScrollView(
-      padding: EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.lg,
-        bottom: _showFullComparison ? 80 : AppSpacing.lg,
+    return viewAsync.when(
+      skipLoadingOnReload: true,
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: _maxContentWidth),
+      error: (error, _) => Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              _PageHeader(
-                showFullComparison: _showFullComparison,
-                onBuyLicenses: () => showBuyLicensesDialog(context),
-                onMenuSelected: (value) {
-                  if (value == 'license_info') {
-                    unawaited(
-                      showLicenseInfoDialog(
-                        context,
-                        platform: _selectedPlatform,
-                        duration: _selectedDuration,
-                        upgradeAmount: platinumPricing.discountedPrice,
-                      ),
-                    );
-                  }
-                },
+              Text(
+                SubscriptionErrorMapper.messageFor(error),
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
               const SizedBox(height: AppSpacing.md),
-              _DiscontinuationBanner(),
-              const SizedBox(height: AppSpacing.md),
-              if (!_showFullComparison) ...[
-                _FilterChips(
-                  selectedPlatform: _selectedPlatform,
-                  selectedDuration: _selectedDuration,
-                  onPlatformChanged: (platform) =>
-                      setState(() => _selectedPlatform = platform),
-                  onDurationChanged: (duration) =>
-                      setState(() => _selectedDuration = duration),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                _OverviewPlanCards(
-                  goldPlan: goldPlan,
-                  platinumPlan: platinumPlan,
-                  goldPricing: goldPricing,
-                  platinumPricing: platinumPricing,
-                  features: cardFeatures,
-                  overviewFeatureLimit: _overviewFeatureLimit,
-                  featuresExpanded: _featuresExpanded,
-                  selectedCompactPlan: _selectedCompactPlan,
-                  onCompactPlanChanged: (plan) =>
-                      setState(() => _selectedCompactPlan = plan),
-                  onToggleFeatures: () =>
-                      setState(() => _featuresExpanded = !_featuresExpanded),
-                  onViewAllFeatures: () =>
-                      setState(() => _showFullComparison = true),
-                  onUpgradePressed: () =>
-                      _openUpgradeDialog(platinumPricing.discountedPrice),
-                ),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (constraints.maxWidth < _compactBreakpoint) {
-                      return const SizedBox.shrink();
-                    }
-                    return Column(
-                      children: [
-                        const SizedBox(height: AppSpacing.lg),
-                        Center(
-                          child: OutlinedButton(
-                            onPressed: () =>
-                                setState(() => _showFullComparison = true),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.error,
-                              side: const BorderSide(color: AppColors.error),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.lg,
-                                vertical: AppSpacing.sm + 4,
-                              ),
-                            ),
-                            child: const Text('Compare All Features'),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ] else ...[
-                _ComparisonHeader(
-                  goldPlan: goldPlan,
-                  platinumPlan: platinumPlan,
-                  goldPricing: goldPricing,
-                  platinumPricing: platinumPricing,
-                  features: cardFeatures,
-                  overviewFeatureLimit: _overviewFeatureLimit,
-                  onUpgradePressed: () =>
-                      _openUpgradeDialog(platinumPricing.discountedPrice),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                _FeatureComparisonTable(features: features),
-              ],
+              FilledButton(
+                onPressed: () =>
+                    ref.read(plansPricingViewProvider.notifier).reload(),
+                child: const Text('Retry'),
+              ),
             ],
           ),
         ),
       ),
-    );
+      data: (viewData) {
+        final plans = viewData.plans;
+        final features = viewData.comparisonFeatures;
+        final goldPlan = plans.firstWhere((p) => p.isGold);
+        final platinumPlan = plans.firstWhere((p) => !p.isGold);
+        final cardFeatures = goldPlan.featuresByPlatform[_selectedPlatform]!;
+        final goldPricing = goldPlan.pricingFor(
+          _selectedPlatform,
+          _selectedDuration,
+        );
+        final platinumPricing = platinumPlan.pricingFor(
+          _selectedPlatform,
+          _selectedDuration,
+        );
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isCompact =
-              constraints.maxWidth < _compactBreakpoint && !_showFullComparison;
-
-          if (isCompact) {
-            final selectedPricing = _selectedCompactPlan == PricingPlanType.gold
-                ? goldPricing
-                : platinumPricing;
-
-            return Column(
-              children: [
-                Expanded(child: scrollContent),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.sm,
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: FilledButton(
-                      onPressed:
-                          _selectedCompactPlan == PricingPlanType.platinum &&
-                              selectedPricing.ctaLabel == 'Upgrade to Platinum'
-                          ? () => _openUpgradeDialog(
-                              selectedPricing.discountedPrice,
-                            )
-                          : () {},
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.error,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.sm + 4,
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      child: Text(selectedPricing.ctaLabel),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }
-
-          return SizedBox.expand(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                scrollContent,
-                if (_showFullComparison)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: AppSpacing.md,
-                    child: Center(
-                      child: OutlinedButton.icon(
-                        onPressed: () =>
-                            setState(() => _showFullComparison = false),
-                        icon: const Icon(Icons.arrow_upward, size: 18),
-                        label: const Text('Back To Plans'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.textPrimary,
-                          backgroundColor: AppColors.surface,
-                          side: BorderSide(color: Colors.grey.shade300),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg,
-                            vertical: AppSpacing.sm + 4,
+        final scrollContent = SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            top: AppSpacing.lg,
+            bottom: _showFullComparison ? 80 : AppSpacing.lg,
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: _maxContentWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _PageHeader(
+                    showFullComparison: _showFullComparison,
+                    onBuyLicenses: () => showBuyLicensesDialog(context),
+                    onMenuSelected: (value) {
+                      if (value == 'license_info') {
+                        unawaited(
+                          showLicenseInfoDialog(
+                            context,
+                            platform: _selectedPlatform,
+                            duration: _selectedDuration,
+                            upgradeAmount: platinumPricing.discountedPrice,
                           ),
-                          elevation: 2,
-                          shadowColor: Colors.black26,
+                        );
+                      }
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _DiscontinuationBanner(),
+                  const SizedBox(height: AppSpacing.md),
+                  if (!_showFullComparison) ...[
+                    _FilterChips(
+                      selectedPlatform: _selectedPlatform,
+                      selectedDuration: _selectedDuration,
+                      onPlatformChanged: (platform) =>
+                          setState(() => _selectedPlatform = platform),
+                      onDurationChanged: (duration) =>
+                          setState(() => _selectedDuration = duration),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _OverviewPlanCards(
+                      goldPlan: goldPlan,
+                      platinumPlan: platinumPlan,
+                      goldPricing: goldPricing,
+                      platinumPricing: platinumPricing,
+                      features: cardFeatures,
+                      overviewFeatureLimit: _overviewFeatureLimit,
+                      featuresExpanded: _featuresExpanded,
+                      selectedCompactPlan: _selectedCompactPlan,
+                      onCompactPlanChanged: (plan) =>
+                          setState(() => _selectedCompactPlan = plan),
+                      onToggleFeatures: () =>
+                          setState(() => _featuresExpanded = !_featuresExpanded),
+                      onViewAllFeatures: () =>
+                          setState(() => _showFullComparison = true),
+                      onBuyGold: () => _openReviewOrder(SubscriptionPlanType.gold),
+                      onBuyPlatinum: () =>
+                          _openReviewOrder(SubscriptionPlanType.platinum),
+                      onUpgradePressed: () =>
+                          _openUpgradeDialog(platinumPricing.discountedPrice),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    const _PurchaseHistorySection(),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        if (constraints.maxWidth < _compactBreakpoint) {
+                          return const SizedBox.shrink();
+                        }
+                        return Column(
+                          children: [
+                            const SizedBox(height: AppSpacing.lg),
+                            Center(
+                              child: OutlinedButton(
+                                onPressed: () =>
+                                    setState(() => _showFullComparison = true),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.error,
+                                  side: const BorderSide(color: AppColors.error),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.lg,
+                                    vertical: AppSpacing.sm + 4,
+                                  ),
+                                ),
+                                child: const Text('Compare All Features'),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ] else ...[
+                    _ComparisonHeader(
+                      goldPlan: goldPlan,
+                      platinumPlan: platinumPlan,
+                      goldPricing: goldPricing,
+                      platinumPricing: platinumPricing,
+                      features: cardFeatures,
+                      overviewFeatureLimit: _overviewFeatureLimit,
+                      onBuyGold: () => _openReviewOrder(SubscriptionPlanType.gold),
+                      onBuyPlatinum: () =>
+                          _openReviewOrder(SubscriptionPlanType.platinum),
+                      onUpgradePressed: () =>
+                          _openUpgradeDialog(platinumPricing.discountedPrice),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _FeatureComparisonTable(features: features),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact =
+                  constraints.maxWidth < _compactBreakpoint &&
+                  !_showFullComparison;
+
+              if (isCompact) {
+                final selectedPricing =
+                    _selectedCompactPlan == PricingPlanType.gold
+                    ? goldPricing
+                    : platinumPricing;
+                final selectedPlanType =
+                    _selectedCompactPlan == PricingPlanType.gold
+                    ? SubscriptionPlanType.gold
+                    : SubscriptionPlanType.platinum;
+
+                return Column(
+                  children: [
+                    Expanded(child: scrollContent),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.sm,
+                        AppSpacing.lg,
+                        AppSpacing.lg,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: FilledButton(
+                          onPressed: () => _openReviewOrder(selectedPlanType),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.error,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.sm + 4,
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          child: Text(selectedPricing.ctaLabel),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                  ],
+                );
+              }
+
+              return SizedBox.expand(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    scrollContent,
+                    if (_showFullComparison)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: AppSpacing.md,
+                        child: Center(
+                          child: OutlinedButton.icon(
+                            onPressed: () =>
+                                setState(() => _showFullComparison = false),
+                            icon: const Icon(Icons.arrow_upward, size: 18),
+                            label: const Text('Back To Plans'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.textPrimary,
+                              backgroundColor: AppColors.surface,
+                              side: BorderSide(color: Colors.grey.shade300),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg,
+                                vertical: AppSpacing.sm + 4,
+                              ),
+                              elevation: 2,
+                              shadowColor: Colors.black26,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PurchaseHistorySection extends ConsumerWidget {
+  const _PurchaseHistorySection();
+
+  static final _dateFormat = DateFormat('dd MMM yyyy');
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyAsync = ref.watch(purchaseHistoryStateProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: AppSpacing.sm),
+          child: Text(
+            'Purchase History',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
             ),
-          );
-        },
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppRadius.lgBorder,
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: historyAsync.when(
+            skipLoadingOnReload: true,
+            loading: () => const Padding(
+              padding: EdgeInsets.all(AppSpacing.lg),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, _) => Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Text(
+                SubscriptionErrorMapper.messageFor(error),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            data: (history) {
+              if (history.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: Text(
+                    'No purchase history yet.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                );
+              }
+
+              return Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm + 4,
+                    ),
+                    color: AppColors.surface,
+                    child: const Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'Date',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'Event',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            'Plan change',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ...history.asMap().entries.map((entry) {
+                    final item = entry.value;
+                    final isEven = entry.key.isEven;
+                    return _PurchaseHistoryRow(
+                      item: item,
+                      dateLabel: _dateFormat.format(item.createdAt),
+                      isEven: isEven,
+                    );
+                  }),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PurchaseHistoryRow extends StatelessWidget {
+  const _PurchaseHistoryRow({
+    required this.item,
+    required this.dateLabel,
+    required this.isEven,
+  });
+
+  final PurchaseHistory item;
+  final String dateLabel;
+  final bool isEven;
+
+  @override
+  Widget build(BuildContext context) {
+    final planChange =
+        '${item.oldPlan.displayName} → ${item.newPlan.displayName}';
+
+    return Container(
+      color: isEven ? AppColors.surface : const Color(0xFFFAFAFA),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm + 4,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              dateLabel,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              item.event,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              planChange,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -594,6 +854,8 @@ class _OverviewPlanCards extends StatelessWidget {
     required this.onCompactPlanChanged,
     required this.onToggleFeatures,
     required this.onViewAllFeatures,
+    required this.onBuyGold,
+    required this.onBuyPlatinum,
     required this.onUpgradePressed,
   });
 
@@ -608,6 +870,8 @@ class _OverviewPlanCards extends StatelessWidget {
   final ValueChanged<PricingPlanType> onCompactPlanChanged;
   final VoidCallback onToggleFeatures;
   final VoidCallback onViewAllFeatures;
+  final VoidCallback onBuyGold;
+  final VoidCallback onBuyPlatinum;
   final VoidCallback onUpgradePressed;
 
   @override
@@ -634,6 +898,7 @@ class _OverviewPlanCards extends StatelessWidget {
                   overviewFeatureLimit: overviewFeatureLimit,
                   featuresExpanded: featuresExpanded,
                   onToggleFeatures: onToggleFeatures,
+                  onCtaPressed: onBuyGold,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -646,7 +911,7 @@ class _OverviewPlanCards extends StatelessWidget {
                   overviewFeatureLimit: overviewFeatureLimit,
                   featuresExpanded: featuresExpanded,
                   onToggleFeatures: onToggleFeatures,
-                  onCtaPressed: showUpgradeCta ? onUpgradePressed : null,
+                  onCtaPressed: showUpgradeCta ? onUpgradePressed : onBuyPlatinum,
                 ),
               ),
             ],
@@ -693,6 +958,8 @@ class _ComparisonHeader extends StatelessWidget {
     required this.platinumPricing,
     required this.features,
     required this.overviewFeatureLimit,
+    required this.onBuyGold,
+    required this.onBuyPlatinum,
     required this.onUpgradePressed,
   });
 
@@ -702,6 +969,8 @@ class _ComparisonHeader extends StatelessWidget {
   final PlanPricing platinumPricing;
   final List<PlanFeature> features;
   final int overviewFeatureLimit;
+  final VoidCallback onBuyGold;
+  final VoidCallback onBuyPlatinum;
   final VoidCallback onUpgradePressed;
 
   @override
@@ -718,6 +987,7 @@ class _ComparisonHeader extends StatelessWidget {
             isGold: true,
             compact: true,
             overviewFeatureLimit: overviewFeatureLimit,
+            onCtaPressed: onBuyGold,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -729,7 +999,7 @@ class _ComparisonHeader extends StatelessWidget {
             isGold: false,
             compact: true,
             overviewFeatureLimit: overviewFeatureLimit,
-            onCtaPressed: showUpgradeCta ? onUpgradePressed : null,
+            onCtaPressed: showUpgradeCta ? onUpgradePressed : onBuyPlatinum,
           ),
         ),
       ],

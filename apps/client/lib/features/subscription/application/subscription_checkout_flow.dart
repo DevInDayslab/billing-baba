@@ -1,0 +1,99 @@
+import 'package:billing_baba/features/plans_pricing/presentation/widgets/payment_pending_dialog.dart';
+import 'package:billing_baba/features/subscription/application/subscription_error_mapper.dart';
+import 'package:billing_baba/features/subscription/domain/models/create_order_result.dart';
+import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
+import 'package:billing_baba/features/subscription/presentation/desktop/subscription_payment_host.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/current_subscription_provider.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/plans_pricing_view_provider.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/purchase_history_provider.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/subscription_plans_provider.dart';
+import 'package:billing_baba/features/subscription/presentation/providers/subscription_service_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+
+/// Coordinates Razorpay checkout, server verification, and provider refresh.
+class SubscriptionCheckoutFlow {
+  const SubscriptionCheckoutFlow._();
+
+  static Future<void> startFromOrder(
+    BuildContext context,
+    WidgetRef ref, {
+    required CreateOrderResult order,
+    required SubscriptionPlanType planType,
+  }) async {
+    final bridgeResult = await showSubscriptionPaymentHost(
+      context,
+      order: order,
+      planType: planType,
+    );
+
+    if (!context.mounted || bridgeResult == null) return;
+
+    switch (bridgeResult) {
+      case PaymentBridgeCancelled():
+        return;
+      case PaymentBridgeFailed(:final message):
+        _showErrorSnackBar(context, message);
+        return;
+      case PaymentBridgeSuccess(
+        :final razorpayPaymentId,
+        :final razorpayOrderId,
+        :final razorpaySignature,
+      ):
+        if (razorpayPaymentId.isEmpty ||
+            razorpayOrderId.isEmpty ||
+            razorpaySignature.isEmpty) {
+          _showErrorSnackBar(
+            context,
+            'Incomplete payment response. Please try again.',
+          );
+          return;
+        }
+
+        try {
+          final service = await ref.read(subscriptionServiceProvider.future);
+          final verifyResult = await service.verifyPayment(
+            paymentUuid: order.paymentUuid,
+            razorpayOrderId: razorpayOrderId,
+            razorpayPaymentId: razorpayPaymentId,
+            razorpaySignature: razorpaySignature,
+          );
+
+          _refreshSubscriptionData(ref);
+
+          if (!context.mounted) return;
+
+          final formattedAmount =
+              '₹${NumberFormat('#,##0.##', 'en_IN').format(order.amount / 100)}';
+
+          await showPaymentSuccessDialog(
+            context,
+            planName: verifyResult.plan.displayName,
+            expiresAt: verifyResult.expiresAt,
+            amount: formattedAmount,
+          );
+        } on Object catch (error) {
+          if (!context.mounted) return;
+          _showErrorSnackBar(context, SubscriptionErrorMapper.messageFor(error));
+        }
+    }
+  }
+
+  static void _refreshSubscriptionData(WidgetRef ref) {
+    ref
+      ..invalidate(currentSubscriptionStateProvider)
+      ..invalidate(purchaseHistoryStateProvider)
+      ..invalidate(subscriptionPlansProvider)
+      ..invalidate(plansPricingViewProvider);
+  }
+
+  static void _showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+}

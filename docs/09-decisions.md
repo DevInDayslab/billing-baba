@@ -1375,6 +1375,61 @@ Product item details needed an immutable stock update history showing who change
 
 ---
 
+## ADR-038: Annual Plan Purchase Infrastructure (Phase 1)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-24 |
+| **Status** | Accepted |
+
+#### Context
+
+Billing Baba needs cloud-backed plan purchase and storage for Gold and Platinum annual plans before any licensing or feature gating. This is a one-time annual purchase (365 days), not recurring Razorpay Subscriptions.
+
+#### Decision
+
+- Add normalized tables: `subscription_plans`, `subscriptions`, `subscription_payments`, `subscription_history`.
+- Denormalize current state on `businesses`: `current_plan`, `plan_status`, `plan_expires_at` (default `no_plan` / `active`).
+- Integrate Razorpay **Orders API** only. Primary activation via `POST /subscription/verify` after Razorpay Checkout.js returns payment credentials; Flutter verifies server-side via Dio (never trusts WebView callbacks alone). Webhooks (`payment.captured`, `order.paid`) remain secondary reconciliation for missed or duplicate events.
+- No Billing Baba-hosted checkout page and no external browser. `POST /subscription/create-order` returns `{ paymentUuid, razorpayOrderId, razorpayKey, amount, currency, businessName, businessEmail, businessPhone }`. Payment credentials are passed from the page to Flutter via a JavaScript bridge; Flutter calls `/verify` with `payment_id`, `order_id`, and `signature` and refreshes subscription state automatically.
+- Daily idempotent scheduler expires `ACTIVE` subscriptions past `expires_at` and downgrades business to `no_plan`.
+- No feature restrictions, license validation, or API authorization by plan in this phase.
+
+#### Consequences
+
+- Future licensing can read `businesses.current_plan` and subscription history without changing payment flow.
+- Plan prices are seeded in `subscription_plans` and updatable in DB.
+- Addon/seat licensing and auto-renewal remain out of scope.
+
+---
+
+## ADR-039: Client Checkout Rebuild — Clean WebView, No DOM Hacks
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-07-25 |
+| **Status** | Accepted |
+
+#### Context
+
+The first client implementation of the checkout WebView (built alongside ADR-038) accumulated CSS injection, `MutationObserver` re-styling, viewport-forcing guards, retry-keyed WebView rebuilds, and an unfinished macOS transparency native channel — all attempting to force Razorpay's Standard Checkout to look edge-to-edge inside the WebView. This made the flow fragile and hard to reason about, so it is being rebuilt from scratch rather than patched further.
+
+#### Decision
+
+- Rebuild the client `subscription` feature as a layered `domain/application/data/presentation` (with `desktop/mobile/shared` presentation split) feature, mirroring the CRM feature's structure.
+- `checkout.html` is minimal: load `checkout.js`, construct a `Razorpay` instance from a config object injected once via `runJavaScript`/`loadStringContent`, forward `payment_started` / `payment_success` / `payment_failed` / `payment_cancelled` events to Flutter over a single bridge channel (`PaymentBridge` on macOS, `chrome.webview.postMessage` on Windows). No injected CSS, no `MutationObserver`, no iframe manipulation, no viewport forcing, no retry-keyed rebuilds, no native transparency channel. Razorpay renders its own native checkout overlay inside the WebView unmodified.
+- The payment host UI is a custom transparent `PageRouteBuilder` overlay (not a `Dialog`/`showDialog`), giving a Vyapar-like dimmed, centered, rounded, shadowed panel that hosts the WebView plus Billing Baba's own loading/success/failure/cancel chrome.
+- Payment progress is modeled as an explicit Riverpod state machine (`Idle → CreatingOrder → OpeningCheckout → PaymentStarted → PaymentSuccess → Verifying → ActivatingLicense → Completed`, with `Failed`/`Cancelled` branches) instead of ad-hoc dialog state + timers.
+- "License" (current plan, expiry, remaining days, device access, license type) is a client-side domain concept mapped onto the existing Subscription API responses — no backend changes beyond the ADR-038 module. A static per-plan metadata overlay (features, badge, `isPopular`, device limit, license type, duration label) is merged onto the live price/duration from `subscription_plans` so the UI is data-driven even though only `gold`/`platinum` × 365-day duration are purchasable today.
+
+#### Consequences
+
+- The old `desktop_payment_webview_*`, `subscription_payment_dialog.dart`, `subscription_payment_host_audit.dart`, and native `TransparentWebViewChannel.swift` approach is fully retired and not reused.
+- Adding real duration variants or device-limit tiers later only requires new `subscription_plans` rows; the client's plan-metadata overlay is the single seam to extend.
+- Purchase History and Additional License Purchase ship as state-ready UI backed by mock/local data in this phase; wiring to real endpoints is future work.
+
+---
+
 ## ADR Template
 
 Use for future decisions. Do not remove.
