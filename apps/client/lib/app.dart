@@ -3,7 +3,6 @@ import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/routing/app_router.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_opening_overlay.dart';
-import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/shared/image/image_memory_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,10 +35,6 @@ class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
     final isOpeningCompany = ref.watch(businessSessionLoadingProvider) != null;
     final isSelectingCompany = ref.watch(businessSelectionTransitionProvider);
     final isBlocking = isOpeningCompany || isSelectingCompany;
-
-    SwitchCompanyDebugLog.loading(
-      'app overlay opening=$isOpeningCompany selecting=$isSelectingCompany',
-    );
 
     return MaterialApp.router(
       title: AppConfig.appName,

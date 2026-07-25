@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/widgets/mobile/transaction/mobile_scoped_transaction_page.dart';
 import 'package:flutter/material.dart';
 
 class MobileSalePlaceholderPage extends StatelessWidget {
@@ -12,10 +13,9 @@ class MobileSalePlaceholderPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Sale Placeholder — Mobile UI coming soon'),
-      ),
+    return MobileScopedTransactionPage(
+      route: route,
+      titleOverride: title,
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/widgets/mobile/mobile_settings_detail_page.dart';
+import 'package:billing_baba/core/widgets/mobile/mobile_empty_state.dart';
 import 'package:flutter/material.dart';
 
 class MobileComingSoonPage extends StatelessWidget {
@@ -10,9 +12,12 @@ class MobileComingSoonPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Coming Soon — Mobile UI coming soon'),
+    return MobileSettingsDetailPage(
+      title: title,
+      body: MobileEmptyState(
+        title: '$title coming soon',
+        message: 'This feature is under development.',
+        icon: Icons.construction_outlined,
       ),
     );
   }

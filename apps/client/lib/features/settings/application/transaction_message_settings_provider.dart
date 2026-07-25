@@ -8,7 +8,7 @@ part 'transaction_message_settings_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 Future<TransactionMessageSettingsRepository>
-    transactionMessageSettingsRepository(Ref ref) async {
+transactionMessageSettingsRepository(Ref ref) async {
   final storage = await ref.watch(storageServiceProvider.future);
   final businessId = ref.watch(currentBusinessProvider)?.id ?? '';
   return TransactionMessageSettingsRepository(storage, businessId);
@@ -20,14 +20,16 @@ class TransactionMessageSettingsNotifier
   @override
   Future<TransactionMessageSettings> build() async {
     ref.watch(currentBusinessProvider);
-    final repository =
-        await ref.watch(transactionMessageSettingsRepositoryProvider.future);
+    final repository = await ref.watch(
+      transactionMessageSettingsRepositoryProvider.future,
+    );
     return repository.load();
   }
 
   Future<void> save(TransactionMessageSettings settings) async {
-    final repository =
-        await ref.read(transactionMessageSettingsRepositoryProvider.future);
+    final repository = await ref.read(
+      transactionMessageSettingsRepositoryProvider.future,
+    );
     await repository.save(settings);
     state = AsyncData(settings);
   }

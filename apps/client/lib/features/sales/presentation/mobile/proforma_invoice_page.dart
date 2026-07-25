@@ -1,16 +1,14 @@
+import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/core/widgets/mobile/transaction/mobile_scoped_transaction_page.dart';
 import 'package:flutter/material.dart';
 
 class MobileProformaInvoicePage extends StatelessWidget {
-  const MobileProformaInvoicePage({
-    super.key,
-  });
+  const MobileProformaInvoicePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Proforma Invoice — Mobile UI coming soon'),
-      ),
+    return const MobileScopedTransactionPage(
+      route: AppRoutes.saleProformaInvoice,
     );
   }
 }

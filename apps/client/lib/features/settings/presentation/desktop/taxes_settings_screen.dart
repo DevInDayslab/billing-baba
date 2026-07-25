@@ -17,7 +17,8 @@ class DesktopTaxesSettingsScreen extends ConsumerStatefulWidget {
       _TaxesSettingsScreenState();
 }
 
-class _TaxesSettingsScreenState extends ConsumerState<DesktopTaxesSettingsScreen> {
+class _TaxesSettingsScreenState
+    extends ConsumerState<DesktopTaxesSettingsScreen> {
   final _tierControllers = <String, TextEditingController>{};
   String _defaultTaxLabel = 'None';
   bool _saving = false;
@@ -33,8 +34,8 @@ class _TaxesSettingsScreenState extends ConsumerState<DesktopTaxesSettingsScreen
   void _syncDraft(CommerceSettingsModel settings) {
     for (final tier in PriceTier.all) {
       final apiTier = PriceTier.toApiTier(tier);
-      final label = settings.pricingTierLabels[apiTier] ??
-          PriceTier.labelFor(tier);
+      final label =
+          settings.pricingTierLabels[apiTier] ?? PriceTier.labelFor(tier);
       _tierControllers.putIfAbsent(
         tier,
         () => TextEditingController(text: label),
@@ -55,7 +56,9 @@ class _TaxesSettingsScreenState extends ConsumerState<DesktopTaxesSettingsScreen
         }
       }
       final defaultTax = ItemTaxRate.parsePercent(_defaultTaxLabel);
-      await ref.read(commerceSettingsProvider.notifier).save(
+      await ref
+          .read(commerceSettingsProvider.notifier)
+          .save(
             pricingTierLabels: tierLabels,
             defaultInvoiceTaxRate: defaultTax,
             clearDefaultInvoiceTaxRate: defaultTax == null,
@@ -140,7 +143,8 @@ class _TaxesSettingsScreenState extends ConsumerState<DesktopTaxesSettingsScreen
                 child: SaleGenericSelectDropdown(
                   value: _defaultTaxLabel,
                   options: ItemTaxRate.options,
-                  onSelected: (value) => setState(() => _defaultTaxLabel = value),
+                  onSelected: (value) =>
+                      setState(() => _defaultTaxLabel = value),
                 ),
               ),
               const SizedBox(height: 8),

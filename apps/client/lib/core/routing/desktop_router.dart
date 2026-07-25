@@ -4,7 +4,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Desktop GoRouter — uses [DesktopShell], public Adaptive feature pages only.
+/// Desktop GoRouter — isolated from the mobile router provider.
+///
+/// Uses [DesktopShell] only; mobile builds never load this provider.
 final desktopRouterProvider = Provider<GoRouter>((ref) {
   return createAppRouter(
     ref: ref,

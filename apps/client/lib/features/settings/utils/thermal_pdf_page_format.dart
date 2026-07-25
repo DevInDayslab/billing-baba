@@ -4,10 +4,10 @@ import 'package:pdf/pdf.dart';
 
 /// Roll width in millimeters for each thermal paper size setting.
 double thermalRollWidthMm(ThermalPageSize size) => switch (size) {
-      ThermalPageSize.twoInch => 62,
-      ThermalPageSize.threeInch => 80,
-      ThermalPageSize.fourInch => 92,
-    };
+  ThermalPageSize.twoInch => 62,
+  ThermalPageSize.threeInch => 80,
+  ThermalPageSize.fourInch => 92,
+};
 
 /// Horizontal margin inside the thermal roll (each side).
 double thermalHorizontalMarginMm() => 10;

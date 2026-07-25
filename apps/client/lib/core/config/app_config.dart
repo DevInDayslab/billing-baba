@@ -35,17 +35,20 @@ abstract final class AppConfig {
   /// When true, shows Developer menu in the app shell (debug / dev profile).
   static bool get showDeveloperMenu => kDebugMode || enableDevLogin;
 
-  /// Verbose auth/MSG91 logging in development builds.
-  static bool get authDebugLogging =>
-      kDebugMode ||
+  /// Verbose auth/MSG91 logging — opt-in via env, not enabled by default in debug.
+  static bool get authDebugLogging => consoleVerbose;
+
+  /// Verbose console/file diagnostics (HTTP traces, image cache, temp debug helpers).
+  ///
+  /// Set `VERBOSE_LOGGING=true` or `DEBUG=true` in `.env` when debugging.
+  static bool get consoleVerbose =>
+      dotenv.env['VERBOSE_LOGGING']?.toLowerCase() == 'true' ||
       dotenv.env['DEBUG']?.toLowerCase() == 'true' ||
-      dotenv.env['APP_ENV']?.toLowerCase() == 'development';
+      dotenv.env['APP_ENV']?.toLowerCase() == 'development' ||
+      _isDiagnosticsAppEnv;
 
   /// Production-grade diagnostics for alpha, demo, and internal builds.
-  static bool get diagnosticsEnabled =>
-      authDebugLogging ||
-      enableDevLogin ||
-      _isDiagnosticsAppEnv;
+  static bool get diagnosticsEnabled => consoleVerbose || _isDiagnosticsAppEnv;
 
   static bool get _isDiagnosticsAppEnv {
     final env = dotenv.env['APP_ENV']?.toLowerCase();
@@ -80,9 +83,9 @@ abstract final class AppConfig {
   /// Default OTP for local development when MSG91 is not configured.
   static String get devOtp => dotenv.env['DEV_OTP']?.trim() ?? '123456';
 
-  /// Prints resolved config once at startup when diagnostics are enabled.
+  /// Prints resolved config once at startup when verbose logging is enabled.
   static void logStartupConfig() {
-    if (!diagnosticsEnabled) return;
+    if (!consoleVerbose) return;
     debugPrint(
       '[CONFIG] API_BASE_URL=$apiBaseUrl (source: $apiBaseUrlSource)',
     );

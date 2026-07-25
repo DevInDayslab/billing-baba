@@ -75,7 +75,8 @@ class TransactionMessageSettings {
       includeFooter: true,
       autoSend: {
         for (final type in TransactionMessageType.values)
-          type: type == TransactionMessageType.sale ||
+          type:
+              type == TransactionMessageType.sale ||
               type == TransactionMessageType.paymentIn ||
               type == TransactionMessageType.syncShareInvitation,
       },

@@ -35,8 +35,9 @@ abstract final class WhatsAppAutoNotify {
   }) async {
     try {
       final printService = await ref.read(printServiceProvider.future);
-      final generatedDocuments =
-          await ref.read(generatedDocumentServiceProvider.future);
+      final generatedDocuments = await ref.read(
+        generatedDocumentServiceProvider.future,
+      );
       final request = PrintRequest.saleInvoice(documentId);
       final bytes = await printService.generatePdf(request);
       await generatedDocuments.cacheForPrintRequest(

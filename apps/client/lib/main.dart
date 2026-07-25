@@ -73,7 +73,7 @@ Future<void> main() async {
 }
 
 Future<void> _logStartupDiagnostics() async {
-  if (!AppConfig.diagnosticsEnabled) return;
+  if (!AppConfig.consoleVerbose) return;
 
   try {
     final deviceInfo = await DeviceInfoCollector.collect();

@@ -4,7 +4,7 @@
   "description": "Billing Baba REST API",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "bun --watch src/server.ts",
+    "dev": "bun scripts/dev.ts",
     "start": "node dist/server.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",

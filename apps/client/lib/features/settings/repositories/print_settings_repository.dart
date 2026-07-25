@@ -40,8 +40,10 @@ class PrintSettingsRepository {
         _storageService.read(_scopedKey(_kThermalPageSize)),
       ),
       useTextStylingBold: _readBool(_kBold, defaults.useTextStylingBold),
-      autoCutPaperAfterPrinting:
-          _readBool(_kAutoCut, defaults.autoCutPaperAfterPrinting),
+      autoCutPaperAfterPrinting: _readBool(
+        _kAutoCut,
+        defaults.autoCutPaperAfterPrinting,
+      ),
       extraLinesAtEnd: _readInt(_kExtraLines, defaults.extraLinesAtEnd),
       numberOfCopies: _readInt(_kCopies, defaults.numberOfCopies),
       orientation: RegularOrientationX.fromStorageKey(
@@ -59,8 +61,10 @@ class PrintSettingsRepository {
       printPhone: _readBool(_kPhone, defaults.printPhone),
       printGstin: _readBool(_kGstin, defaults.printGstin),
       printBankDetails: _readBool(_kBankDetails, defaults.printBankDetails),
-      printTermsAndConditions:
-          _readBool(_kTermsToggle, defaults.printTermsAndConditions),
+      printTermsAndConditions: _readBool(
+        _kTermsToggle,
+        defaults.printTermsAndConditions,
+      ),
       termsAndConditions:
           _storageService.read(_scopedKey(_kTermsText)) ??
           defaults.termsAndConditions,
@@ -117,8 +121,14 @@ class PrintSettingsRepository {
         _scopedKey(_kAddress),
         _writeBool(settings.printAddress),
       ),
-      _storageService.write(_scopedKey(_kPhone), _writeBool(settings.printPhone)),
-      _storageService.write(_scopedKey(_kGstin), _writeBool(settings.printGstin)),
+      _storageService.write(
+        _scopedKey(_kPhone),
+        _writeBool(settings.printPhone),
+      ),
+      _storageService.write(
+        _scopedKey(_kGstin),
+        _writeBool(settings.printGstin),
+      ),
       _storageService.write(
         _scopedKey(_kBankDetails),
         _writeBool(settings.printBankDetails),
@@ -127,7 +137,10 @@ class PrintSettingsRepository {
         _scopedKey(_kTermsToggle),
         _writeBool(settings.printTermsAndConditions),
       ),
-      _storageService.write(_scopedKey(_kTermsText), settings.termsAndConditions),
+      _storageService.write(
+        _scopedKey(_kTermsText),
+        settings.termsAndConditions,
+      ),
     ]);
   }
 

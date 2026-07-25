@@ -1,8 +1,10 @@
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:flutter/foundation.dart';
 
 /// Temporary diagnostics for business open/switch flow.
 abstract final class BusinessOpenDebugLog {
   static void log(String message) {
+    if (!AppConfig.consoleVerbose) return;
     debugPrint('[BUSINESS_OPEN] $message');
   }
 
