@@ -6,6 +6,7 @@ import { loadAppConfig } from '../src/config/app_config';
 import { getDb } from '../src/db/client';
 import { OutstandingRepository } from '../src/modules/accounting/outstanding.repository';
 import { buildPartyLedgerReport } from '../src/shared/reporting/party-ledger';
+import { uniqueIndianMobile } from './helpers/app';
 
 const canRun = Boolean(process.env.DATABASE_URL) && process.env.JWT_SECRET;
 
@@ -129,6 +130,7 @@ describe.skipIf(!canRun)('Party ledger API integration', () => {
           name: `LedgerCustomer-${suffix}`,
           party_type: 'customer',
           state_code: '27',
+          mobile: uniqueIndianMobile('9'),
           opening_balance: '500',
         },
       });
@@ -268,6 +270,7 @@ describe.skipIf(!canRun)('Party ledger API integration', () => {
         payload: {
           name: `EmptyParty-${suffix}`,
           party_type: 'customer',
+          mobile: uniqueIndianMobile('8'),
           opening_balance: '1000',
         },
       });
@@ -311,6 +314,7 @@ describe.skipIf(!canRun)('Party ledger API integration', () => {
           name: `TimelineCustomer-${suffix}`,
           party_type: 'customer',
           state_code: '27',
+          mobile: uniqueIndianMobile('7'),
         },
       });
       const partyId = (partyRes.json() as { data: { id: string } }).data.id;
@@ -458,6 +462,7 @@ describe.skipIf(!canRun)('Party ledger API integration', () => {
           name: `TimelineSupplier-${suffix}`,
           party_type: 'supplier',
           state_code: '27',
+          mobile: uniqueIndianMobile('6'),
         },
       });
       const partyId = (partyRes.json() as { data: { id: string } }).data.id;
@@ -610,6 +615,7 @@ describe.skipIf(!canRun)('Party ledger API integration', () => {
           name: `CashCustomer-${suffix}`,
           party_type: 'customer',
           state_code: '27',
+          mobile: uniqueIndianMobile('9'),
         },
       });
       const partyId = (partyRes.json() as { data: { id: string } }).data.id;

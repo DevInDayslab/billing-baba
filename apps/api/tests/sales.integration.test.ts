@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app';
 import { loadAppConfig } from '../src/config/app_config';
+import { uniqueIndianMobile } from './helpers/app';
 
 const hasDatabase = Boolean(process.env.DATABASE_URL);
 const canRun = hasDatabase && process.env.JWT_SECRET;
@@ -88,6 +89,7 @@ async function createSalesFixtures(
       name: `Customer-${suffix}`,
       party_type: 'customer',
       state_code: '27',
+      mobile: uniqueIndianMobile(),
     },
   });
   expect(partyRes.statusCode).toBe(201);

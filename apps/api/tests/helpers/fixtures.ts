@@ -1,7 +1,7 @@
 import { expect } from 'bun:test';
 import type { FastifyInstance } from 'fastify';
 import { loadAppConfig } from '../../src/config/app_config';
-import { getAuthHeaders, jsonAuthHeaders } from './app';
+import { getAuthHeaders, jsonAuthHeaders, uniqueIndianMobile } from './app';
 
 export async function createInventoryFixtures(
   app: FastifyInstance,
@@ -71,6 +71,7 @@ export async function createParty(
       name: `Party-${suffix}`,
       party_type: partyType,
       state_code: '27',
+      mobile: uniqueIndianMobile(),
     },
   });
   expect(response.statusCode).toBe(201);
