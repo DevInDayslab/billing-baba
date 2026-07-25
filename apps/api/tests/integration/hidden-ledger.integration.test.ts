@@ -14,6 +14,29 @@ import {
 import { canRunDbTests, INTEGRATION_TIMEOUT_MS } from '../helpers/env';
 import { createParty } from '../helpers/fixtures';
 
+async function createDraftSaleDocument(
+  app: FastifyInstance,
+  token: string,
+  partyId: string,
+  series: string,
+): Promise<string> {
+  const config = loadAppConfig();
+  const created = await app.inject({
+    method: 'POST',
+    url: `${config.apiPrefix}/sales/sales-documents`,
+    headers: jsonAuthHeaders(token),
+    payload: {
+      document_type: 'tax_invoice',
+      document_series: series,
+      party_id: partyId,
+      is_gst_formal: true,
+      party_state_code: '27',
+    },
+  });
+  expect(created.statusCode).toBe(201);
+  return (created.json() as { data: { id: string } }).data.id;
+}
+
 describe.skipIf(!canRunDbTests)('Hidden ledger integration', () => {
   let app: FastifyInstance;
   let token: string;
@@ -31,31 +54,44 @@ describe.skipIf(!canRunDbTests)('Hidden ledger integration', () => {
       url: `${config.apiPrefix}/auth/me`,
       headers: jsonAuthHeaders(token),
     });
-    businessId = (
-      me.json() as { data: { businesses: Array<{ id: string }> } }
-    ).data.businesses[0]?.id ?? '';
+    businessId =
+      (me.json() as { data: { businesses: Array<{ id: string }> } }).data
+        .businesses[0]?.id ?? '';
     expect(businessId).toBeTruthy();
 
     partyId = await createParty(app, token, `${suffix}-hl`);
+
+    const shortfallSaleA = await createDraftSaleDocument(
+      app,
+      token,
+      partyId,
+      `HL${suffix}A`,
+    );
+    const shortfallSaleB = await createDraftSaleDocument(
+      app,
+      token,
+      partyId,
+      `HL${suffix}B`,
+    );
 
     const service = new HiddenLedgerService();
     await service.recordShortPaymentEntry({
       businessId,
       partyId,
-      salesDocumentId: randomUUID(),
+      salesDocumentId: shortfallSaleA,
       shortfallAmount: '100.00',
     });
     await service.recordShortPaymentEntry({
       businessId,
       partyId,
-      salesDocumentId: randomUUID(),
+      salesDocumentId: shortfallSaleB,
       shortfallAmount: '50.00',
     });
-  });
+  }, INTEGRATION_TIMEOUT_MS);
 
   afterAll(async () => {
     await app.close();
-  });
+  }, INTEGRATION_TIMEOUT_MS);
 
   test(
     'lists hidden ledger entries with party summary for owner',
@@ -85,9 +121,9 @@ describe.skipIf(!canRunDbTests)('Hidden ledger integration', () => {
       const summaryBody = summary.json() as {
         data: { hidden_ledger_balance: string; pending_entries: number };
       };
-      expect(Number(summaryBody.data.hidden_ledger_balance)).toBeGreaterThanOrEqual(
-        150,
-      );
+      expect(
+        Number(summaryBody.data.hidden_ledger_balance),
+      ).toBeGreaterThanOrEqual(150);
       expect(summaryBody.data.pending_entries).toBeGreaterThanOrEqual(2);
     },
     INTEGRATION_TIMEOUT_MS,
@@ -104,9 +140,8 @@ describe.skipIf(!canRunDbTests)('Hidden ledger integration', () => {
         url: `${prefix}/entries?party_id=${partyId}&limit=1`,
         headers: getAuthHeaders(token),
       });
-      const entryId = (
-        list.json() as { data: Array<{ id: string }> }
-      ).data[0]?.id;
+      const entryId = (list.json() as { data: Array<{ id: string }> }).data[0]
+        ?.id;
       expect(entryId).toBeTruthy();
 
       const detail = await app.inject({
@@ -129,7 +164,12 @@ describe.skipIf(!canRunDbTests)('Hidden ledger integration', () => {
     async () => {
       const config = loadAppConfig();
       const prefix = `${config.apiPrefix}/hidden-ledger`;
-      const saleId = randomUUID();
+      const saleId = await createDraftSaleDocument(
+        app,
+        token,
+        partyId,
+        `HL${suffix}R`,
+      );
 
       const recovered = await app.inject({
         method: 'POST',
