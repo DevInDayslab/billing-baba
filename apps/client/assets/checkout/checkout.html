@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Billing Baba Checkout</title>
+  </head>
+  <body>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+      // Minimal bridge: forward Razorpay Checkout.js callbacks to Flutter as
+      // { event, data } JSON. No DOM styling, no MutationObserver, no
+      // viewport forcing, no iframe manipulation — Razorpay renders its own
+      // native overlay inside this WebView unmodified.
+      function postToFlutter(event, data) {
+        var message = JSON.stringify({ event: event, data: data || {} });
+        if (window.PaymentBridge && window.PaymentBridge.postMessage) {
+          window.PaymentBridge.postMessage(message);
+        } else if (window.chrome && window.chrome.webview) {
+          window.chrome.webview.postMessage(message);
+        }
+      }
+
+      function logViewportMetrics() {
+        var metrics = {
+          innerWidth: window.innerWidth,
+          innerHeight: window.innerHeight,
+          outerWidth: window.outerWidth,
+          outerHeight: window.outerHeight,
+          screenWidth: screen.width,
+          screenHeight: screen.height,
+          devicePixelRatio: window.devicePixelRatio,
+        };
+        console.log('[checkout] viewport metrics', metrics);
+        postToFlutter('viewport_metrics', metrics);
+      }
+
+      window.BillingBabaCheckout = {
+        start: function (config) {
+          logViewportMetrics();
+
+          var options = {
+            key: config.key,
+            order_id: config.orderId,
+            amount: config.amount,
+            currency: config.currency,
+            name: config.businessName,
+            description: config.description,
+            image: config.businessLogo || undefined,
+            theme: { color: config.themeColor },
+            prefill: {
+              name: config.customerName,
+              email: config.customerEmail,
+              contact: config.customerPhone,
+            },
+            modal: {
+              ondismiss: function () {
+                postToFlutter('payment_cancelled');
+              },
+            },
+            handler: function (response) {
+              postToFlutter('payment_success', {
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+              });
+            },
+          };
+
+          var rzp = new Razorpay(options);
+          rzp.on('payment.failed', function (response) {
+            postToFlutter('payment_failed', {
+              message: response.error && response.error.description,
+            });
+          });
+
+          postToFlutter('payment_started');
+          rzp.open();
+        },
+      };
+    </script>
+  </body>
+</html>

@@ -12,7 +12,8 @@ abstract final class ApiEndpoints {
   static const authAvatar = '/api/v1/auth/me/avatar';
   static const parties = '/api/v1/parties';
   static String party(String id) => '/api/v1/parties/$id';
-  static String partyDeleteStatus(String id) => '/api/v1/parties/$id/delete-status';
+  static String partyDeleteStatus(String id) =>
+      '/api/v1/parties/$id/delete-status';
   static String partyLedger(String id) => '/api/v1/parties/$id/ledger';
   static String partyLoyalty(String id) => '/api/v1/parties/$id/loyalty';
   static String partyProfileImage(String id) =>
@@ -252,14 +253,14 @@ abstract final class ApiEndpoints {
   static const generatedDocuments = '/api/v1/generated-documents';
   static const generatedDocumentsLookup = '$generatedDocuments/lookup';
   static const generatedDocumentsEnsure = '$generatedDocuments/ensure';
-  static String generatedDocumentUrl(String id) => '$generatedDocuments/$id/url';
+  static String generatedDocumentUrl(String id) =>
+      '$generatedDocuments/$id/url';
   static String generatedDocumentRegenerate(String id) =>
       '$generatedDocuments/$id/regenerate';
 
   static const collaboration = '/api/v1/collaboration';
   static const collaborationInvitations = '$collaboration/invitations';
-  static const collaborationCompaniesShared =
-      '$collaboration/companies/shared';
+  static const collaborationCompaniesShared = '$collaboration/companies/shared';
   static const collaborationCompaniesInvitations =
       '$collaboration/companies/invitations';
   static const collaborationMembers = '$collaboration/company-members';
@@ -277,4 +278,12 @@ abstract final class ApiEndpoints {
       '$collaborationInvitations/$token/reject';
   static String collaborationLeaveCompany(String memberId) =>
       '$collaboration/company-members/$memberId/leave';
+
+  static const subscription = '/api/v1/subscription';
+  static const subscriptionPlans = '$subscription/plans';
+  static const subscriptionCurrent = '$subscription/current';
+  static const subscriptionHistory = '$subscription/history';
+  static const subscriptionCreateOrder = '$subscription/create-order';
+  static const subscriptionVerify = '$subscription/verify';
+  static const subscriptionRefresh = '$subscription/refresh';
 }

@@ -72,6 +72,11 @@ dependencies:
   window_manager: ^0.5.2
   open_filex: ^4.7.0
 
+  # Checkout WebView (Razorpay Standard Checkout)
+  webview_flutter: ^4.14.0
+  webview_flutter_wkwebview: ^3.22.0
+  webview_flutter_windows: ^1.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -109,6 +114,7 @@ flutter:
     - assets/images/
     - assets/illustrations/
     - assets/animations/
+    - assets/checkout/
     - .env
 
 # Flutter Launcher Icons

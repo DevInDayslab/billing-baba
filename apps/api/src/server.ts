@@ -3,6 +3,7 @@ import { config as loadEnv } from 'dotenv';
 import { buildApp } from './app';
 import { loadAppConfig } from './config/app_config';
 import { resolveGeminiModel } from './modules/purchases/purchase-document-gemini.parser';
+import { startSubscriptionScheduler } from './modules/subscription/subscription.scheduler';
 import {
   auditGeminiAuthEnvironment,
   describeGeminiKeyForLog,
@@ -20,6 +21,8 @@ async function startServer(): Promise<void> {
   setupGracefulShutdown(app);
 
   await app.listen({ host: config.host, port: config.port });
+
+  startSubscriptionScheduler(app, config);
 
   app.log.info(
     `${config.appName} v${config.version} listening on http://${config.host}:${config.port}`,

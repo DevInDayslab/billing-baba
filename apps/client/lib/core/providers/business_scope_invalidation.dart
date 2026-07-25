@@ -24,6 +24,9 @@ import 'package:billing_baba/features/sales/providers/sale_line_item_column_visi
 import 'package:billing_baba/features/settings/providers/print_settings_provider.dart';
 import 'package:billing_baba/features/settings/providers/transaction_message_settings_provider.dart';
 import 'package:billing_baba/features/settings/providers/whatsapp_settings_provider.dart';
+// import 'package:billing_baba/features/subscription/presentation/providers/current_license_provider.dart';
+// import 'package:billing_baba/features/subscription/presentation/providers/purchase_history_provider.dart';
+// import 'package:billing_baba/features/subscription/presentation/providers/subscription_plans_provider.dart';
 import 'package:billing_baba/features/tasks/providers/tasks_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -127,6 +130,9 @@ void invalidateAllBusinessScopedProviders(
     ..invalidate(posSalesListProvider)
     ..invalidate(dashboardProvider)
     ..invalidate(inventoryItemsProvider);
+    // ..invalidate(currentLicenseProvider)
+    // ..invalidate(subscriptionPlansProvider)
+    // ..invalidate(purchaseHistoryProvider);
 
   if (includeBusinessService) {
     ref.invalidate(businessServiceProvider);
@@ -146,18 +152,20 @@ void invalidateAllBusinessScopedProviders(
 
 /// Seeds sidebar/profile UI immediately from list-card data before API warm-up.
 void seedBusinessProfilePreview(Ref ref, {required CompanyListEntry entry}) {
-  ref.read(businessProfileProvider.notifier).replaceWith(
-    BusinessProfileModel(
-      id: entry.id,
-      name: entry.name,
-      ownerName: entry.ownerName,
-      phone: entry.phone,
-      email: entry.email,
-      gstin: entry.gstin,
-      address: entry.address,
-      logoUrl: entry.logoUrl,
-    ),
-  );
+  ref
+      .read(businessProfileProvider.notifier)
+      .replaceWith(
+        BusinessProfileModel(
+          id: entry.id,
+          name: entry.name,
+          ownerName: entry.ownerName,
+          phone: entry.phone,
+          email: entry.email,
+          gstin: entry.gstin,
+          address: entry.address,
+          logoUrl: entry.logoUrl,
+        ),
+      );
 }
 
 /// Loads core business-scoped data for the dashboard shell after a switch.
@@ -174,7 +182,10 @@ Future<void> warmBusinessScopedProviders(
   final service = await ref.read(businessServiceProvider.future);
   _ensureRefMounted(ref, 'warm after service resolve');
 
-  BusinessOpenDebugLog.step('warm', 'parallel fetch (profile, dashboard, tasks)');
+  BusinessOpenDebugLog.step(
+    'warm',
+    'parallel fetch (profile, dashboard, tasks)',
+  );
   await Future.wait<void>([
     _warmBusinessProfile(ref, service, businessId),
     _warmDashboard(ref),

@@ -1,7 +1,15 @@
 import { sql } from 'drizzle-orm';
 import { boolean, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
-import { syncedBusinessColumns, tenantRootColumns } from '../columns';
-import { valuationMethodEnum } from '../enums';
+import {
+  syncedBusinessColumns,
+  tenantRootColumns,
+  timestamptz,
+} from '../columns';
+import {
+  subscriptionPlanEnum,
+  subscriptionStatusEnum,
+  valuationMethodEnum,
+} from '../enums';
 
 export const businesses = pgTable(
   'businesses',
@@ -30,6 +38,13 @@ export const businesses = pgTable(
     valuationMethod: valuationMethodEnum('valuation_method')
       .notNull()
       .default('average'),
+    currentPlan: subscriptionPlanEnum('current_plan')
+      .notNull()
+      .default('no_plan'),
+    planStatus: subscriptionStatusEnum('plan_status')
+      .notNull()
+      .default('active'),
+    planExpiresAt: timestamptz('plan_expires_at'),
   },
   (table) => [
     uniqueIndex('uq_businesses_gstin')
