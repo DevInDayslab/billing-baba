@@ -8,22 +8,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:razorpay_web/razorpay_web.dart';
 
-const _panelWidth = 950.0;
-const _panelHeight = 680.0;
-
 /// Experiment switch between our custom WebView host and `razorpay_web`.
 ///
-/// Default is [PaymentHostImplementation.razorpayWeb] for the desktop-layout
-/// experiment. Flip back to [PaymentHostImplementation.customWebView] to restore
-/// the previous host without deleting any code.
+/// Prefer [PaymentHostImplementation.customWebView]. `razorpay_web` hardcodes
+/// a 480px dialog (mobile checkout) on wide screens.
 enum PaymentHostImplementation {
   customWebView,
   razorpayWeb,
 }
 
-/// Active payment host for this experiment.
 const PaymentHostImplementation activePaymentHostImplementation =
-    PaymentHostImplementation.razorpayWeb;
+    PaymentHostImplementation.customWebView;
+
+/// Flutter scrim only — Razorpay paints its own desktop modal on top.
+const _checkoutBarrierColor = Color(0x99000000);
 
 /// Presents Razorpay checkout. Public API is unchanged for callers.
 Future<PaymentBridgeResult?> showSubscriptionPaymentHost(
@@ -50,39 +48,42 @@ Future<PaymentBridgeResult?> _showCustomWebViewHost(
   required CreateOrderResult order,
   required SubscriptionPlanType planType,
 }) {
-  return Navigator.of(context, rootNavigator: true).push<PaymentBridgeResult>(
-    PageRouteBuilder(
-      opaque: false,
-      barrierColor: Colors.transparent,
-      pageBuilder: (dialogContext, _, _) {
-        return PopScope(
-          canPop: false,
-          child: Material(
-            type: MaterialType.transparency,
-            child: Center(
-              child: SizedBox(
-                width: _panelWidth,
-                height: _panelHeight,
-                child: SubscriptionPaymentWebView(
-                  order: order,
-                  planType: planType,
-                  onResult: (bridgeResult) {
-                    Navigator.of(dialogContext).pop(bridgeResult);
-                  },
-                ),
-              ),
+  final size = MediaQuery.sizeOf(context);
+  debugPrint(
+    '[checkout] full-window host '
+    '${size.width.toStringAsFixed(0)}x${size.height.toStringAsFixed(0)} '
+    '(no parent embed — standard desktop modal)',
+  );
+
+  // Full-window transparent WebView so window.innerWidth is the real desktop
+  // width. A fixed 960 panel + `parent` was still rendering Razorpay's compact
+  // (mobile) embed UI even when innerWidth reported 960.
+  return showGeneralDialog<PaymentBridgeResult>(
+    context: context,
+    barrierDismissible: false,
+    barrierLabel: 'Checkout',
+    barrierColor: _checkoutBarrierColor,
+    pageBuilder: (dialogContext, _, _) {
+      return PopScope(
+        canPop: false,
+        child: Material(
+          type: MaterialType.transparency,
+          child: SizedBox.expand(
+            child: SubscriptionPaymentWebView(
+              order: order,
+              planType: planType,
+              onResult: (bridgeResult) {
+                Navigator.of(dialogContext).pop(bridgeResult);
+              },
             ),
           ),
-        );
-      },
-    ),
+        ),
+      );
+    },
   );
 }
 
 /// Temporary adapter: maps `razorpay_web` events → [PaymentBridgeResult].
-///
-/// Package-specific APIs stay inside this file. Callers still receive the same
-/// bridge result type used by the existing checkout flow.
 Future<PaymentBridgeResult?> _showRazorpayWebHost(
   BuildContext context, {
   required CreateOrderResult order,
@@ -92,27 +93,19 @@ Future<PaymentBridgeResult?> _showRazorpayWebHost(
   debugPrint(
     '[checkout] razorpay_web experiment: '
     'window=${media.width.toStringAsFixed(0)}x${media.height.toStringAsFixed(0)} '
-    'packageDialogWidth=${media.width > 500 ? 480 : media.width - 32} '
-    '(razorpay_web hardcodes 480px when screen width > 500)',
+    'packageDialogWidth=${media.width > 500 ? 480 : media.width - 32}',
   );
 
   final completer = Completer<PaymentBridgeResult>();
-  final razorpay = Razorpay();
+  final razorpay = Razorpay()
 
-  razorpay
+  
     ..on(Razorpay.EVENT_PAYMENT_SUCCESS, (PaymentSuccessResponse response) {
       if (completer.isCompleted) return;
 
       final paymentId = response.paymentId ?? '';
       final orderId = response.orderId ?? '';
       final signature = response.signature ?? '';
-
-      debugPrint(
-        '[checkout] razorpay_web success: '
-        'paymentId=${paymentId.isEmpty ? "<empty>" : paymentId} '
-        'orderId=${orderId.isEmpty ? "<empty>" : orderId} '
-        'signature=${signature.isEmpty ? "<empty>" : "<present>"}',
-      );
 
       if (paymentId.isEmpty || orderId.isEmpty || signature.isEmpty) {
         completer.complete(
@@ -133,11 +126,6 @@ Future<PaymentBridgeResult?> _showRazorpayWebHost(
     })
     ..on(Razorpay.EVENT_PAYMENT_ERROR, (PaymentFailureResponse response) {
       if (completer.isCompleted) return;
-
-      debugPrint(
-        '[checkout] razorpay_web error: code=${response.code} '
-        'message=${response.message}',
-      );
 
       if (response.code == Razorpay.PAYMENT_CANCELLED) {
         completer.complete(const PaymentBridgeCancelled());

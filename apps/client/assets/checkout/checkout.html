@@ -2,179 +2,162 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=950, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Billing Baba Checkout</title>
     <style>
-      /* Opaque white — NOT transparent. WKWebView on macOS shows grey through transparent. */
+      /*
+       * Full-window transparent page. Flutter paints the dimmed barrier.
+       * Razorpay Standard Checkout (modal, no `parent`) draws the desktop
+       * two-column window. Its own backdrop is suppressed so it doesn't
+       * cover the Flutter scrim with an opaque layer.
+       */
       html,
       body {
         margin: 0;
         padding: 0;
         width: 100%;
         height: 100%;
-        background-color: #ffffff;
+        background-color: transparent !important;
         overflow: hidden;
+      }
+
+      .razorpay-backdrop {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        background: transparent !important;
       }
     </style>
   </head>
   <body>
-    <div
-      id="checkout-container"
-      style="width: 100%; height: 100%; position: absolute; top: 0; left: 0"
-    ></div>
     <script>
       var CHECKOUT_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
-      var MIN_DESKTOP_WIDTH = 768;
       var checkoutScriptPromise = null;
 
       function postToFlutter(event, data) {
         var message = JSON.stringify({ event: event, data: data || {} });
-        if (window.PaymentBridge && window.PaymentBridge.postMessage) {
+        if (
+          window.flutter_inappwebview &&
+          window.flutter_inappwebview.callHandler
+        ) {
+          window.flutter_inappwebview.callHandler("PaymentBridge", message);
+        } else if (window.PaymentBridge && window.PaymentBridge.postMessage) {
           window.PaymentBridge.postMessage(message);
         } else if (window.chrome && window.chrome.webview) {
           window.chrome.webview.postMessage(message);
         }
       }
 
-      /* Step 1 — environment metrics before Razorpay.open() */
+      /**
+       * Razorpay checkout.js treats these as mobile. Force desktop answers
+       * before checkout.js evaluates them (WebView sometimes reports touch /
+       * coarse pointer even on macOS).
+       */
+      function forceDesktopEnvironment() {
+        try {
+          Object.defineProperty(navigator, "maxTouchPoints", {
+            get: function () {
+              return 0;
+            },
+            configurable: true,
+          });
+        } catch (e) {}
+
+        var originalMatchMedia = window.matchMedia.bind(window);
+        window.matchMedia = function (query) {
+          var q = String(query).toLowerCase();
+          if (
+            q.indexOf("max-device-width") !== -1 ||
+            q.indexOf("max-device-height") !== -1 ||
+            q.indexOf("pointer: coarse") !== -1 ||
+            q.indexOf("hover: none") !== -1 ||
+            q.indexOf("max-width: 485") !== -1 ||
+            q.indexOf("max-width:485") !== -1
+          ) {
+            return {
+              matches: false,
+              media: query,
+              onchange: null,
+              addListener: function () {},
+              removeListener: function () {},
+              addEventListener: function () {},
+              removeEventListener: function () {},
+              dispatchEvent: function () {
+                return false;
+              },
+            };
+          }
+          if (
+            q.indexOf("pointer: fine") !== -1 ||
+            q.indexOf("hover: hover") !== -1
+          ) {
+            var fine = originalMatchMedia(query);
+            return {
+              matches: true,
+              media: query,
+              onchange: null,
+              addListener: fine.addListener
+                ? fine.addListener.bind(fine)
+                : function () {},
+              removeListener: fine.removeListener
+                ? fine.removeListener.bind(fine)
+                : function () {},
+              addEventListener: fine.addEventListener
+                ? fine.addEventListener.bind(fine)
+                : function () {},
+              removeEventListener: fine.removeEventListener
+                ? fine.removeEventListener.bind(fine)
+                : function () {},
+              dispatchEvent: function () {
+                return false;
+              },
+            };
+          }
+          return originalMatchMedia(query);
+        };
+      }
+
+      function suppressRazorpayBackdrop() {
+        var nodes = document.querySelectorAll(
+          ".razorpay-backdrop, .razorpay-container > .razorpay-backdrop"
+        );
+        for (var i = 0; i < nodes.length; i++) {
+          nodes[i].style.setProperty("display", "none", "important");
+          nodes[i].style.setProperty("opacity", "0", "important");
+          nodes[i].style.setProperty("visibility", "hidden", "important");
+          nodes[i].style.setProperty("background", "transparent", "important");
+        }
+      }
+
+      function watchAndSuppressBackdrop() {
+        suppressRazorpayBackdrop();
+        if (!window.MutationObserver || !document.body) return;
+        var observer = new MutationObserver(function () {
+          suppressRazorpayBackdrop();
+        });
+        observer.observe(document.documentElement, {
+          childList: true,
+          subtree: true,
+        });
+      }
+
       function collectEnvironmentMetrics(stage) {
         var metrics = {
           stage: stage,
           innerWidth: window.innerWidth,
           innerHeight: window.innerHeight,
-          outerWidth: window.outerWidth,
-          outerHeight: window.outerHeight,
-          screenWidth: screen.width,
-          screenHeight: screen.height,
-          availWidth: screen.availWidth,
-          availHeight: screen.availHeight,
-          devicePixelRatio: window.devicePixelRatio,
-          userAgent: navigator.userAgent,
-          platform: navigator.platform,
-          maxTouchPoints: navigator.maxTouchPoints,
-          pointerFine: window.matchMedia("(pointer: fine)").matches,
-          pointerCoarse: window.matchMedia("(pointer: coarse)").matches,
-          hover: window.matchMedia("(hover: hover)").matches,
-          hoverNone: window.matchMedia("(hover: none)").matches,
-          mobileMedia: window.matchMedia("(max-width: 768px)").matches,
-          maxDeviceWidth485: window.matchMedia("(max-device-width: 485px)")
-            .matches,
-          maxDeviceHeight485: window.matchMedia("(max-device-height: 485px)")
-            .matches,
           documentWidth: document.documentElement.clientWidth,
           documentHeight: document.documentElement.clientHeight,
-          locationHref: window.location.href,
+          userAgent: navigator.userAgent,
+          maxTouchPoints: navigator.maxTouchPoints,
+          pointerCoarse: window.matchMedia("(pointer: coarse)").matches,
+          maxDeviceWidth485: window.matchMedia("(max-device-width: 485px)")
+            .matches,
         };
-
-        console.log("[checkout] environment @" + stage);
-        console.table(metrics);
+        console.log("[checkout] environment @" + stage, metrics);
         postToFlutter("checkout_environment", metrics);
         return metrics;
-      }
-
-      /* Step 2 — inspect ancestor element computed styles */
-      function inspectElementStyles(el, label) {
-        if (!el) {
-          return { label: label, exists: false };
-        }
-        var cs = window.getComputedStyle(el);
-        var rect = el.getBoundingClientRect();
-        return {
-          label: label,
-          tag: el.tagName,
-          id: el.id || null,
-          className: el.className || null,
-          background: cs.background,
-          backgroundColor: cs.backgroundColor,
-          opacity: cs.opacity,
-          display: cs.display,
-          position: cs.position,
-          width: cs.width,
-          height: cs.height,
-          overflow: cs.overflow,
-          rectWidth: Math.round(rect.width),
-          rectHeight: Math.round(rect.height),
-        };
-      }
-
-      function inspectDomTree(stage) {
-        var razorpaySelectors = [
-          ".razorpay-container",
-          ".razorpay-backdrop",
-          ".razorpay-modal",
-          ".razorpay-modal-body",
-          "iframe",
-        ];
-
-        var ancestors = [
-          inspectElementStyles(document.documentElement, "html"),
-          inspectElementStyles(document.body, "body"),
-          inspectElementStyles(
-            document.getElementById("checkout-container"),
-            "#checkout-container"
-          ),
-          inspectElementStyles(document.getElementById("root"), "#root"),
-        ];
-
-        var razorpayNodes = [];
-        razorpaySelectors.forEach(function (selector) {
-          var nodes = document.querySelectorAll(selector);
-          for (var i = 0; i < nodes.length; i++) {
-            razorpayNodes.push(
-              inspectElementStyles(nodes[i], selector + "[" + i + "]")
-            );
-          }
-        });
-
-        var report = {
-          stage: stage,
-          ancestors: ancestors,
-          razorpayNodes: razorpayNodes,
-          bodyChildCount: document.body ? document.body.children.length : 0,
-        };
-
-        console.log("[checkout] DOM inspection @" + stage, report);
-        postToFlutter("dom_inspection", report);
-        return report;
-      }
-
-      /* Razorpay mobile detection mirror (from checkout.js source) */
-      function razorpayWouldDetectMobile() {
-        var innerSmall = window.innerWidth && window.innerWidth < 485;
-        var isIPhone = /iPhone/.test(navigator.userAgent);
-        var deviceSmall =
-          window.matchMedia("(max-device-height: 485px)").matches ||
-          window.matchMedia("(max-device-width: 485px)").matches;
-        return {
-          wouldBeMobile: innerSmall || isIPhone || deviceSmall,
-          innerWidthLt485: innerSmall,
-          isIPhone: isIPhone,
-          deviceDimensionLt485: deviceSmall,
-        };
-      }
-
-      function waitForDesktopLayout() {
-        return new Promise(function (resolve) {
-          if (window.innerWidth >= MIN_DESKTOP_WIDTH) {
-            resolve();
-            return;
-          }
-
-          var timeout = setTimeout(function () {
-            window.removeEventListener("resize", onResize);
-            resolve();
-          }, 5000);
-
-          function onResize() {
-            if (window.innerWidth >= MIN_DESKTOP_WIDTH) {
-              clearTimeout(timeout);
-              window.removeEventListener("resize", onResize);
-              resolve();
-            }
-          }
-
-          window.addEventListener("resize", onResize);
-        });
       }
 
       function loadCheckoutScript() {
@@ -191,10 +174,6 @@
           script.async = true;
           script.onload = function () {
             collectEnvironmentMetrics("after_checkout_js_load");
-            postToFlutter("razorpay_mobile_detection", {
-              stage: "after_checkout_js_load",
-              detection: razorpayWouldDetectMobile(),
-            });
             resolve();
           };
           script.onerror = function () {
@@ -208,11 +187,6 @@
 
       function openCheckout(config) {
         collectEnvironmentMetrics("before_open");
-        postToFlutter("razorpay_mobile_detection", {
-          stage: "before_open",
-          detection: razorpayWouldDetectMobile(),
-        });
-        inspectDomTree("before_open");
 
         var options = {
           key: config.key,
@@ -228,8 +202,7 @@
             email: config.customerEmail,
             contact: config.customerPhone,
           },
-          /* Embedded mode: fills #checkout-container instead of modal overlay */
-          parent: "#checkout-container",
+          /* NO `parent` — parent embed uses compact/mobile UI even at 960px. */
           modal: {
             ondismiss: function () {
               postToFlutter("payment_cancelled");
@@ -268,37 +241,34 @@
 
         postToFlutter("payment_started");
         rzp.open();
-
-        /* Step 3 — inspect DOM 1s after Razorpay initializes */
-        setTimeout(function () {
-          collectEnvironmentMetrics("after_open_1s");
-          postToFlutter("razorpay_mobile_detection", {
-            stage: "after_open_1s",
-            detection: razorpayWouldDetectMobile(),
-          });
-          inspectDomTree("after_open_1s");
-        }, 1000);
+        watchAndSuppressBackdrop();
+        setTimeout(suppressRazorpayBackdrop, 50);
+        setTimeout(suppressRazorpayBackdrop, 300);
+        setTimeout(suppressRazorpayBackdrop, 1000);
       }
 
       window.BillingBabaCheckout = {
         start: function (config) {
+          forceDesktopEnvironment();
           collectEnvironmentMetrics("before_script_load");
-          inspectDomTree("before_script_load");
 
-          waitForDesktopLayout()
-            .then(function () {
-              return loadCheckoutScript();
-            })
-            .then(function () {
-              openCheckout(config);
-            })
-            .catch(function (error) {
-              postToFlutter("payment_failed", {
-                message:
-                  (error && error.message) ||
-                  "Failed to start checkout. Please try again.",
-              });
+          // Wait one frame so the full-window WebView has committed its size
+          // before checkout.js snapshots innerWidth.
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              loadCheckoutScript()
+                .then(function () {
+                  openCheckout(config);
+                })
+                .catch(function (error) {
+                  postToFlutter("payment_failed", {
+                    message:
+                      (error && error.message) ||
+                      "Failed to start checkout. Please try again.",
+                  });
+                });
             });
+          });
         },
       };
     </script>
