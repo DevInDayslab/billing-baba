@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/pos/application/pos_sales_list_provider.dart';
 import 'package:billing_baba/features/pos/models/payment_entry.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
-import 'package:billing_baba/features/pos/application/pos_sales_list_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_empty_state_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

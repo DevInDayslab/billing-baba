@@ -1,7 +1,7 @@
-import 'package:billing_baba/features/parties/models/party_group_summary.dart';
-import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
+import 'package:billing_baba/features/parties/models/party_group_summary.dart';
+import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 List<PartyModel> _allPartiesOrEmpty(AsyncValue<List<PartyModel>> async) {

@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/models/category_model.dart';
-import 'package:billing_baba/features/inventory/models/godown_model.dart';
 import 'package:billing_baba/features/inventory/application/inventory_godowns_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
+import 'package:billing_baba/features/inventory/models/category_model.dart';
+import 'package:billing_baba/features/inventory/models/godown_model.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';

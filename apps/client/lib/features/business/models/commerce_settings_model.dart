@@ -32,8 +32,7 @@ class CommerceSettingsModel {
     bool clearDefaultInvoiceTaxRate = false,
   }) {
     return {
-      if (pricingTierLabels != null)
-        'pricing_tier_labels': pricingTierLabels,
+      'pricing_tier_labels': ?pricingTierLabels,
       if (clearDefaultInvoiceTaxRate) 'default_invoice_tax_rate': null,
       if (!clearDefaultInvoiceTaxRate && defaultInvoiceTaxRate != null)
         'default_invoice_tax_rate': defaultInvoiceTaxRate,

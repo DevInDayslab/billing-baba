@@ -1,16 +1,16 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/core/utils/date_time_utils.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/core/widgets/share_menu_button.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
+import 'package:billing_baba/features/purchases/application/purchase_fa_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_fa_model.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_fa_actions.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_fa_status_badge.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/purchase_transaction_table_layout.dart';
-import 'package:billing_baba/features/purchases/application/purchase_fa_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -367,7 +367,6 @@ class _PurchaseFaTableColumns {
       ResizableDataColumn(
         initialWidth: purchaseTransactionPartyColMinWidth,
         minWidth: 120,
-        maxWidth: 420,
         header: filterHeader('Party Name', PurchaseColumnFilterKind.partyName),
       ),
       ResizableDataColumn(

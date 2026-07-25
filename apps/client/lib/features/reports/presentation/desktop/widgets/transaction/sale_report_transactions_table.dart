@@ -1,10 +1,10 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_load_helper.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_invoice_status_badge.dart';
@@ -85,14 +85,14 @@ class SaleReportTransactionsTable extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(
                           AppSpacing.md,
                           0,
                           AppSpacing.md,
                           AppSpacing.sm,
                         ),
-                        child: const ReportSearchField(
+                        child: ReportSearchField(
                           hintText: 'Search invoices...',
                         ),
                       ),

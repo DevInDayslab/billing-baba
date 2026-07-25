@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/search/application/search_command_executor.dart';
+import 'package:billing_baba/features/search/application/search_controller.dart';
 import 'package:billing_baba/features/search/application/search_repository.dart';
 import 'package:billing_baba/features/search/domain/search_item.dart';
 import 'package:billing_baba/features/search/presentation/desktop/widgets/search_empty_state.dart';
 import 'package:billing_baba/features/search/presentation/desktop/widgets/search_result_row.dart';
 import 'package:billing_baba/features/search/presentation/desktop/widgets/search_section_header.dart';
-import 'package:billing_baba/features/search/application/search_controller.dart';
 import 'package:billing_baba/shared/widgets/keyboard_shortcut_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

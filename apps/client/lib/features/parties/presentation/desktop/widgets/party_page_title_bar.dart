@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/parties/models/party_sub_route.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/manage_party_groups_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_switcher_menu.dart';
-import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
-import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -286,7 +286,7 @@ class _ResizableDataTableState extends State<ResizableDataTable> {
             if (widget.rows.isNotEmpty) body,
           ],
         ),
-        if (resizeOverlay != null) resizeOverlay,
+        ?resizeOverlay,
       ],
     );
   }

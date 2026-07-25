@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/payment_in_page.dart';
-import './mobile/payment_in_page.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/payment_in_page.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/payment_in_page.dart';
 import 'package:flutter/widgets.dart';
 
 class PaymentInPage extends StatelessWidget {
@@ -10,9 +10,9 @@ class PaymentInPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopPaymentInPage(),
-      mobile: const MobilePaymentInPage(),
+    return const AdaptivePage(
+      desktop: DesktopPaymentInPage(),
+      mobile: MobilePaymentInPage(),
     );
   }
 }

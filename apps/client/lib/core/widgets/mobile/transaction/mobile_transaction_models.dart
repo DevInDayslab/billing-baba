@@ -1,3 +1,6 @@
+import 'package:billing_baba/core/widgets/mobile/mobile_widgets.dart' show MobileTransactionPage;
+import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_page.dart' show MobileTransactionPage;
+import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_widgets.dart' show MobileTransactionPage;
 import 'package:flutter/material.dart';
 
 /// Display model for a row on [MobileTransactionPage].
@@ -112,7 +115,6 @@ class MobileTransactionSortState {
 
     return MobileTransactionSortState(
       fieldKey: key,
-      direction: MobileTransactionSortDirection.descending,
     );
   }
 }

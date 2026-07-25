@@ -1,6 +1,7 @@
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
 import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart' show Printing;
 
 /// Roll width in millimeters for each thermal paper size setting.
 double thermalRollWidthMm(ThermalPageSize size) => switch (size) {

@@ -35,7 +35,7 @@ abstract class Lead with _$Lead {
     required String id,
     @JsonKey(name: 'business_id') required String businessId,
     required String name,
-    String? company,
+    @JsonKey(name: 'updated_at') required DateTime updatedAt, @JsonKey(name: 'created_at') required DateTime createdAt, String? company,
     String? phone,
     String? email,
     @JsonKey(name: 'lead_source') LeadSource? leadSource,
@@ -44,11 +44,9 @@ abstract class Lead with _$Lead {
     String? notes,
     @JsonKey(name: 'sync_version') @Default(1) int syncVersion,
     @JsonKey(name: 'is_deleted') @Default(false) bool isDeleted,
-    @JsonKey(name: 'updated_at') required DateTime updatedAt,
     @JsonKey(name: 'deleted_at') DateTime? deletedAt,
     @JsonKey(name: 'device_id') @Default('') String deviceId,
     @JsonKey(name: 'sync_status') @Default('pending') String syncStatus,
-    @JsonKey(name: 'created_at') required DateTime createdAt,
   }) = _Lead;
 
   factory Lead.fromJson(Map<String, dynamic> json) => _$LeadFromJson(json);

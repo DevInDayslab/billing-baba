@@ -6,12 +6,12 @@ import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/export/presentation/desktop/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/sale_invoice_print_actions.dart';
+import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_invoice_actions_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_invoice_status_badge.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_table_shared.dart';
-import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -919,8 +919,8 @@ class _PaginationRow extends ConsumerWidget {
     // with ellipsis gaps — never renders more than 7 _PageNumber widgets
     final pages = <Widget>[];
 
-    int rangeStart = (currentPage - 2).clamp(1, totalPages);
-    int rangeEnd = (currentPage + 2).clamp(1, totalPages);
+    final rangeStart = (currentPage - 2).clamp(1, totalPages);
+    final rangeEnd = (currentPage + 2).clamp(1, totalPages);
 
     // Always show first page
     if (rangeStart > 1) {

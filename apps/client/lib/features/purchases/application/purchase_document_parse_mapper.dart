@@ -45,12 +45,12 @@ class PurchaseDocumentParseMapper {
     }
 
     if (parsed.eWayBillNumber != null) {
-      next = next.copyWith(eWayBillNo: parsed.eWayBillNumber!);
+      next = next.copyWith(eWayBillNo: parsed.eWayBillNumber);
     }
 
     if (parsed.invoiceNumber != null &&
         (next.billNumber.isEmpty || next.billNumber == 'Auto')) {
-      next = next.copyWith(billNumber: parsed.invoiceNumber!);
+      next = next.copyWith(billNumber: parsed.invoiceNumber);
     }
 
     final invoiceDate = _parseDate(parsed.invoiceDate);
@@ -67,15 +67,15 @@ class PurchaseDocumentParseMapper {
     }
 
     if (parsed.stateOfSupply != null) {
-      next = next.copyWith(stateOfSupply: parsed.stateOfSupply!);
+      next = next.copyWith(stateOfSupply: parsed.stateOfSupply);
     }
 
     if (parsed.notes != null) {
-      next = next.copyWith(description: parsed.notes!);
+      next = next.copyWith(description: parsed.notes);
     }
 
     if (parsed.termsNotes != null) {
-      next = next.copyWith(termsNotes: parsed.termsNotes!);
+      next = next.copyWith(termsNotes: parsed.termsNotes);
     }
 
     if (parsed.lines.isNotEmpty) {
@@ -151,7 +151,7 @@ class PurchaseDocumentParseMapper {
     final price = line.unitPrice;
     if (price == null || price < 0) return null;
 
-    String? itemId = line.itemId;
+    var itemId = line.itemId;
     itemId ??= itemNameToId[itemName.trim().toLowerCase()];
 
     final tax = _resolveWithTaxMapping(line, qty, price);
@@ -186,19 +186,19 @@ class PurchaseDocumentParseMapper {
       return (unitPrice: unitPrice, taxPercent: 0, withTax: false);
     }
 
-    var taxPercent = hasTaxRate ? _normalizeToPurchaseTaxSlab(rawRate!) : 0.0;
+    var taxPercent = hasTaxRate ? _normalizeToPurchaseTaxSlab(rawRate) : 0.0;
 
     if (taxPercent <= 0 && hasTaxAmount && qty > 0 && unitPrice > 0) {
       taxPercent = billInclusive
           ? _deriveTaxPercentFromInclusiveAmount(
               qty: qty,
               inclusiveUnitPrice: unitPrice,
-              taxAmount: billTaxAmount!,
+              taxAmount: billTaxAmount,
             )
           : _deriveTaxPercentFromExclusiveAmount(
               qty: qty,
               unitPrice: unitPrice,
-              taxAmount: billTaxAmount!,
+              taxAmount: billTaxAmount,
             );
     }
 
@@ -214,7 +214,7 @@ class PurchaseDocumentParseMapper {
       taxPercent = _resolveTaxPercentMatchingBillTax(
         qty: qty,
         inclusiveUnitPrice: inclusiveUnitPrice,
-        taxAmount: billTaxAmount!,
+        taxAmount: billTaxAmount,
         fallbackPercent: taxPercent,
       );
     }

@@ -7,10 +7,9 @@ import 'package:billing_baba/features/crm/domain/services/deal_service_types.dar
 
 class DealRepository {
   DealRepository({
-    required DealLocalSource local,
-    required DealRemoteSource remote,
-  }) : _local = local,
-       _remote = remote;
+    required this._local,
+    required this._remote,
+  });
 
   final DealLocalSource _local;
   final DealRemoteSource _remote;

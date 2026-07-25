@@ -33,19 +33,19 @@ void main() {
 
     test('deduplicates missing names within one import batch', () {
       final lines = [
-        PurchaseLineItem(
+        const PurchaseLineItem(
           id: 'line-1',
           itemName: 'New Gadget',
           qty: 2,
           pricePerUnit: 50,
         ),
-        PurchaseLineItem(
+        const PurchaseLineItem(
           id: 'line-2',
           itemName: 'new gadget',
           qty: 1,
           pricePerUnit: 50,
         ),
-        PurchaseLineItem(
+        const PurchaseLineItem(
           id: 'line-3',
           itemName: 'Existing Item',
           itemId: 'item-existing',
@@ -100,13 +100,13 @@ void main() {
 
     test('assigns created ids to all matching lines', () {
       final lines = [
-        PurchaseLineItem(
+        const PurchaseLineItem(
           id: 'line-1',
           itemName: 'Gadget',
           qty: 2,
           pricePerUnit: 50,
         ),
-        PurchaseLineItem(
+        const PurchaseLineItem(
           id: 'line-2',
           itemName: 'GADGET',
           qty: 1,

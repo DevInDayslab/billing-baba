@@ -1,11 +1,11 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/collaboration/domain/models/permission_action.dart';
 import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
+import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_document_scope_permissions.dart';
+import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_date_range_picker.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
-import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
-import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

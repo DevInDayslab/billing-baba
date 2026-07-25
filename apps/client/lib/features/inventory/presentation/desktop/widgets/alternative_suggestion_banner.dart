@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/data/models/item_recommendations_dto.dart';
 import 'package:billing_baba/features/inventory/application/item_alternatives_provider.dart';
+import 'package:billing_baba/features/inventory/data/models/item_recommendations_dto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -188,7 +188,7 @@ class _AlternativeSuggestionBannerState
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: items.map((item) => _buildItemChip(item)).toList(),
+          children: items.map(_buildItemChip).toList(),
         ),
       ],
     );

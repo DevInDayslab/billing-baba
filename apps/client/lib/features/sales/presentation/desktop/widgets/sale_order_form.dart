@@ -1,5 +1,5 @@
-import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_order_table.dart';
 import 'package:billing_baba/features/sales/application/sale_order_form_provider.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_order_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -7,13 +7,13 @@ import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/inventory/application/barcode_lookup_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
+import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
 import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
 import 'package:billing_baba/features/inventory/models/requests/item_requests.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
-import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -63,23 +63,8 @@ class BarcodeImportRow {
     required this.hsnCode,
     required this.defaultMrp,
     required this.salePrice,
-    this.incTax = true,
-    required this.taxPercent,
-    required this.baseUnit,
-    required this.status,
+    required this.taxPercent, required this.baseUnit, required this.status, this.incTax = true,
   });
-
-  final int index;
-  final String barcode;
-  final String itemName;
-  final String category;
-  final String hsnCode;
-  final String defaultMrp;
-  final String salePrice;
-  final bool incTax;
-  final String taxPercent;
-  final String baseUnit;
-  final BarcodeRowStatus status;
 
   factory BarcodeImportRow.empty(int index) {
     return BarcodeImportRow(
@@ -95,6 +80,39 @@ class BarcodeImportRow {
       status: BarcodeRowStatus.empty,
     );
   }
+
+  factory BarcodeImportRow.fromJson(Map<String, dynamic> json) {
+    final rawStatus = json['status'] as String? ?? BarcodeRowStatus.empty.name;
+    final status = rawStatus == BarcodeRowStatus.loading.name
+        ? BarcodeRowStatus.notFound
+        : BarcodeRowStatus.values.byName(rawStatus);
+
+    return BarcodeImportRow(
+      index: json['index'] as int? ?? 0,
+      barcode: json['barcode'] as String? ?? '',
+      itemName: json['itemName'] as String? ?? '',
+      category: json['category'] as String? ?? '',
+      hsnCode: json['hsnCode'] as String? ?? '',
+      defaultMrp: json['defaultMrp'] as String? ?? '',
+      salePrice: json['salePrice'] as String? ?? '',
+      incTax: json['incTax'] as bool? ?? true,
+      taxPercent: json['taxPercent'] as String? ?? '',
+      baseUnit: json['baseUnit'] as String? ?? '',
+      status: status,
+    );
+  }
+
+  final int index;
+  final String barcode;
+  final String itemName;
+  final String category;
+  final String hsnCode;
+  final String defaultMrp;
+  final String salePrice;
+  final bool incTax;
+  final String taxPercent;
+  final String baseUnit;
+  final BarcodeRowStatus status;
 
   bool get hasData => status != BarcodeRowStatus.empty;
 
@@ -150,30 +168,9 @@ class BarcodeImportRow {
     'baseUnit': baseUnit,
     'status': status.name,
   };
-
-  factory BarcodeImportRow.fromJson(Map<String, dynamic> json) {
-    final rawStatus = json['status'] as String? ?? BarcodeRowStatus.empty.name;
-    final status = rawStatus == BarcodeRowStatus.loading.name
-        ? BarcodeRowStatus.notFound
-        : BarcodeRowStatus.values.byName(rawStatus);
-
-    return BarcodeImportRow(
-      index: json['index'] as int? ?? 0,
-      barcode: json['barcode'] as String? ?? '',
-      itemName: json['itemName'] as String? ?? '',
-      category: json['category'] as String? ?? '',
-      hsnCode: json['hsnCode'] as String? ?? '',
-      defaultMrp: json['defaultMrp'] as String? ?? '',
-      salePrice: json['salePrice'] as String? ?? '',
-      incTax: json['incTax'] as bool? ?? true,
-      taxPercent: json['taxPercent'] as String? ?? '',
-      baseUnit: json['baseUnit'] as String? ?? '',
-      status: status,
-    );
-  }
 }
 
-@Riverpod(keepAlive: false)
+@Riverpod()
 class BarcodeImport extends _$BarcodeImport {
   static const _initialRowCount = 20;
   static const _rowsToAppend = 5;
@@ -486,9 +483,7 @@ class BarcodeImport extends _$BarcodeImport {
 
   /// Returns `null` on success, or an error message on failure.
   Future<String?> saveItems({
-    bool ignoreErrors = false,
-    required List<InventoryCategory> categories,
-    required List<InventoryUnit> units,
+    required List<InventoryCategory> categories, required List<InventoryUnit> units, bool ignoreErrors = false,
   }) async {
     final rowsToSave = state.where((row) => !row.isEmpty).toList();
     if (rowsToSave.isEmpty) return 'No items to save';

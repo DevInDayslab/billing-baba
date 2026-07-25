@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/diagnostics_page.dart';
-import './mobile/diagnostics_page.dart';
+import 'package:billing_baba/features/developer/presentation/desktop/diagnostics_page.dart';
+import 'package:billing_baba/features/developer/presentation/mobile/diagnostics_page.dart';
 import 'package:flutter/widgets.dart';
 
 class DiagnosticsPage extends StatelessWidget {
@@ -10,9 +10,9 @@ class DiagnosticsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopDiagnosticsPage(),
-      mobile: const MobileDiagnosticsPage(),
+    return const AdaptivePage(
+      desktop: DesktopDiagnosticsPage(),
+      mobile: MobileDiagnosticsPage(),
     );
   }
 }

@@ -1,9 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/crm/application/deal_error_mapper.dart';
-import 'package:billing_baba/features/crm/domain/models/deal.dart';
-import 'package:billing_baba/features/crm/domain/services/deal_service_types.dart';
 import 'package:billing_baba/features/crm/application/deals_provider.dart';
 import 'package:billing_baba/features/crm/application/deals_selection_providers.dart';
+import 'package:billing_baba/features/crm/domain/models/deal.dart';
+import 'package:billing_baba/features/crm/domain/services/deal_service_types.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/add_deal_dialog.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/deals_filter_panel.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/deals_kanban_board.dart';

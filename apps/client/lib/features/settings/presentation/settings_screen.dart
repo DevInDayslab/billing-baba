@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/settings_screen.dart';
-import './mobile/settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/desktop/settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/mobile/settings_screen.dart';
 import 'package:flutter/widgets.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -10,9 +10,9 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopSettingsScreen(),
-      mobile: const MobileSettingsScreen(),
+    return const AdaptivePage(
+      desktop: DesktopSettingsScreen(),
+      mobile: MobileSettingsScreen(),
     );
   }
 }

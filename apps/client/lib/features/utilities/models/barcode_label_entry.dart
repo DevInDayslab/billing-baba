@@ -6,11 +6,8 @@ const _uuid = Uuid();
 /// A queued row in the barcode generator table.
 class BarcodeLabelEntry {
   BarcodeLabelEntry({
-    String? id,
-    required this.itemName,
+    required this.itemName, required this.itemCode, required this.labelCount, String? id,
     this.itemId,
-    required this.itemCode,
-    required this.labelCount,
     this.header = '',
     this.line1 = '',
     this.line2 = '',

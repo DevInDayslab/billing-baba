@@ -8,11 +8,8 @@ class SubscriptionPlanMetadata {
     required this.durationLabel,
     required this.deviceLimit,
     required this.licenseType,
-    this.badge,
+    required this.cardFeatures, required this.priceMultipliers, required this.originalPriceMultiplier, this.badge,
     this.isPopular = false,
-    required this.cardFeatures,
-    required this.priceMultipliers,
-    required this.originalPriceMultiplier,
   });
 
   final String description;
@@ -422,7 +419,6 @@ subscriptionPlanMetadataRegistry = {
     durationLabel: '1 Year',
     deviceLimit: 2,
     licenseType: 'Desktop + Mobile',
-    isPopular: false,
     cardFeatures: subscriptionFeaturesByPlatform,
     priceMultipliers: _priceMultipliersForPlan(
       baseOneYearDesktopMobile: _goldBaseOneYear,

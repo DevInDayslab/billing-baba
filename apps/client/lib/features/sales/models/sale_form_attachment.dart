@@ -33,7 +33,6 @@ class SaleFormAttachment {
       isImage: isImage,
       mimeType: mimeType,
       localBytes: localBytes,
-      syncStatus: AttachmentSyncStatus.local,
     );
   }
 

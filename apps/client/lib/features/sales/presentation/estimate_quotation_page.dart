@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/estimate_quotation_page.dart';
-import './mobile/estimate_quotation_page.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/estimate_quotation_page.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/estimate_quotation_page.dart';
 import 'package:flutter/widgets.dart';
 
 class EstimateQuotationPage extends StatelessWidget {
@@ -10,9 +10,9 @@ class EstimateQuotationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopEstimateQuotationPage(),
-      mobile: const MobileEstimateQuotationPage(),
+    return const AdaptivePage(
+      desktop: DesktopEstimateQuotationPage(),
+      mobile: MobileEstimateQuotationPage(),
     );
   }
 }

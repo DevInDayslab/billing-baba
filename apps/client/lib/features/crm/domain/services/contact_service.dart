@@ -64,7 +64,7 @@ class ContactService {
   Future<void> syncFromRemote() async {
     final businessId = _requireBusinessId();
     try {
-      final remoteContacts = await _repository.remote.listContacts(limit: 100);
+      final remoteContacts = await _repository.remote.listContacts();
       for (final contact in remoteContacts) {
         if (contact.businessId == businessId) {
           await _repository.local.upsertContact(contact);

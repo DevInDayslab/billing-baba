@@ -7,10 +7,9 @@ import 'package:billing_baba/features/crm/domain/models/lead_activity.dart';
 
 class LeadRepository {
   LeadRepository({
-    required LeadLocalSource local,
-    required LeadRemoteSource remote,
-  }) : _local = local,
-       _remote = remote;
+    required this._local,
+    required this._remote,
+  });
 
   final LeadLocalSource _local;
   final LeadRemoteSource _remote;

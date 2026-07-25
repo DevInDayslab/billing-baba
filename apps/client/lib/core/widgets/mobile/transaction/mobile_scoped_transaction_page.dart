@@ -26,7 +26,7 @@ class MobileScopedTransactionPage extends ConsumerWidget {
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(title: Text(titleOverride ?? 'Transactions')),
-        body: MobileEmptyState(
+        body: const MobileEmptyState(
           title: 'Unsupported route',
           message: 'No mobile transaction list is configured for this page.',
           icon: Icons.error_outline_rounded,

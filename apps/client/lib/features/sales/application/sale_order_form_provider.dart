@@ -5,8 +5,11 @@ import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/core/utils/validators.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
-import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
+import 'package:billing_baba/features/parties/models/party_model.dart';
+import 'package:billing_baba/features/sales/application/invoice_tax_fallback_provider.dart';
+import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
+import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/application/sales_service.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
@@ -14,9 +17,6 @@ import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart'
 import 'package:billing_baba/features/sales/models/sale_order_form_model.dart';
 import 'package:billing_baba/features/sales/models/sales_document_draft_input.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
-import 'package:billing_baba/features/sales/application/invoice_tax_fallback_provider.dart';
-import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
-import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/sales_constants.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
@@ -95,8 +95,6 @@ class SaleOrderFormNotifier extends _$SaleOrderFormNotifier {
         description: loaded.description,
         attachedImages: attachments.images,
         attachedDocuments: attachments.documents,
-        isLoading: false,
-        showValidationErrors: kResetValidationOnLoad,
       );
     } catch (error) {
       state = state.copyWith(

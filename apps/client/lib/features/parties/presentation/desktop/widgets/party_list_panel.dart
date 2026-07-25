@@ -8,12 +8,12 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_table_row.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_list_image_warmup.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_list_filter.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
-import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/shared/widgets/table_filters/column_filter_trigger.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_models.dart';
 import 'package:billing_baba/shared/widgets/table_filters/filter_result.dart';

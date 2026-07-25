@@ -5,14 +5,14 @@ import 'package:billing_baba/core/widgets/text_input_dialog.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
+import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/add_party_result.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
-import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_additional_phones_field.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_additional_phones_field.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_profile_image_editor.dart';
-import 'package:billing_baba/features/parties/application/parties_providers.dart';
-import 'package:billing_baba/features/parties/application/party_groups_provider.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/pricing/presentation/desktop/widgets/edit_pricing_tier_labels_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
@@ -1256,17 +1256,7 @@ class _AddPartyDialogState extends ConsumerState<AddPartyDialog>
             onRemove: _removeAdditionalPhoneField,
             onChanged: (_) => setState(() {}),
             fieldBuilder:
-                ({
-                  required controller,
-                  required errorText,
-                  required onRemove,
-                  required onChanged,
-                }) => buildAdditionalPhoneInput(
-                  controller: controller,
-                  errorText: errorText,
-                  onRemove: onRemove,
-                  onChanged: onChanged,
-                ),
+                buildAdditionalPhoneInput,
           ),
         ] else ...[
           const SizedBox(height: 8),

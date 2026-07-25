@@ -10,7 +10,6 @@ abstract class PurchaseHistory with _$PurchaseHistory {
     required SubscriptionPlanType oldPlan,
     required SubscriptionPlanType newPlan,
     required String event,
-    Map<String, dynamic>? metadata,
-    required DateTime createdAt,
+    required DateTime createdAt, Map<String, dynamic>? metadata,
   }) = _PurchaseHistory;
 }

@@ -32,12 +32,10 @@ Future<PosSaleService> posSaleService(Ref ref) async {
 
 class PosSaleService {
   PosSaleService({
-    required SalesRemoteDataSource remote,
-    required PosSessionService sessionService,
-    required PosLocalDataSource localDataSource,
-  }) : _remote = remote,
-       _sessionService = sessionService,
-       _localDataSource = localDataSource;
+    required this._remote,
+    required this._sessionService,
+    required this._localDataSource,
+  });
 
   final SalesRemoteDataSource _remote;
   final PosSessionService _sessionService;
@@ -92,7 +90,7 @@ class PosSaleService {
       final resolvedPayments = _resolvePayments(payments, items, finalizedDto);
 
       final totalAmount = double.tryParse(finalizedDto.totalAmount) ?? 0;
-      double remaining = totalAmount;
+      var remaining = totalAmount;
 
       for (var i = 0; i < resolvedPayments.length; i++) {
         final payment = resolvedPayments[i];

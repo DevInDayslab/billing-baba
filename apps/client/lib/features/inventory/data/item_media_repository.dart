@@ -23,7 +23,7 @@ class ItemMediaRepository {
         mimeType: mimeType,
         completeExtra: {
           if (isPrimary) 'is_primary': true,
-          if (replacesImageId != null) 'replaces_image_id': replacesImageId,
+          'replaces_image_id': ?replacesImageId,
         },
       );
 

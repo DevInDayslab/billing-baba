@@ -10,7 +10,7 @@ import 'package:pdf/widgets.dart' as pw;
 class BarcodeLabelPdfBuilder {
   const BarcodeLabelPdfBuilder._();
 
-  static final _code128 = Barcode.code128();
+  static final Barcode _code128 = Barcode.code128();
 
   static Future<Uint8List> build({
     required List<BarcodeLabelEntry> entries,

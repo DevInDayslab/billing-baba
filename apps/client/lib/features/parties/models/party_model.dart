@@ -65,7 +65,7 @@ class PartyModel {
       alias: dto.alias ?? '',
       phone: _formatPhone(dto.mobile),
       additionalPhones: dto.additionalPhones
-          .map((phone) => _formatPhone(phone))
+          .map(_formatPhone)
           .where((phone) => phone.isNotEmpty)
           .toList(),
       partyType: dto.partyType,
@@ -161,7 +161,7 @@ class PartyModel {
       alias: result.alias.trim(),
       phone: result.phone.trim(),
       additionalPhones: result.additionalPhones
-          .map((phone) => _formatPhone(phone))
+          .map(_formatPhone)
           .where((phone) => phone.isNotEmpty)
           .toList(),
       partyType: result.partyType,

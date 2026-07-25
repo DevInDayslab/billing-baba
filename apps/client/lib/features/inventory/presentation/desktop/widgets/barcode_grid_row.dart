@@ -78,7 +78,7 @@ class BarcodeGridRow extends StatelessWidget {
 
   static const _fieldDecoration = InputDecoration(
     isDense: true,
-    contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+    contentPadding: EdgeInsets.symmetric(vertical: 8),
     border: InputBorder.none,
     enabledBorder: InputBorder.none,
     focusedBorder: InputBorder.none,

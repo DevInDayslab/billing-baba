@@ -26,7 +26,7 @@ class _CommonInvoiceTogglesState extends State<CommonInvoiceToggles> {
 
   static final _termsFieldDecoration = InputDecoration(
     isDense: true,
-    contentPadding: EdgeInsets.all(AppSpacing.sm),
+    contentPadding: const EdgeInsets.all(AppSpacing.sm),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.sm),
       borderSide: const BorderSide(color: listPanelCardBorder),
@@ -212,7 +212,6 @@ class _ToggleRow extends StatelessWidget {
               label,
               style: AppTypography.inter(
                 fontSize: AppTypography.bodyMediumSize,
-                fontWeight: FontWeight.w400,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -220,7 +219,7 @@ class _ToggleRow extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ],

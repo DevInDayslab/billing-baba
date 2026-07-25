@@ -1,11 +1,10 @@
-import 'package:billing_baba/core/widgets/mobile/mobile_settings_detail_page.dart';
 import 'package:billing_baba/core/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/core/widgets/mobile/mobile_settings_detail_page.dart';
 import 'package:flutter/material.dart';
 
 class MobileComingSoonPage extends StatelessWidget {
   const MobileComingSoonPage({
-    super.key,
-    required this.title,
+    required this.title, super.key,
   });
 
   final String title;

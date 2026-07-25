@@ -64,7 +64,7 @@ class DealService {
   Future<void> syncFromRemote() async {
     final businessId = _requireBusinessId();
     try {
-      final remoteDeals = await _repository.remote.listDeals(limit: 100);
+      final remoteDeals = await _repository.remote.listDeals();
       for (final deal in remoteDeals) {
         if (deal.businessId == businessId) {
           await _repository.local.upsertDeal(deal);

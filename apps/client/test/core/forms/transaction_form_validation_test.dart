@@ -18,7 +18,6 @@ void main() {
       expect(
         buildTransactionValidationError(
           hasValidLineItems: false,
-          hasValidPhone: true,
           requirePhone: true,
         ),
         kLineItemsValidationMessage,
@@ -42,7 +41,7 @@ void main() {
       expect(
         hasValidNamedLineItems<SaleLineItem>(
           items: const [
-            SaleLineItem(id: '1', itemName: 'Oil', qty: 0),
+            SaleLineItem(id: '1', itemName: 'Oil'),
           ],
           nameOf: (item) => item.itemName,
           qtyOf: (item) => item.qty,

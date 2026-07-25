@@ -4,23 +4,23 @@ import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
-import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/parties/application/parties_providers.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
-import 'package:billing_baba/features/parties/application/parties_providers.dart';
+import 'package:billing_baba/features/purchases/application/pending_purchase_document_parse_provider.dart';
+import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_document_item_factory.dart';
-import 'package:billing_baba/features/purchases/application/purchase_document_party_factory.dart';
 import 'package:billing_baba/features/purchases/application/purchase_document_parse_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_document_party_factory.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
-import 'package:billing_baba/features/purchases/application/pending_purchase_document_parse_provider.dart';
-import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
 import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
@@ -384,7 +384,7 @@ class AddPurchaseForm extends _$AddPurchaseForm {
       for (final item in state.items)
         item.copyWith(
           taxPercent: taxPercent,
-          priceIsTaxInclusive: taxPercent > 0 ? true : item.priceIsTaxInclusive,
+          priceIsTaxInclusive: taxPercent > 0 || item.priceIsTaxInclusive,
         ),
     ];
     state = state.copyWith(items: items, isDirty: true);

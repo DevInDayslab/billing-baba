@@ -1,12 +1,12 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/core/utils/date_time_utils.dart';
+import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
-import 'package:billing_baba/features/dashboard/presentation/utils/dashboard_transaction_navigation.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_empty_state.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_metric_card.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
+import 'package:billing_baba/features/dashboard/presentation/utils/dashboard_transaction_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -36,7 +36,7 @@ class DashboardRecentTransactionsSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(
+              const Expanded(
                 child: Text(
                   'Recent Transactions',
                   style: DashboardTypography.cardTitle,
@@ -50,7 +50,7 @@ class DashboardRecentTransactionsSection extends StatelessWidget {
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: Text(
+                child: const Text(
                   'View All →',
                   style: DashboardTypography.link,
                 ),

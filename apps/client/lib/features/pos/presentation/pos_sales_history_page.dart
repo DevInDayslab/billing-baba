@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/pos_sales_history_page.dart';
-import './mobile/pos_sales_history_page.dart';
+import 'package:billing_baba/features/pos/presentation/desktop/pos_sales_history_page.dart';
+import 'package:billing_baba/features/pos/presentation/mobile/pos_sales_history_page.dart';
 import 'package:flutter/widgets.dart';
 
 class PosSalesHistoryPage extends StatelessWidget {
@@ -10,9 +10,9 @@ class PosSalesHistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopPosSalesHistoryPage(),
-      mobile: const MobilePosSalesHistoryPage(),
+    return const AdaptivePage(
+      desktop: DesktopPosSalesHistoryPage(),
+      mobile: MobilePosSalesHistoryPage(),
     );
   }
 }

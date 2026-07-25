@@ -1,9 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/pos/application/pos_receipt_printer.dart';
-import 'package:billing_baba/features/pos/models/pos_sale.dart';
-import 'package:billing_baba/features/pos/presentation/pos_return_page.dart';
-import 'package:billing_baba/features/pos/presentation/desktop/widgets/receipt_view_widget.dart';
 import 'package:billing_baba/features/pos/application/pos_sales_list_provider.dart';
+import 'package:billing_baba/features/pos/models/pos_sale.dart';
+import 'package:billing_baba/features/pos/presentation/desktop/widgets/receipt_view_widget.dart';
+import 'package:billing_baba/features/pos/presentation/pos_return_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';

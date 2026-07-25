@@ -190,7 +190,7 @@ class _HiddenLedgerListPageState extends ConsumerState<DesktopHiddenLedgerListPa
             if (filters.from != null || filters.to != null)
               TextButton(onPressed: _clearDateRange, child: const Text('Clear dates')),
             FilledButton(
-              onPressed: () => _applyFilters(),
+              onPressed: _applyFilters,
               child: const Text('Apply'),
             ),
           ],

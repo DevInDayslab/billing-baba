@@ -5,8 +5,8 @@ import 'package:billing_baba/features/parties/application/party_error_mapper.dar
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
-import 'package:billing_baba/features/parties/presentation/mobile/application/mobile_party_mock_data.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
+import 'package:billing_baba/features/parties/presentation/mobile/application/mobile_party_mock_data.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_detail_header.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_more_actions_sheet.dart';
 import 'package:billing_baba/features/parties/presentation/mobile/widgets/party_quick_actions.dart';

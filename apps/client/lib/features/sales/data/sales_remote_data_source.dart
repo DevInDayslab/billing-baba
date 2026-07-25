@@ -73,7 +73,7 @@ class SalesRemoteDataSource {
     double loyaltyPointsRedeemed = 0,
   }) async {
     final payload = <String, dynamic>{
-      if (godownId != null) 'godown_id': godownId,
+      'godown_id': ?godownId,
       if (loyaltyPointsRedeemed > 0)
         'loyalty_points_redeemed': _formatPoints(loyaltyPointsRedeemed),
     };
@@ -239,7 +239,7 @@ class SalesRemoteDataSource {
     final response = await _dio.post<Map<String, dynamic>>(
       ApiEndpoints.posSessions,
       data: {
-        if (openingCash != null) 'opening_cash': openingCash,
+        'opening_cash': ?openingCash,
       },
     );
     return PosSessionDto.fromJson(
@@ -264,7 +264,7 @@ class SalesRemoteDataSource {
       ApiEndpoints.posSession(sessionId),
       data: {
         'ended_at': DateTime.now().toUtc().toIso8601String(),
-        if (closingCash != null) 'closing_cash': closingCash,
+        'closing_cash': ?closingCash,
       },
     );
     return PosSessionDto.fromJson(

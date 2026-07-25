@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('SaleFormAttachment.fromApi', () {
     test('maps API attachment payload', () {
-      final attachment = SaleFormAttachment.fromApi({
+      final attachment = SaleFormAttachment.fromApi(const {
         'id': 'att-1',
         'file_name': 'invoice.pdf',
         'file_url': 'https://cdn/invoice.pdf',

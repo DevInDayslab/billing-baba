@@ -5,12 +5,12 @@ import 'package:billing_baba/features/export/presentation/desktop/widgets/module
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/module_print_actions.dart';
+import 'package:billing_baba/features/purchases/application/purchase_return_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_return_model.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_bill_status_badge.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_return_actions.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/purchase_transaction_table_layout.dart';
-import 'package:billing_baba/features/purchases/application/purchase_return_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_table_shared.dart';
 import 'package:flutter/material.dart';
@@ -383,7 +383,6 @@ class _PurchaseReturnTableColumns {
       ResizableDataColumn(
         initialWidth: purchaseTransactionPartyColMinWidth,
         minWidth: 120,
-        maxWidth: 420,
         header: filterHeader('PARTY NAME', PurchaseColumnFilterKind.partyName),
       ),
       ResizableDataColumn(

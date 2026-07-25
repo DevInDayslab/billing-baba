@@ -62,7 +62,6 @@ class MobileTransactionScopeDefinition {
         onAction: addRoute == null ? null : () => context.push(addRoute!),
       ),
       fabTooltip: addFabLabel ?? 'Add',
-      fabIcon: Icons.add_rounded,
       onFabPressed: addRoute == null ? null : () => context.push(addRoute!),
     );
   }
@@ -78,7 +77,7 @@ abstract final class MobileTransactionCatalog {
     MobileFilterOption(key: 'open', label: 'Open'),
   ];
 
-  static const _crmRoutes = {
+  static const Set<String> _crmRoutes = {
     AppRoutes.crmLeads,
     AppRoutes.crmContacts,
     AppRoutes.crmDeals,

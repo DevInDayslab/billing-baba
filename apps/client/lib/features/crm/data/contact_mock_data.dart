@@ -146,14 +146,12 @@ class _MockContactEntry {
   const _MockContactEntry({
     required this.id,
     required this.name,
-    this.firstName,
+    required this.phone, required this.createdAt, this.firstName,
     this.lastName,
     this.accountName,
-    required this.phone,
     this.email,
     this.assignedTo,
     this.title,
-    required this.createdAt,
   });
 
   final String id;

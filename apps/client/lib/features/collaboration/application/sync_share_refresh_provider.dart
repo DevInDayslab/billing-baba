@@ -31,7 +31,6 @@ class SyncShareRefresh extends _$SyncShareRefresh {
   /// After invite/cancel/role change/etc. Reuses the same pipeline.
   Future<void> refreshAfterMutation() {
     return refresh(
-      manual: false,
       trigger: SyncShareRefreshTrigger.mutation,
     );
   }

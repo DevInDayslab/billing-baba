@@ -53,4 +53,4 @@ const attachmentAllowedMimes = {
   'application/pdf',
 };
 
-const attachmentMaxBytes = 10 * 1024 * 1024;
+const int attachmentMaxBytes = 10 * 1024 * 1024;

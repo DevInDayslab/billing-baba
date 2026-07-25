@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/src/providers/provider.dart';
 
 /// Search, filter, and sort UI state for a scoped transaction list.
 class MobileTransactionListState {
@@ -82,7 +83,7 @@ class MobileTransactionListRegistry
 }
 
 /// Watches list UI state for a single transaction page scope.
-final mobileTransactionListStateProvider =
+final ProviderFamily<MobileTransactionListState, String> mobileTransactionListStateProvider =
     Provider.family<MobileTransactionListState, String>((ref, scope) {
   final registry = ref.watch(mobileTransactionListRegistryProvider);
   return registry[scope] ?? const MobileTransactionListState();

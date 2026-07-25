@@ -43,7 +43,6 @@ class ExpenseListPanelHeader extends StatelessWidget {
           flexValues: const [1, 0],
           fixedWidths: const [null, expenseListAmountColWidth],
           showColumnSeparators: false,
-          trailing: const SizedBox(width: expenseListMenuTrailingWidth),
           children: [
             Align(
               alignment: Alignment.centerLeft,

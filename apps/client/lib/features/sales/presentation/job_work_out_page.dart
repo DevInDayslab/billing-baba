@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/job_work_out_page.dart';
-import './mobile/job_work_out_page.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/job_work_out_page.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/job_work_out_page.dart';
 import 'package:flutter/widgets.dart';
 
 class JobWorkOutPage extends StatelessWidget {
@@ -10,9 +10,9 @@ class JobWorkOutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopJobWorkOutPage(),
-      mobile: const MobileJobWorkOutPage(),
+    return const AdaptivePage(
+      desktop: DesktopJobWorkOutPage(),
+      mobile: MobileJobWorkOutPage(),
     );
   }
 }

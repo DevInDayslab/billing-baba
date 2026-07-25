@@ -1,19 +1,19 @@
-import 'package:billing_baba/core/utils/output_error_mapper.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/core/utils/output_error_mapper.dart';
 import 'package:billing_baba/core/widgets/resizable_data_table.dart';
-import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/print/application/print_exception.dart';
+import 'package:billing_baba/features/print/application/print_providers.dart';
 import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/models/printable_pdf.dart';
-import 'package:billing_baba/features/print/application/print_providers.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
+import 'package:billing_baba/features/utilities/application/barcode_generator_provider.dart';
 import 'package:billing_baba/features/utilities/application/barcode_label_pdf_builder.dart';
 import 'package:billing_baba/features/utilities/models/barcode_label_entry.dart';
 import 'package:billing_baba/features/utilities/presentation/desktop/widgets/barcode_label_preview.dart';
 import 'package:billing_baba/features/utilities/presentation/desktop/widgets/utilities_page_title_bar.dart';
-import 'package:billing_baba/features/utilities/application/barcode_generator_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +21,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 const _cardBorder = Color(0xFFE0E0E0);
 const _actionRed = Color(0xFFD32F2F);
 const _actionRedDisabled = Color(0xFFEF9A9A);
-const _actionRedText = Colors.white;
+const Color _actionRedText = Colors.white;
 const _actionRedTextDisabled = Color(0xFFFFEBEE);
 
 class BarcodeGeneratorContent extends ConsumerStatefulWidget {
@@ -283,13 +283,7 @@ class _HeaderControls extends StatelessWidget {
 
 class _EntryFormCard extends StatefulWidget {
   const _EntryFormCard({
-    super.key,
-    required this.draft,
-    required this.items,
-    required this.onDraftChanged,
-    required this.onItemSelected,
-    required this.onItemNameChanged,
-    required this.onAdd,
+    required this.draft, required this.items, required this.onDraftChanged, required this.onItemSelected, required this.onItemNameChanged, required this.onAdd, super.key,
   });
 
   final BarcodeGeneratorDraft draft;
@@ -690,7 +684,6 @@ class _ItemDetailsTable extends StatelessWidget {
                   maxWidth: 52,
                   resizable: false,
                   header: Align(
-                    alignment: Alignment.center,
                     child: Checkbox(
                       value: allSelected,
                       onChanged: (value) =>
@@ -733,7 +726,6 @@ class _ItemDetailsTable extends StatelessWidget {
                     isSelected: selectedIds.contains(entry.id),
                     cells: [
                       Align(
-                        alignment: Alignment.center,
                         child: Checkbox(
                           value: selectedIds.contains(entry.id),
                           onChanged: (value) => onToggle(

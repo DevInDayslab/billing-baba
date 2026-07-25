@@ -100,9 +100,9 @@ class NetworkErrorBanner extends StatelessWidget {
           ),
           if (AppConfig.showDeveloperMenu)
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
-                context.push(AppRoutes.developerDiagnostics);
+                await context.push(AppRoutes.developerDiagnostics);
               },
               child: const Text('Open Diagnostics'),
             ),

@@ -1,13 +1,11 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/purchase_placeholder_page.dart';
-import './mobile/purchase_placeholder_page.dart';
+import 'package:billing_baba/features/purchases/presentation/desktop/purchase_placeholder_page.dart';
+import 'package:billing_baba/features/purchases/presentation/mobile/purchase_placeholder_page.dart';
 import 'package:flutter/widgets.dart';
 
 class PurchasePlaceholderPage extends StatelessWidget {
   const PurchasePlaceholderPage({
-    super.key,
-    required this.title,
-    required this.route,
+    required this.title, required this.route, super.key,
   });
 
   final String title;

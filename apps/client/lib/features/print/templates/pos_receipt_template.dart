@@ -52,7 +52,7 @@ class PosReceiptTemplate implements PrintTemplate {
     );
 
     final pdf = pw.Document();
-    final pageFormat = PdfPageFormat(
+    const pageFormat = PdfPageFormat(
       58 * PdfPageFormat.mm,
       double.infinity,
       marginAll: 4 * PdfPageFormat.mm,
@@ -95,7 +95,6 @@ class PosReceiptTemplate implements PrintTemplate {
               pw.Text(
                 sale.docNumber,
                 style: InvoicePdfFonts.style(
-                  fontSize: 10,
                   fontWeight: pw.FontWeight.bold,
                 ),
                 textAlign: pw.TextAlign.center,

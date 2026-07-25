@@ -59,10 +59,9 @@ Future<InventoryService> inventoryService(Ref ref) async {
 
 class InventoryService {
   InventoryService({
-    required InventoryRepository repository,
+    required this._repository,
     ItemMediaRepository? mediaRepository,
-  })  : _repository = repository,
-        _media = mediaRepository;
+  })  : _media = mediaRepository;
 
   final InventoryRepository _repository;
   final ItemMediaRepository? _media;

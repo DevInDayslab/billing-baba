@@ -4,6 +4,7 @@ import 'package:billing_baba/features/business/models/business_profile_model.dar
 import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_fonts.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
+import 'package:billing_baba/features/settings/presentation/desktop/widgets/invoice_preview_widget.dart' show InvoicePreviewWidget;
 import 'package:billing_baba/features/settings/utils/thermal_pdf_page_format.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -123,7 +124,6 @@ class InvoicePdfBuilder {
                         pw.MemoryImage(invoice.logoBytes!),
                         width: 32,
                         height: 32,
-                        fit: pw.BoxFit.contain,
                       ),
                     ],
                   )
@@ -293,7 +293,6 @@ class InvoicePdfBuilder {
                           pw.MemoryImage(invoice.logoBytes!),
                           width: 32,
                           height: 32,
-                          fit: pw.BoxFit.contain,
                         )
                       else
                         pw.Container(
@@ -415,7 +414,6 @@ class InvoicePdfBuilder {
         2: pw.IntrinsicColumnWidth(),
         3: pw.IntrinsicColumnWidth(),
       },
-      defaultVerticalAlignment: pw.TableCellVerticalAlignment.top,
       children: [
         pw.TableRow(
           children: [
@@ -517,9 +515,9 @@ class InvoicePdfBuilder {
       border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
       columnWidths: const {
         0: pw.FlexColumnWidth(3),
-        1: pw.FlexColumnWidth(1),
-        2: pw.FlexColumnWidth(1),
-        3: pw.FlexColumnWidth(1),
+        1: pw.FlexColumnWidth(),
+        2: pw.FlexColumnWidth(),
+        3: pw.FlexColumnWidth(),
       },
       children: [
         pw.TableRow(

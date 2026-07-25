@@ -6,7 +6,6 @@ part 'current_subscription.freezed.dart';
 
 @freezed
 abstract class CurrentSubscription with _$CurrentSubscription {
-  const CurrentSubscription._();
 
   const factory CurrentSubscription({
     required SubscriptionPlanType planType,
@@ -17,6 +16,7 @@ abstract class CurrentSubscription with _$CurrentSubscription {
     DateTime? purchaseDate,
     DateTime? renewalDate,
   }) = _CurrentSubscription;
+  const CurrentSubscription._();
 
   bool get hasActivePlan =>
       planType != SubscriptionPlanType.none &&

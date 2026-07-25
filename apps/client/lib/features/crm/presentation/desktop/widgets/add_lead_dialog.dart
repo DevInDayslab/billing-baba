@@ -761,7 +761,6 @@ class _RequiredFormField extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 width: 3,
@@ -770,7 +769,6 @@ class _RequiredFormField extends StatelessWidget {
               ),
               Expanded(
                 child: Align(
-                  alignment: Alignment.center,
                   child: child,
                 ),
               ),

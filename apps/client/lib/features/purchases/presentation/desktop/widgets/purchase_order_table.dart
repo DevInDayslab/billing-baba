@@ -3,12 +3,12 @@ import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
+import 'package:billing_baba/features/purchases/application/purchase_orders_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_order_model.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_order_actions.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_order_status_badge.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/purchase_transaction_table_layout.dart';
-import 'package:billing_baba/features/purchases/application/purchase_orders_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -330,7 +330,6 @@ class _PurchaseOrderTableColumns {
       ResizableDataColumn(
         initialWidth: purchaseTransactionPartyColMinWidth,
         minWidth: 120,
-        maxWidth: 420,
         header: filterHeader('Party', PurchaseColumnFilterKind.partyName),
       ),
       ResizableDataColumn(

@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/delivery_challan_page.dart';
-import './mobile/delivery_challan_page.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/delivery_challan_page.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/delivery_challan_page.dart';
 import 'package:flutter/widgets.dart';
 
 class DeliveryChallanPage extends StatelessWidget {
@@ -10,9 +10,9 @@ class DeliveryChallanPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopDeliveryChallanPage(),
-      mobile: const MobileDeliveryChallanPage(),
+    return const AdaptivePage(
+      desktop: DesktopDeliveryChallanPage(),
+      mobile: MobileDeliveryChallanPage(),
     );
   }
 }

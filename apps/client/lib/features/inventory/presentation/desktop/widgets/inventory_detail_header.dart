@@ -1,10 +1,10 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
+import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_primary_button.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
-import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

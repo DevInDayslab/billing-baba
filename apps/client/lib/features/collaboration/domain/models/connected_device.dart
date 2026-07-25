@@ -55,9 +55,8 @@ abstract class ConnectedDevice with _$ConnectedDevice {
     @JsonKey(name: 'os_name') required String osName,
     @JsonKey(name: 'app_version') required String appVersion,
     @JsonKey(name: 'last_seen_at') required DateTime lastSeenAt,
-    @JsonKey(name: 'is_current_device') @Default(false) bool isCurrentDevice,
+    @JsonKey(name: 'sync_status') required DeviceSyncStatus deviceSyncStatus, @JsonKey(name: 'is_current_device') @Default(false) bool isCurrentDevice,
     @JsonKey(name: 'is_online') @Default(true) bool isOnline,
-    @JsonKey(name: 'sync_status') required DeviceSyncStatus deviceSyncStatus,
   }) = _ConnectedDevice;
 
   factory ConnectedDevice.fromJson(Map<String, dynamic> json) =>

@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/sale_invoices_page.dart';
-import './mobile/sale_invoices_page.dart';
+import 'package:billing_baba/features/sales/presentation/desktop/sale_invoices_page.dart';
+import 'package:billing_baba/features/sales/presentation/mobile/sale_invoices_page.dart';
 import 'package:flutter/widgets.dart';
 
 class SaleInvoicesPage extends StatelessWidget {
@@ -10,9 +10,9 @@ class SaleInvoicesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopSaleInvoicesPage(),
-      mobile: const MobileSaleInvoicesPage(),
+    return const AdaptivePage(
+      desktop: DesktopSaleInvoicesPage(),
+      mobile: MobileSaleInvoicesPage(),
     );
   }
 }

@@ -4,14 +4,14 @@ import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
-import 'package:billing_baba/features/collaboration/data/collaboration_repository.dart';
-import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
-import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
-import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
 import 'package:billing_baba/features/collaboration/application/company_directory_provider.dart';
 import 'package:billing_baba/features/collaboration/application/company_session_provider.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:billing_baba/features/collaboration/application/sync_share_refresh_provider.dart';
+import 'package:billing_baba/features/collaboration/data/collaboration_repository.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

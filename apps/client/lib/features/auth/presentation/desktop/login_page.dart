@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/network/network_error_details.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/auth/presentation/desktop/widgets/network_error_banner.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
+import 'package:billing_baba/features/auth/presentation/desktop/widgets/network_error_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

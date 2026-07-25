@@ -10,12 +10,10 @@ import 'package:flutter/foundation.dart';
 /// Resolves a scanned barcode against business inventory and public product data.
 class BarcodeLookupService {
   BarcodeLookupService({
-    required InventoryRepository repository,
-    required InventoryRemoteDataSource remoteDataSource,
+    required this._repository,
+    required this._remoteDataSource,
     Dio? openFoodFactsDio,
-  })  : _repository = repository,
-        _remoteDataSource = remoteDataSource,
-        _openFoodFactsDio = openFoodFactsDio ?? Dio();
+  })  : _openFoodFactsDio = openFoodFactsDio ?? Dio();
 
   final InventoryRepository _repository;
   final InventoryRemoteDataSource _remoteDataSource;
@@ -274,7 +272,7 @@ class BarcodeLookupService {
 class BarcodeLookupResult {
   const BarcodeLookupResult({
     required this.found,
-    this.itemName,
+    required this.source, this.itemName,
     this.category,
     this.hsnCode,
     this.defaultMrp,
@@ -282,21 +280,8 @@ class BarcodeLookupResult {
     this.taxPercent,
     this.baseUnit,
     this.incTax = true,
-    required this.source,
     this.hadError = false,
   });
-
-  final bool found;
-  final String? itemName;
-  final String? category;
-  final String? hsnCode;
-  final String? defaultMrp;
-  final String? salePrice;
-  final String? taxPercent;
-  final String? baseUnit;
-  final bool incTax;
-  final String source;
-  final bool hadError;
 
   factory BarcodeLookupResult.fromInventory(ItemListDto item) {
     return BarcodeLookupResult(
@@ -308,7 +293,6 @@ class BarcodeLookupResult {
       salePrice: item.salePrice,
       taxPercent: '',
       baseUnit: item.baseUnit,
-      incTax: true,
       source: 'inventory',
     );
   }
@@ -329,7 +313,6 @@ class BarcodeLookupResult {
       salePrice: '',
       taxPercent: '',
       baseUnit: baseUnit ?? '',
-      incTax: true,
       source: 'openfoodfacts',
     );
   }
@@ -350,6 +333,26 @@ class BarcodeLookupResult {
       source: 'gemini',
     );
   }
+
+  factory BarcodeLookupResult.notFound({bool hadError = false}) {
+    return BarcodeLookupResult(
+      found: false,
+      source: 'notFound',
+      hadError: hadError,
+    );
+  }
+
+  final bool found;
+  final String? itemName;
+  final String? category;
+  final String? hsnCode;
+  final String? defaultMrp;
+  final String? salePrice;
+  final String? taxPercent;
+  final String? baseUnit;
+  final bool incTax;
+  final String source;
+  final bool hadError;
 
   bool get needsCommercialEnrichment {
     return _isBlank(hsnCode) || _isBlank(taxPercent);
@@ -398,13 +401,4 @@ class BarcodeLookupResult {
   }
 
   static bool _isBlank(String? value) => value == null || value.trim().isEmpty;
-
-  factory BarcodeLookupResult.notFound({bool hadError = false}) {
-    return BarcodeLookupResult(
-      found: false,
-      source: 'notFound',
-      incTax: true,
-      hadError: hadError,
-    );
-  }
 }

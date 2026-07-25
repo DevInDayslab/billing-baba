@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/features/crm/application/lead_error_mapper.dart';
-import 'package:billing_baba/features/crm/domain/models/lead.dart';
 import 'package:billing_baba/features/crm/application/leads_provider.dart';
 import 'package:billing_baba/features/crm/application/leads_selection_providers.dart';
+import 'package:billing_baba/features/crm/domain/models/lead.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/lead_status_chip.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_table_shared.dart';
@@ -156,7 +156,6 @@ class _LeadsHeaderRow extends ConsumerWidget {
         children: [
           SalesTableCell(
             width: _checkboxColWidth,
-            gapAfter: salesTableColGap,
             child: Checkbox(
               value: headerCheckboxValue,
               tristate: true,

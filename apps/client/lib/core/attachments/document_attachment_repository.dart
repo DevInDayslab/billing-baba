@@ -41,9 +41,8 @@ class DocumentAttachmentRepository {
         mimeType: mimeType,
         completeExtra: {
           'file_name': fileName,
-          if (label != null) 'label': label,
-          if (replacesAttachmentId != null)
-            'replaces_attachment_id': replacesAttachmentId,
+          'label': ?label,
+          'replaces_attachment_id': ?replacesAttachmentId,
         },
       );
 

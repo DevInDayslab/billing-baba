@@ -47,14 +47,6 @@ class AddDealServiceInput {
     this.description,
   });
 
-  final String name;
-  final DealStage stage;
-  final String? accountName;
-  final String? assignedTo;
-  final double amount;
-  final DateTime? expectedCloseDate;
-  final String? description;
-
   factory AddDealServiceInput.fromDialogInput({
     required String name,
     DealStage stage = DealStage.qualification,
@@ -74,6 +66,14 @@ class AddDealServiceInput {
       description: description,
     );
   }
+
+  final String name;
+  final DealStage stage;
+  final String? accountName;
+  final String? assignedTo;
+  final double amount;
+  final DateTime? expectedCloseDate;
+  final String? description;
 }
 
 class DealBusinessNotSelectedException implements Exception {

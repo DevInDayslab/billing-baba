@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/settings/models/transaction_message_settings.dart';
 import 'package:billing_baba/features/settings/application/transaction_message_settings_provider.dart';
+import 'package:billing_baba/features/settings/models/transaction_message_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

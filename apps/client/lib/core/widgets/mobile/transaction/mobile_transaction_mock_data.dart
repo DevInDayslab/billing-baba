@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 /// Sample transaction rows for mobile list previews and demos.
 ///
-/// TODO(mobile): Replace when feature pages supply live transaction data.
+// TODO(mobile): Replace when feature pages supply live transaction data.
 abstract final class MobileTransactionMockData {
   static List<MobileTransactionListItem> itemsFor(
     MobileTransactionScopeDefinition definition,
@@ -59,7 +59,7 @@ abstract final class MobileTransactionMockData {
       dateLabel: '24 Jul 2026',
       amountLabel: '₹12,500.00',
       statusLabel: 'Paid',
-      statusColor: Color(0xFF2E7D32),
+      statusColor: const Color(0xFF2E7D32),
       leadingIcon: Icons.receipt_long_outlined,
       sortAmount: 12500,
       sortDate: DateTime(2026, 7, 24),
@@ -72,7 +72,7 @@ abstract final class MobileTransactionMockData {
       dateLabel: '23 Jul 2026',
       amountLabel: '₹8,200.00',
       statusLabel: 'Unpaid',
-      statusColor: Color(0xFFD32F2F),
+      statusColor: const Color(0xFFD32F2F),
       leadingIcon: Icons.receipt_long_outlined,
       sortAmount: 8200,
       sortDate: DateTime(2026, 7, 23),
@@ -120,7 +120,7 @@ abstract final class MobileTransactionMockData {
       dateLabel: '22 Jul 2026',
       amountLabel: '₹4,500.00',
       statusLabel: 'Recorded',
-      statusColor: Color(0xFF2E7D32),
+      statusColor: const Color(0xFF2E7D32),
       leadingIcon: Icons.payments_outlined,
       sortAmount: 4500,
       sortDate: DateTime(2026, 7, 22),
@@ -136,7 +136,7 @@ abstract final class MobileTransactionMockData {
       dateLabel: '22 Jul 2026',
       amountLabel: '₹9,000.00',
       statusLabel: 'Recorded',
-      statusColor: Color(0xFF2E7D32),
+      statusColor: const Color(0xFF2E7D32),
       leadingIcon: Icons.payments_outlined,
       sortAmount: 9000,
       sortDate: DateTime(2026, 7, 22),
@@ -200,7 +200,7 @@ abstract final class MobileTransactionMockData {
       dateLabel: '20 Jul 2026',
       amountLabel: '₹1,200.00',
       statusLabel: 'Approved',
-      statusColor: Color(0xFF2E7D32),
+      statusColor: const Color(0xFF2E7D32),
       leadingIcon: Icons.undo_rounded,
       sortAmount: 1200,
       sortDate: DateTime(2026, 7, 20),
@@ -216,7 +216,7 @@ abstract final class MobileTransactionMockData {
       dateLabel: '16 Jul 2026',
       amountLabel: '₹75,000.00',
       statusLabel: 'Paid',
-      statusColor: Color(0xFF2E7D32),
+      statusColor: const Color(0xFF2E7D32),
       leadingIcon: Icons.account_balance_outlined,
       sortAmount: 75000,
       sortDate: DateTime(2026, 7, 16),
@@ -232,7 +232,7 @@ abstract final class MobileTransactionMockData {
       dateLabel: '22 Jul 2026',
       amountLabel: '₹45,000.00',
       statusLabel: 'Partial',
-      statusColor: Color(0xFFFF9800),
+      statusColor: const Color(0xFFFF9800),
       leadingIcon: Icons.shopping_cart_outlined,
       sortAmount: 45000,
       sortDate: DateTime(2026, 7, 22),
@@ -251,7 +251,7 @@ abstract final class MobileTransactionMockData {
       statusColor: AppColors.textSecondary,
       leadingIcon: Icons.money_off_outlined,
       sortAmount: 15000,
-      sortDate: DateTime(2026, 7, 1),
+      sortDate: DateTime(2026, 7),
       sortTitle: 'Office Rent',
     ),
   ];
@@ -280,7 +280,7 @@ abstract final class MobileTransactionMockData {
       dateLabel: '14 Jul 2026',
       amountLabel: '₹2,800.00',
       statusLabel: 'Approved',
-      statusColor: Color(0xFF2E7D32),
+      statusColor: const Color(0xFF2E7D32),
       leadingIcon: Icons.undo_rounded,
       sortAmount: 2800,
       sortDate: DateTime(2026, 7, 14),
@@ -296,7 +296,7 @@ abstract final class MobileTransactionMockData {
       dateLabel: '13 Jul 2026',
       amountLabel: '₹1,20,000.00',
       statusLabel: 'Paid',
-      statusColor: Color(0xFF2E7D32),
+      statusColor: const Color(0xFF2E7D32),
       leadingIcon: Icons.account_balance_outlined,
       sortAmount: 120000,
       sortDate: DateTime(2026, 7, 13),

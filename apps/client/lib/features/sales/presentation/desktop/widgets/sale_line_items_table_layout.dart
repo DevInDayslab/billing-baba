@@ -23,9 +23,9 @@ class SaleLineItemTableLayout {
     SaleLineItemColumnVisibility visibility =
         SaleLineItemColumnVisibility.defaults,
   }) {
-    final contentWidth = math.max(
+    final contentWidth = math.max<double>(
       availableWidth - horizontalPadding * 2,
-      320.0,
+      320,
     );
     return _columnWidthsFor(contentWidth)
         .applyVisibility(visibility)
@@ -44,9 +44,9 @@ class SaleLineItemTableLayout {
   static SaleLineItemColumnWidths _columnWidthsFor(double availableWidth) {
     const preferred = SaleLineItemColumnWidths.preferred;
     const gap = cellGap;
-    final contentWidth = math.max(
+    final contentWidth = math.max<double>(
       availableWidth - horizontalPadding * 2,
-      320.0,
+      320,
     );
     final preferredTotal = preferred.totalWithGaps(gap);
 
@@ -132,7 +132,7 @@ class SaleLineItemColumnWidths {
     actions: 24,
   );
 
-  static const minimum = _minimum;
+  static const SaleLineItemColumnWidths minimum = _minimum;
 
   final double index;
   final double item;

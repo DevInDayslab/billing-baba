@@ -11,7 +11,6 @@ abstract final class SettingsNavCatalog {
       title: 'Print Settings',
       subtitle: 'Printer type, layout, and invoice content',
       route: AppRoutes.settingsPrint,
-      group: SettingsNavGroup.general,
     ),
     SettingsNavItem(
       id: 'taxes',
@@ -19,7 +18,6 @@ abstract final class SettingsNavCatalog {
       title: 'Taxes',
       subtitle: 'GST and tax configuration',
       route: AppRoutes.settingsTaxes,
-      group: SettingsNavGroup.general,
     ),
     SettingsNavItem(
       id: 'invoice-templates',
@@ -27,7 +25,6 @@ abstract final class SettingsNavCatalog {
       title: 'Invoice Templates',
       subtitle: 'Customize invoice layouts',
       route: AppRoutes.settingsInvoiceTemplates,
-      group: SettingsNavGroup.general,
     ),
     SettingsNavItem(
       id: 'whatsapp',

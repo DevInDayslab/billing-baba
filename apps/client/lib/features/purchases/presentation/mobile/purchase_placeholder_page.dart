@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 
 class MobilePurchasePlaceholderPage extends StatelessWidget {
   const MobilePurchasePlaceholderPage({
-    super.key,
-    required this.title,
-    required this.route,
+    required this.title, required this.route, super.key,
   });
 
   final String title;

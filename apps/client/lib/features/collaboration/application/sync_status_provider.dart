@@ -1,8 +1,8 @@
-import 'package:billing_baba/features/collaboration/application/collaboration_repository_provider.dart';
-import 'package:billing_baba/features/collaboration/domain/models/sync_status.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_init_provider.dart';
+import 'package:billing_baba/features/collaboration/application/collaboration_repository_provider.dart';
 import 'package:billing_baba/features/collaboration/application/company_access_provider.dart';
 import 'package:billing_baba/features/collaboration/application/devices_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/sync_status.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sync_status_provider.g.dart';

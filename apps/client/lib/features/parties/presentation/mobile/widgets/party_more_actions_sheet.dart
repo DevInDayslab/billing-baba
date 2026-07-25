@@ -19,7 +19,6 @@ Future<void> showPartyMoreActionsSheet({
 
   return showMobileMoreActionsSheet(
     context: context,
-    title: 'More Actions',
     actions: [
       MobileSheetAction(
         icon: Icons.edit_outlined,

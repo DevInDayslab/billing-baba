@@ -26,7 +26,7 @@ class HiddenLedgerHistorySection extends ConsumerWidget {
         padding: EdgeInsets.all(AppSpacing.md),
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (entries) {
         if (entries.isEmpty) return const SizedBox.shrink();
 

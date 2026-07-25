@@ -1,9 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/models/printable_pdf.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pdf/pdf.dart';
-import 'dart:typed_data';
 
 void main() {
   group('PdfPageProfile', () {
@@ -23,7 +24,7 @@ void main() {
     });
 
     test('forPrintSettings returns landscape A4 for landscape orientation', () {
-      final settings = PrintSettings.defaults().copyWith(
+      final settings = const PrintSettings.defaults().copyWith(
         printerType: PrinterType.regular,
         orientation: RegularOrientation.landscape,
       );

@@ -36,13 +36,12 @@ class LeadActivityTable extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const InventoryListHeader(
-          showColumnSeparators: true,
           columns: [
             InventoryListColumn(label: 'TYPE', flex: 2),
             InventoryListColumn(label: 'NOTES', flex: 4),
             InventoryListColumn(label: 'DATE', flex: 3),
             InventoryListColumn(label: 'ADDED BY', flex: 2),
-            InventoryListColumn(label: 'ACTIONS', flex: 1, fixedWidth: 48),
+            InventoryListColumn(label: 'ACTIONS', fixedWidth: 48),
           ],
         ),
         Expanded(

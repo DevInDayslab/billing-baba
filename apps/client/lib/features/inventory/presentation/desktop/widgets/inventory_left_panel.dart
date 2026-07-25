@@ -3,6 +3,7 @@ import 'package:billing_baba/features/collaboration/domain/models/permission_act
 import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/collaboration/permissions/permission_gate.dart';
 import 'package:billing_baba/features/inventory/application/inventory_list_image_warmup.dart';
+import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_async_list.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_item_list_tile.dart';
@@ -10,7 +11,6 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_primary_button.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_search_field.dart';
-import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

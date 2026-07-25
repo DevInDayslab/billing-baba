@@ -11,8 +11,7 @@ void main() {
         eWayBillNo: 'EWB-OLD',
         billDate: DateTime(2024, 1, 15),
         billTime: const TimeOfDay(hour: 10, minute: 30),
-        dueDate: DateTime(2024, 2, 1),
-        stateOfSupply: 'Madhya Pradesh',
+        dueDate: DateTime(2024, 2),
         items: [PurchaseLineItem.empty(id: 'line_1')],
       );
 

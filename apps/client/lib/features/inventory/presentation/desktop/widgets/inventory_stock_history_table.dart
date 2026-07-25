@@ -3,11 +3,11 @@ import 'package:billing_baba/core/utils/date_time_utils.dart';
 import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/core/widgets/resizable_data_table.dart';
+import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/models/product_transaction_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_movement_indicator.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
-import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -233,35 +233,35 @@ class _StockHistoryTableColumns {
         resizable: false,
         header: SizedBox.shrink(),
       ),
-      ResizableDataColumn(
+      const ResizableDataColumn(
         initialWidth: _typeColWidth,
         header: _HeaderCell(label: 'Type'),
       ),
-      ResizableDataColumn(
+      const ResizableDataColumn(
         initialWidth: _dateColWidth,
         header: _HeaderCell(label: 'Date & Time'),
       ),
-      ResizableDataColumn(
+      const ResizableDataColumn(
         initialWidth: _userColWidth,
         header: _HeaderCell(label: 'Updated By'),
       ),
-      ResizableDataColumn(
+      const ResizableDataColumn(
         initialWidth: _changeColWidth,
         header: _HeaderCell(label: 'Change', alignment: Alignment.centerRight),
       ),
-      ResizableDataColumn(
+      const ResizableDataColumn(
         initialWidth: _balanceColWidth,
         header: _HeaderCell(label: 'Balance', alignment: Alignment.centerRight),
       ),
-      ResizableDataColumn(
+      const ResizableDataColumn(
         initialWidth: _godownColWidth,
         header: _HeaderCell(label: 'Godown'),
       ),
-      ResizableDataColumn(
+      const ResizableDataColumn(
         initialWidth: _referenceColWidth,
         header: _HeaderCell(label: 'Reference'),
       ),
-      ResizableDataColumn(
+      const ResizableDataColumn(
         initialWidth: _notesColWidth,
         header: _HeaderCell(label: 'Notes'),
       ),

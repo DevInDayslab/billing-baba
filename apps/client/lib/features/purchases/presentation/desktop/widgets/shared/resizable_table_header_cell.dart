@@ -1,3 +1,4 @@
+import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/purchase_transaction_table_layout.dart' show PurchaseTransactionTableCell;
 import 'package:flutter/material.dart';
 
 /// A header cell that can be resized by dragging its right edge.

@@ -23,15 +23,13 @@ abstract class ContactActivity with _$ContactActivity {
     @JsonKey(name: 'contact_id') required String contactId,
     @JsonKey(name: 'business_id') required String businessId,
     required ContactActivityType type,
-    String? notes,
+    @JsonKey(name: 'updated_at') required DateTime updatedAt, @JsonKey(name: 'created_at') required DateTime createdAt, String? notes,
     @JsonKey(name: 'added_by') String? addedBy,
     @JsonKey(name: 'sync_version') @Default(1) int syncVersion,
     @JsonKey(name: 'is_deleted') @Default(false) bool isDeleted,
-    @JsonKey(name: 'updated_at') required DateTime updatedAt,
     @JsonKey(name: 'deleted_at') DateTime? deletedAt,
     @JsonKey(name: 'device_id') @Default('') String deviceId,
     @JsonKey(name: 'sync_status') @Default('pending') String syncStatus,
-    @JsonKey(name: 'created_at') required DateTime createdAt,
   }) = _ContactActivity;
 
   factory ContactActivity.fromJson(Map<String, dynamic> json) =>

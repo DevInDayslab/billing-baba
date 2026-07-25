@@ -42,9 +42,6 @@ class PdfPageProfile {
   static const transaction = PdfPageProfile(
     kind: PdfProfileKind.transaction,
     pageFormat: PdfPageFormat.a4,
-    pageMargins: pw.EdgeInsets.fromLTRB(40, 40, 40, 52),
-    previewMaxPageWidth: 700,
-    previewDynamicLayout: true,
   );
 
   /// Tabular reports and party ledger statements.
@@ -52,8 +49,6 @@ class PdfPageProfile {
     kind: PdfProfileKind.transaction,
     pageFormat: PdfPageFormat.a4,
     pageMargins: pw.EdgeInsets.fromLTRB(36, 36, 36, 48),
-    previewMaxPageWidth: 700,
-    previewDynamicLayout: true,
   );
 
   /// Settings-driven regular invoices (print settings screen / commercial docs).
@@ -61,8 +56,6 @@ class PdfPageProfile {
     kind: PdfProfileKind.transaction,
     pageFormat: PdfPageFormat.a4,
     pageMargins: pw.EdgeInsets.all(15 * PdfPageFormat.mm),
-    previewMaxPageWidth: 700,
-    previewDynamicLayout: true,
   );
 
   /// Resolves the profile used for transaction documents from print settings.
@@ -88,7 +81,6 @@ class PdfPageProfile {
         pageFormat: PdfPageFormat.a4.landscape,
         pageMargins: transaction.pageMargins,
         previewMaxPageWidth: 900,
-        previewDynamicLayout: true,
       );
     }
 

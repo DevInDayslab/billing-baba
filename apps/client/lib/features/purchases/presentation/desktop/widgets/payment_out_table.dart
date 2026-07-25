@@ -4,11 +4,11 @@ import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/export/presentation/desktop/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/module_print_actions.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/voucher_print_actions.dart';
+import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
 import 'package:billing_baba/features/purchases/models/payment_out_model.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/payment_out_status_badge.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/purchase_transaction_table_layout.dart';
-import 'package:billing_baba/features/purchases/application/payment_out_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -300,7 +300,6 @@ class _PaymentOutTableColumns {
       ResizableDataColumn(
         initialWidth: purchaseTransactionPartyColMinWidth,
         minWidth: 120,
-        maxWidth: 420,
         header: filterHeader('Party Name', PurchaseColumnFilterKind.partyName),
       ),
       ResizableDataColumn(

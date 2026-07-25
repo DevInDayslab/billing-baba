@@ -2,7 +2,6 @@ import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_fi
 import 'package:billing_baba/features/sales/utils/sale_price_input.dart';
 import 'package:billing_baba/features/sales/utils/sale_quantity_input.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// Compact numeric field with stable controller lifecycle for table rows.
 ///

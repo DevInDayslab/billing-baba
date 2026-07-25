@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -69,7 +69,7 @@ class _GstrMonthFilterBarState extends ConsumerState<GstrMonthFilterBar> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(reportFiltersProvider, (_, __) {
+    ref.listen(reportFiltersProvider, (_, _) {
       if (!mounted) return;
       setState(_syncFromFilters);
     });

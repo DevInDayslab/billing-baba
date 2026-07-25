@@ -78,7 +78,6 @@ class DocumentAttachmentService {
       mimeType: mimeType,
       localBytes: bytes,
       isImage: isImage,
-      syncStatus: AttachmentSyncStatus.local,
     );
   }
 }

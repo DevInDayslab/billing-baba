@@ -1,5 +1,5 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:billing_baba/features/business/models/commerce_settings_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Persists the most recently selected invoice line GST rate per business.
 abstract final class InvoiceTaxPreference {

@@ -140,8 +140,7 @@ class _MenuRow extends StatelessWidget {
     required this.icon,
     required this.label,
     this.destructive = false,
-    this.muted = false,
-  });
+  }) : muted = false;
 
   final IconData icon;
   final String label;

@@ -1,22 +1,22 @@
+import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/core/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/export/presentation/desktop/widgets/module_export_actions.dart';
+import 'package:billing_baba/features/print/models/print_request.dart';
+import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/module_print_actions.dart';
+import 'package:billing_baba/features/sales/application/sale_fa_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
 import 'package:billing_baba/features/sales/models/sale_fa_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_fa_status_badge.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
-import 'package:billing_baba/features/sales/application/sale_fa_provider.dart';
-import 'package:billing_baba/features/print/models/print_request.dart';
-import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:billing_baba/core/router/app_routes.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _zebraRowBg = Color(0xFFFAFAFA);
@@ -236,7 +236,6 @@ class _SaleFaTableRows {
         _DataCell(
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               IconButton(
                 onPressed: () => DocumentPrintActions.preview(

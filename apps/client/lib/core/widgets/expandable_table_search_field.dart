@@ -45,8 +45,8 @@ class _ExpandableTableSearchFieldState
   @override
   void dispose() {
     _debounce?.cancel();
-    _focusNode.removeListener(_onFocusChange);
-    _focusNode.dispose();
+    _focusNode..removeListener(_onFocusChange)
+    ..dispose();
     _controller.dispose();
     super.dispose();
   }

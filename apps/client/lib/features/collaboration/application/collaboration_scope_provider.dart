@@ -2,16 +2,16 @@ import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/models/business_model.dart'
     as business;
-import 'package:billing_baba/features/collaboration/application/sync_share_live_sync_service.dart';
-import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
-import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
-import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
-import 'package:billing_baba/features/collaboration/domain/role_permission_registry.dart';
 import 'package:billing_baba/features/collaboration/application/company_directory_provider.dart';
 import 'package:billing_baba/features/collaboration/application/company_session_provider.dart';
 import 'package:billing_baba/features/collaboration/application/members_provider.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
+import 'package:billing_baba/features/collaboration/application/sync_share_live_sync_service.dart';
 import 'package:billing_baba/features/collaboration/application/sync_share_refresh_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
+import 'package:billing_baba/features/collaboration/domain/role_permission_registry.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Reloads collaboration data when the active company changes and keeps

@@ -22,7 +22,7 @@ abstract final class DealMockData {
         .toList();
   }
 
-  static final _entries = [
+  static final List<_MockDealEntry> _entries = [
     for (var i = 1; i <= 4; i++)
       _MockDealEntry(
         id: 'd1000001-0000-4000-8000-${i.toString().padLeft(12, '0')}',

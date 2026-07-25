@@ -13,12 +13,12 @@ import 'package:billing_baba/features/business/presentation/desktop/widgets/dele
 import 'package:billing_baba/features/business/presentation/desktop/widgets/edit_business_dialog.dart';
 import 'package:billing_baba/features/business/utils/business_open_debug_log.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
-import 'package:billing_baba/features/collaboration/application/company_session_service.dart';
-import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
-import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
 import 'package:billing_baba/features/collaboration/application/company_directory_provider.dart';
 import 'package:billing_baba/features/collaboration/application/company_session_provider.dart';
+import 'package:billing_baba/features/collaboration/application/company_session_service.dart';
 import 'package:billing_baba/features/collaboration/application/company_session_service_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_list_entry.dart';
+import 'package:billing_baba/features/collaboration/domain/models/company_relationship.dart';
 import 'package:billing_baba/shared/image/app_image_prefetcher.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';

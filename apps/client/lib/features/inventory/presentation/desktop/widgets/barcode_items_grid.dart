@@ -51,7 +51,7 @@ abstract final class BarcodeGridLayout {
   static const gridBorderColor = Color(0xFFE0E0E0);
   static const headerBackground = Color(0xFFF5F7FA);
   static const activeRowBackground = Color(0xFFE8F0FE);
-  static const activeRowBorderColor = AppColors.primary;
+  static const Color activeRowBorderColor = AppColors.primary;
   static const rowHeight = 40.0;
   static const placeholderColor = Color(0xFFBDBDBD);
 
@@ -68,7 +68,7 @@ abstract final class BarcodeGridLayout {
   static const flexTaxPercent = 1.0;
   static const flexBaseUnit = 1.5;
 
-  static const _totalFlex =
+  static const double _totalFlex =
       flexItemCode +
       flexItemName +
       flexCategory +

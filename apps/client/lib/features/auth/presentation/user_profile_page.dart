@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/user_profile_page.dart';
-import './mobile/user_profile_page.dart';
+import 'package:billing_baba/features/auth/presentation/desktop/user_profile_page.dart';
+import 'package:billing_baba/features/auth/presentation/mobile/user_profile_page.dart';
 import 'package:flutter/widgets.dart';
 
 class UserProfilePage extends StatelessWidget {
@@ -10,9 +10,9 @@ class UserProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopUserProfilePage(),
-      mobile: const MobileUserProfilePage(),
+    return const AdaptivePage(
+      desktop: DesktopUserProfilePage(),
+      mobile: MobileUserProfilePage(),
     );
   }
 }

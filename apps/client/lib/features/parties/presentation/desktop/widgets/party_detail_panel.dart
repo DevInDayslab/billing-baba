@@ -2,8 +2,8 @@ import 'package:billing_baba/core/media/image_display_context.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
-import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/permission_module.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_history_section.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_summary_tile.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';
@@ -11,6 +11,7 @@ import 'package:billing_baba/features/loyalty/application/loyalty_service.dart';
 import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/parties/application/party_error_mapper.dart';
 import 'package:billing_baba/features/parties/application/party_ledger_service.dart';
+import 'package:billing_baba/features/parties/application/party_reminder_schedule_provider.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_ledger_model.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
@@ -20,7 +21,6 @@ import 'package:billing_baba/features/parties/presentation/desktop/widgets/party
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_ledger_transactions_section.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_profile_image_preview_dialog.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_whatsapp_actions.dart';
-import 'package:billing_baba/features/parties/application/party_reminder_schedule_provider.dart';
 import 'package:billing_baba/features/parties/repositories/party_reminder_schedule_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -360,7 +360,6 @@ class _PartyDetailHeader extends ConsumerWidget {
                               Flexible(
                                 child: AppTruncatedText(
                                   party.name,
-                                  maxLength: _partyHeaderNameMaxLength,
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,

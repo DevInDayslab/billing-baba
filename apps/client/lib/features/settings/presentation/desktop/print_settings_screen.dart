@@ -1,10 +1,10 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/features/settings/application/print_settings_provider.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
 import 'package:billing_baba/features/settings/presentation/desktop/widgets/invoice_preview_widget.dart';
 import 'package:billing_baba/features/settings/presentation/desktop/widgets/regular_settings_panel.dart';
 import 'package:billing_baba/features/settings/presentation/desktop/widgets/thermal_settings_panel.dart';
-import 'package:billing_baba/features/settings/application/print_settings_provider.dart';
 import 'package:billing_baba/features/settings/services/invoice_print_document_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

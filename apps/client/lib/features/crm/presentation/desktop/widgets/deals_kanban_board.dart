@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/crm/domain/models/deal.dart';
 import 'package:billing_baba/features/crm/application/deals_provider.dart';
+import 'package:billing_baba/features/crm/domain/models/deal.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/deal_card.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';

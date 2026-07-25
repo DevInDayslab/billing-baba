@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/crm/domain/models/lead.dart';
 import 'package:billing_baba/features/crm/application/lead_detail_provider.dart';
+import 'package:billing_baba/features/crm/domain/models/lead.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/lead_activity_table.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/lead_status_chip.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_detail_header.dart';

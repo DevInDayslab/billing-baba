@@ -1,23 +1,22 @@
 import 'package:billing_baba/core/routing/app_routes.dart';
+import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/auth/presentation/login_page.dart';
 import 'package:billing_baba/features/auth/presentation/splash_page.dart';
 import 'package:billing_baba/features/auth/presentation/user_profile_page.dart';
 import 'package:billing_baba/features/auth/presentation/verify_otp_page.dart';
-import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/presentation/business_list_page.dart';
 import 'package:billing_baba/features/business/presentation/edit_profile_page.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
+import 'package:billing_baba/features/collaboration/application/company_session_bootstrap_provider.dart';
+import 'package:billing_baba/features/collaboration/application/company_session_provider.dart';
+import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:billing_baba/features/collaboration/domain/models/company_session.dart';
 import 'package:billing_baba/features/collaboration/guards/access_denied_page.dart';
 import 'package:billing_baba/features/collaboration/guards/permission_guard.dart';
 import 'package:billing_baba/features/collaboration/presentation/sync_share_page.dart';
-import 'package:billing_baba/features/collaboration/application/company_session_bootstrap_provider.dart';
-import 'package:billing_baba/features/collaboration/application/company_session_provider.dart';
-import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:billing_baba/features/crm/presentation/contacts_screen.dart';
 import 'package:billing_baba/features/crm/presentation/deals_screen.dart';
 import 'package:billing_baba/features/crm/presentation/leads_screen.dart';
-import 'package:billing_baba/features/settings/presentation/taxes_settings_screen.dart';
 import 'package:billing_baba/features/dashboard/presentation/coming_soon_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/home_page.dart';
 import 'package:billing_baba/features/developer/models/developer_sub_route.dart';
@@ -25,8 +24,8 @@ import 'package:billing_baba/features/developer/presentation/developer_component
 import 'package:billing_baba/features/developer/presentation/diagnostics_page.dart';
 import 'package:billing_baba/features/developer/presentation/table_filters_playground_page.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
-import 'package:billing_baba/features/inventory/presentation/items_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/items_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
@@ -60,6 +59,7 @@ import 'package:billing_baba/features/sales/presentation/sale_order_page.dart';
 import 'package:billing_baba/features/sales/presentation/sale_return_page.dart';
 import 'package:billing_baba/features/settings/presentation/print_settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/taxes_settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/transaction_messages_screen.dart';
 import 'package:billing_baba/features/settings/presentation/whatsapp_settings_screen.dart';
 import 'package:billing_baba/features/utilities/presentation/barcode_generator_page.dart';
@@ -603,8 +603,8 @@ GoRouter createAppRouter({
 /// Bridges Riverpod auth and company session changes into a [Listenable].
 class RouterRefreshListenable extends ChangeNotifier {
   RouterRefreshListenable(Ref ref) {
-    ref.listen<AuthState>(authProvider, (_, _) => notifyListeners());
-    ref.listen<CompanySession?>(companySessionProvider, (_, _) {
+    ref..listen<AuthState>(authProvider, (_, _) => notifyListeners())
+    ..listen<CompanySession?>(companySessionProvider, (_, _) {
       notifyListeners();
     });
   }

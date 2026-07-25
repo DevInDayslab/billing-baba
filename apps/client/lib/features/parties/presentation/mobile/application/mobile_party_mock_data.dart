@@ -2,19 +2,17 @@ import 'package:billing_baba/features/parties/models/party_model.dart';
 
 /// Demo parties for mobile UI previews when the live list is empty.
 ///
-/// TODO(mobile): Remove mock fallback once party list is fully wired on all devices.
+// TODO(mobile): Remove mock fallback once party list is fully wired on all devices.
 abstract final class MobilePartyMockData {
   static const List<PartyModel> parties = [
     PartyModel(
       id: 'mock-party-1',
       name: 'Sharma Traders',
       phone: '98765 43210',
-      partyType: 'customer',
       balance: 12500,
       gstin: '27AABCS1429B1ZV',
       email: 'sharma@example.com',
       partyGroup: 'Retail',
-      isActive: true,
     ),
     PartyModel(
       id: 'mock-party-2',
@@ -24,7 +22,6 @@ abstract final class MobilePartyMockData {
       balance: -8400,
       gstin: '09AAACG1234A1Z5',
       email: 'gupta@example.com',
-      isActive: true,
     ),
     PartyModel(
       id: 'mock-party-3',
@@ -33,14 +30,11 @@ abstract final class MobilePartyMockData {
       partyType: 'both',
       balance: 3200,
       partyGroup: 'Wholesale',
-      isActive: true,
     ),
     PartyModel(
       id: 'mock-party-4',
       name: 'City Mart',
       phone: '90000 11122',
-      partyType: 'customer',
-      balance: 0,
       isActive: false,
     ),
     PartyModel(
@@ -50,7 +44,6 @@ abstract final class MobilePartyMockData {
       partyType: 'supplier',
       balance: -25600,
       gstin: '24AABCN9876C1Z8',
-      isActive: true,
     ),
   ];
 }

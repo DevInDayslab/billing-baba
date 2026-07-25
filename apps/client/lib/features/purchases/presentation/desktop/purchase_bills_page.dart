@@ -1,11 +1,11 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_bill_filter_bar.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_bill_summary_card.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_bill_table.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_page_title_bar.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_section_async_content.dart';
-import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

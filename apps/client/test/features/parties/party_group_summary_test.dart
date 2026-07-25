@@ -25,7 +25,6 @@ void main() {
           name: 'Gamma',
           phone: '9000000003',
           partyGroup: 'Retailers',
-          balance: 0,
         ),
       ];
 

@@ -11,7 +11,7 @@ void main() {
       final transactions = [
         PartyLedgerTransactionModel(
           id: '1',
-          date: DateTime(2026, 7, 1),
+          date: DateTime(2026, 7),
           createdAt: DateTime(2026, 7, 1, 10, 30),
           type: 'Sale Invoice',
           entryType: 'sale',
@@ -55,7 +55,7 @@ void main() {
         transactions: [
           PartyLedgerTransactionModel(
             id: '1',
-            date: DateTime(2026, 7, 1),
+            date: DateTime(2026, 7),
             createdAt: DateTime(2026, 7, 1, 10, 30),
             type: 'Sale Invoice',
             entryType: 'sale',

@@ -268,7 +268,7 @@ class _AddItemsBarcodeScreenState extends ConsumerState<DesktopAddItemsBarcodeSc
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: GestureDetector(
-        onTap: () => _searchFocusNode.unfocus(),
+        onTap: _searchFocusNode.unfocus,
         behavior: HitTestBehavior.translucent,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -374,7 +374,6 @@ class _AddItemsBarcodeScreenState extends ConsumerState<DesktopAddItemsBarcodeSc
       child: SizedBox(
         height: FormSpacing.inputHeight,
         child: TextField(
-          autofocus: false,
           focusNode: _searchFocusNode,
           decoration: InputDecoration(
             hintText: 'Search in sheet',
@@ -400,7 +399,7 @@ class _AddItemsBarcodeScreenState extends ConsumerState<DesktopAddItemsBarcodeSc
                 ),
               ),
             ),
-            suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+            suffixIconConstraints: const BoxConstraints(),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: AppSpacing.sm,

@@ -16,21 +16,21 @@ class PurchaseDocumentParsingDialog extends StatelessWidget {
         elevation: 8,
         borderRadius: AppRadius.lgBorder,
         color: AppColors.surface,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
+        child: const Padding(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.xl,
             vertical: AppSpacing.lg,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(
+              SizedBox(
                 width: 44,
                 height: 44,
                 child: CircularProgressIndicator(strokeWidth: 3),
               ),
-              const SizedBox(height: AppSpacing.md),
-              const Text(
+              SizedBox(height: AppSpacing.md),
+              Text(
                 'Uploading & parsing document...',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -39,8 +39,8 @@ class PurchaseDocumentParsingDialog extends StatelessWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: AppSpacing.xs),
-              const Text(
+              SizedBox(height: AppSpacing.xs),
+              Text(
                 'This may take up to a minute for large bills.',
                 textAlign: TextAlign.center,
                 style: TextStyle(

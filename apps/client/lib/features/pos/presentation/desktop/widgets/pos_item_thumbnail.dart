@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/media/image_display_context.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_item_list_merge.dart';
-import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
+import 'package:billing_baba/features/inventory/models/item_image_model.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/item_card.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_category_style.dart';

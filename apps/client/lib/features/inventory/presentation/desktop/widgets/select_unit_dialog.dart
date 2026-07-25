@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_unit_dialog.dart';
-import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
 import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:collection/collection.dart';

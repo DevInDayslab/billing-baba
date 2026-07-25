@@ -202,7 +202,6 @@ class _ToggleRow extends StatelessWidget {
               label,
               style: AppTypography.inter(
                 fontSize: AppTypography.bodyMediumSize,
-                fontWeight: FontWeight.w400,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -210,7 +209,7 @@ class _ToggleRow extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ],
@@ -247,7 +246,6 @@ class _CounterControl extends StatelessWidget {
               label,
               style: AppTypography.inter(
                 fontSize: AppTypography.bodyMediumSize,
-                fontWeight: FontWeight.w400,
                 color: AppColors.textPrimary,
               ),
             ),

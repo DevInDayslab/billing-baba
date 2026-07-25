@@ -47,7 +47,7 @@ class BarcodeSaveErrorDialog extends StatelessWidget {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: errorRows.length,
-                separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
+                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
                 itemBuilder: (context, index) {
                   final row = errorRows[index];
                   return DecoratedBox(

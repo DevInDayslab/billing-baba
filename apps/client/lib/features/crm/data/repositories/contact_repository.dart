@@ -7,10 +7,9 @@ import 'package:billing_baba/features/crm/domain/models/contact_activity.dart';
 
 class ContactRepository {
   ContactRepository({
-    required ContactLocalSource local,
-    required ContactRemoteSource remote,
-  }) : _local = local,
-       _remote = remote;
+    required this._local,
+    required this._remote,
+  });
 
   final ContactLocalSource _local;
   final ContactRemoteSource _remote;

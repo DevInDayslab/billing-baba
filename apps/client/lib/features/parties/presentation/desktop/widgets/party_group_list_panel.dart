@@ -5,10 +5,10 @@ import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inv
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_table_row.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
+import 'package:billing_baba/features/parties/application/party_group_providers.dart';
 import 'package:billing_baba/features/parties/models/party_group_summary.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
-import 'package:billing_baba/features/parties/application/party_group_providers.dart';
-import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';

@@ -82,7 +82,6 @@ class MobileAppBar extends ConsumerWidget implements PreferredSizeWidget {
         child: BusinessAvatar(
           name: business.name,
           seed: business.seed,
-          diameter: 36,
           logoUrl: business.logoUrl,
         ),
       ),

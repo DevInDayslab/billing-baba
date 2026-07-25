@@ -9,7 +9,7 @@ abstract class Contact with _$Contact {
     required String id,
     @JsonKey(name: 'business_id') required String businessId,
     required String name,
-    @JsonKey(name: 'first_name') String? firstName,
+    @JsonKey(name: 'updated_at') required DateTime updatedAt, @JsonKey(name: 'created_at') required DateTime createdAt, @JsonKey(name: 'first_name') String? firstName,
     @JsonKey(name: 'last_name') String? lastName,
     String? salutation,
     @JsonKey(name: 'account_name') String? accountName,
@@ -20,11 +20,9 @@ abstract class Contact with _$Contact {
     String? description,
     @JsonKey(name: 'sync_version') @Default(1) int syncVersion,
     @JsonKey(name: 'is_deleted') @Default(false) bool isDeleted,
-    @JsonKey(name: 'updated_at') required DateTime updatedAt,
     @JsonKey(name: 'deleted_at') DateTime? deletedAt,
     @JsonKey(name: 'device_id') @Default('') String deviceId,
     @JsonKey(name: 'sync_status') @Default('pending') String syncStatus,
-    @JsonKey(name: 'created_at') required DateTime createdAt,
   }) = _Contact;
 
   factory Contact.fromJson(Map<String, dynamic> json) =>

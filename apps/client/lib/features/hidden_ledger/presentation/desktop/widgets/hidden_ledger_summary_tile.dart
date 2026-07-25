@@ -22,7 +22,7 @@ class HiddenLedgerSummaryTile extends ConsumerWidget {
 
     return summaryAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (summary) {
         if (summary.hiddenLedgerBalance <= 0 && summary.pendingEntries <= 0) {
           return const SizedBox.shrink();

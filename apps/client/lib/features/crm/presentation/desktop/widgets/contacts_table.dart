@@ -2,9 +2,9 @@ import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/crm/application/contact_error_mapper.dart';
-import 'package:billing_baba/features/crm/domain/models/contact.dart';
 import 'package:billing_baba/features/crm/application/contacts_provider.dart';
 import 'package:billing_baba/features/crm/application/contacts_selection_providers.dart';
+import 'package:billing_baba/features/crm/domain/models/contact.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -356,7 +356,7 @@ class _ContactsTableState extends ConsumerState<ContactsTable> {
                       tableBody = ListView.separated(
                         padding: EdgeInsets.zero,
                         itemCount: filteredContacts.length,
-                        separatorBuilder: (_, __) =>
+                        separatorBuilder: (_, _) =>
                             const Divider(height: 1, color: _cardBorder),
                         itemBuilder: (context, index) {
                           final contact = filteredContacts[index];

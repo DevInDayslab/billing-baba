@@ -109,7 +109,7 @@ class LeadService {
   Future<void> syncFromRemote() async {
     final businessId = _requireBusinessId();
     try {
-      final remoteLeads = await _repository.remote.listLeads(limit: 100);
+      final remoteLeads = await _repository.remote.listLeads();
       for (final lead in remoteLeads) {
         if (lead.businessId == businessId) {
           await _repository.local.upsertLead(lead);

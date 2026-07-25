@@ -57,7 +57,7 @@ abstract final class ItemMapper {
     double? reservedQuantity,
     double? availableForSale,
   }) {
-    final openingQty = double.tryParse(dto.openingStock?.totalQuantity ?? '');
+    final _ = double.tryParse(dto.openingStock?.totalQuantity ?? '');
     return fromListDto(
       ItemListDto(
         id: dto.id,

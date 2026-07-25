@@ -14,12 +14,6 @@ class PlanCatalogItemDto {
     required this.isActive,
   });
 
-  final String plan;
-  final String name;
-  final String price;
-  final int durationDays;
-  final bool isActive;
-
   factory PlanCatalogItemDto.fromJson(Map<String, dynamic> json) {
     return PlanCatalogItemDto(
       plan: json['plan'] as String? ?? 'no_plan',
@@ -29,6 +23,12 @@ class PlanCatalogItemDto {
       isActive: json['isActive'] as bool? ?? true,
     );
   }
+
+  final String plan;
+  final String name;
+  final String price;
+  final int durationDays;
+  final bool isActive;
 }
 
 class CurrentSubscriptionDto {
@@ -42,14 +42,6 @@ class CurrentSubscriptionDto {
     this.renewalDate,
   });
 
-  final String plan;
-  final String planName;
-  final String status;
-  final String? expiresAt;
-  final int? remainingDays;
-  final String? purchaseDate;
-  final String? renewalDate;
-
   factory CurrentSubscriptionDto.fromJson(Map<String, dynamic> json) {
     return CurrentSubscriptionDto(
       plan: json['plan'] as String? ?? 'no_plan',
@@ -61,6 +53,14 @@ class CurrentSubscriptionDto {
       renewalDate: json['renewalDate'] as String?,
     );
   }
+
+  final String plan;
+  final String planName;
+  final String status;
+  final String? expiresAt;
+  final int? remainingDays;
+  final String? purchaseDate;
+  final String? renewalDate;
 }
 
 class SubscriptionHistoryItemDto {
@@ -69,16 +69,8 @@ class SubscriptionHistoryItemDto {
     required this.oldPlan,
     required this.newPlan,
     required this.event,
-    this.metadata,
-    required this.createdAt,
+    required this.createdAt, this.metadata,
   });
-
-  final String id;
-  final String oldPlan;
-  final String newPlan;
-  final String event;
-  final Map<String, dynamic>? metadata;
-  final String createdAt;
 
   factory SubscriptionHistoryItemDto.fromJson(Map<String, dynamic> json) {
     final metadata = json['metadata'];
@@ -93,6 +85,13 @@ class SubscriptionHistoryItemDto {
       createdAt: json['createdAt'] as String? ?? '',
     );
   }
+
+  final String id;
+  final String oldPlan;
+  final String newPlan;
+  final String event;
+  final Map<String, dynamic>? metadata;
+  final String createdAt;
 }
 
 class SubscriptionApi {

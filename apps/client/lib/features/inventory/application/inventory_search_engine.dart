@@ -4,6 +4,17 @@ import 'package:flutter/foundation.dart';
 
 /// Metadata used to build a searchable index entry for one inventory item.
 class InventorySearchableFields {
+  const InventorySearchableFields({
+    required this.id,
+    required this.name,
+    this.sku,
+    this.barcode,
+    this.hsn,
+    this.categoryName,
+    this.unitName,
+    this.brandName,
+    this.aliases = const [],
+  });
 
   factory InventorySearchableFields.fromInventoryItem(
     InventoryItem item, {
@@ -24,17 +35,6 @@ class InventorySearchableFields {
       aliases: aliases,
     );
   }
-  const InventorySearchableFields({
-    required this.id,
-    required this.name,
-    this.sku,
-    this.barcode,
-    this.hsn,
-    this.categoryName,
-    this.unitName,
-    this.brandName,
-    this.aliases = const [],
-  });
 
   final String id;
   final String name;

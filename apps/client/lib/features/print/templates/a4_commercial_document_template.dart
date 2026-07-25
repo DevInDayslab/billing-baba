@@ -1,14 +1,13 @@
 import 'dart:typed_data';
 
+import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/models/printable_document.dart';
 import 'package:billing_baba/features/print/models/printable_document_kind.dart';
-import 'package:billing_baba/features/print/models/pdf_page_profile.dart';
 import 'package:billing_baba/features/print/templates/commercial_document_layout_config.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_fonts.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_sections.dart';
 import 'package:billing_baba/features/print/templates/invoice/invoice_pdf_theme.dart';
 import 'package:billing_baba/features/print/templates/print_template.dart';
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 /// Production A4 layout for all commercial documents.

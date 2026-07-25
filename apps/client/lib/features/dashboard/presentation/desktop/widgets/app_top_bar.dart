@@ -1,10 +1,10 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
+import 'package:billing_baba/features/dashboard/application/shell_sidebar_provider.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/global_search_field.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/quick_create_menu.dart';
-import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
-import 'package:billing_baba/features/dashboard/application/shell_sidebar_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

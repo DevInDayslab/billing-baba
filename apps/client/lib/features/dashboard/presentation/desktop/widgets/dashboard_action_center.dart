@@ -163,7 +163,7 @@ class _ActionCenterQuickReports extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(
+            const Expanded(
               child: Text(
                 'Quick Reports',
                 style: DashboardTypography.cardTitle,
@@ -177,13 +177,13 @@ class _ActionCenterQuickReports extends StatelessWidget {
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: Text('View All →', style: DashboardTypography.link),
+              child: const Text('View All →', style: DashboardTypography.link),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
         if (reports.isEmpty)
-          Text(
+          const Text(
             'No reports available',
             style: DashboardTypography.metadata,
           )

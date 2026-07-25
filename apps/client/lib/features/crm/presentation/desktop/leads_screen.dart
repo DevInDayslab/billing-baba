@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/crm/application/lead_error_mapper.dart';
-import 'package:billing_baba/features/crm/domain/models/lead.dart';
-import 'package:billing_baba/features/crm/domain/services/lead_service_types.dart';
 import 'package:billing_baba/features/crm/application/leads_provider.dart';
 import 'package:billing_baba/features/crm/application/leads_selection_providers.dart';
+import 'package:billing_baba/features/crm/domain/models/lead.dart';
+import 'package:billing_baba/features/crm/domain/services/lead_service_types.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/add_lead_dialog.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -224,7 +224,7 @@ class _LeadsScreenState extends ConsumerState<DesktopLeadsScreen> {
         await notifier.deleteLead(leadId);
       }
       if (!mounted) return;
-      setState(() => _selectedLeadKeys.clear());
+      setState(_selectedLeadKeys.clear);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -1357,7 +1357,7 @@ class _LeadsTableCard extends StatelessWidget {
                   tableBody = ListView.separated(
                     padding: EdgeInsets.zero,
                     itemCount: leads.length,
-                    separatorBuilder: (_, __) =>
+                    separatorBuilder: (_, _) =>
                         const Divider(height: 1, color: _cardBorder),
                     itemBuilder: (context, index) => _LeadDataRow(
                       lead: leads[index],

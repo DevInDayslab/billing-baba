@@ -70,7 +70,7 @@ class MediaUploadClient {
       endpoint,
       data: {
         'intent_id': intentId,
-        if (completeExtra != null) ...completeExtra,
+        ...?completeExtra,
       },
     );
 

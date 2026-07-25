@@ -5,16 +5,16 @@ import 'package:billing_baba/core/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
+import 'package:billing_baba/features/purchases/application/purchase_return_provider.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
 import 'package:billing_baba/features/purchases/models/debit_note_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/models/purchase_document_draft_input.dart';
-import 'package:billing_baba/features/purchases/application/purchase_return_provider.dart';
 import 'package:billing_baba/features/purchases/purchase_constants.dart';
+import 'package:billing_baba/features/sales/application/invoice_tax_fallback_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
-import 'package:billing_baba/features/sales/application/invoice_tax_fallback_provider.dart';
 import 'package:billing_baba/features/sales/utils/sale_line_item_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -112,8 +112,6 @@ class DebitNoteForm extends _$DebitNoteForm {
             : items,
         attachedImages: attachments.images,
         attachedDocuments: attachments.documents,
-        isLoading: false,
-        showValidationErrors: kResetValidationOnLoad,
       );
     } catch (error) {
       state = state.copyWith(

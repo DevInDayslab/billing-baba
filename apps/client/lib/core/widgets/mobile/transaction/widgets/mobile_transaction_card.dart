@@ -1,6 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/mobile/mobile_card.dart';
+import 'package:billing_baba/core/widgets/mobile/mobile_widgets.dart' show MobileTransactionPage;
 import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_models.dart';
+import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_page.dart' show MobileTransactionPage;
+import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_widgets.dart' show MobileTransactionPage;
 import 'package:flutter/material.dart';
 
 /// Default transaction row card for [MobileTransactionPage].

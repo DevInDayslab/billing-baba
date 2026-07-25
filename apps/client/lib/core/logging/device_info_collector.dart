@@ -69,7 +69,7 @@ abstract final class DeviceInfoCollector {
     if (platform.isLinux) {
       final info = await deviceInfo.linuxInfo;
       return _NativeDetails(
-        operatingSystem: '${info.prettyName ?? 'Linux'} ${info.version ?? ''}',
+        operatingSystem: '${info.prettyName} ${info.version ?? ''}',
         cpuArchitecture: info.machineId ?? '',
       );
     }

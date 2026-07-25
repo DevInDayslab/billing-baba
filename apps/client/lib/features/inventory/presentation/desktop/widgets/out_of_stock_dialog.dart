@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/inventory/application/item_alternatives_provider.dart';
 import 'package:billing_baba/features/inventory/data/models/item_alternative_dto.dart';
 import 'package:billing_baba/features/inventory/data/models/item_recommendations_dto.dart';
-import 'package:billing_baba/features/inventory/application/item_alternatives_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -51,9 +51,9 @@ class OutOfStockDialog extends ConsumerWidget {
                       ),
                       error: (error, stack) {
                         print('ALTERNATIVES ERROR: $error');
-                        return Center(
+                        return const Center(
                           child: Padding(
-                            padding: const EdgeInsets.all(32),
+                            padding: EdgeInsets.all(32),
                             child: Text(
                               'Failed to load alternatives',
                               style: TextStyle(color: AppColors.error, fontSize: 13),

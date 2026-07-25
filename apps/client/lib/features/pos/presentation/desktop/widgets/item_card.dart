@@ -1,10 +1,10 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/out_of_stock_dialog.dart';
+import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_category_style.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_item_thumbnail.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
-import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';

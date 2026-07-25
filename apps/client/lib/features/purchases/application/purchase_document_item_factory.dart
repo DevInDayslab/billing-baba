@@ -85,8 +85,6 @@ class PurchaseDocumentItemFactory {
       description: line.description.trim(),
       baseUnitId: resolvedUnit.id,
       atPrice: line.pricePerUnit > 0 ? line.pricePerUnit : 0,
-      // Opening stock stays 0; qty from the bill is applied when the bill is saved.
-      openingQty: 0,
       purchasePriceTaxMode: line.priceIsTaxInclusive
           ? PriceTaxMode.withTax
           : PriceTaxMode.withoutTax,

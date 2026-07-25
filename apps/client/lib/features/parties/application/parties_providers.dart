@@ -1,6 +1,6 @@
+import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
-import 'package:billing_baba/features/parties/application/parties_selection_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 export 'parties_selection_providers.dart';

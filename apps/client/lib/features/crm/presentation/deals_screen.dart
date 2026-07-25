@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/deals_screen.dart';
-import './mobile/deals_screen.dart';
+import 'package:billing_baba/features/crm/presentation/desktop/deals_screen.dart';
+import 'package:billing_baba/features/crm/presentation/mobile/deals_screen.dart';
 import 'package:flutter/widgets.dart';
 
 class DealsScreen extends StatelessWidget {
@@ -10,9 +10,9 @@ class DealsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopDealsScreen(),
-      mobile: const MobileDealsScreen(),
+    return const AdaptivePage(
+      desktop: DesktopDealsScreen(),
+      mobile: MobileDealsScreen(),
     );
   }
 }

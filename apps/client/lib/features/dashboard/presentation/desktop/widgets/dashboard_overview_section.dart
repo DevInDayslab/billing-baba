@@ -166,8 +166,7 @@ class _KpiDirectionIcon extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.background,
-    this.size = 24,
-  });
+  }) : size = 24;
 
   final IconData icon;
   final Color color;

@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:billing_baba/features/crm/application/leads_selection_providers.dart';
 import 'package:billing_baba/features/crm/domain/models/lead.dart';
 import 'package:billing_baba/features/crm/domain/services/lead_service.dart';
 import 'package:billing_baba/features/crm/domain/services/lead_service_types.dart';
-import 'package:billing_baba/features/crm/application/leads_selection_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

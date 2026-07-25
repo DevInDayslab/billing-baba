@@ -1,10 +1,9 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -127,7 +126,7 @@ class SalePurchaseOrderReportFilters extends ConsumerWidget {
                 label: documentType,
                 options: _orderTypeOptions,
                 selected: documentType,
-                onSelected: (value) => notifier.setDocumentType(value),
+                onSelected: notifier.setDocumentType,
               ),
               SaleFilterDropdown(
                 label: status,

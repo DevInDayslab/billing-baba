@@ -8,14 +8,14 @@ import 'package:billing_baba/features/plans_pricing/presentation/desktop/widgets
 import 'package:billing_baba/features/plans_pricing/presentation/desktop/widgets/plan_card.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/desktop/widgets/plan_card_compact.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/desktop/widgets/upgrade_plan_dialog.dart';
+import 'package:billing_baba/features/subscription/application/plans_pricing_view_provider.dart';
+import 'package:billing_baba/features/subscription/application/purchase_history_provider.dart';
 import 'package:billing_baba/features/subscription/application/subscription_error_mapper.dart';
 import 'package:billing_baba/features/subscription/domain/models/purchase_history.dart';
 import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
 import 'package:billing_baba/features/subscription/domain/subscription_plan_metadata.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/review_order_summary_dialog.dart';
 import 'package:billing_baba/features/subscription/presentation/desktop/review_order_summary_input.dart';
-import 'package:billing_baba/features/subscription/application/plans_pricing_view_provider.dart';
-import 'package:billing_baba/features/subscription/application/purchase_history_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';

@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:billing_baba/features/crm/application/contacts_selection_providers.dart';
 import 'package:billing_baba/features/crm/domain/models/contact.dart';
 import 'package:billing_baba/features/crm/domain/services/contact_service.dart';
 import 'package:billing_baba/features/crm/domain/services/contact_service_types.dart';
-import 'package:billing_baba/features/crm/application/contacts_selection_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'contacts_provider.g.dart';

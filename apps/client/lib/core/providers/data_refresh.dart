@@ -29,8 +29,8 @@ void invalidatePartyBalances(Ref ref) {
 }
 
 void invalidatePartyTimeline(Ref ref, String partyId) {
-  ref.invalidate(partyTimelineProvider(partyId));
-  ref.invalidate(partyLedgerProvider(partyId));
+  ref..invalidate(partyTimelineProvider(partyId))
+  ..invalidate(partyLedgerProvider(partyId));
 }
 
 void invalidatePartyLedger(Ref ref, String partyId) {
@@ -106,16 +106,16 @@ void invalidateJobWorkLists(Ref ref) {
 }
 
 void invalidateSaleLists(Ref ref) {
-  ref.invalidate(saleInvoicesProvider);
-  ref.invalidate(saleOrdersProvider);
-  ref.invalidate(saleReturnsProvider);
-  ref.invalidate(estimateQuotationsProvider);
-  ref.invalidate(deliveryChallansProvider);
-  ref.invalidate(salesDocumentsListProvider(saleOrderListScope()));
-  ref.invalidate(salesDocumentsListProvider(deliveryChallanListScope()));
-  ref.invalidate(salesDocumentsListProvider(salesReturnListScope()));
-  ref.invalidate(salesDocumentsListProvider(estimateListScope()));
-  ref.invalidate(salesDocumentsListProvider(proformaListScope()));
+  ref..invalidate(saleInvoicesProvider)
+  ..invalidate(saleOrdersProvider)
+  ..invalidate(saleReturnsProvider)
+  ..invalidate(estimateQuotationsProvider)
+  ..invalidate(deliveryChallansProvider)
+  ..invalidate(salesDocumentsListProvider(saleOrderListScope()))
+  ..invalidate(salesDocumentsListProvider(deliveryChallanListScope()))
+  ..invalidate(salesDocumentsListProvider(salesReturnListScope()))
+  ..invalidate(salesDocumentsListProvider(estimateListScope()))
+  ..invalidate(salesDocumentsListProvider(proformaListScope()));
 }
 
 void invalidateSaleFaLists(Ref ref) {
@@ -135,8 +135,8 @@ void invalidatePaymentOutLists(Ref ref) {
 }
 
 void invalidateExpenseLists(Ref ref) {
-  ref.invalidate(expenseCategoriesProvider);
-  ref.invalidate(expenseTransactionsProvider);
+  ref..invalidate(expenseCategoriesProvider)
+  ..invalidate(expenseTransactionsProvider);
 }
 
 void invalidateInventoryLists(Ref ref) {

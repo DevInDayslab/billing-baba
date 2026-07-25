@@ -329,7 +329,6 @@ class _AttachmentThumb extends StatelessWidget {
         imageUrl: url,
         width: 32,
         height: 32,
-        fit: BoxFit.cover,
         memCacheWidth: 64,
       ),
     );

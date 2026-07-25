@@ -1,6 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';
+import 'package:billing_baba/features/parties/application/party_service.dart';
+import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
+import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/reports_service.dart';
 import 'package:billing_baba/features/reports/models/report_models.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
@@ -10,8 +12,6 @@ import 'package:billing_baba/features/reports/presentation/desktop/widgets/share
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_view_toggle.dart';
-import 'package:billing_baba/features/reports/application/phase1_report_providers.dart';
-import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
@@ -268,8 +268,8 @@ class _PartyStatementReportContentState
         formatReportDate(row.date),
         row.type,
         row.refNo,
-        row.debit > 0 ? formatReportCurrency(row.debit) : '',
-        row.credit > 0 ? formatReportCurrency(row.credit) : '',
+        if (row.debit > 0) formatReportCurrency(row.debit) else '',
+        if (row.credit > 0) formatReportCurrency(row.credit) else '',
         formatReportCurrency(row.balance),
       ];
     }

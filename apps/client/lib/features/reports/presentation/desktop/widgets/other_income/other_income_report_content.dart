@@ -1,4 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/application/report_providers.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_aligned_table.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
@@ -7,8 +9,6 @@ import 'package:billing_baba/features/reports/presentation/desktop/widgets/share
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_responsive_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_search_field.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
-import 'package:billing_baba/features/reports/application/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_service.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
@@ -116,20 +116,20 @@ class OtherIncomeReportContent extends ConsumerWidget {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
+              const Padding(
+                padding: EdgeInsets.fromLTRB(
                   AppSpacing.lg,
                   0,
                   AppSpacing.lg,
                   AppSpacing.md,
                 ),
                 child: ReportCard(
-                  backgroundColor: const Color(0xFFF5F7FA),
-                  padding: const EdgeInsets.symmetric(
+                  backgroundColor: Color(0xFFF5F7FA),
+                  padding: EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  child: const ReportFromToDateFilter(),
+                  child: ReportFromToDateFilter(),
                 ),
               ),
               Expanded(
@@ -391,20 +391,20 @@ class OtherIncomeCategoryReportContent extends ConsumerWidget {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
+              const Padding(
+                padding: EdgeInsets.fromLTRB(
                   AppSpacing.lg,
                   0,
                   AppSpacing.lg,
                   AppSpacing.md,
                 ),
                 child: ReportCard(
-                  backgroundColor: const Color(0xFFF5F7FA),
-                  padding: const EdgeInsets.symmetric(
+                  backgroundColor: Color(0xFFF5F7FA),
+                  padding: EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  child: const ReportFromToDateFilter(betweenLabel: 'From'),
+                  child: ReportFromToDateFilter(betweenLabel: 'From'),
                 ),
               ),
               Expanded(
@@ -609,20 +609,20 @@ class OtherIncomeItemReportContent extends ConsumerWidget {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
+              const Padding(
+                padding: EdgeInsets.fromLTRB(
                   AppSpacing.lg,
                   0,
                   AppSpacing.lg,
                   AppSpacing.md,
                 ),
                 child: ReportCard(
-                  backgroundColor: const Color(0xFFF5F7FA),
-                  padding: const EdgeInsets.symmetric(
+                  backgroundColor: Color(0xFFF5F7FA),
+                  padding: EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
                     vertical: AppSpacing.sm,
                   ),
-                  child: const ReportFromToDateFilter(betweenLabel: 'From'),
+                  child: ReportFromToDateFilter(betweenLabel: 'From'),
                 ),
               ),
               Expanded(

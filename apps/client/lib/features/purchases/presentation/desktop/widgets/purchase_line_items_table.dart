@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/purchases/application/add_purchase_form_provider.dart';
+import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/item_name_autocomplete_field.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
@@ -256,7 +256,6 @@ class _TaxPercentHeaderCell extends StatelessWidget {
         value: '',
         options: SaleDropdownOptions.taxSlabs,
         hintText: 'TAX %',
-        highlight: SaleDropdownHighlight.neutral,
         compact: true,
         borderless: true,
         minMenuWidth: 88,

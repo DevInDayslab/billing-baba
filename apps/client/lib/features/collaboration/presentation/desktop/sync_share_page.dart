@@ -2,19 +2,19 @@ import 'dart:async';
 
 import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/collaboration/application/collaboration_repository_provider.dart';
-import 'package:billing_baba/features/collaboration/application/sync_share_live_sync_service.dart';
-import 'package:billing_baba/features/collaboration/domain/models/business_member.dart';
-import 'package:billing_baba/features/collaboration/domain/models/member_status.dart';
-import 'package:billing_baba/features/collaboration/domain/models/sync_status.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_init_provider.dart';
+import 'package:billing_baba/features/collaboration/application/collaboration_repository_provider.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_scope_provider.dart';
 import 'package:billing_baba/features/collaboration/application/company_access_provider.dart';
 import 'package:billing_baba/features/collaboration/application/invitations_provider.dart';
 import 'package:billing_baba/features/collaboration/application/members_provider.dart';
 import 'package:billing_baba/features/collaboration/application/sync_share_live_sync_provider.dart';
+import 'package:billing_baba/features/collaboration/application/sync_share_live_sync_service.dart';
 import 'package:billing_baba/features/collaboration/application/sync_share_refresh_provider.dart';
 import 'package:billing_baba/features/collaboration/application/sync_status_provider.dart';
+import 'package:billing_baba/features/collaboration/domain/models/business_member.dart';
+import 'package:billing_baba/features/collaboration/domain/models/member_status.dart';
+import 'package:billing_baba/features/collaboration/domain/models/sync_status.dart';
 import 'package:billing_baba/features/collaboration/presentation/desktop/widgets/collaboration_action_helper.dart';
 import 'package:billing_baba/features/collaboration/presentation/desktop/widgets/collaboration_page_header.dart';
 import 'package:billing_baba/features/collaboration/presentation/desktop/widgets/collaboration_page_skeleton.dart';
@@ -75,7 +75,6 @@ class _SyncSharePageState extends ConsumerState<DesktopSyncSharePage>
   void _silentRefresh(SyncShareRefreshTrigger trigger) {
     unawaited(
       ref.read(syncShareRefreshProvider.notifier).refresh(
-            manual: false,
             trigger: trigger,
           ),
     );

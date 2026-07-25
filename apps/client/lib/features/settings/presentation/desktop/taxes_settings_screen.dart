@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/business/models/commerce_settings_model.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
+import 'package:billing_baba/features/business/models/commerce_settings_model.dart';
 import 'package:billing_baba/features/inventory/utils/item_tax_rate.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_generic_select_dropdown.dart';
@@ -39,7 +39,7 @@ class _TaxesSettingsScreenState
       _tierControllers.putIfAbsent(
         tier,
         () => TextEditingController(text: label),
-      )..text = label;
+      ).text = label;
     }
     final defaultTax = settings.defaultInvoiceTaxPercent;
     _defaultTaxLabel = ItemTaxRate.labelForPercent(defaultTax);

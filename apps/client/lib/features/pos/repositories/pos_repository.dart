@@ -1,5 +1,5 @@
-import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_state.dart';
+import 'package:billing_baba/features/pos/models/pos_sale.dart';
 
 abstract class PosRepository {
   /// Submit a completed sale — deducts stock, creates ledger entry.

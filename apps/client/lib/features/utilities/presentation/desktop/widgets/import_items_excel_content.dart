@@ -6,13 +6,13 @@ import 'package:billing_baba/core/utils/platform_file_output.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/utilities/application/import_items_excel_parser.dart';
-import 'package:billing_baba/features/utilities/models/import_item_preview_row.dart';
 import 'package:billing_baba/features/utilities/application/import_items_excel_provider.dart';
-import 'package:justkawal_excel_updated/justkawal_excel_updated.dart'
-    hide Border;
+import 'package:billing_baba/features/utilities/models/import_item_preview_row.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:justkawal_excel_updated/justkawal_excel_updated.dart'
+    hide Border;
 
 class ImportItemsExcelContent extends StatefulWidget {
   const ImportItemsExcelContent({super.key, this.onBack});

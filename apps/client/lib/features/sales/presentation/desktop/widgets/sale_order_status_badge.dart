@@ -1,5 +1,5 @@
-import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:billing_baba/features/sales/application/sale_orders_provider.dart';
+import 'package:billing_baba/features/sales/models/sale_invoice_model.dart';
 import 'package:flutter/material.dart';
 
 class SaleOrderStatusBadge extends StatelessWidget {

@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/taxes_settings_screen.dart';
-import './mobile/taxes_settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/desktop/taxes_settings_screen.dart';
+import 'package:billing_baba/features/settings/presentation/mobile/taxes_settings_screen.dart';
 import 'package:flutter/widgets.dart';
 
 class TaxesSettingsScreen extends StatelessWidget {
@@ -10,9 +10,9 @@ class TaxesSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopTaxesSettingsScreen(),
-      mobile: const MobileTaxesSettingsScreen(),
+    return const AdaptivePage(
+      desktop: DesktopTaxesSettingsScreen(),
+      mobile: MobileTaxesSettingsScreen(),
     );
   }
 }

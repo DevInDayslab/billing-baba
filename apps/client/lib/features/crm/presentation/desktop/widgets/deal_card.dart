@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/crm/domain/models/deal.dart';
 import 'package:billing_baba/features/crm/application/deals_selection_providers.dart';
+import 'package:billing_baba/features/crm/domain/models/deal.dart';
 import 'package:billing_baba/features/crm/presentation/desktop/widgets/create_deal_task_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

@@ -80,8 +80,8 @@ class PosCartState {
 }
 
 double heldBillTotal(List<CartItem> items) {
-  final subtotal = items.fold(0.0, (sum, item) => sum + item.grossTotal);
-  final discount = items.fold(0.0, (sum, item) => sum + item.discountAmount);
+  final subtotal = items.fold<double>(0, (sum, item) => sum + item.grossTotal);
+  final discount = items.fold<double>(0, (sum, item) => sum + item.discountAmount);
   final taxable = subtotal - discount;
   final tax = taxable * 0.18;
   final beforeRound = taxable + tax;

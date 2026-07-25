@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/application/reports_nav_intent_provider.dart';
 import 'package:billing_baba/features/reports/models/business_status_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/expense_report_subsection.dart';
 import 'package:billing_baba/features/reports/models/gst_report_subsection.dart';
@@ -13,8 +15,6 @@ import 'package:billing_baba/features/reports/models/taxes_report_subsection.dar
 import 'package:billing_baba/features/reports/models/transaction_report_subsection.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/report_content_panel.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/reports_nav_panel.dart';
-import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
-import 'package:billing_baba/features/reports/application/reports_nav_intent_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

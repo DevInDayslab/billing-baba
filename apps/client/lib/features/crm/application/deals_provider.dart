@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:billing_baba/features/crm/application/deals_selection_providers.dart';
 import 'package:billing_baba/features/crm/domain/models/deal.dart';
 import 'package:billing_baba/features/crm/domain/services/deal_service.dart';
 import 'package:billing_baba/features/crm/domain/services/deal_service_types.dart';
-import 'package:billing_baba/features/crm/application/deals_selection_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'deals_provider.g.dart';

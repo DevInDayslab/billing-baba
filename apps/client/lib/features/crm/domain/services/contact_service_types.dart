@@ -15,17 +15,6 @@ class AddContactServiceInput {
     this.description,
   });
 
-  final String name;
-  final String phone;
-  final String? email;
-  final String? accountName;
-  final String? assignedTo;
-  final String? salutation;
-  final String? firstName;
-  final String? lastName;
-  final String? title;
-  final String? description;
-
   factory AddContactServiceInput.fromDialogInput({
     required String name,
     required String phone,
@@ -75,6 +64,17 @@ class AddContactServiceInput {
       ),
     );
   }
+
+  final String name;
+  final String phone;
+  final String? email;
+  final String? accountName;
+  final String? assignedTo;
+  final String? salutation;
+  final String? firstName;
+  final String? lastName;
+  final String? title;
+  final String? description;
 }
 
 String? composeContactDescription({

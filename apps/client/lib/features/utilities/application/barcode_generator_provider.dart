@@ -1,6 +1,6 @@
 import 'package:billing_baba/features/business/application/business_service.dart';
-import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/utilities/application/barcode_item_label_mapper.dart';
 import 'package:billing_baba/features/utilities/models/barcode_label_entry.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

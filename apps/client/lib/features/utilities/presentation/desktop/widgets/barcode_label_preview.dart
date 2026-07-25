@@ -21,7 +21,7 @@ class BarcodeLabelPreview extends StatelessWidget {
   final String line3;
   final String line4;
 
-  static final _barcode = Barcode.code128();
+  static final Barcode _barcode = Barcode.code128();
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +78,6 @@ class BarcodeLabelPreview extends StatelessWidget {
                       height: 52,
                       drawText: false,
                     ),
-                    fit: BoxFit.contain,
                   ),
           ),
           const SizedBox(height: 6),

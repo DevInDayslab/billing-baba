@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
-import 'package:billing_baba/features/inventory/models/item_model.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/application/item_alternatives_index_provider.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item_dialog.dart';
 import 'package:billing_baba/features/pricing/application/item_api_tier_prices_provider.dart';
 import 'package:billing_baba/features/pricing/application/local_item_tier_prices_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
@@ -558,7 +558,7 @@ class ItemNameAutocompleteFieldState
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(inventoryItemsProvider, (_, __) {
+    ref.listen(inventoryItemsProvider, (_, _) {
       _overlayEntry?.markNeedsBuild();
     });
 

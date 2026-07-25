@@ -1,8 +1,12 @@
-import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_item_filter_service.dart';
+import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_stock_calculator.dart';
 import 'package:billing_baba/features/inventory/application/inventory_transaction_table_service.dart';
+import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/category_item_sort.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
@@ -16,11 +20,6 @@ import 'package:billing_baba/features/inventory/models/product_transaction_model
 import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_stock_utils.dart';
-import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
-import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
-import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
-import 'package:billing_baba/features/inventory/application/inventory_search_provider.dart';
-import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
 import 'package:billing_baba/shared/widgets/table_filters/table_filters.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

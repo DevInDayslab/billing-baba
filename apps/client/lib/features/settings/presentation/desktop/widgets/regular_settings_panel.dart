@@ -167,7 +167,6 @@ class _TextSizeControl extends StatelessWidget {
             label,
             style: AppTypography.inter(
               fontSize: AppTypography.bodyMediumSize,
-              fontWeight: FontWeight.w400,
               color: AppColors.textPrimary,
             ),
           ),

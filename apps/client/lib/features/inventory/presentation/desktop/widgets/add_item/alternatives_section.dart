@@ -1,11 +1,11 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
-import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
-import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_categories_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_search_engine.dart';
 import 'package:billing_baba/features/inventory/application/item_alternatives_provider.dart';
+import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -44,7 +44,7 @@ class AlternativesSection extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            const Text(
               'Failed to load alternatives',
               style: TextStyle(
                 fontSize: 13,
@@ -93,7 +93,7 @@ class AlternativesSection extends ConsumerWidget {
             color: Colors.grey.shade400,
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'No alternatives added',
             style: TextStyle(
               fontSize: 14,
@@ -142,8 +142,8 @@ class AlternativesSection extends ConsumerWidget {
     final alternativeItemId = (alternative as dynamic).alternativeItemId as String;
 
     final subtitle = [
-      if (brandName != null) brandName,
-      if (categoryName != null) categoryName,
+      ?brandName,
+      ?categoryName,
     ].join(' · ');
 
     return Container(
@@ -301,7 +301,7 @@ class AlternativesSection extends ConsumerWidget {
     );
   }
 
-  void _showAddAlternativeSheet(
+  Future<void> _showAddAlternativeSheet(
     BuildContext context,
     WidgetRef ref,
     List<dynamic> alternatives,
@@ -430,7 +430,7 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
 
     return itemsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
+      error: (error, stack) => const Center(
         child: Text(
           'Failed to load items',
           style: TextStyle(fontSize: 13, color: AppColors.error),
@@ -494,8 +494,8 @@ class _AddAlternativeSheetState extends ConsumerState<_AddAlternativeSheet> {
     final categoryName = item.categoryId != null ? categoryById[item.categoryId] : null;
     
     final subtitle = [
-      if (brandName != null) brandName,
-      if (categoryName != null) categoryName,
+      ?brandName,
+      ?categoryName,
     ].join(' · ');
 
     final stockQty = item.quantity ?? 0;

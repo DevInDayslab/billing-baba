@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/contacts_screen.dart';
-import './mobile/contacts_screen.dart';
+import 'package:billing_baba/features/crm/presentation/desktop/contacts_screen.dart';
+import 'package:billing_baba/features/crm/presentation/mobile/contacts_screen.dart';
 import 'package:flutter/widgets.dart';
 
 class ContactsScreen extends StatelessWidget {
@@ -10,9 +10,9 @@ class ContactsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopContactsScreen(),
-      mobile: const MobileContactsScreen(),
+    return const AdaptivePage(
+      desktop: DesktopContactsScreen(),
+      mobile: MobileContactsScreen(),
     );
   }
 }

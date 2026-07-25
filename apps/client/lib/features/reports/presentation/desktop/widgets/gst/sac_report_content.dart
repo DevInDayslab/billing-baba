@@ -1,13 +1,13 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
+import 'package:billing_baba/features/reports/application/report_providers.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_card.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_data_row.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_date_widgets.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_export_actions.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_search_field.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_data_row.dart';
-import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_async_body.dart';
 import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_theme.dart';
-import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
-import 'package:billing_baba/features/reports/application/report_providers.dart';
 import 'package:billing_baba/features/reports/utils/report_export_helpers.dart';
 import 'package:billing_baba/features/reports/utils/report_formatters.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_filter_dropdown.dart';
@@ -34,7 +34,7 @@ class _SacReportContentState extends ConsumerState<SacReportContent> {
       onRetry: () => ref.read(sacReportReportProvider.notifier).refresh(),
       data: (report) {
         final rows = report.rows;
-        final totalValue = rows.fold(0.0, (sum, r) => sum + r.totalValue);
+        final totalValue = rows.fold<double>(0, (sum, r) => sum + r.totalValue);
         const exportHeaders = [
           '#',
           'SAC',

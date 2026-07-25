@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/widgets/adaptive_page.dart';
-import './desktop/leads_screen.dart';
-import './mobile/leads_screen.dart';
+import 'package:billing_baba/features/crm/presentation/desktop/leads_screen.dart';
+import 'package:billing_baba/features/crm/presentation/mobile/leads_screen.dart';
 import 'package:flutter/widgets.dart';
 
 class LeadsScreen extends StatelessWidget {
@@ -10,9 +10,9 @@ class LeadsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdaptivePage(
-      desktop: const DesktopLeadsScreen(),
-      mobile: const MobileLeadsScreen(),
+    return const AdaptivePage(
+      desktop: DesktopLeadsScreen(),
+      mobile: MobileLeadsScreen(),
     );
   }
 }

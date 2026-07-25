@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/plans_pricing/models/plan_model.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/desktop/widgets/upgrade_plan_dialog.dart';
+import 'package:billing_baba/features/subscription/application/current_subscription_provider.dart';
 import 'package:billing_baba/features/subscription/domain/models/current_subscription.dart';
 import 'package:billing_baba/features/subscription/domain/models/subscription_plan_type.dart';
 import 'package:billing_baba/features/subscription/domain/subscription_plan_metadata.dart';
-import 'package:billing_baba/features/subscription/application/current_subscription_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -307,7 +307,7 @@ class _PlanDetailsCard extends StatelessWidget {
 
     final expires = subscription.expiresAt!;
     final remaining = subscription.remainingDays ?? 0;
-    return "(Expires on ${_dateFormat.format(expires)} ; $remaining days left)";
+    return '(Expires on ${_dateFormat.format(expires)} ; $remaining days left)';
   }
 }
 
