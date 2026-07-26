@@ -1,5 +1,5 @@
-import 'package:billing_baba/core/layout/dashboard_layout.dart';
-import 'package:billing_baba/core/layout/dashboard_navigation.dart';
+import 'package:billing_baba/shared/layout/dashboard_layout.dart';
+import 'package:billing_baba/features/dashboard/dashboard_navigation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/dashboard/application/dashboard_widget_preferences_provider.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';

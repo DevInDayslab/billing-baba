@@ -1,12 +1,11 @@
-import 'package:billing_baba/core/layout/dashboard_navigation.dart' show DashboardNavigation;
-import 'package:billing_baba/core/layout/desktop_breakpoints.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/shared/layout/desktop_breakpoints.dart';
 import 'package:flutter/material.dart';
 
 /// Proportional dashboard layout — ratios apply to widths/heights only.
 ///
 /// Typography, spacing, icons, and radii use fixed design tokens.
-/// Widget tap targets use [DashboardNavigation] for route mapping.
+/// Widget tap targets use DashboardNavigation for route mapping.
 abstract final class DashboardLayout {
   static const minimumWindowWidth = 1024.0;
   static const minimumWindowHeight = 800.0;
