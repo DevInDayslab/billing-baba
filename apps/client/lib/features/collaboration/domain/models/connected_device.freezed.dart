@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ConnectedDevice {
 
- String get id; String get name; DevicePlatform get platform;@JsonKey(name: 'os_name') String get osName;@JsonKey(name: 'app_version') String get appVersion;@JsonKey(name: 'last_seen_at') DateTime get lastSeenAt;@JsonKey(name: 'is_current_device') bool get isCurrentDevice;@JsonKey(name: 'is_online') bool get isOnline;@JsonKey(name: 'sync_status') DeviceSyncStatus get deviceSyncStatus;
+ String get id; String get name; DevicePlatform get platform;@JsonKey(name: 'os_name') String get osName;@JsonKey(name: 'app_version') String get appVersion;@JsonKey(name: 'last_seen_at') DateTime get lastSeenAt;@JsonKey(name: 'sync_status') DeviceSyncStatus get deviceSyncStatus;@JsonKey(name: 'is_current_device') bool get isCurrentDevice;@JsonKey(name: 'is_online') bool get isOnline;
 /// Create a copy of ConnectedDevice
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ConnectedDeviceCopyWith<ConnectedDevice> get copyWith => _$ConnectedDeviceCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConnectedDevice&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.osName, osName) || other.osName == osName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.isCurrentDevice, isCurrentDevice) || other.isCurrentDevice == isCurrentDevice)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline)&&(identical(other.deviceSyncStatus, deviceSyncStatus) || other.deviceSyncStatus == deviceSyncStatus));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConnectedDevice&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.osName, osName) || other.osName == osName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.deviceSyncStatus, deviceSyncStatus) || other.deviceSyncStatus == deviceSyncStatus)&&(identical(other.isCurrentDevice, isCurrentDevice) || other.isCurrentDevice == isCurrentDevice)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,platform,osName,appVersion,lastSeenAt,isCurrentDevice,isOnline,deviceSyncStatus);
+int get hashCode => Object.hash(runtimeType,id,name,platform,osName,appVersion,lastSeenAt,deviceSyncStatus,isCurrentDevice,isOnline);
 
 @override
 String toString() {
-  return 'ConnectedDevice(id: $id, name: $name, platform: $platform, osName: $osName, appVersion: $appVersion, lastSeenAt: $lastSeenAt, isCurrentDevice: $isCurrentDevice, isOnline: $isOnline, deviceSyncStatus: $deviceSyncStatus)';
+  return 'ConnectedDevice(id: $id, name: $name, platform: $platform, osName: $osName, appVersion: $appVersion, lastSeenAt: $lastSeenAt, deviceSyncStatus: $deviceSyncStatus, isCurrentDevice: $isCurrentDevice, isOnline: $isOnline)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ConnectedDeviceCopyWith<$Res>  {
   factory $ConnectedDeviceCopyWith(ConnectedDevice value, $Res Function(ConnectedDevice) _then) = _$ConnectedDeviceCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, DevicePlatform platform,@JsonKey(name: 'os_name') String osName,@JsonKey(name: 'app_version') String appVersion,@JsonKey(name: 'last_seen_at') DateTime lastSeenAt,@JsonKey(name: 'is_current_device') bool isCurrentDevice,@JsonKey(name: 'is_online') bool isOnline,@JsonKey(name: 'sync_status') DeviceSyncStatus deviceSyncStatus
+ String id, String name, DevicePlatform platform,@JsonKey(name: 'os_name') String osName,@JsonKey(name: 'app_version') String appVersion,@JsonKey(name: 'last_seen_at') DateTime lastSeenAt,@JsonKey(name: 'sync_status') DeviceSyncStatus deviceSyncStatus,@JsonKey(name: 'is_current_device') bool isCurrentDevice,@JsonKey(name: 'is_online') bool isOnline
 });
 
 
@@ -65,7 +65,7 @@ class _$ConnectedDeviceCopyWithImpl<$Res>
 
 /// Create a copy of ConnectedDevice
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? platform = null,Object? osName = null,Object? appVersion = null,Object? lastSeenAt = null,Object? isCurrentDevice = null,Object? isOnline = null,Object? deviceSyncStatus = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? platform = null,Object? osName = null,Object? appVersion = null,Object? lastSeenAt = null,Object? deviceSyncStatus = null,Object? isCurrentDevice = null,Object? isOnline = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -73,10 +73,10 @@ as String,platform: null == platform ? _self.platform : platform // ignore: cast
 as DevicePlatform,osName: null == osName ? _self.osName : osName // ignore: cast_nullable_to_non_nullable
 as String,appVersion: null == appVersion ? _self.appVersion : appVersion // ignore: cast_nullable_to_non_nullable
 as String,lastSeenAt: null == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
-as DateTime,isCurrentDevice: null == isCurrentDevice ? _self.isCurrentDevice : isCurrentDevice // ignore: cast_nullable_to_non_nullable
+as DateTime,deviceSyncStatus: null == deviceSyncStatus ? _self.deviceSyncStatus : deviceSyncStatus // ignore: cast_nullable_to_non_nullable
+as DeviceSyncStatus,isCurrentDevice: null == isCurrentDevice ? _self.isCurrentDevice : isCurrentDevice // ignore: cast_nullable_to_non_nullable
 as bool,isOnline: null == isOnline ? _self.isOnline : isOnline // ignore: cast_nullable_to_non_nullable
-as bool,deviceSyncStatus: null == deviceSyncStatus ? _self.deviceSyncStatus : deviceSyncStatus // ignore: cast_nullable_to_non_nullable
-as DeviceSyncStatus,
+as bool,
   ));
 }
 
@@ -161,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  DevicePlatform platform, @JsonKey(name: 'os_name')  String osName, @JsonKey(name: 'app_version')  String appVersion, @JsonKey(name: 'last_seen_at')  DateTime lastSeenAt, @JsonKey(name: 'is_current_device')  bool isCurrentDevice, @JsonKey(name: 'is_online')  bool isOnline, @JsonKey(name: 'sync_status')  DeviceSyncStatus deviceSyncStatus)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  DevicePlatform platform, @JsonKey(name: 'os_name')  String osName, @JsonKey(name: 'app_version')  String appVersion, @JsonKey(name: 'last_seen_at')  DateTime lastSeenAt, @JsonKey(name: 'sync_status')  DeviceSyncStatus deviceSyncStatus, @JsonKey(name: 'is_current_device')  bool isCurrentDevice, @JsonKey(name: 'is_online')  bool isOnline)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ConnectedDevice() when $default != null:
-return $default(_that.id,_that.name,_that.platform,_that.osName,_that.appVersion,_that.lastSeenAt,_that.isCurrentDevice,_that.isOnline,_that.deviceSyncStatus);case _:
+return $default(_that.id,_that.name,_that.platform,_that.osName,_that.appVersion,_that.lastSeenAt,_that.deviceSyncStatus,_that.isCurrentDevice,_that.isOnline);case _:
   return orElse();
 
 }
@@ -182,10 +182,10 @@ return $default(_that.id,_that.name,_that.platform,_that.osName,_that.appVersion
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  DevicePlatform platform, @JsonKey(name: 'os_name')  String osName, @JsonKey(name: 'app_version')  String appVersion, @JsonKey(name: 'last_seen_at')  DateTime lastSeenAt, @JsonKey(name: 'is_current_device')  bool isCurrentDevice, @JsonKey(name: 'is_online')  bool isOnline, @JsonKey(name: 'sync_status')  DeviceSyncStatus deviceSyncStatus)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  DevicePlatform platform, @JsonKey(name: 'os_name')  String osName, @JsonKey(name: 'app_version')  String appVersion, @JsonKey(name: 'last_seen_at')  DateTime lastSeenAt, @JsonKey(name: 'sync_status')  DeviceSyncStatus deviceSyncStatus, @JsonKey(name: 'is_current_device')  bool isCurrentDevice, @JsonKey(name: 'is_online')  bool isOnline)  $default,) {final _that = this;
 switch (_that) {
 case _ConnectedDevice():
-return $default(_that.id,_that.name,_that.platform,_that.osName,_that.appVersion,_that.lastSeenAt,_that.isCurrentDevice,_that.isOnline,_that.deviceSyncStatus);case _:
+return $default(_that.id,_that.name,_that.platform,_that.osName,_that.appVersion,_that.lastSeenAt,_that.deviceSyncStatus,_that.isCurrentDevice,_that.isOnline);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +202,10 @@ return $default(_that.id,_that.name,_that.platform,_that.osName,_that.appVersion
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  DevicePlatform platform, @JsonKey(name: 'os_name')  String osName, @JsonKey(name: 'app_version')  String appVersion, @JsonKey(name: 'last_seen_at')  DateTime lastSeenAt, @JsonKey(name: 'is_current_device')  bool isCurrentDevice, @JsonKey(name: 'is_online')  bool isOnline, @JsonKey(name: 'sync_status')  DeviceSyncStatus deviceSyncStatus)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  DevicePlatform platform, @JsonKey(name: 'os_name')  String osName, @JsonKey(name: 'app_version')  String appVersion, @JsonKey(name: 'last_seen_at')  DateTime lastSeenAt, @JsonKey(name: 'sync_status')  DeviceSyncStatus deviceSyncStatus, @JsonKey(name: 'is_current_device')  bool isCurrentDevice, @JsonKey(name: 'is_online')  bool isOnline)?  $default,) {final _that = this;
 switch (_that) {
 case _ConnectedDevice() when $default != null:
-return $default(_that.id,_that.name,_that.platform,_that.osName,_that.appVersion,_that.lastSeenAt,_that.isCurrentDevice,_that.isOnline,_that.deviceSyncStatus);case _:
+return $default(_that.id,_that.name,_that.platform,_that.osName,_that.appVersion,_that.lastSeenAt,_that.deviceSyncStatus,_that.isCurrentDevice,_that.isOnline);case _:
   return null;
 
 }
@@ -217,7 +217,7 @@ return $default(_that.id,_that.name,_that.platform,_that.osName,_that.appVersion
 @JsonSerializable()
 
 class _ConnectedDevice implements ConnectedDevice {
-  const _ConnectedDevice({required this.id, required this.name, required this.platform, @JsonKey(name: 'os_name') required this.osName, @JsonKey(name: 'app_version') required this.appVersion, @JsonKey(name: 'last_seen_at') required this.lastSeenAt, @JsonKey(name: 'is_current_device') this.isCurrentDevice = false, @JsonKey(name: 'is_online') this.isOnline = true, @JsonKey(name: 'sync_status') required this.deviceSyncStatus});
+  const _ConnectedDevice({required this.id, required this.name, required this.platform, @JsonKey(name: 'os_name') required this.osName, @JsonKey(name: 'app_version') required this.appVersion, @JsonKey(name: 'last_seen_at') required this.lastSeenAt, @JsonKey(name: 'sync_status') required this.deviceSyncStatus, @JsonKey(name: 'is_current_device') this.isCurrentDevice = false, @JsonKey(name: 'is_online') this.isOnline = true});
   factory _ConnectedDevice.fromJson(Map<String, dynamic> json) => _$ConnectedDeviceFromJson(json);
 
 @override final  String id;
@@ -226,9 +226,9 @@ class _ConnectedDevice implements ConnectedDevice {
 @override@JsonKey(name: 'os_name') final  String osName;
 @override@JsonKey(name: 'app_version') final  String appVersion;
 @override@JsonKey(name: 'last_seen_at') final  DateTime lastSeenAt;
+@override@JsonKey(name: 'sync_status') final  DeviceSyncStatus deviceSyncStatus;
 @override@JsonKey(name: 'is_current_device') final  bool isCurrentDevice;
 @override@JsonKey(name: 'is_online') final  bool isOnline;
-@override@JsonKey(name: 'sync_status') final  DeviceSyncStatus deviceSyncStatus;
 
 /// Create a copy of ConnectedDevice
 /// with the given fields replaced by the non-null parameter values.
@@ -243,16 +243,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConnectedDevice&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.osName, osName) || other.osName == osName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.isCurrentDevice, isCurrentDevice) || other.isCurrentDevice == isCurrentDevice)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline)&&(identical(other.deviceSyncStatus, deviceSyncStatus) || other.deviceSyncStatus == deviceSyncStatus));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConnectedDevice&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.osName, osName) || other.osName == osName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.lastSeenAt, lastSeenAt) || other.lastSeenAt == lastSeenAt)&&(identical(other.deviceSyncStatus, deviceSyncStatus) || other.deviceSyncStatus == deviceSyncStatus)&&(identical(other.isCurrentDevice, isCurrentDevice) || other.isCurrentDevice == isCurrentDevice)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,platform,osName,appVersion,lastSeenAt,isCurrentDevice,isOnline,deviceSyncStatus);
+int get hashCode => Object.hash(runtimeType,id,name,platform,osName,appVersion,lastSeenAt,deviceSyncStatus,isCurrentDevice,isOnline);
 
 @override
 String toString() {
-  return 'ConnectedDevice(id: $id, name: $name, platform: $platform, osName: $osName, appVersion: $appVersion, lastSeenAt: $lastSeenAt, isCurrentDevice: $isCurrentDevice, isOnline: $isOnline, deviceSyncStatus: $deviceSyncStatus)';
+  return 'ConnectedDevice(id: $id, name: $name, platform: $platform, osName: $osName, appVersion: $appVersion, lastSeenAt: $lastSeenAt, deviceSyncStatus: $deviceSyncStatus, isCurrentDevice: $isCurrentDevice, isOnline: $isOnline)';
 }
 
 
@@ -263,7 +263,7 @@ abstract mixin class _$ConnectedDeviceCopyWith<$Res> implements $ConnectedDevice
   factory _$ConnectedDeviceCopyWith(_ConnectedDevice value, $Res Function(_ConnectedDevice) _then) = __$ConnectedDeviceCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, DevicePlatform platform,@JsonKey(name: 'os_name') String osName,@JsonKey(name: 'app_version') String appVersion,@JsonKey(name: 'last_seen_at') DateTime lastSeenAt,@JsonKey(name: 'is_current_device') bool isCurrentDevice,@JsonKey(name: 'is_online') bool isOnline,@JsonKey(name: 'sync_status') DeviceSyncStatus deviceSyncStatus
+ String id, String name, DevicePlatform platform,@JsonKey(name: 'os_name') String osName,@JsonKey(name: 'app_version') String appVersion,@JsonKey(name: 'last_seen_at') DateTime lastSeenAt,@JsonKey(name: 'sync_status') DeviceSyncStatus deviceSyncStatus,@JsonKey(name: 'is_current_device') bool isCurrentDevice,@JsonKey(name: 'is_online') bool isOnline
 });
 
 
@@ -280,7 +280,7 @@ class __$ConnectedDeviceCopyWithImpl<$Res>
 
 /// Create a copy of ConnectedDevice
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? platform = null,Object? osName = null,Object? appVersion = null,Object? lastSeenAt = null,Object? isCurrentDevice = null,Object? isOnline = null,Object? deviceSyncStatus = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? platform = null,Object? osName = null,Object? appVersion = null,Object? lastSeenAt = null,Object? deviceSyncStatus = null,Object? isCurrentDevice = null,Object? isOnline = null,}) {
   return _then(_ConnectedDevice(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -288,10 +288,10 @@ as String,platform: null == platform ? _self.platform : platform // ignore: cast
 as DevicePlatform,osName: null == osName ? _self.osName : osName // ignore: cast_nullable_to_non_nullable
 as String,appVersion: null == appVersion ? _self.appVersion : appVersion // ignore: cast_nullable_to_non_nullable
 as String,lastSeenAt: null == lastSeenAt ? _self.lastSeenAt : lastSeenAt // ignore: cast_nullable_to_non_nullable
-as DateTime,isCurrentDevice: null == isCurrentDevice ? _self.isCurrentDevice : isCurrentDevice // ignore: cast_nullable_to_non_nullable
+as DateTime,deviceSyncStatus: null == deviceSyncStatus ? _self.deviceSyncStatus : deviceSyncStatus // ignore: cast_nullable_to_non_nullable
+as DeviceSyncStatus,isCurrentDevice: null == isCurrentDevice ? _self.isCurrentDevice : isCurrentDevice // ignore: cast_nullable_to_non_nullable
 as bool,isOnline: null == isOnline ? _self.isOnline : isOnline // ignore: cast_nullable_to_non_nullable
-as bool,deviceSyncStatus: null == deviceSyncStatus ? _self.deviceSyncStatus : deviceSyncStatus // ignore: cast_nullable_to_non_nullable
-as DeviceSyncStatus,
+as bool,
   ));
 }
 

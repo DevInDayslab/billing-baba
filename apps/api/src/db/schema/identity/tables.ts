@@ -67,6 +67,7 @@ export const devices = pgTable('devices', {
   userId: uuid('user_id').references(() => users.id),
   deviceName: text('device_name').notNull(),
   platform: text('platform').notNull(),
+  appVersion: text('app_version').notNull().default('0.0.0'),
   lastSyncAt: timestamptz('last_sync_at'),
 });
 

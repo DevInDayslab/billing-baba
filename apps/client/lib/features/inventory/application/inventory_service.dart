@@ -1,8 +1,15 @@
 import 'dart:typed_data';
 
+import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
+import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/sync/engine/device_identity.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
+import 'package:billing_baba/features/inventory/data/category_local_source.dart';
+import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
@@ -49,10 +56,27 @@ part 'inventory_service.g.dart';
 @Riverpod(keepAlive: true)
 Future<InventoryService> inventoryService(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
+  final storage = await ref.watch(storageServiceProvider.future);
+  final db = ref.watch(appDatabaseProvider);
+  final queue = ref.watch(syncQueueServiceProvider);
+  String? deviceId;
+  try {
+    final identity = await ref.watch(syncDeviceIdentityProvider.future);
+    deviceId = await identity.deviceId();
+  } on Object {
+    deviceId = null;
+  }
+
+  final repository = InventoryRepository(
+    remote: InventoryRemoteDataSource(api.dio),
+    local: DriftInventoryLocalDataSource(CategoryLocalSource(db)),
+    syncQueue: queue,
+    businessIdReader: () =>
+        storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
+    deviceIdReader: () => deviceId,
+  );
   return InventoryService(
-    repository: InventoryRepository(
-      remote: InventoryRemoteDataSource(api.dio),
-    ),
+    repository: repository,
     mediaRepository: ItemMediaRepository(api.dio),
   );
 }

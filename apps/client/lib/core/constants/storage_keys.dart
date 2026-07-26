@@ -31,4 +31,11 @@ abstract final class StorageKeys {
   static const recentSearchPageIds = 'recent_search_page_ids';
   static const collaborationMembers = 'collaboration_members';
   static const collaborationInvitations = 'collaboration_invitations';
+
+  /// Stable install-lifetime sync device id (UUID).
+  static const syncDeviceId = 'sync_device_id';
+  static const syncPullCursor = 'sync_pull_cursor';
+  static const syncBootstrappedAt = 'sync_bootstrapped_at';
+  static const syncLocalSchemaVersion = 'sync_local_schema_version';
+  static const syncLastServerSchemaVersion = 'sync_last_server_schema_version';
 }

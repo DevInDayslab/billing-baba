@@ -1,9 +1,13 @@
 import 'package:billing_baba/core/constants/storage_keys.dart';
 import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/services/storage_service.dart';
+import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
 import 'package:billing_baba/features/crm/domain/models/contact.dart';
 import 'package:billing_baba/features/crm/domain/models/contact_activity.dart';
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
+
+const _uuid = Uuid();
 
 class ContactLocalSource {
   ContactLocalSource(this._db, this._storage);
@@ -85,16 +89,21 @@ class ContactLocalSource {
     required String payload,
     required String createdAt,
   }) async {
-    await _db
-        .into(_db.syncQueue)
-        .insert(
+    final id = _uuid.v4();
+    await _db.into(_db.syncQueue).insert(
           SyncQueueCompanion.insert(
-            businessId: businessId,
+            id: id,
+            mutationId: _uuid.v4(),
+            kind: SyncQueueKind.row.wire,
             entityType: entityType,
-            entityId: entityId,
+            entityId: Value(entityId),
             operation: operation,
             payload: payload,
-            createdAt: createdAt,
+            businessId: businessId,
+            status: SyncQueueStatus.pending.wire,
+            priority: Value(SyncQueuePriority.normal.value),
+            createdAt: DateTime.tryParse(createdAt)?.toUtc() ??
+                DateTime.now().toUtc(),
           ),
         );
   }

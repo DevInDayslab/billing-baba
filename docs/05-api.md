@@ -779,71 +779,27 @@ Response format: JSON `data` or `Content-Type: application/csv` when `?format=cs
 
 Primary cloud interface for offline-first operation. See [01-architecture.md](01-architecture.md#offline-sync-overview).
 
+> **Authoritative contract:** [11-sync-api-contract.md](11-sync-api-contract.md) (protocol v1).  
+> Locked decisions: hybrid row+command push, `LOCAL-*` → server document number remap, `command_id` idempotency ([ADR-025](09-decisions.md#adr-025-sync-contract-hybrid-local-remap-command-idempotency)).  
+> The sketches below are a summary only — do not implement against them.
+
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/sync/push` | Push batched local mutations |
-| GET | `/sync/pull` | Pull changes since cursor |
-| GET | `/sync/status` | Last sync time, pending count |
-| POST | `/sync/bootstrap` | Initial full dataset download |
-| GET | `/sync/schema-version` | Current schema version |
+| POST | `/sync/devices` | Register / heartbeat device |
+| GET | `/sync/devices` | List devices for business |
+| GET | `/sync/status` | Capabilities, schema version, min client |
+| POST | `/sync/bootstrap` | Start snapshot job |
+| GET | `/sync/bootstrap/{id}/chunks/{i}` | Download snapshot chunk |
+| POST | `/sync/push` | Push row mutations + commands (partial success) |
+| GET | `/sync/pull` | Incremental changes since opaque cursor |
+| POST | `/sync/media/uploads` | Media upload intent |
+| POST | `/sync/media/uploads/complete` | Media upload complete |
+| GET | `/sync/media/{asset_id}/url` | Presigned download URL |
 | GET | `/online-orders` | List Nazdikwala orders (`status`) |
 | GET | `/online-orders/{id}` | Order detail |
 | PATCH | `/online-orders/{id}` | Accept/reject (`status`, creates sales doc on accept) |
 
-### `POST /sync/push`
-
-**Request:**
-
-```json
-{
-  "device_id": "...",
-  "mutations": [
-    {
-      "entity_type": "sales_documents",
-      "entity_id": "...",
-      "operation": "create",
-      "sync_version": 1,
-      "payload": { ... },
-      "client_updated_at": "2026-06-26T10:30:00Z"
-    }
-  ]
-}
-```
-
-**Response:**
-
-```json
-{
-  "data": {
-    "accepted": ["entity_id_1"],
-    "conflicts": [
-      {
-        "entity_type": "sales_documents",
-        "entity_id": "...",
-        "server_sync_version": 3,
-        "server_payload": { ... }
-      }
-    ],
-    "errors": []
-  }
-}
-```
-
-### `GET /sync/pull`
-
-**Query:** `?since=2026-06-26T09:00:00Z&limit=500`
-
-**Response:**
-
-```json
-{
-  "data": {
-    "mutations": [ ... ],
-    "cursor": "2026-06-26T10:35:00Z",
-    "has_more": false
-  }
-}
-```
+Push is **hybrid**: masters/drafts as `kind: "row"`; finalize/payment/stock/journal as `kind: "command"` with stable `command_id`. Pull uses an opaque `cursor` (not a raw timestamp alone). Full request/response schemas, conflict objects, error codes, and retry rules: [11-sync-api-contract.md](11-sync-api-contract.md).
 
 ```mermaid
 sequenceDiagram
@@ -851,13 +807,14 @@ sequenceDiagram
     participant A as Sync API
     participant P as PostgreSQL
 
-    C->>A: POST /sync/push (batch)
-    A->>P: Apply mutations (tenant-scoped)
-    A-->>C: accepted + conflicts
-
-    C->>A: GET /sync/pull?since=cursor
-    A->>P: Changes since cursor
-    A-->>C: mutations + new cursor
+    C->>A: POST /sync/devices
+    C->>A: POST /sync/bootstrap
+    C->>A: GET bootstrap chunks
+    C->>A: POST /sync/push (rows + commands)
+    A->>P: Apply / run domain services idempotently
+    A-->>C: accepted + remaps + conflicts + replayed
+    C->>A: GET /sync/pull?cursor=...
+    A-->>C: changes + next_cursor
     C->>C: Merge into SQLite
 ```
 

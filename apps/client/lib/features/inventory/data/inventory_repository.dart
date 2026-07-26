@@ -1,3 +1,5 @@
+import 'package:billing_baba/core/sync/models/sync_queue_enums.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue_service.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/models/dto/brand_dto.dart';
@@ -7,6 +9,7 @@ import 'package:billing_baba/features/inventory/models/dto/item_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_location_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/item_summary_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/movement_dto.dart';
+import 'package:billing_baba/features/inventory/models/dto/pagination_meta_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/price_history_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/unit_conversion_dto.dart';
@@ -17,33 +20,179 @@ import 'package:billing_baba/features/inventory/models/requests/godown_requests.
 import 'package:billing_baba/features/inventory/models/requests/item_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/movement_requests.dart';
 import 'package:billing_baba/features/inventory/models/requests/unit_requests.dart';
+import 'package:uuid/uuid.dart';
+
+const _uuid = Uuid();
+const _categoriesEntity = 'categories';
 
 class InventoryRepository {
   InventoryRepository({
     required this._remote,
-    this._local,
+    required this._local,
+    required this._syncQueue,
+    required this._businessIdReader,
+    this._deviceIdReader,
   });
 
   final InventoryRemoteDataSource _remote;
-  // ignore: unused_field
-  final InventoryLocalDataSource? _local;
+  final InventoryLocalDataSource _local;
+  final SyncQueueService _syncQueue;
+  final String Function() _businessIdReader;
+  final String? Function()? _deviceIdReader;
 
   InventoryRemoteDataSource get remoteDataSource => _remote;
 
-  Future<PaginatedCategoriesDto> getCategories(CategoryListQuery query) =>
-      _remote.listCategories(query);
+  String _requireBusinessId() {
+    final id = _businessIdReader().trim();
+    if (id.isEmpty) {
+      throw StateError('No business selected for inventory operations');
+    }
+    return id;
+  }
 
-  Future<CategoryDto> getCategory(String id) => _remote.getCategory(id);
+  Future<PaginatedCategoriesDto> getCategories(CategoryListQuery query) async {
+    final businessId = _requireBusinessId();
+    await _hydrateCategoriesIfEmpty(businessId);
+    final all = await _local.categories.listActive(
+      businessId,
+      searchQuery: query.q,
+    );
+    final start = (query.page - 1) * query.limit;
+    final pageItems = start >= all.length
+        ? <CategoryDto>[]
+        : all.skip(start).take(query.limit).toList();
+    return PaginatedCategoriesDto(
+      categories: pageItems,
+      meta: PaginationMetaDto(
+        page: query.page,
+        limit: query.limit,
+        total: all.length,
+      ),
+    );
+  }
 
-  Future<CategoryDto> createCategory(CreateCategoryRequest request) =>
-      _remote.createCategory(request);
+  Future<CategoryDto> getCategory(String id) async {
+    final local = await _local.categories.getActiveDto(id);
+    if (local != null) return local;
+    // Fallback for missing local row (e.g. deep link before hydrate).
+    final remote = await _remote.getCategory(id);
+    final businessId = _requireBusinessId();
+    await _local.categories.upsertFromDto(businessId, remote);
+    return remote;
+  }
+
+  Future<CategoryDto> createCategory(CreateCategoryRequest request) async {
+    final businessId = _requireBusinessId();
+    final now = DateTime.now().toUtc();
+    final id = _uuid.v4();
+    final name = request.name.trim();
+    await _local.categories.upsertRow(
+      id: id,
+      businessId: businessId,
+      name: name,
+      syncVersion: 0,
+      createdAt: now,
+      updatedAt: now,
+      deviceId: _deviceIdReader?.call(),
+    );
+    await _syncQueue.enqueueRowMutation(
+      businessId: businessId,
+      deviceId: _deviceIdReader?.call(),
+      entityType: _categoriesEntity,
+      entityId: id,
+      operation: SyncQueueOperation.create,
+      payload: {'name': name},
+      clientUpdatedAt: now,
+    );
+    return CategoryDto(
+      id: id,
+      name: name,
+      itemCount: 0,
+      createdAt: now.toIso8601String(),
+      updatedAt: now.toIso8601String(),
+    );
+  }
 
   Future<CategoryDto> updateCategory(
     String id,
     UpdateCategoryRequest request,
-  ) => _remote.updateCategory(id, request);
+  ) async {
+    final businessId = _requireBusinessId();
+    final existing = await _local.categories.getById(id);
+    if (existing == null || existing.isDeleted) {
+      throw StateError('Category not found locally');
+    }
+    final name = (request.name ?? existing.name).trim();
+    final now = DateTime.now().toUtc();
+    final baseVersion = existing.syncVersion;
+    await _local.categories.upsertRow(
+      id: id,
+      businessId: businessId,
+      name: name,
+      syncVersion: baseVersion,
+      createdAt: existing.createdAt,
+      updatedAt: now,
+      deviceId: _deviceIdReader?.call() ?? existing.deviceId,
+      itemCount: existing.itemCount,
+    );
+    await _syncQueue.enqueueRowMutation(
+      businessId: businessId,
+      deviceId: _deviceIdReader?.call(),
+      entityType: _categoriesEntity,
+      entityId: id,
+      operation: SyncQueueOperation.update,
+      payload: {'name': name},
+      baseSyncVersion: baseVersion,
+      clientUpdatedAt: now,
+    );
+    return CategoryDto(
+      id: id,
+      name: name,
+      itemCount: existing.itemCount,
+      createdAt: existing.createdAt.toUtc().toIso8601String(),
+      updatedAt: now.toIso8601String(),
+    );
+  }
 
-  Future<void> deleteCategory(String id) => _remote.deleteCategory(id);
+  Future<void> deleteCategory(String id) async {
+    final businessId = _requireBusinessId();
+    final existing = await _local.categories.getById(id);
+    if (existing == null || existing.isDeleted) return;
+    final now = DateTime.now().toUtc();
+    await _local.categories.softDelete(id: id, deletedAt: now);
+    await _syncQueue.enqueueRowMutation(
+      businessId: businessId,
+      deviceId: _deviceIdReader?.call(),
+      entityType: _categoriesEntity,
+      entityId: id,
+      operation: SyncQueueOperation.delete,
+      payload: const {},
+      baseSyncVersion: existing.syncVersion,
+      clientUpdatedAt: now,
+    );
+  }
+
+  /// Temporary remote hydrate until full sync bootstrap lands.
+  Future<void> _hydrateCategoriesIfEmpty(String businessId) async {
+    final count = await _local.categories.countActive(businessId);
+    if (count > 0) return;
+    try {
+      var page = 1;
+      while (true) {
+        final response = await _remote.listCategories(
+          CategoryListQuery(page: page, limit: 100),
+        );
+        for (final dto in response.categories) {
+          await _local.categories.upsertFromDto(businessId, dto);
+        }
+        if (response.categories.length < 100) break;
+        if (page * 100 >= response.meta.total) break;
+        page += 1;
+      }
+    } on Object {
+      // Offline / first launch with empty local — leave empty.
+    }
+  }
 
   Future<PaginatedBrandsDto> getBrands(BrandListQuery query) =>
       _remote.listBrands(query);

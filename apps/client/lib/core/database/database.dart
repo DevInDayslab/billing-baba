@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/database/tables/categories_table.dart';
 import 'package:billing_baba/core/database/tables/contacts_tables.dart';
 import 'package:billing_baba/core/database/tables/deals_tables.dart';
 import 'package:billing_baba/core/database/tables/leads_tables.dart';
@@ -20,13 +21,14 @@ part 'database.g.dart';
     ContactActivities,
     Deals,
     SyncQueue,
+    CategoriesLocal,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -79,6 +81,14 @@ class AppDatabase extends _$AppDatabase {
         await m.database.customStatement('DELETE FROM sales_line_local');
         await m.database.customStatement('DELETE FROM sales_local');
         await m.database.customStatement('DELETE FROM held_bills_local');
+      }
+      if (from < 9) {
+        // Recreate sync_queue: PK becomes UUID; prior CRM queue was never flushed.
+        await m.database.customStatement('DROP TABLE IF EXISTS sync_queue');
+        await m.createTable(syncQueue);
+      }
+      if (from < 10) {
+        await m.createTable(categoriesLocal);
       }
     },
   );

@@ -2,12 +2,17 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/database/app_database_provider.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
+import 'package:billing_baba/core/sync/engine/device_identity.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/inventory/application/barcode_lookup_service.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
+import 'package:billing_baba/features/inventory/data/category_local_source.dart';
+import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
@@ -24,8 +29,23 @@ part 'barcode_import_provider.g.dart';
 @Riverpod(keepAlive: true)
 Future<InventoryRepository> inventoryRepository(Ref ref) async {
   final api = await ref.watch(apiClientProvider.future);
+  final storage = await ref.watch(storageServiceProvider.future);
+  final db = ref.watch(appDatabaseProvider);
+  final queue = ref.watch(syncQueueServiceProvider);
+  String? deviceId;
+  try {
+    final identity = await ref.watch(syncDeviceIdentityProvider.future);
+    deviceId = await identity.deviceId();
+  } on Object {
+    deviceId = null;
+  }
   return InventoryRepository(
     remote: InventoryRemoteDataSource(api.dio),
+    local: DriftInventoryLocalDataSource(CategoryLocalSource(db)),
+    syncQueue: queue,
+    businessIdReader: () =>
+        storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
+    deviceIdReader: () => deviceId,
   );
 }
 

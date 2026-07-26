@@ -1,4 +1,11 @@
-import { jsonb, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  jsonb,
+  pgTable,
+  text,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { businesses } from '../business/tables';
 import { money, syncedBusinessColumns, timestamptz } from '../columns';
 import { parties } from '../crm/tables';
@@ -27,6 +34,27 @@ export const onlineOrders = pgTable(
     uniqueIndex('uq_online_orders_business_external').on(
       table.businessId,
       table.externalOrderId,
+    ),
+  ],
+);
+
+/** Idempotent push acknowledgements for sync mutation_id replay. */
+export const syncMutationAcks = pgTable(
+  'sync_mutation_acks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    businessId: uuid('business_id')
+      .notNull()
+      .references(() => businesses.id),
+    mutationId: uuid('mutation_id').notNull(),
+    kind: text('kind').notNull(),
+    resultJson: jsonb('result_json').notNull(),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('uq_sync_mutation_acks_business_mutation').on(
+      table.businessId,
+      table.mutationId,
     ),
   ],
 );

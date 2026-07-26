@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SubscriptionPlan {
 
- String get id; SubscriptionPlanType get planType; String get title; String get description; int get durationDays; String get durationLabel; double get amount; String get currency; int get deviceLimit; String get licenseType; String? get badge; bool get isPopular; List<String> get features; bool get isActive;
+ String get id; SubscriptionPlanType get planType; String get title; String get description; int get durationDays; String get durationLabel; double get amount; int get deviceLimit; String get licenseType; String get currency; String? get badge; bool get isPopular; List<String> get features; bool get isActive;
 /// Create a copy of SubscriptionPlan
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $SubscriptionPlanCopyWith<SubscriptionPlan> get copyWith => _$SubscriptionPlanCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SubscriptionPlan&&(identical(other.id, id) || other.id == id)&&(identical(other.planType, planType) || other.planType == planType)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.durationDays, durationDays) || other.durationDays == durationDays)&&(identical(other.durationLabel, durationLabel) || other.durationLabel == durationLabel)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.deviceLimit, deviceLimit) || other.deviceLimit == deviceLimit)&&(identical(other.licenseType, licenseType) || other.licenseType == licenseType)&&(identical(other.badge, badge) || other.badge == badge)&&(identical(other.isPopular, isPopular) || other.isPopular == isPopular)&&const DeepCollectionEquality().equals(other.features, features)&&(identical(other.isActive, isActive) || other.isActive == isActive));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SubscriptionPlan&&(identical(other.id, id) || other.id == id)&&(identical(other.planType, planType) || other.planType == planType)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.durationDays, durationDays) || other.durationDays == durationDays)&&(identical(other.durationLabel, durationLabel) || other.durationLabel == durationLabel)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.deviceLimit, deviceLimit) || other.deviceLimit == deviceLimit)&&(identical(other.licenseType, licenseType) || other.licenseType == licenseType)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.badge, badge) || other.badge == badge)&&(identical(other.isPopular, isPopular) || other.isPopular == isPopular)&&const DeepCollectionEquality().equals(other.features, features)&&(identical(other.isActive, isActive) || other.isActive == isActive));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,planType,title,description,durationDays,durationLabel,amount,currency,deviceLimit,licenseType,badge,isPopular,const DeepCollectionEquality().hash(features),isActive);
+int get hashCode => Object.hash(runtimeType,id,planType,title,description,durationDays,durationLabel,amount,deviceLimit,licenseType,currency,badge,isPopular,const DeepCollectionEquality().hash(features),isActive);
 
 @override
 String toString() {
-  return 'SubscriptionPlan(id: $id, planType: $planType, title: $title, description: $description, durationDays: $durationDays, durationLabel: $durationLabel, amount: $amount, currency: $currency, deviceLimit: $deviceLimit, licenseType: $licenseType, badge: $badge, isPopular: $isPopular, features: $features, isActive: $isActive)';
+  return 'SubscriptionPlan(id: $id, planType: $planType, title: $title, description: $description, durationDays: $durationDays, durationLabel: $durationLabel, amount: $amount, deviceLimit: $deviceLimit, licenseType: $licenseType, currency: $currency, badge: $badge, isPopular: $isPopular, features: $features, isActive: $isActive)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $SubscriptionPlanCopyWith<$Res>  {
   factory $SubscriptionPlanCopyWith(SubscriptionPlan value, $Res Function(SubscriptionPlan) _then) = _$SubscriptionPlanCopyWithImpl;
 @useResult
 $Res call({
- String id, SubscriptionPlanType planType, String title, String description, int durationDays, String durationLabel, double amount, String currency, int deviceLimit, String licenseType, String? badge, bool isPopular, List<String> features, bool isActive
+ String id, SubscriptionPlanType planType, String title, String description, int durationDays, String durationLabel, double amount, int deviceLimit, String licenseType, String currency, String? badge, bool isPopular, List<String> features, bool isActive
 });
 
 
@@ -62,7 +62,7 @@ class _$SubscriptionPlanCopyWithImpl<$Res>
 
 /// Create a copy of SubscriptionPlan
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? planType = null,Object? title = null,Object? description = null,Object? durationDays = null,Object? durationLabel = null,Object? amount = null,Object? currency = null,Object? deviceLimit = null,Object? licenseType = null,Object? badge = freezed,Object? isPopular = null,Object? features = null,Object? isActive = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? planType = null,Object? title = null,Object? description = null,Object? durationDays = null,Object? durationLabel = null,Object? amount = null,Object? deviceLimit = null,Object? licenseType = null,Object? currency = null,Object? badge = freezed,Object? isPopular = null,Object? features = null,Object? isActive = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,planType: null == planType ? _self.planType : planType // ignore: cast_nullable_to_non_nullable
@@ -71,9 +71,9 @@ as String,description: null == description ? _self.description : description // 
 as String,durationDays: null == durationDays ? _self.durationDays : durationDays // ignore: cast_nullable_to_non_nullable
 as int,durationLabel: null == durationLabel ? _self.durationLabel : durationLabel // ignore: cast_nullable_to_non_nullable
 as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
-as double,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
-as String,deviceLimit: null == deviceLimit ? _self.deviceLimit : deviceLimit // ignore: cast_nullable_to_non_nullable
+as double,deviceLimit: null == deviceLimit ? _self.deviceLimit : deviceLimit // ignore: cast_nullable_to_non_nullable
 as int,licenseType: null == licenseType ? _self.licenseType : licenseType // ignore: cast_nullable_to_non_nullable
+as String,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
 as String,badge: freezed == badge ? _self.badge : badge // ignore: cast_nullable_to_non_nullable
 as String?,isPopular: null == isPopular ? _self.isPopular : isPopular // ignore: cast_nullable_to_non_nullable
 as bool,features: null == features ? _self.features : features // ignore: cast_nullable_to_non_nullable
@@ -163,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  SubscriptionPlanType planType,  String title,  String description,  int durationDays,  String durationLabel,  double amount,  String currency,  int deviceLimit,  String licenseType,  String? badge,  bool isPopular,  List<String> features,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  SubscriptionPlanType planType,  String title,  String description,  int durationDays,  String durationLabel,  double amount,  int deviceLimit,  String licenseType,  String currency,  String? badge,  bool isPopular,  List<String> features,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SubscriptionPlan() when $default != null:
-return $default(_that.id,_that.planType,_that.title,_that.description,_that.durationDays,_that.durationLabel,_that.amount,_that.currency,_that.deviceLimit,_that.licenseType,_that.badge,_that.isPopular,_that.features,_that.isActive);case _:
+return $default(_that.id,_that.planType,_that.title,_that.description,_that.durationDays,_that.durationLabel,_that.amount,_that.deviceLimit,_that.licenseType,_that.currency,_that.badge,_that.isPopular,_that.features,_that.isActive);case _:
   return orElse();
 
 }
@@ -184,10 +184,10 @@ return $default(_that.id,_that.planType,_that.title,_that.description,_that.dura
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  SubscriptionPlanType planType,  String title,  String description,  int durationDays,  String durationLabel,  double amount,  String currency,  int deviceLimit,  String licenseType,  String? badge,  bool isPopular,  List<String> features,  bool isActive)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  SubscriptionPlanType planType,  String title,  String description,  int durationDays,  String durationLabel,  double amount,  int deviceLimit,  String licenseType,  String currency,  String? badge,  bool isPopular,  List<String> features,  bool isActive)  $default,) {final _that = this;
 switch (_that) {
 case _SubscriptionPlan():
-return $default(_that.id,_that.planType,_that.title,_that.description,_that.durationDays,_that.durationLabel,_that.amount,_that.currency,_that.deviceLimit,_that.licenseType,_that.badge,_that.isPopular,_that.features,_that.isActive);case _:
+return $default(_that.id,_that.planType,_that.title,_that.description,_that.durationDays,_that.durationLabel,_that.amount,_that.deviceLimit,_that.licenseType,_that.currency,_that.badge,_that.isPopular,_that.features,_that.isActive);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +204,10 @@ return $default(_that.id,_that.planType,_that.title,_that.description,_that.dura
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  SubscriptionPlanType planType,  String title,  String description,  int durationDays,  String durationLabel,  double amount,  String currency,  int deviceLimit,  String licenseType,  String? badge,  bool isPopular,  List<String> features,  bool isActive)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  SubscriptionPlanType planType,  String title,  String description,  int durationDays,  String durationLabel,  double amount,  int deviceLimit,  String licenseType,  String currency,  String? badge,  bool isPopular,  List<String> features,  bool isActive)?  $default,) {final _that = this;
 switch (_that) {
 case _SubscriptionPlan() when $default != null:
-return $default(_that.id,_that.planType,_that.title,_that.description,_that.durationDays,_that.durationLabel,_that.amount,_that.currency,_that.deviceLimit,_that.licenseType,_that.badge,_that.isPopular,_that.features,_that.isActive);case _:
+return $default(_that.id,_that.planType,_that.title,_that.description,_that.durationDays,_that.durationLabel,_that.amount,_that.deviceLimit,_that.licenseType,_that.currency,_that.badge,_that.isPopular,_that.features,_that.isActive);case _:
   return null;
 
 }
@@ -219,7 +219,7 @@ return $default(_that.id,_that.planType,_that.title,_that.description,_that.dura
 
 
 class _SubscriptionPlan implements SubscriptionPlan {
-  const _SubscriptionPlan({required this.id, required this.planType, required this.title, required this.description, required this.durationDays, required this.durationLabel, required this.amount, this.currency = 'INR', required this.deviceLimit, required this.licenseType, this.badge, this.isPopular = false, final  List<String> features = const <String>[], this.isActive = true}): _features = features;
+  const _SubscriptionPlan({required this.id, required this.planType, required this.title, required this.description, required this.durationDays, required this.durationLabel, required this.amount, required this.deviceLimit, required this.licenseType, this.currency = 'INR', this.badge, this.isPopular = false, final  List<String> features = const <String>[], this.isActive = true}): _features = features;
   
 
 @override final  String id;
@@ -229,9 +229,9 @@ class _SubscriptionPlan implements SubscriptionPlan {
 @override final  int durationDays;
 @override final  String durationLabel;
 @override final  double amount;
-@override@JsonKey() final  String currency;
 @override final  int deviceLimit;
 @override final  String licenseType;
+@override@JsonKey() final  String currency;
 @override final  String? badge;
 @override@JsonKey() final  bool isPopular;
  final  List<String> _features;
@@ -253,16 +253,16 @@ _$SubscriptionPlanCopyWith<_SubscriptionPlan> get copyWith => __$SubscriptionPla
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SubscriptionPlan&&(identical(other.id, id) || other.id == id)&&(identical(other.planType, planType) || other.planType == planType)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.durationDays, durationDays) || other.durationDays == durationDays)&&(identical(other.durationLabel, durationLabel) || other.durationLabel == durationLabel)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.deviceLimit, deviceLimit) || other.deviceLimit == deviceLimit)&&(identical(other.licenseType, licenseType) || other.licenseType == licenseType)&&(identical(other.badge, badge) || other.badge == badge)&&(identical(other.isPopular, isPopular) || other.isPopular == isPopular)&&const DeepCollectionEquality().equals(other._features, _features)&&(identical(other.isActive, isActive) || other.isActive == isActive));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SubscriptionPlan&&(identical(other.id, id) || other.id == id)&&(identical(other.planType, planType) || other.planType == planType)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.durationDays, durationDays) || other.durationDays == durationDays)&&(identical(other.durationLabel, durationLabel) || other.durationLabel == durationLabel)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.deviceLimit, deviceLimit) || other.deviceLimit == deviceLimit)&&(identical(other.licenseType, licenseType) || other.licenseType == licenseType)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.badge, badge) || other.badge == badge)&&(identical(other.isPopular, isPopular) || other.isPopular == isPopular)&&const DeepCollectionEquality().equals(other._features, _features)&&(identical(other.isActive, isActive) || other.isActive == isActive));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,planType,title,description,durationDays,durationLabel,amount,currency,deviceLimit,licenseType,badge,isPopular,const DeepCollectionEquality().hash(_features),isActive);
+int get hashCode => Object.hash(runtimeType,id,planType,title,description,durationDays,durationLabel,amount,deviceLimit,licenseType,currency,badge,isPopular,const DeepCollectionEquality().hash(_features),isActive);
 
 @override
 String toString() {
-  return 'SubscriptionPlan(id: $id, planType: $planType, title: $title, description: $description, durationDays: $durationDays, durationLabel: $durationLabel, amount: $amount, currency: $currency, deviceLimit: $deviceLimit, licenseType: $licenseType, badge: $badge, isPopular: $isPopular, features: $features, isActive: $isActive)';
+  return 'SubscriptionPlan(id: $id, planType: $planType, title: $title, description: $description, durationDays: $durationDays, durationLabel: $durationLabel, amount: $amount, deviceLimit: $deviceLimit, licenseType: $licenseType, currency: $currency, badge: $badge, isPopular: $isPopular, features: $features, isActive: $isActive)';
 }
 
 
@@ -273,7 +273,7 @@ abstract mixin class _$SubscriptionPlanCopyWith<$Res> implements $SubscriptionPl
   factory _$SubscriptionPlanCopyWith(_SubscriptionPlan value, $Res Function(_SubscriptionPlan) _then) = __$SubscriptionPlanCopyWithImpl;
 @override @useResult
 $Res call({
- String id, SubscriptionPlanType planType, String title, String description, int durationDays, String durationLabel, double amount, String currency, int deviceLimit, String licenseType, String? badge, bool isPopular, List<String> features, bool isActive
+ String id, SubscriptionPlanType planType, String title, String description, int durationDays, String durationLabel, double amount, int deviceLimit, String licenseType, String currency, String? badge, bool isPopular, List<String> features, bool isActive
 });
 
 
@@ -290,7 +290,7 @@ class __$SubscriptionPlanCopyWithImpl<$Res>
 
 /// Create a copy of SubscriptionPlan
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? planType = null,Object? title = null,Object? description = null,Object? durationDays = null,Object? durationLabel = null,Object? amount = null,Object? currency = null,Object? deviceLimit = null,Object? licenseType = null,Object? badge = freezed,Object? isPopular = null,Object? features = null,Object? isActive = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? planType = null,Object? title = null,Object? description = null,Object? durationDays = null,Object? durationLabel = null,Object? amount = null,Object? deviceLimit = null,Object? licenseType = null,Object? currency = null,Object? badge = freezed,Object? isPopular = null,Object? features = null,Object? isActive = null,}) {
   return _then(_SubscriptionPlan(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,planType: null == planType ? _self.planType : planType // ignore: cast_nullable_to_non_nullable
@@ -299,9 +299,9 @@ as String,description: null == description ? _self.description : description // 
 as String,durationDays: null == durationDays ? _self.durationDays : durationDays // ignore: cast_nullable_to_non_nullable
 as int,durationLabel: null == durationLabel ? _self.durationLabel : durationLabel // ignore: cast_nullable_to_non_nullable
 as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
-as double,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
-as String,deviceLimit: null == deviceLimit ? _self.deviceLimit : deviceLimit // ignore: cast_nullable_to_non_nullable
+as double,deviceLimit: null == deviceLimit ? _self.deviceLimit : deviceLimit // ignore: cast_nullable_to_non_nullable
 as int,licenseType: null == licenseType ? _self.licenseType : licenseType // ignore: cast_nullable_to_non_nullable
+as String,currency: null == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
 as String,badge: freezed == badge ? _self.badge : badge // ignore: cast_nullable_to_non_nullable
 as String?,isPopular: null == isPopular ? _self.isPopular : isPopular // ignore: cast_nullable_to_non_nullable
 as bool,features: null == features ? _self._features : features // ignore: cast_nullable_to_non_nullable

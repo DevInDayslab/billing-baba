@@ -8,7 +8,7 @@ Record significant architectural and technical decisions for Billing Baba. ADRs 
 
 Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 
-**Related docs:** [01-architecture.md](01-architecture.md) · [04-database.md](04-database.md) · [05-api.md](05-api.md)
+**Related docs:** [01-architecture.md](01-architecture.md) · [04-database.md](04-database.md) · [05-api.md](05-api.md) · [11-sync-api-contract.md](11-sync-api-contract.md)
 
 ## Table of Contents
 
@@ -37,6 +37,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 - [ADR-022: Provider-Agnostic Outbound Notifications](#adr-022-provider-agnostic-outbound-notifications)
 - [ADR-023: Provider-Agnostic Object Storage](#adr-023-provider-agnostic-object-storage)
 - [ADR-024: Invoice Artifact System](#adr-024-invoice-artifact-system)
+- [ADR-025: Sync Contract (Hybrid + LOCAL Remap + Command Idempotency)](#adr-025-sync-contract-hybrid-local-remap-command-idempotency)
 
 ---
 
@@ -68,6 +69,7 @@ Phase 1 decisions. Superseded decisions will be marked when stack changes occur.
 | ADR-022 | Provider-Agnostic Outbound Notifications | July 2026 | Accepted |
 | ADR-023 | Provider-Agnostic Object Storage | July 2026 | Accepted |
 | ADR-024 | Invoice Artifact System | July 2026 | Accepted |
+| ADR-025 | Sync Contract (Hybrid + LOCAL Remap + Command Idempotency) | July 2026 | Accepted |
 
 ---
 
@@ -1455,6 +1457,54 @@ Billing Baba targets Windows, macOS, Linux, Android, and iOS from one Flutter cl
 - Import paths for former `providers/` modules now use `application/`.
 - App shells live in `core/shell/` (`DesktopShell`, `MobileShell`). Desktop and mobile each have a dedicated GoRouter in `core/routing/` (`desktop_router.dart`, `mobile_router.dart`); `appRouterProvider` selects by `AppPlatform`. Both routers navigate only to public Adaptive feature pages.
 - Public Adaptive entries live directly under `features/<feature>/presentation/` (not nested `pages/` / `screens/` folders).
+
+---
+
+## ADR-025: Sync Contract (Hybrid + LOCAL Remap + Command Idempotency)
+
+| Field | Value |
+|-------|-------|
+| **Date** | July 2026 |
+| **Status** | Accepted |
+| **Author** | Technical Lead |
+
+### Context
+
+Offline-first sync must move writes through Drift → queue → Sync Engine → API without duplicating ERP invariants on the client. Document numbers, stock, and ledger posting already run in Fastify domain transactions. Retries after timeouts must not double-finalize or double-post. A thin “mutations-only” sketch in early API docs was insufficient for production.
+
+### Decision
+
+1. **Hybrid push model** — Masters and draft documents sync as **row** mutations (`create` / `update` / `delete` with `base_sync_version`). Invariant operations sync as **commands** (`finalize_sale`, `finalize_purchase`, `record_payment`, `record_receipt`, `stock_adjustment`, `stock_transfer`, `post_journal_entry`, `finalize_credit_note`, `finalize_debit_note`, …) that invoke existing server domain services.
+2. **Temporary document number remapping (MVP)** — Entity UUID is permanent. Offline display numbers use `LOCAL-######`. On finalize ack, server returns `local_document_number` → `server_document_number`; client updates display only. Lease ranges may be added later via `numbering_strategy` without changing UUIDs.
+3. **Command idempotency** — Every command includes a client-generated `command_id` (UUID). Server persists `(business_id, command_id)` → result and returns the original success payload on replay (`replayed[]`), never re-executing stock/ledger/number allocation.
+
+Normative protocol: [11-sync-api-contract.md](11-sync-api-contract.md). Summary index: [05-api.md](05-api.md#offline-sync-api).
+
+### Consequences
+
+**Positive:**
+
+- Server remains authority for financial and inventory side effects
+- Safe client retries after network loss
+- Clear migration path to leased numbering later
+- Flutter SyncEngine and Fastify `sync` module share one contract
+
+**Negative:**
+
+- Offline-printed `LOCAL-*` documents may need regeneration after remap
+- Push batch schema is richer than simple CRUD
+- Server must store command idempotency records indefinitely in v1
+
+### Alternatives Considered
+
+| Alternative | Rejected because |
+|-------------|------------------|
+| Rows-only push (client sends movements/ledger) | Duplicates invariants; easy to diverge from Fastify services |
+| Commands-only for all entities | Verbose for masters; poor fit for simple CRUD |
+| Per-device number leases in MVP | More ops complexity; deferred |
+| Online-only finalize | Blocks offline POS goal |
+
+**References:** [11-sync-api-contract.md](11-sync-api-contract.md), [10-offline-first-architecture-audit.md](10-offline-first-architecture-audit.md), [ADR-007](#adr-007-offline-first)
 
 ---
 

@@ -6261,23 +6261,28 @@ class $SyncQueueTable extends SyncQueue
   $SyncQueueTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
   );
-  static const VerificationMeta _businessIdMeta = const VerificationMeta(
-    'businessId',
+  static const VerificationMeta _mutationIdMeta = const VerificationMeta(
+    'mutationId',
   );
   @override
-  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
-    'business_id',
+  late final GeneratedColumn<String> mutationId = GeneratedColumn<String>(
+    'mutation_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -6301,9 +6306,9 @@ class $SyncQueueTable extends SyncQueue
   late final GeneratedColumn<String> entityId = GeneratedColumn<String>(
     'entity_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _operationMeta = const VerificationMeta(
     'operation',
@@ -6327,26 +6332,148 @@ class $SyncQueueTable extends SyncQueue
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
   );
   @override
-  late final GeneratedColumn<String> createdAt = GeneratedColumn<String>(
-    'created_at',
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _commandIdMeta = const VerificationMeta(
+    'commandId',
+  );
+  @override
+  late final GeneratedColumn<String> commandId = GeneratedColumn<String>(
+    'command_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<int> priority = GeneratedColumn<int>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _attemptCountMeta = const VerificationMeta(
+    'attemptCount',
+  );
+  @override
+  late final GeneratedColumn<int> attemptCount = GeneratedColumn<int>(
+    'attempt_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _scheduledAtMeta = const VerificationMeta(
+    'scheduledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> scheduledAt = GeneratedColumn<DateTime>(
+    'scheduled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastAttemptAtMeta = const VerificationMeta(
+    'lastAttemptAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastAttemptAt =
+      GeneratedColumn<DateTime>(
+        'last_attempt_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _nextRetryAtMeta = const VerificationMeta(
+    'nextRetryAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextRetryAt = GeneratedColumn<DateTime>(
+    'next_retry_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    businessId,
+    mutationId,
+    kind,
     entityType,
     entityId,
     operation,
     payload,
+    businessId,
+    deviceId,
+    commandId,
+    status,
+    priority,
+    attemptCount,
     createdAt,
+    scheduledAt,
+    lastAttemptAt,
+    nextRetryAt,
+    lastError,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6362,14 +6489,24 @@ class $SyncQueueTable extends SyncQueue
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
     }
-    if (data.containsKey('business_id')) {
+    if (data.containsKey('mutation_id')) {
       context.handle(
-        _businessIdMeta,
-        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+        _mutationIdMeta,
+        mutationId.isAcceptableOrUnknown(data['mutation_id']!, _mutationIdMeta),
       );
     } else if (isInserting) {
-      context.missing(_businessIdMeta);
+      context.missing(_mutationIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
     }
     if (data.containsKey('entity_type')) {
       context.handle(
@@ -6384,8 +6521,6 @@ class $SyncQueueTable extends SyncQueue
         _entityIdMeta,
         entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_entityIdMeta);
     }
     if (data.containsKey('operation')) {
       context.handle(
@@ -6403,6 +6538,49 @@ class $SyncQueueTable extends SyncQueue
     } else if (isInserting) {
       context.missing(_payloadMeta);
     }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    if (data.containsKey('command_id')) {
+      context.handle(
+        _commandIdMeta,
+        commandId.isAcceptableOrUnknown(data['command_id']!, _commandIdMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('attempt_count')) {
+      context.handle(
+        _attemptCountMeta,
+        attemptCount.isAcceptableOrUnknown(
+          data['attempt_count']!,
+          _attemptCountMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -6411,22 +6589,63 @@ class $SyncQueueTable extends SyncQueue
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('scheduled_at')) {
+      context.handle(
+        _scheduledAtMeta,
+        scheduledAt.isAcceptableOrUnknown(
+          data['scheduled_at']!,
+          _scheduledAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_attempt_at')) {
+      context.handle(
+        _lastAttemptAtMeta,
+        lastAttemptAt.isAcceptableOrUnknown(
+          data['last_attempt_at']!,
+          _lastAttemptAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_retry_at')) {
+      context.handle(
+        _nextRetryAtMeta,
+        nextRetryAt.isAcceptableOrUnknown(
+          data['next_retry_at']!,
+          _nextRetryAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
     return context;
   }
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {mutationId},
+  ];
+  @override
   SyncQueueData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SyncQueueData(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
-      businessId: attachedDatabase.typeMapping.read(
+      mutationId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}business_id'],
+        data['${effectivePrefix}mutation_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
       )!,
       entityType: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -6435,7 +6654,7 @@ class $SyncQueueTable extends SyncQueue
       entityId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}entity_id'],
-      )!,
+      ),
       operation: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}operation'],
@@ -6444,10 +6663,50 @@ class $SyncQueueTable extends SyncQueue
         DriftSqlType.string,
         data['${effectivePrefix}payload'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
+      businessId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+      commandId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}command_id'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}priority'],
+      )!,
+      attemptCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempt_count'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      scheduledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}scheduled_at'],
+      ),
+      lastAttemptAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_attempt_at'],
+      ),
+      nextRetryAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_retry_at'],
+      ),
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
     );
   }
 
@@ -6458,44 +6717,116 @@ class $SyncQueueTable extends SyncQueue
 }
 
 class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
-  final int id;
-  final String businessId;
+  final String id;
+  final String mutationId;
+  final String kind;
   final String entityType;
-  final String entityId;
+  final String? entityId;
   final String operation;
   final String payload;
-  final String createdAt;
+  final String businessId;
+  final String? deviceId;
+  final String? commandId;
+  final String status;
+  final int priority;
+  final int attemptCount;
+  final DateTime createdAt;
+  final DateTime? scheduledAt;
+  final DateTime? lastAttemptAt;
+  final DateTime? nextRetryAt;
+  final String? lastError;
   const SyncQueueData({
     required this.id,
-    required this.businessId,
+    required this.mutationId,
+    required this.kind,
     required this.entityType,
-    required this.entityId,
+    this.entityId,
     required this.operation,
     required this.payload,
+    required this.businessId,
+    this.deviceId,
+    this.commandId,
+    required this.status,
+    required this.priority,
+    required this.attemptCount,
     required this.createdAt,
+    this.scheduledAt,
+    this.lastAttemptAt,
+    this.nextRetryAt,
+    this.lastError,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['business_id'] = Variable<String>(businessId);
+    map['id'] = Variable<String>(id);
+    map['mutation_id'] = Variable<String>(mutationId);
+    map['kind'] = Variable<String>(kind);
     map['entity_type'] = Variable<String>(entityType);
-    map['entity_id'] = Variable<String>(entityId);
+    if (!nullToAbsent || entityId != null) {
+      map['entity_id'] = Variable<String>(entityId);
+    }
     map['operation'] = Variable<String>(operation);
     map['payload'] = Variable<String>(payload);
-    map['created_at'] = Variable<String>(createdAt);
+    map['business_id'] = Variable<String>(businessId);
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    if (!nullToAbsent || commandId != null) {
+      map['command_id'] = Variable<String>(commandId);
+    }
+    map['status'] = Variable<String>(status);
+    map['priority'] = Variable<int>(priority);
+    map['attempt_count'] = Variable<int>(attemptCount);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || scheduledAt != null) {
+      map['scheduled_at'] = Variable<DateTime>(scheduledAt);
+    }
+    if (!nullToAbsent || lastAttemptAt != null) {
+      map['last_attempt_at'] = Variable<DateTime>(lastAttemptAt);
+    }
+    if (!nullToAbsent || nextRetryAt != null) {
+      map['next_retry_at'] = Variable<DateTime>(nextRetryAt);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
     return map;
   }
 
   SyncQueueCompanion toCompanion(bool nullToAbsent) {
     return SyncQueueCompanion(
       id: Value(id),
-      businessId: Value(businessId),
+      mutationId: Value(mutationId),
+      kind: Value(kind),
       entityType: Value(entityType),
-      entityId: Value(entityId),
+      entityId: entityId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(entityId),
       operation: Value(operation),
       payload: Value(payload),
+      businessId: Value(businessId),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+      commandId: commandId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(commandId),
+      status: Value(status),
+      priority: Value(priority),
+      attemptCount: Value(attemptCount),
       createdAt: Value(createdAt),
+      scheduledAt: scheduledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scheduledAt),
+      lastAttemptAt: lastAttemptAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastAttemptAt),
+      nextRetryAt: nextRetryAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextRetryAt),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
     );
   }
 
@@ -6505,59 +6836,126 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SyncQueueData(
-      id: serializer.fromJson<int>(json['id']),
-      businessId: serializer.fromJson<String>(json['businessId']),
+      id: serializer.fromJson<String>(json['id']),
+      mutationId: serializer.fromJson<String>(json['mutationId']),
+      kind: serializer.fromJson<String>(json['kind']),
       entityType: serializer.fromJson<String>(json['entityType']),
-      entityId: serializer.fromJson<String>(json['entityId']),
+      entityId: serializer.fromJson<String?>(json['entityId']),
       operation: serializer.fromJson<String>(json['operation']),
       payload: serializer.fromJson<String>(json['payload']),
-      createdAt: serializer.fromJson<String>(json['createdAt']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+      commandId: serializer.fromJson<String?>(json['commandId']),
+      status: serializer.fromJson<String>(json['status']),
+      priority: serializer.fromJson<int>(json['priority']),
+      attemptCount: serializer.fromJson<int>(json['attemptCount']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      scheduledAt: serializer.fromJson<DateTime?>(json['scheduledAt']),
+      lastAttemptAt: serializer.fromJson<DateTime?>(json['lastAttemptAt']),
+      nextRetryAt: serializer.fromJson<DateTime?>(json['nextRetryAt']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'businessId': serializer.toJson<String>(businessId),
+      'id': serializer.toJson<String>(id),
+      'mutationId': serializer.toJson<String>(mutationId),
+      'kind': serializer.toJson<String>(kind),
       'entityType': serializer.toJson<String>(entityType),
-      'entityId': serializer.toJson<String>(entityId),
+      'entityId': serializer.toJson<String?>(entityId),
       'operation': serializer.toJson<String>(operation),
       'payload': serializer.toJson<String>(payload),
-      'createdAt': serializer.toJson<String>(createdAt),
+      'businessId': serializer.toJson<String>(businessId),
+      'deviceId': serializer.toJson<String?>(deviceId),
+      'commandId': serializer.toJson<String?>(commandId),
+      'status': serializer.toJson<String>(status),
+      'priority': serializer.toJson<int>(priority),
+      'attemptCount': serializer.toJson<int>(attemptCount),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'scheduledAt': serializer.toJson<DateTime?>(scheduledAt),
+      'lastAttemptAt': serializer.toJson<DateTime?>(lastAttemptAt),
+      'nextRetryAt': serializer.toJson<DateTime?>(nextRetryAt),
+      'lastError': serializer.toJson<String?>(lastError),
     };
   }
 
   SyncQueueData copyWith({
-    int? id,
-    String? businessId,
+    String? id,
+    String? mutationId,
+    String? kind,
     String? entityType,
-    String? entityId,
+    Value<String?> entityId = const Value.absent(),
     String? operation,
     String? payload,
-    String? createdAt,
+    String? businessId,
+    Value<String?> deviceId = const Value.absent(),
+    Value<String?> commandId = const Value.absent(),
+    String? status,
+    int? priority,
+    int? attemptCount,
+    DateTime? createdAt,
+    Value<DateTime?> scheduledAt = const Value.absent(),
+    Value<DateTime?> lastAttemptAt = const Value.absent(),
+    Value<DateTime?> nextRetryAt = const Value.absent(),
+    Value<String?> lastError = const Value.absent(),
   }) => SyncQueueData(
     id: id ?? this.id,
-    businessId: businessId ?? this.businessId,
+    mutationId: mutationId ?? this.mutationId,
+    kind: kind ?? this.kind,
     entityType: entityType ?? this.entityType,
-    entityId: entityId ?? this.entityId,
+    entityId: entityId.present ? entityId.value : this.entityId,
     operation: operation ?? this.operation,
     payload: payload ?? this.payload,
+    businessId: businessId ?? this.businessId,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+    commandId: commandId.present ? commandId.value : this.commandId,
+    status: status ?? this.status,
+    priority: priority ?? this.priority,
+    attemptCount: attemptCount ?? this.attemptCount,
     createdAt: createdAt ?? this.createdAt,
+    scheduledAt: scheduledAt.present ? scheduledAt.value : this.scheduledAt,
+    lastAttemptAt: lastAttemptAt.present
+        ? lastAttemptAt.value
+        : this.lastAttemptAt,
+    nextRetryAt: nextRetryAt.present ? nextRetryAt.value : this.nextRetryAt,
+    lastError: lastError.present ? lastError.value : this.lastError,
   );
   SyncQueueData copyWithCompanion(SyncQueueCompanion data) {
     return SyncQueueData(
       id: data.id.present ? data.id.value : this.id,
-      businessId: data.businessId.present
-          ? data.businessId.value
-          : this.businessId,
+      mutationId: data.mutationId.present
+          ? data.mutationId.value
+          : this.mutationId,
+      kind: data.kind.present ? data.kind.value : this.kind,
       entityType: data.entityType.present
           ? data.entityType.value
           : this.entityType,
       entityId: data.entityId.present ? data.entityId.value : this.entityId,
       operation: data.operation.present ? data.operation.value : this.operation,
       payload: data.payload.present ? data.payload.value : this.payload,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      commandId: data.commandId.present ? data.commandId.value : this.commandId,
+      status: data.status.present ? data.status.value : this.status,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      attemptCount: data.attemptCount.present
+          ? data.attemptCount.value
+          : this.attemptCount,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      scheduledAt: data.scheduledAt.present
+          ? data.scheduledAt.value
+          : this.scheduledAt,
+      lastAttemptAt: data.lastAttemptAt.present
+          ? data.lastAttemptAt.value
+          : this.lastAttemptAt,
+      nextRetryAt: data.nextRetryAt.present
+          ? data.nextRetryAt.value
+          : this.nextRetryAt,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
     );
   }
 
@@ -6565,12 +6963,23 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   String toString() {
     return (StringBuffer('SyncQueueData(')
           ..write('id: $id, ')
-          ..write('businessId: $businessId, ')
+          ..write('mutationId: $mutationId, ')
+          ..write('kind: $kind, ')
           ..write('entityType: $entityType, ')
           ..write('entityId: $entityId, ')
           ..write('operation: $operation, ')
           ..write('payload: $payload, ')
-          ..write('createdAt: $createdAt')
+          ..write('businessId: $businessId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('commandId: $commandId, ')
+          ..write('status: $status, ')
+          ..write('priority: $priority, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('scheduledAt: $scheduledAt, ')
+          ..write('lastAttemptAt: $lastAttemptAt, ')
+          ..write('nextRetryAt: $nextRetryAt, ')
+          ..write('lastError: $lastError')
           ..write(')'))
         .toString();
   }
@@ -6578,94 +6987,203 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   @override
   int get hashCode => Object.hash(
     id,
-    businessId,
+    mutationId,
+    kind,
     entityType,
     entityId,
     operation,
     payload,
+    businessId,
+    deviceId,
+    commandId,
+    status,
+    priority,
+    attemptCount,
     createdAt,
+    scheduledAt,
+    lastAttemptAt,
+    nextRetryAt,
+    lastError,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SyncQueueData &&
           other.id == this.id &&
-          other.businessId == this.businessId &&
+          other.mutationId == this.mutationId &&
+          other.kind == this.kind &&
           other.entityType == this.entityType &&
           other.entityId == this.entityId &&
           other.operation == this.operation &&
           other.payload == this.payload &&
-          other.createdAt == this.createdAt);
+          other.businessId == this.businessId &&
+          other.deviceId == this.deviceId &&
+          other.commandId == this.commandId &&
+          other.status == this.status &&
+          other.priority == this.priority &&
+          other.attemptCount == this.attemptCount &&
+          other.createdAt == this.createdAt &&
+          other.scheduledAt == this.scheduledAt &&
+          other.lastAttemptAt == this.lastAttemptAt &&
+          other.nextRetryAt == this.nextRetryAt &&
+          other.lastError == this.lastError);
 }
 
 class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
-  final Value<int> id;
-  final Value<String> businessId;
+  final Value<String> id;
+  final Value<String> mutationId;
+  final Value<String> kind;
   final Value<String> entityType;
-  final Value<String> entityId;
+  final Value<String?> entityId;
   final Value<String> operation;
   final Value<String> payload;
-  final Value<String> createdAt;
+  final Value<String> businessId;
+  final Value<String?> deviceId;
+  final Value<String?> commandId;
+  final Value<String> status;
+  final Value<int> priority;
+  final Value<int> attemptCount;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> scheduledAt;
+  final Value<DateTime?> lastAttemptAt;
+  final Value<DateTime?> nextRetryAt;
+  final Value<String?> lastError;
+  final Value<int> rowid;
   const SyncQueueCompanion({
     this.id = const Value.absent(),
-    this.businessId = const Value.absent(),
+    this.mutationId = const Value.absent(),
+    this.kind = const Value.absent(),
     this.entityType = const Value.absent(),
     this.entityId = const Value.absent(),
     this.operation = const Value.absent(),
     this.payload = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.commandId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.attemptCount = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.scheduledAt = const Value.absent(),
+    this.lastAttemptAt = const Value.absent(),
+    this.nextRetryAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   SyncQueueCompanion.insert({
-    this.id = const Value.absent(),
-    required String businessId,
+    required String id,
+    required String mutationId,
+    required String kind,
     required String entityType,
-    required String entityId,
+    this.entityId = const Value.absent(),
     required String operation,
     required String payload,
-    required String createdAt,
-  }) : businessId = Value(businessId),
+    required String businessId,
+    this.deviceId = const Value.absent(),
+    this.commandId = const Value.absent(),
+    required String status,
+    this.priority = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    required DateTime createdAt,
+    this.scheduledAt = const Value.absent(),
+    this.lastAttemptAt = const Value.absent(),
+    this.nextRetryAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       mutationId = Value(mutationId),
+       kind = Value(kind),
        entityType = Value(entityType),
-       entityId = Value(entityId),
        operation = Value(operation),
        payload = Value(payload),
+       businessId = Value(businessId),
+       status = Value(status),
        createdAt = Value(createdAt);
   static Insertable<SyncQueueData> custom({
-    Expression<int>? id,
-    Expression<String>? businessId,
+    Expression<String>? id,
+    Expression<String>? mutationId,
+    Expression<String>? kind,
     Expression<String>? entityType,
     Expression<String>? entityId,
     Expression<String>? operation,
     Expression<String>? payload,
-    Expression<String>? createdAt,
+    Expression<String>? businessId,
+    Expression<String>? deviceId,
+    Expression<String>? commandId,
+    Expression<String>? status,
+    Expression<int>? priority,
+    Expression<int>? attemptCount,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? scheduledAt,
+    Expression<DateTime>? lastAttemptAt,
+    Expression<DateTime>? nextRetryAt,
+    Expression<String>? lastError,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (businessId != null) 'business_id': businessId,
+      if (mutationId != null) 'mutation_id': mutationId,
+      if (kind != null) 'kind': kind,
       if (entityType != null) 'entity_type': entityType,
       if (entityId != null) 'entity_id': entityId,
       if (operation != null) 'operation': operation,
       if (payload != null) 'payload': payload,
+      if (businessId != null) 'business_id': businessId,
+      if (deviceId != null) 'device_id': deviceId,
+      if (commandId != null) 'command_id': commandId,
+      if (status != null) 'status': status,
+      if (priority != null) 'priority': priority,
+      if (attemptCount != null) 'attempt_count': attemptCount,
       if (createdAt != null) 'created_at': createdAt,
+      if (scheduledAt != null) 'scheduled_at': scheduledAt,
+      if (lastAttemptAt != null) 'last_attempt_at': lastAttemptAt,
+      if (nextRetryAt != null) 'next_retry_at': nextRetryAt,
+      if (lastError != null) 'last_error': lastError,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   SyncQueueCompanion copyWith({
-    Value<int>? id,
-    Value<String>? businessId,
+    Value<String>? id,
+    Value<String>? mutationId,
+    Value<String>? kind,
     Value<String>? entityType,
-    Value<String>? entityId,
+    Value<String?>? entityId,
     Value<String>? operation,
     Value<String>? payload,
-    Value<String>? createdAt,
+    Value<String>? businessId,
+    Value<String?>? deviceId,
+    Value<String?>? commandId,
+    Value<String>? status,
+    Value<int>? priority,
+    Value<int>? attemptCount,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? scheduledAt,
+    Value<DateTime?>? lastAttemptAt,
+    Value<DateTime?>? nextRetryAt,
+    Value<String?>? lastError,
+    Value<int>? rowid,
   }) {
     return SyncQueueCompanion(
       id: id ?? this.id,
-      businessId: businessId ?? this.businessId,
+      mutationId: mutationId ?? this.mutationId,
+      kind: kind ?? this.kind,
       entityType: entityType ?? this.entityType,
       entityId: entityId ?? this.entityId,
       operation: operation ?? this.operation,
       payload: payload ?? this.payload,
+      businessId: businessId ?? this.businessId,
+      deviceId: deviceId ?? this.deviceId,
+      commandId: commandId ?? this.commandId,
+      status: status ?? this.status,
+      priority: priority ?? this.priority,
+      attemptCount: attemptCount ?? this.attemptCount,
       createdAt: createdAt ?? this.createdAt,
+      scheduledAt: scheduledAt ?? this.scheduledAt,
+      lastAttemptAt: lastAttemptAt ?? this.lastAttemptAt,
+      nextRetryAt: nextRetryAt ?? this.nextRetryAt,
+      lastError: lastError ?? this.lastError,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -6673,10 +7191,13 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
-    if (businessId.present) {
-      map['business_id'] = Variable<String>(businessId.value);
+    if (mutationId.present) {
+      map['mutation_id'] = Variable<String>(mutationId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
     }
     if (entityType.present) {
       map['entity_type'] = Variable<String>(entityType.value);
@@ -6690,8 +7211,41 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     if (payload.present) {
       map['payload'] = Variable<String>(payload.value);
     }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (commandId.present) {
+      map['command_id'] = Variable<String>(commandId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<int>(priority.value);
+    }
+    if (attemptCount.present) {
+      map['attempt_count'] = Variable<int>(attemptCount.value);
+    }
     if (createdAt.present) {
-      map['created_at'] = Variable<String>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (scheduledAt.present) {
+      map['scheduled_at'] = Variable<DateTime>(scheduledAt.value);
+    }
+    if (lastAttemptAt.present) {
+      map['last_attempt_at'] = Variable<DateTime>(lastAttemptAt.value);
+    }
+    if (nextRetryAt.present) {
+      map['next_retry_at'] = Variable<DateTime>(nextRetryAt.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -6700,12 +7254,639 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   String toString() {
     return (StringBuffer('SyncQueueCompanion(')
           ..write('id: $id, ')
-          ..write('businessId: $businessId, ')
+          ..write('mutationId: $mutationId, ')
+          ..write('kind: $kind, ')
           ..write('entityType: $entityType, ')
           ..write('entityId: $entityId, ')
           ..write('operation: $operation, ')
           ..write('payload: $payload, ')
-          ..write('createdAt: $createdAt')
+          ..write('businessId: $businessId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('commandId: $commandId, ')
+          ..write('status: $status, ')
+          ..write('priority: $priority, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('scheduledAt: $scheduledAt, ')
+          ..write('lastAttemptAt: $lastAttemptAt, ')
+          ..write('nextRetryAt: $nextRetryAt, ')
+          ..write('lastError: $lastError, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CategoriesLocalTable extends CategoriesLocal
+    with TableInfo<$CategoriesLocalTable, CategoryTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CategoriesLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _itemCountMeta = const VerificationMeta(
+    'itemCount',
+  );
+  @override
+  late final GeneratedColumn<int> itemCount = GeneratedColumn<int>(
+    'item_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    name,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+    itemCount,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'categories_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CategoryTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    if (data.containsKey('item_count')) {
+      context.handle(
+        _itemCountMeta,
+        itemCount.isAcceptableOrUnknown(data['item_count']!, _itemCountMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CategoryTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CategoryTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+      itemCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}item_count'],
+      )!,
+    );
+  }
+
+  @override
+  $CategoriesLocalTable createAlias(String alias) {
+    return $CategoriesLocalTable(attachedDatabase, alias);
+  }
+}
+
+class CategoryTableData extends DataClass
+    implements Insertable<CategoryTableData> {
+  final String id;
+  final String businessId;
+  final String name;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+
+  /// Denormalized; not pushed to server.
+  final int itemCount;
+  const CategoryTableData({
+    required this.id,
+    required this.businessId,
+    required this.name,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+    required this.itemCount,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['name'] = Variable<String>(name);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    map['item_count'] = Variable<int>(itemCount);
+    return map;
+  }
+
+  CategoriesLocalCompanion toCompanion(bool nullToAbsent) {
+    return CategoriesLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      name: Value(name),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+      itemCount: Value(itemCount),
+    );
+  }
+
+  factory CategoryTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CategoryTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      name: serializer.fromJson<String>(json['name']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+      itemCount: serializer.fromJson<int>(json['itemCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'name': serializer.toJson<String>(name),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+      'itemCount': serializer.toJson<int>(itemCount),
+    };
+  }
+
+  CategoryTableData copyWith({
+    String? id,
+    String? businessId,
+    String? name,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+    int? itemCount,
+  }) => CategoryTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    name: name ?? this.name,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+    itemCount: itemCount ?? this.itemCount,
+  );
+  CategoryTableData copyWithCompanion(CategoriesLocalCompanion data) {
+    return CategoryTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      name: data.name.present ? data.name.value : this.name,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      itemCount: data.itemCount.present ? data.itemCount.value : this.itemCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('itemCount: $itemCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    name,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+    itemCount,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CategoryTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.name == this.name &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId &&
+          other.itemCount == this.itemCount);
+}
+
+class CategoriesLocalCompanion extends UpdateCompanion<CategoryTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> name;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> itemCount;
+  final Value<int> rowid;
+  const CategoriesLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.itemCount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CategoriesLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String name,
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.itemCount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<CategoryTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? name,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? itemCount,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (name != null) 'name': name,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (itemCount != null) 'item_count': itemCount,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CategoriesLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? name,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? itemCount,
+    Value<int>? rowid,
+  }) {
+    return CategoriesLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      name: name ?? this.name,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      itemCount: itemCount ?? this.itemCount,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (itemCount.present) {
+      map['item_count'] = Variable<int>(itemCount.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoriesLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('itemCount: $itemCount, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -6724,6 +7905,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ContactActivitiesTable(this);
   late final $DealsTable deals = $DealsTable(this);
   late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
+  late final $CategoriesLocalTable categoriesLocal = $CategoriesLocalTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6738,6 +7922,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     contactActivities,
     deals,
     syncQueue,
+    categoriesLocal,
   ];
 }
 
@@ -9944,23 +11129,47 @@ typedef $$DealsTableProcessedTableManager =
     >;
 typedef $$SyncQueueTableCreateCompanionBuilder =
     SyncQueueCompanion Function({
-      Value<int> id,
-      required String businessId,
+      required String id,
+      required String mutationId,
+      required String kind,
       required String entityType,
-      required String entityId,
+      Value<String?> entityId,
       required String operation,
       required String payload,
-      required String createdAt,
+      required String businessId,
+      Value<String?> deviceId,
+      Value<String?> commandId,
+      required String status,
+      Value<int> priority,
+      Value<int> attemptCount,
+      required DateTime createdAt,
+      Value<DateTime?> scheduledAt,
+      Value<DateTime?> lastAttemptAt,
+      Value<DateTime?> nextRetryAt,
+      Value<String?> lastError,
+      Value<int> rowid,
     });
 typedef $$SyncQueueTableUpdateCompanionBuilder =
     SyncQueueCompanion Function({
-      Value<int> id,
-      Value<String> businessId,
+      Value<String> id,
+      Value<String> mutationId,
+      Value<String> kind,
       Value<String> entityType,
-      Value<String> entityId,
+      Value<String?> entityId,
       Value<String> operation,
       Value<String> payload,
-      Value<String> createdAt,
+      Value<String> businessId,
+      Value<String?> deviceId,
+      Value<String?> commandId,
+      Value<String> status,
+      Value<int> priority,
+      Value<int> attemptCount,
+      Value<DateTime> createdAt,
+      Value<DateTime?> scheduledAt,
+      Value<DateTime?> lastAttemptAt,
+      Value<DateTime?> nextRetryAt,
+      Value<String?> lastError,
+      Value<int> rowid,
     });
 
 class $$SyncQueueTableFilterComposer
@@ -9972,13 +11181,18 @@ class $$SyncQueueTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get businessId => $composableBuilder(
-    column: $table.businessId,
+  ColumnFilters<String> get mutationId => $composableBuilder(
+    column: $table.mutationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10002,8 +11216,58 @@ class $$SyncQueueTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get createdAt => $composableBuilder(
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get commandId => $composableBuilder(
+    column: $table.commandId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastAttemptAt => $composableBuilder(
+    column: $table.lastAttemptAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextRetryAt => $composableBuilder(
+    column: $table.nextRetryAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -10017,13 +11281,18 @@ class $$SyncQueueTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get businessId => $composableBuilder(
-    column: $table.businessId,
+  ColumnOrderings<String> get mutationId => $composableBuilder(
+    column: $table.mutationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -10047,8 +11316,58 @@ class $$SyncQueueTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get createdAt => $composableBuilder(
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get commandId => $composableBuilder(
+    column: $table.commandId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastAttemptAt => $composableBuilder(
+    column: $table.lastAttemptAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get nextRetryAt => $composableBuilder(
+    column: $table.nextRetryAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -10062,13 +11381,16 @@ class $$SyncQueueTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get businessId => $composableBuilder(
-    column: $table.businessId,
+  GeneratedColumn<String> get mutationId => $composableBuilder(
+    column: $table.mutationId,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
 
   GeneratedColumn<String> get entityType => $composableBuilder(
     column: $table.entityType,
@@ -10084,8 +11406,48 @@ class $$SyncQueueTableAnnotationComposer
   GeneratedColumn<String> get payload =>
       $composableBuilder(column: $table.payload, builder: (column) => column);
 
-  GeneratedColumn<String> get createdAt =>
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get commandId =>
+      $composableBuilder(column: $table.commandId, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get scheduledAt => $composableBuilder(
+    column: $table.scheduledAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastAttemptAt => $composableBuilder(
+    column: $table.lastAttemptAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get nextRetryAt => $composableBuilder(
+    column: $table.nextRetryAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
 }
 
 class $$SyncQueueTableTableManager
@@ -10119,39 +11481,87 @@ class $$SyncQueueTableTableManager
               $$SyncQueueTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
-                Value<String> businessId = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> mutationId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
                 Value<String> entityType = const Value.absent(),
-                Value<String> entityId = const Value.absent(),
+                Value<String?> entityId = const Value.absent(),
                 Value<String> operation = const Value.absent(),
                 Value<String> payload = const Value.absent(),
-                Value<String> createdAt = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<String?> commandId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> priority = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> scheduledAt = const Value.absent(),
+                Value<DateTime?> lastAttemptAt = const Value.absent(),
+                Value<DateTime?> nextRetryAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => SyncQueueCompanion(
                 id: id,
-                businessId: businessId,
+                mutationId: mutationId,
+                kind: kind,
                 entityType: entityType,
                 entityId: entityId,
                 operation: operation,
                 payload: payload,
+                businessId: businessId,
+                deviceId: deviceId,
+                commandId: commandId,
+                status: status,
+                priority: priority,
+                attemptCount: attemptCount,
                 createdAt: createdAt,
+                scheduledAt: scheduledAt,
+                lastAttemptAt: lastAttemptAt,
+                nextRetryAt: nextRetryAt,
+                lastError: lastError,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
-                required String businessId,
+                required String id,
+                required String mutationId,
+                required String kind,
                 required String entityType,
-                required String entityId,
+                Value<String?> entityId = const Value.absent(),
                 required String operation,
                 required String payload,
-                required String createdAt,
+                required String businessId,
+                Value<String?> deviceId = const Value.absent(),
+                Value<String?> commandId = const Value.absent(),
+                required String status,
+                Value<int> priority = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                required DateTime createdAt,
+                Value<DateTime?> scheduledAt = const Value.absent(),
+                Value<DateTime?> lastAttemptAt = const Value.absent(),
+                Value<DateTime?> nextRetryAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => SyncQueueCompanion.insert(
                 id: id,
-                businessId: businessId,
+                mutationId: mutationId,
+                kind: kind,
                 entityType: entityType,
                 entityId: entityId,
                 operation: operation,
                 payload: payload,
+                businessId: businessId,
+                deviceId: deviceId,
+                commandId: commandId,
+                status: status,
+                priority: priority,
+                attemptCount: attemptCount,
                 createdAt: createdAt,
+                scheduledAt: scheduledAt,
+                lastAttemptAt: lastAttemptAt,
+                nextRetryAt: nextRetryAt,
+                lastError: lastError,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -10178,6 +11588,311 @@ typedef $$SyncQueueTableProcessedTableManager =
       SyncQueueData,
       PrefetchHooks Function()
     >;
+typedef $$CategoriesLocalTableCreateCompanionBuilder =
+    CategoriesLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String name,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> itemCount,
+      Value<int> rowid,
+    });
+typedef $$CategoriesLocalTableUpdateCompanionBuilder =
+    CategoriesLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> name,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> itemCount,
+      Value<int> rowid,
+    });
+
+class $$CategoriesLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $CategoriesLocalTable> {
+  $$CategoriesLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get itemCount => $composableBuilder(
+    column: $table.itemCount,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CategoriesLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $CategoriesLocalTable> {
+  $$CategoriesLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get itemCount => $composableBuilder(
+    column: $table.itemCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CategoriesLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CategoriesLocalTable> {
+  $$CategoriesLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<int> get itemCount =>
+      $composableBuilder(column: $table.itemCount, builder: (column) => column);
+}
+
+class $$CategoriesLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CategoriesLocalTable,
+          CategoryTableData,
+          $$CategoriesLocalTableFilterComposer,
+          $$CategoriesLocalTableOrderingComposer,
+          $$CategoriesLocalTableAnnotationComposer,
+          $$CategoriesLocalTableCreateCompanionBuilder,
+          $$CategoriesLocalTableUpdateCompanionBuilder,
+          (
+            CategoryTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $CategoriesLocalTable,
+              CategoryTableData
+            >,
+          ),
+          CategoryTableData,
+          PrefetchHooks Function()
+        > {
+  $$CategoriesLocalTableTableManager(
+    _$AppDatabase db,
+    $CategoriesLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CategoriesLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CategoriesLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CategoriesLocalTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> itemCount = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoriesLocalCompanion(
+                id: id,
+                businessId: businessId,
+                name: name,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                itemCount: itemCount,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String name,
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> itemCount = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoriesLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                name: name,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                itemCount: itemCount,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CategoriesLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CategoriesLocalTable,
+      CategoryTableData,
+      $$CategoriesLocalTableFilterComposer,
+      $$CategoriesLocalTableOrderingComposer,
+      $$CategoriesLocalTableAnnotationComposer,
+      $$CategoriesLocalTableCreateCompanionBuilder,
+      $$CategoriesLocalTableUpdateCompanionBuilder,
+      (
+        CategoryTableData,
+        BaseReferences<_$AppDatabase, $CategoriesLocalTable, CategoryTableData>,
+      ),
+      CategoryTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10200,4 +11915,6 @@ class $AppDatabaseManager {
       $$DealsTableTableManager(_db, _db.deals);
   $$SyncQueueTableTableManager get syncQueue =>
       $$SyncQueueTableTableManager(_db, _db.syncQueue);
+  $$CategoriesLocalTableTableManager get categoriesLocal =>
+      $$CategoriesLocalTableTableManager(_db, _db.categoriesLocal);
 }
