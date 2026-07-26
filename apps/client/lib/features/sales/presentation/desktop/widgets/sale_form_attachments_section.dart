@@ -1,5 +1,5 @@
-import 'package:billing_baba/core/attachments/attachment_picker.dart';
-import 'package:billing_baba/core/attachments/document_attachment_service.dart';
+import 'package:billing_baba/shared/attachments/attachment_picker.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_service.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/text_input_dialog.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';

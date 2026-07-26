@@ -19,8 +19,9 @@ String? resolveServerLineId({
       .where((line) => !keptServerIds.contains(line.id))
       .toList(growable: false);
 
-  final bySortOrder =
-      unmatched.where((line) => line.sortOrder == sortOrder).toList();
+  final bySortOrder = unmatched
+      .where((line) => line.sortOrder == sortOrder)
+      .toList();
   if (bySortOrder.length == 1) {
     return bySortOrder.first.id;
   }

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:billing_baba/core/storage/media_upload_client.dart';
+import 'package:billing_baba/shared/media/media_upload_client.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/branding_image_uploader.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';

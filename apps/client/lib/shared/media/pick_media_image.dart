@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:billing_baba/core/media/prepare_media_upload_bytes.dart';
-import 'package:billing_baba/core/storage/media_upload_client.dart';
+import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
+import 'package:billing_baba/shared/media/media_upload_client.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/media/image_display_context.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
 import 'package:billing_baba/shared/image/image_urls.dart';

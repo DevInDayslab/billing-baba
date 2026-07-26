@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/navigation/transaction_detail_navigation.dart';
+import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/close_form_dialog.dart';

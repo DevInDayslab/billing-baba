@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/media/image_variant.dart';
+import 'package:billing_baba/shared/media/image_variant.dart';
 
 enum ImageDisplayContext {
   grid(ImageVariant.thumbnail),

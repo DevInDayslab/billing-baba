@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:billing_baba/core/attachments/attachment_sync_helper.dart';
-import 'package:billing_baba/core/storage/media_upload_client.dart';
+import 'package:billing_baba/shared/attachments/attachment_sync_helper.dart';
+import 'package:billing_baba/shared/media/media_upload_client.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:file_picker/file_picker.dart';
 

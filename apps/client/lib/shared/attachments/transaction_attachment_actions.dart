@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:billing_baba/core/attachments/attachment_offline_metadata_store.dart';
-import 'package:billing_baba/core/attachments/attachment_picker.dart';
-import 'package:billing_baba/core/attachments/attachment_sync_helper.dart';
-import 'package:billing_baba/core/attachments/document_attachment_providers.dart';
-import 'package:billing_baba/core/attachments/document_attachment_service.dart';
+import 'package:billing_baba/shared/attachments/attachment_offline_metadata_store.dart';
+import 'package:billing_baba/shared/attachments/attachment_picker.dart';
+import 'package:billing_baba/shared/attachments/attachment_sync_helper.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_providers.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_service.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_form_attachments_section.dart';
 import 'package:billing_baba/shared/image/image_service.dart';
@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 ({List<SaleFormAttachment> images, List<SaleFormAttachment> documents})
-    splitTransactionAttachments(List<SaleFormAttachment> attachments) {
+splitTransactionAttachments(List<SaleFormAttachment> attachments) {
   return (
     images: attachments.where((attachment) => attachment.isImage).toList(),
     documents: attachments.where((attachment) => !attachment.isImage).toList(),
@@ -44,7 +44,7 @@ Future<DocumentAttachmentService?> readDocumentAttachmentServiceFromRef(
 }
 
 Future<({List<SaleFormAttachment> images, List<SaleFormAttachment> documents})>
-    loadTransactionAttachments(
+loadTransactionAttachments(
   Ref ref, {
   required String entityType,
   required String entityId,
@@ -52,7 +52,10 @@ Future<({List<SaleFormAttachment> images, List<SaleFormAttachment> documents})>
   try {
     final service = await readDocumentAttachmentServiceFromRef(ref);
     if (service == null) {
-      return (images: <SaleFormAttachment>[], documents: <SaleFormAttachment>[]);
+      return (
+        images: <SaleFormAttachment>[],
+        documents: <SaleFormAttachment>[],
+      );
     }
     final attachments = await service.fetchAttachments(
       entityType: entityType,
@@ -65,10 +68,12 @@ Future<({List<SaleFormAttachment> images, List<SaleFormAttachment> documents})>
 }
 
 Future<
-    ({
-      List<SaleFormAttachment> images,
-      List<SaleFormAttachment> documents,
-    })?>     syncTransactionAttachments(
+  ({
+    List<SaleFormAttachment> images,
+    List<SaleFormAttachment> documents,
+  })?
+>
+syncTransactionAttachments(
   Ref ref, {
   required String entityType,
   required String entityId,
@@ -214,9 +219,9 @@ Future<void> transactionRemoveAttachment({
   required void Function(String id) onRemoved,
 }) async {
   final attachment = attachments.cast<SaleFormAttachment?>().firstWhere(
-        (item) => item?.id == id,
-        orElse: () => null,
-      );
+    (item) => item?.id == id,
+    orElse: () => null,
+  );
   if (attachment?.remoteId != null) {
     try {
       final service = await readDocumentAttachmentService(ref);
@@ -229,7 +234,9 @@ Future<void> transactionRemoveAttachment({
       attachment.isImage &&
       normalizeImageUrl(attachment.fileUrl) != null) {
     unawaited(
-      ref.read(imageServiceProvider).invalidateImage(
+      ref
+          .read(imageServiceProvider)
+          .invalidateImage(
             url: attachment.fileUrl,
             cacheKey: buildImageCacheKey(fallbackUrl: attachment.fileUrl),
           ),
@@ -246,9 +253,9 @@ Future<void> transactionRenameAttachment({
   required void Function(String id, String name) onRenamed,
 }) async {
   final attachment = attachments.cast<SaleFormAttachment?>().firstWhere(
-        (item) => item?.id == id,
-        orElse: () => null,
-      );
+    (item) => item?.id == id,
+    orElse: () => null,
+  );
   if (attachment?.remoteId != null) {
     try {
       final service = await readDocumentAttachmentService(ref);

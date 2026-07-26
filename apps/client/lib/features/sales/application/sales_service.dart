@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/documents/document_line_sync.dart';
+import 'package:billing_baba/shared/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';

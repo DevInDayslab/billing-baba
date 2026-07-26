@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/media/image_variant.dart';
+import 'package:billing_baba/shared/media/image_variant.dart';
 import 'package:billing_baba/core/network/api_endpoints.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +9,8 @@ typedef MediaVariantRequest = ({
   ImageVariant variant,
 });
 
-final FutureProviderFamily<String, MediaVariantRequest> mediaVariantUrlProvider = FutureProvider.family<String, MediaVariantRequest>(
+final FutureProviderFamily<String, MediaVariantRequest>
+mediaVariantUrlProvider = FutureProvider.family<String, MediaVariantRequest>(
   (ref, request) async {
     final client = await ref.watch(apiClientProvider.future);
     final path = ApiEndpoints.storageImageVariantUrl(
@@ -27,7 +28,10 @@ final FutureProviderFamily<String, MediaVariantRequest> mediaVariantUrlProvider 
 );
 
 /// Drops cached signed URLs so the next read fetches a fresh variant URL.
-void invalidateMediaVariantUrls(ProviderContainer container, String mediaAssetId) {
+void invalidateMediaVariantUrls(
+  ProviderContainer container,
+  String mediaAssetId,
+) {
   final assetId = mediaAssetId.trim();
   if (assetId.isEmpty) return;
 

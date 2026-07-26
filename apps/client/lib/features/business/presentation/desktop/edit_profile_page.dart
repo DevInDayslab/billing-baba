@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:billing_baba/core/media/pick_media_image.dart';
+import 'package:billing_baba/shared/media/pick_media_image.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/utils/validators.dart';

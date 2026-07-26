@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:billing_baba/core/media/image_display_context.dart';
-import 'package:billing_baba/core/media/pick_media_image.dart';
-import 'package:billing_baba/core/media/prepare_media_upload_bytes.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/shared/media/pick_media_image.dart';
+import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_service.dart';

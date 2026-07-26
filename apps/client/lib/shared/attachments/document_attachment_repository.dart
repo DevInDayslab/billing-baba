@@ -1,11 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:billing_baba/core/network/api_endpoints.dart';
-import 'package:billing_baba/core/storage/media_upload_client.dart';
+import 'package:billing_baba/shared/media/media_upload_client.dart';
 import 'package:dio/dio.dart';
 
 class DocumentAttachmentRepository {
-  DocumentAttachmentRepository(this._dio) : _uploadClient = MediaUploadClient(_dio);
+  DocumentAttachmentRepository(this._dio)
+    : _uploadClient = MediaUploadClient(_dio);
 
   final Dio _dio;
   final MediaUploadClient _uploadClient;
@@ -34,17 +35,16 @@ class DocumentAttachmentRepository {
     required String fileName,
     String? label,
     String? replacesAttachmentId,
-  }) =>
-      _uploadClient.upload(
-        endpoint: ApiEndpoints.documentAttachmentsFor(entityType, entityId),
-        bytes: bytes,
-        mimeType: mimeType,
-        completeExtra: {
-          'file_name': fileName,
-          'label': ?label,
-          'replaces_attachment_id': ?replacesAttachmentId,
-        },
-      );
+  }) => _uploadClient.upload(
+    endpoint: ApiEndpoints.documentAttachmentsFor(entityType, entityId),
+    bytes: bytes,
+    mimeType: mimeType,
+    completeExtra: {
+      'file_name': fileName,
+      'label': ?label,
+      'replaces_attachment_id': ?replacesAttachmentId,
+    },
+  );
 
   Future<void> delete(String attachmentId) =>
       _dio.delete<void>(ApiEndpoints.documentAttachment(attachmentId));

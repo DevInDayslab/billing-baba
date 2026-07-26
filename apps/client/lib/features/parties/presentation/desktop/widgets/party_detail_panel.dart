@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/media/image_display_context.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';

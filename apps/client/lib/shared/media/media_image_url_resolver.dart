@@ -1,6 +1,6 @@
-import 'package:billing_baba/core/media/image_display_context.dart';
-import 'package:billing_baba/core/media/image_variant.dart';
-import 'package:billing_baba/core/media/media_image_providers.dart';
+import 'package:billing_baba/shared/media/image_display_context.dart';
+import 'package:billing_baba/shared/media/image_variant.dart';
+import 'package:billing_baba/shared/media/media_image_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MediaImageUrlResolver {

@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:billing_baba/core/media/prepare_media_upload_bytes.dart';
+import 'package:billing_baba/shared/media/prepare_media_upload_bytes.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
-import 'package:billing_baba/core/storage/media_upload_client.dart';
+import 'package:billing_baba/shared/media/media_upload_client.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';

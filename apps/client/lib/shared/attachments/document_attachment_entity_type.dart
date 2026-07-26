@@ -36,7 +36,8 @@ DocumentAttachmentEntityType? documentAttachmentEntityFromPurchaseType(
 ) {
   return switch (documentType) {
     'purchase_order' => DocumentAttachmentEntityType.purchaseOrder,
-    'purchase_bill' || 'purchase_return' => DocumentAttachmentEntityType.purchase,
+    'purchase_bill' ||
+    'purchase_return' => DocumentAttachmentEntityType.purchase,
     _ => null,
   };
 }
