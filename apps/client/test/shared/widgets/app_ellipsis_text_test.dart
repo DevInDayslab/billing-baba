@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

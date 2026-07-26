@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/widgets/adaptive_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/pos/models/pos_sale.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/pos_return_page.dart';
 import 'package:billing_baba/features/pos/presentation/mobile/pos_return_page.dart';

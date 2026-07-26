@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
 import 'package:billing_baba/features/inventory/application/add_item_form_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_brands_provider.dart';

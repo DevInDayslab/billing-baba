@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_button.dart';
+import 'package:billing_baba/shared/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 
 /// Illustrated empty state for mobile list and detail screens.

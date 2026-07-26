@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/text_input_dialog.dart';
+import 'package:billing_baba/shared/widgets/text_input_dialog.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_split_layout.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';

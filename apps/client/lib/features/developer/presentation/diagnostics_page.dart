@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/widgets/adaptive_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/developer/presentation/desktop/diagnostics_page.dart';
 import 'package:billing_baba/features/developer/presentation/mobile/diagnostics_page.dart';
 import 'package:flutter/widgets.dart';

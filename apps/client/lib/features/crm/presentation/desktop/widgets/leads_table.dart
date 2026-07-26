@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/expandable_table_search_field.dart';
+import 'package:billing_baba/shared/widgets/expandable_table_search_field.dart';
 import 'package:billing_baba/features/crm/application/lead_error_mapper.dart';
 import 'package:billing_baba/features/crm/application/leads_provider.dart';
 import 'package:billing_baba/features/crm/application/leads_selection_providers.dart';

@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_section_header.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_section_header.dart';
 import 'package:flutter/material.dart';
 
 /// Groups mobile list rows under a shared section header.

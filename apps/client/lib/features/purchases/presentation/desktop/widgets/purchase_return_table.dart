@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
-import 'package:billing_baba/core/widgets/resizable_data_table.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/export/presentation/desktop/widgets/module_export_actions.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';

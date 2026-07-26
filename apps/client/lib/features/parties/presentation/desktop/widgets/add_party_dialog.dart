@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/utils/validators.dart';
-import 'package:billing_baba/core/widgets/text_input_dialog.dart';
-import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/shared/widgets/text_input_dialog.dart';
+import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/application/commerce_settings_provider.dart';
 import 'package:billing_baba/features/parties/application/parties_providers.dart';

@@ -54,10 +54,10 @@ class _AppNetworkImageState extends ConsumerState<AppNetworkImage> {
   late Future<String> _resolvedUrlFuture;
 
   String? get _cacheKey => buildImageCacheKey(
-        mediaAssetId: widget.sourceMediaAssetId,
-        displayContext: widget.displayContext,
-        fallbackUrl: widget.imageUrl,
-      );
+    mediaAssetId: widget.sourceMediaAssetId,
+    displayContext: widget.displayContext,
+    fallbackUrl: widget.imageUrl,
+  );
 
   @override
   void initState() {

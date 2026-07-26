@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/widgets/adaptive_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/collaboration/presentation/desktop/sync_share_page.dart';
 import 'package:billing_baba/features/collaboration/presentation/mobile/sync_share_page.dart';
 import 'package:flutter/widgets.dart';

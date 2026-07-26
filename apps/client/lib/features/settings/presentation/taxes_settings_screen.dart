@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/widgets/adaptive_page.dart';
+import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:billing_baba/features/settings/presentation/desktop/taxes_settings_screen.dart';
 import 'package:billing_baba/features/settings/presentation/mobile/taxes_settings_screen.dart';
 import 'package:flutter/widgets.dart';

@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_models.dart';
+import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/src/providers/provider.dart';
 
@@ -33,10 +33,12 @@ class MobileTransactionListState {
 
 /// Registry of list UI state keyed by page [scopeId].
 final mobileTransactionListRegistryProvider =
-    NotifierProvider<MobileTransactionListRegistry,
-        Map<String, MobileTransactionListState>>(
-  MobileTransactionListRegistry.new,
-);
+    NotifierProvider<
+      MobileTransactionListRegistry,
+      Map<String, MobileTransactionListState>
+    >(
+      MobileTransactionListRegistry.new,
+    );
 
 class MobileTransactionListRegistry
     extends Notifier<Map<String, MobileTransactionListState>> {
@@ -83,11 +85,12 @@ class MobileTransactionListRegistry
 }
 
 /// Watches list UI state for a single transaction page scope.
-final ProviderFamily<MobileTransactionListState, String> mobileTransactionListStateProvider =
+final ProviderFamily<MobileTransactionListState, String>
+mobileTransactionListStateProvider =
     Provider.family<MobileTransactionListState, String>((ref, scope) {
-  final registry = ref.watch(mobileTransactionListRegistryProvider);
-  return registry[scope] ?? const MobileTransactionListState();
-});
+      final registry = ref.watch(mobileTransactionListRegistryProvider);
+      return registry[scope] ?? const MobileTransactionListState();
+    });
 
 List<MobileTransactionListItem> sortMobileTransactionItems(
   List<MobileTransactionListItem> items,
@@ -121,7 +124,8 @@ List<MobileTransactionListItem> filterMobileTransactionItems({
   required List<MobileTransactionListItem> items,
   required String query,
   String? filterKey,
-  bool Function(MobileTransactionListItem item, String filterKey)? filterMatcher,
+  bool Function(MobileTransactionListItem item, String filterKey)?
+  filterMatcher,
 }) {
   var result = items;
 

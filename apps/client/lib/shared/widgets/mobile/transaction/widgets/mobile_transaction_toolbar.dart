@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_icon_action_button.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_search_field.dart';
-import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_models.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_icon_action_button.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_search_field.dart';
+import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_models.dart';
 import 'package:flutter/material.dart';
 
 /// Search, filter, sort, and more-actions controls for transaction lists.

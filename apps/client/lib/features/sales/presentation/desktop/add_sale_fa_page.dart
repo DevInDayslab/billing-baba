@@ -1,8 +1,8 @@
 import 'package:billing_baba/shared/navigation/transaction_detail_navigation.dart';
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/share_menu_button.dart';
-import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
+import 'package:billing_baba/shared/widgets/share_menu_button.dart';
+import 'package:billing_baba/shared/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/sales/application/add_sale_fa_form_provider.dart';
 import 'package:billing_baba/features/sales/application/sale_fa_tabs_provider.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/add_sale_fa_footer.dart';

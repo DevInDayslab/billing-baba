@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/resizable_data_table.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_error_mapper.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
 import 'package:billing_baba/features/collaboration/domain/models/business_member.dart';

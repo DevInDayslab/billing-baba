@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_button.dart';
+import 'package:billing_baba/shared/widgets/app_button.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_actions.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_whatsapp_actions.dart';

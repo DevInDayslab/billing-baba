@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_empty_state.dart';
-import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_catalog.dart';
-import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_items_provider.dart';
-import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_page.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_empty_state.dart';
+import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_catalog.dart';
+import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_items_provider.dart';
+import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,7 +35,9 @@ class MobileScopedTransactionPage extends ConsumerWidget {
     }
 
     final config = definition.config(context, titleOverride: titleOverride);
-    final itemsAsync = ref.watch(mobileTransactionItemsProvider(definition.scopeId));
+    final itemsAsync = ref.watch(
+      mobileTransactionItemsProvider(definition.scopeId),
+    );
 
     return MobileTransactionPage(
       config: config,

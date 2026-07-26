@@ -1,8 +1,8 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_button.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_bottom_sheet.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_option_sheet.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_sheet_models.dart';
+import 'package:billing_baba/shared/widgets/app_button.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_bottom_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_option_sheet.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_sheet_models.dart';
 import 'package:flutter/material.dart';
 
 /// Quick Actions — icon grid for shortcuts (home, party detail, etc.).
@@ -353,9 +353,10 @@ class _AddOptionTile extends StatelessWidget {
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           option.subtitle!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
                         ),
                       ],
                     ],
@@ -425,9 +426,10 @@ class _ActionTile extends StatelessWidget {
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           action.subtitle!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
                         ),
                       ],
                     ],

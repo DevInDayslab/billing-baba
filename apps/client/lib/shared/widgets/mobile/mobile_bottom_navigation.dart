@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/mobile/mobile_nav_destinations.dart';
+import 'package:billing_baba/shared/widgets/mobile/mobile_nav_destinations.dart';
 import 'package:flutter/material.dart';
 
 /// Reusable mobile bottom navigation with a raised center POS action.

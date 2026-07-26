@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_loader.dart';
+import 'package:billing_baba/shared/widgets/app_loader.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/tasks/application/tasks_provider.dart';
 import 'package:billing_baba/features/tasks/models/task_model.dart';

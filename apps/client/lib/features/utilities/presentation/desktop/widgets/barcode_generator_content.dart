@@ -1,7 +1,7 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/shared/utils/output_error_mapper.dart';
-import 'package:billing_baba/core/widgets/resizable_data_table.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 import 'package:billing_baba/features/print/application/print_exception.dart';

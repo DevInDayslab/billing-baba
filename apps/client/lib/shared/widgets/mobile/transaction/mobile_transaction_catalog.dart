@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/router/app_routes.dart';
-import 'package:billing_baba/core/widgets/mobile/transaction/mobile_transaction_models.dart';
+import 'package:billing_baba/shared/widgets/mobile/transaction/mobile_transaction_models.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:flutter/material.dart';
@@ -96,8 +96,9 @@ abstract final class MobileTransactionCatalog {
   static List<MobileTransactionScopeDefinition> get sales =>
       all.where((d) => d.category == MobileTransactionCategory.sales).toList();
 
-  static List<MobileTransactionScopeDefinition> get purchases =>
-      all.where((d) => d.category == MobileTransactionCategory.purchase).toList();
+  static List<MobileTransactionScopeDefinition> get purchases => all
+      .where((d) => d.category == MobileTransactionCategory.purchase)
+      .toList();
 
   static List<MobileTransactionScopeDefinition> get others =>
       all.where((d) => d.category == MobileTransactionCategory.other).toList();

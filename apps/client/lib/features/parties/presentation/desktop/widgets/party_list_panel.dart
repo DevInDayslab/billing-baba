@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/widgets/app_ellipsis_text.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_async_list.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_highlighted_text.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
