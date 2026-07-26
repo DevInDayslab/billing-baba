@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_error_mapper.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_repository_provider.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';

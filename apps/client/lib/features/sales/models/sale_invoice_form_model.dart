@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:flutter/material.dart';

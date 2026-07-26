@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/output_error_mapper.dart';
+import 'package:billing_baba/shared/utils/output_error_mapper.dart';
 import 'package:billing_baba/features/generated_documents/application/generated_document_providers.dart';
 import 'package:billing_baba/features/generated_documents/application/generated_document_service.dart';
 import 'package:billing_baba/features/print/application/print_providers.dart';

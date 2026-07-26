@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:billing_baba/features/sales/application/sale_invoices_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_documents_list_provider.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';

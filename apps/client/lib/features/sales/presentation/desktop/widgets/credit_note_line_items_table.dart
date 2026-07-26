@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/out_of_stock_dialog.dart';
 import 'package:billing_baba/features/sales/application/credit_note_form_provider.dart';

@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 
 class BusinessProfileModel {
   const BusinessProfileModel({

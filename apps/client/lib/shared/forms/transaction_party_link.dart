@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/features/parties/models/party_model.dart';
 import 'package:billing_baba/features/pricing/models/price_tier.dart';
 

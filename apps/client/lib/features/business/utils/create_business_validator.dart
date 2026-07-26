@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/features/business/models/create_business_input.dart';
 
 /// Client-side validation for the create-business form.

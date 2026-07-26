@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/sales/application/sale_document_form_provider.dart';
 import 'package:billing_baba/features/sales/models/sale_document_model.dart';

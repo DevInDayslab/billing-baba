@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_service_types.dart';
 import 'package:billing_baba/features/collaboration/application/collaboration_simulator.dart';
 import 'package:billing_baba/features/collaboration/data/collaboration_repository.dart';

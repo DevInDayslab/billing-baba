@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_receipt_printer.dart';

@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/platform_file_output.dart';
+import 'package:billing_baba/shared/utils/platform_file_output.dart';
 import 'package:billing_baba/features/print/models/printable_pdf.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_pdf_preview_dialog.dart';
 import 'package:billing_baba/features/settings/utils/thermal_pdf_page_format.dart';

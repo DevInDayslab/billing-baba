@@ -37,7 +37,8 @@ abstract final class DateTimeUtils {
   }
 
   /// Serializes a local [dateTime] to UTC ISO-8601 for API writes.
-  static String toApiIso(DateTime dateTime) => dateTime.toUtc().toIso8601String();
+  static String toApiIso(DateTime dateTime) =>
+      dateTime.toUtc().toIso8601String();
 
   static String formatDisplayDateTime(DateTime dateTime) =>
       displayDateTime.format(dateTime.toLocal());

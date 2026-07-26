@@ -9,7 +9,7 @@ import 'package:billing_baba/core/network/network_exception_classifier.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/services/session_cache_cleanup.dart';
-import 'package:billing_baba/core/utils/jwt_utils.dart';
+import 'package:billing_baba/shared/utils/jwt_utils.dart';
 import 'package:billing_baba/features/auth/models/auth_session.dart';
 import 'package:billing_baba/features/auth/models/auth_user.dart';
 import 'package:billing_baba/features/auth/models/business_summary.dart';

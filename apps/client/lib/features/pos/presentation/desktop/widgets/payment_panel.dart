@@ -1,5 +1,5 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_avatar.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_items_provider.dart';

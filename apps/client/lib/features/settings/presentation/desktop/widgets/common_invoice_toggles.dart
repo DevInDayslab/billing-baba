@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
-import 'package:billing_baba/core/utils/debouncer.dart';
+import 'package:billing_baba/shared/utils/debouncer.dart';
 import 'package:billing_baba/features/settings/models/print_settings.dart';
 import 'package:billing_baba/features/settings/services/invoice_print_document_service.dart';
 import 'package:flutter/material.dart';

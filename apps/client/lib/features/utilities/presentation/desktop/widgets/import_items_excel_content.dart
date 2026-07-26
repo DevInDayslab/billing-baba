@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/platform_file_output.dart';
+import 'package:billing_baba/shared/utils/platform_file_output.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/utilities/application/import_items_excel_parser.dart';

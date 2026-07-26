@@ -1,4 +1,4 @@
-import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/features/business/models/business_profile_model.dart';
 
 abstract final class EditBusinessProfileValidator {

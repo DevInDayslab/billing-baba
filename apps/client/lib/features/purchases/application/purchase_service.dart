@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/documents/document_line_sync.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
-import 'package:billing_baba/core/utils/date_time_utils.dart';
+import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';

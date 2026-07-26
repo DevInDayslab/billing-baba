@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/core/widgets/text_input_dialog.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';

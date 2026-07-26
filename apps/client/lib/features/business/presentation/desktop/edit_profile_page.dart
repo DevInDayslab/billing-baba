@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:billing_baba/core/media/pick_media_image.dart';
 import 'package:billing_baba/core/providers/api_client_provider.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/core/utils/validators.dart';
+import 'package:billing_baba/shared/utils/validators.dart';
 import 'package:billing_baba/features/business/application/business_profile_controller.dart';
 import 'package:billing_baba/features/business/application/business_service.dart';
 import 'package:billing_baba/features/business/data/business_branding_repository.dart';

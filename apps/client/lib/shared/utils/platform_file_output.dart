@@ -97,16 +97,15 @@ abstract final class PlatformFileOutput {
 
     final safeName = _ensureExtension(
       _basename(filename),
-      _normalizeExtension(extension) ??
-          _extensionFromMimeType(mimeType),
+      _normalizeExtension(extension) ?? _extensionFromMimeType(mimeType),
     );
 
     if (isDesktop) {
       await saveViaDialog(
         filename: safeName,
         bytes: bytes,
-        extension: _normalizeExtension(extension) ??
-            _extensionFromMimeType(mimeType),
+        extension:
+            _normalizeExtension(extension) ?? _extensionFromMimeType(mimeType),
       );
       return;
     }
@@ -131,11 +130,11 @@ abstract final class PlatformFileOutput {
   }
 
   static String? _extensionFromMimeType(String mimeType) => switch (mimeType) {
-        'application/pdf' => 'pdf',
-        'image/png' => 'png',
-        'image/jpeg' => 'jpg',
-        _ => null,
-      };
+    'application/pdf' => 'pdf',
+    'image/png' => 'png',
+    'image/jpeg' => 'jpg',
+    _ => null,
+  };
 
   static String _ensureExtension(String filename, String? extension) {
     if (extension == null) return filename;
