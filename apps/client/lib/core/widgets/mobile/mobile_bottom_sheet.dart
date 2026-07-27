@@ -22,13 +22,30 @@ Future<T?> showMobileBottomSheet<T>({
     isDismissible: isDismissible,
     enableDrag: enableDrag,
     backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.45),
     builder: (sheetContext) {
-      return MobileBottomSheet(
+      final sheet = MobileBottomSheet(
         title: title,
         titleWidget: titleWidget,
         footer: footer,
         maxHeightFraction: maxHeightFraction,
         child: builder(sheetContext),
+      );
+
+      if (!isDismissible) return sheet;
+
+      // Transparent sheet routes still fill the screen; taps on the dimmed
+      // area above the sheet must pop explicitly.
+      return GestureDetector(
+        onTap: () => Navigator.of(sheetContext).pop(),
+        behavior: HitTestBehavior.opaque,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: GestureDetector(
+            onTap: () {},
+            child: sheet,
+          ),
+        ),
       );
     },
   );

@@ -10,6 +10,13 @@ class DesktopSettingsScreen extends StatelessWidget {
 
   static const _items = <_SettingsNavItem>[
     _SettingsNavItem(
+      icon: Icons.tune_outlined,
+      title: 'Item Settings',
+      subtitle: 'Barcode scan, pricing, categories, and fields',
+      route: AppRoutes.itemsSettings,
+      push: true,
+    ),
+    _SettingsNavItem(
       icon: Icons.print_outlined,
       title: 'Print Settings',
       subtitle: 'Printer type, layout, and invoice content',

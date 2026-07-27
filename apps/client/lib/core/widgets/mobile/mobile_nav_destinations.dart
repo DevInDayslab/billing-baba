@@ -74,7 +74,7 @@ abstract final class MobileNavDestinations {
     MobileNavDestination(
       tab: MobileNavTab.menu,
       label: 'MENU',
-      route: AppRoutes.settings,
+      route: AppRoutes.settingsPreferences,
       icon: Icons.menu_rounded,
       selectedIcon: Icons.menu_open_rounded,
     ),
@@ -108,6 +108,7 @@ abstract final class MobileNavDestinations {
   /// Resolves the active tab from the current GoRouter location.
   static MobileNavTab tabForLocation(String location) {
     if (location.startsWith(AppRoutes.pos)) return MobileNavTab.pos;
+    if (location.startsWith(AppRoutes.itemsSettings)) return MobileNavTab.menu;
     if (location.startsWith(AppRoutes.items)) return MobileNavTab.items;
     if (location.startsWith(AppRoutes.settings)) return MobileNavTab.menu;
     if (location.startsWith(AppRoutes.reports)) return MobileNavTab.dashboard;

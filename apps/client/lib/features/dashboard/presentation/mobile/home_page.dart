@@ -178,7 +178,7 @@ class _MobileHomePageState extends ConsumerState<MobileHomePage> {
             children: [
               MobileHomeHeader(
                 onBusinessTap: () => context.push(AppRoutes.businessList),
-                onSettingsTap: () => context.push(AppRoutes.settings),
+                onSettingsTap: () => context.push(AppRoutes.settingsPreferences),
                 onNotificationTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Notifications coming soon')),

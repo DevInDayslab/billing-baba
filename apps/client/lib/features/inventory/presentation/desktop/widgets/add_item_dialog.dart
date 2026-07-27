@@ -1,5 +1,14 @@
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:billing_baba/core/routing/app_routes.dart';
+import 'package:billing_baba/core/media/prepare_media_upload_bytes.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/screens/mobile_item_image_preview_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_header.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_photo_button.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_add_item_settings_sheet.dart';
+import 'package:billing_baba/features/inventory/presentation/mobile/widgets/add_item/mobile_item_image_picker.dart';
+import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:billing_baba/core/network/api_validation_exception.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/widgets/transaction_success_toast.dart';
@@ -34,9 +43,11 @@ import 'package:billing_baba/shared/widgets/forms/forms.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 const _cardBorder = Color(0xFFE0E0E0);
 const _tabActiveColor = Color(0xFFD32F2F);
+const _mobileAddItemHeaderHeight = 84.0;
 
 int _tierRowCounter = 0;
 
@@ -95,10 +106,15 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   final Map<String, TextEditingController> _additionalCostControllers = {};
   final Map<String, TextEditingController> _tierPriceControllers = {};
   final _primaryImageUrlController = TextEditingController();
+  Uint8List? _pendingItemPhotoBytes;
   bool _isSaving = false;
   String? _rackLocationId;
   String? _rackPhotoUrl;
   double _initialOpeningQty = 0;
+
+  double get _headerHeight => AppPlatform.current.isMobile
+      ? _mobileAddItemHeaderHeight
+      : FormSpacing.headerHeight;
 
   int _tabCountFor(ItemType type) => type == ItemType.product ? 5 : 2;
 
@@ -432,6 +448,12 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       }
 
       if (!mounted) return;
+
+      if (savedItem != null) {
+        await _uploadPendingPhotoIfNeeded(savedItem.id);
+      }
+
+      if (!mounted) return;
       setState(() => _isSaving = false);
 
       if (saveAndNew) {
@@ -462,6 +484,55 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     showTransactionErrorToast(context, message: message);
   }
 
+  Future<void> _uploadPendingPhotoIfNeeded(String itemId) async {
+    final bytes = _pendingItemPhotoBytes;
+    if (bytes == null) return;
+
+    try {
+      final prepared = await prepareMediaUploadBytes(
+        bytes: bytes,
+        mimeType: 'image/jpeg',
+      );
+      final service = await ref.read(inventoryServiceProvider.future);
+      await service.uploadItemImage(
+        itemId,
+        bytes: prepared.bytes,
+        mimeType: prepared.mimeType,
+        isPrimary: true,
+      );
+      if (mounted) {
+        setState(() => _pendingItemPhotoBytes = null);
+      }
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Item saved but photo upload failed: $error')),
+      );
+    }
+  }
+
+  Future<void> _pickItemPhoto() async {
+    final existingBytes = _pendingItemPhotoBytes;
+    if (existingBytes != null) {
+      final outcome = await openMobileItemImagePreview(
+        context,
+        imageBytes: existingBytes,
+      );
+      if (!mounted || outcome == null) return;
+      switch (outcome) {
+        case MobileItemImagePreviewDeleted():
+          setState(() => _pendingItemPhotoBytes = null);
+        case MobileItemImagePreviewUpdated(:final bytes):
+          setState(() => _pendingItemPhotoBytes = bytes);
+      }
+      return;
+    }
+
+    final bytes = await pickMobileItemImage(context);
+    if (bytes == null || !mounted) return;
+    setState(() => _pendingItemPhotoBytes = bytes);
+  }
+
   void _clearControllers() {
     _itemNameController.clear();
     _hsnController.clear();
@@ -478,6 +549,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     _onlineStorePriceController.clear();
     _onlineStoreDescriptionController.clear();
     _primaryImageUrlController.clear();
+    _pendingItemPhotoBytes = null;
     for (final controller in _rawMaterialControllers.values) {
       controller.dispose();
     }
@@ -557,54 +629,54 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     final preferredWidth = availableWidth >= FormSpacing.dialogWidth
         ? FormSpacing.dialogWidth
         : availableWidth.clamp(0, FormSpacing.dialogMaxWidth);
-    final isService = form.itemType == ItemType.service;
+
+    final maxDialogHeight = media.height * FormSpacing.dialogMaxHeightFactor;
 
     return ConstrainedBox(
-      constraints: isService
-          ? BoxConstraints(maxWidth: preferredWidth.toDouble())
-          : BoxConstraints(
-              maxWidth: preferredWidth.toDouble(),
-              maxHeight: media.height * FormSpacing.dialogMaxHeightFactor,
-            ),
+      constraints: BoxConstraints(
+        maxWidth: preferredWidth.toDouble(),
+        maxHeight: maxDialogHeight,
+      ),
       child: Material(
         color: AppColors.surface,
         borderRadius: AppRadius.lgBorder,
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildHeader(form),
-            const Divider(height: 1, color: _cardBorder),
-            if (isService)
-              buildFormBody(
-                form,
-                notifier,
-                categories,
-                categoryOptions,
-                selectedCategory,
-                brands,
-                brandOptions,
-                selectedBrand,
-              )
-            else
-              Flexible(
-                child: SingleChildScrollView(
-                  child: buildFormBody(
-                    form,
-                    notifier,
-                    categories,
-                    categoryOptions,
-                    selectedCategory,
-                    brands,
-                    brandOptions,
-                    selectedBrand,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            const dividerHeight = 1.0;
+            final bodyMaxHeight =
+                (constraints.maxHeight -
+                        _headerHeight -
+                        FormSpacing.footerHeight -
+                        dividerHeight * 2)
+                    .clamp(0.0, double.infinity);
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHeader(form),
+                const Divider(height: dividerHeight, color: _cardBorder),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: bodyMaxHeight),
+                  child: SingleChildScrollView(
+                    child: buildFormBody(
+                      form,
+                      notifier,
+                      categories,
+                      categoryOptions,
+                      selectedCategory,
+                      brands,
+                      brandOptions,
+                      selectedBrand,
+                    ),
                   ),
                 ),
-              ),
-            const Divider(height: 1, color: _cardBorder),
-            _buildFooter(),
-          ],
+                const Divider(height: dividerHeight, color: _cardBorder),
+                _buildFooter(),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -687,65 +759,99 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       ),
     );
 
-    if (!isService) return content;
-
-    // Service forms are short — size to content, scroll only if viewport is tight.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minWidth: constraints.maxWidth),
-            child: content,
-          ),
-        );
-      },
-    );
+    return content;
   }
 
   Widget _buildHeader(AddItemFormState form) {
+    final title = widget.editItem != null ? 'Edit Item' : 'Add Item';
+    final titleStyle = const TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.w600,
+      color: AppColors.textPrimary,
+    );
+    final toggle = _ProductServiceToggle(
+      isProduct: form.itemType == ItemType.product,
+      onChanged: (isProduct) => _handleItemTypeChange(
+        isProduct ? ItemType.product : ItemType.service,
+      ),
+    );
+
+    if (AppPlatform.current.isMobile) {
+      return MobileAddItemHeader(
+        height: _headerHeight,
+        title: title,
+        photoButton: MobileAddItemPhotoButton(
+          imageBytes: _pendingItemPhotoBytes,
+          onTap: () => unawaited(_pickItemPhoto()),
+        ),
+        actions: MobileAddItemHeaderActions(
+          onSettingsTap: () {
+            unawaited(showMobileAddItemSettingsSheet(context));
+          },
+          onCloseTap: () => Navigator.of(context).pop(),
+        ),
+        bottom: toggle,
+      );
+    }
+
     return SizedBox(
-      height: FormSpacing.headerHeight,
+      height: _headerHeight,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: FormSpacing.page),
         child: Row(
           children: [
-            Text(
-              widget.editItem != null ? 'Edit Item' : 'Add Item',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: titleStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  toggle,
+                ],
               ),
             ),
-            const SizedBox(width: 16),
-            _ProductServiceToggle(
-              isProduct: form.itemType == ItemType.product,
-              onChanged: (isProduct) => _handleItemTypeChange(
-                isProduct ? ItemType.product : ItemType.service,
-              ),
-            ),
-            const Spacer(),
-            IconButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Item settings coming soon')),
-                );
-              },
-              icon: const Icon(
-                Icons.settings_outlined,
-                color: AppColors.textSecondary,
-              ),
-              tooltip: 'Settings',
-              visualDensity: VisualDensity.compact,
-            ),
-            IconButton(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.close, color: AppColors.textSecondary),
-              visualDensity: VisualDensity.compact,
-            ),
+            _buildHeaderActions(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHeaderActions() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          onPressed: () {
+            if (AppPlatform.current.isMobile) {
+              unawaited(showMobileAddItemSettingsSheet(context));
+              return;
+            }
+            context.push(AppRoutes.itemsSettings);
+          },
+          icon: const Icon(
+            Icons.settings_outlined,
+            color: AppColors.textSecondary,
+          ),
+          tooltip: 'Settings',
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+        ),
+        IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.close, color: AppColors.textSecondary),
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+        ),
+      ],
     );
   }
 
@@ -915,16 +1021,16 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       height: FormSpacing.footerHeight,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: FormSpacing.page),
-        child: Row(
-          children: [
-            const Spacer(),
-            OutlinedButton(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 360;
+            final saveAndNew = OutlinedButton(
               onPressed: _isSaving ? null : () => _save(saveAndNew: true),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.textPrimary,
                 side: const BorderSide(color: _cardBorder),
-                minimumSize: const Size(0, FormSpacing.inputHeight),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                minimumSize: Size(compact ? double.infinity : 0, FormSpacing.inputHeight),
+                padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 20),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -933,14 +1039,13 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                 'Save & New',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-            ),
-            const SizedBox(width: 12),
-            FilledButton(
+            );
+            final save = FilledButton(
               onPressed: _isSaving ? null : () => _save(saveAndNew: false),
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                minimumSize: const Size(0, FormSpacing.inputHeight),
-                padding: const EdgeInsets.symmetric(horizontal: 28),
+                minimumSize: Size(compact ? double.infinity : 0, FormSpacing.inputHeight),
+                padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 28),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -949,8 +1054,27 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
                 'Save',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
-            ),
-          ],
+            );
+
+            if (compact) {
+              return Row(
+                children: [
+                  Expanded(child: saveAndNew),
+                  const SizedBox(width: 12),
+                  Expanded(child: save),
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                const Spacer(),
+                saveAndNew,
+                const SizedBox(width: 12),
+                save,
+              ],
+            );
+          },
         ),
       ),
     );

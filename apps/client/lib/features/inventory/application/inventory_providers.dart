@@ -10,6 +10,7 @@ import 'package:billing_baba/features/inventory/application/inventory_units_prov
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/category_item_sort.dart';
 import 'package:billing_baba/features/inventory/models/category_model.dart';
+import 'package:billing_baba/features/inventory/models/mappers/category_mapper.dart';
 import 'package:billing_baba/features/inventory/models/dto/stock_level_dto.dart';
 import 'package:billing_baba/features/inventory/models/inventory_item_filters.dart';
 import 'package:billing_baba/features/inventory/models/inventory_transaction_filters.dart';
@@ -65,7 +66,10 @@ final categoriesProvider = Provider<List<InventoryCategory>>((ref) {
       categories: categories,
       items: items,
     ),
-    orElse: () => categories,
+    orElse: () => _categoriesWithUncategorized(
+      categories: categories,
+      items: items,
+    ),
   );
 
   return withUncategorized
@@ -75,6 +79,41 @@ final categoriesProvider = Provider<List<InventoryCategory>>((ref) {
       )
       .toList();
 });
+
+List<InventoryCategory> _categoriesWithUncategorized({
+  required List<InventoryCategory> categories,
+  required List<InventoryItem> items,
+}) {
+  if (categories.isEmpty) return categories;
+
+  final uncategorizedCount = items
+      .where(
+        (item) =>
+            item.categoryId == null ||
+            item.categoryId == uncategorizedCategoryId,
+      )
+      .length;
+
+  final categoriesWithCounts = categories
+      .where((category) => !category.isUncategorized)
+      .map((category) {
+        if (category.itemCount > 0) return category;
+        final count = items
+            .where((item) => item.categoryId == category.id)
+            .length;
+        return InventoryCategory(
+          id: category.id,
+          name: category.name,
+          itemCount: count,
+        );
+      })
+      .toList();
+
+  return [
+    CategoryMapper.uncategorized(itemCount: uncategorizedCount),
+    ...categoriesWithCounts,
+  ];
+}
 
 // Provider.family's family type is not publicly exported by Riverpod.
 // ignore: specify_nonobvious_property_types

@@ -25,6 +25,7 @@ abstract final class StorageKeys {
   static const dashboardSideWidgets = 'dashboard_side_widgets';
   static const barcodeImportDraft = 'barcode_import_draft';
   static const printSettings = 'print_settings';
+  static const itemSettings = 'item_settings';
   static const whatsappSettings = 'whatsapp_settings';
   static const transactionMessageSettings = 'transaction_message_settings';
   static const partyReminderSchedule = 'party_reminder_schedule';

@@ -26,6 +26,21 @@ class MobileBottomNavigation extends StatelessWidget {
   static const centerButtonProtrusion = 28.0;
   static const centerButtonLowerOffset = 14.0;
 
+  /// Bottom offset for floating actions sitting above the shell nav bar.
+  static double floatingActionBottomOffset(BuildContext context) {
+    return barHeight + MediaQuery.paddingOf(context).bottom + AppSpacing.sm;
+  }
+
+  /// Extra scroll padding so list content clears a bottom floating action.
+  static double scrollBottomPadding(
+    BuildContext context, {
+    double floatingActionHeight = 40,
+  }) {
+    return floatingActionBottomOffset(context) +
+        floatingActionHeight +
+        AppSpacing.lg;
+  }
+
   @override
   Widget build(BuildContext context) {
     final items = destinations ?? MobileNavDestinations.visible();

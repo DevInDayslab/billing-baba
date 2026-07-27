@@ -25,6 +25,10 @@ class ReportFilters extends _$ReportFilters {
     state = state.copyWith(selectedDate: date, currentPage: 1);
   }
 
+  void clearSelectedDate() {
+    state = state.copyWith(clearSelectedDate: true, currentPage: 1);
+  }
+
   void setPartyId(String? partyId) {
     state = state.copyWith(
       partyId: partyId,

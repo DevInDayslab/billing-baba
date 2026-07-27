@@ -25,7 +25,11 @@ import 'package:billing_baba/features/developer/presentation/diagnostics_page.da
 import 'package:billing_baba/features/developer/presentation/table_filters_playground_page.dart';
 import 'package:billing_baba/features/hidden_ledger/presentation/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/inventory/presentation/add_items_barcode_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/categories_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/item_settings_screen.dart';
+import 'package:billing_baba/features/inventory/presentation/item_details_screen.dart';
 import 'package:billing_baba/features/inventory/presentation/items_page.dart';
+import 'package:billing_baba/features/inventory/presentation/units_screen.dart';
 import 'package:billing_baba/features/parties/presentation/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/party_groups_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
@@ -41,6 +45,8 @@ import 'package:billing_baba/features/purchases/presentation/purchase_bills_page
 import 'package:billing_baba/features/purchases/presentation/purchase_fa_page.dart';
 import 'package:billing_baba/features/purchases/presentation/purchase_order_page.dart';
 import 'package:billing_baba/features/purchases/presentation/purchase_return_page.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_mobile_filters.dart';
+import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_stock_summary_screen.dart';
 import 'package:billing_baba/features/reports/presentation/reports_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_credit_note_page.dart';
 import 'package:billing_baba/features/sales/presentation/add_delivery_challan_page.dart';
@@ -218,13 +224,20 @@ GoRouter createAppRouter({
             builder: (context, state) => const ItemsPage(),
           ),
           GoRoute(
+            path: '${AppRoutes.itemsDetail}/:itemId',
+            name: 'itemDetails',
+            builder: (context, state) => ItemDetailsScreen(
+              itemId: state.pathParameters['itemId']!,
+              fallbackItem: state.extra,
+            ),
+          ),
+          GoRoute(
             path: AppRoutes.itemsCategories,
-            builder: (context, state) =>
-                const ComingSoonPage(title: 'Categories'),
+            builder: (context, state) => const CategoriesScreen(),
           ),
           GoRoute(
             path: AppRoutes.itemsUnits,
-            builder: (context, state) => const ComingSoonPage(title: 'Units'),
+            builder: (context, state) => const UnitsScreen(),
           ),
           GoRoute(
             path: AppRoutes.itemsGodowns,
@@ -234,6 +247,10 @@ GoRouter createAppRouter({
             path: AppRoutes.itemsStockTransfer,
             builder: (context, state) =>
                 const ComingSoonPage(title: 'Stock Transfer'),
+          ),
+          GoRoute(
+            path: AppRoutes.itemsSettings,
+            builder: (context, state) => const ItemSettingsScreen(),
           ),
           GoRoute(
             path: AppRoutes.sale,
@@ -485,7 +502,15 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.reportsStock,
-            redirect: (context, state) => AppRoutes.reports,
+            redirect: (context, state) => AppRoutes.reportsStockSummary,
+          ),
+          GoRoute(
+            path: AppRoutes.reportsStockSummary,
+            builder: (context, state) => MobileStockSummaryScreen(
+              initialStockFilter: StockSummaryMobileFilters.stockFilterFromQuery(
+                state.uri.queryParameters['stock'],
+              ),
+            ),
           ),
           GoRoute(
             path: AppRoutes.reportsParty,

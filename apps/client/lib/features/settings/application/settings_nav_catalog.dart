@@ -6,6 +6,13 @@ import 'package:flutter/material.dart';
 abstract final class SettingsNavCatalog {
   static const items = <SettingsNavItem>[
     SettingsNavItem(
+      id: 'item-settings',
+      icon: Icons.tune_outlined,
+      title: 'Item Settings',
+      subtitle: 'Barcode scan, pricing, categories, and fields',
+      route: AppRoutes.itemsSettings,
+    ),
+    SettingsNavItem(
       id: 'print',
       icon: Icons.print_outlined,
       title: 'Print Settings',
