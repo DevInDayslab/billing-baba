@@ -71,7 +71,7 @@ const rowMutationSchema = z.object({
 const commandMutationSchema = z.object({
   mutation_id: uuidSchema,
   kind: z.literal('command'),
-  // Commands not implemented in MVP — accepted by schema, rejected in PushService.
+  // Command mutations validated here; handlers registered in command-registry.
   command: z.string().min(1).max(64),
   command_id: uuidSchema,
   payload: z.record(z.string(), z.unknown()),

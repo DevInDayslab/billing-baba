@@ -13,6 +13,21 @@ const _uuid = Uuid();
 const _salesDocumentsEntity = 'sales_documents';
 const _salesDocumentLinesEntity = 'sales_document_lines';
 
+/// Payment fields for atomic finalize_sale command payload.
+class FinalizeSalePaymentCommand {
+  const FinalizeSalePaymentCommand({
+    required this.amount,
+    required this.paymentMode,
+    this.shortPaymentHandling,
+    this.shortfallAmount,
+  });
+
+  final String amount;
+  final String paymentMode;
+  final String? shortPaymentHandling;
+  final String? shortfallAmount;
+}
+
 /// Local-first tax invoice writes + SyncQueue enqueue (hybrid ADR-025).
 class SalesInvoiceCommandRepository {
   SalesInvoiceCommandRepository({
@@ -47,6 +62,10 @@ class SalesInvoiceCommandRepository {
     final isCreate = input.documentId == null;
 
     final existing = isCreate ? null : await _local.getDocument(documentId);
+    final existingLineIds = existing == null
+        ? <String>{}
+        : existing.lines.map((line) => line.id).toSet();
+
     final documentNumber = existing?.documentNumber ??
         await _numbering.allocate(
           businessId: businessId,
@@ -79,10 +98,14 @@ class SalesInvoiceCommandRepository {
       convertedFromId: input.convertedFromId,
       notes: input.notes,
       godownId: input.godownId,
+      paidAmount: existing?.paidAmount ?? '0',
+      paymentMode: existing?.paymentMode,
       syncVersion: existing == null
           ? 0
           : (await _local.getHeaderSyncVersion(documentId) ?? 0),
-      createdAt: existing == null ? now : DateTime.parse(existing.createdAt).toUtc(),
+      createdAt: existing == null
+          ? now
+          : DateTime.parse(existing.createdAt).toUtc(),
       updatedAt: now,
       deviceId: _deviceIdReader?.call(),
     );
@@ -121,6 +144,21 @@ class SalesInvoiceCommandRepository {
         ),
       );
     }
+
+    final newLineIds = lineRows.map((line) => line.id).toSet();
+    final removedLineIds = existingLineIds.difference(newLineIds);
+    for (final removedId in removedLineIds) {
+      await _syncQueue.enqueueRowMutation(
+        businessId: businessId,
+        entityType: _salesDocumentLinesEntity,
+        entityId: removedId,
+        operation: SyncQueueOperation.delete,
+        payload: {},
+        deviceId: _deviceIdReader?.call(),
+        clientUpdatedAt: now,
+      );
+    }
+
     await _local.replaceLines(
       businessId: businessId,
       salesDocumentId: documentId,
@@ -188,6 +226,7 @@ class SalesInvoiceCommandRepository {
     required String documentId,
     String? localDocumentNumber,
     String? godownId,
+    FinalizeSalePaymentCommand? payment,
   }) async {
     final businessId = _requireBusinessId();
     final document = await _local.getDocument(documentId);
@@ -197,22 +236,101 @@ class SalesInvoiceCommandRepository {
 
     final localNumber =
         localDocumentNumber ?? document.documentNumber ?? 'LOCAL-000001';
+    final now = DateTime.now().toUtc();
+    final paidAmount = payment?.amount ?? '0';
+    final paymentMode = payment?.paymentMode;
+
+    await _local.upsertDocument(
+      id: documentId,
+      businessId: businessId,
+      documentType: document.documentType,
+      status: 'finalized',
+      documentNumber: document.documentNumber,
+      documentSeries: document.documentSeries,
+      partyId: document.partyId,
+      isGstFormal: document.isGstFormal,
+      subtotal: document.subtotal,
+      discountTotal: document.discountTotal,
+      taxAmount: document.taxAmount,
+      totalAmount: document.totalAmount,
+      documentDate: document.documentDate,
+      convertedFromId: document.convertedFromId,
+      notes: document.notes,
+      paidAmount: paidAmount,
+      paymentMode: paymentMode,
+      syncVersion: await _local.getHeaderSyncVersion(documentId) ?? 0,
+      createdAt: DateTime.parse(document.createdAt).toUtc(),
+      updatedAt: now,
+      deviceId: _deviceIdReader?.call(),
+    );
+
+    final commandPayload = <String, dynamic>{
+      'document_id': documentId,
+      'local_document_number': localNumber,
+      'godown_id': ?godownId,
+    };
+
+    if (payment != null && double.tryParse(payment.amount) != null &&
+        double.parse(payment.amount) > 0) {
+      commandPayload['payment'] = {
+        'amount': payment.amount,
+        'payment_mode': payment.paymentMode,
+        if (payment.shortPaymentHandling != null)
+          'short_payment_handling': payment.shortPaymentHandling,
+        if (payment.shortfallAmount != null)
+          'shortfall_amount': payment.shortfallAmount,
+      };
+    }
+
     final commandId = _uuid.v4();
 
     await _syncQueue.enqueueCommand(
       businessId: businessId,
       command: 'finalize_sale',
       commandId: commandId,
-      payload: {
-        'document_id': documentId,
-        'local_document_number': localNumber,
-        'godown_id': ?godownId,
-      },
+      payload: commandPayload,
       deviceId: _deviceIdReader?.call(),
       entityType: _salesDocumentsEntity,
       entityId: documentId,
       priority: SyncQueuePriority.high,
     );
+  }
+
+  Future<void> deleteDraft(String documentId) async {
+    final businessId = _requireBusinessId();
+    final document = await _local.getDocument(documentId);
+    if (document == null) {
+      return;
+    }
+
+    final now = DateTime.now().toUtc();
+    await _local.softDeleteDocument(documentId, now);
+
+    final headerSyncVersion =
+        await _local.getHeaderSyncVersion(documentId) ?? 0;
+
+    await _syncQueue.enqueueRowMutation(
+      businessId: businessId,
+      entityType: _salesDocumentsEntity,
+      entityId: documentId,
+      operation: SyncQueueOperation.delete,
+      payload: {},
+      deviceId: _deviceIdReader?.call(),
+      baseSyncVersion: headerSyncVersion,
+      clientUpdatedAt: now,
+    );
+
+    for (final line in document.lines) {
+      await _syncQueue.enqueueRowMutation(
+        businessId: businessId,
+        entityType: _salesDocumentLinesEntity,
+        entityId: line.id,
+        operation: SyncQueueOperation.delete,
+        payload: {},
+        deviceId: _deviceIdReader?.call(),
+        clientUpdatedAt: now,
+      );
+    }
   }
 
   Future<List<SalesDocumentDto>> listTaxInvoices() {

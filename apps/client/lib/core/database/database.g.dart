@@ -14220,6 +14220,29 @@ class $SalesDocumentsLocalTable extends SalesDocumentsLocal
     requiredDuringInsert: false,
     defaultValue: const Constant('0'),
   );
+  static const VerificationMeta _paidAmountMeta = const VerificationMeta(
+    'paidAmount',
+  );
+  @override
+  late final GeneratedColumn<String> paidAmount = GeneratedColumn<String>(
+    'paid_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _paymentModeMeta = const VerificationMeta(
+    'paymentMode',
+  );
+  @override
+  late final GeneratedColumn<String> paymentMode = GeneratedColumn<String>(
+    'payment_mode',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _documentDateMeta = const VerificationMeta(
     'documentDate',
   );
@@ -14348,6 +14371,8 @@ class $SalesDocumentsLocalTable extends SalesDocumentsLocal
     discountTotal,
     taxAmount,
     totalAmount,
+    paidAmount,
+    paymentMode,
     documentDate,
     convertedFromId,
     notes,
@@ -14472,6 +14497,21 @@ class $SalesDocumentsLocalTable extends SalesDocumentsLocal
         totalAmount.isAcceptableOrUnknown(
           data['total_amount']!,
           _totalAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('paid_amount')) {
+      context.handle(
+        _paidAmountMeta,
+        paidAmount.isAcceptableOrUnknown(data['paid_amount']!, _paidAmountMeta),
+      );
+    }
+    if (data.containsKey('payment_mode')) {
+      context.handle(
+        _paymentModeMeta,
+        paymentMode.isAcceptableOrUnknown(
+          data['payment_mode']!,
+          _paymentModeMeta,
         ),
       );
     }
@@ -14611,6 +14651,14 @@ class $SalesDocumentsLocalTable extends SalesDocumentsLocal
         DriftSqlType.string,
         data['${effectivePrefix}total_amount'],
       )!,
+      paidAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}paid_amount'],
+      )!,
+      paymentMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_mode'],
+      ),
       documentDate: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}document_date'],
@@ -14675,6 +14723,8 @@ class SalesDocumentLocalData extends DataClass
   final String discountTotal;
   final String taxAmount;
   final String totalAmount;
+  final String paidAmount;
+  final String? paymentMode;
   final String documentDate;
   final String? convertedFromId;
   final String? notes;
@@ -14699,6 +14749,8 @@ class SalesDocumentLocalData extends DataClass
     required this.discountTotal,
     required this.taxAmount,
     required this.totalAmount,
+    required this.paidAmount,
+    this.paymentMode,
     required this.documentDate,
     this.convertedFromId,
     this.notes,
@@ -14732,6 +14784,10 @@ class SalesDocumentLocalData extends DataClass
     map['discount_total'] = Variable<String>(discountTotal);
     map['tax_amount'] = Variable<String>(taxAmount);
     map['total_amount'] = Variable<String>(totalAmount);
+    map['paid_amount'] = Variable<String>(paidAmount);
+    if (!nullToAbsent || paymentMode != null) {
+      map['payment_mode'] = Variable<String>(paymentMode);
+    }
     map['document_date'] = Variable<String>(documentDate);
     if (!nullToAbsent || convertedFromId != null) {
       map['converted_from_id'] = Variable<String>(convertedFromId);
@@ -14776,6 +14832,10 @@ class SalesDocumentLocalData extends DataClass
       discountTotal: Value(discountTotal),
       taxAmount: Value(taxAmount),
       totalAmount: Value(totalAmount),
+      paidAmount: Value(paidAmount),
+      paymentMode: paymentMode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentMode),
       documentDate: Value(documentDate),
       convertedFromId: convertedFromId == null && nullToAbsent
           ? const Value.absent()
@@ -14818,6 +14878,8 @@ class SalesDocumentLocalData extends DataClass
       discountTotal: serializer.fromJson<String>(json['discountTotal']),
       taxAmount: serializer.fromJson<String>(json['taxAmount']),
       totalAmount: serializer.fromJson<String>(json['totalAmount']),
+      paidAmount: serializer.fromJson<String>(json['paidAmount']),
+      paymentMode: serializer.fromJson<String?>(json['paymentMode']),
       documentDate: serializer.fromJson<String>(json['documentDate']),
       convertedFromId: serializer.fromJson<String?>(json['convertedFromId']),
       notes: serializer.fromJson<String?>(json['notes']),
@@ -14847,6 +14909,8 @@ class SalesDocumentLocalData extends DataClass
       'discountTotal': serializer.toJson<String>(discountTotal),
       'taxAmount': serializer.toJson<String>(taxAmount),
       'totalAmount': serializer.toJson<String>(totalAmount),
+      'paidAmount': serializer.toJson<String>(paidAmount),
+      'paymentMode': serializer.toJson<String?>(paymentMode),
       'documentDate': serializer.toJson<String>(documentDate),
       'convertedFromId': serializer.toJson<String?>(convertedFromId),
       'notes': serializer.toJson<String?>(notes),
@@ -14874,6 +14938,8 @@ class SalesDocumentLocalData extends DataClass
     String? discountTotal,
     String? taxAmount,
     String? totalAmount,
+    String? paidAmount,
+    Value<String?> paymentMode = const Value.absent(),
     String? documentDate,
     Value<String?> convertedFromId = const Value.absent(),
     Value<String?> notes = const Value.absent(),
@@ -14902,6 +14968,8 @@ class SalesDocumentLocalData extends DataClass
     discountTotal: discountTotal ?? this.discountTotal,
     taxAmount: taxAmount ?? this.taxAmount,
     totalAmount: totalAmount ?? this.totalAmount,
+    paidAmount: paidAmount ?? this.paidAmount,
+    paymentMode: paymentMode.present ? paymentMode.value : this.paymentMode,
     documentDate: documentDate ?? this.documentDate,
     convertedFromId: convertedFromId.present
         ? convertedFromId.value
@@ -14946,6 +15014,12 @@ class SalesDocumentLocalData extends DataClass
       totalAmount: data.totalAmount.present
           ? data.totalAmount.value
           : this.totalAmount,
+      paidAmount: data.paidAmount.present
+          ? data.paidAmount.value
+          : this.paidAmount,
+      paymentMode: data.paymentMode.present
+          ? data.paymentMode.value
+          : this.paymentMode,
       documentDate: data.documentDate.present
           ? data.documentDate.value
           : this.documentDate,
@@ -14981,6 +15055,8 @@ class SalesDocumentLocalData extends DataClass
           ..write('discountTotal: $discountTotal, ')
           ..write('taxAmount: $taxAmount, ')
           ..write('totalAmount: $totalAmount, ')
+          ..write('paidAmount: $paidAmount, ')
+          ..write('paymentMode: $paymentMode, ')
           ..write('documentDate: $documentDate, ')
           ..write('convertedFromId: $convertedFromId, ')
           ..write('notes: $notes, ')
@@ -15010,6 +15086,8 @@ class SalesDocumentLocalData extends DataClass
     discountTotal,
     taxAmount,
     totalAmount,
+    paidAmount,
+    paymentMode,
     documentDate,
     convertedFromId,
     notes,
@@ -15038,6 +15116,8 @@ class SalesDocumentLocalData extends DataClass
           other.discountTotal == this.discountTotal &&
           other.taxAmount == this.taxAmount &&
           other.totalAmount == this.totalAmount &&
+          other.paidAmount == this.paidAmount &&
+          other.paymentMode == this.paymentMode &&
           other.documentDate == this.documentDate &&
           other.convertedFromId == this.convertedFromId &&
           other.notes == this.notes &&
@@ -15065,6 +15145,8 @@ class SalesDocumentsLocalCompanion
   final Value<String> discountTotal;
   final Value<String> taxAmount;
   final Value<String> totalAmount;
+  final Value<String> paidAmount;
+  final Value<String?> paymentMode;
   final Value<String> documentDate;
   final Value<String?> convertedFromId;
   final Value<String?> notes;
@@ -15090,6 +15172,8 @@ class SalesDocumentsLocalCompanion
     this.discountTotal = const Value.absent(),
     this.taxAmount = const Value.absent(),
     this.totalAmount = const Value.absent(),
+    this.paidAmount = const Value.absent(),
+    this.paymentMode = const Value.absent(),
     this.documentDate = const Value.absent(),
     this.convertedFromId = const Value.absent(),
     this.notes = const Value.absent(),
@@ -15116,6 +15200,8 @@ class SalesDocumentsLocalCompanion
     this.discountTotal = const Value.absent(),
     this.taxAmount = const Value.absent(),
     this.totalAmount = const Value.absent(),
+    this.paidAmount = const Value.absent(),
+    this.paymentMode = const Value.absent(),
     required String documentDate,
     this.convertedFromId = const Value.absent(),
     this.notes = const Value.absent(),
@@ -15148,6 +15234,8 @@ class SalesDocumentsLocalCompanion
     Expression<String>? discountTotal,
     Expression<String>? taxAmount,
     Expression<String>? totalAmount,
+    Expression<String>? paidAmount,
+    Expression<String>? paymentMode,
     Expression<String>? documentDate,
     Expression<String>? convertedFromId,
     Expression<String>? notes,
@@ -15174,6 +15262,8 @@ class SalesDocumentsLocalCompanion
       if (discountTotal != null) 'discount_total': discountTotal,
       if (taxAmount != null) 'tax_amount': taxAmount,
       if (totalAmount != null) 'total_amount': totalAmount,
+      if (paidAmount != null) 'paid_amount': paidAmount,
+      if (paymentMode != null) 'payment_mode': paymentMode,
       if (documentDate != null) 'document_date': documentDate,
       if (convertedFromId != null) 'converted_from_id': convertedFromId,
       if (notes != null) 'notes': notes,
@@ -15202,6 +15292,8 @@ class SalesDocumentsLocalCompanion
     Value<String>? discountTotal,
     Value<String>? taxAmount,
     Value<String>? totalAmount,
+    Value<String>? paidAmount,
+    Value<String?>? paymentMode,
     Value<String>? documentDate,
     Value<String?>? convertedFromId,
     Value<String?>? notes,
@@ -15228,6 +15320,8 @@ class SalesDocumentsLocalCompanion
       discountTotal: discountTotal ?? this.discountTotal,
       taxAmount: taxAmount ?? this.taxAmount,
       totalAmount: totalAmount ?? this.totalAmount,
+      paidAmount: paidAmount ?? this.paidAmount,
+      paymentMode: paymentMode ?? this.paymentMode,
       documentDate: documentDate ?? this.documentDate,
       convertedFromId: convertedFromId ?? this.convertedFromId,
       notes: notes ?? this.notes,
@@ -15284,6 +15378,12 @@ class SalesDocumentsLocalCompanion
     if (totalAmount.present) {
       map['total_amount'] = Variable<String>(totalAmount.value);
     }
+    if (paidAmount.present) {
+      map['paid_amount'] = Variable<String>(paidAmount.value);
+    }
+    if (paymentMode.present) {
+      map['payment_mode'] = Variable<String>(paymentMode.value);
+    }
     if (documentDate.present) {
       map['document_date'] = Variable<String>(documentDate.value);
     }
@@ -15336,6 +15436,8 @@ class SalesDocumentsLocalCompanion
           ..write('discountTotal: $discountTotal, ')
           ..write('taxAmount: $taxAmount, ')
           ..write('totalAmount: $totalAmount, ')
+          ..write('paidAmount: $paidAmount, ')
+          ..write('paymentMode: $paymentMode, ')
           ..write('documentDate: $documentDate, ')
           ..write('convertedFromId: $convertedFromId, ')
           ..write('notes: $notes, ')
@@ -26243,6 +26345,8 @@ typedef $$SalesDocumentsLocalTableCreateCompanionBuilder =
       Value<String> discountTotal,
       Value<String> taxAmount,
       Value<String> totalAmount,
+      Value<String> paidAmount,
+      Value<String?> paymentMode,
       required String documentDate,
       Value<String?> convertedFromId,
       Value<String?> notes,
@@ -26270,6 +26374,8 @@ typedef $$SalesDocumentsLocalTableUpdateCompanionBuilder =
       Value<String> discountTotal,
       Value<String> taxAmount,
       Value<String> totalAmount,
+      Value<String> paidAmount,
+      Value<String?> paymentMode,
       Value<String> documentDate,
       Value<String?> convertedFromId,
       Value<String?> notes,
@@ -26354,6 +26460,16 @@ class $$SalesDocumentsLocalTableFilterComposer
 
   ColumnFilters<String> get totalAmount => $composableBuilder(
     column: $table.totalAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paidAmount => $composableBuilder(
+    column: $table.paidAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -26482,6 +26598,16 @@ class $$SalesDocumentsLocalTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get paidAmount => $composableBuilder(
+    column: $table.paidAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get documentDate => $composableBuilder(
     column: $table.documentDate,
     builder: (column) => ColumnOrderings(column),
@@ -26597,6 +26723,16 @@ class $$SalesDocumentsLocalTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get paidAmount => $composableBuilder(
+    column: $table.paidAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get documentDate => $composableBuilder(
     column: $table.documentDate,
     builder: (column) => column,
@@ -26690,6 +26826,8 @@ class $$SalesDocumentsLocalTableTableManager
                 Value<String> discountTotal = const Value.absent(),
                 Value<String> taxAmount = const Value.absent(),
                 Value<String> totalAmount = const Value.absent(),
+                Value<String> paidAmount = const Value.absent(),
+                Value<String?> paymentMode = const Value.absent(),
                 Value<String> documentDate = const Value.absent(),
                 Value<String?> convertedFromId = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
@@ -26715,6 +26853,8 @@ class $$SalesDocumentsLocalTableTableManager
                 discountTotal: discountTotal,
                 taxAmount: taxAmount,
                 totalAmount: totalAmount,
+                paidAmount: paidAmount,
+                paymentMode: paymentMode,
                 documentDate: documentDate,
                 convertedFromId: convertedFromId,
                 notes: notes,
@@ -26742,6 +26882,8 @@ class $$SalesDocumentsLocalTableTableManager
                 Value<String> discountTotal = const Value.absent(),
                 Value<String> taxAmount = const Value.absent(),
                 Value<String> totalAmount = const Value.absent(),
+                Value<String> paidAmount = const Value.absent(),
+                Value<String?> paymentMode = const Value.absent(),
                 required String documentDate,
                 Value<String?> convertedFromId = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
@@ -26767,6 +26909,8 @@ class $$SalesDocumentsLocalTableTableManager
                 discountTotal: discountTotal,
                 taxAmount: taxAmount,
                 totalAmount: totalAmount,
+                paidAmount: paidAmount,
+                paymentMode: paymentMode,
                 documentDate: documentDate,
                 convertedFromId: convertedFromId,
                 notes: notes,

@@ -730,9 +730,17 @@ See [Error codes](#13-error-codes). Per-item errors appear in `errors[]` with `m
 {
   "document_id": "uuid",
   "local_document_number": "LOCAL-000001",
-  "godown_id": "uuid?"
+  "godown_id": "uuid?",
+  "payment": {
+    "amount": "1000.0000",
+    "payment_mode": "cash",
+    "short_payment_handling": "unrecovered?",
+    "shortfall_amount": "100.0000?"
+  }
 }
 ```
+
+Omit the `payment` block for credit sales with zero received amount (invoice remains unpaid). When `payment` is present, the server records payment + allocation atomically inside the finalize transaction and returns `paid_amount` / `payment_mode` in the command ack `result`.
 
 **`record_payment` / `record_receipt`**
 

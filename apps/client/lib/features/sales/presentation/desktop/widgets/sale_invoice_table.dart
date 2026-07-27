@@ -228,7 +228,23 @@ class SaleInvoiceTableRows {
       backgroundColor: isOdd ? _zebraRowBg : Colors.transparent,
       cells: [
         _DataCell(child: Text(_dateFormat.format(invoice.date))),
-        _DataCell(child: Text(invoice.invoiceNo)),
+        _DataCell(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  invoice.invoiceNo,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (invoice.syncState != SaleInvoiceSyncState.none)
+                Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: _SyncStateBadge(state: invoice.syncState),
+                ),
+            ],
+          ),
+        ),
         _DataCell(
           child: Text(
             invoice.partyName,
@@ -999,6 +1015,43 @@ class _PageNumber extends StatelessWidget {
             fontWeight: FontWeight.w500,
             color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SyncStateBadge extends StatelessWidget {
+  const _SyncStateBadge({required this.state});
+
+  final SaleInvoiceSyncState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (state) {
+      SaleInvoiceSyncState.savedLocally => ('Local', const Color(0xFF1565C0)),
+      SaleInvoiceSyncState.syncing => ('Syncing', const Color(0xFFF57C00)),
+      SaleInvoiceSyncState.synced => ('Synced', const Color(0xFF2E7D32)),
+      SaleInvoiceSyncState.conflict => ('Conflict', const Color(0xFFC62828)),
+      SaleInvoiceSyncState.none => ('', Colors.transparent),
+    };
+
+    if (label.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
         ),
       ),
     );

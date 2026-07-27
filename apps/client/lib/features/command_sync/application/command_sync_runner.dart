@@ -15,6 +15,7 @@ class CommandSyncRunner {
     required this._queue,
     required this._identity,
     required this._ackApplier,
+    this.onCommandConflict,
     Uuid? uuid,
   })  : _uuid = uuid ?? const Uuid();
 
@@ -22,6 +23,7 @@ class CommandSyncRunner {
   final SyncQueue _queue;
   final SyncDeviceIdentity _identity;
   final CommandAckApplier _ackApplier;
+  final Future<void> Function(SyncJob job, String? code)? onCommandConflict;
   final Uuid _uuid;
 
   Future<SyncResult> runPending() async {
@@ -152,6 +154,10 @@ class CommandSyncRunner {
       job.id,
       reason: item['code']?.toString() ?? 'COMMAND_CONFLICT',
     );
+    final code = item['code']?.toString();
+    if (onCommandConflict != null) {
+      await onCommandConflict!(job, code);
+    }
   }
 
   Future<void> _handleError(

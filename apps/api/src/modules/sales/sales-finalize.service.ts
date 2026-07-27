@@ -16,6 +16,10 @@ import { syncLoyaltyRedeemedExpense } from '../purchases/expense-sync.service';
 import type { SalesDocumentRepository } from './sales-document.repository';
 import type { SalesDocumentType } from './sales-document.types';
 import { assignDocumentNumber } from './sales-numbering.service';
+import {
+  type FinalizeSalePaymentInput,
+  recordSaleFinalizePayment,
+} from './sales-finalize-payment.service';
 
 type DbTransaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
@@ -95,11 +99,14 @@ export async function finalizeSalesDocument(
     userId?: string;
     godownId?: string;
     loyaltyPointsRedeemed?: string;
+    payment?: FinalizeSalePaymentInput;
   },
 ): Promise<{
   documentNumber: string | null;
   documentType: SalesDocumentType;
   loyalty: SaleLoyaltyResult | null;
+  paidAmount: string;
+  paymentMode: string | null;
 }> {
   const document = await repository.findRowById(
     params.businessId,
@@ -307,10 +314,29 @@ export async function finalizeSalesDocument(
       });
     }
 
+    let paidAmount = '0';
+    let paymentMode: string | null = null;
+
+    if (params.payment && document.partyId) {
+      const paymentResult = await recordSaleFinalizePayment(tx, {
+        businessId: params.businessId,
+        documentId: params.documentId,
+        partyId: document.partyId,
+        documentTotal: document.totalAmount,
+        documentDate: document.documentDate,
+        userId: params.userId,
+        payment: params.payment,
+      });
+      paidAmount = paymentResult.paidAmount;
+      paymentMode = paymentResult.paymentMode;
+    }
+
     return {
       documentNumber,
       documentType: document.documentType as SalesDocumentType,
       loyalty,
+      paidAmount,
+      paymentMode,
     };
   });
 }

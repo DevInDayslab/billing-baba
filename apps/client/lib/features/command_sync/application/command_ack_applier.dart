@@ -40,6 +40,8 @@ class CommandAckApplier {
           documentNumber: documentNumber,
           syncVersion: syncVersion,
           updatedAt: updatedAt,
+          paidAmount: result['paid_amount']?.toString(),
+          paymentMode: result['payment_mode']?.toString(),
         );
       case 'finalize_purchase':
         await _purchaseLocal.applyFinalizeAck(

@@ -303,6 +303,13 @@ class SyncQueue {
     );
   }
 
+  Future<List<SyncJob>> listJobsForEntity(String entityId) async {
+    final rows = await (_db.select(_db.syncQueue)
+          ..where((t) => t.entityId.equals(entityId)))
+        .get();
+    return rows.map(_fromRow).toList();
+  }
+
   SyncJob _fromRow(SyncQueueData row) {
     Map<String, dynamic> payload;
     try {

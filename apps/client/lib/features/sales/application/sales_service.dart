@@ -5,6 +5,8 @@ import 'package:billing_baba/shared/utils/date_time_utils.dart';
 import 'package:billing_baba/features/loyalty/models/loyalty_dto.dart';
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/sales/application/sales_error_mapper.dart';
+import 'package:billing_baba/core/sync/queue/sync_queue.dart';
+import 'package:billing_baba/features/sales/data/sales_sync_status.dart';
 import 'package:billing_baba/features/sales/data/sales_invoice_command_repository.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_remote_data_source.dart';
@@ -22,6 +24,7 @@ import 'package:billing_baba/features/sales/utils/sale_bill_tax.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:billing_baba/features/command_sync/application/command_sync_providers.dart';
+import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 export 'sales_error_mapper.dart' show SalesException, SalesOfflineException;
@@ -52,6 +55,7 @@ Future<SalesService> salesService(Ref ref) async {
     ),
     partyService: partyService,
     commandRepository: commandRepo,
+    syncQueue: ref.watch(syncQueueProvider),
   );
 }
 
@@ -60,11 +64,13 @@ class SalesService {
     required this._repository,
     required this._partyService,
     this._commandRepository,
+    this._syncQueue,
   });
 
   final SalesRepository _repository;
   final PartyService _partyService;
   final SalesInvoiceCommandRepository? _commandRepository;
+  final SyncQueue? _syncQueue;
 
   SalesRepository get repository => _repository;
 
@@ -80,37 +86,28 @@ class SalesService {
     SalesDocumentListQuery query, {
     Map<String, String>? partyNames,
   }) async {
-    if (query.documentType == SalesDocumentType.taxInvoice.apiValue &&
-        _commandRepository != null &&
-        query.page == 1) {
+    final isTaxInvoiceQuery =
+        query.documentType == SalesDocumentType.taxInvoice.apiValue;
+
+    var localDocs = const <SalesDocumentDto>[];
+    if (isTaxInvoiceQuery && _commandRepository != null) {
       try {
-        final resolvedPartyNames = partyNames ?? await _partyNameMap();
-        final localDocs = await _commandRepository.listTaxInvoices();
-        final items = localDocs
-            .map(
-              (dto) => SalesDocumentMapper.toInvoiceModel(
-                dto,
-                partyName: dto.partyId != null
-                    ? (resolvedPartyNames[dto.partyId] ?? '')
-                    : '',
-              ),
-            )
-            .toList();
-        return PaginatedSaleInvoices(
-          items: items,
-          currentPage: 1,
-          totalPages: 1,
-          totalItems: items.length,
-        );
+        localDocs = await _commandRepository.listTaxInvoices();
       } on Object {
-        // Fall through to remote when local read fails.
+        localDocs = const [];
       }
     }
 
     try {
       final resolvedPartyNames = partyNames ?? await _partyNameMap();
       final response = await _repository.listDocuments(query);
-      final items = response.documents
+      final remoteDocs = response.documents;
+
+      final mergedDocs = isTaxInvoiceQuery && localDocs.isNotEmpty
+          ? _mergeTaxInvoiceDocuments(remoteDocs, localDocs)
+          : remoteDocs;
+
+      final items = mergedDocs
           .map(
             (dto) => SalesDocumentMapper.toInvoiceModel(
               dto,
@@ -119,10 +116,17 @@ class SalesService {
                   : '',
             ),
           )
-          .toList();
+          .toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
 
-      final total = response.meta.total;
+      final total = isTaxInvoiceQuery && localDocs.isNotEmpty
+          ? items.length
+          : response.meta.total;
       final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
+      final start = (query.page - 1) * query.limit;
+      final pageItems = await _enrichInvoiceSyncState(
+        items.skip(start).take(query.limit).toList(),
+      );
 
       final summaryDto = response.summary;
       final summary = summaryDto == null
@@ -134,15 +138,108 @@ class SalesService {
             );
 
       return PaginatedSaleInvoices(
-        items: items,
+        items: pageItems,
         currentPage: query.page,
         totalPages: totalPages,
         totalItems: total,
         summary: summary,
       );
     } on DioException catch (error) {
+      if (isTaxInvoiceQuery && localDocs.isNotEmpty) {
+        final resolvedPartyNames = partyNames ?? await _partyNameMap();
+        final sortedDocs = [...localDocs]
+          ..sort((a, b) {
+            final aDate = DateTimeUtils.parseApiDateTime(a.documentDate);
+            final bDate = DateTimeUtils.parseApiDateTime(b.documentDate);
+            return bDate.compareTo(aDate);
+          });
+        final items = sortedDocs
+            .map(
+              (dto) => SalesDocumentMapper.toInvoiceModel(
+                dto,
+                partyName: dto.partyId != null
+                    ? (resolvedPartyNames[dto.partyId] ?? '')
+                    : '',
+              ),
+            )
+            .toList();
+
+        final total = items.length;
+        final totalPages = total == 0 ? 1 : (total / query.limit).ceil();
+        final start = (query.page - 1) * query.limit;
+        final pageItems = await _enrichInvoiceSyncState(
+          items.skip(start).take(query.limit).toList(),
+        );
+
+        return PaginatedSaleInvoices(
+          items: pageItems,
+          currentPage: query.page,
+          totalPages: totalPages,
+          totalItems: total,
+        );
+      }
       throw mapSalesError(error);
     }
+  }
+
+  List<SalesDocumentDto> _mergeTaxInvoiceDocuments(
+    List<SalesDocumentDto> remote,
+    List<SalesDocumentDto> local,
+  ) {
+    final merged = <String, SalesDocumentDto>{
+      for (final doc in remote) doc.id: doc,
+    };
+
+    for (final localDoc in local) {
+      final remoteDoc = merged[localDoc.id];
+      if (remoteDoc == null ||
+          localDoc.status == 'draft' ||
+          (localDoc.documentNumber?.startsWith('LOCAL-') ?? false) ||
+          _shouldPreferLocalTaxInvoice(localDoc, remoteDoc)) {
+        merged[localDoc.id] = localDoc;
+      }
+    }
+
+    return merged.values.toList();
+  }
+
+  bool _shouldPreferLocalTaxInvoice(
+    SalesDocumentDto local,
+    SalesDocumentDto remote,
+  ) {
+    if (local.status == 'finalized' && remote.status == 'draft') {
+      return true;
+    }
+
+    final localUpdated = DateTime.tryParse(local.updatedAt);
+    final remoteUpdated = DateTime.tryParse(remote.updatedAt);
+    if (localUpdated != null && remoteUpdated != null) {
+      return localUpdated.isAfter(remoteUpdated);
+    }
+    return false;
+  }
+
+  Future<List<SaleInvoiceModel>> _enrichInvoiceSyncState(
+    List<SaleInvoiceModel> invoices,
+  ) async {
+    if (_syncQueue == null || invoices.isEmpty) {
+      return invoices;
+    }
+
+    final enriched = <SaleInvoiceModel>[];
+    for (final invoice in invoices) {
+      final jobs = await _syncQueue.listJobsForEntity(invoice.id);
+      enriched.add(
+        invoice.copyWith(
+          syncState: resolveSaleInvoiceSyncState(
+            jobs: jobs,
+            isDraft: invoice.isDraft,
+            invoiceNo: invoice.invoiceNo,
+          ),
+        ),
+      );
+    }
+    return enriched;
   }
 
   Future<List<SaleInvoiceModel>> fetchInvoices({
@@ -208,32 +305,40 @@ class SalesService {
   }
 
   Future<AddSaleFormState> loadSaleForm(String documentId) async {
-    try {
-      final document = await _repository.getDocument(documentId);
-      final partyNames = await _partyNameMap();
-      final partyName = document.partyId != null
-          ? (partyNames[document.partyId] ?? '')
-          : '';
-
-      final date = DateTimeUtils.parseApiDateTime(document.documentDate);
-      final items = _linesToSaleLineItems(document.lines);
-
-      return AddSaleFormState(
-        documentId: document.id,
-        partyId: document.partyId,
-        billingName: partyName,
-        invoiceNumber: document.documentNumber ?? 'Draft',
-        invoiceNumberMode: document.documentNumber == null
-            ? InvoiceNumberMode.auto
-            : InvoiceNumberMode.manual,
-        invoiceDate: DateTime(date.year, date.month, date.day),
-        invoiceTime: TimeOfDay.fromDateTime(date),
-        description: document.notes ?? '',
-        items: items,
-      );
-    } on DioException catch (error) {
-      throw mapSalesError(error);
+    SalesDocumentDto? document;
+    if (_commandRepository != null) {
+      document = await _commandRepository.getDocument(documentId);
     }
+
+    if (document == null) {
+      try {
+        document = await _repository.getDocument(documentId);
+      } on DioException catch (error) {
+        throw mapSalesError(error);
+      }
+    }
+
+    final partyNames = await _partyNameMap();
+    final partyName = document.partyId != null
+        ? (partyNames[document.partyId] ?? '')
+        : '';
+
+    final date = DateTimeUtils.parseApiDateTime(document.documentDate);
+    final items = _linesToSaleLineItems(document.lines);
+
+    return AddSaleFormState(
+      documentId: document.id,
+      partyId: document.partyId,
+      billingName: partyName,
+      invoiceNumber: document.documentNumber ?? 'Draft',
+      invoiceNumberMode: document.documentNumber == null
+          ? InvoiceNumberMode.auto
+          : InvoiceNumberMode.manual,
+      invoiceDate: DateTime(date.year, date.month, date.day),
+      invoiceTime: TimeOfDay.fromDateTime(date),
+      description: document.notes ?? '',
+      items: items,
+    );
   }
 
   Future<SalesDocumentDto> saveDocumentDraft(
@@ -494,6 +599,41 @@ class SalesService {
       throw const SalesException('Party is required');
     }
 
+    final receivedAmount = form.saleType == SaleType.cash
+        ? form.paymentAmount
+        : (form.receivedEnabled ? form.receivedAmount : 0);
+
+    if (_commandRepository != null) {
+      final draft = await saveDraft(
+        form.copyWith(partyId: partyId, godownId: godownId),
+        itemNameToId: itemNameToId,
+      );
+
+      FinalizeSalePaymentCommand? payment;
+      if (receivedAmount > 0) {
+        payment = FinalizeSalePaymentCommand(
+          amount: receivedAmount.toStringAsFixed(4),
+          paymentMode: SalesPaymentModes.toApi(form.paymentType),
+          shortPaymentHandling: shortPaymentHandling,
+          shortfallAmount: shortfallAmount != null && shortfallAmount > 0
+              ? shortfallAmount.toStringAsFixed(4)
+              : null,
+        );
+      }
+
+      await _commandRepository.finalize(
+        documentId: draft.id,
+        localDocumentNumber: draft.documentNumber,
+        godownId: godownId ?? form.godownId,
+        payment: payment,
+      );
+
+      final finalized = await _commandRepository.getDocument(draft.id);
+      return CreateAndFinalizeSaleResult(
+        document: finalized ?? draft,
+      );
+    }
+
     try {
       final draft = await saveDraft(
         form.copyWith(partyId: partyId, godownId: godownId),
@@ -506,19 +646,13 @@ class SalesService {
       );
       final finalized = await _repository.getDocument(draft.id);
 
-      final payableTotal = form.invoiceTotal;
-      final receivedAmount = form.saleType == SaleType.cash
-          ? form.paymentAmount
-          : (form.receivedEnabled ? form.receivedAmount : 0);
-
       if (receivedAmount > 0) {
-        final paymentMode = form.saleType == SaleType.cash
-            ? SalesPaymentModes.toApi(form.paymentType)
-            : SalesPaymentModes.toApi(form.paymentType);
+        final paymentMode = SalesPaymentModes.toApi(form.paymentType);
         final routeToHiddenLedger =
             shortPaymentHandling == 'unrecovered' &&
             shortfallAmount != null &&
             shortfallAmount > 0;
+        final payableTotal = form.invoiceTotal;
         final allocationAmount = routeToHiddenLedger
             ? payableTotal
             : receivedAmount;
@@ -561,6 +695,15 @@ class SalesService {
   }
 
   Future<void> deleteDraft(String documentId) async {
+    if (_commandRepository != null) {
+      final local = await _commandRepository.getDocument(documentId);
+      if (local != null &&
+          local.documentType == SalesDocumentType.taxInvoice.apiValue) {
+        await _commandRepository.deleteDraft(documentId);
+        return;
+      }
+    }
+
     try {
       await _repository.deleteDocument(documentId);
     } on DioException catch (error) {
@@ -598,6 +741,21 @@ class SalesService {
     String documentId, {
     String? godownId,
   }) async {
+    if (_commandRepository != null) {
+      final local = await _commandRepository.getDocument(documentId);
+      if (local != null &&
+          local.documentType == SalesDocumentType.taxInvoice.apiValue &&
+          local.status == 'draft') {
+        await _commandRepository.finalize(
+          documentId: documentId,
+          localDocumentNumber: local.documentNumber,
+          godownId: godownId,
+        );
+        final finalized = await _commandRepository.getDocument(documentId);
+        return finalized ?? local;
+      }
+    }
+
     try {
       await _repository.finalizeDocument(documentId, godownId: godownId);
       return _repository.getDocument(documentId);

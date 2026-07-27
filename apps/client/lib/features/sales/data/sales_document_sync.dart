@@ -147,6 +147,12 @@ class SalesDocumentSync {
             totalAmount: Value(
               _str(payload, 'total_amount') ?? existing?.totalAmount ?? '0',
             ),
+            paidAmount: Value(
+              _str(payload, 'paid_amount') ?? existing?.paidAmount ?? '0',
+            ),
+            paymentMode: Value(
+              _str(payload, 'payment_mode') ?? existing?.paymentMode,
+            ),
             documentDate: _str(payload, 'document_date') ??
                 existing?.documentDate ??
                 updatedAt.toUtc().toIso8601String(),

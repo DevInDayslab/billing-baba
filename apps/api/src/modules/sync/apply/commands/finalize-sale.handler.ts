@@ -5,6 +5,8 @@ import { salesDocuments } from '../../../../db/schema/sales/tables';
 import { AppError } from '../../../../shared/errors/app-error';
 import { SalesDocumentRepository } from '../../../sales/sales-document.repository';
 import { finalizeSalesDocument } from '../../../sales/sales-finalize.service';
+import type { FinalizeSalePaymentInput } from '../../../sales/sales-finalize-payment.service';
+import { finalizeSalePaymentBodySchema } from '../../../sales/sales-document.schema';
 import type {
   CommandApplyOutcome,
   CommandHandler,
@@ -13,6 +15,32 @@ import type {
 
 function isLocalDocumentNumber(value: string | null | undefined): boolean {
   return value != null && value.startsWith('LOCAL-');
+}
+
+function parseFinalizePayment(
+  payload: Record<string, unknown>,
+): FinalizeSalePaymentInput | undefined {
+  const paymentBlock = payload.payment;
+  if (!paymentBlock || typeof paymentBlock !== 'object') {
+    return undefined;
+  }
+
+  const parsed = finalizeSalePaymentBodySchema.safeParse(paymentBlock);
+  if (!parsed.success) {
+    throw new AppError(
+      'VALIDATION_ERROR',
+      parsed.error.issues[0]?.message ?? 'Invalid payment payload',
+      422,
+    );
+  }
+
+  return {
+    amount: parsed.data.amount,
+    paymentMode: parsed.data.payment_mode,
+    shortPaymentHandling: parsed.data.short_payment_handling ?? null,
+    shortfallAmount: parsed.data.shortfall_amount ?? null,
+    paymentDate: parsed.data.payment_date,
+  };
 }
 
 export const finalizeSaleHandler: CommandHandler = async (db, input) => {
@@ -26,6 +54,23 @@ export const finalizeSaleHandler: CommandHandler = async (db, input) => {
     typeof input.payload.godown_id === 'string'
       ? input.payload.godown_id
       : undefined;
+
+  let payment: FinalizeSalePaymentInput | undefined;
+  try {
+    payment = parseFinalizePayment(input.payload);
+  } catch (error) {
+    if (error instanceof AppError) {
+      return {
+        status: 'error',
+        result: {
+          mutation_id: input.mutationId,
+          code: error.code,
+          message: error.message,
+        },
+      };
+    }
+    throw error;
+  }
 
   const repository = new SalesDocumentRepository(db);
   const document = await repository.findRowById(input.businessId, documentId);
@@ -64,13 +109,19 @@ export const finalizeSaleHandler: CommandHandler = async (db, input) => {
       documentId,
       userId: input.userId,
       godownId,
+      payment,
     });
 
     const serverDocumentNumber = finalized.documentNumber;
     const result: Record<string, unknown> = {
       document_id: documentId,
       status: 'finalized',
+      paid_amount: finalized.paidAmount,
     };
+
+    if (finalized.paymentMode) {
+      result.payment_mode = finalized.paymentMode;
+    }
 
     if (localNumber && serverDocumentNumber) {
       result.document_number_remap = {

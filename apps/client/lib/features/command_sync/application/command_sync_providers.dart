@@ -10,6 +10,7 @@ import 'package:billing_baba/features/purchases/data/purchase_bill_command_repos
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_invoice_command_repository.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
+import 'package:billing_baba/features/sales/data/sales_sync_status.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final localDocumentNumberServiceProvider =
@@ -50,11 +51,22 @@ final commandSyncRunnerProvider =
   final api = await ref.watch(syncApiProvider.future);
   final identity = await ref.watch(syncDeviceIdentityProvider.future);
   final db = ref.watch(appDatabaseProvider);
+  final salesRecovery = SalesSyncRecovery(
+    salesLocal: SalesLocalDataSource(db),
+    syncQueue: ref.watch(syncQueueProvider),
+  );
   return CommandSyncRunner(
     api: api,
     queue: ref.watch(syncQueueProvider),
     identity: identity,
     ackApplier: CommandAckApplier(db: db),
+    onCommandConflict: (job, code) async {
+      if (code == 'DOCUMENT_ALREADY_FINALIZED' &&
+          job.entityType == 'sales_documents' &&
+          job.entityId != null) {
+        await salesRecovery.reconcileFinalizeConflict(job.entityId!);
+      }
+    },
   );
 });
 

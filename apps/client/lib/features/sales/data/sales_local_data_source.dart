@@ -65,6 +65,8 @@ class SalesLocalDataSource {
     String? convertedFromId,
     String? notes,
     String? godownId,
+    String paidAmount = '0',
+    String? paymentMode,
     String? deviceId,
   }) async {
     await _db.into(_db.salesDocumentsLocal).insertOnConflictUpdate(
@@ -86,6 +88,8 @@ class SalesLocalDataSource {
             convertedFromId: Value(convertedFromId),
             notes: Value(notes),
             godownId: Value(godownId),
+            paidAmount: Value(paidAmount),
+            paymentMode: Value(paymentMode),
             syncVersion: Value(syncVersion),
             createdAt: createdAt.toUtc(),
             updatedAt: updatedAt.toUtc(),
@@ -159,6 +163,8 @@ class SalesLocalDataSource {
     required String? documentNumber,
     required int syncVersion,
     required DateTime updatedAt,
+    String? paidAmount,
+    String? paymentMode,
   }) {
     return (_db.update(_db.salesDocumentsLocal)
           ..where((t) => t.id.equals(documentId)))
@@ -168,6 +174,9 @@ class SalesLocalDataSource {
         documentNumber: Value(documentNumber),
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),
+        paidAmount: paidAmount != null ? Value(paidAmount) : const Value.absent(),
+        paymentMode:
+            paymentMode != null ? Value(paymentMode) : const Value.absent(),
       ),
     );
   }
@@ -189,6 +198,8 @@ class SalesLocalDataSource {
       discountTotal: header.discountTotal,
       taxAmount: header.taxAmount,
       totalAmount: header.totalAmount,
+      paidAmount: header.paidAmount,
+      paymentMode: header.paymentMode,
       documentDate: header.documentDate,
       convertedFromId: header.convertedFromId,
       notes: header.notes,

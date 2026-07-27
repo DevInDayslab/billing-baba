@@ -1,6 +1,7 @@
 import { and, asc, eq, gt, or } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type { Database } from '../../../db/client';
+import { salesDocuments } from '../../../db/schema/sales/tables';
 import type {
   ApplyOutcome,
   RowMutationInput,
@@ -51,8 +52,12 @@ export class RowApplier {
     }
 
     const existing = await this.findRow(definition, input.businessId, input.entityId);
+    if (input.entityType === 'sales_document_lines') {
+      const lineGuard = await this.guardSalesLineParentDraft(input, existing);
+      if (lineGuard) return lineGuard;
+    }
     if (definition.beforeApply) {
-      const guardOutcome = definition.beforeApply(input, existing);
+      const guardOutcome = await definition.beforeApply(input, existing);
       if (guardOutcome) return guardOutcome;
     }
 
@@ -351,6 +356,89 @@ export class RowApplier {
       .limit(limit);
 
     return rows as Array<SyncedRowBase & Record<string, unknown>>;
+  }
+
+  private async guardSalesLineParentDraft(
+    input: RowMutationInput,
+    existing: SyncedRowBase | null,
+  ): Promise<ApplyOutcome | null> {
+    const payloadParentId = input.payload.sales_document_id;
+    const existingParentId =
+      existing && 'salesDocumentId' in existing
+        ? (existing as { salesDocumentId?: string }).salesDocumentId
+        : undefined;
+    const parentId =
+      typeof payloadParentId === 'string'
+        ? payloadParentId
+        : existingParentId;
+
+    if (!parentId) {
+      return {
+        status: 'error',
+        result: {
+          mutation_id: input.mutationId,
+          code: 'VALIDATION_FAILED',
+          message: 'sales_document_id is required for line mutations',
+        },
+      };
+    }
+
+    const [parent] = await this.db
+      .select({
+        status: salesDocuments.status,
+        documentType: salesDocuments.documentType,
+      })
+      .from(salesDocuments)
+      .where(
+        and(
+          eq(salesDocuments.id, parentId),
+          eq(salesDocuments.businessId, input.businessId),
+          eq(salesDocuments.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    if (!parent) {
+      return {
+        status: 'error',
+        result: {
+          mutation_id: input.mutationId,
+          code: 'NOT_FOUND',
+          message: 'Parent sales document not found',
+        },
+      };
+    }
+
+    if (parent.documentType !== 'tax_invoice') {
+      return {
+        status: 'error',
+        result: {
+          mutation_id: input.mutationId,
+          code: 'VALIDATION_FAILED',
+          message: 'Only tax_invoice line sync is supported in Phase 2',
+        },
+      };
+    }
+
+    if (parent.status !== 'draft') {
+      return {
+        status: 'conflict',
+        result: {
+          mutation_id: input.mutationId,
+          code: 'DOCUMENT_ALREADY_FINALIZED',
+          entity_type: input.entityType,
+          entity_id: input.entityId,
+          incoming_sync_version: input.baseSyncVersion,
+          server_sync_version: input.baseSyncVersion,
+          server_payload: null,
+          server_updated_at: new Date().toISOString(),
+          suggested_resolution: 'retry_with_server_version',
+          conflict_id: randomUUID(),
+        },
+      };
+    }
+
+    return null;
   }
 
   private toPullChange(

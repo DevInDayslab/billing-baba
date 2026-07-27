@@ -18,6 +18,8 @@ class SalesDocumentsLocal extends Table {
   TextColumn get discountTotal => text().withDefault(const Constant('0'))();
   TextColumn get taxAmount => text().withDefault(const Constant('0'))();
   TextColumn get totalAmount => text().withDefault(const Constant('0'))();
+  TextColumn get paidAmount => text().withDefault(const Constant('0'))();
+  TextColumn get paymentMode => text().nullable()();
   TextColumn get documentDate => text()();
   TextColumn get convertedFromId => text().nullable()();
   TextColumn get notes => text().nullable()();
