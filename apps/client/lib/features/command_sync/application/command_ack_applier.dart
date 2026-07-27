@@ -50,6 +50,8 @@ class CommandAckApplier {
           documentNumber: documentNumber,
           syncVersion: syncVersion,
           updatedAt: updatedAt,
+          paidAmount: result['paid_amount']?.toString(),
+          paymentMode: result['payment_mode']?.toString(),
         );
       default:
         break;

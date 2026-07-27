@@ -161,6 +161,12 @@ class PurchaseDocumentSync {
             ),
             dueDate: Value(_str(payload, 'due_date') ?? existing?.dueDate),
             notes: Value(_str(payload, 'notes') ?? existing?.notes),
+            paidAmount: Value(
+              _str(payload, 'paid_amount') ?? existing?.paidAmount ?? '0',
+            ),
+            paymentMode: Value(
+              _str(payload, 'payment_mode') ?? existing?.paymentMode,
+            ),
             syncVersion: Value(syncVersion),
             createdAt: (existing?.createdAt ?? updatedAt).toUtc(),
             updatedAt: updatedAt.toUtc(),

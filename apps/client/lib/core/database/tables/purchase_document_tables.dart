@@ -24,6 +24,8 @@ class PurchaseDocumentsLocal extends Table {
   TextColumn get dueDate => text().nullable()();
   TextColumn get notes => text().nullable()();
   TextColumn get godownId => text().nullable()();
+  TextColumn get paidAmount => text().withDefault(const Constant('0'))();
+  TextColumn get paymentMode => text().nullable()();
   IntColumn get syncVersion => integer().withDefault(const Constant(0))();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();

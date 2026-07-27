@@ -1,8 +1,3 @@
-import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
-import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
-import 'package:billing_baba/shared/documents/document_line_sync.dart';
-import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
-import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:billing_baba/core/providers/data_refresh.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
 import 'package:billing_baba/features/inventory/application/inventory_units_provider.dart';
@@ -17,6 +12,7 @@ import 'package:billing_baba/features/purchases/application/purchase_document_pa
 import 'package:billing_baba/features/purchases/application/purchase_document_party_factory.dart';
 import 'package:billing_baba/features/purchases/application/purchase_error_mapper.dart';
 import 'package:billing_baba/features/purchases/application/purchase_service.dart';
+import 'package:billing_baba/features/purchases/data/purchase_bill_command_repository.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_dto.dart';
 import 'package:billing_baba/features/purchases/models/dto/purchase_document_parse_dto.dart';
 import 'package:billing_baba/features/purchases/models/purchase_bill_form_model.dart';
@@ -26,6 +22,11 @@ import 'package:billing_baba/features/purchases/utils/purchase_line_item_catalog
 import 'package:billing_baba/features/sales/models/sale_form_attachment.dart';
 import 'package:billing_baba/features/sales/models/sale_invoice_form_model.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_dropdown_options.dart';
+import 'package:billing_baba/shared/attachments/document_attachment_entity_type.dart';
+import 'package:billing_baba/shared/attachments/transaction_attachment_actions.dart';
+import 'package:billing_baba/shared/documents/document_line_sync.dart';
+import 'package:billing_baba/shared/forms/transaction_form_validation.dart';
+import 'package:billing_baba/shared/forms/transaction_party_link.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -584,10 +585,21 @@ class AddPurchaseForm extends _$AddPurchaseForm {
 
       final PurchaseDocumentDto document;
       if (finalize) {
+        FinalizePurchasePaymentCommand? payment;
+        if (state.paymentAmount > 0) {
+          final payAmount = state.paymentAmount
+              .clamp(0, state.grandTotal)
+              .toDouble();
+          payment = FinalizePurchasePaymentCommand(
+            amount: payAmount.toStringAsFixed(4),
+            paymentMode: PurchasePaymentModes.toApi(state.paymentType),
+          );
+        }
         document = await service.finalizeDocumentDraft(
           input.copyWith(partyId: state.partyId),
           itemNameToId: _itemNameToId(),
           godownId: state.godownId,
+          payment: payment,
         );
       } else {
         document = await service.saveDocumentDraft(
@@ -611,31 +623,6 @@ class AddPurchaseForm extends _$AddPurchaseForm {
         isSaving: false,
         isDirty: false,
       );
-
-      if (finalize &&
-          state.partyId != null &&
-          state.partyId!.isNotEmpty &&
-          state.paymentAmount > 0) {
-        final billDate = state.billDate ?? DateTime.now();
-        final billTime = state.billTime ?? TimeOfDay.now();
-        final paymentDate = DateTime(
-          billDate.year,
-          billDate.month,
-          billDate.day,
-          billTime.hour,
-          billTime.minute,
-        );
-        final payAmount = state.paymentAmount
-            .clamp(0, state.grandTotal)
-            .toDouble();
-        await service.recordPurchaseBillPayment(
-          partyId: state.partyId!,
-          purchaseDocumentId: document.id,
-          amount: payAmount,
-          paymentModeUi: state.paymentType,
-          paymentDate: paymentDate,
-        );
-      }
 
       ref.invalidate(purchaseBillsProvider);
       await _refreshAfterPurchaseMutation();

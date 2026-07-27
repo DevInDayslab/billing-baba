@@ -133,4 +133,6 @@ export type FinalizePurchaseDocumentResponse = {
   message: string;
   document_number: string | null;
   status: DocumentStatus;
+  paid_amount?: string;
+  payment_mode?: string | null;
 };

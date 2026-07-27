@@ -1,6 +1,4 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
-import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:billing_baba/features/print/models/print_request.dart';
 import 'package:billing_baba/features/print/presentation/desktop/widgets/document_print_actions.dart';
 import 'package:billing_baba/features/purchases/application/purchase_bills_provider.dart';
@@ -11,6 +9,8 @@ import 'package:billing_baba/features/purchases/presentation/desktop/widgets/pur
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/purchase_shared_column_filters.dart';
 import 'package:billing_baba/features/purchases/presentation/desktop/widgets/shared/purchase_transaction_table_layout.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/shared/sales_action_menu_button.dart';
+import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
+import 'package:billing_baba/shared/widgets/resizable_data_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -115,7 +115,23 @@ class PurchaseBillTable extends ConsumerWidget {
       backgroundColor: index.isOdd ? _zebraRowBg : Colors.transparent,
       cells: [
         _DataCell(child: Text(_dateFormat.format(bill.date))),
-        _DataCell(child: Text(bill.invoiceNo)),
+        _DataCell(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  bill.invoiceNo,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (bill.syncState != PurchaseBillSyncState.none)
+                Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: _SyncStateBadge(state: bill.syncState),
+                ),
+            ],
+          ),
+        ),
         _DataCell(
           child: Text(
             bill.partyName,
@@ -617,6 +633,43 @@ class _PageNumber extends StatelessWidget {
             fontWeight: FontWeight.w500,
             color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SyncStateBadge extends StatelessWidget {
+  const _SyncStateBadge({required this.state});
+
+  final PurchaseBillSyncState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (state) {
+      PurchaseBillSyncState.savedLocally => ('Local', const Color(0xFF1565C0)),
+      PurchaseBillSyncState.syncing => ('Syncing', const Color(0xFFF57C00)),
+      PurchaseBillSyncState.synced => ('Synced', const Color(0xFF2E7D32)),
+      PurchaseBillSyncState.conflict => ('Conflict', const Color(0xFFC62828)),
+      PurchaseBillSyncState.none => ('', Colors.transparent),
+    };
+
+    if (label.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color,
         ),
       ),
     );

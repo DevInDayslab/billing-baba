@@ -66,6 +66,8 @@ class PurchaseLocalDataSource {
     String? dueDate,
     String? notes,
     String? godownId,
+    String paidAmount = '0',
+    String? paymentMode,
     String? deviceId,
   }) async {
     await _db.into(_db.purchaseDocumentsLocal).insertOnConflictUpdate(
@@ -89,6 +91,8 @@ class PurchaseLocalDataSource {
             dueDate: Value(dueDate),
             notes: Value(notes),
             godownId: Value(godownId),
+            paidAmount: Value(paidAmount),
+            paymentMode: Value(paymentMode),
             syncVersion: Value(syncVersion),
             createdAt: createdAt.toUtc(),
             updatedAt: updatedAt.toUtc(),
@@ -133,6 +137,17 @@ class PurchaseLocalDataSource {
     }
   }
 
+  Future<void> softDeleteDocument(String id, DateTime deletedAt) {
+    return (_db.update(_db.purchaseDocumentsLocal)..where((t) => t.id.equals(id)))
+        .write(
+      PurchaseDocumentsLocalCompanion(
+        isDeleted: const Value(true),
+        deletedAt: Value(deletedAt.toUtc()),
+        updatedAt: Value(deletedAt.toUtc()),
+      ),
+    );
+  }
+
   Future<int?> getHeaderSyncVersion(String id) async {
     final row = await (_db.select(_db.purchaseDocumentsLocal)
           ..where((t) => t.id.equals(id)))
@@ -146,6 +161,8 @@ class PurchaseLocalDataSource {
     required String? documentNumber,
     required int syncVersion,
     required DateTime updatedAt,
+    String? paidAmount,
+    String? paymentMode,
   }) {
     return (_db.update(_db.purchaseDocumentsLocal)
           ..where((t) => t.id.equals(documentId)))
@@ -155,6 +172,10 @@ class PurchaseLocalDataSource {
         documentNumber: Value(documentNumber),
         syncVersion: Value(syncVersion),
         updatedAt: Value(updatedAt.toUtc()),
+        paidAmount:
+            paidAmount != null ? Value(paidAmount) : const Value.absent(),
+        paymentMode:
+            paymentMode != null ? Value(paymentMode) : const Value.absent(),
       ),
     );
   }
@@ -181,6 +202,8 @@ class PurchaseLocalDataSource {
       supplierInvoiceNumber: header.supplierInvoiceNumber,
       dueDate: header.dueDate,
       notes: header.notes,
+      paidAmount: header.paidAmount,
+      paymentMode: header.paymentMode,
       createdAt: header.createdAt.toUtc().toIso8601String(),
       updatedAt: header.updatedAt.toUtc().toIso8601String(),
       lines: lines

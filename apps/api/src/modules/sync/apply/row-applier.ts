@@ -2,6 +2,7 @@ import { and, asc, eq, gt, or } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type { Database } from '../../../db/client';
 import { salesDocuments } from '../../../db/schema/sales/tables';
+import { purchaseDocuments } from '../../../db/schema/purchases/tables';
 import type {
   ApplyOutcome,
   RowMutationInput,
@@ -54,6 +55,10 @@ export class RowApplier {
     const existing = await this.findRow(definition, input.businessId, input.entityId);
     if (input.entityType === 'sales_document_lines') {
       const lineGuard = await this.guardSalesLineParentDraft(input, existing);
+      if (lineGuard) return lineGuard;
+    }
+    if (input.entityType === 'purchase_document_lines') {
+      const lineGuard = await this.guardPurchaseLineParentDraft(input, existing);
       if (lineGuard) return lineGuard;
     }
     if (definition.beforeApply) {
@@ -416,6 +421,89 @@ export class RowApplier {
           mutation_id: input.mutationId,
           code: 'VALIDATION_FAILED',
           message: 'Only tax_invoice line sync is supported in Phase 2',
+        },
+      };
+    }
+
+    if (parent.status !== 'draft') {
+      return {
+        status: 'conflict',
+        result: {
+          mutation_id: input.mutationId,
+          code: 'DOCUMENT_ALREADY_FINALIZED',
+          entity_type: input.entityType,
+          entity_id: input.entityId,
+          incoming_sync_version: input.baseSyncVersion,
+          server_sync_version: input.baseSyncVersion,
+          server_payload: null,
+          server_updated_at: new Date().toISOString(),
+          suggested_resolution: 'retry_with_server_version',
+          conflict_id: randomUUID(),
+        },
+      };
+    }
+
+    return null;
+  }
+
+  private async guardPurchaseLineParentDraft(
+    input: RowMutationInput,
+    existing: SyncedRowBase | null,
+  ): Promise<ApplyOutcome | null> {
+    const payloadParentId = input.payload.purchase_document_id;
+    const existingParentId =
+      existing && 'purchaseDocumentId' in existing
+        ? (existing as { purchaseDocumentId?: string }).purchaseDocumentId
+        : undefined;
+    const parentId =
+      typeof payloadParentId === 'string'
+        ? payloadParentId
+        : existingParentId;
+
+    if (!parentId) {
+      return {
+        status: 'error',
+        result: {
+          mutation_id: input.mutationId,
+          code: 'VALIDATION_FAILED',
+          message: 'purchase_document_id is required for line mutations',
+        },
+      };
+    }
+
+    const [parent] = await this.db
+      .select({
+        status: purchaseDocuments.status,
+        documentType: purchaseDocuments.documentType,
+      })
+      .from(purchaseDocuments)
+      .where(
+        and(
+          eq(purchaseDocuments.id, parentId),
+          eq(purchaseDocuments.businessId, input.businessId),
+          eq(purchaseDocuments.isDeleted, false),
+        ),
+      )
+      .limit(1);
+
+    if (!parent) {
+      return {
+        status: 'error',
+        result: {
+          mutation_id: input.mutationId,
+          code: 'NOT_FOUND',
+          message: 'Parent purchase document not found',
+        },
+      };
+    }
+
+    if (parent.documentType !== 'purchase_bill') {
+      return {
+        status: 'error',
+        result: {
+          mutation_id: input.mutationId,
+          code: 'VALIDATION_FAILED',
+          message: 'Only purchase_bill line sync is supported in Phase 2',
         },
       };
     }

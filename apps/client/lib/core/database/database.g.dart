@@ -16875,6 +16875,29 @@ class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _paidAmountMeta = const VerificationMeta(
+    'paidAmount',
+  );
+  @override
+  late final GeneratedColumn<String> paidAmount = GeneratedColumn<String>(
+    'paid_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('0'),
+  );
+  static const VerificationMeta _paymentModeMeta = const VerificationMeta(
+    'paymentMode',
+  );
+  @override
+  late final GeneratedColumn<String> paymentMode = GeneratedColumn<String>(
+    'payment_mode',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _syncVersionMeta = const VerificationMeta(
     'syncVersion',
   );
@@ -16967,6 +16990,8 @@ class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
     dueDate,
     notes,
     godownId,
+    paidAmount,
+    paymentMode,
     syncVersion,
     isDeleted,
     createdAt,
@@ -17139,6 +17164,21 @@ class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
         godownId.isAcceptableOrUnknown(data['godown_id']!, _godownIdMeta),
       );
     }
+    if (data.containsKey('paid_amount')) {
+      context.handle(
+        _paidAmountMeta,
+        paidAmount.isAcceptableOrUnknown(data['paid_amount']!, _paidAmountMeta),
+      );
+    }
+    if (data.containsKey('payment_mode')) {
+      context.handle(
+        _paymentModeMeta,
+        paymentMode.isAcceptableOrUnknown(
+          data['payment_mode']!,
+          _paymentModeMeta,
+        ),
+      );
+    }
     if (data.containsKey('sync_version')) {
       context.handle(
         _syncVersionMeta,
@@ -17270,6 +17310,14 @@ class $PurchaseDocumentsLocalTable extends PurchaseDocumentsLocal
         DriftSqlType.string,
         data['${effectivePrefix}godown_id'],
       ),
+      paidAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}paid_amount'],
+      )!,
+      paymentMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payment_mode'],
+      ),
       syncVersion: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sync_version'],
@@ -17324,6 +17372,8 @@ class PurchaseDocumentLocalData extends DataClass
   final String? dueDate;
   final String? notes;
   final String? godownId;
+  final String paidAmount;
+  final String? paymentMode;
   final int syncVersion;
   final bool isDeleted;
   final DateTime createdAt;
@@ -17350,6 +17400,8 @@ class PurchaseDocumentLocalData extends DataClass
     this.dueDate,
     this.notes,
     this.godownId,
+    required this.paidAmount,
+    this.paymentMode,
     required this.syncVersion,
     required this.isDeleted,
     required this.createdAt,
@@ -17392,6 +17444,10 @@ class PurchaseDocumentLocalData extends DataClass
     }
     if (!nullToAbsent || godownId != null) {
       map['godown_id'] = Variable<String>(godownId);
+    }
+    map['paid_amount'] = Variable<String>(paidAmount);
+    if (!nullToAbsent || paymentMode != null) {
+      map['payment_mode'] = Variable<String>(paymentMode);
     }
     map['sync_version'] = Variable<int>(syncVersion);
     map['is_deleted'] = Variable<bool>(isDeleted);
@@ -17441,6 +17497,10 @@ class PurchaseDocumentLocalData extends DataClass
       godownId: godownId == null && nullToAbsent
           ? const Value.absent()
           : Value(godownId),
+      paidAmount: Value(paidAmount),
+      paymentMode: paymentMode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paymentMode),
       syncVersion: Value(syncVersion),
       isDeleted: Value(isDeleted),
       createdAt: Value(createdAt),
@@ -17481,6 +17541,8 @@ class PurchaseDocumentLocalData extends DataClass
       dueDate: serializer.fromJson<String?>(json['dueDate']),
       notes: serializer.fromJson<String?>(json['notes']),
       godownId: serializer.fromJson<String?>(json['godownId']),
+      paidAmount: serializer.fromJson<String>(json['paidAmount']),
+      paymentMode: serializer.fromJson<String?>(json['paymentMode']),
       syncVersion: serializer.fromJson<int>(json['syncVersion']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -17514,6 +17576,8 @@ class PurchaseDocumentLocalData extends DataClass
       'dueDate': serializer.toJson<String?>(dueDate),
       'notes': serializer.toJson<String?>(notes),
       'godownId': serializer.toJson<String?>(godownId),
+      'paidAmount': serializer.toJson<String>(paidAmount),
+      'paymentMode': serializer.toJson<String?>(paymentMode),
       'syncVersion': serializer.toJson<int>(syncVersion),
       'isDeleted': serializer.toJson<bool>(isDeleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -17543,6 +17607,8 @@ class PurchaseDocumentLocalData extends DataClass
     Value<String?> dueDate = const Value.absent(),
     Value<String?> notes = const Value.absent(),
     Value<String?> godownId = const Value.absent(),
+    String? paidAmount,
+    Value<String?> paymentMode = const Value.absent(),
     int? syncVersion,
     bool? isDeleted,
     DateTime? createdAt,
@@ -17577,6 +17643,8 @@ class PurchaseDocumentLocalData extends DataClass
     dueDate: dueDate.present ? dueDate.value : this.dueDate,
     notes: notes.present ? notes.value : this.notes,
     godownId: godownId.present ? godownId.value : this.godownId,
+    paidAmount: paidAmount ?? this.paidAmount,
+    paymentMode: paymentMode.present ? paymentMode.value : this.paymentMode,
     syncVersion: syncVersion ?? this.syncVersion,
     isDeleted: isDeleted ?? this.isDeleted,
     createdAt: createdAt ?? this.createdAt,
@@ -17629,6 +17697,12 @@ class PurchaseDocumentLocalData extends DataClass
       dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
       notes: data.notes.present ? data.notes.value : this.notes,
       godownId: data.godownId.present ? data.godownId.value : this.godownId,
+      paidAmount: data.paidAmount.present
+          ? data.paidAmount.value
+          : this.paidAmount,
+      paymentMode: data.paymentMode.present
+          ? data.paymentMode.value
+          : this.paymentMode,
       syncVersion: data.syncVersion.present
           ? data.syncVersion.value
           : this.syncVersion,
@@ -17662,6 +17736,8 @@ class PurchaseDocumentLocalData extends DataClass
           ..write('dueDate: $dueDate, ')
           ..write('notes: $notes, ')
           ..write('godownId: $godownId, ')
+          ..write('paidAmount: $paidAmount, ')
+          ..write('paymentMode: $paymentMode, ')
           ..write('syncVersion: $syncVersion, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('createdAt: $createdAt, ')
@@ -17693,6 +17769,8 @@ class PurchaseDocumentLocalData extends DataClass
     dueDate,
     notes,
     godownId,
+    paidAmount,
+    paymentMode,
     syncVersion,
     isDeleted,
     createdAt,
@@ -17723,6 +17801,8 @@ class PurchaseDocumentLocalData extends DataClass
           other.dueDate == this.dueDate &&
           other.notes == this.notes &&
           other.godownId == this.godownId &&
+          other.paidAmount == this.paidAmount &&
+          other.paymentMode == this.paymentMode &&
           other.syncVersion == this.syncVersion &&
           other.isDeleted == this.isDeleted &&
           other.createdAt == this.createdAt &&
@@ -17752,6 +17832,8 @@ class PurchaseDocumentsLocalCompanion
   final Value<String?> dueDate;
   final Value<String?> notes;
   final Value<String?> godownId;
+  final Value<String> paidAmount;
+  final Value<String?> paymentMode;
   final Value<int> syncVersion;
   final Value<bool> isDeleted;
   final Value<DateTime> createdAt;
@@ -17779,6 +17861,8 @@ class PurchaseDocumentsLocalCompanion
     this.dueDate = const Value.absent(),
     this.notes = const Value.absent(),
     this.godownId = const Value.absent(),
+    this.paidAmount = const Value.absent(),
+    this.paymentMode = const Value.absent(),
     this.syncVersion = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -17807,6 +17891,8 @@ class PurchaseDocumentsLocalCompanion
     this.dueDate = const Value.absent(),
     this.notes = const Value.absent(),
     this.godownId = const Value.absent(),
+    this.paidAmount = const Value.absent(),
+    this.paymentMode = const Value.absent(),
     this.syncVersion = const Value.absent(),
     this.isDeleted = const Value.absent(),
     required DateTime createdAt,
@@ -17842,6 +17928,8 @@ class PurchaseDocumentsLocalCompanion
     Expression<String>? dueDate,
     Expression<String>? notes,
     Expression<String>? godownId,
+    Expression<String>? paidAmount,
+    Expression<String>? paymentMode,
     Expression<int>? syncVersion,
     Expression<bool>? isDeleted,
     Expression<DateTime>? createdAt,
@@ -17871,6 +17959,8 @@ class PurchaseDocumentsLocalCompanion
       if (dueDate != null) 'due_date': dueDate,
       if (notes != null) 'notes': notes,
       if (godownId != null) 'godown_id': godownId,
+      if (paidAmount != null) 'paid_amount': paidAmount,
+      if (paymentMode != null) 'payment_mode': paymentMode,
       if (syncVersion != null) 'sync_version': syncVersion,
       if (isDeleted != null) 'is_deleted': isDeleted,
       if (createdAt != null) 'created_at': createdAt,
@@ -17901,6 +17991,8 @@ class PurchaseDocumentsLocalCompanion
     Value<String?>? dueDate,
     Value<String?>? notes,
     Value<String?>? godownId,
+    Value<String>? paidAmount,
+    Value<String?>? paymentMode,
     Value<int>? syncVersion,
     Value<bool>? isDeleted,
     Value<DateTime>? createdAt,
@@ -17930,6 +18022,8 @@ class PurchaseDocumentsLocalCompanion
       dueDate: dueDate ?? this.dueDate,
       notes: notes ?? this.notes,
       godownId: godownId ?? this.godownId,
+      paidAmount: paidAmount ?? this.paidAmount,
+      paymentMode: paymentMode ?? this.paymentMode,
       syncVersion: syncVersion ?? this.syncVersion,
       isDeleted: isDeleted ?? this.isDeleted,
       createdAt: createdAt ?? this.createdAt,
@@ -18002,6 +18096,12 @@ class PurchaseDocumentsLocalCompanion
     if (godownId.present) {
       map['godown_id'] = Variable<String>(godownId.value);
     }
+    if (paidAmount.present) {
+      map['paid_amount'] = Variable<String>(paidAmount.value);
+    }
+    if (paymentMode.present) {
+      map['payment_mode'] = Variable<String>(paymentMode.value);
+    }
     if (syncVersion.present) {
       map['sync_version'] = Variable<int>(syncVersion.value);
     }
@@ -18048,6 +18148,8 @@ class PurchaseDocumentsLocalCompanion
           ..write('dueDate: $dueDate, ')
           ..write('notes: $notes, ')
           ..write('godownId: $godownId, ')
+          ..write('paidAmount: $paidAmount, ')
+          ..write('paymentMode: $paymentMode, ')
           ..write('syncVersion: $syncVersion, ')
           ..write('isDeleted: $isDeleted, ')
           ..write('createdAt: $createdAt, ')
@@ -27531,6 +27633,8 @@ typedef $$PurchaseDocumentsLocalTableCreateCompanionBuilder =
       Value<String?> dueDate,
       Value<String?> notes,
       Value<String?> godownId,
+      Value<String> paidAmount,
+      Value<String?> paymentMode,
       Value<int> syncVersion,
       Value<bool> isDeleted,
       required DateTime createdAt,
@@ -27560,6 +27664,8 @@ typedef $$PurchaseDocumentsLocalTableUpdateCompanionBuilder =
       Value<String?> dueDate,
       Value<String?> notes,
       Value<String?> godownId,
+      Value<String> paidAmount,
+      Value<String?> paymentMode,
       Value<int> syncVersion,
       Value<bool> isDeleted,
       Value<DateTime> createdAt,
@@ -27670,6 +27776,16 @@ class $$PurchaseDocumentsLocalTableFilterComposer
 
   ColumnFilters<String> get godownId => $composableBuilder(
     column: $table.godownId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paidAmount => $composableBuilder(
+    column: $table.paidAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -27808,6 +27924,16 @@ class $$PurchaseDocumentsLocalTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get paidAmount => $composableBuilder(
+    column: $table.paidAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get syncVersion => $composableBuilder(
     column: $table.syncVersion,
     builder: (column) => ColumnOrderings(column),
@@ -27927,6 +28053,16 @@ class $$PurchaseDocumentsLocalTableAnnotationComposer
   GeneratedColumn<String> get godownId =>
       $composableBuilder(column: $table.godownId, builder: (column) => column);
 
+  GeneratedColumn<String> get paidAmount => $composableBuilder(
+    column: $table.paidAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get paymentMode => $composableBuilder(
+    column: $table.paymentMode,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get syncVersion => $composableBuilder(
     column: $table.syncVersion,
     builder: (column) => column,
@@ -28013,6 +28149,8 @@ class $$PurchaseDocumentsLocalTableTableManager
                 Value<String?> dueDate = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<String?> godownId = const Value.absent(),
+                Value<String> paidAmount = const Value.absent(),
+                Value<String?> paymentMode = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -28040,6 +28178,8 @@ class $$PurchaseDocumentsLocalTableTableManager
                 dueDate: dueDate,
                 notes: notes,
                 godownId: godownId,
+                paidAmount: paidAmount,
+                paymentMode: paymentMode,
                 syncVersion: syncVersion,
                 isDeleted: isDeleted,
                 createdAt: createdAt,
@@ -28069,6 +28209,8 @@ class $$PurchaseDocumentsLocalTableTableManager
                 Value<String?> dueDate = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<String?> godownId = const Value.absent(),
+                Value<String> paidAmount = const Value.absent(),
+                Value<String?> paymentMode = const Value.absent(),
                 Value<int> syncVersion = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
                 required DateTime createdAt,
@@ -28096,6 +28238,8 @@ class $$PurchaseDocumentsLocalTableTableManager
                 dueDate: dueDate,
                 notes: notes,
                 godownId: godownId,
+                paidAmount: paidAmount,
+                paymentMode: paymentMode,
                 syncVersion: syncVersion,
                 isDeleted: isDeleted,
                 createdAt: createdAt,

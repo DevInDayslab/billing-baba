@@ -8,6 +8,7 @@ import 'package:billing_baba/features/command_sync/application/command_sync_runn
 import 'package:billing_baba/features/documents/data/local_document_number_service.dart';
 import 'package:billing_baba/features/purchases/data/purchase_bill_command_repository.dart';
 import 'package:billing_baba/features/purchases/data/purchase_local_data_source.dart';
+import 'package:billing_baba/features/purchases/data/purchase_sync_status.dart';
 import 'package:billing_baba/features/sales/data/sales_invoice_command_repository.dart';
 import 'package:billing_baba/features/sales/data/sales_local_data_source.dart';
 import 'package:billing_baba/features/sales/data/sales_sync_status.dart';
@@ -55,6 +56,10 @@ final commandSyncRunnerProvider =
     salesLocal: SalesLocalDataSource(db),
     syncQueue: ref.watch(syncQueueProvider),
   );
+  final purchaseRecovery = PurchaseSyncRecovery(
+    purchaseLocal: PurchaseLocalDataSource(db),
+    syncQueue: ref.watch(syncQueueProvider),
+  );
   return CommandSyncRunner(
     api: api,
     queue: ref.watch(syncQueueProvider),
@@ -65,6 +70,11 @@ final commandSyncRunnerProvider =
           job.entityType == 'sales_documents' &&
           job.entityId != null) {
         await salesRecovery.reconcileFinalizeConflict(job.entityId!);
+      }
+      if (code == 'DOCUMENT_ALREADY_FINALIZED' &&
+          job.entityType == 'purchase_documents' &&
+          job.entityId != null) {
+        await purchaseRecovery.reconcileFinalizeConflict(job.entityId!);
       }
     },
   );
