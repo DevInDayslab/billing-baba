@@ -1,4 +1,12 @@
 import { categories, items, parties } from '../../../db/schema';
+import {
+  godowns,
+  unitDefinitions,
+} from '../../../db/schema/inventory/tables';
+import {
+  businessSettings,
+  taxRates,
+} from '../../../db/schema/settings/tables';
 import { rowToWirePayload, wirePayloadToDomainValues } from './row-serializers';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 
@@ -120,6 +128,41 @@ export const ROW_ENTITIES: Record<string, RowEntityDef> = {
       'reorderLevel',
       'defaultTaxRate',
       'primaryImageUrl',
+    ],
+  }),
+  unit_definitions: defineEntity({
+    entityType: 'unit_definitions',
+    table: unitDefinitions,
+    allowedColumns: [
+      'name',
+      'shortName',
+      'symbol',
+      'decimalPlaces',
+      'isSystem',
+      'isActive',
+    ],
+  }),
+  tax_rates: defineEntity({
+    entityType: 'tax_rates',
+    table: taxRates,
+    allowedColumns: ['name', 'rate', 'isDefault'],
+  }),
+  godowns: defineEntity({
+    entityType: 'godowns',
+    table: godowns,
+    allowedColumns: ['name', 'address', 'isDefault'],
+  }),
+  business_settings: defineEntity({
+    entityType: 'business_settings',
+    table: businessSettings,
+    allowedColumns: [
+      'valuationMethod',
+      'defaultTaxType',
+      'invoiceTerms',
+      'enablePriceConflictAlerts',
+      'creditLimitAction',
+      'pricingTierLabels',
+      'defaultInvoiceTaxRate',
     ],
   }),
 };

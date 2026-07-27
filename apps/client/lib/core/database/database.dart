@@ -1,11 +1,15 @@
+import 'package:billing_baba/core/database/tables/business_settings_table.dart';
 import 'package:billing_baba/core/database/tables/categories_table.dart';
 import 'package:billing_baba/core/database/tables/contacts_tables.dart';
 import 'package:billing_baba/core/database/tables/deals_tables.dart';
+import 'package:billing_baba/core/database/tables/godowns_table.dart';
 import 'package:billing_baba/core/database/tables/items_table.dart';
 import 'package:billing_baba/core/database/tables/leads_tables.dart';
 import 'package:billing_baba/core/database/tables/parties_table.dart';
 import 'package:billing_baba/core/database/tables/pos_sales_tables.dart';
 import 'package:billing_baba/core/database/tables/sync_queue_table.dart';
+import 'package:billing_baba/core/database/tables/tax_rates_table.dart';
+import 'package:billing_baba/core/database/tables/unit_definitions_table.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
@@ -26,13 +30,17 @@ part 'database.g.dart';
     CategoriesLocal,
     PartiesLocal,
     ItemsLocal,
+    UnitDefinitionsLocal,
+    TaxRatesLocal,
+    GodownsLocal,
+    BusinessSettingsLocal,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -99,6 +107,12 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 12) {
         await m.createTable(itemsLocal);
+      }
+      if (from < 13) {
+        await m.createTable(unitDefinitionsLocal);
+        await m.createTable(taxRatesLocal);
+        await m.createTable(godownsLocal);
+        await m.createTable(businessSettingsLocal);
       }
     },
   );

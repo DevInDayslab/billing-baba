@@ -12,6 +12,10 @@ import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/category_local_source.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
+import 'package:billing_baba/features/inventory/data/godown_sync.dart';
+import 'package:billing_baba/features/inventory/data/unit_sync.dart';
+import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
+import 'package:billing_baba/features/settings/data/tax_rate_sync.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
@@ -148,6 +152,10 @@ void main() {
       categorySync: CategorySync(db),
       partySync: PartySync(db),
       itemSync: ItemSync(db),
+      unitSync: UnitSync(db),
+      taxRateSync: TaxRateSync(db),
+      godownSync: GodownSync(db),
+      businessSettingsSync: BusinessSettingsSync(db),
     );
     lastState = const SyncState(connectivity: SyncConnectivityStatus.online);
   });

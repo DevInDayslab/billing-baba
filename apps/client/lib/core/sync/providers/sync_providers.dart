@@ -12,8 +12,12 @@ import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
+import 'package:billing_baba/features/inventory/data/godown_sync.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
+import 'package:billing_baba/features/inventory/data/unit_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
+import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
+import 'package:billing_baba/features/settings/data/tax_rate_sync.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final connectivityMonitorProvider = Provider<ConnectivityMonitor>((ref) {
@@ -72,6 +76,10 @@ final syncCoordinatorProvider = FutureProvider<SyncCoordinator>((ref) async {
     categorySync: CategorySync(db),
     partySync: PartySync(db),
     itemSync: ItemSync(db),
+    unitSync: UnitSync(db),
+    taxRateSync: TaxRateSync(db),
+    godownSync: GodownSync(db),
+    businessSettingsSync: BusinessSettingsSync(db),
   );
 });
 

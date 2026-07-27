@@ -11,8 +11,12 @@ import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
+import 'package:billing_baba/features/inventory/data/godown_sync.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
+import 'package:billing_baba/features/inventory/data/unit_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
+import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
+import 'package:billing_baba/features/settings/data/tax_rate_sync.dart';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 
@@ -31,10 +35,18 @@ class SyncCoordinator {
     this._categorySync,
     this._partySync,
     this._itemSync,
+    this._unitSync,
+    this._taxRateSync,
+    this._godownSync,
+    this._businessSettingsSync,
     Uuid? uuid,
     this.categoryEntityType = 'categories',
     this.partyEntityType = 'parties',
     this.itemEntityType = 'items',
+    this.unitEntityType = 'unit_definitions',
+    this.taxRateEntityType = 'tax_rates',
+    this.godownEntityType = 'godowns',
+    this.businessSettingsEntityType = 'business_settings',
   })  : _uuid = uuid ?? const Uuid();
 
   final SyncApi _api;
@@ -45,10 +57,32 @@ class SyncCoordinator {
   final CategorySync? _categorySync;
   final PartySync? _partySync;
   final ItemSync? _itemSync;
+  final UnitSync? _unitSync;
+  final TaxRateSync? _taxRateSync;
+  final GodownSync? _godownSync;
+  final BusinessSettingsSync? _businessSettingsSync;
   final Uuid _uuid;
   final String categoryEntityType;
   final String partyEntityType;
   final String itemEntityType;
+  final String unitEntityType;
+  final String taxRateEntityType;
+  final String godownEntityType;
+  final String businessSettingsEntityType;
+
+  String get _pullEntityTypes =>
+      '$categoryEntityType,$partyEntityType,$itemEntityType,'
+      '$unitEntityType,$taxRateEntityType,$godownEntityType,'
+      '$businessSettingsEntityType';
+
+  bool _isRowEntity(String? type) =>
+      type == categoryEntityType ||
+      type == partyEntityType ||
+      type == itemEntityType ||
+      type == unitEntityType ||
+      type == taxRateEntityType ||
+      type == godownEntityType ||
+      type == businessSettingsEntityType;
 
   bool _busy = false;
 
@@ -173,9 +207,7 @@ class SyncCoordinator {
           .where(
             (j) =>
                 j.kind == SyncQueueKind.row &&
-                (j.entityType == categoryEntityType ||
-                    j.entityType == partyEntityType ||
-                    j.entityType == itemEntityType) &&
+                _isRowEntity(j.entityType) &&
                 j.status == SyncQueueStatus.pending,
           )
           .toList();
@@ -398,7 +430,7 @@ class SyncCoordinator {
         appVersion: appVersion,
         cursor: cursor,
         limit: 200,
-        entityTypes: '$categoryEntityType,$partyEntityType,$itemEntityType',
+        entityTypes: _pullEntityTypes,
       );
 
       final changes = _asList(response['changes']);
@@ -493,6 +525,50 @@ class SyncCoordinator {
           deviceId: deviceId,
           payload: payload,
         );
+      case 'unit_definitions':
+        await _unitSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'tax_rates':
+        await _taxRateSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'godowns':
+        await _godownSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
+      case 'business_settings':
+        await _businessSettingsSync?.applyChange(
+          businessId: businessId,
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          isDeleted: isDeleted,
+          deletedAt: deletedAt,
+          deviceId: deviceId,
+          payload: payload,
+        );
       default:
         // Unknown entity — ignore until that entity ships.
         break;
@@ -523,6 +599,34 @@ class SyncCoordinator {
         );
       case 'items':
         await _itemSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'unit_definitions':
+        await _unitSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'tax_rates':
+        await _taxRateSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'godowns':
+        await _godownSync?.updateAckMeta(
+          entityId: entityId,
+          syncVersion: syncVersion,
+          updatedAt: updatedAt,
+          deviceId: deviceId,
+        );
+      case 'business_settings':
+        await _businessSettingsSync?.updateAckMeta(
           entityId: entityId,
           syncVersion: syncVersion,
           updatedAt: updatedAt,

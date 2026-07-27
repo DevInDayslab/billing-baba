@@ -8,6 +8,10 @@ export const SUPPORTED_ROW_ENTITY_TYPES = [
   'categories',
   'parties',
   'items',
+  'unit_definitions',
+  'tax_rates',
+  'godowns',
+  'business_settings',
 ] as const;
 
 export type SupportedRowEntityType =

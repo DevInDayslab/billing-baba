@@ -1,8 +1,10 @@
 import 'package:billing_baba/core/sync/models/sync_job.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
+import 'package:billing_baba/features/inventory/data/godown_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
+import 'package:billing_baba/features/inventory/data/unit_master_repository.dart';
 import 'package:billing_baba/features/inventory/models/dto/brand_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/category_dto.dart';
 import 'package:billing_baba/features/inventory/models/dto/godown_dto.dart';
@@ -33,6 +35,8 @@ class InventoryRepository {
     required this._syncQueue,
     required this._businessIdReader,
     required this._items,
+    this._units,
+    this._godowns,
     this._deviceIdReader,
   });
 
@@ -41,6 +45,8 @@ class InventoryRepository {
   final SyncQueue _syncQueue;
   final String Function() _businessIdReader;
   final ItemMasterRepository _items;
+  final UnitMasterRepository? _units;
+  final GodownMasterRepository? _godowns;
   final String? Function()? _deviceIdReader;
 
   InventoryRemoteDataSource get remoteDataSource => _remote;
@@ -211,17 +217,22 @@ class InventoryRepository {
   Future<void> deleteBrand(String id) => _remote.deleteBrand(id);
 
   Future<PaginatedUnitsDto> getUnits(UnitListQuery query) =>
-      _remote.listUnits(query);
+      _units?.list(query) ?? _remote.listUnits(query);
 
-  Future<UnitDetailDto> getUnit(String id) => _remote.getUnit(id);
+  Future<UnitDetailDto> getUnit(String id) async {
+    final local = await _units?.getActive(id);
+    if (local != null) return local;
+    return _remote.getUnit(id);
+  }
 
   Future<UnitDetailDto> createUnit(CreateUnitRequest request) =>
-      _remote.createUnit(request);
+      _units?.create(request) ?? _remote.createUnit(request);
 
   Future<UnitDetailDto> updateUnit(String id, UpdateUnitRequest request) =>
-      _remote.updateUnit(id, request);
+      _units?.update(id, request) ?? _remote.updateUnit(id, request);
 
-  Future<void> deleteUnit(String id) => _remote.deleteUnit(id);
+  Future<void> deleteUnit(String id) =>
+      _units?.softDelete(id) ?? _remote.deleteUnit(id);
 
   Future<PaginatedUnitConversionsDto> getUnitConversions(
     UnitConversionListQuery query,
@@ -240,17 +251,22 @@ class InventoryRepository {
       _remote.deleteUnitConversion(id);
 
   Future<PaginatedGodownsDto> getGodowns(GodownListQuery query) =>
-      _remote.listGodowns(query);
+      _godowns?.list(query) ?? _remote.listGodowns(query);
 
-  Future<GodownDto> getGodown(String id) => _remote.getGodown(id);
+  Future<GodownDto> getGodown(String id) async {
+    final local = await _godowns?.getActive(id);
+    if (local != null) return local;
+    return _remote.getGodown(id);
+  }
 
   Future<GodownDto> createGodown(CreateGodownRequest request) =>
-      _remote.createGodown(request);
+      _godowns?.create(request) ?? _remote.createGodown(request);
 
   Future<GodownDto> updateGodown(String id, UpdateGodownRequest request) =>
-      _remote.updateGodown(id, request);
+      _godowns?.update(id, request) ?? _remote.updateGodown(id, request);
 
-  Future<void> deleteGodown(String id) => _remote.deleteGodown(id);
+  Future<void> deleteGodown(String id) =>
+      _godowns?.softDelete(id) ?? _remote.deleteGodown(id);
 
   Future<PaginatedItemsDto> listItems(ItemListQuery query) =>
       _items.list(query);

@@ -10998,6 +10998,3074 @@ class ItemsLocalCompanion extends UpdateCompanion<ItemTableData> {
   }
 }
 
+class $UnitDefinitionsLocalTable extends UnitDefinitionsLocal
+    with TableInfo<$UnitDefinitionsLocalTable, UnitDefinitionTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UnitDefinitionsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shortNameMeta = const VerificationMeta(
+    'shortName',
+  );
+  @override
+  late final GeneratedColumn<String> shortName = GeneratedColumn<String>(
+    'short_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _symbolMeta = const VerificationMeta('symbol');
+  @override
+  late final GeneratedColumn<String> symbol = GeneratedColumn<String>(
+    'symbol',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _decimalPlacesMeta = const VerificationMeta(
+    'decimalPlaces',
+  );
+  @override
+  late final GeneratedColumn<int> decimalPlaces = GeneratedColumn<int>(
+    'decimal_places',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isSystemMeta = const VerificationMeta(
+    'isSystem',
+  );
+  @override
+  late final GeneratedColumn<bool> isSystem = GeneratedColumn<bool>(
+    'is_system',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_system" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    name,
+    shortName,
+    symbol,
+    decimalPlaces,
+    isSystem,
+    isActive,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'unit_definitions_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UnitDefinitionTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('short_name')) {
+      context.handle(
+        _shortNameMeta,
+        shortName.isAcceptableOrUnknown(data['short_name']!, _shortNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shortNameMeta);
+    }
+    if (data.containsKey('symbol')) {
+      context.handle(
+        _symbolMeta,
+        symbol.isAcceptableOrUnknown(data['symbol']!, _symbolMeta),
+      );
+    }
+    if (data.containsKey('decimal_places')) {
+      context.handle(
+        _decimalPlacesMeta,
+        decimalPlaces.isAcceptableOrUnknown(
+          data['decimal_places']!,
+          _decimalPlacesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_system')) {
+      context.handle(
+        _isSystemMeta,
+        isSystem.isAcceptableOrUnknown(data['is_system']!, _isSystemMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UnitDefinitionTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UnitDefinitionTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      shortName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}short_name'],
+      )!,
+      symbol: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}symbol'],
+      ),
+      decimalPlaces: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}decimal_places'],
+      )!,
+      isSystem: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_system'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $UnitDefinitionsLocalTable createAlias(String alias) {
+    return $UnitDefinitionsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class UnitDefinitionTableData extends DataClass
+    implements Insertable<UnitDefinitionTableData> {
+  final String id;
+  final String businessId;
+  final String name;
+  final String shortName;
+  final String? symbol;
+  final int decimalPlaces;
+  final bool isSystem;
+  final bool isActive;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const UnitDefinitionTableData({
+    required this.id,
+    required this.businessId,
+    required this.name,
+    required this.shortName,
+    this.symbol,
+    required this.decimalPlaces,
+    required this.isSystem,
+    required this.isActive,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['name'] = Variable<String>(name);
+    map['short_name'] = Variable<String>(shortName);
+    if (!nullToAbsent || symbol != null) {
+      map['symbol'] = Variable<String>(symbol);
+    }
+    map['decimal_places'] = Variable<int>(decimalPlaces);
+    map['is_system'] = Variable<bool>(isSystem);
+    map['is_active'] = Variable<bool>(isActive);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  UnitDefinitionsLocalCompanion toCompanion(bool nullToAbsent) {
+    return UnitDefinitionsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      name: Value(name),
+      shortName: Value(shortName),
+      symbol: symbol == null && nullToAbsent
+          ? const Value.absent()
+          : Value(symbol),
+      decimalPlaces: Value(decimalPlaces),
+      isSystem: Value(isSystem),
+      isActive: Value(isActive),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory UnitDefinitionTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UnitDefinitionTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      name: serializer.fromJson<String>(json['name']),
+      shortName: serializer.fromJson<String>(json['shortName']),
+      symbol: serializer.fromJson<String?>(json['symbol']),
+      decimalPlaces: serializer.fromJson<int>(json['decimalPlaces']),
+      isSystem: serializer.fromJson<bool>(json['isSystem']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'name': serializer.toJson<String>(name),
+      'shortName': serializer.toJson<String>(shortName),
+      'symbol': serializer.toJson<String?>(symbol),
+      'decimalPlaces': serializer.toJson<int>(decimalPlaces),
+      'isSystem': serializer.toJson<bool>(isSystem),
+      'isActive': serializer.toJson<bool>(isActive),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  UnitDefinitionTableData copyWith({
+    String? id,
+    String? businessId,
+    String? name,
+    String? shortName,
+    Value<String?> symbol = const Value.absent(),
+    int? decimalPlaces,
+    bool? isSystem,
+    bool? isActive,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => UnitDefinitionTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    name: name ?? this.name,
+    shortName: shortName ?? this.shortName,
+    symbol: symbol.present ? symbol.value : this.symbol,
+    decimalPlaces: decimalPlaces ?? this.decimalPlaces,
+    isSystem: isSystem ?? this.isSystem,
+    isActive: isActive ?? this.isActive,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  UnitDefinitionTableData copyWithCompanion(
+    UnitDefinitionsLocalCompanion data,
+  ) {
+    return UnitDefinitionTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      name: data.name.present ? data.name.value : this.name,
+      shortName: data.shortName.present ? data.shortName.value : this.shortName,
+      symbol: data.symbol.present ? data.symbol.value : this.symbol,
+      decimalPlaces: data.decimalPlaces.present
+          ? data.decimalPlaces.value
+          : this.decimalPlaces,
+      isSystem: data.isSystem.present ? data.isSystem.value : this.isSystem,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UnitDefinitionTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('shortName: $shortName, ')
+          ..write('symbol: $symbol, ')
+          ..write('decimalPlaces: $decimalPlaces, ')
+          ..write('isSystem: $isSystem, ')
+          ..write('isActive: $isActive, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    name,
+    shortName,
+    symbol,
+    decimalPlaces,
+    isSystem,
+    isActive,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UnitDefinitionTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.name == this.name &&
+          other.shortName == this.shortName &&
+          other.symbol == this.symbol &&
+          other.decimalPlaces == this.decimalPlaces &&
+          other.isSystem == this.isSystem &&
+          other.isActive == this.isActive &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class UnitDefinitionsLocalCompanion
+    extends UpdateCompanion<UnitDefinitionTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> name;
+  final Value<String> shortName;
+  final Value<String?> symbol;
+  final Value<int> decimalPlaces;
+  final Value<bool> isSystem;
+  final Value<bool> isActive;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const UnitDefinitionsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.shortName = const Value.absent(),
+    this.symbol = const Value.absent(),
+    this.decimalPlaces = const Value.absent(),
+    this.isSystem = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UnitDefinitionsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String name,
+    required String shortName,
+    this.symbol = const Value.absent(),
+    this.decimalPlaces = const Value.absent(),
+    this.isSystem = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       name = Value(name),
+       shortName = Value(shortName),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<UnitDefinitionTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? name,
+    Expression<String>? shortName,
+    Expression<String>? symbol,
+    Expression<int>? decimalPlaces,
+    Expression<bool>? isSystem,
+    Expression<bool>? isActive,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (name != null) 'name': name,
+      if (shortName != null) 'short_name': shortName,
+      if (symbol != null) 'symbol': symbol,
+      if (decimalPlaces != null) 'decimal_places': decimalPlaces,
+      if (isSystem != null) 'is_system': isSystem,
+      if (isActive != null) 'is_active': isActive,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UnitDefinitionsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? name,
+    Value<String>? shortName,
+    Value<String?>? symbol,
+    Value<int>? decimalPlaces,
+    Value<bool>? isSystem,
+    Value<bool>? isActive,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return UnitDefinitionsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      name: name ?? this.name,
+      shortName: shortName ?? this.shortName,
+      symbol: symbol ?? this.symbol,
+      decimalPlaces: decimalPlaces ?? this.decimalPlaces,
+      isSystem: isSystem ?? this.isSystem,
+      isActive: isActive ?? this.isActive,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (shortName.present) {
+      map['short_name'] = Variable<String>(shortName.value);
+    }
+    if (symbol.present) {
+      map['symbol'] = Variable<String>(symbol.value);
+    }
+    if (decimalPlaces.present) {
+      map['decimal_places'] = Variable<int>(decimalPlaces.value);
+    }
+    if (isSystem.present) {
+      map['is_system'] = Variable<bool>(isSystem.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UnitDefinitionsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('shortName: $shortName, ')
+          ..write('symbol: $symbol, ')
+          ..write('decimalPlaces: $decimalPlaces, ')
+          ..write('isSystem: $isSystem, ')
+          ..write('isActive: $isActive, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TaxRatesLocalTable extends TaxRatesLocal
+    with TableInfo<$TaxRatesLocalTable, TaxRateTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TaxRatesLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rateMeta = const VerificationMeta('rate');
+  @override
+  late final GeneratedColumn<String> rate = GeneratedColumn<String>(
+    'rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+    'is_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_default" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    name,
+    rate,
+    isDefault,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tax_rates_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TaxRateTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('rate')) {
+      context.handle(
+        _rateMeta,
+        rate.isAcceptableOrUnknown(data['rate']!, _rateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rateMeta);
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(
+        _isDefaultMeta,
+        isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TaxRateTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TaxRateTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      rate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rate'],
+      )!,
+      isDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_default'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $TaxRatesLocalTable createAlias(String alias) {
+    return $TaxRatesLocalTable(attachedDatabase, alias);
+  }
+}
+
+class TaxRateTableData extends DataClass
+    implements Insertable<TaxRateTableData> {
+  final String id;
+  final String businessId;
+  final String name;
+  final String rate;
+  final bool isDefault;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const TaxRateTableData({
+    required this.id,
+    required this.businessId,
+    required this.name,
+    required this.rate,
+    required this.isDefault,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['name'] = Variable<String>(name);
+    map['rate'] = Variable<String>(rate);
+    map['is_default'] = Variable<bool>(isDefault);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  TaxRatesLocalCompanion toCompanion(bool nullToAbsent) {
+    return TaxRatesLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      name: Value(name),
+      rate: Value(rate),
+      isDefault: Value(isDefault),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory TaxRateTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TaxRateTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      name: serializer.fromJson<String>(json['name']),
+      rate: serializer.fromJson<String>(json['rate']),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'name': serializer.toJson<String>(name),
+      'rate': serializer.toJson<String>(rate),
+      'isDefault': serializer.toJson<bool>(isDefault),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  TaxRateTableData copyWith({
+    String? id,
+    String? businessId,
+    String? name,
+    String? rate,
+    bool? isDefault,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => TaxRateTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    name: name ?? this.name,
+    rate: rate ?? this.rate,
+    isDefault: isDefault ?? this.isDefault,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  TaxRateTableData copyWithCompanion(TaxRatesLocalCompanion data) {
+    return TaxRateTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      name: data.name.present ? data.name.value : this.name,
+      rate: data.rate.present ? data.rate.value : this.rate,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaxRateTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('rate: $rate, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    name,
+    rate,
+    isDefault,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TaxRateTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.name == this.name &&
+          other.rate == this.rate &&
+          other.isDefault == this.isDefault &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class TaxRatesLocalCompanion extends UpdateCompanion<TaxRateTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> name;
+  final Value<String> rate;
+  final Value<bool> isDefault;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const TaxRatesLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.rate = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TaxRatesLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String name,
+    required String rate,
+    this.isDefault = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       name = Value(name),
+       rate = Value(rate),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<TaxRateTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? name,
+    Expression<String>? rate,
+    Expression<bool>? isDefault,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (name != null) 'name': name,
+      if (rate != null) 'rate': rate,
+      if (isDefault != null) 'is_default': isDefault,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TaxRatesLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? name,
+    Value<String>? rate,
+    Value<bool>? isDefault,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return TaxRatesLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      name: name ?? this.name,
+      rate: rate ?? this.rate,
+      isDefault: isDefault ?? this.isDefault,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (rate.present) {
+      map['rate'] = Variable<String>(rate.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TaxRatesLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('rate: $rate, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $GodownsLocalTable extends GodownsLocal
+    with TableInfo<$GodownsLocalTable, GodownTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GodownsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _addressMeta = const VerificationMeta(
+    'address',
+  );
+  @override
+  late final GeneratedColumn<String> address = GeneratedColumn<String>(
+    'address',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+    'is_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_default" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    name,
+    address,
+    isDefault,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'godowns_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GodownTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('address')) {
+      context.handle(
+        _addressMeta,
+        address.isAcceptableOrUnknown(data['address']!, _addressMeta),
+      );
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(
+        _isDefaultMeta,
+        isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GodownTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GodownTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      address: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}address'],
+      ),
+      isDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_default'],
+      )!,
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $GodownsLocalTable createAlias(String alias) {
+    return $GodownsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class GodownTableData extends DataClass implements Insertable<GodownTableData> {
+  final String id;
+  final String businessId;
+  final String name;
+  final String? address;
+  final bool isDefault;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const GodownTableData({
+    required this.id,
+    required this.businessId,
+    required this.name,
+    this.address,
+    required this.isDefault,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || address != null) {
+      map['address'] = Variable<String>(address);
+    }
+    map['is_default'] = Variable<bool>(isDefault);
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  GodownsLocalCompanion toCompanion(bool nullToAbsent) {
+    return GodownsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      name: Value(name),
+      address: address == null && nullToAbsent
+          ? const Value.absent()
+          : Value(address),
+      isDefault: Value(isDefault),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory GodownTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GodownTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      name: serializer.fromJson<String>(json['name']),
+      address: serializer.fromJson<String?>(json['address']),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'name': serializer.toJson<String>(name),
+      'address': serializer.toJson<String?>(address),
+      'isDefault': serializer.toJson<bool>(isDefault),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  GodownTableData copyWith({
+    String? id,
+    String? businessId,
+    String? name,
+    Value<String?> address = const Value.absent(),
+    bool? isDefault,
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => GodownTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    name: name ?? this.name,
+    address: address.present ? address.value : this.address,
+    isDefault: isDefault ?? this.isDefault,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  GodownTableData copyWithCompanion(GodownsLocalCompanion data) {
+    return GodownTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      name: data.name.present ? data.name.value : this.name,
+      address: data.address.present ? data.address.value : this.address,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GodownTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('address: $address, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    name,
+    address,
+    isDefault,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GodownTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.name == this.name &&
+          other.address == this.address &&
+          other.isDefault == this.isDefault &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class GodownsLocalCompanion extends UpdateCompanion<GodownTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> name;
+  final Value<String?> address;
+  final Value<bool> isDefault;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const GodownsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.address = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GodownsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    required String name,
+    this.address = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<GodownTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? name,
+    Expression<String>? address,
+    Expression<bool>? isDefault,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (name != null) 'name': name,
+      if (address != null) 'address': address,
+      if (isDefault != null) 'is_default': isDefault,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GodownsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? name,
+    Value<String?>? address,
+    Value<bool>? isDefault,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return GodownsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      name: name ?? this.name,
+      address: address ?? this.address,
+      isDefault: isDefault ?? this.isDefault,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (address.present) {
+      map['address'] = Variable<String>(address.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GodownsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('name: $name, ')
+          ..write('address: $address, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $BusinessSettingsLocalTable extends BusinessSettingsLocal
+    with TableInfo<$BusinessSettingsLocalTable, BusinessSettingsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BusinessSettingsLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _businessIdMeta = const VerificationMeta(
+    'businessId',
+  );
+  @override
+  late final GeneratedColumn<String> businessId = GeneratedColumn<String>(
+    'business_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valuationMethodMeta = const VerificationMeta(
+    'valuationMethod',
+  );
+  @override
+  late final GeneratedColumn<String> valuationMethod = GeneratedColumn<String>(
+    'valuation_method',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('average'),
+  );
+  static const VerificationMeta _defaultTaxTypeMeta = const VerificationMeta(
+    'defaultTaxType',
+  );
+  @override
+  late final GeneratedColumn<String> defaultTaxType = GeneratedColumn<String>(
+    'default_tax_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('none'),
+  );
+  static const VerificationMeta _invoiceTermsMeta = const VerificationMeta(
+    'invoiceTerms',
+  );
+  @override
+  late final GeneratedColumn<String> invoiceTerms = GeneratedColumn<String>(
+    'invoice_terms',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _enablePriceConflictAlertsMeta =
+      const VerificationMeta('enablePriceConflictAlerts');
+  @override
+  late final GeneratedColumn<bool> enablePriceConflictAlerts =
+      GeneratedColumn<bool>(
+        'enable_price_conflict_alerts',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("enable_price_conflict_alerts" IN (0, 1))',
+        ),
+        defaultValue: const Constant(true),
+      );
+  static const VerificationMeta _creditLimitActionMeta = const VerificationMeta(
+    'creditLimitAction',
+  );
+  @override
+  late final GeneratedColumn<String> creditLimitAction =
+      GeneratedColumn<String>(
+        'credit_limit_action',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('warn'),
+      );
+  static const VerificationMeta _pricingTierLabelsMeta = const VerificationMeta(
+    'pricingTierLabels',
+  );
+  @override
+  late final GeneratedColumn<String> pricingTierLabels =
+      GeneratedColumn<String>(
+        'pricing_tier_labels',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _defaultInvoiceTaxRateMeta =
+      const VerificationMeta('defaultInvoiceTaxRate');
+  @override
+  late final GeneratedColumn<String> defaultInvoiceTaxRate =
+      GeneratedColumn<String>(
+        'default_invoice_tax_rate',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _syncVersionMeta = const VerificationMeta(
+    'syncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> syncVersion = GeneratedColumn<int>(
+    'sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    businessId,
+    valuationMethod,
+    defaultTaxType,
+    invoiceTerms,
+    enablePriceConflictAlerts,
+    creditLimitAction,
+    pricingTierLabels,
+    defaultInvoiceTaxRate,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'business_settings_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BusinessSettingsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('business_id')) {
+      context.handle(
+        _businessIdMeta,
+        businessId.isAcceptableOrUnknown(data['business_id']!, _businessIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_businessIdMeta);
+    }
+    if (data.containsKey('valuation_method')) {
+      context.handle(
+        _valuationMethodMeta,
+        valuationMethod.isAcceptableOrUnknown(
+          data['valuation_method']!,
+          _valuationMethodMeta,
+        ),
+      );
+    }
+    if (data.containsKey('default_tax_type')) {
+      context.handle(
+        _defaultTaxTypeMeta,
+        defaultTaxType.isAcceptableOrUnknown(
+          data['default_tax_type']!,
+          _defaultTaxTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('invoice_terms')) {
+      context.handle(
+        _invoiceTermsMeta,
+        invoiceTerms.isAcceptableOrUnknown(
+          data['invoice_terms']!,
+          _invoiceTermsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('enable_price_conflict_alerts')) {
+      context.handle(
+        _enablePriceConflictAlertsMeta,
+        enablePriceConflictAlerts.isAcceptableOrUnknown(
+          data['enable_price_conflict_alerts']!,
+          _enablePriceConflictAlertsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('credit_limit_action')) {
+      context.handle(
+        _creditLimitActionMeta,
+        creditLimitAction.isAcceptableOrUnknown(
+          data['credit_limit_action']!,
+          _creditLimitActionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pricing_tier_labels')) {
+      context.handle(
+        _pricingTierLabelsMeta,
+        pricingTierLabels.isAcceptableOrUnknown(
+          data['pricing_tier_labels']!,
+          _pricingTierLabelsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('default_invoice_tax_rate')) {
+      context.handle(
+        _defaultInvoiceTaxRateMeta,
+        defaultInvoiceTaxRate.isAcceptableOrUnknown(
+          data['default_invoice_tax_rate']!,
+          _defaultInvoiceTaxRateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_version')) {
+      context.handle(
+        _syncVersionMeta,
+        syncVersion.isAcceptableOrUnknown(
+          data['sync_version']!,
+          _syncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  BusinessSettingsTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BusinessSettingsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      businessId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}business_id'],
+      )!,
+      valuationMethod: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}valuation_method'],
+      )!,
+      defaultTaxType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}default_tax_type'],
+      )!,
+      invoiceTerms: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}invoice_terms'],
+      ),
+      enablePriceConflictAlerts: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}enable_price_conflict_alerts'],
+      )!,
+      creditLimitAction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}credit_limit_action'],
+      )!,
+      pricingTierLabels: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pricing_tier_labels'],
+      ),
+      defaultInvoiceTaxRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}default_invoice_tax_rate'],
+      ),
+      syncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sync_version'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+    );
+  }
+
+  @override
+  $BusinessSettingsLocalTable createAlias(String alias) {
+    return $BusinessSettingsLocalTable(attachedDatabase, alias);
+  }
+}
+
+class BusinessSettingsTableData extends DataClass
+    implements Insertable<BusinessSettingsTableData> {
+  final String id;
+  final String businessId;
+  final String valuationMethod;
+  final String defaultTaxType;
+  final String? invoiceTerms;
+  final bool enablePriceConflictAlerts;
+  final String creditLimitAction;
+
+  /// JSON object string for pricing tier labels.
+  final String? pricingTierLabels;
+  final String? defaultInvoiceTaxRate;
+  final int syncVersion;
+  final bool isDeleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final String? deviceId;
+  const BusinessSettingsTableData({
+    required this.id,
+    required this.businessId,
+    required this.valuationMethod,
+    required this.defaultTaxType,
+    this.invoiceTerms,
+    required this.enablePriceConflictAlerts,
+    required this.creditLimitAction,
+    this.pricingTierLabels,
+    this.defaultInvoiceTaxRate,
+    required this.syncVersion,
+    required this.isDeleted,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+    this.deviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['business_id'] = Variable<String>(businessId);
+    map['valuation_method'] = Variable<String>(valuationMethod);
+    map['default_tax_type'] = Variable<String>(defaultTaxType);
+    if (!nullToAbsent || invoiceTerms != null) {
+      map['invoice_terms'] = Variable<String>(invoiceTerms);
+    }
+    map['enable_price_conflict_alerts'] = Variable<bool>(
+      enablePriceConflictAlerts,
+    );
+    map['credit_limit_action'] = Variable<String>(creditLimitAction);
+    if (!nullToAbsent || pricingTierLabels != null) {
+      map['pricing_tier_labels'] = Variable<String>(pricingTierLabels);
+    }
+    if (!nullToAbsent || defaultInvoiceTaxRate != null) {
+      map['default_invoice_tax_rate'] = Variable<String>(defaultInvoiceTaxRate);
+    }
+    map['sync_version'] = Variable<int>(syncVersion);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    return map;
+  }
+
+  BusinessSettingsLocalCompanion toCompanion(bool nullToAbsent) {
+    return BusinessSettingsLocalCompanion(
+      id: Value(id),
+      businessId: Value(businessId),
+      valuationMethod: Value(valuationMethod),
+      defaultTaxType: Value(defaultTaxType),
+      invoiceTerms: invoiceTerms == null && nullToAbsent
+          ? const Value.absent()
+          : Value(invoiceTerms),
+      enablePriceConflictAlerts: Value(enablePriceConflictAlerts),
+      creditLimitAction: Value(creditLimitAction),
+      pricingTierLabels: pricingTierLabels == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pricingTierLabels),
+      defaultInvoiceTaxRate: defaultInvoiceTaxRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(defaultInvoiceTaxRate),
+      syncVersion: Value(syncVersion),
+      isDeleted: Value(isDeleted),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+    );
+  }
+
+  factory BusinessSettingsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BusinessSettingsTableData(
+      id: serializer.fromJson<String>(json['id']),
+      businessId: serializer.fromJson<String>(json['businessId']),
+      valuationMethod: serializer.fromJson<String>(json['valuationMethod']),
+      defaultTaxType: serializer.fromJson<String>(json['defaultTaxType']),
+      invoiceTerms: serializer.fromJson<String?>(json['invoiceTerms']),
+      enablePriceConflictAlerts: serializer.fromJson<bool>(
+        json['enablePriceConflictAlerts'],
+      ),
+      creditLimitAction: serializer.fromJson<String>(json['creditLimitAction']),
+      pricingTierLabels: serializer.fromJson<String?>(
+        json['pricingTierLabels'],
+      ),
+      defaultInvoiceTaxRate: serializer.fromJson<String?>(
+        json['defaultInvoiceTaxRate'],
+      ),
+      syncVersion: serializer.fromJson<int>(json['syncVersion']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'businessId': serializer.toJson<String>(businessId),
+      'valuationMethod': serializer.toJson<String>(valuationMethod),
+      'defaultTaxType': serializer.toJson<String>(defaultTaxType),
+      'invoiceTerms': serializer.toJson<String?>(invoiceTerms),
+      'enablePriceConflictAlerts': serializer.toJson<bool>(
+        enablePriceConflictAlerts,
+      ),
+      'creditLimitAction': serializer.toJson<String>(creditLimitAction),
+      'pricingTierLabels': serializer.toJson<String?>(pricingTierLabels),
+      'defaultInvoiceTaxRate': serializer.toJson<String?>(
+        defaultInvoiceTaxRate,
+      ),
+      'syncVersion': serializer.toJson<int>(syncVersion),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+    };
+  }
+
+  BusinessSettingsTableData copyWith({
+    String? id,
+    String? businessId,
+    String? valuationMethod,
+    String? defaultTaxType,
+    Value<String?> invoiceTerms = const Value.absent(),
+    bool? enablePriceConflictAlerts,
+    String? creditLimitAction,
+    Value<String?> pricingTierLabels = const Value.absent(),
+    Value<String?> defaultInvoiceTaxRate = const Value.absent(),
+    int? syncVersion,
+    bool? isDeleted,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+  }) => BusinessSettingsTableData(
+    id: id ?? this.id,
+    businessId: businessId ?? this.businessId,
+    valuationMethod: valuationMethod ?? this.valuationMethod,
+    defaultTaxType: defaultTaxType ?? this.defaultTaxType,
+    invoiceTerms: invoiceTerms.present ? invoiceTerms.value : this.invoiceTerms,
+    enablePriceConflictAlerts:
+        enablePriceConflictAlerts ?? this.enablePriceConflictAlerts,
+    creditLimitAction: creditLimitAction ?? this.creditLimitAction,
+    pricingTierLabels: pricingTierLabels.present
+        ? pricingTierLabels.value
+        : this.pricingTierLabels,
+    defaultInvoiceTaxRate: defaultInvoiceTaxRate.present
+        ? defaultInvoiceTaxRate.value
+        : this.defaultInvoiceTaxRate,
+    syncVersion: syncVersion ?? this.syncVersion,
+    isDeleted: isDeleted ?? this.isDeleted,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+  );
+  BusinessSettingsTableData copyWithCompanion(
+    BusinessSettingsLocalCompanion data,
+  ) {
+    return BusinessSettingsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      businessId: data.businessId.present
+          ? data.businessId.value
+          : this.businessId,
+      valuationMethod: data.valuationMethod.present
+          ? data.valuationMethod.value
+          : this.valuationMethod,
+      defaultTaxType: data.defaultTaxType.present
+          ? data.defaultTaxType.value
+          : this.defaultTaxType,
+      invoiceTerms: data.invoiceTerms.present
+          ? data.invoiceTerms.value
+          : this.invoiceTerms,
+      enablePriceConflictAlerts: data.enablePriceConflictAlerts.present
+          ? data.enablePriceConflictAlerts.value
+          : this.enablePriceConflictAlerts,
+      creditLimitAction: data.creditLimitAction.present
+          ? data.creditLimitAction.value
+          : this.creditLimitAction,
+      pricingTierLabels: data.pricingTierLabels.present
+          ? data.pricingTierLabels.value
+          : this.pricingTierLabels,
+      defaultInvoiceTaxRate: data.defaultInvoiceTaxRate.present
+          ? data.defaultInvoiceTaxRate.value
+          : this.defaultInvoiceTaxRate,
+      syncVersion: data.syncVersion.present
+          ? data.syncVersion.value
+          : this.syncVersion,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BusinessSettingsTableData(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('valuationMethod: $valuationMethod, ')
+          ..write('defaultTaxType: $defaultTaxType, ')
+          ..write('invoiceTerms: $invoiceTerms, ')
+          ..write('enablePriceConflictAlerts: $enablePriceConflictAlerts, ')
+          ..write('creditLimitAction: $creditLimitAction, ')
+          ..write('pricingTierLabels: $pricingTierLabels, ')
+          ..write('defaultInvoiceTaxRate: $defaultInvoiceTaxRate, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    businessId,
+    valuationMethod,
+    defaultTaxType,
+    invoiceTerms,
+    enablePriceConflictAlerts,
+    creditLimitAction,
+    pricingTierLabels,
+    defaultInvoiceTaxRate,
+    syncVersion,
+    isDeleted,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    deviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BusinessSettingsTableData &&
+          other.id == this.id &&
+          other.businessId == this.businessId &&
+          other.valuationMethod == this.valuationMethod &&
+          other.defaultTaxType == this.defaultTaxType &&
+          other.invoiceTerms == this.invoiceTerms &&
+          other.enablePriceConflictAlerts == this.enablePriceConflictAlerts &&
+          other.creditLimitAction == this.creditLimitAction &&
+          other.pricingTierLabels == this.pricingTierLabels &&
+          other.defaultInvoiceTaxRate == this.defaultInvoiceTaxRate &&
+          other.syncVersion == this.syncVersion &&
+          other.isDeleted == this.isDeleted &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.deviceId == this.deviceId);
+}
+
+class BusinessSettingsLocalCompanion
+    extends UpdateCompanion<BusinessSettingsTableData> {
+  final Value<String> id;
+  final Value<String> businessId;
+  final Value<String> valuationMethod;
+  final Value<String> defaultTaxType;
+  final Value<String?> invoiceTerms;
+  final Value<bool> enablePriceConflictAlerts;
+  final Value<String> creditLimitAction;
+  final Value<String?> pricingTierLabels;
+  final Value<String?> defaultInvoiceTaxRate;
+  final Value<int> syncVersion;
+  final Value<bool> isDeleted;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> deviceId;
+  final Value<int> rowid;
+  const BusinessSettingsLocalCompanion({
+    this.id = const Value.absent(),
+    this.businessId = const Value.absent(),
+    this.valuationMethod = const Value.absent(),
+    this.defaultTaxType = const Value.absent(),
+    this.invoiceTerms = const Value.absent(),
+    this.enablePriceConflictAlerts = const Value.absent(),
+    this.creditLimitAction = const Value.absent(),
+    this.pricingTierLabels = const Value.absent(),
+    this.defaultInvoiceTaxRate = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BusinessSettingsLocalCompanion.insert({
+    required String id,
+    required String businessId,
+    this.valuationMethod = const Value.absent(),
+    this.defaultTaxType = const Value.absent(),
+    this.invoiceTerms = const Value.absent(),
+    this.enablePriceConflictAlerts = const Value.absent(),
+    this.creditLimitAction = const Value.absent(),
+    this.pricingTierLabels = const Value.absent(),
+    this.defaultInvoiceTaxRate = const Value.absent(),
+    this.syncVersion = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       businessId = Value(businessId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<BusinessSettingsTableData> custom({
+    Expression<String>? id,
+    Expression<String>? businessId,
+    Expression<String>? valuationMethod,
+    Expression<String>? defaultTaxType,
+    Expression<String>? invoiceTerms,
+    Expression<bool>? enablePriceConflictAlerts,
+    Expression<String>? creditLimitAction,
+    Expression<String>? pricingTierLabels,
+    Expression<String>? defaultInvoiceTaxRate,
+    Expression<int>? syncVersion,
+    Expression<bool>? isDeleted,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? deviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (businessId != null) 'business_id': businessId,
+      if (valuationMethod != null) 'valuation_method': valuationMethod,
+      if (defaultTaxType != null) 'default_tax_type': defaultTaxType,
+      if (invoiceTerms != null) 'invoice_terms': invoiceTerms,
+      if (enablePriceConflictAlerts != null)
+        'enable_price_conflict_alerts': enablePriceConflictAlerts,
+      if (creditLimitAction != null) 'credit_limit_action': creditLimitAction,
+      if (pricingTierLabels != null) 'pricing_tier_labels': pricingTierLabels,
+      if (defaultInvoiceTaxRate != null)
+        'default_invoice_tax_rate': defaultInvoiceTaxRate,
+      if (syncVersion != null) 'sync_version': syncVersion,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BusinessSettingsLocalCompanion copyWith({
+    Value<String>? id,
+    Value<String>? businessId,
+    Value<String>? valuationMethod,
+    Value<String>? defaultTaxType,
+    Value<String?>? invoiceTerms,
+    Value<bool>? enablePriceConflictAlerts,
+    Value<String>? creditLimitAction,
+    Value<String?>? pricingTierLabels,
+    Value<String?>? defaultInvoiceTaxRate,
+    Value<int>? syncVersion,
+    Value<bool>? isDeleted,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? deviceId,
+    Value<int>? rowid,
+  }) {
+    return BusinessSettingsLocalCompanion(
+      id: id ?? this.id,
+      businessId: businessId ?? this.businessId,
+      valuationMethod: valuationMethod ?? this.valuationMethod,
+      defaultTaxType: defaultTaxType ?? this.defaultTaxType,
+      invoiceTerms: invoiceTerms ?? this.invoiceTerms,
+      enablePriceConflictAlerts:
+          enablePriceConflictAlerts ?? this.enablePriceConflictAlerts,
+      creditLimitAction: creditLimitAction ?? this.creditLimitAction,
+      pricingTierLabels: pricingTierLabels ?? this.pricingTierLabels,
+      defaultInvoiceTaxRate:
+          defaultInvoiceTaxRate ?? this.defaultInvoiceTaxRate,
+      syncVersion: syncVersion ?? this.syncVersion,
+      isDeleted: isDeleted ?? this.isDeleted,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deviceId: deviceId ?? this.deviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (businessId.present) {
+      map['business_id'] = Variable<String>(businessId.value);
+    }
+    if (valuationMethod.present) {
+      map['valuation_method'] = Variable<String>(valuationMethod.value);
+    }
+    if (defaultTaxType.present) {
+      map['default_tax_type'] = Variable<String>(defaultTaxType.value);
+    }
+    if (invoiceTerms.present) {
+      map['invoice_terms'] = Variable<String>(invoiceTerms.value);
+    }
+    if (enablePriceConflictAlerts.present) {
+      map['enable_price_conflict_alerts'] = Variable<bool>(
+        enablePriceConflictAlerts.value,
+      );
+    }
+    if (creditLimitAction.present) {
+      map['credit_limit_action'] = Variable<String>(creditLimitAction.value);
+    }
+    if (pricingTierLabels.present) {
+      map['pricing_tier_labels'] = Variable<String>(pricingTierLabels.value);
+    }
+    if (defaultInvoiceTaxRate.present) {
+      map['default_invoice_tax_rate'] = Variable<String>(
+        defaultInvoiceTaxRate.value,
+      );
+    }
+    if (syncVersion.present) {
+      map['sync_version'] = Variable<int>(syncVersion.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BusinessSettingsLocalCompanion(')
+          ..write('id: $id, ')
+          ..write('businessId: $businessId, ')
+          ..write('valuationMethod: $valuationMethod, ')
+          ..write('defaultTaxType: $defaultTaxType, ')
+          ..write('invoiceTerms: $invoiceTerms, ')
+          ..write('enablePriceConflictAlerts: $enablePriceConflictAlerts, ')
+          ..write('creditLimitAction: $creditLimitAction, ')
+          ..write('pricingTierLabels: $pricingTierLabels, ')
+          ..write('defaultInvoiceTaxRate: $defaultInvoiceTaxRate, ')
+          ..write('syncVersion: $syncVersion, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -11016,6 +14084,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $PartiesLocalTable partiesLocal = $PartiesLocalTable(this);
   late final $ItemsLocalTable itemsLocal = $ItemsLocalTable(this);
+  late final $UnitDefinitionsLocalTable unitDefinitionsLocal =
+      $UnitDefinitionsLocalTable(this);
+  late final $TaxRatesLocalTable taxRatesLocal = $TaxRatesLocalTable(this);
+  late final $GodownsLocalTable godownsLocal = $GodownsLocalTable(this);
+  late final $BusinessSettingsLocalTable businessSettingsLocal =
+      $BusinessSettingsLocalTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -11033,6 +14107,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     categoriesLocal,
     partiesLocal,
     itemsLocal,
+    unitDefinitionsLocal,
+    taxRatesLocal,
+    godownsLocal,
+    businessSettingsLocal,
   ];
 }
 
@@ -16340,6 +19418,1466 @@ typedef $$ItemsLocalTableProcessedTableManager =
       ItemTableData,
       PrefetchHooks Function()
     >;
+typedef $$UnitDefinitionsLocalTableCreateCompanionBuilder =
+    UnitDefinitionsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String name,
+      required String shortName,
+      Value<String?> symbol,
+      Value<int> decimalPlaces,
+      Value<bool> isSystem,
+      Value<bool> isActive,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$UnitDefinitionsLocalTableUpdateCompanionBuilder =
+    UnitDefinitionsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> name,
+      Value<String> shortName,
+      Value<String?> symbol,
+      Value<int> decimalPlaces,
+      Value<bool> isSystem,
+      Value<bool> isActive,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$UnitDefinitionsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $UnitDefinitionsLocalTable> {
+  $$UnitDefinitionsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shortName => $composableBuilder(
+    column: $table.shortName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get symbol => $composableBuilder(
+    column: $table.symbol,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get decimalPlaces => $composableBuilder(
+    column: $table.decimalPlaces,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSystem => $composableBuilder(
+    column: $table.isSystem,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UnitDefinitionsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $UnitDefinitionsLocalTable> {
+  $$UnitDefinitionsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shortName => $composableBuilder(
+    column: $table.shortName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get symbol => $composableBuilder(
+    column: $table.symbol,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get decimalPlaces => $composableBuilder(
+    column: $table.decimalPlaces,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSystem => $composableBuilder(
+    column: $table.isSystem,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UnitDefinitionsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UnitDefinitionsLocalTable> {
+  $$UnitDefinitionsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get shortName =>
+      $composableBuilder(column: $table.shortName, builder: (column) => column);
+
+  GeneratedColumn<String> get symbol =>
+      $composableBuilder(column: $table.symbol, builder: (column) => column);
+
+  GeneratedColumn<int> get decimalPlaces => $composableBuilder(
+    column: $table.decimalPlaces,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isSystem =>
+      $composableBuilder(column: $table.isSystem, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$UnitDefinitionsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UnitDefinitionsLocalTable,
+          UnitDefinitionTableData,
+          $$UnitDefinitionsLocalTableFilterComposer,
+          $$UnitDefinitionsLocalTableOrderingComposer,
+          $$UnitDefinitionsLocalTableAnnotationComposer,
+          $$UnitDefinitionsLocalTableCreateCompanionBuilder,
+          $$UnitDefinitionsLocalTableUpdateCompanionBuilder,
+          (
+            UnitDefinitionTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $UnitDefinitionsLocalTable,
+              UnitDefinitionTableData
+            >,
+          ),
+          UnitDefinitionTableData,
+          PrefetchHooks Function()
+        > {
+  $$UnitDefinitionsLocalTableTableManager(
+    _$AppDatabase db,
+    $UnitDefinitionsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UnitDefinitionsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UnitDefinitionsLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$UnitDefinitionsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> shortName = const Value.absent(),
+                Value<String?> symbol = const Value.absent(),
+                Value<int> decimalPlaces = const Value.absent(),
+                Value<bool> isSystem = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UnitDefinitionsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                name: name,
+                shortName: shortName,
+                symbol: symbol,
+                decimalPlaces: decimalPlaces,
+                isSystem: isSystem,
+                isActive: isActive,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String name,
+                required String shortName,
+                Value<String?> symbol = const Value.absent(),
+                Value<int> decimalPlaces = const Value.absent(),
+                Value<bool> isSystem = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UnitDefinitionsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                name: name,
+                shortName: shortName,
+                symbol: symbol,
+                decimalPlaces: decimalPlaces,
+                isSystem: isSystem,
+                isActive: isActive,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UnitDefinitionsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UnitDefinitionsLocalTable,
+      UnitDefinitionTableData,
+      $$UnitDefinitionsLocalTableFilterComposer,
+      $$UnitDefinitionsLocalTableOrderingComposer,
+      $$UnitDefinitionsLocalTableAnnotationComposer,
+      $$UnitDefinitionsLocalTableCreateCompanionBuilder,
+      $$UnitDefinitionsLocalTableUpdateCompanionBuilder,
+      (
+        UnitDefinitionTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $UnitDefinitionsLocalTable,
+          UnitDefinitionTableData
+        >,
+      ),
+      UnitDefinitionTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$TaxRatesLocalTableCreateCompanionBuilder =
+    TaxRatesLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String name,
+      required String rate,
+      Value<bool> isDefault,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$TaxRatesLocalTableUpdateCompanionBuilder =
+    TaxRatesLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> name,
+      Value<String> rate,
+      Value<bool> isDefault,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$TaxRatesLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $TaxRatesLocalTable> {
+  $$TaxRatesLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rate => $composableBuilder(
+    column: $table.rate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TaxRatesLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $TaxRatesLocalTable> {
+  $$TaxRatesLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rate => $composableBuilder(
+    column: $table.rate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TaxRatesLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TaxRatesLocalTable> {
+  $$TaxRatesLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get rate =>
+      $composableBuilder(column: $table.rate, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$TaxRatesLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TaxRatesLocalTable,
+          TaxRateTableData,
+          $$TaxRatesLocalTableFilterComposer,
+          $$TaxRatesLocalTableOrderingComposer,
+          $$TaxRatesLocalTableAnnotationComposer,
+          $$TaxRatesLocalTableCreateCompanionBuilder,
+          $$TaxRatesLocalTableUpdateCompanionBuilder,
+          (
+            TaxRateTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $TaxRatesLocalTable,
+              TaxRateTableData
+            >,
+          ),
+          TaxRateTableData,
+          PrefetchHooks Function()
+        > {
+  $$TaxRatesLocalTableTableManager(_$AppDatabase db, $TaxRatesLocalTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TaxRatesLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TaxRatesLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TaxRatesLocalTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> rate = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TaxRatesLocalCompanion(
+                id: id,
+                businessId: businessId,
+                name: name,
+                rate: rate,
+                isDefault: isDefault,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String name,
+                required String rate,
+                Value<bool> isDefault = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TaxRatesLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                name: name,
+                rate: rate,
+                isDefault: isDefault,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TaxRatesLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TaxRatesLocalTable,
+      TaxRateTableData,
+      $$TaxRatesLocalTableFilterComposer,
+      $$TaxRatesLocalTableOrderingComposer,
+      $$TaxRatesLocalTableAnnotationComposer,
+      $$TaxRatesLocalTableCreateCompanionBuilder,
+      $$TaxRatesLocalTableUpdateCompanionBuilder,
+      (
+        TaxRateTableData,
+        BaseReferences<_$AppDatabase, $TaxRatesLocalTable, TaxRateTableData>,
+      ),
+      TaxRateTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$GodownsLocalTableCreateCompanionBuilder =
+    GodownsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      required String name,
+      Value<String?> address,
+      Value<bool> isDefault,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$GodownsLocalTableUpdateCompanionBuilder =
+    GodownsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> name,
+      Value<String?> address,
+      Value<bool> isDefault,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$GodownsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $GodownsLocalTable> {
+  $$GodownsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get address => $composableBuilder(
+    column: $table.address,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GodownsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $GodownsLocalTable> {
+  $$GodownsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get address => $composableBuilder(
+    column: $table.address,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GodownsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GodownsLocalTable> {
+  $$GodownsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get address =>
+      $composableBuilder(column: $table.address, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$GodownsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GodownsLocalTable,
+          GodownTableData,
+          $$GodownsLocalTableFilterComposer,
+          $$GodownsLocalTableOrderingComposer,
+          $$GodownsLocalTableAnnotationComposer,
+          $$GodownsLocalTableCreateCompanionBuilder,
+          $$GodownsLocalTableUpdateCompanionBuilder,
+          (
+            GodownTableData,
+            BaseReferences<_$AppDatabase, $GodownsLocalTable, GodownTableData>,
+          ),
+          GodownTableData,
+          PrefetchHooks Function()
+        > {
+  $$GodownsLocalTableTableManager(_$AppDatabase db, $GodownsLocalTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GodownsLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GodownsLocalTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GodownsLocalTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> address = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GodownsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                name: name,
+                address: address,
+                isDefault: isDefault,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                required String name,
+                Value<String?> address = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GodownsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                name: name,
+                address: address,
+                isDefault: isDefault,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GodownsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GodownsLocalTable,
+      GodownTableData,
+      $$GodownsLocalTableFilterComposer,
+      $$GodownsLocalTableOrderingComposer,
+      $$GodownsLocalTableAnnotationComposer,
+      $$GodownsLocalTableCreateCompanionBuilder,
+      $$GodownsLocalTableUpdateCompanionBuilder,
+      (
+        GodownTableData,
+        BaseReferences<_$AppDatabase, $GodownsLocalTable, GodownTableData>,
+      ),
+      GodownTableData,
+      PrefetchHooks Function()
+    >;
+typedef $$BusinessSettingsLocalTableCreateCompanionBuilder =
+    BusinessSettingsLocalCompanion Function({
+      required String id,
+      required String businessId,
+      Value<String> valuationMethod,
+      Value<String> defaultTaxType,
+      Value<String?> invoiceTerms,
+      Value<bool> enablePriceConflictAlerts,
+      Value<String> creditLimitAction,
+      Value<String?> pricingTierLabels,
+      Value<String?> defaultInvoiceTaxRate,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+typedef $$BusinessSettingsLocalTableUpdateCompanionBuilder =
+    BusinessSettingsLocalCompanion Function({
+      Value<String> id,
+      Value<String> businessId,
+      Value<String> valuationMethod,
+      Value<String> defaultTaxType,
+      Value<String?> invoiceTerms,
+      Value<bool> enablePriceConflictAlerts,
+      Value<String> creditLimitAction,
+      Value<String?> pricingTierLabels,
+      Value<String?> defaultInvoiceTaxRate,
+      Value<int> syncVersion,
+      Value<bool> isDeleted,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> deviceId,
+      Value<int> rowid,
+    });
+
+class $$BusinessSettingsLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $BusinessSettingsLocalTable> {
+  $$BusinessSettingsLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get valuationMethod => $composableBuilder(
+    column: $table.valuationMethod,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get defaultTaxType => $composableBuilder(
+    column: $table.defaultTaxType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get invoiceTerms => $composableBuilder(
+    column: $table.invoiceTerms,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get enablePriceConflictAlerts => $composableBuilder(
+    column: $table.enablePriceConflictAlerts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get creditLimitAction => $composableBuilder(
+    column: $table.creditLimitAction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pricingTierLabels => $composableBuilder(
+    column: $table.pricingTierLabels,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get defaultInvoiceTaxRate => $composableBuilder(
+    column: $table.defaultInvoiceTaxRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BusinessSettingsLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $BusinessSettingsLocalTable> {
+  $$BusinessSettingsLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get valuationMethod => $composableBuilder(
+    column: $table.valuationMethod,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get defaultTaxType => $composableBuilder(
+    column: $table.defaultTaxType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get invoiceTerms => $composableBuilder(
+    column: $table.invoiceTerms,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get enablePriceConflictAlerts => $composableBuilder(
+    column: $table.enablePriceConflictAlerts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get creditLimitAction => $composableBuilder(
+    column: $table.creditLimitAction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pricingTierLabels => $composableBuilder(
+    column: $table.pricingTierLabels,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get defaultInvoiceTaxRate => $composableBuilder(
+    column: $table.defaultInvoiceTaxRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BusinessSettingsLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BusinessSettingsLocalTable> {
+  $$BusinessSettingsLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get businessId => $composableBuilder(
+    column: $table.businessId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get valuationMethod => $composableBuilder(
+    column: $table.valuationMethod,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get defaultTaxType => $composableBuilder(
+    column: $table.defaultTaxType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get invoiceTerms => $composableBuilder(
+    column: $table.invoiceTerms,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get enablePriceConflictAlerts => $composableBuilder(
+    column: $table.enablePriceConflictAlerts,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get creditLimitAction => $composableBuilder(
+    column: $table.creditLimitAction,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pricingTierLabels => $composableBuilder(
+    column: $table.pricingTierLabels,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get defaultInvoiceTaxRate => $composableBuilder(
+    column: $table.defaultInvoiceTaxRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get syncVersion => $composableBuilder(
+    column: $table.syncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+}
+
+class $$BusinessSettingsLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BusinessSettingsLocalTable,
+          BusinessSettingsTableData,
+          $$BusinessSettingsLocalTableFilterComposer,
+          $$BusinessSettingsLocalTableOrderingComposer,
+          $$BusinessSettingsLocalTableAnnotationComposer,
+          $$BusinessSettingsLocalTableCreateCompanionBuilder,
+          $$BusinessSettingsLocalTableUpdateCompanionBuilder,
+          (
+            BusinessSettingsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $BusinessSettingsLocalTable,
+              BusinessSettingsTableData
+            >,
+          ),
+          BusinessSettingsTableData,
+          PrefetchHooks Function()
+        > {
+  $$BusinessSettingsLocalTableTableManager(
+    _$AppDatabase db,
+    $BusinessSettingsLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BusinessSettingsLocalTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$BusinessSettingsLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$BusinessSettingsLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> businessId = const Value.absent(),
+                Value<String> valuationMethod = const Value.absent(),
+                Value<String> defaultTaxType = const Value.absent(),
+                Value<String?> invoiceTerms = const Value.absent(),
+                Value<bool> enablePriceConflictAlerts = const Value.absent(),
+                Value<String> creditLimitAction = const Value.absent(),
+                Value<String?> pricingTierLabels = const Value.absent(),
+                Value<String?> defaultInvoiceTaxRate = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BusinessSettingsLocalCompanion(
+                id: id,
+                businessId: businessId,
+                valuationMethod: valuationMethod,
+                defaultTaxType: defaultTaxType,
+                invoiceTerms: invoiceTerms,
+                enablePriceConflictAlerts: enablePriceConflictAlerts,
+                creditLimitAction: creditLimitAction,
+                pricingTierLabels: pricingTierLabels,
+                defaultInvoiceTaxRate: defaultInvoiceTaxRate,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String businessId,
+                Value<String> valuationMethod = const Value.absent(),
+                Value<String> defaultTaxType = const Value.absent(),
+                Value<String?> invoiceTerms = const Value.absent(),
+                Value<bool> enablePriceConflictAlerts = const Value.absent(),
+                Value<String> creditLimitAction = const Value.absent(),
+                Value<String?> pricingTierLabels = const Value.absent(),
+                Value<String?> defaultInvoiceTaxRate = const Value.absent(),
+                Value<int> syncVersion = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BusinessSettingsLocalCompanion.insert(
+                id: id,
+                businessId: businessId,
+                valuationMethod: valuationMethod,
+                defaultTaxType: defaultTaxType,
+                invoiceTerms: invoiceTerms,
+                enablePriceConflictAlerts: enablePriceConflictAlerts,
+                creditLimitAction: creditLimitAction,
+                pricingTierLabels: pricingTierLabels,
+                defaultInvoiceTaxRate: defaultInvoiceTaxRate,
+                syncVersion: syncVersion,
+                isDeleted: isDeleted,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                deviceId: deviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BusinessSettingsLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BusinessSettingsLocalTable,
+      BusinessSettingsTableData,
+      $$BusinessSettingsLocalTableFilterComposer,
+      $$BusinessSettingsLocalTableOrderingComposer,
+      $$BusinessSettingsLocalTableAnnotationComposer,
+      $$BusinessSettingsLocalTableCreateCompanionBuilder,
+      $$BusinessSettingsLocalTableUpdateCompanionBuilder,
+      (
+        BusinessSettingsTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $BusinessSettingsLocalTable,
+          BusinessSettingsTableData
+        >,
+      ),
+      BusinessSettingsTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -16368,4 +20906,12 @@ class $AppDatabaseManager {
       $$PartiesLocalTableTableManager(_db, _db.partiesLocal);
   $$ItemsLocalTableTableManager get itemsLocal =>
       $$ItemsLocalTableTableManager(_db, _db.itemsLocal);
+  $$UnitDefinitionsLocalTableTableManager get unitDefinitionsLocal =>
+      $$UnitDefinitionsLocalTableTableManager(_db, _db.unitDefinitionsLocal);
+  $$TaxRatesLocalTableTableManager get taxRatesLocal =>
+      $$TaxRatesLocalTableTableManager(_db, _db.taxRatesLocal);
+  $$GodownsLocalTableTableManager get godownsLocal =>
+      $$GodownsLocalTableTableManager(_db, _db.godownsLocal);
+  $$BusinessSettingsLocalTableTableManager get businessSettingsLocal =>
+      $$BusinessSettingsLocalTableTableManager(_db, _db.businessSettingsLocal);
 }

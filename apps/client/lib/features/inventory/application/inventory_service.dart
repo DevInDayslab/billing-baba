@@ -8,12 +8,16 @@ import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/core/sync/providers/sync_providers.dart';
 import 'package:billing_baba/features/inventory/application/inventory_error_mapper.dart';
 import 'package:billing_baba/features/inventory/data/category_local_source.dart';
+import 'package:billing_baba/features/inventory/data/godown_local_source.dart';
+import 'package:billing_baba/features/inventory/data/godown_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/inventory_local_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_remote_data_source.dart';
 import 'package:billing_baba/features/inventory/data/inventory_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_local_source.dart';
 import 'package:billing_baba/features/inventory/data/item_master_repository.dart';
 import 'package:billing_baba/features/inventory/data/item_media_repository.dart';
+import 'package:billing_baba/features/inventory/data/unit_local_source.dart';
+import 'package:billing_baba/features/inventory/data/unit_master_repository.dart';
 import 'package:billing_baba/features/inventory/inventory_constants.dart';
 import 'package:billing_baba/features/inventory/models/add_item_form_model.dart';
 import 'package:billing_baba/features/inventory/models/brand_model.dart';
@@ -68,20 +72,37 @@ Future<InventoryService> inventoryService(Ref ref) async {
     deviceId = null;
   }
 
+  final remote = InventoryRemoteDataSource(api.dio);
+  String businessIdReader() =>
+      storage.read(StorageKeys.lastOpenedBusinessId) ?? '';
+  String? deviceIdReader() => deviceId;
+
   final repository = InventoryRepository(
-    remote: InventoryRemoteDataSource(api.dio),
+    remote: remote,
     local: DriftInventoryLocalDataSource(CategoryLocalSource(db)),
     syncQueue: queue,
-    businessIdReader: () =>
-        storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
-    deviceIdReader: () => deviceId,
+    businessIdReader: businessIdReader,
+    deviceIdReader: deviceIdReader,
     items: ItemMasterRepository(
       local: ItemLocalSource(db),
       syncQueue: queue,
-      remote: InventoryRemoteDataSource(api.dio),
-      businessIdReader: () =>
-          storage.read(StorageKeys.lastOpenedBusinessId) ?? '',
-      deviceIdReader: () => deviceId,
+      remote: remote,
+      businessIdReader: businessIdReader,
+      deviceIdReader: deviceIdReader,
+    ),
+    units: UnitMasterRepository(
+      local: UnitLocalSource(db),
+      syncQueue: queue,
+      remote: remote,
+      businessIdReader: businessIdReader,
+      deviceIdReader: deviceIdReader,
+    ),
+    godowns: GodownMasterRepository(
+      local: GodownLocalSource(db),
+      syncQueue: queue,
+      remote: remote,
+      businessIdReader: businessIdReader,
+      deviceIdReader: deviceIdReader,
     ),
   );
   return InventoryService(

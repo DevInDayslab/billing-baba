@@ -9,6 +9,10 @@ import 'package:billing_baba/core/sync/models/sync_state.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
 import 'package:billing_baba/core/sync/queue/sync_queue.dart';
 import 'package:billing_baba/features/inventory/data/category_sync.dart';
+import 'package:billing_baba/features/inventory/data/godown_sync.dart';
+import 'package:billing_baba/features/inventory/data/unit_sync.dart';
+import 'package:billing_baba/features/settings/data/business_settings_sync.dart';
+import 'package:billing_baba/features/settings/data/tax_rate_sync.dart';
 import 'package:billing_baba/features/inventory/data/item_sync.dart';
 import 'package:billing_baba/features/parties/data/party_sync.dart';
 import 'package:dio/dio.dart';
@@ -150,6 +154,10 @@ void main() {
       categorySync: CategorySync(db),
       partySync: PartySync(db),
       itemSync: ItemSync(db),
+      unitSync: UnitSync(db),
+      taxRateSync: TaxRateSync(db),
+      godownSync: GodownSync(db),
+      businessSettingsSync: BusinessSettingsSync(db),
     );
 
     lifecycles = <SyncLifecycleState>[];
@@ -193,7 +201,9 @@ void main() {
     expect(api.pushCalls, 0);
     // bootstrap pull + steady-state pull
     expect(api.pullCalls, 2);
-    expect(api.lastPullEntityTypes, 'categories,parties,items');
+    expect(api.lastPullEntityTypes, 'categories,parties,items,unit_definitions,tax_rates,godowns,business_settings');
+    // Bootstrap starts from epoch cursor (opaque base64), then stores next_cursor.
+    expect(api.lastPullCursor, isNotNull);
     expect(metadata.pullCursor, isNotNull);
     expect(metadata.bootstrappedAt, isNotNull);
     expect(state.lifecycle, SyncLifecycleState.idle);
@@ -268,7 +278,7 @@ void main() {
 
     expect(api.pushCalls, 1);
     expect(api.pullCalls, 1);
-    expect(api.lastPullEntityTypes, 'categories,parties,items');
+    expect(api.lastPullEntityTypes, 'categories,parties,items,unit_definitions,tax_rates,godowns,business_settings');
     final mutations = api.lastPushBody!['mutations'] as List;
     expect(mutations, hasLength(3));
     final types = mutations.map((m) => m['entity_type']).toSet();
