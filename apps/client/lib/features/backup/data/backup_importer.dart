@@ -36,12 +36,11 @@ class BackupRestoreResult {
 class BackupImporter {
   BackupImporter({
     required this._storage,
-    required SyncMetadataStore metadata,
+    required this._metadata,
     BackupDatabasePaths? paths,
     this._onBeforeDatabaseReplace,
     this._onDatabaseReopened,
-  })  : _metadata = metadata,
-        _paths = paths ?? BackupDatabasePaths();
+  })  : _paths = paths ?? BackupDatabasePaths();
 
   final StorageService _storage;
   final SyncMetadataStore _metadata;
@@ -49,7 +48,10 @@ class BackupImporter {
   final Future<void> Function()? _onBeforeDatabaseReplace;
   final Future<void> Function(AppDatabase database)? _onDatabaseReopened;
 
-  Future<BackupRestoreResult> restore(Uint8List archiveBytes) async {
+  Future<BackupRestoreResult> restore(
+    Uint8List archiveBytes, {
+    required File databaseFile,
+  }) async {
     final archive = ZipDecoder().decodeBytes(archiveBytes);
     final manifestFile = _readEntry(archive, kBibaManifestEntry);
     final manifest = BillingBabaBackupManifest.parse(
@@ -110,10 +112,11 @@ class BackupImporter {
 
     await _onBeforeDatabaseReplace?.call();
 
-    final dbFile = await _paths.resolveDatabaseFile();
+    final dbFile = databaseFile;
     if (await dbFile.exists()) {
       await dbFile.delete();
     }
+    await _paths.deleteSidecarFiles(dbFile);
     await dbFile.parent.create(recursive: true);
     await dbFile.writeAsBytes(dbBytes, flush: true);
 

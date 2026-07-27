@@ -1,26 +1,24 @@
 import 'dart:convert';
-import 'dart:io';
 
+import 'package:billing_baba/core/database/drift_database_paths.dart';
 import 'package:billing_baba/features/backup/backup_constants.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
-/// Resolves the on-disk SQLite file used by Drift (`billing_baba`).
-class BackupDatabasePaths {
-  BackupDatabasePaths({this.overrideDatabaseFile});
+export 'package:billing_baba/core/database/drift_database_paths.dart'
+    show DriftDatabasePaths, kDriftDatabaseName;
 
-  final File? overrideDatabaseFile;
-
-  Future<File> resolveDatabaseFile() async {
-    if (overrideDatabaseFile != null) {
-      return overrideDatabaseFile!;
-    }
-    final dir = await getApplicationSupportDirectory();
-    return File(p.join(dir.path, 'billing_baba.sqlite'));
-  }
-}
+/// Backup/restore database path resolver (same source as Drift).
+typedef BackupDatabasePaths = DriftDatabasePaths;
 
 class BillingBabaBackupManifest {
+  const BillingBabaBackupManifest({
+    required this.version,
+    required this.createdAt,
+    required this.schemaVersion,
+    required this.businessId,
+    required this.appVersion,
+    required this.checksums,
+    this.tablesIncluded = kBibaTablesIncluded,
+  });
 
   factory BillingBabaBackupManifest.fromJson(Map<String, dynamic> json) {
     final checksumsRaw = json['checksums'];
@@ -41,15 +39,6 @@ class BillingBabaBackupManifest {
           kBibaTablesIncluded,
     );
   }
-  const BillingBabaBackupManifest({
-    required this.version,
-    required this.createdAt,
-    required this.schemaVersion,
-    required this.businessId,
-    required this.appVersion,
-    required this.checksums,
-    this.tablesIncluded = kBibaTablesIncluded,
-  });
 
   final int version;
   final String createdAt;
@@ -80,6 +69,12 @@ class BillingBabaBackupManifest {
 }
 
 class BackupSyncMetadata {
+  const BackupSyncMetadata({
+    this.pullCursor,
+    this.bootstrappedAt,
+    this.localSchemaVersion,
+    this.lastServerSchemaVersion,
+  });
 
   factory BackupSyncMetadata.fromJson(Map<String, dynamic> json) {
     return BackupSyncMetadata(
@@ -89,12 +84,6 @@ class BackupSyncMetadata {
       lastServerSchemaVersion: json['last_server_schema_version'] as int?,
     );
   }
-  const BackupSyncMetadata({
-    this.pullCursor,
-    this.bootstrappedAt,
-    this.localSchemaVersion,
-    this.lastServerSchemaVersion,
-  });
 
   final String? pullCursor;
   final String? bootstrappedAt;

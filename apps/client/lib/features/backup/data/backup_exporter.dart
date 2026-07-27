@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
@@ -29,11 +28,10 @@ class BackupExportResult {
 class BackupExporter {
   BackupExporter({
     required this._database,
-    required StorageService storage,
+    required this._storage,
     required this._metadata,
     BackupDatabasePaths? paths,
-  })  : _storage = storage,
-        _paths = paths ?? BackupDatabasePaths();
+  })  : _paths = paths ?? BackupDatabasePaths();
 
   final AppDatabase _database;
   final StorageService _storage;
@@ -50,9 +48,11 @@ class BackupExporter {
 
     await _database.customStatement('PRAGMA wal_checkpoint(FULL);');
 
-    final dbFile = await _paths.resolveDatabaseFile();
+    final dbFile = await _paths.resolveFromDatabase(_database);
     if (!await dbFile.exists()) {
-      throw StateError('Local database file not found');
+      throw StateError(
+        'Local database file not found at ${dbFile.path}',
+      );
     }
 
     final dbBytes = await dbFile.readAsBytes();

@@ -60,7 +60,10 @@ void main() {
       metadata: metadata,
       paths: BackupDatabasePaths(overrideDatabaseFile: restoredFile),
     );
-    await importer.restore(exported.bytes);
+    await importer.restore(
+      exported.bytes,
+      databaseFile: restoredFile,
+    );
 
     final restoredDb = AppDatabase(NativeDatabase(restoredFile));
     final jobs = await restoredDb.select(restoredDb.syncQueue).get();

@@ -201,7 +201,7 @@ void main() {
     expect(api.pushCalls, 0);
     // bootstrap pull + steady-state pull
     expect(api.pullCalls, 2);
-    expect(api.lastPullEntityTypes, 'categories,parties,items,unit_definitions,tax_rates,godowns,business_settings');
+    expect(api.lastPullEntityTypes, 'categories,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines');
     // Bootstrap starts from epoch cursor (opaque base64), then stores next_cursor.
     expect(api.lastPullCursor, isNotNull);
     expect(metadata.pullCursor, isNotNull);
@@ -278,7 +278,7 @@ void main() {
 
     expect(api.pushCalls, 1);
     expect(api.pullCalls, 1);
-    expect(api.lastPullEntityTypes, 'categories,parties,items,unit_definitions,tax_rates,godowns,business_settings');
+    expect(api.lastPullEntityTypes, 'categories,parties,items,unit_definitions,tax_rates,godowns,business_settings,sales_documents,sales_document_lines,purchase_documents,purchase_document_lines');
     final mutations = api.lastPushBody!['mutations'] as List;
     expect(mutations, hasLength(3));
     final types = mutations.map((m) => m['entity_type']).toSet();

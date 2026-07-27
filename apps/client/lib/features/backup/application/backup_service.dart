@@ -62,6 +62,8 @@ class BackupService {
   }
 
   Future<BackupRestoreResult> restoreBackup(Uint8List archiveBytes) async {
+    final databaseFile = await _paths.resolveFromDatabase(database);
+
     final importer = BackupImporter(
       storage: storage,
       metadata: metadata,
@@ -72,13 +74,18 @@ class BackupService {
       onDatabaseReopened: (_) async {
         _ref.invalidate(appDatabaseProvider);
         _ref.invalidate(syncQueueProvider);
+        _ref.invalidate(syncEngineProvider);
+        _ref.invalidate(commandAwareSyncEngineProvider);
         _ref.invalidate(salesInvoiceCommandRepositoryProvider);
         _ref.invalidate(salesReturnCommandRepositoryProvider);
         _ref.invalidate(purchaseBillCommandRepositoryProvider);
         _ref.invalidate(purchaseReturnCommandRepositoryProvider);
       },
     );
-    final result = await importer.restore(archiveBytes);
+    final result = await importer.restore(
+      archiveBytes,
+      databaseFile: databaseFile,
+    );
 
     final syncEngine = await _ref.read(commandAwareSyncEngineProvider.future);
     await syncEngine.syncNow();

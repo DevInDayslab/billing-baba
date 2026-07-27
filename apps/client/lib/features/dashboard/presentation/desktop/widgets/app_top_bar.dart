@@ -1,10 +1,10 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/dashboard/application/dashboard_provider.dart';
 import 'package:billing_baba/features/dashboard/application/shell_sidebar_provider.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/global_search_field.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/quick_create_menu.dart';
+import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/sync_toolbar_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -109,17 +109,8 @@ class _TopBarActions extends ConsumerWidget {
         ],
         const QuickCreateMenuButton(),
         const SizedBox(width: AppSpacing.xs),
-        _TopBarIconButton(
-          tooltip: 'Refresh',
-          icon: Icons.refresh,
-          onPressed: () => ref.read(dashboardProvider.notifier).refresh(),
-        ),
-        _TopBarIconButton(
-          tooltip: 'Cloud Sync',
-          icon: Icons.cloud_done_outlined,
-          iconColor: Colors.green.shade600,
-          onPressed: () {},
-        ),
+        const SyncNowToolbarButton(),
+        const CloudSyncToolbarButton(),
       ],
     );
   }
@@ -130,19 +121,17 @@ class _TopBarIconButton extends StatelessWidget {
     required this.tooltip,
     required this.icon,
     required this.onPressed,
-    this.iconColor,
   });
 
   final String tooltip;
   final IconData icon;
   final VoidCallback onPressed;
-  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
       tooltip: tooltip,
-      icon: Icon(icon, size: 20, color: iconColor ?? AppColors.textSecondary),
+      icon: Icon(icon, size: 20, color: AppColors.textSecondary),
       onPressed: onPressed,
       padding: const EdgeInsets.all(AppSpacing.sm),
       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),

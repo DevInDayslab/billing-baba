@@ -1,3 +1,4 @@
+import 'package:billing_baba/core/database/drift_database_paths.dart';
 import 'package:billing_baba/core/database/tables/business_settings_table.dart';
 import 'package:billing_baba/core/database/tables/categories_table.dart';
 import 'package:billing_baba/core/database/tables/contacts_tables.dart';
@@ -129,15 +130,41 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(localDocumentCounters);
       }
       if (from < 15) {
-        await m.addColumn(salesDocumentsLocal, salesDocumentsLocal.paidAmount);
-        await m.addColumn(salesDocumentsLocal, salesDocumentsLocal.paymentMode);
+        await _addColumnIfMissing(m, salesDocumentsLocal, salesDocumentsLocal.paidAmount);
+        await _addColumnIfMissing(m, salesDocumentsLocal, salesDocumentsLocal.paymentMode);
       }
       if (from < 16) {
-        await m.addColumn(purchaseDocumentsLocal, purchaseDocumentsLocal.paidAmount);
-        await m.addColumn(purchaseDocumentsLocal, purchaseDocumentsLocal.paymentMode);
+        await _addColumnIfMissing(
+          m,
+          purchaseDocumentsLocal,
+          purchaseDocumentsLocal.paidAmount,
+        );
+        await _addColumnIfMissing(
+          m,
+          purchaseDocumentsLocal,
+          purchaseDocumentsLocal.paymentMode,
+        );
       }
     },
   );
+
+  static Future<void> _addColumnIfMissing(
+    Migrator m,
+    TableInfo<Table, Object?> table,
+    GeneratedColumn<Object> column,
+  ) async {
+    final existing = await m.database
+        .customSelect(
+          'PRAGMA table_info(${table.actualTableName})',
+        )
+        .get();
+    final hasColumn = existing.any(
+      (row) => row.data['name'] == column.name,
+    );
+    if (!hasColumn) {
+      await m.addColumn(table, column);
+    }
+  }
 
   static Future<void> _createTableIfMissing(
     Migrator m,
@@ -158,6 +185,6 @@ class AppDatabase extends _$AppDatabase {
   }
 
   static QueryExecutor _openConnection() {
-    return driftDatabase(name: 'billing_baba');
+    return driftDatabase(name: kDriftDatabaseName);
   }
 }

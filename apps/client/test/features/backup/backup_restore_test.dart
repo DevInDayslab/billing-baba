@@ -61,7 +61,10 @@ void main() {
       metadata: metadata,
       paths: BackupDatabasePaths(overrideDatabaseFile: restoreDbFile),
     );
-    final restored = await importer.restore(exported.bytes);
+    final restored = await importer.restore(
+      exported.bytes,
+      databaseFile: restoreDbFile,
+    );
 
     expect(restored.manifest.businessId, 'biz-restore-1');
     expect(metadata.pullCursor, 'cursor-restore-xyz');
@@ -116,16 +119,20 @@ void main() {
     }
     final tampered = Uint8List.fromList(ZipEncoder().encode(tamperedArchive));
 
+    final tamperedDbFile = File('${tempDir.path}/tampered.sqlite');
     final importer = BackupImporter(
       storage: storage,
       metadata: metadata,
       paths: BackupDatabasePaths(
-        overrideDatabaseFile: File('${tempDir.path}/tampered.sqlite'),
+        overrideDatabaseFile: tamperedDbFile,
       ),
     );
 
     expect(
-      () => importer.restore(tampered),
+      () => importer.restore(
+        tampered,
+        databaseFile: tamperedDbFile,
+      ),
       throwsA(isA<BackupRestoreException>()),
     );
 
